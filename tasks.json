@@ -1,0 +1,114 @@
+{
+  "tasks": [
+    {
+      "id": "t001",
+      "title": "Register NEXUS as NSSM service",
+      "project": "NEXUS",
+      "agent": "ops",
+      "priority": "high",
+      "description": "NEXUS service not installed. Port 8010 is closed. Run nssm install NEXUSBot.",
+      "column": "done",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t002",
+      "title": "Commit loose files in Maia",
+      "project": "Maia",
+      "agent": "builder",
+      "priority": "medium",
+      "description": "23 uncommitted files in C:\\QI. Stage and commit with descriptive message.",
+      "column": "backlog",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t003",
+      "title": "Update Naya documentation",
+      "project": "Naya",
+      "agent": "scribe",
+      "priority": "medium",
+      "description": "Naya docs are 6 days behind the code. Update Implementation Log and Meeting Minutes.",
+      "column": "backlog",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t004",
+      "title": "Commit MQ scaffolding files",
+      "project": "MQ",
+      "agent": "builder",
+      "priority": "low",
+      "description": "14 uncommitted files in C:\\MQ. Review, clean up and commit what belongs.",
+      "column": "done",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t005",
+      "title": "Install ClaudeManager NSSM service",
+      "project": "Claude_Manager",
+      "agent": "ops",
+      "priority": "high",
+      "description": "Run C:\\Claude\\Dashboard\\install_service.bat as Administrator to auto-start dashboard.",
+      "column": "done",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t006",
+      "title": "Build Maia WhatsApp channel",
+      "project": "Maia",
+      "agent": "architect",
+      "priority": "medium",
+      "description": "WhatsApp is next channel after LINE/Telegram/Messenger/Instagram. Design integration first.",
+      "column": "backlog",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t007",
+      "title": "Build Maia RAG knowledge base",
+      "project": "Maia",
+      "agent": "architect",
+      "priority": "medium",
+      "description": "ChromaDB RAG integration is in development. Design document ingestion pipeline.",
+      "column": "backlog",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t008",
+      "title": "Wire Scout to NEXUS digest",
+      "project": "Claude_Manager",
+      "agent": "builder",
+      "priority": "low",
+      "description": "Connect Scout agent to NEXUS /scout/digest endpoint for live AI news feed.",
+      "column": "backlog",
+      "created_at": "2026-04-06"
+    },
+    {
+      "id": "t2ffb7d",
+      "column": "backlog",
+      "project": "Naya",
+      "created_at": "2026-04-06",
+      "title": "Commit loose files in Naya",
+      "description": "Naya has uncommitted changes. Review and commit.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "t0e4f1b",
+      "column": "backlog",
+      "project": "NEXUS",
+      "created_at": "2026-04-06",
+      "title": "Commit loose files in NEXUS",
+      "description": "NEXUS has uncommitted changes. Review and commit.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "t49ec78",
+      "column": "backlog",
+      "project": "Claude_Manager",
+      "title": "Fix failing test: test_service_responds[Naya]",
+      "description": "Test failure detected by Tester agent.\n\nTest: test_smoke.py::test_service_responds[Naya]\nError: AssertionError: Naya returned 404 \u2014 expected 200\nassert 404 == 200\n +  where 404 = <Response [404 NOT FOUND]>.status_code",
+      "agent": "builder",
+      "priority": "high",
+      "created_at": "2026-04-06"
+    }
+  ]
+}

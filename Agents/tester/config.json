@@ -1,0 +1,28 @@
+{
+  "agent": "tester",
+  "display_name": "Tester",
+  "model_default": "claude-haiku-4-5-20251001",
+  "model_max": "claude-sonnet-4-6",
+  "scope": "cross_project",
+  "can_run_code": true,
+  "can_write_files": ["C:\\Claude\\Tests\\"],
+  "can_read_files": true,
+  "can_call_external": false,
+  "escalate_to": "builder",
+  "reports_to": "inspector",
+  "tools": ["pytest", "playwright", "locust", "httpx"],
+  "test_targets": {
+    "Maia":       {"api": "http://localhost:8001", "ui": "http://localhost:7860"},
+    "Naya":       {"api": "http://localhost:8002", "ui": "http://localhost:7861"},
+    "NEXUS":      {"api": "http://localhost:8010", "ui": "http://localhost:7880"},
+    "Dashboard":  {"api": "http://localhost:8600", "ui": "http://localhost:8600"}
+  },
+  "result_dir": "C:\\Claude\\Tests\\results\\",
+  "escalation_rules": {
+    "critical": {"condition": "prod_service_failure", "priority": "high", "assign_to": "ops"},
+    "high":     {"condition": "dev_service_failure",  "priority": "high", "assign_to": "builder"},
+    "medium":   {"condition": "flaky_test",           "priority": "medium", "assign_to": "builder"},
+    "low":      {"condition": "cosmetic_failure",     "priority": "low",  "assign_to": "builder"}
+  },
+  "note": "Only agent with cross-project test mandate. Uses free tools only: pytest, httpx, playwright, locust."
+}

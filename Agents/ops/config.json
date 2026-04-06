@@ -1,0 +1,21 @@
+{
+  "agent": "ops",
+  "model_default": "claude-haiku-4-5-20251001",
+  "model_max": "claude-haiku-4-5-20251001",
+  "status": "idle",
+  "scope": "operations",
+  "can_write_code": false,
+  "can_run_bash": true,
+  "bash_restrictions": [
+    "no file deletions",
+    "no code edits",
+    "no rm/del/format on system paths",
+    "service restarts only via sc or nssm commands"
+  ],
+  "escalate_to": "renne",
+  "escalation_conditions": [
+    "service refuses to start after 2 restart attempts",
+    "disk usage >90%",
+    "port conflict between two QI projects"
+  ]
+}

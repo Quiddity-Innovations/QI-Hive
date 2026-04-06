@@ -1,0 +1,152 @@
+{
+  "_meta": {
+    "description": "Cross-project live state — read by all agents before starting any task",
+    "last_updated": "2026-04-06T22:00:00",
+    "last_session": "Claude_Meeting_02_2026-04-06",
+    "update_rule": "Agent updates this file after every task completion"
+  },
+  "projects": {
+    "Maia": {
+      "path": "C:\\QI",
+      "status": "active_production",
+      "current_task": null,
+      "locked_files": [],
+      "last_activity": "2026-04-06",
+      "notes": "Running on port 8001 via NSSM. LINE/Telegram/Messenger live."
+    },
+    "Naya": {
+      "path": "C:\\NAYA",
+      "status": "active_development",
+      "current_task": null,
+      "locked_files": [],
+      "last_activity": "2026-04-06",
+      "notes": "Port 8002. FileHQ fully merged in. Telegram only. LAN-only."
+    },
+    "NEXUS": {
+      "path": "C:\\NEXUS",
+      "status": "active_development",
+      "current_task": null,
+      "locked_files": [],
+      "last_activity": "2026-04-05",
+      "notes": "Port 8010. AI synthesis backbone."
+    },
+    "OpenClaw": {
+      "path": "C:\\OC",
+      "status": "active_production",
+      "current_task": null,
+      "locked_files": [],
+      "last_activity": "2026-04-05",
+      "notes": "WSL. Tasuke/Kaze/Yubin/Sentry live. Seiri cancelled."
+    },
+    "MQ": {
+      "path": "C:\\MQ",
+      "status": "new",
+      "current_task": null,
+      "locked_files": [],
+      "last_activity": "2026-04-05",
+      "notes": "Scaffolded. Waiting on FB Page + Meta Developer credentials."
+    },
+    "Claude_Manager": {
+      "path": "C:\\Claude",
+      "status": "active_development",
+      "current_task": null,
+      "locked_files": [],
+      "last_activity": "2026-04-06",
+      "notes": "Port 8600. 7 agents (incl. Tester). Dashboard v2 live with /tests page. Test suite built (pytest+playwright+locust). sync_tasks live."
+    }
+  },
+  "active_agents": [],
+  "agent_roster": {
+    "architect": {"model_default": "claude-sonnet-4-6", "model_max": "claude-opus-4-6",            "status": "idle", "soul": "C:\\Claude\\Agents\\architect\\soul.md"},
+    "builder":   {"model_default": "claude-sonnet-4-6", "model_max": "claude-sonnet-4-6",          "status": "idle", "soul": "C:\\Claude\\Agents\\builder\\soul.md"},
+    "scout":     {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6", "status": "idle", "soul": "C:\\Claude\\Agents\\scout\\soul.md"},
+    "scribe":    {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6", "status": "idle", "soul": "C:\\Claude\\Agents\\scribe\\soul.md"},
+    "ops":       {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-haiku-4-5-20251001", "status": "idle", "soul": "C:\\Claude\\Agents\\ops\\soul.md"},
+    "inspector": {"model_default": "claude-sonnet-4-6", "model_max": "claude-sonnet-4-6",          "status": "idle", "soul": "C:\\Claude\\Agents\\inspector\\soul.md"},
+    "tester":    {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6",  "status": "idle", "soul": "C:\\Claude\\Agents\\tester\\soul.md"}
+  },
+  "infrastructure": {
+    "dashboard": {"url": "http://localhost:8600", "status": "running", "service": "ClaudeManager (manual start — run install_service.bat as admin for NSSM)"},
+    "claude_peers": {"status": "registered", "config": "C:\\Users\\renne\\.claude.json"},
+    "openspace": {"status": "registered", "venv": "C:\\Claude\\OpenSpace\\.venv", "config": "C:\\Users\\renne\\.claude.json"},
+    "bun": {"version": "1.3.11", "path": "C:\\Users\\renne\\.bun\\bin\\bun.exe"}
+  },
+  "skills": {
+    "session-summary": "C:\\Claude\\Skills\\session-summary\\skill.md",
+    "git-commit": "C:\\Claude\\Skills\\git-commit\\skill.md",
+    "doc-generator": "C:\\Claude\\Skills\\doc-generator\\skill.md",
+    "delegate-task": "C:\\Claude\\Skills\\delegate-task",
+    "skill-discovery": "C:\\Claude\\Skills\\skill-discovery"
+  },
+  "feature_registry": {
+    "_note": "What each project can do — check here before building something new. Port features, don't rebuild them.",
+    "Maia": [
+      "multi-channel messaging (LINE, Telegram, Messenger, Instagram)",
+      "multi-LLM chain (MiniMax → GPT → Qwen3 → Gemma → DeepSeek)",
+      "auto language detection",
+      "VIP user system",
+      "group chat management",
+      "guardian/household management",
+      "user profiles + onboarding",
+      "retention policy + document retention",
+      "personality + mood configuration",
+      "RAG knowledge base (in development)",
+      "Gradio admin config UI"
+    ],
+    "Naya": [
+      "private AI assistant (personal use)",
+      "file intelligence (FileHQ merged in)",
+      "advisor brain (cleanup planning, folder insights)",
+      "memory system (conversation + decision history)",
+      "disk/USB watcher",
+      "off-hours task scheduler",
+      "Telegram bot interface"
+    ],
+    "NEXUS": [
+      "multi-model AI synthesis (synthesize endpoint)",
+      "AI news Scout (daily digest)",
+      "model Judge (benchmarks which model performed best)",
+      "Gradio UI for manual synthesis"
+    ],
+    "OpenClaw": [
+      "autonomous task orchestration (Tasuke)",
+      "news and digest monitoring (Kaze)",
+      "system health + security monitoring (Sentry)",
+      "email handling (Yubin)",
+      "voice/communication (Koe)",
+      "WSL-based Linux environment on Windows"
+    ],
+    "MQ": [],
+    "Claude_Manager": [
+      "7-agent dev team (Architect, Builder, Scout, Scribe, Ops, Inspector, Tester)",
+      "ecosystem health check (all projects)",
+      "cross-project dashboard (port 8600)",
+      "session summary generation",
+      "git commit skill",
+      "doc generator skill",
+      "status.json live state tracking",
+      "claude-peers MCP (agent messaging)",
+      "OpenSpace MCP (skill evolution)",
+      "test suite (pytest API + Playwright UI + Locust load)",
+      "auto-task creation from test failures",
+      "/tests dashboard page with one-click test runner"
+    ]
+  },
+  "pending_actions": [
+    "ClaudeManager service installed (PAUSED) — needs 'sc start ClaudeManager' from admin terminal to resume",
+    "Install SQLite MCP — pip install mcp-sqlite + register in .claude.json",
+    "Install Git MCP — npm install -g @cyanheads/git-mcp-server + register"
+  ],
+  "session_log": [
+    {
+      "session": "Claude_Meeting_01_2026-04-06",
+      "doc": "C:\\Claude\\Session Summaries\\Claude_Meeting_01_2026-04-06.docx",
+      "summary": "Agent system designed. Node.js installed. C:\\Claude created. Registry updated."
+    },
+    {
+      "session": "Claude_Meeting_02_2026-04-06",
+      "doc": "C:\\Claude\\Session Summaries\\Claude_Meeting_02_2026-04-06.docx",
+      "summary": "Bun installed. claude-peers MCP registered. OpenSpace MCP installed in venv + registered. 6 agent folders built (soul/skills/config). Dashboard live on port 8600. 3 QI skills written. Scout agent e2e test passed."
+    }
+  ]
+}
