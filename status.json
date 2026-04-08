@@ -89,15 +89,15 @@
     "all_mcps": "All 5 MCPs confirmed live: claude-peers, openspace, sqlite-maia, sqlite-naya, git"
   },
   "pending_actions": [
-    "ClaudeManager NSSM service still PAUSED — run 'sc continue ClaudeManager' from admin terminal",
-    "OpenSpace skill evolution test — search_skills not yet run (first task for Meeting 04)",
-    "Add GitHub remote to C:\\Claude — push to Quiddity-Innovations org",
-    "Commit loose files: Maia (12+), NEXUS (4+), OC (3+)",
-    "Add /api/ping test to test_dashboard_api.py",
-    "First real sqlite-maia MCP query — explore maia.db tables",
-    "First real git MCP use — git_log on a live QI repo"
+    "OpenSpace skill evolution test — MCPs (openspace, sqlite-maia, git) not available in worktree sessions; must run from C:\\Claude root session",
+    "Register MCPs in project-level .claude/settings.json so they load in all session contexts"
   ],
   "session_log": [
+    {
+      "session": "Claude_Meeting_04_2026-04-08",
+      "doc": "C:\\Claude\\Session Summaries\\Claude_Meeting_04_2026-04-08.docx",
+      "summary": "ClaudeManager NSSM was already RUNNING. GitHub remote added + pushed (Quiddity-Innovations/CLAUDE-MANAGER). /api/ping test added — 10/10 passing. maia.db explored (6 bots, 30 people, 903 convos). Maia+NEXUS+OC commits pushed. NEXUS API key gitignored. MCP tools not available in worktree sessions — needs fix."
+    },
     {
       "session": "Claude_Meeting_01_2026-04-06",
       "doc": "C:\\Claude\\Session Summaries\\Claude_Meeting_01_2026-04-06.docx",
