@@ -1,5 +1,5 @@
-# Claude Meeting 02 — Handoff to Meeting 03
-# Date: 2026-04-06 | Status: COMPLETE (extended session)
+# Claude Meeting 03 — Handoff to Meeting 04
+# Date: 2026-04-07 | Status: COMPLETE
 
 ---
 
@@ -11,20 +11,19 @@
 
 ## What Was Decided (Do Not Re-debate These)
 
-- **Bun v1.3.11** installed at `C:\Users\renne\.bun\bin\bun.exe`
-- **claude-peers MCP** registered in `C:\Users\renne\.claude.json` (user scope)
-- **OpenSpace MCP** installed in isolated venv at `C:\Claude\OpenSpace\.venv` — registered in `.claude.json`
-- **7 agents** fully scaffolded: Architect, Builder, Scout, Scribe, Ops, Inspector, **Tester**
-- **Dashboard v2** live at port 8600 — AdminLTE + kanban + health + tests + guide
-- **Test suite** built: pytest API tests + Playwright UI tests + Locust load tests
-- **sync_tasks()** is the single source of truth — drives tasks.json from health check data
-- **Naya root 404** is a confirmed real bug — task auto-created on kanban board
-- **Test runner** auto-creates kanban tasks for failures, deduplication included
-- **NSSM service** installed (PAUSED) — run `sc start ClaudeManager` from admin terminal
+- **SQLite MCP** installed (`mcp-server-sqlite`) + registered as `sqlite-maia` and `sqlite-naya` in `.claude.json`
+- **Git MCP** installed (`@cyanheads/git-mcp-server` v2.10.5) + registered as `git` in `.claude.json`
+- **Starlette pinned to 0.41.3** — `mcp-server-sqlite` upgraded it to 1.0.0 breaking FastAPI; downgraded to fix
+- **Naya root 404 patched** — `naya_server.py` now has `GET /` returning `{"project":"naya","status":"ok","port":8002}` — needs admin service restart to activate
+- **`/api/ping` added to Dashboard** — designed by Architect, built by Builder, verified by Inspector — **end-to-end agent chain PROVEN**
+- **`/api/scout/digest` added to Dashboard** — proxies NEXUS `/scout/digest`, returns top 5 AI headlines
+- **`fetch-ai-news` skill created** at `C:\Claude\Skills\fetch-ai-news\skill.md`
+- **Dashboard running as background process** — ClaudeManager NSSM service is still PAUSED (needs admin `sc continue`)
+- **OpenSpace skill evolution test NOT RUN** — tool was unavailable in Meeting 03 context; first task for Meeting 04
 
 ---
 
-## Claude Manager State (as of end of Meeting 02 extended)
+## Claude Manager State (as of end of Meeting 03)
 
 ```
 C:\Claude\
@@ -35,124 +34,127 @@ C:\Claude\
 │   ├── scribe\      soul.md  skills.md  config.json
 │   ├── ops\         soul.md  skills.md  config.json
 │   ├── inspector\   soul.md  skills.md  config.json
-│   └── tester\      soul.md  skills.md  config.json   ← NEW
+│   └── tester\      soul.md  skills.md  config.json
 ├── Dashboard\
-│   ├── server.py          ← FastAPI, port 8600, 5 pages
+│   ├── server.py          ← +/api/ping  +/api/scout/digest
+│   ├── dashboard.log      ← current run log
 │   ├── start_dashboard.bat
-│   └── install_service.bat ← run as admin for NSSM
+│   └── install_service.bat
 ├── OpenSpace\             ← cloned + installed in .venv
 ├── Skills\
 │   ├── session-summary\
 │   ├── git-commit\
 │   ├── doc-generator\
 │   ├── delegate-task\
-│   └── skill-discovery\
-├── Tests\                             ← NEW
-│   ├── conftest.py                    ← shared httpx fixtures
-│   ├── test_smoke.py                  ← 4 services smoke test
-│   ├── test_maia_api.py               ← Maia API tests
-│   ├── test_naya_api.py               ← Naya API tests
-│   ├── test_nexus_api.py              ← NEXUS API tests
-│   ├── test_dashboard_api.py          ← Dashboard API + CRUD tests
-│   ├── test_dashboard_ui.py           ← Playwright UI tests
-│   ├── run_tests.py                   ← runner: saves results + creates tasks
-│   ├── load\
-│   │   └── locustfile.py              ← Locust load tests
-│   └── results\
-│       └── latest.json                ← last run results (read by dashboard)
+│   ├── skill-discovery\
+│   └── fetch-ai-news\     ← NEW (wired to NEXUS)
+├── Tests\
+│   ├── conftest.py
+│   ├── test_smoke.py
+│   ├── test_maia_api.py
+│   ├── test_naya_api.py
+│   ├── test_nexus_api.py
+│   ├── test_dashboard_api.py
+│   ├── test_dashboard_ui.py
+│   ├── run_tests.py
+│   └── load\locustfile.py
+├── Tools\
+│   └── patch_mcp_config.py   ← NEW (safely patches .claude.json)
 ├── Session Summaries\
-│   ├── LATEST.md          ← this file
+│   ├── LATEST.md             ← this file
 │   ├── Claude_Meeting_01_2026-04-06.docx
-│   └── Claude_Meeting_02_2026-04-06.docx
-├── tasks.json             ← 11 tasks; t49ec78 = Naya root 404 (backlog)
-└── status.json            ← live cross-project state (7 agents registered)
+│   ├── Claude_Meeting_02_2026-04-06.docx
+│   └── Claude_Meeting_03_2026-04-07.docx
+├── tasks.json
+└── status.json               ← updated, 5 MCPs registered
 ```
 
 ---
 
-## Dashboard Pages (all working)
+## MCP Servers Now Registered (all 5 active)
 
-| URL | Page |
-|---|---|
-| http://localhost:8600/ | Dashboard — project cards, agent table, session log |
-| http://localhost:8600/health | Health Check — live scan, auto-refresh 60s |
-| http://localhost:8600/board | Task Board — kanban drag-and-drop |
-| http://localhost:8600/tests | Tests — one-click run, results, auto-tasks |
-| http://localhost:8600/guide | Guide — rendered markdown cheatsheet |
-
----
-
-## Test Suite Status
-
-| Test File | Status |
-|---|---|
-| test_smoke.py | 3/4 pass — Naya root returns 404 (real bug, task created) |
-| test_dashboard_api.py | 8/8 pass |
-| test_maia_api.py | Skips gracefully if Maia offline |
-| test_naya_api.py | Skips gracefully if Naya offline |
-| test_nexus_api.py | Skips gracefully if NEXUS offline |
-| test_dashboard_ui.py | Playwright headless — skips if offline |
-| load/locustfile.py | Locust — run manually, not in CI |
-
-**Run:** `python C:\Claude\Tests\run_tests.py smoke` (quick) or `all` (full)
-
----
-
-## Known Issues (on kanban board)
-
-| Task | Project | Issue |
+| Name | Type | Purpose |
 |---|---|---|
-| Fix failing test: test_service_responds[Naya] | Naya | Root `/` returns 404, not 200 |
-| Commit loose files in Naya | Naya | Uncommitted changes |
-| Commit loose files in NEXUS | NEXUS | Uncommitted changes |
+| claude-peers | stdio | Agent-to-agent messaging |
+| openspace | stdio | Skill discovery + evolution |
+| sqlite-maia | stdio | Direct query C:\QI\maia.db |
+| sqlite-naya | stdio | Direct query C:\NAYA\naya.db |
+| git | stdio | Git operations from Claude |
 
 ---
 
-## Meeting 03 Build Agenda (In Order)
+## Dashboard Endpoints (all working)
 
-1. **Install ClaudeManager NSSM service** — run `install_service.bat` as admin (or `sc start ClaudeManager`)
-2. **Fix Naya root 404** — Naya's FastAPI server has no `/` route; add one
-3. **Install SQLite MCP** — `pip install mcp-sqlite`, register for all QI projects
-4. **Install Git MCP** — `npm install -g @cyanheads/git-mcp-server`, register
-5. **Agent workflow test** — full Architect→Builder→Inspector chain on a real small task
-6. **NEXUS integration** — wire Scout to NEXUS `/scout/digest` for AI news
-7. **Skill evolution** — test OpenSpace skill-discovery against an existing QI skill
-
----
-
-## Pending Actions (Do Before Meeting 03)
-
-1. Run `C:\Claude\Dashboard\install_service.bat` **as Administrator** to make the dashboard auto-start
-2. Commit loose files in Naya and NEXUS
+| URL | Description |
+|---|---|
+| http://localhost:8600/ | Main dashboard |
+| http://localhost:8600/health | Health check |
+| http://localhost:8600/board | Kanban board |
+| http://localhost:8600/tests | Test runner |
+| http://localhost:8600/guide | Guide |
+| http://localhost:8600/api/ping | **NEW** — pong + timestamp + version |
+| http://localhost:8600/api/scout/digest | **NEW** — top 5 AI headlines from NEXUS |
 
 ---
 
-## Files Created/Updated This Session (Extended)
+## Agent Chain — PROVEN End-to-End
+
+Meeting 03 ran the full **Architect → Builder → Inspector** chain on a real task (`/api/ping`):
+- Architect read server.py, produced exact spec (file, line, signature, test)
+- Builder implemented it exactly to spec
+- Inspector code-reviewed it (PASS) and ran live assertion test (PASS after restart)
+- Result: feature shipped with zero human code involvement
+
+---
+
+## Known Issues
+
+| Issue | Project | Status |
+|---|---|---|
+| ClaudeManager NSSM service PAUSED | Claude_Manager | Run `sc continue ClaudeManager` as admin |
+| Naya root 404 | Naya | Code fixed — restart NayaBot service as admin |
+| Uncommitted files | Maia (12), Naya (4+), NEXUS (4), Claude (1+) | Need `git commit` |
+| Starlette pinned to 0.41.3 | Claude_Manager | May conflict with mcp-server-sqlite when run as MCP; monitor |
+
+---
+
+## Meeting 04 Build Agenda (In Order)
+
+1. **OpenSpace skill evolution test** — run `search_skills` against `fetch-ai-news`, `session-summary`, `git-commit`; import any cloud improvements
+2. **Fix Naya root 404 properly** — restart NayaBot service (or ask Renne to run naya_control.bat as admin option 3)
+3. **Start ClaudeManager NSSM service** — `sc continue ClaudeManager` as admin (or install_service.bat)
+4. **Commit all loose files** — Maia (12), Naya (4+), NEXUS (4), Claude (1+)
+5. **Add /api/ping test to test_dashboard_api.py** — Inspector identified this gap
+6. **Wire sqlite-maia MCP** — query maia.db directly; explore config table, LLM chain, user stats
+7. **Git MCP first real use** — use `mcp__git__git_log` and `mcp__git__git_status` on a live repo
+
+---
+
+## Pending Actions (Do Before Meeting 04)
+
+1. Run `sc continue ClaudeManager` from admin terminal
+2. Run `naya_control.bat` → option 3 (Restart Naya) as admin to activate root 404 fix
+3. Commit all loose files across projects
+
+---
+
+## Files Created/Updated This Session
 
 | File | Action |
 |---|---|
-| C:\Claude\Agents\tester\soul.md | CREATED |
-| C:\Claude\Agents\tester\skills.md | CREATED |
-| C:\Claude\Agents\tester\config.json | CREATED |
-| C:\Claude\Tests\conftest.py | CREATED |
-| C:\Claude\Tests\test_smoke.py | CREATED |
-| C:\Claude\Tests\test_maia_api.py | CREATED |
-| C:\Claude\Tests\test_naya_api.py | CREATED |
-| C:\Claude\Tests\test_nexus_api.py | CREATED |
-| C:\Claude\Tests\test_dashboard_api.py | CREATED |
-| C:\Claude\Tests\test_dashboard_ui.py | CREATED |
-| C:\Claude\Tests\run_tests.py | CREATED |
-| C:\Claude\Tests\load\locustfile.py | CREATED |
-| C:\Claude\Dashboard\server.py | UPDATED (+/tests page, +/api/tests/run, +tester in agents) |
-| C:\UNIVERSAL\QI_Claude_Manager_Guide.md | UPDATED (+Tester agent, +Tests page docs) |
-| C:\Claude\status.json | UPDATED (7 agents, tester in roster, updated features) |
+| C:\NAYA\naya_server.py | UPDATED — added GET / root route |
+| C:\Claude\Dashboard\server.py | UPDATED — +/api/ping, +/api/scout/digest, +timezone import |
+| C:\Claude\Skills\fetch-ai-news\skill.md | CREATED |
+| C:\Claude\Tools\patch_mcp_config.py | CREATED |
+| C:\Users\renne\.claude.json | UPDATED — sqlite-maia, sqlite-naya, git MCPs registered |
+| C:\Claude\status.json | UPDATED |
 | C:\Claude\Session Summaries\LATEST.md | UPDATED (this file) |
 
 ---
 
-## How to Start Meeting 03
+## How to Start Meeting 04
 
 1. Open a new Claude Code session
-2. Name it: **Claude Meeting 03 — Fix Naya Root + Agent Workflow Test**
-3. Say: "Start Meeting 03. Read LATEST.md at C:\Claude\Session Summaries\LATEST.md and status.json. Then begin the agenda."
+2. Name it: **Claude Meeting 04 — OpenSpace Test + Commits + DB Queries**
+3. Say: `"Start Meeting 04. Read LATEST.md at C:\Claude\Session Summaries\LATEST.md and status.json at C:\Claude\status.json. Then begin the agenda."`
 4. I will pick up exactly where we left off.

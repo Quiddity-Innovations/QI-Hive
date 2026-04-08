@@ -6,7 +6,7 @@ AdminLTE v4 + Bootstrap 5 + SortableJS kanban
 import json
 import sys
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -651,6 +651,42 @@ def guide_page():
 @app.get("/api/status")
 def api_status():
     return JSONResponse(load_status())
+
+@app.get("/api/ping")
+def api_ping():
+    return JSONResponse({
+        "pong": True,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": app.version,
+    })
+
+@app.get("/api/scout/digest")
+def api_scout_digest():
+    """Fetch AI news digest from NEXUS and return top items."""
+    import urllib.request, json as _json
+    try:
+        with urllib.request.urlopen("http://localhost:8010/scout/digest", timeout=10) as resp:
+            data = _json.loads(resp.read().decode())
+        # Parse the markdown to extract first 5 headlines
+        content = data.get("content_md", "")
+        items = []
+        for line in content.splitlines():
+            if line.startswith("### ["):
+                title_end = line.index("](")
+                url_end = line.index(")", title_end)
+                title = line[5:title_end]
+                url = line[title_end + 2:url_end]
+                items.append({"title": title, "url": url})
+                if len(items) >= 5:
+                    break
+        return JSONResponse({
+            "ok": True,
+            "date": data.get("date"),
+            "item_count": data.get("item_count", 0),
+            "top_5": items,
+        })
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=503)
 
 @app.get("/api/agents")
 def api_agents():
