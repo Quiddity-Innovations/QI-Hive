@@ -27,7 +27,7 @@
       "agent": "scribe",
       "priority": "medium",
       "description": "Naya docs are 6 days behind the code. Update Implementation Log and Meeting Minutes.",
-      "column": "backlog",
+      "column": "done",
       "created_at": "2026-04-06"
     },
     {
@@ -109,6 +109,26 @@
       "agent": "builder",
       "priority": "high",
       "created_at": "2026-04-06"
+    },
+    {
+      "id": "tce2790",
+      "column": "backlog",
+      "project": "OpenClaw",
+      "created_at": "2026-04-07",
+      "title": "Commit loose files in OpenClaw",
+      "description": "OpenClaw has uncommitted changes. Review and commit.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "tfb4bc7",
+      "column": "backlog",
+      "project": "Claude_Manager",
+      "created_at": "2026-04-07",
+      "title": "Commit loose files in Claude_Manager",
+      "description": "Claude_Manager has uncommitted changes. Review and commit.",
+      "agent": "builder",
+      "priority": "medium"
     }
   ]
 }
