@@ -121,6 +121,17 @@ def test_api_tasks_create_and_delete(client):
     assert task_id not in ids_after, "Deleted task still in /api/tasks"
 
 
+def test_api_ping(client):
+    """Ping endpoint should return status ok and a timestamp."""
+    skip_if_offline(client)
+    r = client.get("/api/ping")
+    assert r.status_code == 200
+    data = r.json()
+    assert data.get("pong") is True, f"Expected pong=true, got: {data}"
+    assert "timestamp" in data, "Ping response missing 'timestamp' field"
+    assert "version" in data, "Ping response missing 'version' field"
+
+
 def test_api_health_returns_projects(client):
     """Health API should return data for all registered projects."""
     skip_if_offline(client)
