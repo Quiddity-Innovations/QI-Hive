@@ -1,8 +1,8 @@
 {
   "_meta": {
     "description": "Cross-project live state — read by all agents before starting any task",
-    "last_updated": "2026-04-08T08:00:00",
-    "last_session": "Claude_Meeting_03_2026-04-07_wrapup",
+    "last_updated": "2026-04-08T13:00:00",
+    "last_session": "Claude_Meeting_04_2026-04-08",
     "update_rule": "Agent updates this file after every task completion"
   },
   "projects": {
@@ -12,7 +12,7 @@
       "current_task": null,
       "locked_files": [],
       "last_activity": "2026-04-08",
-      "notes": "Running on port 8001 via NSSM. LINE/Telegram/Messenger live. Uncommitted files exist."
+      "notes": "Running on port 8001 via NSSM. LINE/Telegram/Messenger live. All files committed + pushed (4b4d881)."
     },
     "Naya": {
       "path": "C:\\NAYA",
@@ -52,7 +52,7 @@
       "current_task": null,
       "locked_files": [],
       "last_activity": "2026-04-08",
-      "notes": "Port 8600. Dashboard running as background process. ClaudeManager NSSM still paused (needs admin). All 5 MCPs confirmed live in session."
+      "notes": "Port 8600. ClaudeManager NSSM RUNNING (confirmed Meeting 04). GitHub: Quiddity-Innovations/CLAUDE-MANAGER. 10/10 tests passing. MCP tools unstable in worktree sessions — fix in Meeting 05."
     }
   },
   "active_agents": [],
@@ -66,12 +66,12 @@
     "tester":    {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6",   "status": "idle", "soul": "C:\\Claude\\Agents\\tester\\soul.md"}
   },
   "infrastructure": {
-    "dashboard":    {"url": "http://localhost:8600", "status": "running_as_process", "note": "ClaudeManager NSSM still PAUSED — needs admin 'sc continue ClaudeManager'", "endpoints": ["/api/ping", "/api/scout/digest", "/api/health", "/api/agents", "/api/tasks"]},
+    "dashboard":    {"url": "http://localhost:8600", "status": "running_as_nssm_service", "note": "ClaudeManager NSSM RUNNING. 10/10 tests passing. GitHub: Quiddity-Innovations/CLAUDE-MANAGER", "endpoints": ["/api/ping", "/api/scout/digest", "/api/health", "/api/agents", "/api/tasks"]},
     "claude_peers": {"status": "registered", "confirmed_live": true},
-    "openspace":    {"status": "registered", "confirmed_live": true, "tools": ["search_skills", "execute_task", "fix_skill", "upload_skill"]},
-    "sqlite_maia":  {"status": "registered", "confirmed_live": true, "db": "C:\\QI\\maia.db",   "tools": ["list_tables", "describe_table", "read_query", "write_query", "create_table", "append_insight"]},
-    "sqlite_naya":  {"status": "registered", "confirmed_live": true, "db": "C:\\NAYA\\naya.db", "tools": ["list_tables", "describe_table", "read_query", "write_query", "create_table", "append_insight"]},
-    "git_mcp":      {"status": "registered", "confirmed_live": true, "tools": ["git_log", "git_status", "git_diff", "git_commit", "git_add", "git_push", "git_branch", "git_checkout", "git_clone", "git_remote", "+20 more"]},
+    "openspace":    {"status": "registered", "note": "UNSTABLE in worktree sessions — disconnect after brief appearance. Fix: run Claude from C:\\Claude root.", "tools": ["search_skills", "execute_task", "fix_skill", "upload_skill"]},
+    "sqlite_maia":  {"status": "registered", "note": "UNSTABLE in worktree sessions. Fix same as openspace.", "db": "C:\\QI\\maia.db",   "tools": ["list_tables", "describe_table", "read_query", "write_query", "create_table", "append_insight"]},
+    "sqlite_naya":  {"status": "registered", "note": "UNSTABLE in worktree sessions. Fix same as openspace.", "db": "C:\\NAYA\\naya.db", "tools": ["list_tables", "describe_table", "read_query", "write_query", "create_table", "append_insight"]},
+    "git_mcp":      {"status": "registered", "note": "UNSTABLE in worktree sessions. Fix same as openspace.", "tools": ["git_log", "git_status", "git_diff", "git_commit", "git_add", "git_push", "git_branch", "git_checkout", "git_clone", "git_remote", "+20 more"]},
     "bun":          {"version": "1.3.11", "path": "C:\\Users\\renne\\.bun\\bin\\bun.exe"}
   },
   "skills": {
@@ -86,11 +86,17 @@
     "agent_chain": "Architect->Builder->Inspector PROVEN on /api/ping (Meeting 03)",
     "nexus_integration": "/api/scout/digest live — NEXUS wired to Dashboard",
     "naya_root_fix": "GET / returns 200 as of 2026-04-08 (overnight restart activated fix)",
-    "all_mcps": "All 5 MCPs confirmed live: claude-peers, openspace, sqlite-maia, sqlite-naya, git"
+    "all_mcps": "All 5 MCPs confirmed live: claude-peers, openspace, sqlite-maia, sqlite-naya, git",
+    "claude_manager_github": "Quiddity-Innovations/CLAUDE-MANAGER created + pushed (Meeting 04)",
+    "ping_test": "/api/ping test added — 10/10 tests passing (Meeting 04)",
+    "session_naming": "Naming convention saved to all 3 memory dirs: [QI/OC/Claude] - S[#] - [Project]: [Item]"
   },
   "pending_actions": [
-    "OpenSpace skill evolution test — MCPs (openspace, sqlite-maia, git) not available in worktree sessions; must run from C:\\Claude root session",
-    "Register MCPs in project-level .claude/settings.json so they load in all session contexts"
+    "MCP worktree instability — open Claude Code from C:\\Claude root (not worktree) to get stable MCP sessions",
+    "OpenSpace search_skills — deferred to Claude S5",
+    "First sqlite-maia MCP query via tool — deferred to Claude S5",
+    "First git MCP tool use — deferred to Claude S5",
+    "NEXUS installer weekend test — target 2026-04-12"
   ],
   "session_log": [
     {
