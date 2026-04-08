@@ -1,8 +1,8 @@
 {
   "_meta": {
     "description": "Cross-project live state — read by all agents before starting any task",
-    "last_updated": "2026-04-07T08:30:00",
-    "last_session": "Claude_Meeting_03_2026-04-07",
+    "last_updated": "2026-04-08T08:00:00",
+    "last_session": "Claude_Meeting_03_2026-04-07_wrapup",
     "update_rule": "Agent updates this file after every task completion"
   },
   "projects": {
@@ -11,24 +11,24 @@
       "status": "active_production",
       "current_task": null,
       "locked_files": [],
-      "last_activity": "2026-04-07",
-      "notes": "Running on port 8001 via NSSM. LINE/Telegram/Messenger live. 12 uncommitted files."
+      "last_activity": "2026-04-08",
+      "notes": "Running on port 8001 via NSSM. LINE/Telegram/Messenger live. Uncommitted files exist."
     },
     "Naya": {
       "path": "C:\\NAYA",
       "status": "active_development",
       "current_task": null,
       "locked_files": [],
-      "last_activity": "2026-04-07",
-      "notes": "Port 8002. Root / route added (returns 200). Needs admin service restart to go live. 4+ uncommitted files."
+      "last_activity": "2026-04-08",
+      "notes": "Port 8002. Root / returns 200 — FIX CONFIRMED LIVE after overnight restart. FileHQ merged in."
     },
     "NEXUS": {
       "path": "C:\\NEXUS",
       "status": "active_development",
       "current_task": null,
       "locked_files": [],
-      "last_activity": "2026-04-06",
-      "notes": "Port 8010. /scout/digest live — 369 items. 4 uncommitted files."
+      "last_activity": "2026-04-07",
+      "notes": "Port 8010. /scout/digest live with 369 items. Uncommitted files exist."
     },
     "OpenClaw": {
       "path": "C:\\OC",
@@ -51,105 +51,51 @@
       "status": "active_development",
       "current_task": null,
       "locked_files": [],
-      "last_activity": "2026-04-07",
-      "notes": "Port 8600. Dashboard running as background process (service still paused — needs admin). 5 MCPs registered. /api/ping live. /api/scout/digest live."
+      "last_activity": "2026-04-08",
+      "notes": "Port 8600. Dashboard running as background process. ClaudeManager NSSM still paused (needs admin). All 5 MCPs confirmed live in session."
     }
   },
   "active_agents": [],
   "agent_roster": {
-    "architect": {"model_default": "claude-sonnet-4-6", "model_max": "claude-opus-4-6",            "status": "idle", "soul": "C:\\Claude\\Agents\\architect\\soul.md"},
-    "builder":   {"model_default": "claude-sonnet-4-6", "model_max": "claude-sonnet-4-6",          "status": "idle", "soul": "C:\\Claude\\Agents\\builder\\soul.md"},
-    "scout":     {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6", "status": "idle", "soul": "C:\\Claude\\Agents\\scout\\soul.md"},
-    "scribe":    {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6", "status": "idle", "soul": "C:\\Claude\\Agents\\scribe\\soul.md"},
+    "architect": {"model_default": "claude-sonnet-4-6", "model_max": "claude-opus-4-6",             "status": "idle", "soul": "C:\\Claude\\Agents\\architect\\soul.md"},
+    "builder":   {"model_default": "claude-sonnet-4-6", "model_max": "claude-sonnet-4-6",           "status": "idle", "soul": "C:\\Claude\\Agents\\builder\\soul.md"},
+    "scout":     {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6",  "status": "idle", "soul": "C:\\Claude\\Agents\\scout\\soul.md"},
+    "scribe":    {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6",  "status": "idle", "soul": "C:\\Claude\\Agents\\scribe\\soul.md"},
     "ops":       {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-haiku-4-5-20251001", "status": "idle", "soul": "C:\\Claude\\Agents\\ops\\soul.md"},
-    "inspector": {"model_default": "claude-sonnet-4-6", "model_max": "claude-sonnet-4-6",          "status": "idle", "soul": "C:\\Claude\\Agents\\inspector\\soul.md"},
-    "tester":    {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6",  "status": "idle", "soul": "C:\\Claude\\Agents\\tester\\soul.md"}
+    "inspector": {"model_default": "claude-sonnet-4-6", "model_max": "claude-sonnet-4-6",           "status": "idle", "soul": "C:\\Claude\\Agents\\inspector\\soul.md"},
+    "tester":    {"model_default": "claude-haiku-4-5-20251001", "model_max": "claude-sonnet-4-6",   "status": "idle", "soul": "C:\\Claude\\Agents\\tester\\soul.md"}
   },
   "infrastructure": {
-    "dashboard": {"url": "http://localhost:8600", "status": "running_as_process", "service": "ClaudeManager PAUSED — run 'sc continue ClaudeManager' from admin terminal", "new_endpoints": ["/api/ping", "/api/scout/digest"]},
-    "claude_peers": {"status": "registered", "config": "C:\\Users\\renne\\.claude.json"},
-    "openspace": {"status": "registered", "venv": "C:\\Claude\\OpenSpace\\.venv", "config": "C:\\Users\\renne\\.claude.json"},
-    "sqlite_maia": {"status": "registered", "db": "C:\\QI\\maia.db", "config": "C:\\Users\\renne\\.claude.json"},
-    "sqlite_naya": {"status": "registered", "db": "C:\\NAYA\\naya.db", "config": "C:\\Users\\renne\\.claude.json"},
-    "git_mcp": {"status": "registered", "bin": "C:\\Users\\renne\\AppData\\Roaming\\npm\\git-mcp-server.cmd", "config": "C:\\Users\\renne\\.claude.json"},
-    "bun": {"version": "1.3.11", "path": "C:\\Users\\renne\\.bun\\bin\\bun.exe"}
+    "dashboard":    {"url": "http://localhost:8600", "status": "running_as_process", "note": "ClaudeManager NSSM still PAUSED — needs admin 'sc continue ClaudeManager'", "endpoints": ["/api/ping", "/api/scout/digest", "/api/health", "/api/agents", "/api/tasks"]},
+    "claude_peers": {"status": "registered", "confirmed_live": true},
+    "openspace":    {"status": "registered", "confirmed_live": true, "tools": ["search_skills", "execute_task", "fix_skill", "upload_skill"]},
+    "sqlite_maia":  {"status": "registered", "confirmed_live": true, "db": "C:\\QI\\maia.db",   "tools": ["list_tables", "describe_table", "read_query", "write_query", "create_table", "append_insight"]},
+    "sqlite_naya":  {"status": "registered", "confirmed_live": true, "db": "C:\\NAYA\\naya.db", "tools": ["list_tables", "describe_table", "read_query", "write_query", "create_table", "append_insight"]},
+    "git_mcp":      {"status": "registered", "confirmed_live": true, "tools": ["git_log", "git_status", "git_diff", "git_commit", "git_add", "git_push", "git_branch", "git_checkout", "git_clone", "git_remote", "+20 more"]},
+    "bun":          {"version": "1.3.11", "path": "C:\\Users\\renne\\.bun\\bin\\bun.exe"}
   },
   "skills": {
-    "session-summary": "C:\\Claude\\Skills\\session-summary\\skill.md",
-    "git-commit": "C:\\Claude\\Skills\\git-commit\\skill.md",
-    "doc-generator": "C:\\Claude\\Skills\\doc-generator\\skill.md",
-    "delegate-task": "C:\\Claude\\Skills\\delegate-task",
-    "skill-discovery": "C:\\Claude\\Skills\\skill-discovery",
-    "fetch-ai-news": "C:\\Claude\\Skills\\fetch-ai-news\\skill.md"
+    "session-summary":  "C:\\Claude\\Skills\\session-summary\\skill.md",
+    "git-commit":       "C:\\Claude\\Skills\\git-commit\\skill.md",
+    "doc-generator":    "C:\\Claude\\Skills\\doc-generator\\skill.md",
+    "delegate-task":    "C:\\Claude\\Skills\\delegate-task",
+    "skill-discovery":  "C:\\Claude\\Skills\\skill-discovery",
+    "fetch-ai-news":    "C:\\Claude\\Skills\\fetch-ai-news\\skill.md"
   },
-  "feature_registry": {
-    "_note": "What each project can do — check here before building something new. Port features, don't rebuild them.",
-    "Maia": [
-      "multi-channel messaging (LINE, Telegram, Messenger, Instagram)",
-      "multi-LLM chain (MiniMax → GPT → Qwen3 → Gemma → DeepSeek)",
-      "auto language detection",
-      "VIP user system",
-      "group chat management",
-      "guardian/household management",
-      "user profiles + onboarding",
-      "retention policy + document retention",
-      "personality + mood configuration",
-      "RAG knowledge base (in development)",
-      "Gradio admin config UI"
-    ],
-    "Naya": [
-      "private AI assistant (personal use)",
-      "file intelligence (FileHQ merged in)",
-      "advisor brain (cleanup planning, folder insights)",
-      "memory system (conversation + decision history)",
-      "disk/USB watcher",
-      "off-hours task scheduler",
-      "Telegram bot interface",
-      "root / health route (added Meeting 03 — pending service restart)"
-    ],
-    "NEXUS": [
-      "multi-model AI synthesis (synthesize endpoint)",
-      "AI news Scout (daily digest — /scout/digest, 369 items)",
-      "model Judge (benchmarks which model performed best)",
-      "Gradio UI for manual synthesis"
-    ],
-    "OpenClaw": [
-      "autonomous task orchestration (Tasuke)",
-      "news and digest monitoring (Kaze)",
-      "system health + security monitoring (Sentry)",
-      "email handling (Yubin)",
-      "voice/communication (Koe)",
-      "WSL-based Linux environment on Windows"
-    ],
-    "MQ": [],
-    "Claude_Manager": [
-      "7-agent dev team (Architect, Builder, Scout, Scribe, Ops, Inspector, Tester)",
-      "ecosystem health check (all projects)",
-      "cross-project dashboard (port 8600)",
-      "GET /api/ping — health check with version + UTC timestamp",
-      "GET /api/scout/digest — proxies NEXUS, returns top 5 AI headlines",
-      "session summary generation",
-      "git commit skill",
-      "doc generator skill",
-      "fetch-ai-news skill (wired to NEXUS)",
-      "status.json live state tracking",
-      "claude-peers MCP (agent messaging)",
-      "openspace MCP (skill evolution)",
-      "sqlite-maia MCP (direct Maia DB access)",
-      "sqlite-naya MCP (direct Naya DB access)",
-      "git MCP (git operations from Claude)",
-      "test suite (pytest API + Playwright UI + Locust load)",
-      "auto-task creation from test failures",
-      "/tests dashboard page with one-click test runner",
-      "Architect→Builder→Inspector agent chain — end-to-end PROVEN"
-    ]
+  "confirmed_working": {
+    "agent_chain": "Architect->Builder->Inspector PROVEN on /api/ping (Meeting 03)",
+    "nexus_integration": "/api/scout/digest live — NEXUS wired to Dashboard",
+    "naya_root_fix": "GET / returns 200 as of 2026-04-08 (overnight restart activated fix)",
+    "all_mcps": "All 5 MCPs confirmed live: claude-peers, openspace, sqlite-maia, sqlite-naya, git"
   },
   "pending_actions": [
     "ClaudeManager NSSM service still PAUSED — run 'sc continue ClaudeManager' from admin terminal",
-    "Naya root 404 fix is in code — restart NayaBot service (admin) to go live",
-    "OpenSpace skill evolution test — not yet run (tool unavailable in Meeting 03 context)",
-    "Commit loose files: C:\\Claude (1 file), C:\\NAYA (4+ files), C:\\QI (12 files), C:\\NEXUS (4 files)",
-    "Starlette pinned to 0.41.3 for FastAPI compat — mcp-server-sqlite may need starlette>=0.49 when used as MCP server"
+    "OpenSpace skill evolution test — search_skills not yet run (first task for Meeting 04)",
+    "Add GitHub remote to C:\\Claude — push to Quiddity-Innovations org",
+    "Commit loose files: Maia (12+), NEXUS (4+), OC (3+)",
+    "Add /api/ping test to test_dashboard_api.py",
+    "First real sqlite-maia MCP query — explore maia.db tables",
+    "First real git MCP use — git_log on a live QI repo"
   ],
   "session_log": [
     {
@@ -160,12 +106,12 @@
     {
       "session": "Claude_Meeting_02_2026-04-06",
       "doc": "C:\\Claude\\Session Summaries\\Claude_Meeting_02_2026-04-06.docx",
-      "summary": "Bun installed. claude-peers MCP registered. OpenSpace MCP installed in venv + registered. 6 agent folders built (soul/skills/config). Dashboard live on port 8600. 3 QI skills written. Scout agent e2e test passed."
+      "summary": "Bun installed. claude-peers + OpenSpace MCPs registered. 7 agent folders built. Dashboard v2 live. 5 QI skills written. Test suite (pytest+playwright+locust) built. sync_tasks live."
     },
     {
       "session": "Claude_Meeting_03_2026-04-07",
       "doc": "C:\\Claude\\Session Summaries\\Claude_Meeting_03_2026-04-07.docx",
-      "summary": "SQLite MCP (maia+naya) installed + registered. Git MCP installed + registered. Naya root 404 patched. /api/ping built via Architect→Builder→Inspector chain (PROVEN). /api/scout/digest live (NEXUS integration). fetch-ai-news skill created. starlette downgraded to fix FastAPI compat after mcp-server-sqlite upgrade."
+      "summary": "SQLite MCP (maia+naya) + Git MCP installed and registered. Naya root 404 patched (live as of 2026-04-08). /api/ping built via Architect->Builder->Inspector chain (PROVEN). /api/scout/digest live (NEXUS integration). fetch-ai-news skill. Starlette downgraded to fix FastAPI compat."
     }
   ]
 }
