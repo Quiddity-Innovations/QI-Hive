@@ -10,3 +10,5 @@ Tests/__pycache__/
 Tests/results/
 OpenSpace/
 *.map
+.claude/
+Dashboard/dashboard.log
