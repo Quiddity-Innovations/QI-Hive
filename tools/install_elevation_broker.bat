@@ -43,6 +43,9 @@ if %ERRORLEVEL%==0 (
     "%NSSM%" remove %SVC% confirm >nul 2>&1
 )
 
+REM Ensure log folder exists BEFORE nssm opens AppStdout/AppStderr
+if not exist "C:\QIH\logs\elevation" mkdir "C:\QIH\logs\elevation"
+
 echo [INFO] Installing %SVC%...
 "%NSSM%" install %SVC% "%PYTHON%" "%SCRIPT%"
 "%NSSM%" set %SVC% AppDirectory "%APPDIR%"

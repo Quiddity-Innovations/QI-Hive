@@ -1,0 +1,10 @@
+{
+  "id": "req_20260419_171546_8952a6",
+  "status": "ok",
+  "returncode": 0,
+  "stdout": "SERVICE_RUNNING",
+  "stderr": "",
+  "rule_matched": "nssm_service_control",
+  "error": null,
+  "completed_at": "2026-04-19T17:15:47.178578"
+}
