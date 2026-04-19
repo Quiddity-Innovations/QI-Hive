@@ -16,8 +16,8 @@ from pathlib import Path
 PROJECTS = {
     "Maia": {
         "path": r"C:\QI",
-        "service": "MaiaBot",
-        "tunnel": "MaiaTunnel",
+        "service": "QI_MaiaBot",
+        "tunnel": "QI_MaiaTunnel",
         "api_port": 8001,
         "ui_port": 7860,
         "db": r"C:\QI\maia.db",
@@ -26,8 +26,8 @@ PROJECTS = {
     },
     "Naya": {
         "path": r"C:\NAYA",
-        "service": "NayaBot",
-        "tunnel": "NayaTunnel",
+        "service": "QI_NayaBot",
+        "tunnel": None,
         "api_port": 8002,
         "ui_port": 7861,
         "db": r"C:\NAYA\naya.db",
@@ -36,8 +36,8 @@ PROJECTS = {
     },
     "NEXUS": {
         "path": r"C:\NEXUS",
-        "service": "NEXUSService",
-        "tunnel": "NEXUSTunnel",
+        "service": "QI_NEXUS",
+        "tunnel": None,
         "api_port": 8010,
         "ui_port": 7880,
         "db": r"C:\NEXUS\nexus.db",
@@ -66,16 +66,27 @@ PROJECTS = {
         "key_files": [],
         "note": "Not yet live — waiting on Meta credentials",
     },
-    "Claude_Manager": {
-        "path": r"C:\Claude",
-        "service": "ClaudeManager",
+    "QI_Hive": {
+        "path": r"C:\QIH",
+        "service": "QI_Dashboard",
         "tunnel": None,
         "api_port": 8600,
         "ui_port": None,
         "db": None,
-        "doc_path": r"C:\Claude\Session Summaries",
-        "key_files": ["Dashboard/server.py"],
-        "note": "Service installed. Start via admin terminal: sc start ClaudeManager",
+        "doc_path": r"C:\QIH\hive\Session Summaries",
+        "key_files": ["hive/Dashboard/server.py"],
+        "note": "QI Hive — dashboard + agent system. Brain at port 9010.",
+    },
+    "QI_Brain": {
+        "path": r"C:\QIH\brain",
+        "service": "QI_BrainAPI",
+        "tunnel": None,
+        "api_port": 9010,
+        "ui_port": None,
+        "db": r"C:\QIH\brain\qi_brain.db",
+        "doc_path": r"C:\QIH\brain",
+        "key_files": ["qi_brain_api.py"],
+        "note": "QI Brain — hive nervous system. SQLite + ChromaDB + MCP.",
     },
 }
 

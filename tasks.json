@@ -129,6 +129,86 @@
       "description": "Claude_Manager has uncommitted changes. Review and commit.",
       "agent": "builder",
       "priority": "medium"
+    },
+    {
+      "id": "tyub01",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Define account profiles schema",
+      "description": "Define the 3-account profile structure for Yubin v2:\n- maia.quiddam@gmail.com → mode=full_agent, own_digest=true, telegram=true\n- rennesan@gmail.com → mode=read_only_alerting, own_digest=true, telegram=true\n- maia.quiddam@outlook.com → mode=forward, forward_to=maia.quiddam@gmail.com, tag_subject=[via-Outlook]\n\nStore in maia.db (new table yubin_accounts) or yubin_accounts.json. No hardcoded values.",
+      "agent": "architect",
+      "priority": "medium"
+    },
+    {
+      "id": "tyub02",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Implement full_agent mode (maia.quiddam@gmail.com)",
+      "description": "Wire maia.quiddam@gmail.com as a full agent: reads inbox, drafts + sends replies, runs through the LLM chain. Must respect the per-account digest flag and Telegram flag from the schema in tyub01.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "tyub03",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Implement read_only_alerting mode (rennesan@gmail.com)",
+      "description": "Wire rennesan@gmail.com as read-only with alerting: Yubin may READ and CLASSIFY messages, may push summaries to digest + Telegram, but may NOT draft, send, archive, label, or modify any mail. Writes must be blocked — see tyub04 for the guard.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "tyub04",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Write-guard middleware for read_only_alerting",
+      "description": "Centralized middleware that intercepts ALL Gmail write ops (send, reply, draft, modify labels, archive, trash) and rejects them when account.mode === 'read_only_alerting'. Raises YubinWriteBlockedError. Must log every blocked attempt for audit.\n\nSAFETY-CRITICAL: rennesan@gmail.com must never send automated mail.",
+      "agent": "builder",
+      "priority": "high"
+    },
+    {
+      "id": "tyub05",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Outlook forwarder with [via-Outlook] tag",
+      "description": "Poll maia.quiddam@outlook.com, forward each new message to maia.quiddam@gmail.com with '[via-Outlook] ' prepended to the subject. Preserve original From/Date in the forwarded body header. Deduplicate to avoid re-forwarding on polling cycles.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "tyub06",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Per-account digest generator (2 digests)",
+      "description": "Two independent digest jobs, one per account with own_digest=true:\n- Maia's digest covers maia.quiddam@gmail.com (including forwarded Outlook mail)\n- Renne's digest covers rennesan@gmail.com\n\nDigests render HTML + plaintext, delivered via Telegram (tyub07) and optionally email.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "tyub07",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Telegram notifications wiring (both accounts)",
+      "description": "Per-account Telegram channel/chat routing. Each account's alerts and digest go to its own Telegram target (separate chat IDs in the schema). Suppress Telegram when telegram=false on the account.",
+      "agent": "builder",
+      "priority": "medium"
+    },
+    {
+      "id": "tyub08",
+      "column": "backlog",
+      "project": "Maia",
+      "created_at": "2026-04-14",
+      "title": "Yubin v2 — Smoke tests (all 3 accounts + write-guard)",
+      "description": "Smoke suite covering:\n1. maia.quiddam@gmail.com reads + sends a test reply (full_agent happy path)\n2. rennesan@gmail.com reads + alerts, WRITE attempt is blocked by tyub04 guard (assert YubinWriteBlockedError)\n3. maia.quiddam@outlook.com → forward lands in Maia Gmail with [via-Outlook] prefix\n4. Both digests generate + fire to their own Telegram targets\n\nMust pass before the bundle is considered complete.",
+      "agent": "tester",
+      "priority": "high"
     }
   ]
 }

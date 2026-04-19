@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Claude Manager Dashboard — port 8600
+QI Hive Dashboard — port 8600
 AdminLTE v4 + Bootstrap 5 + SortableJS kanban
+Powered by QI Brain (port 9010) as the hive's nervous system.
 """
 import json
 import sys
@@ -10,7 +11,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
 from health_check import run_health_check, sync_tasks
+from qi_brain_client import (
+    brain_online, get_agents, get_ecosystem_snapshot,
+    get_recent_sessions, get_agent_profile, get_brain_status,
+)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -19,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 
-app = FastAPI(title="Claude Manager", version="2.0.0")
+app = FastAPI(title="QI Hive", version="3.0.0")
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
@@ -60,6 +66,7 @@ def load_agents():
 def base_layout(title: str, content: str, active: str = "") -> str:
     nav_items = [
         ("dashboard", "/",        "bi-speedometer2",  "Dashboard"),
+        ("hive",      "/hive",    "bi-hexagon",       "The Hive"),
         ("health",    "/health",  "bi-heart-pulse",   "Health Check"),
         ("board",     "/board",   "bi-kanban",        "Task Board"),
         ("tests",     "/tests",   "bi-bug",           "Tests"),
@@ -131,13 +138,13 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     <div class="sidebar-brand">
       <a href="/" class="brand-link">
         <i class="bi bi-cpu brand-image" style="font-size:1.6rem;margin-right:8px;color:#6366f1"></i>
-        <span class="brand-text fw-bold">Claude Manager</span>
+        <span class="brand-text fw-bold">QI Hive</span>
       </a>
     </div>
     <div class="sidebar-wrapper">
       <nav class="mt-2">
         <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation">
-          <li class="nav-header">QI ECOSYSTEM</li>
+          <li class="nav-header">QI HIVE</li>
           {nav_html}
         </ul>
       </nav>
@@ -167,7 +174,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
   </main>
 
   <footer class="app-footer">
-    <div class="float-end d-none d-sm-inline">QI Ecosystem — Claude Manager v2.0</div>
+    <div class="float-end d-none d-sm-inline">QI Hive v3.0 — Powered by QI Brain</div>
     <strong>Quiddity Innovations</strong>
   </footer>
 </div>
@@ -594,11 +601,220 @@ def render_board(project_filter: str = "") -> str:
     }}
     </script>"""
 
+# ── Hive Page ─────────────────────────────────────────────────────────────────
+
+def render_hive() -> str:
+    online  = brain_online()
+    agents  = get_agents()
+    snap    = get_ecosystem_snapshot()
+    bstatus = get_brain_status()
+
+    brain_badge = (
+        '<span class="badge text-bg-success"><i class="bi bi-circle-fill me-1"></i>Online :9010</span>'
+        if online else
+        '<span class="badge text-bg-danger"><i class="bi bi-circle-fill me-1"></i>Offline</span>'
+    )
+
+    # Stats row from brain status
+    n_projects  = bstatus.get("projects",  {}).get("active", "?")
+    n_decisions = bstatus.get("decisions", {}).get("active", "?")
+    n_features  = bstatus.get("features",  {}).get("total",  "?")
+    n_sessions  = bstatus.get("sessions",  {}).get("total",  "?")
+
+    stats_html = f"""
+    <div class="row mb-3">
+      <div class="col-lg-3 col-md-6">
+        <div class="small-box text-bg-primary">
+          <div class="inner"><h3>{n_projects}</h3><p>Active Projects</p></div>
+          <i class="small-box-icon bi bi-folder2-open"></i>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="small-box text-bg-success">
+          <div class="inner"><h3>{n_decisions}</h3><p>Decisions Logged</p></div>
+          <i class="small-box-icon bi bi-journal-check"></i>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="small-box text-bg-warning">
+          <div class="inner"><h3>{n_features}</h3><p>Features Tracked</p></div>
+          <i class="small-box-icon bi bi-stars"></i>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="small-box text-bg-info">
+          <div class="inner"><h3>{n_sessions}</h3><p>Sessions Logged</p></div>
+          <i class="small-box-icon bi bi-calendar2-check"></i>
+        </div>
+      </div>
+    </div>"""
+
+    # Agent cards
+    type_colors = {"hive": "primary", "claude": "danger", "maia": "success",
+                   "nexus": "warning", "naya": "info", "system": "secondary"}
+    agent_cards = ""
+    for a in agents:
+        atype  = a.get("agent_type", "system")
+        color  = type_colors.get(atype, "secondary")
+        tasks  = a.get("task_count", 0)
+        name   = a.get("display_name", a["agent_id"])
+        desc   = (a.get("description") or "")[:90]
+        aid    = a["agent_id"]
+        agent_cards += f"""
+        <div class="col-lg-4 col-md-6 mb-3">
+          <div class="card h-100 border-{color}" style="border-left:4px solid !important">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title mb-0">{name}</h5>
+                <span class="badge text-bg-{color}">{atype}</span>
+              </div>
+              <p class="card-text text-muted" style="font-size:.83rem">{desc}</p>
+              <div class="d-flex justify-content-between align-items-center mt-auto">
+                <small class="text-muted"><i class="bi bi-lightning me-1"></i>{tasks} tasks logged</small>
+                <a href="/hive/agent/{aid}" class="btn btn-sm btn-outline-{color}">Profile</a>
+              </div>
+            </div>
+          </div>
+        </div>"""
+
+    if not agent_cards:
+        agent_cards = '<div class="col-12"><div class="alert alert-warning">QI Brain offline — agent profiles unavailable.</div></div>'
+
+    # Recent sessions
+    sessions = snap.get("recent_sessions", [])[:6]
+    session_rows = ""
+    for s in sessions:
+        session_rows += f"""<tr>
+          <td><small><strong>{s.get('session_title','—')}</strong></small></td>
+          <td><small class="badge text-bg-secondary">{s.get('project_id','—')}</small></td>
+          <td><small class="text-muted">{(s.get('summary',''))[:70]}</small></td>
+          <td><small>{(s.get('ended_at',''))[:10]}</small></td>
+        </tr>"""
+    if not session_rows:
+        session_rows = '<tr><td colspan="4" class="text-center text-muted">No sessions logged yet.</td></tr>'
+
+    return f"""
+    <!-- Brain status banner -->
+    <div class="row mb-3">
+      <div class="col-12 d-flex justify-content-between align-items-center">
+        <div><i class="bi bi-cpu me-2 text-primary"></i><strong>QI Brain</strong> {brain_badge}</div>
+        <a href="http://localhost:9010/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-box-arrow-up-right me-1"></i>Brain API Docs
+        </a>
+      </div>
+    </div>
+
+    {stats_html}
+
+    <!-- Agent grid -->
+    <div class="row mb-2">
+      <div class="col-12">
+        <h5 class="mb-3"><i class="bi bi-hexagon me-2 text-primary"></i>Hive Agents</h5>
+      </div>
+    </div>
+    <div class="row">{agent_cards}</div>
+
+    <!-- Session log -->
+    <div class="row mt-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between">
+            <h3 class="card-title"><i class="bi bi-journal-text me-2"></i>Recent Sessions (QI Brain)</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-dark"><tr><th>Session</th><th>Project</th><th>Summary</th><th>Date</th></tr></thead>
+              <tbody>{session_rows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>"""
+
+
+def render_agent_profile(agent_id: str) -> str:
+    profile = get_agent_profile(agent_id)
+    if not profile:
+        return f'<div class="alert alert-danger">Agent "{agent_id}" not found or QI Brain offline.</div>'
+
+    growth = profile.get("recent_growth", [])
+    patterns = profile.get("top_patterns", [])
+    stats = profile.get("stats", {})
+
+    growth_rows = ""
+    for g in growth:
+        growth_rows += f"""<tr>
+          <td><small>{g.get('recorded_at','')[:16]}</small></td>
+          <td><small>{g.get('task_summary','')[:60]}</small></td>
+          <td><small class="text-success">{g.get('what_worked','') or '—'}</small></td>
+          <td><small class="text-warning">{g.get('what_to_improve','') or '—'}</small></td>
+          <td><small class="text-info">{g.get('pattern_learned','') or '—'}</small></td>
+        </tr>"""
+    if not growth_rows:
+        growth_rows = '<tr><td colspan="5" class="text-center text-muted">No growth entries yet — this agent has not logged any tasks.</td></tr>'
+
+    pattern_badges = "".join(
+        f'<span class="badge text-bg-info me-1 mb-1">{p["pattern"]} <small>×{p["frequency"]}</small></span>'
+        for p in patterns
+    ) or '<span class="text-muted">No patterns yet.</span>'
+
+    return f"""
+    <div class="row mb-3">
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <i class="bi bi-person-circle" style="font-size:3rem;color:#6366f1"></i>
+            <h4 class="mt-2">{profile['display_name']}</h4>
+            <span class="badge text-bg-primary">{profile['agent_type']}</span>
+            <p class="text-muted mt-2" style="font-size:.85rem">{profile.get('description') or ''}</p>
+            <hr/>
+            <div class="d-flex justify-content-around">
+              <div><h5>{stats.get('total_tasks',0)}</h5><small class="text-muted">Tasks Logged</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header"><h5 class="card-title">Learned Patterns</h5></div>
+          <div class="card-body">{pattern_badges}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5 class="card-title">Growth Log</h5></div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-dark">
+            <tr><th>Date</th><th>Task</th><th>What Worked</th><th>To Improve</th><th>Pattern</th></tr>
+          </thead>
+          <tbody>{growth_rows}</tbody>
+        </table>
+      </div>
+    </div>"""
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard():
     return base_layout("Dashboard", render_dashboard(), "dashboard")
+
+@app.get("/hive", response_class=HTMLResponse)
+def hive_page():
+    return base_layout("The Hive", render_hive(), "hive")
+
+@app.get("/hive/agent/{agent_id}", response_class=HTMLResponse)
+def hive_agent_page(agent_id: str):
+    return base_layout(f"Agent: {agent_id}", render_agent_profile(agent_id), "hive")
+
+@app.get("/api/brain/agents")
+def api_brain_agents():
+    return JSONResponse({"agents": get_agents(), "brain_online": brain_online()})
+
+@app.get("/api/brain/status")
+def api_brain_status():
+    return JSONResponse({"brain_online": brain_online(), **get_brain_status()})
 
 @app.get("/health", response_class=HTMLResponse)
 def health_page():
