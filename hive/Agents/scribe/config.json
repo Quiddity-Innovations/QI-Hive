@@ -1,0 +1,22 @@
+{
+  "agent": "scribe",
+  "model_default": "claude-haiku-4-5-20251001",
+  "model_max": "claude-sonnet-4-6",
+  "model_escalation_trigger": "multi-document synthesis or cross-project summary",
+  "status": "idle",
+  "scope": "documentation",
+  "can_write_code": false,
+  "can_run_bash": false,
+  "can_write_files": true,
+  "allowed_write_paths": [
+    "C:\\QI\\DOCUMENTATION",
+    "C:\\NAYA\\DOCUMENTATION",
+    "C:\\NEXUS\\DOCUMENTATION",
+    "C:\\Claude\\Session Summaries",
+    "C:\\Claude\\status.json"
+  ],
+  "escalate_to": "renne",
+  "escalation_conditions": [
+    "unsure what was actually decided or built (ambiguous context)"
+  ]
+}

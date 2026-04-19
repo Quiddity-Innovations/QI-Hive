@@ -1,14 +1,14 @@
+# QI Hive — gitignore
+data/
+logs/
+LOGS/
+archive/
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
-.pytest_cache/
-Dashboard/__pycache__/
-Dashboard/logs/
-Dashboard/server.log
-Tests/__pycache__/
-Tests/results/
-OpenSpace/
-*.map
+.venv/
+node_modules/
+.env
+*.db-wal
+*.db-shm
 .claude/
-Dashboard/dashboard.log

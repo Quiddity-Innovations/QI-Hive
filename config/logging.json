@@ -1,0 +1,19 @@
+{
+  "_comment": "QI Project Standard — logging configuration. Per-service log level control. Hot-reloadable via /config Dashboard page.",
+  "default_level": "INFO",
+  "log_dir": "C:\\QIH\\logs",
+  "rotation": {
+    "max_bytes": 5242880,
+    "backup_count": 5
+  },
+  "format": "%(asctime)s  %(levelname)-7s  %(name)s  %(message)s",
+  "date_format": "%Y-%m-%d %H:%M:%S",
+  "services": {
+    "brain_api":    { "level": "INFO",  "file": "brain/brain_api.log" },
+    "brain_mcp":    { "level": "INFO",  "file": "brain/brain_mcp.log" },
+    "dashboard":    { "level": "INFO",  "file": "dashboard/dashboard.log" },
+    "tunnel":       { "level": "INFO",  "file": "tunnel/tunnel.log" },
+    "health_check": { "level": "WARNING", "file": "dashboard/health_check.log" },
+    "growth_loop":  { "level": "DEBUG", "file": "brain/growth_loop.log" }
+  }
+}

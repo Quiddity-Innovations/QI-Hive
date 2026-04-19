@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+Dashboard/__pycache__/
+Dashboard/logs/
+Dashboard/server.log
+Tests/__pycache__/
+Tests/results/
+OpenSpace/
+*.map
+.claude/
+Dashboard/dashboard.log

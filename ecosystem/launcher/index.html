@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QI Launcher</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0f14;
+      color: #e2e8f0;
+      padding: 2rem;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 1.75rem;
+      border-bottom: 1px solid #2a3348;
+      padding-bottom: .75rem;
+    }
+
+    .project {
+      margin-bottom: 1.75rem;
+    }
+
+    .project-name {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: .5rem;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .45rem .9rem;
+      border-radius: 7px;
+      border: 1px solid #2a3348;
+      background: #161b26;
+      color: #e2e8f0;
+      text-decoration: none;
+      font-size: .84rem;
+      transition: border-color .15s, background .15s;
+    }
+    a:hover {
+      border-color: #4f8ef7;
+      background: #1e2535;
+      color: #4f8ef7;
+    }
+
+    .port {
+      font-family: 'Consolas', monospace;
+      font-size: .72rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+<h1>QI Launcher</h1>
+
+<div class="project">
+  <div class="project-name">Maia — Core</div>
+  <div class="links">
+    <a href="http://localhost:7860" target="_blank">Admin UI <span class="port">:7860</span></a>
+    <a href="http://localhost:8001/docs" target="_blank">API Docs <span class="port">:8001/docs</span></a>
+    <a href="http://localhost:8001/health" target="_blank">Health <span class="port">:8001/health</span></a>
+  </div>
+</div>
+
+<div class="project">
+  <div class="project-name">NEXUS — Backbone</div>
+  <div class="links">
+    <a href="http://localhost:7880" target="_blank">NEXUS UI <span class="port">:7880</span></a>
+    <a href="http://localhost:8010/docs" target="_blank">API Docs <span class="port">:8010/docs</span></a>
+    <a href="http://localhost:8010/health" target="_blank">Health <span class="port">:8010/health</span></a>
+    <a href="http://localhost:8010/providers" target="_blank">Providers <span class="port">:8010/providers</span></a>
+    <a href="http://localhost:8010/scout/digest" target="_blank">AI Digest <span class="port">:8010/scout/digest</span></a>
+  </div>
+</div>
+
+<div class="project">
+  <div class="project-name">Naya — Sibling</div>
+  <div class="links">
+    <a href="http://localhost:7861" target="_blank">Naya UI <span class="port">:7861</span></a>
+    <a href="http://localhost:8002/health" target="_blank">API Health <span class="port">:8002/health</span></a>
+    <a href="http://localhost:8200/health" target="_blank">FileHQ Health <span class="port">:8200/health</span></a>
+  </div>
+</div>
+
+<div class="project">
+  <div class="project-name">MQ — Maia Quiddam</div>
+  <div class="links">
+    <a href="http://localhost:7840" target="_blank">MQ UI <span class="port">:7840</span></a>
+    <a href="http://localhost:8500/health" target="_blank">API Health <span class="port">:8500/health</span></a>
+  </div>
+</div>
+
+<div class="project">
+  <div class="project-name">Ollama — Shared LLM (used by Maia, NEXUS, Naya)</div>
+  <div class="links">
+    <a href="http://localhost:11434" target="_blank">Ollama <span class="port">:11434</span></a>
+    <a href="http://localhost:11434/api/tags" target="_blank">Loaded Models <span class="port">:11434/api/tags</span></a>
+  </div>
+</div>
+
+<div class="project">
+  <div class="project-name">Claude Manager</div>
+  <div class="links">
+    <a href="http://localhost:8600" target="_blank">Dashboard <span class="port">:8600</span></a>
+  </div>
+</div>
+
+<div class="project">
+  <div class="project-name">OpenClaw — Agents (WSL)</div>
+  <div class="links">
+    <a href="http://localhost:18789/#token=627db52a242d2ec31b44037b2e0fdf6d923e8be86f351507" target="_blank">OC Gateway <span class="port">:18789</span></a>
+    <button onclick="refreshOCToken()" style="padding:.45rem .9rem;border-radius:7px;border:1px solid #2a3348;background:#161b26;color:#64748b;font-size:.84rem;cursor:pointer;" title="Token rotates on gateway restart — click to refresh">⟳ Refresh token</button>
+  </div>
+  <div style="font-size:.72rem;color:#64748b;margin-top:.35rem;">
+    ⚠️ Token rotates when the WSL gateway restarts. If the link stops working, run <code style="color:#94a3b8">openclaw dashboard</code> in WSL and update the token below, or click Refresh.
+  </div>
+</div>
+
+<script>
+function refreshOCToken() {
+  const newToken = prompt(
+    'Run this in WSL:\n\n  ~/.npm-global/bin/openclaw dashboard\n\nPaste the token value here (the part after #token=):',
+    ''
+  );
+  if (newToken && newToken.trim()) {
+    const links = document.querySelectorAll('a[href*="18789"]');
+    links.forEach(a => {
+      a.href = 'http://localhost:18789/#token=' + newToken.trim();
+    });
+    alert('Token updated for this session. To make it permanent, edit C:\\UNIVERSAL\\ECOSYSTEM\\launcher\\index.html');
+  }
+}
+</script>
+
+</body>
+</html>
