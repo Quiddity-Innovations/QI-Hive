@@ -37,6 +37,7 @@ AGENTS_DIR   = _PROJECT_DIR / "hive" / "Agents"  # legacy agents folder — stay
 # Wire up QI Logger
 sys.path.insert(0, str(_PROJECT_DIR))
 from engine.common.qi_logger import get_logger, set_level, list_services
+from engine.common import usage_stats
 log = get_logger("dashboard")
 
 # ── Data helpers ─────────────────────────────────────────────────────────────
@@ -76,6 +77,10 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("health",    "/health",  "bi-heart-pulse",   "Health Check"),
         ("board",     "/board",   "bi-kanban",        "Task Board"),
         ("tests",     "/tests",   "bi-bug",           "Tests"),
+        ("services",  "/services","bi-gear-wide-connected", "Services"),
+        ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
+        ("usage",     "/usage",   "bi-graph-up-arrow","Claude Usage"),
+        ("activity",  "/activity","bi-activity",      "Activity"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
         ("guide",     "/guide",   "bi-book",          "Guide"),
@@ -149,13 +154,21 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         <span class="brand-text fw-bold">QI Hive</span>
       </a>
     </div>
-    <div class="sidebar-wrapper">
-      <nav class="mt-2">
+    <div class="sidebar-wrapper d-flex flex-column" style="height:calc(100vh - 56px);">
+      <nav class="mt-2 flex-grow-1">
         <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation">
           <li class="nav-header">QI HIVE</li>
           {nav_html}
         </ul>
       </nav>
+      <div class="sidebar-legend px-3 pb-3 pt-2 border-top border-secondary-subtle" style="font-size:.75rem;">
+        <div class="text-uppercase text-secondary fw-bold mb-2" style="letter-spacing:.05em;font-size:.68rem;">Status Legend</div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-success me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Complete</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-warning me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>In Progress</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-danger me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Backlog</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-success-subtle me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>New</span></div>
+        <div class="d-flex align-items-center"><span class="badge text-bg-secondary me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Retired</span></div>
+      </div>
     </div>
   </aside>
 
@@ -201,11 +214,15 @@ def render_dashboard() -> str:
     tasks   = load_tasks()
 
     proj_colors = {
-        "active_production":  ("success", "bi-circle-fill"),
-        "active_development": ("info",    "bi-circle-half"),
-        "in_development":     ("warning", "bi-circle"),
-        "new":                ("secondary","bi-circle"),
-        "idle":               ("secondary","bi-dash-circle"),
+        "complete":           ("success",         "bi-check-circle-fill"),
+        "in_progress":        ("warning",         "bi-play-circle-fill"),
+        "backlog":            ("danger",          "bi-inbox-fill"),
+        "new":                ("success-subtle",  "bi-stars"),
+        "retired":            ("secondary",       "bi-archive-fill"),
+        "idle":               ("secondary",       "bi-dash-circle"),
+        "active_production":  ("success",         "bi-check-circle-fill"),
+        "active_development": ("warning",         "bi-play-circle-fill"),
+        "in_development":     ("warning",         "bi-play-circle-fill"),
     }
 
     # Project small-boxes
@@ -270,6 +287,19 @@ def render_dashboard() -> str:
     for t in tasks:
         col_counts[t.get("column","backlog")] = col_counts.get(t.get("column","backlog"),0)+1
 
+    # Claude usage snapshot
+    try:
+        u_today = usage_stats.today()
+        u_30    = usage_stats.totals(30)
+        tokens_today   = f'{u_today["tokens"]/1_000_000:.1f}M'
+        cost_today     = f'${u_today["cost_usd"]:.2f}'
+        sessions_today = u_today["sessions"]
+        turns_today    = u_today["assistant_turns"]
+        cost_30        = f'${u_30["cost_usd"]:,.0f}'
+    except Exception as e:
+        tokens_today = cost_today = sessions_today = turns_today = cost_30 = "—"
+        log.warning(f"usage_stats failed: {e}")
+
     return f"""
     <!-- Summary row -->
     <div class="row">
@@ -281,6 +311,46 @@ def render_dashboard() -> str:
           <span class="badge text-bg-success fs-6"><i class="bi bi-check-circle me-1"></i> Done: {col_counts.get("done",0)}</span>
           <a href="/board" class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-kanban me-1"></i> Open Board</a>
           <a href="/health" class="btn btn-sm btn-outline-success"><i class="bi bi-heart-pulse me-1"></i> Health Check</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Claude usage strip (today + 30d) -->
+    <div class="row mb-1">
+      <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="small-box text-bg-primary">
+          <div class="inner"><h4>{tokens_today}</h4><p>Tokens Today</p></div>
+          <i class="small-box-icon bi bi-lightning-charge-fill"></i>
+          <a href="/usage" class="small-box-footer text-white text-decoration-none">
+            Details <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="small-box text-bg-success">
+          <div class="inner"><h4>{cost_today}</h4><p>Spend Today</p></div>
+          <i class="small-box-icon bi bi-currency-dollar"></i>
+          <a href="/usage" class="small-box-footer text-white text-decoration-none">
+            Details <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="small-box text-bg-info">
+          <div class="inner"><h4>{sessions_today} · {turns_today}</h4><p>Sessions · Turns Today</p></div>
+          <i class="small-box-icon bi bi-chat-left-dots"></i>
+          <a href="/usage" class="small-box-footer text-white text-decoration-none">
+            Details <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="small-box text-bg-warning">
+          <div class="inner"><h4>{cost_30}</h4><p>Spend (30d)</p></div>
+          <i class="small-box-icon bi bi-calendar-range"></i>
+          <a href="/usage" class="small-box-footer text-dark text-decoration-none">
+            Breakdown <i class="bi bi-arrow-right"></i>
+          </a>
         </div>
       </div>
     </div>
@@ -1474,6 +1544,621 @@ def render_project(pid: str) -> str:
 @app.get("/project/{pid}", response_class=HTMLResponse)
 def project_page(pid: str):
     return base_layout(pid, render_project(pid), "dashboard")
+
+
+# ── Services + Scheduled Tasks (read-only visibility) ────────────────────────
+import subprocess as _sp
+
+_NSSM = r"C:\QIH\engine\bin\nssm.exe"
+_CREATE_NO_WINDOW = getattr(_sp, "CREATE_NO_WINDOW", 0)
+
+
+def _collect_services() -> list[dict]:
+    """List QI_* + known legacy services with status + AppDirectory."""
+    out = []
+    try:
+        r = _sp.run([_NSSM, "list"], capture_output=True, text=True, timeout=10,
+                    creationflags=_CREATE_NO_WINDOW)
+        names = [n.strip() for n in r.stdout.splitlines() if n.strip()]
+    except Exception as e:
+        return [{"name": "ERROR", "status": str(e), "app_dir": "", "description": ""}]
+
+    # Surface QI_* first, then known legacy OC/Maia/Naya/NEXUS
+    legacy = ("OC-", "MaiaBot", "NayaBot", "NayaTunnel", "NEXUS", "ClaudeManager")
+    def _keep(n): return n.startswith("QI_") or any(n.startswith(p) for p in legacy)
+
+    for name in sorted(n for n in names if _keep(n)):
+        row = {"name": name, "status": "?", "app_dir": "", "description": ""}
+        try:
+            row["status"] = _sp.run([_NSSM, "status", name], capture_output=True, text=True,
+                                    timeout=5, creationflags=_CREATE_NO_WINDOW).stdout.strip()
+        except Exception: pass
+        for key in ("AppDirectory", "Description"):
+            try:
+                v = _sp.run([_NSSM, "get", name, key], capture_output=True, text=True,
+                            timeout=5, creationflags=_CREATE_NO_WINDOW).stdout.strip()
+                row["app_dir" if key == "AppDirectory" else "description"] = v
+            except Exception: pass
+        out.append(row)
+    return out
+
+
+def _collect_tasks() -> list[dict]:
+    """List QI-relevant scheduled tasks with schedule + last result."""
+    ps = r"""
+    $patterns = @('QI-','OC-','Maia','Naya','NEXUS','openclaw','claude','nlm')
+    Get-ScheduledTask | Where-Object {
+      $n = $_.TaskName; $patterns | Where-Object { $n -like "*$_*" }
+    } | ForEach-Object {
+      $info = Get-ScheduledTaskInfo -TaskName $_.TaskName -TaskPath $_.TaskPath
+      $trig = $_.Triggers | Select-Object -First 1
+      [PSCustomObject]@{
+        name        = $_.TaskName
+        state       = $_.State.ToString()
+        exec        = $_.Actions[0].Execute
+        args        = $_.Actions[0].Arguments
+        hidden      = $_.Settings.Hidden
+        interval    = if ($trig.Repetition) { $trig.Repetition.Interval } else { '' }
+        lastRun     = if ($info.LastRunTime) { $info.LastRunTime.ToString('yyyy-MM-dd HH:mm') } else { '' }
+        lastResult  = $info.LastTaskResult
+        nextRun     = if ($info.NextRunTime) { $info.NextRunTime.ToString('yyyy-MM-dd HH:mm') } else { '' }
+      }
+    } | ConvertTo-Json -Depth 3 -Compress
+    """
+    try:
+        r = _sp.run(["powershell", "-NoProfile", "-Command", ps],
+                    capture_output=True, text=True, timeout=20,
+                    creationflags=_CREATE_NO_WINDOW)
+        data = json.loads(r.stdout.strip() or "[]")
+        if isinstance(data, dict): data = [data]
+        return sorted(data, key=lambda x: x.get("name", ""))
+    except Exception as e:
+        return [{"name": "ERROR", "state": str(e), "exec": "", "args": "",
+                 "hidden": False, "interval": "", "lastRun": "", "lastResult": "",
+                 "nextRun": ""}]
+
+
+@app.get("/api/services")
+def api_services():
+    return {"services": _collect_services()}
+
+
+@app.get("/api/tasks/scheduled")
+def api_scheduled_tasks():
+    return {"tasks": _collect_tasks()}
+
+
+def render_services() -> str:
+    rows = ""
+    for s in _collect_services():
+        badge_cls = {"SERVICE_RUNNING": "bg-success", "SERVICE_STOPPED": "bg-danger",
+                     "SERVICE_PAUSED": "bg-warning"}.get(s["status"], "bg-secondary")
+        rows += f"""<tr>
+          <td><code>{s['name']}</code></td>
+          <td><span class="badge {badge_cls}">{s['status']}</span></td>
+          <td class="small text-muted">{s['app_dir']}</td>
+          <td class="small">{s['description'][:80]}</td>
+        </tr>"""
+    return f"""
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-gear-wide-connected"></i> Windows Services (NSSM)</span>
+        <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead><tr><th>Service</th><th>Status</th><th>App Directory</th><th>Description</th></tr></thead>
+          <tbody>{rows}</tbody>
+        </table>
+      </div>
+      <div class="card-footer small text-muted">
+        Start/stop controls route through the QI Elevation Broker — coming next pass.
+        For now, use <code>nssm start|stop|restart &lt;name&gt;</code> manually.
+      </div>
+    </div>
+    """
+
+
+def render_tasks_scheduled() -> str:
+    def _fmt_result(r):
+        if r == 0: return '<span class="badge bg-success">OK</span>'
+        if r == 267009: return '<span class="badge bg-info">RUNNING</span>'
+        if r == 267011: return '<span class="badge bg-secondary">NEVER RUN</span>'
+        if r == 3221225786: return '<span class="badge bg-danger" title="0xC000013A — task killed (timeout or abort)">ABORTED</span>'
+        return f'<span class="badge bg-warning">{r}</span>'
+
+    rows = ""
+    for t in _collect_tasks():
+        hidden_badge = '<i class="bi bi-eye-slash text-success" title="Hidden (no popup)"></i>' if t.get("hidden") else '<i class="bi bi-eye text-warning" title="Visible window"></i>'
+        exec_short = (t.get("exec") or "").split("\\")[-1]
+        args_short = (t.get("args") or "")[:60]
+        rows += f"""<tr>
+          <td><code>{t['name']}</code> {hidden_badge}</td>
+          <td>{t.get('state','')}</td>
+          <td class="small"><code>{exec_short}</code> {args_short}</td>
+          <td class="small">{t.get('interval','—')}</td>
+          <td class="small">{t.get('lastRun','—')}</td>
+          <td>{_fmt_result(t.get('lastResult', -1))}</td>
+          <td class="small">{t.get('nextRun','—')}</td>
+        </tr>"""
+    return f"""
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-calendar-event"></i> Scheduled Tasks (QI / Maia / Naya / NEXUS / OC)</span>
+        <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead><tr>
+            <th>Task</th><th>State</th><th>Command</th><th>Every</th>
+            <th>Last Run</th><th>Result</th><th>Next Run</th>
+          </tr></thead>
+          <tbody>{rows}</tbody>
+        </table>
+      </div>
+      <div class="card-footer small text-muted">
+        <i class="bi bi-eye-slash text-success"></i> = hidden (no popup)
+        &nbsp;·&nbsp; <i class="bi bi-eye text-warning"></i> = visible console window (will flash)
+        &nbsp;·&nbsp; <span class="badge bg-danger">ABORTED</span> = task was killed mid-run (usually ExecutionTimeLimit)
+      </div>
+    </div>
+    """
+
+
+@app.get("/services", response_class=HTMLResponse)
+def services_page():
+    return base_layout("Services", render_services(), "services")
+
+
+@app.get("/tasks", response_class=HTMLResponse)
+def tasks_page():
+    return base_layout("Scheduled Tasks", render_tasks_scheduled(), "tasks")
+
+
+# ── Claude Usage panel ────────────────────────────────────────────────────────
+
+@app.get("/api/usage/today")
+def api_usage_today():
+    return JSONResponse(usage_stats.today())
+
+@app.get("/api/usage/daily")
+def api_usage_daily(days: int = 30):
+    return JSONResponse({"days": days, "series": usage_stats.daily(days)})
+
+@app.get("/api/usage/by_project")
+def api_usage_by_project(days: int = 30):
+    return JSONResponse({"days": days, "rows": usage_stats.by_project(days)})
+
+@app.get("/api/usage/by_model")
+def api_usage_by_model(days: int = 30):
+    return JSONResponse({"days": days, "rows": usage_stats.by_model(days)})
+
+@app.get("/api/usage/savings")
+def api_usage_savings(days: int = 30):
+    return JSONResponse(usage_stats.savings(days))
+
+@app.get("/api/usage/savings/today")
+def api_usage_savings_today():
+    return JSONResponse(usage_stats.savings_today())
+
+@app.get("/api/usage/savings/by_model")
+def api_usage_savings_by_model(days: int = 30):
+    return JSONResponse({"days": days, "rows": usage_stats.savings_by_model(days)})
+
+
+def render_usage() -> str:
+    t = usage_stats.today()
+    t7 = usage_stats.totals(7)
+    t30 = usage_stats.totals(30)
+    daily = usage_stats.daily(30)
+    projects = usage_stats.by_project(30)
+    models = usage_stats.by_model(30)
+
+    # What-if optimization numbers
+    s_today = usage_stats.savings_today()
+    s_7  = usage_stats.savings(7)
+    s_30 = usage_stats.savings(30)
+    s_models = usage_stats.savings_by_model(30)
+
+    max_cost = max((d["cost_usd"] for d in daily), default=0) or 1
+    daily_bars = ""
+    for d in daily:
+        h = int((d["cost_usd"] / max_cost) * 100) if max_cost else 0
+        daily_bars += f'''
+        <div class="daily-bar-wrap" title="{d['date']} — ${d['cost_usd']:.2f} — {d['tokens']/1_000_000:.1f}M tok — {d['sessions']} sessions">
+          <div class="daily-bar" style="height:{h}%;"></div>
+          <small class="daily-label">{d['date'][-5:]}</small>
+        </div>'''
+
+    project_rows = ""
+    total_30_cost = t30["cost_usd"] or 1
+    for r in projects:
+        pct = (r["cost_usd"] / total_30_cost) * 100
+        project_rows += f'''<tr>
+          <td><strong>{r["project"]}</strong></td>
+          <td class="text-end">{r["tokens"]/1_000_000:.1f}M</td>
+          <td class="text-end">${r["cost_usd"]:,.2f}</td>
+          <td class="text-end">{r["turns"]:,}</td>
+          <td style="width:30%">
+            <div class="progress" style="height:6px">
+              <div class="progress-bar bg-primary" style="width:{pct:.1f}%"></div>
+            </div>
+            <small class="text-muted">{pct:.1f}%</small>
+          </td>
+        </tr>'''
+
+    # "Savings by model" rows (actual → combined)
+    savings_model_rows = ""
+    for r in s_models:
+        if r["actual_usd"] <= 0: continue
+        short = r["model"].replace("claude-", "").replace("-20251001", "")
+        fam = r["family"]
+        col = {"opus": "danger", "sonnet": "primary", "haiku": "success"}.get(fam, "secondary")
+        saved = r["total_savings_usd"]
+        savings_model_rows += f'''<tr>
+          <td><span class="badge text-bg-{col}">{fam}</span> <code>{short}</code></td>
+          <td class="text-end">${r["actual_usd"]:,.2f}</td>
+          <td class="text-end text-info">${r["local_opt_usd"]:,.2f}</td>
+          <td class="text-end text-warning">${r["batch_opt_usd"]:,.2f}</td>
+          <td class="text-end text-success"><strong>${r["combined_usd"]:,.2f}</strong></td>
+          <td class="text-end"><span class="badge text-bg-success-subtle">−${saved:,.2f} ({r["total_savings_pct"]:.1f}%)</span></td>
+        </tr>'''
+
+    model_rows = ""
+    for r in models:
+        short = r["model"].replace("claude-", "").replace("-20251001", "")
+        pct = (r["cost_usd"] / total_30_cost) * 100
+        fam = "opus" if "opus" in r["model"].lower() else "sonnet" if "sonnet" in r["model"].lower() else "haiku" if "haiku" in r["model"].lower() else "?"
+        col = {"opus": "danger", "sonnet": "primary", "haiku": "success"}.get(fam, "secondary")
+        model_rows += f'''<tr>
+          <td><span class="badge text-bg-{col}">{fam}</span> <code>{short}</code></td>
+          <td class="text-end">{r["tokens"]/1_000_000:.1f}M</td>
+          <td class="text-end">${r["cost_usd"]:,.2f}</td>
+          <td class="text-end">{r["turns"]:,}</td>
+          <td style="width:30%">
+            <div class="progress" style="height:6px">
+              <div class="progress-bar bg-{col}" style="width:{pct:.1f}%"></div>
+            </div>
+            <small class="text-muted">{pct:.1f}%</small>
+          </td>
+        </tr>'''
+
+    return f"""
+    <style>
+      .daily-bars {{
+        display: flex; align-items: flex-end; gap: 3px;
+        height: 180px; padding: 10px 0 30px; overflow-x: auto;
+      }}
+      .daily-bar-wrap {{
+        flex: 1 0 26px; display: flex; flex-direction: column;
+        align-items: center; justify-content: flex-end; height: 100%;
+        position: relative;
+      }}
+      .daily-bar {{
+        width: 70%; background: linear-gradient(to top, #6366f1, #a5b4fc);
+        border-radius: 3px 3px 0 0; min-height: 2px;
+      }}
+      .daily-label {{
+        position: absolute; bottom: -22px; font-size: 10px;
+        color: #6c757d; white-space: nowrap;
+        transform: rotate(-45deg); transform-origin: center;
+      }}
+    </style>
+
+    <!-- Row 1: actual spend -->
+    <div class="row mb-1">
+      <div class="col-md-3"><div class="small-box text-bg-primary">
+        <div class="inner"><h4>{t['tokens']/1_000_000:.1f}M</h4><p>Tokens Today</p></div>
+        <i class="small-box-icon bi bi-lightning-charge-fill"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-success">
+        <div class="inner"><h4>${t['cost_usd']:.2f}</h4><p>Spend Today</p></div>
+        <i class="small-box-icon bi bi-currency-dollar"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-info">
+        <div class="inner"><h4>${t7['cost_usd']:,.0f}</h4><p>Spend (7d)</p></div>
+        <i class="small-box-icon bi bi-calendar-week"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-warning">
+        <div class="inner"><h4>${t30['cost_usd']:,.0f}</h4><p>Spend (30d)</p></div>
+        <i class="small-box-icon bi bi-calendar-range"></i>
+      </div></div>
+    </div>
+
+    <!-- Row 2: what-if local LLM offload -->
+    <div class="row mb-1">
+      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em"><i class="bi bi-cpu me-1"></i> What-if: Local LLMs (Ollama — free)</p></div>
+      <div class="col-md-3"><div class="small-box text-bg-info">
+        <div class="inner"><h4>{s_today['offloaded_turns']}</h4><p>Offloadable Turns Today</p></div>
+        <i class="small-box-icon bi bi-pc-display"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-info">
+        <div class="inner"><h4>−${s_today['local_savings_usd']:.2f}</h4><p>Saved Today ({s_today['local_savings_pct']:.0f}%)</p></div>
+        <i class="small-box-icon bi bi-piggy-bank"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-info">
+        <div class="inner"><h4>−${s_7['local_savings_usd']:,.0f}</h4><p>Saved (7d)</p></div>
+        <i class="small-box-icon bi bi-calendar-week"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-info">
+        <div class="inner"><h4>−${s_30['local_savings_usd']:,.0f}</h4><p>Saved (30d, {s_30['local_savings_pct']:.0f}%)</p></div>
+        <i class="small-box-icon bi bi-calendar-range"></i>
+      </div></div>
+    </div>
+
+    <!-- Row 3: what-if batch API (00:00-06:00) -->
+    <div class="row mb-3">
+      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em"><i class="bi bi-moon-stars me-1"></i> What-if: Claude Batch API (deferred to 00:00–06:00, 50% off)</p></div>
+      <div class="col-md-3"><div class="small-box text-bg-warning">
+        <div class="inner"><h4>{s_today['batchable_turns']}</h4><p>Batchable Turns Today</p></div>
+        <i class="small-box-icon bi bi-moon-stars"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-warning">
+        <div class="inner"><h4>−${s_today['batch_savings_usd']:.2f}</h4><p>Saved Today ({s_today['batch_savings_pct']:.0f}%)</p></div>
+        <i class="small-box-icon bi bi-piggy-bank"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-warning">
+        <div class="inner"><h4>−${s_7['batch_savings_usd']:,.0f}</h4><p>Saved (7d)</p></div>
+        <i class="small-box-icon bi bi-calendar-week"></i>
+      </div></div>
+      <div class="col-md-3"><div class="small-box text-bg-warning">
+        <div class="inner"><h4>−${s_30['batch_savings_usd']:,.0f}</h4><p>Saved (30d, {s_30['batch_savings_pct']:.0f}%)</p></div>
+        <i class="small-box-icon bi bi-calendar-range"></i>
+      </div></div>
+    </div>
+
+    <!-- Combined summary -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="alert alert-success d-flex align-items-center justify-content-between mb-0">
+          <div>
+            <i class="bi bi-stars fs-4 me-2"></i>
+            <strong>Combined what-if (30d):</strong> actual <code>${s_30['actual_cost_usd']:,.2f}</code>
+            → with local offload + batch <code>${s_30['combined_cost_usd']:,.2f}</code>
+          </div>
+          <div>
+            <span class="badge text-bg-success fs-6">Save ${s_30['combined_savings_usd']:,.0f} ({s_30['combined_savings_pct']:.1f}%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily chart -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><i class="bi bi-graph-up me-2"></i>Daily Spend — Last 30 Days</h3>
+      </div>
+      <div class="card-body">
+        <div class="daily-bars">{daily_bars}</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- By project -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-folder2-open me-2"></i>By Project (30d)</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr>
+                <th>Project</th><th class="text-end">Tokens</th>
+                <th class="text-end">Cost</th><th class="text-end">Turns</th>
+                <th>Share</th>
+              </tr></thead>
+              <tbody>{project_rows or '<tr><td colspan="5" class="text-muted text-center">no data</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- By model -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-cpu me-2"></i>By Model (30d)</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr>
+                <th>Model</th><th class="text-end">Tokens</th>
+                <th class="text-end">Cost</th><th class="text-end">Turns</th>
+                <th>Share</th>
+              </tr></thead>
+              <tbody>{model_rows or '<tr><td colspan="5" class="text-muted text-center">no data</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Savings By Model (what-if combined) -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><i class="bi bi-stars me-2"></i>Savings By Model (30d) — Actual vs. What-if</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-striped mb-0">
+          <thead><tr>
+            <th>Model</th>
+            <th class="text-end">Actual</th>
+            <th class="text-end" title="if offloadable work went to local Ollama">w/ Local</th>
+            <th class="text-end" title="if scheduled via batch API 00:00-06:00">w/ Batch</th>
+            <th class="text-end" title="local offload first, then batch the rest">Combined</th>
+            <th class="text-end">Total Savings</th>
+          </tr></thead>
+          <tbody>{savings_model_rows or '<tr><td colspan="6" class="text-muted text-center">no data</td></tr>'}</tbody>
+          <tfoot class="table-group-divider">
+            <tr class="fw-bold">
+              <td>TOTAL</td>
+              <td class="text-end">${s_30['actual_cost_usd']:,.2f}</td>
+              <td class="text-end text-info">${s_30['local_optimized_cost_usd']:,.2f}</td>
+              <td class="text-end text-warning">${s_30['batch_optimized_cost_usd']:,.2f}</td>
+              <td class="text-end text-success">${s_30['combined_cost_usd']:,.2f}</td>
+              <td class="text-end"><span class="badge text-bg-success">−${s_30['combined_savings_usd']:,.2f} ({s_30['combined_savings_pct']:.1f}%)</span></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <p class="small text-muted mt-3">
+      <i class="bi bi-info-circle me-1"></i>
+      Data parsed locally from <code>~/.claude/projects/**/*.jsonl</code> — no API calls.
+      Pricing per 1M tokens: Opus $15/$75 · Sonnet $3/$15 · Haiku $0.80/$4. Cache-read at 10%, cache-write at 125%/200% (5m/1h).
+      Assumes rates as of Jan 2026 — actual billing may differ.
+      <br>
+      <i class="bi bi-cpu me-1"></i>
+      <strong>Local offload heuristic:</strong> Haiku → 100% (gemma4 / qwen3:8b handle trivial ops), Sonnet → 40% (gpt-oss-20b / gemma4:31b for routine code), Opus → 0% (hard reasoning stays on Opus). Conservative estimates; your mix may differ.
+      <br>
+      <i class="bi bi-moon-stars me-1"></i>
+      <strong>Batch window:</strong> turns outside 00:00–06:00 local time are counted as deferrable via Claude Batch API (50% discount, 24h SLA).
+    </p>
+    """
+
+
+@app.get("/usage", response_class=HTMLResponse)
+def usage_page():
+    return base_layout("Claude Usage", render_usage(), "usage")
+
+
+# ── Activity — who did what ──────────────────────────────────────────────────
+
+@app.get("/api/activity/sessions")
+def api_activity_sessions(days: int = 7, limit: int = 200):
+    return JSONResponse({"days": days, "rows": usage_stats.sessions_log(days, limit)})
+
+@app.get("/api/activity/hive_reports")
+def api_activity_hive_reports(limit: int = 50):
+    status = load_status()
+    reports = status.get("hive_reports", [])
+    return JSONResponse({"rows": reports[-limit:][::-1]})
+
+
+def render_activity() -> str:
+    status = load_status()
+    hive_reports = list(reversed(status.get("hive_reports", [])))[:50]
+    sessions = usage_stats.sessions_log(days=7, limit=100)
+
+    # Hive reports (hook-based, from each project's .claude)
+    hive_rows = ""
+    for r in hive_reports:
+        event = r.get("event", "—")
+        ev_color = {
+            "session_start": "info",
+            "session_end":   "success",
+            "task_done":     "primary",
+            "error":         "danger",
+        }.get(event, "secondary")
+        ts = r.get("timestamp", "")[:19].replace("T", " ")
+        project = r.get("project", "—")
+        summary = (r.get("summary") or "").replace("<", "&lt;")[:160]
+        user = r.get("user", "—")
+        host = r.get("host", "—")
+        hive_rows += f'''<tr>
+          <td><small class="text-muted">{ts}</small></td>
+          <td><span class="badge text-bg-dark">{project}</span></td>
+          <td><span class="badge text-bg-{ev_color}">{event}</span></td>
+          <td>{summary or "<em class='text-muted'>no summary</em>"}</td>
+          <td><small class="text-muted">{user}@{host}</small></td>
+        </tr>'''
+
+    # Session log (derived from JSONL)
+    session_rows = ""
+    for s in sessions:
+        started = s["started"][:19].replace("T", " ")
+        dur = f"{s['duration_min']:.0f}m" if s["duration_min"] >= 1 else f"{int(s['duration_min']*60)}s"
+        model = s["primary_model"].replace("claude-", "").replace("-20251001", "")
+        fam = "opus" if "opus" in model else "sonnet" if "sonnet" in model else "haiku" if "haiku" in model else "?"
+        col = {"opus": "danger", "sonnet": "primary", "haiku": "success"}.get(fam, "secondary")
+        session_rows += f'''<tr>
+          <td><small class="text-muted">{started}</small></td>
+          <td><span class="badge text-bg-dark">{s["project"]}</span></td>
+          <td><span class="badge text-bg-{col}">{fam}</span> <small><code>{model}</code></small></td>
+          <td class="text-end">{s["turns"]:,}</td>
+          <td class="text-end"><small>{dur}</small></td>
+          <td class="text-end"><small>{s["tokens"]/1_000_000:.1f}M</small></td>
+          <td class="text-end">${s["cost_usd"]:,.2f}</td>
+          <td><small class="text-muted font-monospace">{s["session"][:8]}…</small></td>
+        </tr>'''
+
+    n_hive = len(hive_reports)
+    n_sessions = len(sessions)
+    total_cost_7d = sum(s["cost_usd"] for s in sessions)
+    total_turns_7d = sum(s["turns"] for s in sessions)
+
+    return f"""
+    <div class="row mb-3">
+      <div class="col-md-4"><div class="small-box text-bg-primary">
+        <div class="inner"><h4>{n_sessions}</h4><p>Sessions (7d)</p></div>
+        <i class="small-box-icon bi bi-chat-square-dots"></i>
+      </div></div>
+      <div class="col-md-4"><div class="small-box text-bg-success">
+        <div class="inner"><h4>{total_turns_7d:,}</h4><p>Assistant Turns (7d)</p></div>
+        <i class="small-box-icon bi bi-robot"></i>
+      </div></div>
+      <div class="col-md-4"><div class="small-box text-bg-warning">
+        <div class="inner"><h4>${total_cost_7d:,.0f}</h4><p>Spend (7d)</p></div>
+        <i class="small-box-icon bi bi-cash-stack"></i>
+      </div></div>
+    </div>
+
+    <!-- Hive reports from .claude hooks -->
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="bi bi-hexagon-fill me-2"></i>Hive Reports ({n_hive}) <small class="text-muted">— hook-based, from each project's <code>.claude</code></small></h3>
+        <span class="badge text-bg-info">Live feed</span>
+      </div>
+      <div class="card-body p-0" style="max-height:320px; overflow-y:auto;">
+        <table class="table table-sm table-striped mb-0">
+          <thead class="sticky-top bg-body-tertiary"><tr>
+            <th style="width:140px">Time</th><th style="width:130px">Project</th>
+            <th style="width:120px">Event</th><th>Summary</th><th style="width:160px">User / Host</th>
+          </tr></thead>
+          <tbody>{hive_rows or '<tr><td colspan="5" class="text-muted text-center py-3">No hive reports yet. Hooks are deployed; entries appear as projects run sessions.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Session log from JSONL -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="bi bi-clock-history me-2"></i>Session Log (7d, last {n_sessions}) — who did what, from Claude Code transcripts</h3>
+      </div>
+      <div class="card-body p-0" style="max-height:560px; overflow-y:auto;">
+        <table class="table table-sm table-striped mb-0">
+          <thead class="sticky-top bg-body-tertiary"><tr>
+            <th style="width:140px">Started</th>
+            <th style="width:130px">Project</th>
+            <th>Primary Model</th>
+            <th class="text-end" style="width:70px">Turns</th>
+            <th class="text-end" style="width:70px">Dur</th>
+            <th class="text-end" style="width:80px">Tokens</th>
+            <th class="text-end" style="width:80px">Cost</th>
+            <th style="width:90px">Session</th>
+          </tr></thead>
+          <tbody>{session_rows or '<tr><td colspan="8" class="text-muted text-center">no sessions in window</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="small text-muted mt-3">
+      <i class="bi bi-info-circle me-1"></i>
+      <strong>Two data sources.</strong>
+      Hive Reports come from the <code>.claude</code> hooks I deployed to each project (session_start / session_end / task_done). They capture explicit intent and project-reported summaries.
+      Session Log is derived from the raw Claude Code <code>.jsonl</code> transcripts — always available, shows every session whether or not the hook fired.
+    </p>
+    """
+
+
+@app.get("/activity", response_class=HTMLResponse)
+def activity_page():
+    return base_layout("Activity", render_activity(), "activity")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

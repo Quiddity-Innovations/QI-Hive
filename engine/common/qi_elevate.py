@@ -76,6 +76,7 @@ log.addHandler(ch)
 COMMAND_RESOLVERS = {
     "nssm":     r"C:\QIH\engine\bin\nssm.exe",
     "taskkill": r"C:\Windows\System32\taskkill.exe",
+    "sc":       r"C:\Windows\System32\sc.exe",
 }
 
 

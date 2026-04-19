@@ -52,6 +52,17 @@
       ]
     },
     {
+      "name": "sc_service_control",
+      "description": "Start/stop/query a QI_ service via sc.exe (fallback path when nssm hits DACL issues)",
+      "cmd": "sc",
+      "arg_count_min": 2,
+      "arg_count_max": 2,
+      "args_regex": [
+        "^(start|stop|query|queryex|continue|pause)$",
+        "^QI_[A-Za-z0-9_]+$"
+      ]
+    },
+    {
       "name": "taskkill_by_pid",
       "description": "Force-kill a process by PID",
       "cmd": "taskkill",

@@ -12,3 +12,10 @@ node_modules/
 *.db-wal
 *.db-shm
 .claude/
+
+# Broker request queue + hive report queue — ephemeral, local only
+commands/pending/
+commands/completed/
+commands/archive/
+shared/reports/inbox/
+shared/reports/archive/
