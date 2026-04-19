@@ -76,6 +76,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("health",    "/health",  "bi-heart-pulse",   "Health Check"),
         ("board",     "/board",   "bi-kanban",        "Task Board"),
         ("tests",     "/tests",   "bi-bug",           "Tests"),
+        ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
         ("guide",     "/guide",   "bi-book",          "Guide"),
     ]
@@ -224,9 +225,12 @@ def render_dashboard() -> str:
             </div>
             <i class="small-box-icon bi {icon}"></i>
             <div class="small-box-footer d-flex justify-content-between">
+              <a href="/project/{name}" class="text-white text-decoration-none">
+                <i class="bi bi-box-arrow-up-right"></i> Details
+              </a>
               <span>{open_tasks} open tasks</span>
               <a href="/board?project={name}" class="text-white text-decoration-none">
-                View Board <i class="bi bi-arrow-right"></i>
+                Board <i class="bi bi-arrow-right"></i>
               </a>
             </div>
           </div>
@@ -1267,6 +1271,209 @@ def api_set_log_level(payload: LogLevelPayload):
         raise HTTPException(400, f"Invalid level: {payload.level}")
     log.info(f"log level changed: {payload.service} -> {payload.level}")
     return {"ok": True, "service": payload.service, "level": payload.level.upper()}
+
+
+# ── /logs — tail viewer ───────────────────────────────────────────────────────
+
+LOGS_ROOT = _PROJECT_DIR / "logs"
+
+
+def _list_log_files() -> list[dict]:
+    if not LOGS_ROOT.exists():
+        return []
+    out = []
+    for p in LOGS_ROOT.rglob("*.log"):
+        try:
+            st = p.stat()
+            out.append({
+                "path": str(p.relative_to(LOGS_ROOT)).replace("\\", "/"),
+                "size": st.st_size,
+                "mtime": st.st_mtime,
+            })
+        except OSError:
+            pass
+    out.sort(key=lambda x: x["mtime"], reverse=True)
+    return out
+
+
+def _tail_file(path: Path, lines: int = 200) -> str:
+    if not path.exists():
+        return ""
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, 2)
+            size = f.tell()
+            block = 8192
+            data = b""
+            while size > 0 and data.count(b"\n") <= lines:
+                read = min(block, size)
+                size -= read
+                f.seek(size)
+                data = f.read(read) + data
+        text = data.decode("utf-8", errors="replace")
+        return "\n".join(text.splitlines()[-lines:])
+    except OSError as e:
+        return f"[error reading log: {e}]"
+
+
+def render_logs() -> str:
+    files = _list_log_files()
+    options = "".join(
+        f'<option value="{f["path"]}">{f["path"]}  ({f["size"]//1024} KB)</option>'
+        for f in files
+    ) or '<option value="">(no logs yet)</option>'
+    return f"""
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-journal-text"></i> Logs</h5>
+        <div class="d-flex gap-2 align-items-center">
+          <select id="log-file" class="form-select form-select-sm" style="width:320px"
+                  onchange="loadLog()">{options}</select>
+          <select id="log-lines" class="form-select form-select-sm" style="width:110px"
+                  onchange="loadLog()">
+            <option value="100">100 lines</option>
+            <option value="200" selected>200 lines</option>
+            <option value="500">500 lines</option>
+            <option value="1000">1000 lines</option>
+          </select>
+          <input type="text" id="log-filter" class="form-control form-control-sm"
+                 placeholder="filter (substring)" style="width:180px" oninput="applyFilter()">
+          <label class="form-check form-switch small mb-0 ms-2">
+            <input class="form-check-input" type="checkbox" id="log-auto" checked> auto
+          </label>
+          <button class="btn btn-sm btn-outline-secondary" onclick="loadLog()">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <pre id="log-content" style="max-height:70vh;overflow:auto;padding:12px;margin:0;
+             background:#0e0e10;color:#c9d1d9;font-size:12px;line-height:1.4;">loading...</pre>
+      </div>
+    </div>
+    <script>
+    let _lastRaw = "";
+    async function loadLog() {{
+      const f = document.getElementById('log-file').value;
+      const n = document.getElementById('log-lines').value;
+      if (!f) return;
+      const r = await fetch(`/api/logs/tail?path=${{encodeURIComponent(f)}}&lines=${{n}}`);
+      const j = await r.json();
+      _lastRaw = j.content || "";
+      applyFilter();
+    }}
+    function applyFilter() {{
+      const q = document.getElementById('log-filter').value.toLowerCase();
+      const pre = document.getElementById('log-content');
+      if (!q) pre.textContent = _lastRaw;
+      else pre.textContent = _lastRaw.split("\\n").filter(l => l.toLowerCase().includes(q)).join("\\n");
+      pre.scrollTop = pre.scrollHeight;
+    }}
+    setInterval(() => {{ if (document.getElementById('log-auto').checked) loadLog(); }}, 3000);
+    loadLog();
+    </script>
+    """
+
+
+@app.get("/logs", response_class=HTMLResponse)
+def logs_page():
+    return base_layout("Logs", render_logs(), "logs")
+
+
+@app.get("/api/logs")
+def api_list_logs():
+    return {"logs": _list_log_files(), "root": str(LOGS_ROOT)}
+
+
+@app.get("/api/logs/tail")
+def api_tail_log(path: str, lines: int = 200):
+    full = (LOGS_ROOT / path).resolve()
+    try:
+        full.relative_to(LOGS_ROOT.resolve())
+    except ValueError:
+        raise HTTPException(400, "path must be under logs/")
+    return {"path": path, "lines": lines, "content": _tail_file(full, lines)}
+
+
+# ── /project/{id} — per-project detail page ─────────────────────────────────
+
+def render_project(pid: str) -> str:
+    status = load_status()
+    proj = status.get("projects", {}).get(pid)
+    if not proj:
+        return f'<div class="alert alert-warning">Project <code>{pid}</code> not found in status.json</div>'
+
+    registry_path = _PROJECT_DIR / "ecosystem" / "qi_registry.json"
+    services = []
+    try:
+        if registry_path.exists():
+            reg = json.loads(registry_path.read_text(encoding="utf-8"))
+            p = reg.get("projects", {}).get(pid.lower(), {})
+            services = p.get("services", []) or []
+    except Exception:
+        pass
+
+    svc_rows = "".join(
+        f"<tr><td><code>{s}</code></td>"
+        f"<td><button class='btn btn-sm btn-outline-secondary' onclick=\"alert('service control coming in Session 06')\">status</button></td></tr>"
+        for s in services
+    ) or '<tr><td colspan="2" class="text-muted">No services registered</td></tr>'
+
+    sessions = status.get("session_log", [])
+    sess_rows = "".join(
+        f"<tr><td><small>{s.get('session','')}</small></td>"
+        f"<td class='text-muted small'>{(s.get('summary','') or '')[:200]}</td></tr>"
+        for s in sessions[-5:][::-1]
+    ) or '<tr><td colspan="2" class="text-muted">No sessions logged</td></tr>'
+
+    return f"""
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="card"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h4 class="mb-0">{pid}</h4>
+              <div class="text-muted small"><code>{proj.get('path','(no path)')}</code></div>
+            </div>
+            <span class="badge bg-info">{proj.get('status','?')}</span>
+          </div>
+          <p class="mt-2 mb-0">{proj.get('notes','')}</p>
+        </div></div>
+      </div>
+      <div class="col-lg-6"><div class="card h-100">
+        <div class="card-header"><i class="bi bi-hdd-stack"></i> Services</div>
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Service</th><th style="width:120px">Action</th></tr></thead>
+          <tbody>{svc_rows}</tbody>
+        </table>
+      </div></div>
+      <div class="col-lg-6"><div class="card h-100">
+        <div class="card-header"><i class="bi bi-journal"></i> Recent Sessions</div>
+        <table class="table table-sm mb-0"><tbody>{sess_rows}</tbody></table>
+      </div></div>
+      <div class="col-12"><div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-terminal"></i> Project Info</span>
+          <a href="/logs" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-journal-text"></i> View Logs
+          </a>
+        </div>
+        <div class="card-body"><dl class="row mb-0 small">
+          <dt class="col-sm-3">Current task</dt>
+          <dd class="col-sm-9">{proj.get('current_task') or '<em>none</em>'}</dd>
+          <dt class="col-sm-3">Last activity</dt>
+          <dd class="col-sm-9">{proj.get('last_activity','?')}</dd>
+          <dt class="col-sm-3">Locked files</dt>
+          <dd class="col-sm-9">{', '.join(proj.get('locked_files',[])) or '<em>none</em>'}</dd>
+        </dl></div>
+      </div></div>
+    </div>
+    """
+
+
+@app.get("/project/{pid}", response_class=HTMLResponse)
+def project_page(pid: str):
+    return base_layout(pid, render_project(pid), "dashboard")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

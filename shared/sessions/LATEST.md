@@ -77,6 +77,36 @@ This will:
 
 ---
 
+## Command Center Roadmap (Sessions 03–07)
+
+**Session 03 — Observability**
+- `/logs` page: tail viewer, filter by service + level, auto-refresh
+- Per-project detail page (`/project/{id}`): services, logs slice, recent sessions, restart buttons
+- `qi_brain_mcp.py` path fixes + `tools/port_audit.py`
+- Archive `C:\CLAUDE`, delete `C:\UNIVERSAL\qi_brain`
+
+**Session 04 — Token & cost tracking**
+- `data/usage.db` with `token_usage(agent_id, model, input_tokens, output_tokens, cost_usd, session_id, ts)`
+- Brain endpoint `POST /api/log_usage`
+- Home widget: today/7d/30d spend by agent + model
+- `/usage` page with charts
+
+**Session 05 — Hive Chat (group chat)**
+- `/chat` page with threads + `@mention` targeting
+- WebSocket backend routing to Claude API and MCP agents
+- Messages persisted to `qi_brain.db` → `hive_chat` table
+- Agent responses hook into growth log
+
+**Session 06 — Full control panel**
+- Service start/stop/restart buttons (nssm with elevation prompt)
+- Env var editor per project
+- Live streaming logs in side panel
+- Kanban cards drag to/from agents
+
+**Session 07+ — Maia migration** to `C:\QIP\Maia` under QI Project Standard
+
+---
+
 ## Next Session Agenda (Session 03)
 
 1. **Run `finalize_migration.bat`** as admin → verify `:8600/hive` and `:8600/config`

@@ -833,4 +833,4 @@ def _est_tokens(text: str) -> int:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("qi_brain_api:app", host="0.0.0.0", port=9010, reload=False)
+    uvicorn.run("api:app", host="0.0.0.0", port=9010, reload=False)
