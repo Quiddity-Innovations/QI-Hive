@@ -1,0 +1,25 @@
+{
+  "_comment": "QI Hive reporting hooks. PROJECT_ID is replaced at deploy time by deploy_hive_reporter.py.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:\\QIH\\engine\\common\\hive_report.py session_start --project {{PROJECT_ID}} --summary \"session opened\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:\\QIH\\engine\\common\\hive_report.py session_end --project {{PROJECT_ID}} --summary \"session closed\""
+          }
+        ]
+      }
+    ]
+  }
+}
