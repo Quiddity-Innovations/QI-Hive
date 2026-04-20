@@ -195,11 +195,75 @@ def _write_error(req_path: Path, rid: str | None, status: str, error: str) -> No
     })
 
 
+# ── Single-instance lock ─────────────────────────────────────────────────
+LOCK_FILE = LOG_DIR / "broker.lock"
+
+def _acquire_lock() -> bool:
+    """Write our PID to lock file. If another broker is alive, refuse to start.
+    Prevents the orphan-broker scenario where two processes polled the same
+    queue and answered requests with inconsistent state (caught 2026-04-19)."""
+    if LOCK_FILE.exists():
+        try:
+            other_pid = int(LOCK_FILE.read_text().strip())
+            if other_pid != os.getpid():
+                # Check if the other process is still alive
+                try:
+                    os.kill(other_pid, 0)  # signal 0 = liveness check
+                    log.error(f"Another broker is already running (PID {other_pid}). Refusing to start.")
+                    return False
+                except OSError:
+                    log.warning(f"Stale lock from PID {other_pid}; taking over.")
+        except Exception:
+            pass  # unreadable lock — overwrite
+    try:
+        LOCK_FILE.write_text(str(os.getpid()), encoding="utf-8")
+        return True
+    except Exception as e:
+        log.error(f"Cannot write lock file: {e}")
+        return False
+
+
+def _release_lock() -> None:
+    try:
+        if LOCK_FILE.exists() and LOCK_FILE.read_text().strip() == str(os.getpid()):
+            LOCK_FILE.unlink()
+    except Exception:
+        pass
+
+
 # ── Main loop ─────────────────────────────────────────────────────────────
 def main() -> None:
     log.info("QI Elevation Broker starting")
     log.info(f"pending dir: {PENDING_DIR}")
     log.info(f"whitelist:   {WHITELIST}")
+    log.info(f"pid: {os.getpid()}")
+
+    if not _acquire_lock():
+        sys.exit(2)
+
+    # Purge stale pending requests left over from a previous broker life.
+    # Without this, an old `sc stop QI_Elevate` request sitting in the queue
+    # will execute the instant this broker starts — killing itself (caught
+    # 2026-04-19 20:51). Anything older than 5 minutes at startup is stale.
+    STALE_AGE_SEC = 300
+    now = time.time()
+    purged = 0
+    for req in PENDING_DIR.glob("*.json"):
+        try:
+            if (now - req.stat().st_mtime) > STALE_AGE_SEC:
+                stale_out = COMPLETED_DIR / f"{req.stem}.json"
+                stale_out.write_text(json.dumps({
+                    "id": req.stem, "status": "denied", "returncode": None,
+                    "stdout": "", "stderr": "", "rule_matched": None,
+                    "error": f"stale: request older than {STALE_AGE_SEC}s at broker startup",
+                    "completed_at": datetime.now().isoformat(),
+                }, indent=2), encoding="utf-8")
+                shutil.move(str(req), str(ARCHIVE_DIR / req.name))
+                purged += 1
+        except Exception as e:
+            log.warning(f"could not purge stale {req.name}: {e}")
+    if purged:
+        log.info(f"purged {purged} stale request(s) from pending queue")
 
     rules = load_whitelist()
     log.info(f"loaded {len(rules)} whitelist rules")
@@ -223,6 +287,7 @@ def main() -> None:
             time.sleep(1)
         except KeyboardInterrupt:
             log.info("shutting down")
+            _release_lock()
             break
         except Exception as e:
             log.exception(f"main loop error: {e}")
