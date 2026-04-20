@@ -79,7 +79,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("tests",     "/tests",   "bi-bug",           "Tests"),
         ("services",  "/services","bi-gear-wide-connected", "Services"),
         ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
-        ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage / Token Costs"),
+        ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage"),
         ("activity",  "/activity","bi-activity",      "Activity"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
