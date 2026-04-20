@@ -1,0 +1,32 @@
+{
+  "categories": [
+    {
+      "name": "Brain Logging & Backfill",
+      "priority": "high",
+      "items": [
+        {"title": "Brain backfill — 80 historical sessions", "detail": "Brain counts 80 sessions but only 7 logged via qi.log_session(). Backfill from JSONL files + session summary .docx. Gives real decision/feature counts on the Hive page."},
+        {"title": "SessionEnd hook — automatic Brain logging", "detail": "Wire a settings.json SessionEnd hook so every Claude session automatically calls qi.log_session() at close. Currently manual / inconsistent."},
+        {"title": "Features Tracked + Decisions Logged — real data wiring", "detail": "Hive page stats currently fall back to proxy calculations (docx count, task count). Wire to real Brain DB tables once backfill is complete."}
+      ]
+    },
+    {
+      "name": "Dashboard Improvements",
+      "priority": "medium",
+      "items": [
+        {"title": "Full route audit and documentation", "detail": "Several pages (/services, /tasks, /activity, /logs, /config, /guide) have TBD descriptions in the status docs. Complete a route audit, document each page's render function and data sources."},
+        {"title": "Tests page", "detail": "GET /tests is in the nav. Purpose and implementation TBD — to be confirmed from server.py route audit."},
+        {"title": "Real-time service restart from dashboard", "detail": "Add a 'Restart' button to the Health page that calls qi_service.restart() for the selected service. Would close the loop: see broken service → click → fixed."},
+        {"title": "LLM usage alerts", "detail": "Configurable daily spend threshold. If today's cost exceeds threshold, show a warning badge in the nav. Prevents surprise bills."}
+      ]
+    },
+    {
+      "name": "Ecosystem Architecture",
+      "priority": "low",
+      "items": [
+        {"title": "Migrate legacy Agents folder to Brain DB", "detail": "Agent configs currently live in C:\\QIH\\hive\\Agents\\*/config.json. Migrate to Brain DB so all projects see the same agent registry via get_agents()."},
+        {"title": "QI Hive folder migration (C:\\QIP, C:\\QIB)", "detail": "QI Hive folder strategy: C:\\QIP for projects, C:\\QIB for business. Migrate one project at a time — tracked in memory file project_qih_folder_strategy.md."},
+        {"title": "Per-project nssm.exe packaging", "detail": "Each QI project should ship its own engine/bin/nssm.exe. Confirm QIH has its own copy at C:\\QIH\\engine\\bin\\nssm.exe and update NSSM service scripts to use it."}
+      ]
+    }
+  ]
+}

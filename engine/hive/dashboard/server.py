@@ -77,6 +77,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("health",    "/health",  "bi-heart-pulse",   "Health Check"),
         ("board",     "/board",   "bi-kanban",        "Task Board"),
         ("tests",     "/tests",   "bi-bug",           "Tests"),
+        ("projects",  "/projects/status", "bi-clipboard-data", "Project Status"),
         ("services",  "/services","bi-gear-wide-connected", "Services"),
         ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
         ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage"),
@@ -1569,7 +1570,12 @@ def render_project(pid: str) -> str:
               <h4 class="mb-0">{pid}</h4>
               <div class="text-muted small"><code>{proj.get('path','(no path)')}</code></div>
             </div>
-            <span class="badge bg-info">{proj.get('status','?')}</span>
+            <div class="d-flex gap-2">
+              <a href="/project/{pid}/status" class="btn btn-sm btn-primary">
+                <i class="bi bi-clipboard-data"></i> Project Status
+              </a>
+              <span class="badge bg-info align-self-center">{proj.get('status','?')}</span>
+            </div>
           </div>
           <p class="mt-2 mb-0">{proj.get('notes','')}</p>
         </div></div>
@@ -1608,6 +1614,43 @@ def render_project(pid: str) -> str:
 @app.get("/project/{pid}", response_class=HTMLResponse)
 def project_page(pid: str):
     return base_layout(pid, render_project(pid), "dashboard")
+
+
+# ── Project Status (Maia-style, 7 tabs) ──────────────────────────────────────
+from project_status import render_project_status, list_projects as _ps_list
+
+
+@app.get("/project/{pid}/status", response_class=HTMLResponse)
+def project_status_page(pid: str, tab: str = "overview"):
+    title, body = render_project_status(pid, tab)
+    return base_layout(title, body, "dashboard")
+
+
+@app.get("/projects/status", response_class=HTMLResponse)
+def project_status_index():
+    rows = []
+    for p in _ps_list():
+        ready = ("<span class='badge bg-success'>ready</span>" if p["ready"]
+                 else "<span class='badge bg-secondary'>empty</span>")
+        rows.append(
+            f"<tr><td><a href='/project/{p['pid']}/status'><strong>{p['name']}</strong></a></td>"
+            f"<td>{ready}</td><td class='small text-muted'><code>{p['intro']}</code></td></tr>"
+        )
+    body = f"""
+    <div class='card'><div class='card-header'>
+      <i class='bi bi-clipboard-data'></i> Project Status — Maia-style pages for every project
+    </div>
+    <table class='table table-sm mb-0'>
+      <thead><tr><th>Project</th><th>Status</th><th>INTRO folder</th></tr></thead>
+      <tbody>{''.join(rows)}</tbody>
+    </table></div>
+    <p class='small text-muted mt-3'>Each project's status pages read from
+    <code>status_intro.md</code>, <code>status_documentation.json</code>,
+    <code>status_features_business.json</code>, <code>status_features_dev.json</code>,
+    <code>status_future.json</code>, <code>status_techstack.json</code>
+    in its INTRO folder. Edit those files and click Refresh on the dashboard.</p>
+    """
+    return base_layout("Project Status — Index", body, "dashboard")
 
 
 # ── Services + Scheduled Tasks (read-only visibility) ────────────────────────

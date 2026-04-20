@@ -1,0 +1,62 @@
+[
+  {
+    "category": "Dashboard Overview",
+    "features": [
+      {"name": "Project status cards", "description": "Each QI project shown as a status card: name, phase (complete/in_progress/backlog/new/retired), open task count, link to kanban board", "status": "live", "notes": "Reads status.json; 9 projects registered"},
+      {"name": "Claude usage strip", "description": "Today's token usage, spend, sessions, turns — plus 30-day cost total — shown at the top of every dashboard visit", "status": "live", "notes": "usage_stats.py parses ~/.claude/**/*.jsonl locally"},
+      {"name": "Agent team table", "description": "All registered Claude agents with their status (active/idle), default model, and scope", "status": "live", "notes": "Reads C:\\QIH\\hive\\Agents\\*/config.json"},
+      {"name": "Session log", "description": "Most recent QI Brain sessions shown in reverse order with summary", "status": "live", "notes": "From QI Brain API or status.json session_log fallback"},
+      {"name": "Task column badges", "description": "Backlog / In Progress / Review / Done counts at a glance with links to board and health check", "status": "live", "notes": ""}
+    ]
+  },
+  {
+    "category": "Health Check",
+    "features": [
+      {"name": "Service status per project", "description": "Each project's NSSM service is probed — running / stopped / not_found / n/a", "status": "live", "notes": "11 projects monitored as of 2026-04-19"},
+      {"name": "Port open check", "description": "API port checked for each project — green tick / red cross per project", "status": "live", "notes": ""},
+      {"name": "Git status", "description": "Branch name, last commit message (45 chars), uncommitted change count per project", "status": "live", "notes": ""},
+      {"name": "Documentation currency", "description": "Docs marked current / stale / missing per project", "status": "live", "notes": ""},
+      {"name": "Session summary presence", "description": "Whether a session summary docx exists for each project", "status": "live", "notes": ""},
+      {"name": "Action items callout", "description": "Projects with health issues surfaced in a warning callout at the top of the Health page", "status": "live", "notes": ""},
+      {"name": "Auto-refresh", "description": "Health page auto-reloads every 60 seconds", "status": "live", "notes": "JavaScript setTimeout 60s"}
+    ]
+  },
+  {
+    "category": "Kanban Task Board",
+    "features": [
+      {"name": "4-column kanban", "description": "Backlog → In Progress → Review → Done. Drag cards between columns with SortableJS.", "status": "live", "notes": "Columns persist to tasks.json via PATCH /api/tasks/:id"},
+      {"name": "Task cards", "description": "Each card shows title, description (first 80 chars), priority badge, agent icon, and project tag", "status": "live", "notes": "Agents: architect, builder, scout, scribe, ops, inspector, tester"},
+      {"name": "Add task", "description": "New task form: title, description, project, agent, priority. Creates entry in tasks.json.", "status": "live", "notes": "POST /api/tasks"},
+      {"name": "Delete task", "description": "Confirm-delete per card", "status": "live", "notes": "DELETE /api/tasks/:id"},
+      {"name": "Per-project filter", "description": "Filter the board to show only one project's tasks", "status": "live", "notes": "?project= query parameter"}
+    ]
+  },
+  {
+    "category": "LLM Usage Tracking",
+    "features": [
+      {"name": "Today's usage summary", "description": "Tokens, cost, sessions, and turns for the current day", "status": "live", "notes": "usage_stats.today()"},
+      {"name": "30-day daily chart", "description": "Daily token and cost breakdown for the past 30 days", "status": "live", "notes": "usage_stats.daily(30); Actual / Local offload / Local+Batch series"},
+      {"name": "By project breakdown", "description": "Token usage and cost attributed per QI project", "status": "live", "notes": "usage_stats.by_project()"},
+      {"name": "By model breakdown", "description": "Token usage, cost, and savings per Claude model (Opus/Sonnet/Haiku)", "status": "live", "notes": "usage_stats.by_model(); per-model savings table; totals row"},
+      {"name": "Tier comparison", "description": "Side-by-side comparison of usage tiers (Actual vs local offload scenarios)", "status": "live", "notes": "Renamed tiers — no 'WHAT-IF' prefix (updated 2026-04-19)"}
+    ]
+  },
+  {
+    "category": "Hive Intelligence (Brain)",
+    "features": [
+      {"name": "Brain connection status", "description": "Live badge showing whether QI Brain (port 9010) is online or offline", "status": "live", "notes": "brain_online() probe"},
+      {"name": "Ecosystem stats", "description": "Active projects, decisions logged, features tracked, sessions logged — from Brain DB with local fallbacks", "status": "live", "notes": "Numbers: 9 projects / 57 decisions / 21 features / 80 sessions (as of 2026-04-19)"},
+      {"name": "Agent profiles", "description": "Per-agent detail: status, model, scope, recent activity from Brain API", "status": "live", "notes": "get_agents() + get_agent_profile()"},
+      {"name": "Recent sessions", "description": "Last N Brain-logged sessions across all projects", "status": "live", "notes": "get_recent_sessions()"}
+    ]
+  },
+  {
+    "category": "Autonomous Service Control",
+    "features": [
+      {"name": "Elevation broker (QI_Elevate)", "description": "Any Claude session can restart, start, or stop NSSM services autonomously — no UAC prompt, no human in the loop", "status": "live", "notes": "from engine.common.qi_service import restart, start, stop"},
+      {"name": "gsudo credential cache", "description": "One UAC prompt per workday (8-hour cache). After that, all elevation is silent.", "status": "live", "notes": "gsudo CacheMode auto, CacheDuration 00:08:00"},
+      {"name": "Broker resilience", "description": "QI_Elevate auto-restarts on crash (NSSM AppExit=Restart). QI_ElevateWatchdog (Task Scheduler, SYSTEM, 1-min cadence) revives it if NSSM itself fails.", "status": "live", "notes": "Suicide-loop fix: stale-queue purge on startup for requests >5 min old"},
+      {"name": "Single-instance PID lock", "description": "Broker locks C:\\QIH\\logs\\elevation\\broker.lock to prevent orphan-broker race condition on rapid restarts", "status": "live", "notes": "os.kill(pid, 0) liveness check"}
+    ]
+  }
+]

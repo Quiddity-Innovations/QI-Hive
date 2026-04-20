@@ -1,0 +1,57 @@
+[
+  {
+    "category": "Dashboard Routes",
+    "features": [
+      {"name": "GET / — Dashboard", "file": "engine/hive/dashboard/server.py @/", "status": "live", "detail": "render_dashboard() — project cards, Claude usage strip (today + 30d), agent team table, session log, task column badges."},
+      {"name": "GET /hive — Hive page", "file": "server.py @/hive", "status": "live", "detail": "render_hive() — Brain connection badge, ecosystem stats (projects/decisions/features/sessions), agent profiles, recent sessions. Falls back to local JSON when Brain offline."},
+      {"name": "GET /health — Health check", "file": "server.py @/health", "status": "live", "detail": "render_health() — run_health_check() probe for all 11 projects. Table: service status, port open, git, docs, summary, health badge. Action items callout. Auto-reload every 60s."},
+      {"name": "GET /board — Kanban board", "file": "server.py @/board", "status": "live", "detail": "render_board(project_filter) — SortableJS kanban. 4 columns. Per-project filter. Add/delete task forms."},
+      {"name": "GET /usage — LLM usage", "file": "server.py @/usage", "status": "live", "detail": "Reads usage_stats. Today strip, daily chart (30d, 3 series), by-project table, by-model table with savings, totals row. Tier comparison."},
+      {"name": "GET /services — Services", "file": "server.py @/services", "status": "live", "detail": "Service management page. TBD — to be confirmed from full route audit."},
+      {"name": "GET /tasks — Scheduled Tasks", "file": "server.py @/tasks", "status": "live", "detail": "Scheduled tasks page. TBD — to be confirmed from full route audit."},
+      {"name": "GET /activity — Activity", "file": "server.py @/activity", "status": "live", "detail": "Activity feed page. TBD — to be confirmed from full route audit."},
+      {"name": "GET /logs — Logs", "file": "server.py @/logs", "status": "live", "detail": "Log viewer page. TBD — to be confirmed from full route audit."},
+      {"name": "GET /config — Config", "file": "server.py @/config", "status": "live", "detail": "Configuration page. TBD — to be confirmed from full route audit."},
+      {"name": "GET /guide — Guide", "file": "server.py @/guide", "status": "live", "detail": "Guide / onboarding page. TBD — to be confirmed from full route audit."},
+      {"name": "GET /project/{name} — Project detail", "file": "server.py @/project/{name}", "status": "live", "detail": "Per-project detail page. Linked from dashboard project cards."},
+      {"name": "POST|PATCH|DELETE /api/tasks*", "file": "server.py", "status": "live", "detail": "Task CRUD API. POST /api/tasks (create), PATCH /api/tasks/:id (move column), DELETE /api/tasks/:id. Persists to tasks.json."}
+    ]
+  },
+  {
+    "category": "Engine — Common Modules",
+    "features": [
+      {"name": "usage_stats.py — Claude cost tracking", "file": "engine/common/usage_stats.py", "status": "live", "detail": "Parses ~/.claude/projects/**/*.jsonl. No API keys — pure local. today() / daily(n) / by_project(n) / by_model(n) / totals(n) / sessions_log(days, limit). Model pricing: Opus $15/75 · Sonnet $3/15 · Haiku $0.80/4 per 1M tokens. Cache read at 10%, write at 125-200%. 30s in-memory cache."},
+      {"name": "qi_service.py — autonomous service control", "file": "engine/common/qi_service.py", "status": "live", "detail": "restart(service_name) / start() / stop() → bool. Routes through elevation broker (qi_elevate_client). Any Claude session can call this. from engine.common.qi_service import restart."},
+      {"name": "qi_elevate_client.py — broker interface", "file": "engine/common/qi_elevate_client.py", "status": "live", "detail": "Drops JSON command file into C:\\QIH\\commands\\pending\\. Waits for result file. Regex whitelist enforced in broker. Client side is fire-and-wait."},
+      {"name": "qi_elevate.py — elevation broker service", "file": "engine/common/qi_elevate.py", "status": "live", "detail": "NSSM service QI_Elevate (LocalSystem). Watches pending\\ folder. Executes whitelisted commands. Stale-queue purge on startup (>5 min). PID lock at logs/elevation/broker.lock. NSSM AppExit=Restart (3s, 1.5s throttle)."},
+      {"name": "qi_logger.py — shared logger", "file": "engine/common/qi_logger.py", "status": "live", "detail": "get_logger(service) — returns a named logger. set_level(), list_services(). Used by dashboard and all engine components."},
+      {"name": "hive_report.py — report helpers", "file": "engine/common/hive_report.py", "status": "live", "detail": "Report generation helpers for Hive page. TBD — to be confirmed from full module audit."}
+    ]
+  },
+  {
+    "category": "Brain Integration",
+    "features": [
+      {"name": "brain_online() probe", "file": "engine/hive/dashboard/qi_brain_client.py", "status": "live", "detail": "HTTP GET to QI Brain (port 9010). Returns bool. Used by render_hive() for badge and conditional fallback logic."},
+      {"name": "get_ecosystem_snapshot()", "file": "qi_brain_client.py", "status": "live", "detail": "Returns Brain flat schema: active_projects, active_decisions, features_logged, sessions_logged. Falls back to local inference: status.json for projects, session_summary docx count for decisions, tasks.json length for features, usage_stats.sessions_log() for sessions."},
+      {"name": "get_agents() + get_agent_profile()", "file": "qi_brain_client.py", "status": "live", "detail": "Agent list and per-agent detail from Brain. Falls back to C:\\QIH\\hive\\Agents\\*/config.json."},
+      {"name": "get_recent_sessions()", "file": "qi_brain_client.py", "status": "live", "detail": "Recent logged sessions from Brain DB. Displayed in dashboard session log widget."},
+      {"name": "get_brain_status()", "file": "qi_brain_client.py", "status": "live", "detail": "Brain API status summary. Used by Hive page header."}
+    ]
+  },
+  {
+    "category": "Health Check Engine",
+    "features": [
+      {"name": "run_health_check() — 11-project probe", "file": "engine/hive/dashboard/health_check.py", "status": "live", "detail": "Checks: path exists on disk, NSSM service status (running/stopped/not_found), port open (TCP), git branch + uncommitted count + last commit, docs currency, session summary docx present. Returns dict per project with health: ok | warning | attention."},
+      {"name": "sync_tasks()", "file": "health_check.py", "status": "live", "detail": "Helper to synchronise task state. TBD — to be confirmed from module audit."}
+    ]
+  },
+  {
+    "category": "Data Layer",
+    "features": [
+      {"name": "status.json — project registry", "file": "data/status.json", "status": "live", "detail": "Projects dict: {name: {status, current_task, notes}}. session_log array. Loaded by load_status(). Saved by save_json(STATUS_FILE, data)."},
+      {"name": "tasks.json — kanban task store", "file": "data/tasks.json", "status": "live", "detail": "tasks array: [{id (uuid), title, description, column, project, agent, priority}]. load_tasks() / save_tasks(). Mutated by /api/tasks CRUD endpoints."},
+      {"name": "Agents config (legacy)", "file": "hive/Agents/*/config.json", "status": "live", "detail": "Per-agent config.json in legacy agents folder (C:\\QIH\\hive\\Agents\\). Keys: status, model_default, scope. Folder stays for now; may migrate to Brain DB."},
+      {"name": "Static assets", "file": "engine/hive/dashboard/static/", "status": "live", "detail": "AdminLTE CSS (adminlte.min.css), Bootstrap Icons, SortableJS. Mounted at /static by FastAPI StaticFiles."}
+    ]
+  }
+]

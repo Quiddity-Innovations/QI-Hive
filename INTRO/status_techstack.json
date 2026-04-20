@@ -1,0 +1,36 @@
+{
+  "table": [
+    {"layer": "Runtime Server", "technology": "FastAPI + Uvicorn", "role": "Dashboard server on port 8600 — all HTML pages and /api/tasks REST endpoints", "license": "Open source (MIT)", "version": "0.115+ (app version 3.0.0)"},
+    {"layer": "Runtime Server", "technology": "Python 3.11+", "role": "Primary language for all engine and dashboard code", "license": "Open source (PSF)", "version": "3.11"},
+    {"layer": "Runtime Server", "technology": "NSSM", "role": "Windows service manager — QI_Dashboard (port 8600), QI_HiveIngest, QI_Elevate, QI_ElevateWatchdog", "license": "Open source", "version": "2.24"},
+    {"layer": "UI Framework", "technology": "AdminLTE v4", "role": "Dashboard layout and component library (sidebar, cards, badges, tables)", "license": "Open source (MIT)", "version": "4.x"},
+    {"layer": "UI Framework", "technology": "Bootstrap 5", "role": "CSS utility framework underlying AdminLTE", "license": "Open source (MIT)", "version": "5.x"},
+    {"layer": "UI Framework", "technology": "Bootstrap Icons 1.13", "role": "Icon library used throughout the dashboard (bi-* classes)", "license": "Open source (MIT)", "version": "1.13.1"},
+    {"layer": "UI Framework", "technology": "SortableJS", "role": "Drag-and-drop kanban board — task cards draggable between columns", "license": "Open source (MIT)", "version": "1.15.0"},
+    {"layer": "UI Framework", "technology": "OverlayScrollbars", "role": "Custom scrollbar styling for the AdminLTE sidebar", "license": "Open source (MIT)", "version": "2.11.0"},
+    {"layer": "Intelligence", "technology": "QI Brain API (port 9010)", "role": "Ecosystem intelligence backend — agents, sessions, decisions, features, snapshots", "license": "Internal (QI)", "version": ""},
+    {"layer": "Intelligence", "technology": "usage_stats.py (local JSONL parser)", "role": "Claude Code cost tracking — parses ~/.claude/**/*.jsonl, no API required", "license": "Internal (QI)", "version": ""},
+    {"layer": "Elevation", "technology": "gsudo", "role": "Privilege elevation helper — 8-hour credential cache so UAC prompts happen once per workday", "license": "Open source (MIT)", "version": ""},
+    {"layer": "Elevation", "technology": "QI_Elevate broker + QI_ElevateWatchdog", "role": "Autonomous service control: any Claude session drops a JSON command → broker runs it as LocalSystem", "license": "Internal (QI)", "version": ""},
+    {"layer": "Data", "technology": "JSON files (status.json, tasks.json)", "role": "Project registry and kanban task store — file-based, no DB required for core dashboard", "license": "N/A", "version": ""},
+    {"layer": "Data", "technology": "Claude Code JSONL sessions (~/.claude/)", "role": "Source of LLM usage data — parsed by usage_stats.py for cost and token tracking", "license": "Anthropic proprietary format", "version": ""}
+  ],
+  "descriptions": [
+    {
+      "title": "Server-rendered HTML, no SPA",
+      "body": "QI Hive Dashboard renders each page as a Python function that returns an HTML string. There is no React, no Vue, no client-side routing. This is intentional: the dashboard is a development tool, not a user-facing product. Server-rendered pages are simpler to maintain, easier to debug (view-source shows the real state), and work without a JavaScript build step. AdminLTE v4 provides the visual polish via CDN CSS/JS."
+    },
+    {
+      "title": "Elevation broker design",
+      "body": "The core problem: Claude Code sessions run as a normal user, but restarting NSSM services requires admin rights. Windows UAC prompts block autonomous loops. The solution is a three-piece system: gsudo caches admin credentials for 8 hours (one UAC per workday). The elevation broker (QI_Elevate) runs as LocalSystem via NSSM. Any Claude session drops a JSON command file into C:\\QIH\\commands\\pending\\, the broker picks it up and executes it. The whitelist regex ensures only pre-approved commands (nssm start/stop/restart for registered services) are accepted."
+    },
+    {
+      "title": "Usage stats — no API keys required",
+      "body": "Claude Code writes a JSONL session log for every conversation at ~/.claude/projects/**/*.jsonl. Each line is a JSON object with token counts per turn and model info. usage_stats.py reads these files directly — no Anthropic API call, no authentication. It applies the public token pricing table (Opus/Sonnet/Haiku input/output rates, plus cache token multipliers) to produce per-day, per-project, and per-model cost breakdowns. Results are cached in memory for 30 seconds to keep dashboard page loads fast."
+    },
+    {
+      "title": "QI Brain vs local fallbacks",
+      "body": "QI Brain (port 9010) is the ecosystem intelligence layer. When Brain is online, the Hive page shows real counts: sessions logged, decisions recorded, features tracked. When Brain is offline, qi_brain_client.py falls back to local inference: project count from status.json, decision proxy from session summary .docx count in the shared folder, feature proxy from tasks.json task count, session count from usage_stats.sessions_log(). The fallback numbers are reasonable approximations — not exact — until the Brain backfill is complete."
+    }
+  ]
+}

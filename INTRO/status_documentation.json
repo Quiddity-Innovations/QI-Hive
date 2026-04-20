@@ -1,0 +1,43 @@
+{
+  "sections": [
+    {
+      "name": "Architecture & Design",
+      "documents": [
+        {"title": "Latest Session Note", "file": "LATEST.md", "location": "C:\\QIH\\docs\\", "type": "Markdown", "description": "Rolling session note — most recent session summary, what changed, what's live, what's pending. Updated after each autonomous or manual session."},
+        {"title": "QI Brain Architecture", "file": "TBD — to be confirmed from C:\\UNIVERSAL\\qi_brain\\", "location": "C:\\UNIVERSAL\\qi_brain\\", "type": "TBD", "description": "QI Brain is QI Hive's nervous system on port 9010. Full architecture documented in the Brain project."}
+      ]
+    },
+    {
+      "name": "Project Logs & Minutes",
+      "documents": [
+        {"title": "Session Summaries", "file": "QIH_Summary_*.docx", "location": "C:\\UNIVERSAL\\DOCUMENTATION\\Session_Summaries\\", "type": "Word Document", "description": "Per-session summaries saved to the shared QI documentation folder. Prefix: QIH_. All QI projects write here."}
+      ]
+    },
+    {
+      "name": "Memory & Context Files",
+      "documents": [
+        {"title": "Project Memory Index", "file": "MEMORY.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "Markdown", "description": "Master index of memory files for the QI Hive / Claude Manager project."},
+        {"title": "QI Hive Folder Strategy", "file": "project_qih_folder_strategy.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "Markdown", "description": "C:\\QIP for projects, C:\\QIB for business. Migrate one at a time."},
+        {"title": "QI Project Standard", "file": "project_qi_standard.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "Markdown", "description": "7-folder layout applied to every QI project: engine/config/data/logs/tests/docs/tools."},
+        {"title": "Per-project nssm.exe policy", "file": "feedback_per_project_nssm.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "Markdown", "description": "Each QI project ships its own engine/bin/nssm.exe — never centralise."}
+      ]
+    },
+    {
+      "name": "Key Source Files",
+      "documents": [
+        {"title": "Dashboard Server", "file": "engine/hive/dashboard/server.py", "location": "C:\\QIH\\", "type": "Python", "description": "FastAPI v3.0.0 on port 8600. AdminLTE v4 + Bootstrap 5 + SortableJS. 12 nav pages. Reads status.json + tasks.json. Queries QI Brain client. Usage stats from usage_stats.py."},
+        {"title": "QI Brain Client", "file": "engine/hive/dashboard/qi_brain_client.py", "location": "C:\\QIH\\", "type": "Python", "description": "HTTP client to QI Brain API (port 9010). Functions: brain_online(), get_agents(), get_ecosystem_snapshot(), get_recent_sessions(), get_agent_profile(), get_brain_status(). Used by Hive and dashboard pages."},
+        {"title": "Health Check", "file": "engine/hive/dashboard/health_check.py", "location": "C:\\QIH\\", "type": "Python", "description": "run_health_check() — checks all 11 registered projects: NSSM service status, port open, git branch + uncommitted changes, docs currency, session summary presence. sync_tasks() helper."},
+        {"title": "Project Status", "file": "engine/hive/dashboard/project_status.py", "location": "C:\\QIH\\", "type": "Python", "description": "Project status rendering helpers for the dashboard."},
+        {"title": "Usage Stats", "file": "engine/common/usage_stats.py", "location": "C:\\QIH\\", "type": "Python", "description": "Parses ~/.claude/projects/**/*.jsonl for Claude Code token and cost tracking. No API calls — pure local file parsing. Functions: today(), daily(n), by_project(n), by_model(n), totals(n), sessions_log(days, limit). 30-second in-memory cache. Pricing: Opus $15/75 · Sonnet $3/15 · Haiku $0.80/4 per 1M tokens. Cache token multipliers applied."},
+        {"title": "Service Control (qi_service.py)", "file": "engine/common/qi_service.py", "location": "C:\\QIH\\", "type": "Python", "description": "restart(service_name) / start() / stop() — routes through elevation broker. Returns True/False. Any Claude session can import this to autonomously restart QI services without UAC. from engine.common.qi_service import restart, start, stop."},
+        {"title": "Elevation Client", "file": "engine/common/qi_elevate_client.py", "location": "C:\\QIH\\", "type": "Python", "description": "Drops JSON command files into C:\\QIH\\commands\\pending\\. Elevation broker picks them up and executes as LocalSystem. Regex whitelist enforced — only pre-approved commands accepted."},
+        {"title": "Elevation Broker (qi_elevate.py)", "file": "engine/common/qi_elevate.py", "location": "C:\\QIH\\", "type": "Python", "description": "NSSM service QI_Elevate. Watches C:\\QIH\\commands\\pending\\. Runs whitelisted commands as LocalSystem. NSSM AppExit=Restart (3s delay). Stale-queue purge on startup (>5 min old). Single-instance PID lock at C:\\QIH\\logs\\elevation\\broker.lock."},
+        {"title": "QI Logger", "file": "engine/common/qi_logger.py", "location": "C:\\QIH\\", "type": "Python", "description": "Shared logger for all QI Hive components. get_logger(service_name), set_level(), list_services(). Used by dashboard and all engine modules."},
+        {"title": "Hive Report", "file": "engine/common/hive_report.py", "location": "C:\\QIH\\", "type": "Python", "description": "Report generation helpers for the Hive page."},
+        {"title": "Status JSON", "file": "data/status.json", "location": "C:\\QIH\\", "type": "JSON", "description": "Project registry for the dashboard. Projects dict with name, status, current_task, notes. Session log array. Read by render_dashboard() and render_board(). Manual or script-updated."},
+        {"title": "Tasks JSON", "file": "data/tasks.json", "location": "C:\\QIH\\", "type": "JSON", "description": "Kanban board task store. tasks array: {id, title, description, column, project, agent, priority}. CRUD via /api/tasks endpoints. columns: backlog | in_progress | review | done."}
+      ]
+    }
+  ]
+}
