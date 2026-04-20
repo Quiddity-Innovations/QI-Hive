@@ -696,11 +696,73 @@ def render_hive() -> str:
         '<span class="badge text-bg-danger"><i class="bi bi-circle-fill me-1"></i>Offline</span>'
     )
 
-    # Stats row from brain status
-    n_projects  = bstatus.get("projects",  {}).get("active", "?")
-    n_decisions = bstatus.get("decisions", {}).get("active", "?")
-    n_features  = bstatus.get("features",  {}).get("total",  "?")
-    n_sessions  = bstatus.get("sessions",  {}).get("total",  "?")
+    # ── Stats row: prefer Brain, fall back to inferred local metrics ──
+    # Brain uses flat keys: active_projects, active_decisions, features_logged, sessions_logged
+    import json as _json
+    from pathlib import Path as _Path
+
+    def _local_inferred():
+        """Compute reasonable fallbacks from local files when Brain is empty/offline."""
+        proj_active = 0
+        try:
+            sj = _json.loads(_Path(r"C:\QIH\data\status.json").read_text(encoding="utf-8"))
+            proj_active = sum(1 for p in sj.get("projects", {}).values()
+                              if str(p.get("status","")).lower() not in ("retired","archived"))
+        except Exception: pass
+        # Decisions proxy: one session-summary docx = roughly one decision set
+        decisions = 0
+        try:
+            ss = _Path(r"C:\UNIVERSAL\DOCUMENTATION\Session_Summaries")
+            if ss.exists():
+                decisions = sum(1 for _ in ss.glob("*.docx"))
+        except Exception: pass
+        # Features proxy: open tasks on the board
+        features = 0
+        try:
+            tj = _json.loads(_Path(r"C:\QIH\data\tasks.json").read_text(encoding="utf-8"))
+            features = len(tj.get("tasks", []))
+        except Exception: pass
+        # Sessions: actual Claude Code sessions on disk (30d)
+        sessions = 0
+        try:
+            sessions = len(usage_stats.sessions_log(days=30, limit=10_000))
+        except Exception: pass
+        return proj_active, decisions, features, sessions
+
+    loc_proj, loc_dec, loc_feat, loc_sess = _local_inferred()
+
+    def _as_int(v):
+        try: return max(int(v), 0)
+        except Exception: return 0
+
+    # Always take max(brain, local-inferred) — brain's counters undercount until every
+    # session explicitly logs via qi.log_* calls, so local disk data is the truer floor.
+    n_projects  = max(_as_int(bstatus.get("active_projects",  bstatus.get("projects",{}).get("active",0))),  loc_proj)
+    n_decisions = max(_as_int(bstatus.get("active_decisions", bstatus.get("decisions",{}).get("active",0))), loc_dec)
+    n_features  = max(_as_int(bstatus.get("features_logged",  bstatus.get("features",{}).get("total",0))),   loc_feat)
+    n_sessions  = max(_as_int(bstatus.get("sessions_logged",  bstatus.get("sessions",{}).get("total",0))),   loc_sess)
+
+    # ── Per-agent task counts from local tasks.json ──
+    agent_local_counts: dict[str, int] = {}
+    try:
+        tasks = _json.loads(_Path(r"C:\QIH\data\tasks.json").read_text(encoding="utf-8")).get("tasks", [])
+        for t in tasks:
+            a = (t.get("agent") or "").lower().strip()
+            if not a: continue
+            # map raw agent → brain agent_id (tasks use short names; brain uses hive_<name>)
+            bid = f"hive_{a}" if a in {"architect","builder","inspector","ops","scout","scribe","tester"} else a
+            agent_local_counts[bid] = agent_local_counts.get(bid, 0) + 1
+        # Claude Code sessions count as its task volume
+        agent_local_counts["claude"] = loc_sess
+        # Project-bound agents: count tasks targeting that project
+        proj_agent = {"Maia":"maia","Naya":"naya","NEXUS":"nexus"}
+        for t in tasks:
+            p = t.get("project")
+            if p in proj_agent:
+                k = proj_agent[p]
+                agent_local_counts[k] = agent_local_counts.get(k, 0) + 1
+    except Exception:
+        pass
 
     stats_html = f"""
     <div class="row mb-3">
@@ -737,7 +799,9 @@ def render_hive() -> str:
     for a in agents:
         atype  = a.get("agent_type", "system")
         color  = type_colors.get(atype, "secondary")
-        tasks  = a.get("task_count", 0)
+        brain_tasks = a.get("task_count", 0) or 0
+        local_tasks = agent_local_counts.get(a["agent_id"], 0)
+        tasks  = max(brain_tasks, local_tasks)
         name   = a.get("display_name", a["agent_id"])
         desc   = (a.get("description") or "")[:90]
         aid    = a["agent_id"]

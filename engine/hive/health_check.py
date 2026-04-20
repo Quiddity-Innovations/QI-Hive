@@ -41,7 +41,7 @@ PROJECTS = {
         "api_port": 8010,
         "ui_port": 7880,
         "db": r"C:\NEXUS\nexus.db",
-        "doc_path": r"C:\NEXUS\DOCUMENTATION",
+        "doc_path": r"C:\NEXUS\Quiddity Innovations - NEXUS Documentation",
         "key_files": ["main.py"],
     },
     "OpenClaw": {
