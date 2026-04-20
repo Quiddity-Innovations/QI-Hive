@@ -79,7 +79,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("tests",     "/tests",   "bi-bug",           "Tests"),
         ("services",  "/services","bi-gear-wide-connected", "Services"),
         ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
-        ("usage",     "/usage",   "bi-graph-up-arrow","Claude Usage"),
+        ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage / Token Costs"),
         ("activity",  "/activity","bi-activity",      "Activity"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
@@ -1755,43 +1755,69 @@ def render_usage() -> str:
     t7 = usage_stats.totals(7)
     t30 = usage_stats.totals(30)
     daily = usage_stats.daily(30)
-    projects = usage_stats.by_project(30)
-    models = usage_stats.by_model(30)
+    projects_sav = usage_stats.savings_by_project(30)
+    s_models = usage_stats.savings_by_model(30)
 
     # What-if optimization numbers
     s_today = usage_stats.savings_today()
     s_7  = usage_stats.savings(7)
     s_30 = usage_stats.savings(30)
-    s_models = usage_stats.savings_by_model(30)
 
+    # Daily chart: 3 thin bars per day (Actual / w-Local / w-Combined)
     max_cost = max((d["cost_usd"] for d in daily), default=0) or 1
     daily_bars = ""
     for d in daily:
-        h = int((d["cost_usd"] / max_cost) * 100) if max_cost else 0
+        ha = int((d["cost_usd"]          / max_cost) * 100) if max_cost else 0
+        hl = int((d["local_cost_usd"]    / max_cost) * 100) if max_cost else 0
+        hc = int((d["combined_cost_usd"] / max_cost) * 100) if max_cost else 0
+        tip = (f"{d['date']} — Actual ${d['cost_usd']:.2f} · "
+               f"w/ Local ${d['local_cost_usd']:.2f} · "
+               f"w/ Batch ${d['batch_cost_usd']:.2f} · "
+               f"Combined ${d['combined_cost_usd']:.2f}")
         daily_bars += f'''
-        <div class="daily-bar-wrap" title="{d['date']} — ${d['cost_usd']:.2f} — {d['tokens']/1_000_000:.1f}M tok — {d['sessions']} sessions">
-          <div class="daily-bar" style="height:{h}%;"></div>
+        <div class="daily-bar-wrap" title="{tip}">
+          <div class="daily-trio">
+            <div class="daily-bar bar-actual"   style="height:{ha}%;"></div>
+            <div class="daily-bar bar-local"    style="height:{hl}%;"></div>
+            <div class="daily-bar bar-combined" style="height:{hc}%;"></div>
+          </div>
           <small class="daily-label">{d['date'][-5:]}</small>
         </div>'''
 
+    # "By Project (30d)" — now with savings columns
     project_rows = ""
-    total_30_cost = t30["cost_usd"] or 1
-    for r in projects:
-        pct = (r["cost_usd"] / total_30_cost) * 100
+    for r in projects_sav:
+        if r["actual_usd"] <= 0: continue
         project_rows += f'''<tr>
           <td><strong>{r["project"]}</strong></td>
           <td class="text-end">{r["tokens"]/1_000_000:.1f}M</td>
-          <td class="text-end">${r["cost_usd"]:,.2f}</td>
           <td class="text-end">{r["turns"]:,}</td>
-          <td style="width:30%">
-            <div class="progress" style="height:6px">
-              <div class="progress-bar bg-primary" style="width:{pct:.1f}%"></div>
-            </div>
-            <small class="text-muted">{pct:.1f}%</small>
-          </td>
+          <td class="text-end">${r["actual_usd"]:,.2f}</td>
+          <td class="text-end text-info">${r["local_opt_usd"]:,.2f}</td>
+          <td class="text-end text-warning">${r["batch_opt_usd"]:,.2f}</td>
+          <td class="text-end text-success"><strong>${r["combined_usd"]:,.2f}</strong></td>
+          <td class="text-end"><span class="badge text-bg-success-subtle">−${r["total_savings_usd"]:,.2f} ({r["total_savings_pct"]:.1f}%)</span></td>
         </tr>'''
 
-    # "Savings by model" rows (actual → combined)
+    # "By Model (30d)" — same structure as savings_by_model (actual + w/Local + w/Batch + Combined + Total)
+    model_rows_compare = ""
+    for r in s_models:
+        if r["actual_usd"] <= 0: continue
+        short = r["model"].replace("claude-", "").replace("-20251001", "")
+        fam = r["family"]
+        col = {"opus": "danger", "sonnet": "primary", "haiku": "success"}.get(fam, "secondary")
+        model_rows_compare += f'''<tr>
+          <td><span class="badge text-bg-{col}">{fam}</span> <code>{short}</code></td>
+          <td class="text-end">{r["tokens"]/1_000_000:.1f}M</td>
+          <td class="text-end">{r["turns"]:,}</td>
+          <td class="text-end">${r["actual_usd"]:,.2f}</td>
+          <td class="text-end text-info">${r["local_opt_usd"]:,.2f}</td>
+          <td class="text-end text-warning">${r["batch_opt_usd"]:,.2f}</td>
+          <td class="text-end text-success"><strong>${r["combined_usd"]:,.2f}</strong></td>
+          <td class="text-end"><span class="badge text-bg-success-subtle">−${r["total_savings_usd"]:,.2f} ({r["total_savings_pct"]:.1f}%)</span></td>
+        </tr>'''
+
+    # Same rows for the Savings-By-Model card (kept simpler shape)
     savings_model_rows = ""
     for r in s_models:
         if r["actual_usd"] <= 0: continue
@@ -1808,49 +1834,52 @@ def render_usage() -> str:
           <td class="text-end"><span class="badge text-bg-success-subtle">−${saved:,.2f} ({r["total_savings_pct"]:.1f}%)</span></td>
         </tr>'''
 
-    model_rows = ""
-    for r in models:
-        short = r["model"].replace("claude-", "").replace("-20251001", "")
-        pct = (r["cost_usd"] / total_30_cost) * 100
-        fam = "opus" if "opus" in r["model"].lower() else "sonnet" if "sonnet" in r["model"].lower() else "haiku" if "haiku" in r["model"].lower() else "?"
-        col = {"opus": "danger", "sonnet": "primary", "haiku": "success"}.get(fam, "secondary")
-        model_rows += f'''<tr>
-          <td><span class="badge text-bg-{col}">{fam}</span> <code>{short}</code></td>
-          <td class="text-end">{r["tokens"]/1_000_000:.1f}M</td>
-          <td class="text-end">${r["cost_usd"]:,.2f}</td>
-          <td class="text-end">{r["turns"]:,}</td>
-          <td style="width:30%">
-            <div class="progress" style="height:6px">
-              <div class="progress-bar bg-{col}" style="width:{pct:.1f}%"></div>
-            </div>
-            <small class="text-muted">{pct:.1f}%</small>
-          </td>
-        </tr>'''
+    # Project totals row
+    p_tot_actual = sum(r["actual_usd"] for r in projects_sav)
+    p_tot_local  = sum(r["local_opt_usd"] for r in projects_sav)
+    p_tot_batch  = sum(r["batch_opt_usd"] for r in projects_sav)
+    p_tot_comb   = sum(r["combined_usd"] for r in projects_sav)
+    p_tot_sav    = p_tot_actual - p_tot_comb
+    p_tot_pct    = (p_tot_sav / p_tot_actual * 100) if p_tot_actual else 0.0
 
     return f"""
     <style>
+      /* Compact small-box: thinner rows across the 3 tiers */
+      .row-compact .small-box {{ padding: .35rem .75rem; min-height: auto; }}
+      .row-compact .small-box .inner h4 {{ font-size: 1.15rem; margin: 0; line-height: 1.1; }}
+      .row-compact .small-box .inner p  {{ font-size: .72rem; margin: 0; opacity: .9; }}
+      .row-compact .small-box .small-box-icon {{ font-size: 2rem; right: .5rem; }}
+
       .daily-bars {{
         display: flex; align-items: flex-end; gap: 3px;
         height: 180px; padding: 10px 0 30px; overflow-x: auto;
       }}
       .daily-bar-wrap {{
-        flex: 1 0 26px; display: flex; flex-direction: column;
+        flex: 1 0 34px; display: flex; flex-direction: column;
         align-items: center; justify-content: flex-end; height: 100%;
         position: relative;
       }}
-      .daily-bar {{
-        width: 70%; background: linear-gradient(to top, #6366f1, #a5b4fc);
-        border-radius: 3px 3px 0 0; min-height: 2px;
+      .daily-trio {{
+        display: flex; align-items: flex-end; gap: 1px;
+        width: 100%; height: 100%; justify-content: center;
       }}
+      .daily-bar {{
+        width: 30%; border-radius: 2px 2px 0 0; min-height: 2px;
+      }}
+      .bar-actual   {{ background: linear-gradient(to top, #6366f1, #a5b4fc); }}
+      .bar-local    {{ background: linear-gradient(to top, #0dcaf0, #7fdfff); }}
+      .bar-combined {{ background: linear-gradient(to top, #198754, #6fd2a0); }}
       .daily-label {{
         position: absolute; bottom: -22px; font-size: 10px;
         color: #6c757d; white-space: nowrap;
         transform: rotate(-45deg); transform-origin: center;
       }}
+      .chart-legend {{ font-size: .8rem; }}
+      .chart-legend .sw {{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:middle; }}
     </style>
 
     <!-- Row 1: actual spend -->
-    <div class="row mb-1">
+    <div class="row row-compact mb-1">
       <div class="col-md-3"><div class="small-box text-bg-primary">
         <div class="inner"><h4>{t['tokens']/1_000_000:.1f}M</h4><p>Tokens Today</p></div>
         <i class="small-box-icon bi bi-lightning-charge-fill"></i>
@@ -1869,9 +1898,14 @@ def render_usage() -> str:
       </div></div>
     </div>
 
-    <!-- Row 2: what-if local LLM offload -->
-    <div class="row mb-1">
-      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em"><i class="bi bi-cpu me-1"></i> What-if: Local LLMs (Ollama — free)</p></div>
+    <!-- Row 2: Local FREE LLMs (Ollama) -->
+    <div class="row row-compact mb-1">
+      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em">
+        <i class="bi bi-cpu me-1"></i> Local FREE LLMs (via OLLAMA)
+        <span class="text-muted text-lowercase fw-normal ms-2" style="letter-spacing:0">
+          — Haiku → gemma4 / qwen3:8b · Sonnet → gpt-oss-20b / gemma4:31b · Opus → stays on Claude
+        </span>
+      </p></div>
       <div class="col-md-3"><div class="small-box text-bg-info">
         <div class="inner"><h4>{s_today['offloaded_turns']}</h4><p>Offloadable Turns Today</p></div>
         <i class="small-box-icon bi bi-pc-display"></i>
@@ -1890,9 +1924,14 @@ def render_usage() -> str:
       </div></div>
     </div>
 
-    <!-- Row 3: what-if batch API (00:00-06:00) -->
-    <div class="row mb-3">
-      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em"><i class="bi bi-moon-stars me-1"></i> What-if: Claude Batch API (deferred to 00:00–06:00, 50% off)</p></div>
+    <!-- Row 3: Claude Batch API -->
+    <div class="row row-compact mb-3">
+      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em">
+        <i class="bi bi-moon-stars me-1"></i> Claude Batch API (Deferred to 00:00–06:00, 50% OFF)
+        <span class="text-muted text-lowercase fw-normal ms-2" style="letter-spacing:0">
+          — applies to Opus · Sonnet · Haiku · 24h async SLA
+        </span>
+      </p></div>
       <div class="col-md-3"><div class="small-box text-bg-warning">
         <div class="inner"><h4>{s_today['batchable_turns']}</h4><p>Batchable Turns Today</p></div>
         <i class="small-box-icon bi bi-moon-stars"></i>
@@ -1917,8 +1956,9 @@ def render_usage() -> str:
         <div class="alert alert-success d-flex align-items-center justify-content-between mb-0">
           <div>
             <i class="bi bi-stars fs-4 me-2"></i>
-            <strong>Combined what-if (30d):</strong> actual <code>${s_30['actual_cost_usd']:,.2f}</code>
-            → with local offload + batch <code>${s_30['combined_cost_usd']:,.2f}</code>
+            <strong>Combined (30d):</strong>
+            Claude API Actual <code>${s_30['actual_cost_usd']:,.2f}</code>
+            → with Local offload + Batch <code>${s_30['combined_cost_usd']:,.2f}</code>
           </div>
           <div>
             <span class="badge text-bg-success fs-6">Save ${s_30['combined_savings_usd']:,.0f} ({s_30['combined_savings_pct']:.1f}%)</span>
@@ -1927,10 +1967,15 @@ def render_usage() -> str:
       </div>
     </div>
 
-    <!-- Daily chart -->
+    <!-- Daily chart (3 series: Actual / w-Local / Combined) -->
     <div class="card mb-3">
-      <div class="card-header">
-        <h3 class="card-title"><i class="bi bi-graph-up me-2"></i>Daily Spend — Last 30 Days</h3>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Daily Spend — Last 30 Days</h3>
+        <div class="chart-legend">
+          <span><i class="sw bar-actual"></i>Actual</span>
+          <span class="ms-3"><i class="sw bar-local"></i>w/ Local</span>
+          <span class="ms-3"><i class="sw bar-combined"></i>Combined</span>
+        </div>
       </div>
       <div class="card-body">
         <div class="daily-bars">{daily_bars}</div>
@@ -1939,48 +1984,78 @@ def render_usage() -> str:
 
     <div class="row">
       <!-- By project -->
-      <div class="col-lg-6">
-        <div class="card">
+      <div class="col-lg-12">
+        <div class="card mb-3">
           <div class="card-header">
-            <h3 class="card-title"><i class="bi bi-folder2-open me-2"></i>By Project (30d)</h3>
+            <h3 class="card-title"><i class="bi bi-folder2-open me-2"></i>By Project (30d) — Claude API vs Local + Batch</h3>
           </div>
           <div class="card-body p-0">
             <table class="table table-sm table-striped mb-0">
               <thead><tr>
-                <th>Project</th><th class="text-end">Tokens</th>
-                <th class="text-end">Cost</th><th class="text-end">Turns</th>
-                <th>Share</th>
+                <th>Project</th>
+                <th class="text-end">Tokens</th>
+                <th class="text-end">Turns</th>
+                <th class="text-end">Actual</th>
+                <th class="text-end">w/ Local</th>
+                <th class="text-end">w/ Batch</th>
+                <th class="text-end">Combined</th>
+                <th class="text-end">Total Savings</th>
               </tr></thead>
-              <tbody>{project_rows or '<tr><td colspan="5" class="text-muted text-center">no data</td></tr>'}</tbody>
+              <tbody>{project_rows or '<tr><td colspan="8" class="text-muted text-center">no data</td></tr>'}</tbody>
+              <tfoot class="table-group-divider">
+                <tr class="fw-bold">
+                  <td colspan="3">TOTAL</td>
+                  <td class="text-end">${p_tot_actual:,.2f}</td>
+                  <td class="text-end text-info">${p_tot_local:,.2f}</td>
+                  <td class="text-end text-warning">${p_tot_batch:,.2f}</td>
+                  <td class="text-end text-success">${p_tot_comb:,.2f}</td>
+                  <td class="text-end"><span class="badge text-bg-success">−${p_tot_sav:,.2f} ({p_tot_pct:.1f}%)</span></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
       </div>
 
       <!-- By model -->
-      <div class="col-lg-6">
-        <div class="card">
+      <div class="col-lg-12">
+        <div class="card mb-3">
           <div class="card-header">
-            <h3 class="card-title"><i class="bi bi-cpu me-2"></i>By Model (30d)</h3>
+            <h3 class="card-title"><i class="bi bi-cpu me-2"></i>By Model (30d) — Claude API vs Local + Batch</h3>
           </div>
           <div class="card-body p-0">
             <table class="table table-sm table-striped mb-0">
               <thead><tr>
-                <th>Model</th><th class="text-end">Tokens</th>
-                <th class="text-end">Cost</th><th class="text-end">Turns</th>
-                <th>Share</th>
+                <th>Model</th>
+                <th class="text-end">Tokens</th>
+                <th class="text-end">Turns</th>
+                <th class="text-end">Actual</th>
+                <th class="text-end">w/ Local</th>
+                <th class="text-end">w/ Batch</th>
+                <th class="text-end">Combined</th>
+                <th class="text-end">Total Savings</th>
               </tr></thead>
-              <tbody>{model_rows or '<tr><td colspan="5" class="text-muted text-center">no data</td></tr>'}</tbody>
+              <tbody>{model_rows_compare or '<tr><td colspan="8" class="text-muted text-center">no data</td></tr>'}</tbody>
+              <tfoot class="table-group-divider">
+                <tr class="fw-bold">
+                  <td colspan="3">TOTAL</td>
+                  <td class="text-end">${s_30['actual_cost_usd']:,.2f}</td>
+                  <td class="text-end text-info">${s_30['local_optimized_cost_usd']:,.2f}</td>
+                  <td class="text-end text-warning">${s_30['batch_optimized_cost_usd']:,.2f}</td>
+                  <td class="text-end text-success">${s_30['combined_cost_usd']:,.2f}</td>
+                  <td class="text-end"><span class="badge text-bg-success">−${s_30['combined_savings_usd']:,.2f} ({s_30['combined_savings_pct']:.1f}%)</span></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Savings By Model (what-if combined) -->
+    <!-- Savings By Model -->
     <div class="card mb-3">
       <div class="card-header">
-        <h3 class="card-title"><i class="bi bi-stars me-2"></i>Savings By Model (30d) — Actual vs. What-if</h3>
+        <h3 class="card-title"><i class="bi bi-stars me-2"></i>Savings by Model (30d) — Claude API vs Local + Batch</h3>
       </div>
       <div class="card-body p-0">
         <table class="table table-sm table-striped mb-0">
@@ -2011,20 +2086,19 @@ def render_usage() -> str:
       <i class="bi bi-info-circle me-1"></i>
       Data parsed locally from <code>~/.claude/projects/**/*.jsonl</code> — no API calls.
       Pricing per 1M tokens: Opus $15/$75 · Sonnet $3/$15 · Haiku $0.80/$4. Cache-read at 10%, cache-write at 125%/200% (5m/1h).
-      Assumes rates as of Jan 2026 — actual billing may differ.
       <br>
       <i class="bi bi-cpu me-1"></i>
-      <strong>Local offload heuristic:</strong> Haiku → 100% (gemma4 / qwen3:8b handle trivial ops), Sonnet → 40% (gpt-oss-20b / gemma4:31b for routine code), Opus → 0% (hard reasoning stays on Opus). Conservative estimates; your mix may differ.
+      <strong>Local offload mapping:</strong> Haiku → 100% to gemma4 / qwen3:8b · Sonnet → 40% to gpt-oss-20b / gemma4:31b · Opus → 0% (stays on Claude).
       <br>
       <i class="bi bi-moon-stars me-1"></i>
-      <strong>Batch window:</strong> turns outside 00:00–06:00 local time are counted as deferrable via Claude Batch API (50% discount, 24h SLA).
+      <strong>Batch window:</strong> turns outside 00:00–06:00 local time are counted as deferrable via Claude Batch API (50% discount, 24h SLA). Applies to Opus, Sonnet, and Haiku.
     </p>
     """
 
 
 @app.get("/usage", response_class=HTMLResponse)
 def usage_page():
-    return base_layout("Claude Usage", render_usage(), "usage")
+    return base_layout("LLM Usage / Token Costs", render_usage(), "usage")
 
 
 # ── Activity — who did what ──────────────────────────────────────────────────

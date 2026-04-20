@@ -241,18 +241,86 @@ def daily(days: int = 30) -> list[dict]:
         b["cost"]    += e["cost"]
         b["turns"]   += 1
         b["sessions"].add(e["session"])
+    # Separately compute per-day what-if costs (local / batch / combined)
+    whatif: dict[date, dict] = defaultdict(lambda: {"local": 0.0, "batch": 0.0, "combined": 0.0})
+    for e in evs:
+        d = e["ts"].astimezone().date()
+        if d < cutoff:
+            continue
+        fam = e["family"]
+        frac = LOCAL_OFFLOAD_BY_FAMILY.get(fam, 0.0)
+        hour_local = e["ts"].astimezone().hour
+        in_night = BATCH_WINDOW_START_HOUR <= hour_local < BATCH_WINDOW_END_HOUR
+        c = e["cost"]
+        w = whatif[d]
+        w["local"]    += c * (1 - frac)
+        w["batch"]    += c * ((1 - BATCH_DISCOUNT) if not in_night else 1.0)
+        remaining = c * (1 - frac)
+        if not in_night:
+            remaining *= (1 - BATCH_DISCOUNT)
+        w["combined"] += remaining
+
     out = []
     for i in range(days):
         d = cutoff + timedelta(days=i)
         b = buckets.get(d, {"tokens": 0, "cost": 0.0, "turns": 0, "sessions": set()})
+        w = whatif.get(d, {"local": 0.0, "batch": 0.0, "combined": 0.0})
         out.append({
-            "date":     d.isoformat(),
-            "tokens":   b["tokens"],
-            "cost_usd": round(b["cost"], 2),
-            "turns":    b["turns"],
-            "sessions": len(b["sessions"]),
+            "date":              d.isoformat(),
+            "tokens":            b["tokens"],
+            "cost_usd":          round(b["cost"], 2),
+            "local_cost_usd":    round(w["local"], 2),
+            "batch_cost_usd":    round(w["batch"], 2),
+            "combined_cost_usd": round(w["combined"], 2),
+            "turns":             b["turns"],
+            "sessions":          len(b["sessions"]),
         })
     return out
+
+
+def savings_by_project(days: int = 30) -> list[dict]:
+    """Per-project what-if breakdown (same shape idea as savings_by_model)."""
+    evs = _iter_events()
+    cutoff = date.today() - timedelta(days=days - 1)
+    agg: dict[str, dict] = defaultdict(lambda: {
+        "tokens": 0, "turns": 0,
+        "actual": 0.0, "local_opt": 0.0, "batch_opt": 0.0, "combined": 0.0,
+    })
+    for e in evs:
+        if e["ts"].astimezone().date() < cutoff:
+            continue
+        fam = e["family"]
+        frac = LOCAL_OFFLOAD_BY_FAMILY.get(fam, 0.0)
+        hour_local = e["ts"].astimezone().hour
+        in_night = BATCH_WINDOW_START_HOUR <= hour_local < BATCH_WINDOW_END_HOUR
+        c = e["cost"]
+        a = agg[e["project"]]
+        a["tokens"] += e["tokens"]
+        a["turns"]  += 1
+        a["actual"] += c
+        a["local_opt"] += c * (1 - frac)
+        a["batch_opt"] += c * ((1 - BATCH_DISCOUNT) if not in_night else 1.0)
+        remaining = c * (1 - frac)
+        if not in_night:
+            remaining *= (1 - BATCH_DISCOUNT)
+        a["combined"] += remaining
+
+    rows = []
+    for proj, a in agg.items():
+        actual = a["actual"]
+        rows.append({
+            "project":       proj,
+            "tokens":        a["tokens"],
+            "turns":         a["turns"],
+            "actual_usd":    round(actual, 2),
+            "local_opt_usd": round(a["local_opt"], 2),
+            "batch_opt_usd": round(a["batch_opt"], 2),
+            "combined_usd":  round(a["combined"], 2),
+            "total_savings_usd": round(actual - a["combined"], 2),
+            "total_savings_pct": round(((actual - a["combined"]) / actual) * 100, 1) if actual > 0 else 0.0,
+        })
+    rows.sort(key=lambda r: r["actual_usd"], reverse=True)
+    return rows
 
 
 def by_project(days: int = 30) -> list[dict]:
