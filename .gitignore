@@ -19,3 +19,13 @@ commands/completed/
 commands/archive/
 shared/reports/inbox/
 shared/reports/archive/
+
+# Brain vector memory + inbox — regeneratable / ephemeral, never commit
+qi_memory/
+**/qi_memory/
+chroma/
+**/chroma/
+*.chroma
+brain/inbox/
+brain/inbox/processed/
+brain/inbox/errors/

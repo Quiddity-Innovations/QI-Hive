@@ -44,23 +44,33 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+
+def _norm_pid(pid: str) -> str:
+    """Normalize a project_id — lowercase, trimmed, no whitespace.
+    Enforces the QI standard: project_ids are always lowercase_snake_case."""
+    if not isinstance(pid, str):
+        return pid
+    return pid.strip().lower().replace(" ", "_").replace("-", "_")
 
 from core.db import open_brain_db
 from core.memory_store import MemoryStore, COL_DECISIONS, COL_FEATURES, COL_SESSIONS, COL_DOCS
 from core.providers.factory import ProviderFactory
+from poller import start_poller, stop_poller, get_poller, run_poll_cycle, INBOX_DIR
+from distiller import distill as _distill, VALID_REASONS
 
 app = FastAPI(
     title="QI Brain API",
-    version="001",
+    version="002",
     description="Shared knowledge substrate for the QI ecosystem",
 )
 
-# CORS — allow QI Orchestrator dashboard at :9000
+# CORS — allow all QI services
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:9000", "http://127.0.0.1:9000"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -85,9 +95,39 @@ def _cfg(key: str, default: str = "") -> str:
 # Health / Status
 # ─────────────────────────────────────────────────────────────────────────────
 
+BRAIN_VERSION = "002"
+BRAIN_BUILD   = "2026-04-20"
+
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "qi_brain", "port": 9010, "version": "001"}
+    return {"status": "ok", "service": "qi_brain", "port": 9010, "version": BRAIN_VERSION}
+
+
+@app.get("/version")
+async def version():
+    """Simple version probe — used by QI validator and uptime monitors."""
+    return {"service": "qi_brain", "version": BRAIN_VERSION, "build": BRAIN_BUILD}
+
+
+@app.get("/info")
+async def info():
+    """Full service metadata — capabilities, endpoints, runtime."""
+    import sys, platform
+    return {
+        "service":      "qi_brain",
+        "version":      BRAIN_VERSION,
+        "build":        BRAIN_BUILD,
+        "port":         9010,
+        "python":       sys.version.split()[0],
+        "platform":     platform.system(),
+        "capabilities": [
+            "memory_store", "decisions", "features", "sessions",
+            "ecosystem_snapshot", "feature_evaluation",
+            "poller", "distiller", "inbox", "dispatch"
+        ],
+        "endpoints_total": len([r for r in app.routes if hasattr(r, "path")]),
+        "docs_url":        "/docs",
+    }
 
 
 @app.get("/api/status")
@@ -122,6 +162,10 @@ async def status():
 class GetContextRequest(BaseModel):
     project_id: str
     token_budget: int = 2000
+
+    @field_validator("project_id")
+    @classmethod
+    def _norm(cls, v): return _norm_pid(v)
 
 
 @app.post("/api/context")
@@ -225,6 +269,10 @@ class LogDecisionRequest(BaseModel):
     impact_scope:  str = "project"
     tags:          Optional[list[str]] = None
 
+    @field_validator("project_id")
+    @classmethod
+    def _norm(cls, v): return _norm_pid(v)
+
 
 @app.post("/api/log_decision")
 async def log_decision(req: LogDecisionRequest):
@@ -268,6 +316,10 @@ class LogFeatureRequest(BaseModel):
     agent_id:       str = "claude"
     code_ref:       Optional[str] = None
     propagate_now:  bool = False
+
+    @field_validator("source_project")
+    @classmethod
+    def _norm(cls, v): return _norm_pid(v)
 
 
 @app.post("/api/log_feature")
@@ -373,6 +425,10 @@ class UpdateProjectStateRequest(BaseModel):
     blockers:   Optional[str] = None
     next_steps: Optional[str] = None
 
+    @field_validator("project_id")
+    @classmethod
+    def _norm(cls, v): return _norm_pid(v)
+
 
 @app.post("/api/update_project_state")
 async def update_project_state(req: UpdateProjectStateRequest):
@@ -432,6 +488,10 @@ class LogSessionRequest(BaseModel):
     next_steps:      Optional[str] = None
     model_used:      Optional[str] = None
     started_at:      Optional[str] = None
+
+    @field_validator("project_id")
+    @classmethod
+    def _norm(cls, v): return _norm_pid(v)
 
 
 @app.post("/api/log_session")
@@ -819,12 +879,342 @@ async def list_agents(active_only: bool = True):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# CoWork Dispatch — bi-directional task/proposal channel
+# Sources: cowork | claude_code | renne | maia | naya
+# Types:   report | brief | decision | task | review | proposal | request
+# Flow:    source writes dispatch → dashboard shows card → Approve/Decline/Discuss
+# ─────────────────────────────────────────────────────────────────────────────
+import uuid as _uuid
+
+
+class DispatchCreate(BaseModel):
+    dispatch_id: Optional[str] = None   # auto-generated if omitted
+    source:      str                     # cowork | claude_code | renne | maia | naya
+    type:        str                     # report | brief | decision | task | review | proposal | request
+    priority:    str = "normal"          # high | normal | low
+    project_id:  Optional[str] = None
+    payload:     Any                     # free-form JSON
+    reply_path:  Optional[str] = None
+
+
+class DispatchReview(BaseModel):
+    status:      str            # approved | declined | discussing | executed
+    reviewed_by: str = "renne"
+    note:        Optional[str] = None   # discussion note or decline reason
+
+
+@app.post("/api/dispatch")
+async def create_dispatch(req: DispatchCreate):
+    """Create a new dispatch from any source. Returns dispatch_id."""
+    did = req.dispatch_id or str(_uuid.uuid4())
+    payload_json = json.dumps(req.payload) if not isinstance(req.payload, str) else req.payload
+    with open_brain_db() as conn:
+        conn.execute(
+            """INSERT INTO dispatches
+               (dispatch_id, source, type, priority, project_id, payload, reply_path)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (did, req.source, req.type, req.priority,
+             req.project_id, payload_json, req.reply_path)
+        )
+        conn.commit()
+    return {"ok": True, "dispatch_id": did}
+
+
+@app.get("/api/dispatches")
+async def list_dispatches(status: Optional[str] = None, source: Optional[str] = None, limit: int = 50):
+    """List dispatches. Filter by status and/or source."""
+    with open_brain_db() as conn:
+        conditions, params = [], []
+        if status:
+            conditions.append("status = ?"); params.append(status)
+        if source:
+            conditions.append("source = ?"); params.append(source)
+        where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+        rows = conn.execute(
+            f"SELECT * FROM dispatches {where} ORDER BY created_at DESC LIMIT ?",
+            params + [limit]
+        ).fetchall()
+    return {"ok": True, "dispatches": [dict(r) for r in rows], "total": len(rows)}
+
+
+@app.get("/api/dispatch/{dispatch_id}")
+async def get_dispatch(dispatch_id: str):
+    """Get a single dispatch by ID."""
+    with open_brain_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM dispatches WHERE dispatch_id=?", (dispatch_id,)
+        ).fetchone()
+    if not row:
+        raise HTTPException(404, "Dispatch not found")
+    return {"ok": True, "dispatch": dict(row)}
+
+
+@app.patch("/api/dispatch/{dispatch_id}")
+async def review_dispatch(dispatch_id: str, req: DispatchReview):
+    """Approve / Decline / mark Discussing. Appends note to notes JSON array."""
+    with open_brain_db() as conn:
+        row = conn.execute(
+            "SELECT notes FROM dispatches WHERE dispatch_id=?", (dispatch_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "Dispatch not found")
+
+        notes = json.loads(row["notes"]) if row["notes"] else []
+        if req.note:
+            notes.append({
+                "by": req.reviewed_by,
+                "note": req.note,
+                "at": datetime.now().isoformat()
+            })
+
+        conn.execute(
+            """UPDATE dispatches
+               SET status=?, reviewed_by=?, reviewed_at=?, notes=?
+               WHERE dispatch_id=?""",
+            (req.status, req.reviewed_by, datetime.now().isoformat(),
+             json.dumps(notes), dispatch_id)
+        )
+        conn.commit()
+    return {"ok": True, "dispatch_id": dispatch_id, "status": req.status}
+
+
+@app.post("/api/dispatch/{dispatch_id}/note")
+async def add_dispatch_note(dispatch_id: str, body: dict):
+    """Add a discussion note to a dispatch without changing its status."""
+    note_text = body.get("note", "")
+    author = body.get("by", "claude_code")
+    with open_brain_db() as conn:
+        row = conn.execute(
+            "SELECT notes, status FROM dispatches WHERE dispatch_id=?", (dispatch_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "Dispatch not found")
+        notes = json.loads(row["notes"]) if row["notes"] else []
+        notes.append({"by": author, "note": note_text, "at": datetime.now().isoformat()})
+        conn.execute(
+            "UPDATE dispatches SET notes=?, status='discussing' WHERE dispatch_id=?",
+            (json.dumps(notes), dispatch_id)
+        )
+        conn.commit()
+    return {"ok": True, "dispatch_id": dispatch_id, "note_count": len(notes)}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Utility
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _est_tokens(text: str) -> int:
     """Rough token estimate: ~4 chars per token."""
     return len(text) // 4
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Startup / Shutdown — poller lifecycle
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.on_event("startup")
+async def _startup():
+    start_poller()
+
+
+@app.on_event("shutdown")
+async def _shutdown():
+    stop_poller()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Poller endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/poll/status")
+async def poll_status():
+    poller = get_poller()
+    with open_brain_db() as conn:
+        rows = conn.execute(
+            """SELECT poll_id, started_at, finished_at, duration_ms,
+                      projects_checked, files_checked, changes_found,
+                      inbox_processed, errors, summary
+               FROM poll_log ORDER BY poll_id DESC LIMIT 20"""
+        ).fetchall()
+    return {
+        "ok": True,
+        "poller_alive":   poller.is_alive() if poller else False,
+        "poller_running": getattr(poller, "is_running", False) if poller else False,
+        "last_result":    poller.last_result if poller else {},
+        "history":        [dict(r) for r in rows],
+    }
+
+
+@app.post("/api/poll/trigger")
+async def poll_trigger():
+    result = run_poll_cycle()
+    return {"ok": True, **result}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Distiller endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+class DistillRequest(BaseModel):
+    project_id:     str
+    reason:         str
+    scope_label:    str = ""
+    drop_reason:    str = ""
+    dropped_by:     str = "claude"
+    stale_patterns: Optional[list[str]] = None
+
+
+@app.post("/api/distill")
+async def api_distill(req: DistillRequest):
+    if req.reason not in VALID_REASONS:
+        raise HTTPException(400, f"reason must be one of {sorted(VALID_REASONS)}")
+    return _distill(
+        project_id=req.project_id, reason=req.reason,
+        scope_label=req.scope_label, drop_reason=req.drop_reason,
+        dropped_by=req.dropped_by, stale_patterns=req.stale_patterns,
+    )
+
+
+@app.get("/api/distill/history")
+async def distill_history(project_id: Optional[str] = None, limit: int = 50):
+    with open_brain_db() as conn:
+        if project_id:
+            rows = conn.execute(
+                "SELECT * FROM scope_drops WHERE project_id=? ORDER BY dropped_at DESC LIMIT ?",
+                (project_id, limit)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM scope_drops ORDER BY dropped_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+    return {"ok": True, "history": [dict(r) for r in rows]}
+
+
+@app.get("/api/archive/decisions")
+async def archive_decisions(project_id: Optional[str] = None, limit: int = 100):
+    with open_brain_db() as conn:
+        if project_id:
+            rows = conn.execute(
+                "SELECT * FROM archived_decisions WHERE project_id=? ORDER BY archived_at DESC LIMIT ?",
+                (project_id, limit)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM archived_decisions ORDER BY archived_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+    return {"ok": True, "archived": [dict(r) for r in rows]}
+
+
+@app.get("/api/archive/features")
+async def archive_features(project_id: Optional[str] = None, limit: int = 100):
+    with open_brain_db() as conn:
+        if project_id:
+            rows = conn.execute(
+                "SELECT * FROM archived_features WHERE source_project=? ORDER BY archived_at DESC LIMIT ?",
+                (project_id, limit)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM archived_features ORDER BY archived_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+    return {"ok": True, "archived": [dict(r) for r in rows]}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Brain Inbox — HTTP (CoWork, any service)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class InboxMessage(BaseModel):
+    type:            str
+    project_id:      str
+    source:          str = "http"
+    title:           Optional[str] = None
+    summary:         Optional[str] = None
+    rationale:       Optional[str] = None
+    phase:           Optional[str] = None
+    status:          Optional[str] = None
+    next_steps:      Optional[str] = None
+    scope_label:     Optional[str] = None
+    reason:          Optional[str] = None
+    tags:            Optional[list[str]] = None
+    model_used:      Optional[str] = None
+    decisions_made:  int = 0
+    features_logged: int = 0
+
+
+@app.post("/api/inbox")
+async def inbox_http(msg: InboxMessage):
+    now = datetime.now().isoformat()
+    payload = msg.model_dump(exclude_none=True)
+    error = None
+    try:
+        with open_brain_db() as conn:
+            if msg.type == "state_update":
+                conn.execute(
+                    "INSERT INTO project_state (project_id, agent_id, phase, status, summary, next_steps) "
+                    "VALUES (?, 'system', ?, ?, ?, ?)",
+                    (msg.project_id, msg.phase or "active", msg.status or "active",
+                     msg.summary or "", msg.next_steps)
+                )
+            elif msg.type == "decision":
+                conn.execute(
+                    "INSERT INTO decisions (project_id, agent_id, title, rationale, impact_scope, tags) "
+                    "VALUES (?, 'system', ?, ?, 'project', ?)",
+                    (msg.project_id, msg.title or "(untitled)", msg.rationale or "",
+                     json.dumps(msg.tags or []))
+                )
+            elif msg.type == "session":
+                conn.execute(
+                    "INSERT INTO session_log (project_id, agent_id, session_title, summary, "
+                    "decisions_made, features_logged, model_used) VALUES (?, 'system', ?, ?, ?, ?, ?)",
+                    (msg.project_id, msg.title or "Session", msg.summary or "",
+                     msg.decisions_made, msg.features_logged, msg.model_used)
+                )
+            elif msg.type == "scope_drop":
+                result = _distill(
+                    project_id=msg.project_id, reason="scope_dropped",
+                    scope_label=msg.scope_label or "", drop_reason=msg.reason or "",
+                    dropped_by=msg.source,
+                )
+                conn.execute(
+                    "INSERT INTO brain_inbox_log (message_type, project_id, source, payload, status) "
+                    "VALUES (?, ?, ?, ?, 'ok')",
+                    (msg.type, msg.project_id, msg.source, json.dumps(payload))
+                )
+                conn.commit()
+                return {"ok": True, "type": msg.type, **result}
+
+            conn.execute(
+                "INSERT INTO brain_inbox_log (message_type, project_id, source, payload, status) "
+                "VALUES (?, ?, ?, ?, 'ok')",
+                (msg.type, msg.project_id, msg.source, json.dumps(payload))
+            )
+            conn.commit()
+    except Exception as e:
+        error = str(e)
+        raise HTTPException(500, f"Inbox error: {error}")
+
+    return {"ok": True, "type": msg.type, "project_id": msg.project_id, "processed_at": now}
+
+
+@app.get("/api/inbox/log")
+async def inbox_log(project_id: Optional[str] = None, limit: int = 50):
+    with open_brain_db() as conn:
+        if project_id:
+            rows = conn.execute(
+                "SELECT inbox_id, message_type, project_id, source, source_file, "
+                "status, error, processed_at FROM brain_inbox_log WHERE project_id=? "
+                "ORDER BY inbox_id DESC LIMIT ?",
+                (project_id, limit)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT inbox_id, message_type, project_id, source, source_file, "
+                "status, error, processed_at FROM brain_inbox_log "
+                "ORDER BY inbox_id DESC LIMIT ?",
+                (limit,)
+            ).fetchall()
+    return {"ok": True, "messages": [dict(r) for r in rows]}
 
 
 # ─────────────────────────────────────────────────────────────────────────────

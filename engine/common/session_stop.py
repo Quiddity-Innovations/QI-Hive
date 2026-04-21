@@ -150,8 +150,8 @@ def main() -> int:
         "session_title": title,
         "summary": summary,
         "files_changed": info["files"],
-        "decisions_made": info["decisions"],
-        "features_logged": [],
+        "decisions_made": len(info["decisions"]),
+        "features_logged": 0,
         "next_steps": "",
         "model_used": payload.get("model", ""),
     })

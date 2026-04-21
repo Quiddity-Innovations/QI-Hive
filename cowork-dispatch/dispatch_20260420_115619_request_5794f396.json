@@ -1,0 +1,13 @@
+{
+  "dispatch_id": "5794f396-03c6-4827-ad03-cf04ea646a59",
+  "source": "claude_code",
+  "type": "request",
+  "priority": "low",
+  "project": "qi_hive",
+  "payload": {
+    "task": "Confirm receipt of dispatch system. Reply to reply_path with a brief hello.",
+    "context": "This is the first test of the Claude Code → CoWork dispatch channel."
+  },
+  "created_at": "2026-04-20T11:56:19.042525",
+  "reply_path": "C:\\QIH\\shared\\reports\\inbox\\reply_5794f396-03c6-4827-ad03-cf04ea646a59.json"
+}

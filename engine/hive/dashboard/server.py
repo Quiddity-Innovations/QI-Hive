@@ -18,7 +18,7 @@ from qi_brain_client import (
     get_recent_sessions, get_agent_profile, get_brain_status,
 )
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -70,6 +70,212 @@ def load_agents():
 
 # ── AdminLTE base layout ──────────────────────────────────────────────────────
 
+PAGE_READMES: dict[str, str] = {
+    "dashboard": """
+        <p>The <strong>Dashboard</strong> is the home screen of QI Hive. It gives you a live snapshot of the entire Quiddity Innovations ecosystem at a glance.</p>
+        <ul class="mb-2">
+          <li><strong>Project cards</strong> — one card per registered project, colour-coded by status (production, in development, backlog, retired). The card shows the current task and open task count.</li>
+          <li><strong>Claude usage strip</strong> — today's token spend and 30-day rolling totals across all agents and models.</li>
+          <li><strong>Hive agent team</strong> — the 7 active agents (Architect, Builder, Scout, Scribe, Ops, Inspector, Tester) and their current state.</li>
+          <li><strong>Session log</strong> — the last few Claude Code sessions with model, duration, and project.</li>
+          <li><strong>Task summary</strong> — counts per Kanban column across all projects.</li>
+        </ul>
+        <p class="mb-0 text-muted">Nothing on this page is interactive — it is read-only. Use the sidebar to navigate to the page where you can act on a specific area.</p>
+    """,
+    "hive": """
+        <p><strong>The Hive</strong> is QI Brain's control panel — the intelligence layer that connects all QI projects.</p>
+        <ul class="mb-2">
+          <li><strong>Brain status</strong> — shows whether QI Brain (port 9010) is online. If offline, agents fall back gracefully but session logging and cross-project memory are suspended.</li>
+          <li><strong>Stats row</strong> — active projects, logged decisions, tracked features, and sessions recorded in the Brain database.</li>
+          <li><strong>Agent cards</strong> — profiles for each of the 7 Hive agents. Each agent has a speciality (architecture, building, testing, etc.), a growth log, and a list of known patterns. Click an agent card to see its full profile.</li>
+          <li><strong>Ecosystem snapshot</strong> — a live read from QI Brain of the current state of every registered project.</li>
+          <li><strong>Growth log</strong> — patterns and insights the agents have accumulated over time.</li>
+        </ul>
+        <p class="mb-0 text-muted">The Hive is the "nervous system" of QI. It does not run code — it holds memory and coordinates agents. Claude Code and Claude Work both read from and write to it.</p>
+    """,
+    "health": """
+        <p><strong>Health Check</strong> pings every registered QI project and surfaces anything that needs attention.</p>
+        <ul class="mb-2">
+          <li><strong>Per-project rows</strong> — checks that the project folder exists on disk, the git repo is clean (or notes uncommitted changes), required docs are present, INTRO status files are populated, and any NSSM services are running.</li>
+          <li><strong>Health badges</strong> — <span class="badge text-bg-success">ok</span> everything is fine · <span class="badge text-bg-warning">warning</span> something is missing but not broken · <span class="badge text-bg-danger">attention</span> something is broken or missing that will affect operation.</li>
+          <li><strong>Action items list</strong> — a consolidated punch-list at the top of items that need fixing, in priority order.</li>
+        </ul>
+        <p class="mb-0 text-muted">Run this before starting a session on any project to catch stale state, stopped services, or missing files before they cause confusion mid-session.</p>
+    """,
+    "board": """
+        <p>The <strong>Task Board</strong> is a cross-project Kanban board. All open work across every QI project lives here in one view.</p>
+        <ul class="mb-2">
+          <li><strong>Columns</strong> — Backlog (queued, not started) · In Progress (actively being worked) · Review (done, awaiting check) · Done (complete).</li>
+          <li><strong>Drag and drop</strong> — drag any card between columns to update its status. Changes persist immediately.</li>
+          <li><strong>Priority colours</strong> — red left-border = high · yellow = medium · green = low.</li>
+          <li><strong>Agent badges</strong> — each card shows which Hive agent owns the task (Architect, Builder, Scout, etc.).</li>
+          <li><strong>Project filter</strong> — use the dropdown at the top right to show only one project's tasks.</li>
+          <li><strong>Add task</strong> — use the + button at the top of any column to add a new task directly to that column.</li>
+        </ul>
+        <p class="mb-0 text-muted">This board is the single source of truth for work in flight. CoWork Dispatch items that get approved are automatically promoted to tasks here.</p>
+    """,
+    "tests": """
+        <p>The <strong>Tests</strong> page has two sections: the QI Hive automated test runner, and the EasyFlow Chrome extension launcher.</p>
+        <p><strong>QI Hive test runner:</strong></p>
+        <ul class="mb-2">
+          <li><strong>Smoke tests</strong> — fast health checks: are all services up, do the key API routes respond, is the Brain reachable?</li>
+          <li><strong>API tests</strong> — tests every <code>/api/*</code> endpoint for correct response shape and status codes.</li>
+          <li><strong>UI tests</strong> — checks that all dashboard pages render without errors.</li>
+          <li><strong>Run All</strong> — runs all suites in sequence. Results appear in the table below (passed/failed/skipped per test).</li>
+        </ul>
+        <p><strong>EasyFlow Chrome extension launcher:</strong></p>
+        <ul class="mb-0">
+          <li>Paste the current unpacked extension ID (from <code>chrome://extensions</code>) into the field and save it — it persists across sessions.</li>
+          <li><strong>Open Test Runner</strong> — opens the automated test page inside the extension in a new Chrome tab.</li>
+          <li><strong>Open Options Page</strong> — opens the EasyFlow settings page in a new tab.</li>
+          <li>The two manual test scripts (<code>v12_feature_test.js</code>, <code>regression_test.js</code>) are listed with one-click copy paths for use in DevTools.</li>
+        </ul>
+    """,
+    "projects": """
+        <p><strong>Project Status</strong> gives you a deep-dive view of any individual QI project — everything in one place without opening files manually.</p>
+        <ul class="mb-2">
+          <li><strong>Project selector</strong> — choose any registered project from the dropdown. Each project has its own set of status tabs.</li>
+          <li><strong>Intro tab</strong> — what the project is, who it is for, and its current phase.</li>
+          <li><strong>Documentation tab</strong> — links to all key documents (implementation log, meeting minutes, version history, architecture diagrams).</li>
+          <li><strong>Business features tab</strong> — user-facing features by status (live, in development, planned).</li>
+          <li><strong>Dev features tab</strong> — technical features and API endpoints, with file and line references.</li>
+          <li><strong>Tech stack tab</strong> — languages, frameworks, databases, services, and external APIs in use.</li>
+          <li><strong>Future tab</strong> — planned enhancements and ideas not yet started.</li>
+        </ul>
+        <p class="mb-0 text-muted">All content is read from each project's <code>INTRO/</code> folder. To update a project's status page, edit the JSON/MD files there — or ask Claude Code to update them after a session.</p>
+    """,
+    "services": """
+        <p><strong>Services</strong> shows the live state of every Windows NSSM service in the QI ecosystem.</p>
+        <ul class="mb-2">
+          <li>All QI services follow the naming convention <code>QI_&lt;Project&gt;&lt;Role&gt;</code> (e.g. <code>QI_MaiaBot</code>, <code>QI_BrainAPI</code>).</li>
+          <li><span class="badge bg-success">RUNNING</span> — service is active and healthy. <span class="badge bg-danger">STOPPED</span> — service is down; dependent features will not work.</li>
+          <li>The <strong>App Directory</strong> column shows which project folder the service runs from — useful for confirming a service is pointing at the right path after a migration.</li>
+          <li>Start/stop/restart controls route through the <strong>QI Elevation Broker</strong> (<code>QI_Elevate</code>) — no UAC prompt required.</li>
+        </ul>
+        <p class="mb-0 text-muted">Rule: never manually kill a port without checking this table first. Stopping <code>QI_MaiaBot</code> cuts off all LINE/Telegram/Messenger users immediately. Stopping <code>QI_NayaBot</code> also stops the FileHQ engine.</p>
+    """,
+    "tasks": """
+        <p><strong>Scheduled Tasks</strong> lists every Windows Task Scheduler job that supports the QI ecosystem — nightly syncs, health polls, token usage snapshots, and automation scripts.</p>
+        <ul class="mb-2">
+          <li><strong>State</strong> — Ready (will run at next trigger), Running, Disabled.</li>
+          <li><strong>Every</strong> — the interval or schedule (daily, every N minutes, on logon, etc.).</li>
+          <li><strong>Last run / Result</strong> — when it last fired and whether it succeeded. <span class="badge bg-success">OK</span> = exit code 0. <span class="badge bg-danger">ABORTED</span> = killed mid-run, usually by ExecutionTimeLimit — the task needs a longer timeout or the script is hanging.</li>
+          <li><strong>Next run</strong> — when it will fire next. If this is far in the future or blank, the task may be disabled.</li>
+          <li>The <i class="bi bi-eye-slash text-success"></i> icon means the task runs hidden (no console popup). <i class="bi bi-eye text-warning"></i> means it will flash a window briefly.</li>
+        </ul>
+        <p class="mb-0 text-muted">Approximately one-third of planned tasks are active. The rest are designed but not yet created. Use this page to confirm that nightly jobs actually ran before assuming the data they produce is fresh.</p>
+    """,
+    "usage": """
+        <p><strong>LLM Usage</strong> tracks token consumption and estimated cost across every Claude session logged by QI Brain.</p>
+        <ul class="mb-2">
+          <li><strong>Today / 7d / 30d cards</strong> — total tokens (input + output + cache) and cost for each window.</li>
+          <li><strong>Daily chart</strong> — three bars per day: Actual cost · Cost with local models substituted · Cost with both local and batch optimisations. Hover for exact figures.</li>
+          <li><strong>By project / By model</strong> — break down spend to see which projects and which models are consuming the most budget.</li>
+          <li><strong>Savings calculator</strong> — shows how much you could save by routing more work through local models (Ollama) or using the Anthropic Batch API for non-interactive tasks.</li>
+        </ul>
+        <p class="mb-0 text-muted">Data is logged automatically by Claude Code session hooks. If a session shows no usage data, check that the <code>QI_BrainAPI</code> service was running during that session — usage is only recorded when Brain is online.</p>
+    """,
+    "activity": """
+        <p><strong>Activity</strong> shows two live event feeds — one from each Claude runtime.</p>
+        <ul class="mb-2">
+          <li><strong>Hive event log</strong> — events fired by Claude Code session hooks across all projects: <span class="badge text-bg-info">session_start</span> <span class="badge text-bg-success">session_end</span> <span class="badge text-bg-primary">task_done</span> <span class="badge text-bg-danger">error</span>. Each entry shows the project, a summary of what happened, and the user/host it ran on.</li>
+          <li><strong>Claude Code session log</strong> — one row per Claude Code session from the last 7 days. Shows project, model used, session duration, and token cost. Colour-coded by model family (Opus / Sonnet / Haiku).</li>
+        </ul>
+        <p class="mb-0 text-muted">This is an audit trail, not a control surface — nothing here is clickable. Use it to answer "what happened in the last session?", "which model did I use yesterday?", or "why did costs spike on Tuesday?"</p>
+    """,
+    "dispatch": """
+        <p><strong>CoWork Dispatch</strong> is the decision gate between Claude Work (CoWork) and execution. Nothing CoWork proposes moves to Claude Code without passing through here.</p>
+        <ul class="mb-2">
+          <li><strong>Pending</strong> — new proposals, briefings, or task requests from CoWork waiting for a decision.</li>
+          <li><strong>Discussing</strong> — items where a conversation thread is open. CoWork, Claude Code, and you can all leave notes before a decision is made.</li>
+          <li><strong>Resolved</strong> — approved (queued for Claude Code), declined (logged with reason), or already executed.</li>
+        </ul>
+        <p><strong>Actions on each card:</strong></p>
+        <ul class="mb-2">
+          <li><span class="badge text-bg-success">Approve</span> — logs the decision to QI Brain and queues it for Claude Code execution.</li>
+          <li><span class="badge text-bg-danger">Decline</span> — logs it with a reason. CoWork sees this in its next session context.</li>
+          <li><span class="badge text-bg-warning text-dark">Discuss</span> — opens a threaded note on the card. Use this when you need more information before deciding.</li>
+        </ul>
+        <p class="mb-0 text-muted">CoWork writes dispatch files to <code>C:\QIH\cowork-dispatch\</code> and session reports to <code>C:\QIH\shared\reports\inbox\</code>. Both are watched automatically — you do not need to import anything manually.</p>
+    """,
+    "logs": """
+        <p><strong>Logs</strong> aggregates log output from all QI services and lets you tail, filter, and read them without opening files manually.</p>
+        <ul class="mb-2">
+          <li><strong>File selector</strong> — choose any <code>.log</code> file from across the QI ecosystem. Files are sorted by most recently modified.</li>
+          <li><strong>Line count</strong> — show the last 100 / 200 / 500 / 1000 lines.</li>
+          <li><strong>Filter</strong> — type any substring to filter lines in real time (client-side, no reload needed).</li>
+          <li><strong>Auto-refresh</strong> — when the toggle is on, the selected log reloads every 3 seconds so you can watch a service live.</li>
+        </ul>
+        <p><strong>Log Level Configuration</strong> (section below):</p>
+        <ul class="mb-0">
+          <li>Adjust verbosity per service — DEBUG shows everything, ERROR shows only failures. Changes to the Dashboard service apply immediately; other services pick up the change on next restart.</li>
+          <li>Settings persist to <code>config/logging.json</code>.</li>
+        </ul>
+    """,
+    "config": """
+        <p><strong>Config</strong> manages <code>gsudo</code> — the elevation tool that lets Claude Code run admin commands (NSSM service restarts, etc.) without a UAC prompt every time.</p>
+        <p><strong>Quick Presets</strong> — one click to apply a named security profile globally:</p>
+        <ul class="mb-2">
+          <li><span class="badge text-bg-success">Loose</span> — auto-cache, never expires. For trusted daily-use projects.</li>
+          <li><span class="badge text-bg-primary">Normal</span> — auto-cache, 8-minute idle timeout. Standard development.</li>
+          <li><span class="badge text-bg-warning text-dark">Strict</span> — manual cache start only, 2-minute timeout, UAC isolation on. For sensitive work.</li>
+          <li><span class="badge text-bg-danger">Locked</span> — no cache, always prompts. Maximum security for one-off operations.</li>
+        </ul>
+        <p><strong>Manual controls</strong> — fine-tune Cache Mode, Cache Duration, Log Level, UAC Isolation, and New Window behaviour individually.</p>
+        <p><strong>Per-Project Profiles</strong> — save a named gsudo profile per project. Hit Apply on any row to instantly switch the machine-wide gsudo config to that project's security level. The active profile is highlighted.</p>
+        <p class="mb-0 text-muted">All changes route through the QI Elevation Broker (<code>QI_Elevate</code>) — no UAC prompt. The broker runs as SYSTEM and only allows whitelisted gsudo commands.</p>
+    """,
+    "guide": """
+        <p>The <strong>Guide</strong> is the built-in reference library for the QI ecosystem — cheatsheets, architecture notes, and quick-reference cards in one place.</p>
+        <ul class="mb-2">
+          <li>Content is loaded from <code>C:\\UNIVERSAL\\QI_Claude_Manager_Guide.md</code> and rendered as formatted HTML.</li>
+          <li>Use <code>Ctrl+F</code> to search within the page — the guide is fully text-searchable.</li>
+        </ul>
+        <p class="mb-0 text-muted">Planned additions: QI Standards reference, port registry table, NSSM command cheatsheet, LLM chain topology diagram, and a new-project quickstart walkthrough. These will be migrated here once the higher-priority dashboard rebuild is complete.</p>
+    """,
+}
+
+
+def _readme_block(page_id: str) -> str:
+    content = PAGE_READMES.get(page_id, "")
+    if not content:
+        return ""
+    return f"""<div class="mb-4">
+      <a class="small text-muted text-decoration-none d-inline-flex align-items-center gap-1"
+         data-bs-toggle="collapse" href="#{page_id}-readme" role="button" aria-expanded="false">
+        <i class="bi bi-info-circle me-1"></i>
+        About this page
+        <i class="bi bi-chevron-down" id="{page_id}-readme-chevron"
+           style="font-size:.7rem;transition:transform .2s;"></i>
+      </a>
+      <div class="collapse mt-2" id="{page_id}-readme">
+        <div class="card card-body small py-3"
+             style="background:var(--bs-tertiary-bg);border:1px solid var(--bs-border-color);">
+          {content}
+        </div>
+      </div>
+    </div>
+    <script>
+    (function(){{
+      var el   = document.getElementById('{page_id}-readme');
+      var chev = document.getElementById('{page_id}-readme-chevron');
+      if (el && chev) {{
+        el.addEventListener('show.bs.collapse', function(){{ chev.style.transform='rotate(180deg)'; }});
+        el.addEventListener('hide.bs.collapse', function(){{ chev.style.transform='rotate(0deg)';   }});
+      }}
+    }})();
+    </script>"""
+
+
+VALID_THEMES = {"dark", "light", "auto"}
+
+def _get_theme() -> str:
+    return _load_hive_config().get("theme", "dark")
+
+def _theme_icon(theme: str) -> str:
+    return {"dark": "bi-moon-stars-fill", "light": "bi-sun-fill", "auto": "bi-circle-half"}.get(theme, "bi-circle-half")
+
+
 def base_layout(title: str, content: str, active: str = "") -> str:
     nav_items = [
         ("dashboard", "/",        "bi-speedometer2",  "Dashboard"),
@@ -82,6 +288,9 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
         ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage"),
         ("activity",  "/activity","bi-activity",      "Activity"),
+        ("dispatch",  "/dispatch","bi-send-check",    "CoWork Dispatch"),
+        ("brain",     "/brain",   "bi-cpu",           "QI Brain"),
+        ("warroom",   "/warroom", "bi-broadcast-pin", "War Room"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
         ("guide",     "/guide",   "bi-book",          "Guide"),
@@ -97,7 +306,11 @@ def base_layout(title: str, content: str, active: str = "") -> str:
           </a>
         </li>"""
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now   = datetime.now().strftime("%Y-%m-%d %H:%M")
+    theme = _get_theme()
+    t_icon = _theme_icon(theme)
+    # 'auto' maps to no data-bs-theme (Bootstrap auto-detects from OS)
+    bs_theme_attr = f'data-bs-theme="{theme}"' if theme != "auto" else ""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -107,13 +320,23 @@ def base_layout(title: str, content: str, active: str = "") -> str:
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"/>
   <link rel="stylesheet" href="/static/css/adminlte.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/adminlte.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     .priority-high   {{ border-left: 4px solid #dc3545 !important; }}
     .priority-medium {{ border-left: 4px solid #ffc107 !important; }}
     .priority-low    {{ border-left: 4px solid #198754 !important; }}
     .kanban-col      {{ min-height: 200px; }}
-    .task-card       {{ cursor: grab; margin-bottom: 10px; }}
+    .task-card       {{ cursor: grab; margin-bottom: 10px; position: relative; }}
     .task-card:active{{ cursor: grabbing; }}
+    .task-card:hover .task-actions {{ opacity: 1 !important; }}
+    .task-card.selected {{ outline: 2px solid #0d6efd; outline-offset: 1px; }}
+    .task-check      {{ visibility: hidden; position: absolute; top: 7px; right: 7px; z-index: 20;
+                        width: 1.1rem; height: 1.1rem; cursor: pointer; }}
+    .select-mode .task-check        {{ visibility: visible; }}
+    .select-mode .task-card         {{ cursor: pointer; }}
+    .select-mode .task-card .task-actions {{ display: none !important; }}
     .col-header      {{ font-size: .75rem; font-weight: 700; text-transform: uppercase;
                         letter-spacing: .08em; padding: 8px 12px; border-radius: 6px 6px 0 0; }}
     .badge-agent     {{ font-size: .68rem; }}
@@ -123,7 +346,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     .sortable-ghost  {{ opacity: .4; }}
   </style>
 </head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary" data-bs-theme="dark">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary" {bs_theme_attr}>
 <div class="app-wrapper">
 
   <!-- Navbar -->
@@ -138,6 +361,23 @@ def base_layout(title: str, content: str, active: str = "") -> str:
       </ul>
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><span class="nav-link text-muted" style="font-size:.8rem">{now}</span></li>
+        <!-- Theme switcher -->
+        <li class="nav-item dropdown">
+          <a class="nav-link" href="#" data-bs-toggle="dropdown" title="Switch theme" id="themeToggle">
+            <i class="bi {t_icon}"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width:120px">
+            <li><a class="dropdown-item {'fw-bold' if theme=='dark' else ''}"
+                   href="#" onclick="setTheme('dark');return false;">
+              <i class="bi bi-moon-stars-fill me-2"></i>Dark</a></li>
+            <li><a class="dropdown-item {'fw-bold' if theme=='light' else ''}"
+                   href="#" onclick="setTheme('light');return false;">
+              <i class="bi bi-sun-fill me-2"></i>Light</a></li>
+            <li><a class="dropdown-item {'fw-bold' if theme=='auto' else ''}"
+                   href="#" onclick="setTheme('auto');return false;">
+              <i class="bi bi-circle-half me-2"></i>System</a></li>
+          </ul>
+        </li>
         <li class="nav-item">
           <a class="nav-link" href="/health" title="Run Health Check">
             <i class="bi bi-heart-pulse"></i>
@@ -148,7 +388,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
   </nav>
 
   <!-- Sidebar -->
-  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+  <aside class="app-sidebar bg-body-secondary shadow" {bs_theme_attr}>
     <div class="sidebar-brand">
       <a href="/" class="brand-link">
         <i class="bi bi-cpu brand-image" style="font-size:1.6rem;margin-right:8px;color:#6366f1"></i>
@@ -164,10 +404,10 @@ def base_layout(title: str, content: str, active: str = "") -> str:
       </nav>
       <div class="sidebar-legend px-3 pb-3 pt-2 border-top border-secondary-subtle" style="font-size:.75rem;">
         <div class="text-uppercase text-secondary fw-bold mb-2" style="letter-spacing:.05em;font-size:.68rem;">Status Legend</div>
-        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-success me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Complete</span></div>
-        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-warning me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>In Progress</span></div>
-        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-danger me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Backlog</span></div>
-        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-success-subtle me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>New</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-dark me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Complete</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-success me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>In Progress</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-warning me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Backlog</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-light me-2" style="width:14px;height:14px;padding:0;border:1px solid #555">&nbsp;</span><span>New</span></div>
         <div class="d-flex align-items-center"><span class="badge text-bg-secondary me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Retired</span></div>
       </div>
     </div>
@@ -190,7 +430,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     </div>
     <div class="app-content">
       <div class="container-fluid">
-        {content}
+        {_readme_block(active)}{content}
       </div>
     </div>
   </main>
@@ -202,8 +442,13 @@ def base_layout(title: str, content: str, active: str = "") -> str:
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="/static/js/adminlte.min.js"></script>
+<script>
+function setTheme(t) {{
+  fetch('/api/theme', {{method:'POST', headers:{{'Content-Type':'application/json'}},
+    body: JSON.stringify({{theme: t}})
+  }}).then(() => location.reload());
+}}
+</script>
 </body>
 </html>"""
 
@@ -215,15 +460,15 @@ def render_dashboard() -> str:
     tasks   = load_tasks()
 
     proj_colors = {
-        "complete":           ("success",         "bi-check-circle-fill"),
-        "in_progress":        ("warning",         "bi-play-circle-fill"),
-        "backlog":            ("danger",          "bi-inbox-fill"),
-        "new":                ("success-subtle",  "bi-stars"),
-        "retired":            ("secondary",       "bi-archive-fill"),
-        "idle":               ("secondary",       "bi-dash-circle"),
-        "active_production":  ("success",         "bi-check-circle-fill"),
-        "active_development": ("warning",         "bi-play-circle-fill"),
-        "in_development":     ("warning",         "bi-play-circle-fill"),
+        "complete":           ("dark",      "bi-check-circle-fill"),
+        "in_progress":        ("success",   "bi-play-circle-fill"),
+        "backlog":            ("warning",   "bi-inbox-fill"),
+        "new":                ("light",     "bi-stars"),
+        "retired":            ("secondary", "bi-archive-fill"),
+        "idle":               ("secondary", "bi-dash-circle"),
+        "active_production":  ("dark",      "bi-check-circle-fill"),
+        "active_development": ("success",   "bi-play-circle-fill"),
+        "in_development":     ("success",   "bi-play-circle-fill"),
     }
 
     # Project small-boxes
@@ -306,8 +551,8 @@ def render_dashboard() -> str:
     <div class="row">
       <div class="col-12 mb-3">
         <div class="d-flex gap-3 flex-wrap">
-          <span class="badge text-bg-danger fs-6"><i class="bi bi-inbox me-1"></i> Backlog: {col_counts.get("backlog",0)}</span>
-          <span class="badge text-bg-warning fs-6"><i class="bi bi-play-circle me-1"></i> In Progress: {col_counts.get("in_progress",0)}</span>
+          <span class="badge text-bg-warning fs-6"><i class="bi bi-inbox me-1"></i> Backlog: {col_counts.get("backlog",0)}</span>
+          <span class="badge text-bg-success fs-6"><i class="bi bi-play-circle me-1"></i> In Progress: {col_counts.get("in_progress",0)}</span>
           <span class="badge text-bg-info fs-6"><i class="bi bi-search me-1"></i> Review: {col_counts.get("review",0)}</span>
           <span class="badge text-bg-success fs-6"><i class="bi bi-check-circle me-1"></i> Done: {col_counts.get("done",0)}</span>
           <a href="/board" class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-kanban me-1"></i> Open Board</a>
@@ -498,10 +743,10 @@ def render_board(project_filter: str = "") -> str:
         for p in projects)
 
     columns = [
-        ("backlog",     "Backlog",     "danger"),
-        ("in_progress", "In Progress", "warning"),
+        ("backlog",     "Backlog",     "warning"),
+        ("in_progress", "In Progress", "success"),
         ("review",      "Review",      "info"),
-        ("done",        "Done",        "success"),
+        ("done",        "Done",        "dark"),
     ]
 
     priority_colors = {"high": "danger", "medium": "warning", "low": "success"}
@@ -525,13 +770,31 @@ def render_board(project_filter: str = "") -> str:
             a_icon = agent_icons.get(agent,"bi-person")
             proj = t.get("project","—")
             cards += f"""
-            <div class="card task-card priority-{pri}" data-id="{t['id']}">
+            <div class="card task-card priority-{pri}" data-id="{t['id']}"
+                 data-title="{t['title'].replace(chr(34), '&quot;')}"
+                 data-desc="{t.get('description','').replace(chr(34), '&quot;')}"
+                 data-project="{proj}"
+                 data-agent="{agent}"
+                 data-priority="{pri}"
+                 onclick="cardClick(event, this)">
+              <input type="checkbox" class="task-check form-check-input"
+                     onclick="event.stopPropagation()" onchange="onCheckChange()"/>
               <div class="card-body p-2">
                 <div class="d-flex justify-content-between align-items-start mb-1">
                   <span class="badge text-bg-{pri_color} badge-agent">{pri}</span>
-                  <button class="btn btn-sm btn-link p-0 text-danger" onclick="deleteTask('{t['id']}')" title="Delete">
-                    <i class="bi bi-x"></i>
-                  </button>
+                  <div class="d-flex gap-1 task-actions"
+                       style="opacity:0;transition:opacity .15s;">
+                    <button class="btn btn-xs btn-outline-secondary py-0 px-1"
+                            onclick="event.stopPropagation();openEditModal('{t['id']}')"
+                            title="Edit task" style="font-size:.68rem;">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-xs btn-outline-danger py-0 px-1"
+                            onclick="event.stopPropagation();deleteTask('{t['id']}')"
+                            title="Delete task" style="font-size:.68rem;">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
                 </div>
                 <p class="mb-1 fw-semibold" style="font-size:.9rem">{t['title']}</p>
                 <p class="text-muted mb-2" style="font-size:.78rem">{t.get('description','')[:80]}{'...' if len(t.get('description',''))>80 else ''}</p>
@@ -571,7 +834,15 @@ def render_board(project_filter: str = "") -> str:
           </select>
         </div>
       </div>
-      <div class="col-md-8 text-end">
+      <div class="col-md-8 text-end d-flex gap-2 justify-content-end">
+        <button class="btn btn-sm btn-danger d-none" id="deleteSelectedBtn"
+                onclick="deleteSelected()">
+          <i class="bi bi-trash3 me-1"></i>Delete Selected (<span id="selCount">0</span>)
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" id="selectToggleBtn"
+                onclick="toggleSelectMode()">
+          <i class="bi bi-check2-square me-1"></i>Select
+        </button>
         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
           <i class="bi bi-plus-circle me-1"></i>Add Task
         </button>
@@ -629,6 +900,55 @@ def render_board(project_filter: str = "") -> str:
       </div>
     </div>
 
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Task</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editTaskId"/>
+            <div class="mb-3">
+              <label class="form-label">Title</label>
+              <input type="text" class="form-control" id="editTitle"/>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" id="editDesc" rows="2"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Project</label>
+                <select class="form-select" id="editProject">
+                  {proj_select_opts}
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Agent</label>
+                <select class="form-select" id="editAgent">
+                  {agent_select_opts}
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="editPriority">
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
     // Initialise SortableJS on each column
     document.querySelectorAll('.kanban-col').forEach(col => {{
@@ -636,6 +956,7 @@ def render_board(project_filter: str = "") -> str:
         group: 'tasks',
         animation: 150,
         ghostClass: 'sortable-ghost',
+        filter: '.task-check',
         onEnd: function(evt) {{
           const taskId = evt.item.dataset.id;
           const newCol = evt.to.dataset.column;
@@ -680,6 +1001,86 @@ def render_board(project_filter: str = "") -> str:
       if (!confirm('Delete this task?')) return;
       fetch('/api/tasks/' + id, {{method: 'DELETE'}})
         .then(() => location.reload());
+    }}
+
+    // ── Edit modal ────────────────────────────────────────────────────────
+    function openEditModal(id) {{
+      const card = document.querySelector('.task-card[data-id="' + id + '"]');
+      if (!card) return;
+      document.getElementById('editTaskId').value    = id;
+      document.getElementById('editTitle').value     = card.dataset.title || '';
+      document.getElementById('editDesc').value      = card.dataset.desc  || '';
+      const proj = document.getElementById('editProject');
+      if (proj) {{ for (let o of proj.options) o.selected = (o.value === card.dataset.project); }}
+      const agent = document.getElementById('editAgent');
+      if (agent) {{ for (let o of agent.options) o.selected = (o.value === card.dataset.agent); }}
+      const pri = document.getElementById('editPriority');
+      if (pri) {{ for (let o of pri.options) o.selected = (o.value === card.dataset.priority); }}
+      new bootstrap.Modal(document.getElementById('editTaskModal')).show();
+    }}
+
+    function saveEdit() {{
+      const id = document.getElementById('editTaskId').value;
+      const payload = {{
+        title:       document.getElementById('editTitle').value,
+        description: document.getElementById('editDesc').value,
+        project:     document.getElementById('editProject').value,
+        agent:       document.getElementById('editAgent').value,
+        priority:    document.getElementById('editPriority').value,
+      }};
+      fetch('/api/tasks/' + id, {{
+        method: 'PATCH',
+        headers: {{'Content-Type': 'application/json'}},
+        body: JSON.stringify(payload)
+      }}).then(() => location.reload());
+    }}
+
+    // ── Select / bulk-delete ──────────────────────────────────────────────
+    let _selectMode = false;
+
+    function toggleSelectMode() {{
+      _selectMode = !_selectMode;
+      const board = document.getElementById('kanban-board');
+      const btn   = document.getElementById('selectToggleBtn');
+      if (_selectMode) {{
+        board.classList.add('select-mode');
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-warning');
+        btn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Cancel';
+      }} else {{
+        board.classList.remove('select-mode');
+        btn.classList.remove('btn-warning');
+        btn.classList.add('btn-outline-secondary');
+        btn.innerHTML = '<i class="bi bi-check2-square me-1"></i>Select';
+        document.querySelectorAll('.task-check').forEach(cb => {{ cb.checked = false; }});
+        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+        onCheckChange();
+      }}
+    }}
+
+    function cardClick(evt, card) {{
+      if (!_selectMode) return;
+      const cb = card.querySelector('.task-check');
+      cb.checked = !cb.checked;
+      card.classList.toggle('selected', cb.checked);
+      onCheckChange();
+    }}
+
+    function onCheckChange() {{
+      const count = document.querySelectorAll('.task-check:checked').length;
+      document.getElementById('selCount').textContent = count;
+      const btn = document.getElementById('deleteSelectedBtn');
+      btn.classList.toggle('d-none', count === 0);
+    }}
+
+    function deleteSelected() {{
+      const ids = [...document.querySelectorAll('.task-check:checked')]
+                    .map(cb => cb.closest('.task-card').dataset.id);
+      if (!ids.length) return;
+      if (!confirm('Delete ' + ids.length + ' task(s)?')) return;
+      Promise.all(ids.map(id =>
+        fetch('/api/tasks/' + id, {{method: 'DELETE'}})
+      )).then(() => location.reload());
     }}
     </script>"""
 
@@ -875,7 +1276,179 @@ def render_hive() -> str:
           </div>
         </div>
       </div>
-    </div>"""
+    </div>
+
+    <!-- Brain Poller -->
+    <div class="row mt-4">
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title"><i class="bi bi-arrow-repeat me-2 text-info"></i>Brain Poller</h3>
+            <button class="btn btn-sm btn-outline-info" onclick="triggerPoll()">
+              <i class="bi bi-play-fill me-1"></i>Poll Now
+            </button>
+          </div>
+          <div class="card-body" id="pollerStatus">
+            <p class="text-muted">Loading poller status…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Distillation -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-funnel me-2 text-warning"></i>Distil Brain Memory</h3>
+          </div>
+          <div class="card-body">
+            <div class="mb-2">
+              <label class="form-label form-label-sm">Project</label>
+              <select class="form-select form-select-sm" id="distillProject">
+                <option value="">— select project —</option>
+                {''.join(f'<option value="{p}">{p}</option>' for p in [
+                    "qi_hive","easyflow","maia","naya","nexus","openclaw","filehq"
+                ])}
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label form-label-sm">Reason</label>
+              <select class="form-select form-select-sm" id="distillReason" onchange="toggleDistillFields()">
+                <option value="stale_cleanup">Stale cleanup (remove dead paths / worktree refs)</option>
+                <option value="scope_dropped">Scope dropped (feature or project line retired)</option>
+                <option value="completed">Project completed (squash to final state)</option>
+              </select>
+            </div>
+            <div id="distillScopeFields">
+              <div class="mb-2">
+                <label class="form-label form-label-sm">Scope label <small class="text-muted">(what was dropped)</small></label>
+                <input type="text" class="form-control form-control-sm" id="distillScope"
+                       placeholder="e.g. Naya chat interface, NEXUS v1, worktree paths"/>
+              </div>
+              <div class="mb-2">
+                <label class="form-label form-label-sm">Reason note <small class="text-muted">(kept in live Brain)</small></label>
+                <input type="text" class="form-control form-control-sm" id="distillNote"
+                       placeholder="e.g. Scope paused pending redesign"/>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-warning w-100" onclick="runDistill()">
+              <i class="bi bi-funnel-fill me-1"></i>Distil Now
+            </button>
+            <div id="distillResult" class="mt-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Poll history -->
+    <div class="row mt-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-clock-history me-2"></i>Poll History (last 10)</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0" id="pollHistory">
+              <thead class="table-dark">
+                <tr><th>Time</th><th>Duration</th><th>Projects</th><th>Changes</th><th>Inbox</th><th>Errors</th><th>Summary</th></tr>
+              </thead>
+              <tbody><tr><td colspan="7" class="text-center text-muted">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // ── Poller status ──────────────────────────────────────────────────────────
+    function loadPollerStatus() {{
+      fetch('http://localhost:9010/api/poll/status')
+        .then(r => r.json()).then(d => {{
+          const el = document.getElementById('pollerStatus');
+          const lr = d.last_result || {{}};
+          el.innerHTML = `
+            <div class="d-flex gap-3 mb-2">
+              <span class="badge text-bg-${{d.poller_alive ? 'success':'danger'}}">
+                ${{d.poller_alive ? 'Running' : 'Stopped'}}
+              </span>
+              ${{d.poller_running ? '<span class="badge text-bg-warning">Polling…</span>' : ''}}
+            </div>
+            <small class="text-muted">Last poll: ${{(lr.started_at || '—').slice(0,19)}}</small><br/>
+            <small class="text-muted">${{lr.summary || 'No polls yet'}}</small>`;
+
+          // Fill history table
+          const tbody = document.querySelector('#pollHistory tbody');
+          if (d.history && d.history.length) {{
+            tbody.innerHTML = d.history.slice(0,10).map(h => `
+              <tr>
+                <td style="font-size:.78rem">${{h.started_at.slice(0,19)}}</td>
+                <td>${{h.duration_ms}}ms</td>
+                <td>${{h.projects_checked}}</td>
+                <td>${{h.changes_found}}</td>
+                <td>${{h.inbox_processed}}</td>
+                <td>${{h.errors ? JSON.parse(h.errors).length : 0}}</td>
+                <td style="font-size:.75rem">${{(h.summary||'').slice(0,80)}}</td>
+              </tr>`).join('');
+          }} else {{
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No polls recorded yet</td></tr>';
+          }}
+        }}).catch(() => {{
+          document.getElementById('pollerStatus').innerHTML =
+            '<span class="text-danger">Brain API offline — poller status unavailable</span>';
+        }});
+    }}
+    loadPollerStatus();
+
+    function triggerPoll() {{
+      const btn = event.target;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Polling…';
+      fetch('http://localhost:9010/api/poll/trigger', {{method:'POST'}})
+        .then(r => r.json()).then(d => {{
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Poll Now';
+          loadPollerStatus();
+        }}).catch(() => {{
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Poll Now';
+        }});
+    }}
+
+    // ── Distillation ──────────────────────────────────────────────────────────
+    function toggleDistillFields() {{
+      const reason = document.getElementById('distillReason').value;
+      document.getElementById('distillScopeFields').style.display =
+        reason === 'completed' ? 'none' : 'block';
+    }}
+
+    function runDistill() {{
+      const project = document.getElementById('distillProject').value;
+      const reason  = document.getElementById('distillReason').value;
+      const scope   = document.getElementById('distillScope').value;
+      const note    = document.getElementById('distillNote').value;
+      if (!project) {{ alert('Select a project first'); return; }}
+      if (reason !== 'completed' && !scope) {{ alert('Enter a scope label'); return; }}
+      if (!confirm(`Distil ${{project}} (${{reason}})? This will archive matching records.`)) return;
+
+      const el = document.getElementById('distillResult');
+      el.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Distilling…';
+
+      fetch('http://localhost:9010/api/distill', {{
+        method: 'POST',
+        headers: {{'Content-Type':'application/json'}},
+        body: JSON.stringify({{
+          project_id: project, reason, scope_label: scope, drop_reason: note
+        }})
+      }}).then(r => r.json()).then(d => {{
+        el.innerHTML = d.ok
+          ? `<div class="alert alert-success py-1 mb-0">
+               ✅ Done — ${{d.decisions_archived}} decisions + ${{d.features_archived}} features archived.
+             </div>`
+          : `<div class="alert alert-danger py-1 mb-0">Error: ${{d.detail || JSON.stringify(d)}}</div>`;
+      }}).catch(e => {{
+        el.innerHTML = `<div class="alert alert-danger py-1 mb-0">Network error: ${{e}}</div>`;
+      }});
+    }}
+    </script>"""
 
 
 def render_agent_profile(agent_id: str) -> str:
@@ -962,9 +1535,21 @@ def api_brain_agents():
 def api_brain_status():
     return JSONResponse({"brain_online": brain_online(), **get_brain_status()})
 
-@app.get("/health", response_class=HTMLResponse)
-def health_page():
-    return base_layout("Health Check", render_health(), "health")
+@app.get("/health")
+def health_page(request: Request):
+    """Content-negotiated: browsers get HTML, monitors/API clients get JSON.
+    QI validator uses Accept: application/json or curl default → JSON probe."""
+    accept = (request.headers.get("accept") or "").lower()
+    wants_html = "text/html" in accept and "application/json" not in accept
+    if wants_html:
+        return HTMLResponse(base_layout("Health Check", render_health(), "health"))
+    # JSON probe
+    return JSONResponse({
+        "status":  "ok",
+        "service": "qi_hive",
+        "port":    8600,
+        "version": "3.0.0",
+    })
 
 @app.get("/board", response_class=HTMLResponse)
 def board_page(project: str = "All"):
@@ -1022,6 +1607,28 @@ def api_ping():
         "version": app.version,
     })
 
+@app.get("/version")
+def api_version():
+    """Simple version probe — QI ecosystem standard."""
+    return JSONResponse({"service": "qi_hive", "version": app.version, "build": "2026-04-20"})
+
+@app.get("/info")
+def api_info():
+    """Full service metadata — capabilities, endpoints, runtime."""
+    import sys, platform
+    return JSONResponse({
+        "service":         "qi_hive",
+        "version":         app.version,
+        "build":           "2026-04-20",
+        "port":            8600,
+        "python":          sys.version.split()[0],
+        "platform":        platform.system(),
+        "capabilities":    ["dashboard", "task_board", "services", "brain_ui",
+                            "warroom", "cowork_dispatch", "themes", "scheduled_tasks"],
+        "endpoints_total": len([r for r in app.routes if hasattr(r, "path")]),
+        "docs_url":        "/docs",
+    })
+
 @app.get("/api/scout/digest")
 def api_scout_digest():
     """Fetch AI news digest from NEXUS and return top items."""
@@ -1070,10 +1677,12 @@ class TaskCreate(BaseModel):
     priority: Optional[str] = "medium"
 
 class TaskUpdate(BaseModel):
-    column: Optional[str] = None
-    title: Optional[str] = None
-    agent: Optional[str] = None
-    priority: Optional[str] = None
+    column:      Optional[str] = None
+    title:       Optional[str] = None
+    description: Optional[str] = None
+    project:     Optional[str] = None
+    agent:       Optional[str] = None
+    priority:    Optional[str] = None
 
 @app.get("/api/tasks")
 def api_get_tasks():
@@ -1101,10 +1710,12 @@ def api_update_task(task_id: str, update: TaskUpdate):
     tasks = load_tasks()
     for t in tasks:
         if t["id"] == task_id:
-            if update.column   is not None: t["column"]   = update.column
-            if update.title    is not None: t["title"]    = update.title
-            if update.agent    is not None: t["agent"]    = update.agent
-            if update.priority is not None: t["priority"] = update.priority
+            if update.column      is not None: t["column"]      = update.column
+            if update.title       is not None: t["title"]       = update.title
+            if update.description is not None: t["description"] = update.description
+            if update.project     is not None: t["project"]     = update.project
+            if update.agent       is not None: t["agent"]       = update.agent
+            if update.priority    is not None: t["priority"]    = update.priority
             save_tasks(tasks)
             return JSONResponse(t)
     raise HTTPException(404, "Task not found")
@@ -1120,6 +1731,18 @@ def api_delete_task(task_id: str):
 
 TESTS_RESULTS = Path(r"C:\Claude\Tests\results\latest.json")
 TESTS_RUNNER  = Path(r"C:\Claude\Tests\run_tests.py")
+
+HIVE_CONFIG        = _PROJECT_DIR / "data" / "hive_config.json"
+_EF_WORKTREE       = Path(r"C:\EasyFlow\tester_builds\beta_unpacked")
+EASYFLOW_MANIFEST  = _EF_WORKTREE / "manifest.json"
+EASYFLOW_TESTS_DIR = _EF_WORKTREE / "tests"
+
+
+def _load_hive_config() -> dict:
+    return load_json(HIVE_CONFIG)
+
+def _save_hive_config(data: dict):
+    save_json(HIVE_CONFIG, data)
 
 def render_tests() -> str:
     # Load latest results if available
@@ -1279,6 +1902,135 @@ def render_tests() -> str:
     </script>"""
 
 
+def render_easyflow_card() -> str:
+    """EasyFlow Chrome extension test launcher card."""
+    # Read version from manifest (name uses __MSG__ locale key — just use "EasyFlow")
+    ef_version = "—"
+    if EASYFLOW_MANIFEST.exists():
+        try:
+            mf = json.loads(EASYFLOW_MANIFEST.read_text(encoding="utf-8"))
+            ef_version = mf.get("version", "—")
+        except Exception:
+            pass
+
+    # Load persisted extension ID
+    cfg = _load_hive_config()
+    saved_ext_id = cfg.get("easyflow_extension_id", "")
+
+    # Build test-script copy rows
+    script_rows = ""
+    for script_name in ("v12_feature_test.js", "regression_test.js"):
+        sp = EASYFLOW_TESTS_DIR / script_name
+        display_path = str(sp).replace("\\", "\\\\")
+        label = "Feature Tests v1.2" if "v12" in script_name else "Regression Tests"
+        exists_badge = '<span class="badge text-bg-success ms-1">found</span>' if sp.exists() else '<span class="badge text-bg-danger ms-1">missing</span>'
+        script_rows += f"""
+          <tr>
+            <td><small>{label}{exists_badge}</small></td>
+            <td><small><code id="path-{script_name}">{display_path}</code></small></td>
+            <td>
+              <button class="btn btn-xs btn-outline-secondary py-0 px-1"
+                      onclick="copyPath('{script_name}')">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </td>
+          </tr>"""
+
+    return f"""
+    <hr class="my-4"/>
+    <div class="row mb-2">
+      <div class="col-12">
+        <h5 class="text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.08em;">
+          <i class="bi bi-puzzle me-1"></i>Chrome Extension — EasyFlow
+        </h5>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">
+          <i class="bi bi-envelope-open me-2"></i>EasyFlow
+          <span class="badge text-bg-secondary ms-2">v{ef_version}</span>
+        </h3>
+        <span class="text-muted" style="font-size:.8rem;">
+          Unpacked extension — ID changes on each Chrome reload
+        </span>
+      </div>
+      <div class="card-body">
+
+        <!-- Extension ID input -->
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col">
+            <label class="form-label mb-1" style="font-size:.8rem;">Extension ID</label>
+            <input type="text" id="ef-ext-id" class="form-control form-control-sm font-monospace"
+                   placeholder="e.g. abcdefghijklmnopqrstuvwxyzabcdef"
+                   value="{saved_ext_id}"/>
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-outline-primary" onclick="saveExtId()">
+              <i class="bi bi-floppy me-1"></i>Save ID
+            </button>
+          </div>
+        </div>
+        <div id="ef-save-msg" class="small text-success mb-3" style="display:none">
+          <i class="bi bi-check-circle me-1"></i>Extension ID saved.
+        </div>
+
+        <!-- Action buttons -->
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <button class="btn btn-sm btn-primary" onclick="openEfPage('tests/automated_runner.html')">
+            <i class="bi bi-play-circle me-1"></i>Open Test Runner
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="openEfPage('options/options.html')">
+            <i class="bi bi-gear me-1"></i>Open Options Page
+          </button>
+        </div>
+
+        <!-- Test script references -->
+        <div class="card card-secondary card-outline">
+          <div class="card-header py-2">
+            <h3 class="card-title" style="font-size:.8rem;">Manual Test Scripts</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+              <tbody>{script_rows}</tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+    function getExtId() {{
+      return document.getElementById('ef-ext-id').value.trim();
+    }}
+    function openEfPage(page) {{
+      const id = getExtId();
+      if (!id) {{ alert('Enter the Extension ID first.'); return; }}
+      window.open('chrome-extension://' + id + '/' + page, '_blank');
+    }}
+    function saveExtId() {{
+      const id = getExtId();
+      fetch('/api/easyflow/config', {{
+        method: 'POST',
+        headers: {{'Content-Type': 'application/json'}},
+        body: JSON.stringify({{extension_id: id}})
+      }}).then(r => r.json()).then(() => {{
+        const msg = document.getElementById('ef-save-msg');
+        msg.style.display = 'block';
+        setTimeout(() => msg.style.display = 'none', 3000);
+      }});
+    }}
+    function copyPath(filename) {{
+      const el = document.getElementById('path-' + filename);
+      navigator.clipboard.writeText(el.textContent).then(() => {{
+        el.style.color = '#198754';
+        setTimeout(() => el.style.color = '', 1500);
+      }});
+    }}
+    </script>"""
+
+
 # ── API: Tests ────────────────────────────────────────────────────────────────
 
 import subprocess as _subprocess
@@ -1314,15 +2066,71 @@ def api_run_tests(suite: str = "all"):
 
 @app.get("/tests", response_class=HTMLResponse)
 def tests_page():
-    return base_layout("Tests", render_tests(), "tests")
+    return base_layout("Tests", render_tests() + render_easyflow_card(), "tests")
+
+
+@app.get("/api/easyflow/config")
+def get_easyflow_config():
+    cfg = _load_hive_config()
+    return JSONResponse({"extension_id": cfg.get("easyflow_extension_id", "")})
+
+
+@app.post("/api/easyflow/config")
+async def save_easyflow_config(request: Request):
+    body = await request.json()
+    cfg  = _load_hive_config()
+    cfg["easyflow_extension_id"] = body.get("extension_id", "")
+    _save_hive_config(cfg)
+    return JSONResponse({"ok": True})
 
 
 # ── /config — log level management ────────────────────────────────────────────
 
 LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
+# gsudo preset definitions — used by both render and apply endpoint
+GSUDO_PRESETS = {
+    "loose":  {
+        "CacheMode": "Auto", "CacheDuration": "Infinite",
+        "SecurityEnforceUacIsolation": "False", "LogLevel": "Warning",
+        "label": "Loose", "color": "success",
+        "description": "Auto cache, never expires — trust this project completely",
+    },
+    "normal": {
+        "CacheMode": "Auto", "CacheDuration": "00:08:00",
+        "SecurityEnforceUacIsolation": "False", "LogLevel": "Info",
+        "label": "Normal", "color": "primary",
+        "description": "Auto cache, 8-minute idle timeout — standard development",
+    },
+    "strict": {
+        "CacheMode": "Explicit", "CacheDuration": "00:02:00",
+        "SecurityEnforceUacIsolation": "True", "LogLevel": "Info",
+        "label": "Strict", "color": "warning",
+        "description": "Manual cache start only, 2-minute timeout, input isolation",
+    },
+    "locked": {
+        "CacheMode": "Disabled", "CacheDuration": "00:00:30",
+        "SecurityEnforceUacIsolation": "True", "LogLevel": "Info",
+        "label": "Locked", "color": "danger",
+        "description": "Always prompt — no caching, maximum security",
+    },
+}
 
-def render_config() -> str:
+QI_PROJECTS = [
+    ("maia",      "Maia"),
+    ("naya",      "Naya"),
+    ("nexus",     "NEXUS"),
+    ("openclaw",  "OpenClaw"),
+    ("mq",        "MQ"),
+    ("easyflow",  "EasyFlow"),
+    ("qi_hive",   "QI Hive"),
+    ("qi_brain",  "QI Brain"),
+    ("universal", "QI-Universal"),
+]
+
+
+def render_log_config() -> str:
+    """Logging level control — rendered inside the Logs page."""
     cfg = list_services()
     rows = []
     for name, svc in cfg["services"].items():
@@ -1345,17 +2153,17 @@ def render_config() -> str:
     table_body = "\n".join(rows) if rows else '<tr><td colspan="3" class="text-muted">No services configured</td></tr>'
 
     return f"""
+    <hr class="my-4"/>
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-sliders"></i> Logging Configuration</h5>
+        <h5 class="mb-0"><i class="bi bi-sliders"></i> Log Level Configuration</h5>
         <span class="badge bg-secondary">Default: {cfg['default_level']}</span>
       </div>
       <div class="card-body">
         <p class="text-muted small mb-3">
           Adjust log verbosity per service. Changes persist to
-          <code>config/logging.json</code> and apply immediately to new log
-          statements in this Dashboard process. Other services (Brain, tunnels)
-          pick up changes on next restart.
+          <code>config/logging.json</code> and apply immediately to this
+          Dashboard process. Other services pick up changes on next restart.
         </p>
         <table class="table table-sm table-hover align-middle">
           <thead>
@@ -1363,7 +2171,7 @@ def render_config() -> str:
           </thead>
           <tbody>{table_body}</tbody>
         </table>
-        <div id="config-toast" class="text-success small"></div>
+        <div id="log-config-toast" class="text-success small"></div>
       </div>
     </div>
     <script>
@@ -1376,12 +2184,571 @@ def render_config() -> str:
         body: JSON.stringify({{service, level}})
       }});
       const j = await r.json();
-      const toast = document.getElementById('config-toast');
+      const toast = document.getElementById('log-config-toast');
       toast.textContent = j.ok ? `✓ ${{service}} → ${{level}}` : `✗ Failed`;
       setTimeout(() => toast.textContent = '', 3000);
     }}
     </script>
     """
+
+
+def _get_gsudo_settings() -> dict:
+    """Read current gsudo config — no elevation required."""
+    import subprocess as _sp
+    try:
+        out = _sp.run(
+            [r"C:\Program Files\gsudo\Current\gsudo.exe", "config"],
+            capture_output=True, text=True, timeout=10
+        ).stdout
+        settings = {}
+        for line in out.splitlines():
+            if "=" in line and not line.startswith("#"):
+                key, _, rest = line.partition("=")
+                val = rest.strip().split()[0].strip('"')
+                settings[key.strip()] = val
+        return settings
+    except Exception as e:
+        return {"_error": str(e)}
+
+
+def render_gsudo_config() -> str:
+    """gsudo configuration card for the Config page."""
+    s = _get_gsudo_settings()
+    err_html = f'<div class="alert alert-warning">Could not read gsudo config: {s["_error"]}</div>' if "_error" in s else ""
+
+    def sel(setting, options):
+        current = s.get(setting, "")
+        opts = "".join(
+            f'<option value="{o}" {"selected" if o == current else ""}>{o}</option>'
+            for o in options
+        )
+        return f'<select class="form-select form-select-sm" id="gs-{setting}" onchange="setSetting(\'{setting}\', this.value)">{opts}</select>'
+
+    cache_dur = s.get("CacheDuration", "")
+    isolation = s.get("SecurityEnforceUacIsolation", "False")
+    nw_force  = s.get("NewWindow.Force", "False")
+
+    isolation_checked = "checked" if isolation == "True" else ""
+    nw_checked        = "checked" if nw_force  == "True" else ""
+
+    # Detect which preset currently matches live settings
+    def _matches(preset_key):
+        p = GSUDO_PRESETS[preset_key]
+        return (s.get("CacheMode")                   == p["CacheMode"] and
+                s.get("CacheDuration")               == p["CacheDuration"] and
+                s.get("SecurityEnforceUacIsolation")  == p["SecurityEnforceUacIsolation"] and
+                s.get("LogLevel")                    == p["LogLevel"])
+
+    active_preset = next((k for k in GSUDO_PRESETS if _matches(k)), None)
+
+    # Preset buttons strip
+    preset_buttons = ""
+    for key, meta in GSUDO_PRESETS.items():
+        is_active  = key == active_preset
+        btn_class  = f"btn-{meta['color']}" if is_active else f"btn-outline-{meta['color']}"
+        active_lbl = " <small>(active)</small>" if is_active else ""
+        preset_buttons += f"""
+          <div class="col">
+            <button class="btn btn-sm {btn_class} w-100 text-start preset-btn"
+                    id="preset-btn-{key}"
+                    onclick="applyGlobalPreset('{key}')"
+                    title="{meta['description']}">
+              <div class="fw-bold">{meta['label']}{active_lbl}</div>
+              <div style="font-size:.7rem;opacity:.8;white-space:normal;">
+                {meta['CacheMode']} · {meta['CacheDuration']} · UAC {meta['SecurityEnforceUacIsolation']}
+              </div>
+            </button>
+          </div>"""
+
+    return f"""
+    {err_html}
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-shield-lock me-2"></i>gsudo Configuration
+        </h5>
+        <span class="badge text-bg-secondary" id="gs-version-badge">
+          v2.6 — <a href="https://gerardog.github.io/gsudo/docs/config" target="_blank"
+                    class="text-decoration-none text-reset">docs</a>
+        </span>
+      </div>
+      <div class="card-body">
+
+        <!-- Quick Presets -->
+        <h6 class="text-uppercase text-muted mb-2" style="font-size:.72rem;letter-spacing:.08em;">
+          <i class="bi bi-lightning-charge me-1"></i>Quick Presets
+        </h6>
+        <div class="row g-2 mb-3">
+          {preset_buttons}
+        </div>
+
+        <!-- Preset reference — collapsible -->
+        <div class="mb-4">
+          <a class="small text-muted text-decoration-none d-inline-flex align-items-center gap-1"
+             data-bs-toggle="collapse" href="#gsudo-preset-readme" role="button"
+             aria-expanded="false">
+            <i class="bi bi-book me-1"></i>
+            <span id="readme-toggle-label">What do these presets mean?</span>
+            <i class="bi bi-chevron-down" id="readme-chevron" style="font-size:.7rem;transition:transform .2s;"></i>
+          </a>
+          <div class="collapse mt-2" id="gsudo-preset-readme">
+            <div class="card card-body small" style="background:var(--bs-tertiary-bg);border:1px solid var(--bs-border-color);">
+              <p class="mb-2 text-muted" style="font-size:.78rem;">
+                gsudo stores elevation credentials in a per-session cache so you are not prompted
+                every time a tool needs admin access. These presets control how aggressive that
+                caching is. Pick the one that matches how much you trust the work happening in
+                that session.
+              </p>
+              <table class="table table-sm table-borderless mb-2" style="font-size:.78rem;">
+                <thead>
+                  <tr class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;">
+                    <th style="width:90px">Preset</th>
+                    <th style="width:110px">Cache Mode</th>
+                    <th style="width:110px">Duration</th>
+                    <th style="width:80px">UAC Isolation</th>
+                    <th>When to use</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="badge text-bg-success">Loose</span></td>
+                    <td>Auto</td>
+                    <td>Infinite</td>
+                    <td><span class="badge text-bg-secondary">Off</span></td>
+                    <td>Projects you work on daily and fully trust — Maia, QI Hive. Approve once per machine reboot, never again.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge text-bg-primary">Normal</span></td>
+                    <td>Auto</td>
+                    <td>8 min idle</td>
+                    <td><span class="badge text-bg-secondary">Off</span></td>
+                    <td>Standard development. Cache expires after 8 minutes of inactivity — a good balance for most projects.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge text-bg-warning text-dark">Strict</span></td>
+                    <td>Explicit</td>
+                    <td>2 min idle</td>
+                    <td><span class="badge text-bg-warning text-dark">On</span></td>
+                    <td>Projects touching production or sensitive config — NEXUS, auth changes. Cache only starts when you explicitly run <code>gsudo cache on</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge text-bg-danger">Locked</span></td>
+                    <td>Disabled</td>
+                    <td>—</td>
+                    <td><span class="badge text-bg-danger">On</span></td>
+                    <td>Maximum security. No caching at all — every elevation shows a UAC prompt. Use for one-off sensitive operations or untrusted scripts.</td>
+                  </tr>
+                </tbody>
+              </table>
+              <hr class="my-2"/>
+              <p class="mb-1 text-muted" style="font-size:.75rem;"><strong>Cache Mode explained:</strong></p>
+              <ul class="mb-1" style="font-size:.75rem;padding-left:1.2rem;">
+                <li><strong>Auto</strong> — gsudo caches credentials automatically after the first UAC approval. No further prompts until the duration expires.</li>
+                <li><strong>Explicit</strong> — cache only activates when you run <code>gsudo cache on</code> manually. Useful when you want a deliberate "start of elevated session" moment.</li>
+                <li><strong>Disabled</strong> — every single gsudo call triggers a fresh UAC prompt. Slowest but most secure.</li>
+              </ul>
+              <p class="mb-1 text-muted" style="font-size:.75rem;"><strong>UAC Isolation:</strong></p>
+              <ul class="mb-0" style="font-size:.75rem;padding-left:1.2rem;">
+                <li>When <strong>On</strong>, the elevated process has its input handle closed — it cannot read from your terminal. More secure but means you cannot type into elevated prompts.</li>
+                <li>When <strong>Off</strong>, the elevated process shares your console — normal interactive use.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <hr/>
+
+        <!-- Cache settings -->
+        <h6 class="text-uppercase text-muted mb-3" style="font-size:.72rem;letter-spacing:.08em;">
+          <i class="bi bi-clock-history me-1"></i>Credentials Cache
+        </h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label small mb-1">Cache Mode</label>
+            {sel("CacheMode", ["Auto", "Explicit", "Disabled"])}
+            <div class="form-text">Auto = cache after first approval. Explicit = only when <code>gsudo cache on</code>. Disabled = always prompt.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small mb-1">Cache Duration</label>
+            <div class="input-group input-group-sm">
+              <input type="text" id="gs-CacheDuration" class="form-control font-monospace"
+                     value="{cache_dur}" placeholder="HH:MM:SS or Infinite"/>
+              <button class="btn btn-outline-secondary" onclick="setSetting('CacheDuration', document.getElementById('gs-CacheDuration').value)">
+                <i class="bi bi-check-lg"></i>
+              </button>
+            </div>
+            <div class="form-text">How long cached credentials stay valid when idle. <code>Infinite</code> = until reboot.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small mb-1">Cache Actions</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-success w-50" onclick="cacheAction('on')">
+                <i class="bi bi-play-fill me-1"></i>Start Cache
+              </button>
+              <button class="btn btn-sm btn-outline-danger w-50" onclick="cacheAction('invalidate')">
+                <i class="bi bi-x-circle me-1"></i>Clear Cache
+              </button>
+            </div>
+            <div class="form-text">Start a cache session or invalidate all stored credentials now.</div>
+          </div>
+        </div>
+
+        <hr/>
+
+        <!-- Security & behaviour -->
+        <h6 class="text-uppercase text-muted mb-3" style="font-size:.72rem;letter-spacing:.08em;">
+          <i class="bi bi-shield-exclamation me-1"></i>Security & Behaviour
+        </h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label small mb-1">Log Level</label>
+            {sel("LogLevel", ["All", "Debug", "Info", "Warning", "Error", "None"])}
+            <div class="form-text">Verbosity of gsudo's own internal log.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small mb-1">UAC Isolation</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="gs-SecurityEnforceUacIsolation"
+                     {isolation_checked}
+                     onchange="setSetting('SecurityEnforceUacIsolation', this.checked ? 'True' : 'False')">
+              <label class="form-check-label small" for="gs-SecurityEnforceUacIsolation">
+                SecurityEnforceUacIsolation
+              </label>
+            </div>
+            <div class="form-text">More secure — closes input handle after elevation. Less convenient.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small mb-1">Always New Window</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="gs-NewWindow.Force"
+                     {nw_checked}
+                     onchange="setSetting('NewWindow.Force', this.checked ? 'True' : 'False')">
+              <label class="form-check-label small" for="gs-NewWindow.Force">
+                NewWindow.Force
+              </label>
+            </div>
+            <div class="form-text">Always elevate in a new window instead of the current console.</div>
+          </div>
+        </div>
+
+        <div id="gs-toast" class="small mt-2" style="min-height:1.2em;"></div>
+      </div>
+    </div>
+
+    <script>
+    const GS_PRESETS = {json.dumps({k: {kk: vv for kk, vv in v.items() if kk not in ("label","color","description")} for k, v in GSUDO_PRESETS.items()})};
+
+    // Rotate chevron when readme collapses/expands
+    document.addEventListener('DOMContentLoaded', () => {{
+      const el = document.getElementById('gsudo-preset-readme');
+      if (el) {{
+        el.addEventListener('show.bs.collapse',  () => document.getElementById('readme-chevron').style.transform = 'rotate(180deg)');
+        el.addEventListener('hide.bs.collapse',  () => document.getElementById('readme-chevron').style.transform = 'rotate(0deg)');
+      }}
+    }});
+
+    async function applyGlobalPreset(key) {{
+      const p = GS_PRESETS[key];
+      if (!p) return;
+      const t = document.getElementById('gs-toast');
+      t.innerHTML = '<span class="text-info">Applying preset...</span>';
+      const keys = Object.keys(p);
+      let errors = [];
+      for (const k of keys) {{
+        const r = await fetch('/api/config/gsudo', {{
+          method: 'POST',
+          headers: {{'Content-Type':'application/json'}},
+          body: JSON.stringify({{key: k, value: p[k]}})
+        }});
+        const j = await r.json();
+        if (!j.ok) errors.push(k);
+      }}
+      if (errors.length) {{
+        t.innerHTML = `<span class="text-danger">❌ Failed: ${{errors.join(', ')}}</span>`;
+      }} else {{
+        t.innerHTML = `<span class="text-success">✅ Preset applied — reloading...</span>`;
+        setTimeout(() => location.reload(), 1200);
+      }}
+    }}
+
+    async function setSetting(key, value) {{
+      if (!value) return;
+      const r = await fetch('/api/config/gsudo', {{
+        method: 'POST',
+        headers: {{'Content-Type':'application/json'}},
+        body: JSON.stringify({{key, value}})
+      }});
+      const j = await r.json();
+      const t = document.getElementById('gs-toast');
+      if (j.ok) {{
+        t.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i>${{key}} → ${{value}}</span>`;
+      }} else {{
+        t.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle me-1"></i>${{j.error || 'Failed'}}</span>`;
+      }}
+      setTimeout(() => t.innerHTML = '', 4000);
+    }}
+    async function cacheAction(action) {{
+      const r = await fetch('/api/config/gsudo/cache', {{
+        method: 'POST',
+        headers: {{'Content-Type':'application/json'}},
+        body: JSON.stringify({{action}})
+      }});
+      const j = await r.json();
+      const t = document.getElementById('gs-toast');
+      t.innerHTML = j.ok
+        ? `<span class="text-success"><i class="bi bi-check-circle me-1"></i>Cache ${{action}} — done</span>`
+        : `<span class="text-danger"><i class="bi bi-x-circle me-1"></i>${{j.error || 'Failed'}}</span>`;
+      setTimeout(() => t.innerHTML = '', 4000);
+    }}
+    </script>
+    """
+
+
+def render_gsudo_profiles() -> str:
+    """Per-project gsudo profile card."""
+    cfg      = _load_hive_config()
+    profiles = cfg.get("gsudo_profiles", [])
+    active   = cfg.get("gsudo_active_profile", None)
+
+    # Build profile rows
+    rows_html = ""
+    for p in profiles:
+        pid     = p["project"]
+        pname   = p.get("label", pid)
+        preset  = p.get("preset", "custom")
+        pmeta   = GSUDO_PRESETS.get(preset, {})
+        color   = pmeta.get("color", "secondary")
+        plabel  = pmeta.get("label", "Custom")
+
+        cm   = p.get("CacheMode", "—")
+        cd   = p.get("CacheDuration", "—")
+        uac  = p.get("SecurityEnforceUacIsolation", "False")
+        lvl  = p.get("LogLevel", "—")
+
+        uac_badge = '<span class="badge text-bg-danger">On</span>' if uac == "True" \
+                    else '<span class="badge text-bg-secondary">Off</span>'
+        active_cls = "table-active" if active == pid else ""
+
+        rows_html += f"""
+        <tr class="{active_cls}" id="prof-row-{pid}">
+          <td>
+            <strong>{pname}</strong>
+            {"<i class='bi bi-check-circle-fill text-success ms-1' title='Currently applied'></i>" if active == pid else ""}
+          </td>
+          <td><span class="badge text-bg-{color}">{plabel}</span></td>
+          <td><small class="font-monospace">{cm}</small></td>
+          <td><small class="font-monospace">{cd}</small></td>
+          <td>{uac_badge}</td>
+          <td><small>{lvl}</small></td>
+          <td>
+            <div class="d-flex gap-1">
+              <button class="btn btn-xs btn-outline-success py-0 px-2"
+                      onclick="applyProfile('{pid}')" title="Apply this profile now">
+                <i class="bi bi-play-fill"></i> Apply
+              </button>
+              <button class="btn btn-xs btn-outline-danger py-0 px-2"
+                      onclick="deleteProfile('{pid}')" title="Delete profile">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>"""
+
+    empty_row = "" if profiles else """
+        <tr><td colspan="7" class="text-muted text-center py-3">
+          No profiles yet — add one below.
+        </td></tr>"""
+
+    # Project options for add-form dropdown
+    proj_opts = "".join(
+        f'<option value="{pid}">{name}</option>'
+        for pid, name in QI_PROJECTS
+        if pid not in {p["project"] for p in profiles}
+    ) or '<option value="" disabled>All projects already configured</option>'
+
+    # Preset options
+    preset_opts = "".join(
+        f'<option value="{k}">{v["label"]} — {v["description"]}</option>'
+        for k, v in GSUDO_PRESETS.items()
+    )
+
+    # Preset JS map for live preview
+    preset_js = json.dumps({
+        k: {kk: vv for kk, vv in v.items() if kk not in ("label","color","description")}
+        for k, v in GSUDO_PRESETS.items()
+    })
+
+    return f"""
+    <div class="card mt-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-diagram-3 me-2"></i>Per-Project Profiles
+        </h5>
+        <button class="btn btn-sm btn-outline-primary" onclick="toggleAddForm()">
+          <i class="bi bi-plus-lg me-1"></i>Add Profile
+        </button>
+      </div>
+      <div class="card-body p-0">
+
+        <!-- Profile table -->
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Project</th>
+              <th>Preset</th>
+              <th>Cache Mode</th>
+              <th>Cache Duration</th>
+              <th>UAC Isolation</th>
+              <th>Log Level</th>
+              <th style="width:120px"></th>
+            </tr>
+          </thead>
+          <tbody id="profiles-tbody">{rows_html}{empty_row}</tbody>
+        </table>
+
+        <!-- Add form (hidden by default) -->
+        <div id="add-profile-form" class="p-3 border-top" style="display:none;background:var(--bs-body-bg)">
+          <h6 class="text-muted text-uppercase mb-3" style="font-size:.72rem;letter-spacing:.08em;">
+            New Project Profile
+          </h6>
+          <div class="row g-3 align-items-end">
+
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Project</label>
+              <select id="new-project" class="form-select form-select-sm">
+                {proj_opts}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Security Preset</label>
+              <select id="new-preset" class="form-select form-select-sm"
+                      onchange="presetChanged()">
+                {preset_opts}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <div class="alert alert-secondary py-1 px-2 mb-0 small" id="preset-desc">
+                Select a preset to see its description.
+              </div>
+            </div>
+
+            <!-- Custom overrides (always visible so user can tweak) -->
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Cache Mode</label>
+              <select id="new-CacheMode" class="form-select form-select-sm">
+                <option>Auto</option><option>Explicit</option><option>Disabled</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Cache Duration</label>
+              <input type="text" id="new-CacheDuration" class="form-control form-control-sm font-monospace"
+                     placeholder="HH:MM:SS or Infinite"/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Log Level</label>
+              <select id="new-LogLevel" class="form-select form-select-sm">
+                <option>All</option><option>Debug</option><option selected>Info</option>
+                <option>Warning</option><option>Error</option><option>None</option>
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="new-UacIsolation">
+                <label class="form-check-label small" for="new-UacIsolation">UAC Isolation</label>
+              </div>
+            </div>
+
+            <div class="col-12 d-flex gap-2 justify-content-end">
+              <button class="btn btn-sm btn-secondary" onclick="toggleAddForm()">Cancel</button>
+              <button class="btn btn-sm btn-primary" onclick="saveProfile()">
+                <i class="bi bi-floppy me-1"></i>Save Profile
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="prof-toast" class="small mt-2" style="min-height:1.2em;"></div>
+
+    <script>
+    const PRESETS = {preset_js};
+
+    function toggleAddForm() {{
+      const f = document.getElementById('add-profile-form');
+      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+      if (f.style.display === 'block') presetChanged();
+    }}
+
+    function presetChanged() {{
+      const key = document.getElementById('new-preset').value;
+      const p   = PRESETS[key] || {{}};
+      if (p.CacheMode)                   document.getElementById('new-CacheMode').value = p.CacheMode;
+      if (p.CacheDuration)               document.getElementById('new-CacheDuration').value = p.CacheDuration;
+      if (p.LogLevel)                    document.getElementById('new-LogLevel').value = p.LogLevel;
+      if (p.SecurityEnforceUacIsolation) document.getElementById('new-UacIsolation').checked = p.SecurityEnforceUacIsolation === 'True';
+      // Update description
+      const descs = {{ {", ".join(f'"{k}": "{v["description"]}"' for k, v in GSUDO_PRESETS.items())} }};
+      document.getElementById('preset-desc').textContent = descs[key] || '';
+    }}
+
+    async function saveProfile() {{
+      const payload = {{
+        project:                    document.getElementById('new-project').value,
+        preset:                     document.getElementById('new-preset').value,
+        CacheMode:                  document.getElementById('new-CacheMode').value,
+        CacheDuration:              document.getElementById('new-CacheDuration').value,
+        LogLevel:                   document.getElementById('new-LogLevel').value,
+        SecurityEnforceUacIsolation: document.getElementById('new-UacIsolation').checked ? 'True' : 'False',
+      }};
+      if (!payload.project) {{ alert('Select a project.'); return; }}
+      const r = await fetch('/api/config/gsudo/profiles', {{
+        method: 'POST',
+        headers: {{'Content-Type':'application/json'}},
+        body: JSON.stringify(payload)
+      }});
+      const j = await r.json();
+      if (j.ok) location.reload();
+      else showProfToast('❌ ' + (j.error || 'Failed'), 'danger');
+    }}
+
+    async function deleteProfile(pid) {{
+      if (!confirm('Delete profile for ' + pid + '?')) return;
+      const r = await fetch('/api/config/gsudo/profiles/' + pid, {{method: 'DELETE'}});
+      const j = await r.json();
+      if (j.ok) location.reload();
+      else showProfToast('❌ ' + (j.error || 'Failed'), 'danger');
+    }}
+
+    async function applyProfile(pid) {{
+      showProfToast('Applying ' + pid + ' profile...', 'info');
+      const r = await fetch('/api/config/gsudo/profiles/' + pid + '/apply', {{method: 'POST'}});
+      const j = await r.json();
+      if (j.ok) {{
+        showProfToast('✅ ' + pid + ' profile applied — gsudo now running at ' + j.preset + ' level.', 'success');
+        setTimeout(() => location.reload(), 1800);
+      }} else {{
+        showProfToast('❌ ' + (j.error || 'Apply failed'), 'danger');
+      }}
+    }}
+
+    function showProfToast(msg, type) {{
+      const t = document.getElementById('prof-toast');
+      t.innerHTML = `<span class="text-${{type}}">${{msg}}</span>`;
+      if (type !== 'info') setTimeout(() => t.innerHTML = '', 5000);
+    }}
+
+    // Init preset description on load
+    document.addEventListener('DOMContentLoaded', presetChanged);
+    </script>
+    """
+
+
+def render_config() -> str:
+    return render_gsudo_config() + render_gsudo_profiles()
 
 
 class LogLevelPayload(BaseModel):
@@ -1406,6 +2773,320 @@ def api_set_log_level(payload: LogLevelPayload):
         raise HTTPException(400, f"Invalid level: {payload.level}")
     log.info(f"log level changed: {payload.service} -> {payload.level}")
     return {"ok": True, "service": payload.service, "level": payload.level.upper()}
+
+
+class GsudoConfigPayload(BaseModel):
+    key: str
+    value: str
+
+class GsudoCachePayload(BaseModel):
+    action: str  # "on" | "off" | "invalidate"
+
+@app.get("/api/config/gsudo")
+def api_gsudo_config_get():
+    return JSONResponse(_get_gsudo_settings())
+
+@app.post("/api/config/gsudo")
+def api_gsudo_config_set(payload: GsudoConfigPayload):
+    ALLOWED_KEYS = {"CacheMode", "CacheDuration", "LogLevel",
+                    "SecurityEnforceUacIsolation", "NewWindow.Force"}
+    if payload.key not in ALLOWED_KEYS:
+        raise HTTPException(400, f"Unknown gsudo setting: {payload.key}")
+    try:
+        sys.path.insert(0, str(_PROJECT_DIR))
+        from engine.common.qi_elevate_client import run_elevated
+        r = run_elevated("gsudo", ["config", payload.key, payload.value], submitted_by="dashboard")
+        if r["status"] == "ok":
+            log.info(f"gsudo config {payload.key} → {payload.value}")
+            return JSONResponse({"ok": True})
+        return JSONResponse({"ok": False, "error": r.get("stderr") or r.get("error", "denied")}, status_code=500)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/config/gsudo/cache")
+def api_gsudo_cache(payload: GsudoCachePayload):
+    try:
+        from engine.common.qi_elevate_client import run_elevated
+        if payload.action == "invalidate":
+            r = run_elevated("gsudo", ["-k"], submitted_by="dashboard")
+        elif payload.action in ("on", "off"):
+            r = run_elevated("gsudo", ["cache", payload.action], submitted_by="dashboard")
+        else:
+            raise HTTPException(400, f"Unknown cache action: {payload.action}")
+        ok = r["status"] == "ok"
+        return JSONResponse({"ok": ok, "error": None if ok else r.get("stderr", "")})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ── gsudo per-project profiles ────────────────────────────────────────────────
+
+class GsudoProfilePayload(BaseModel):
+    project: str
+    preset: str
+    CacheMode: str
+    CacheDuration: str
+    LogLevel: str
+    SecurityEnforceUacIsolation: str
+
+
+@app.get("/api/config/gsudo/profiles")
+def api_gsudo_profiles_get():
+    cfg = _load_hive_config()
+    return JSONResponse(cfg.get("gsudo_profiles", []))
+
+
+@app.post("/api/config/gsudo/profiles")
+def api_gsudo_profiles_add(payload: GsudoProfilePayload):
+    valid_ids = {pid for pid, _ in QI_PROJECTS}
+    if payload.project not in valid_ids:
+        raise HTTPException(400, f"Unknown project: {payload.project}")
+    cfg = _load_hive_config()
+    profiles = cfg.get("gsudo_profiles", [])
+    # Replace if exists, otherwise append
+    label = next((n for pid, n in QI_PROJECTS if pid == payload.project), payload.project)
+    entry = {
+        "project": payload.project,
+        "label":   label,
+        "preset":  payload.preset,
+        "CacheMode":                   payload.CacheMode,
+        "CacheDuration":               payload.CacheDuration,
+        "LogLevel":                    payload.LogLevel,
+        "SecurityEnforceUacIsolation": payload.SecurityEnforceUacIsolation,
+    }
+    profiles = [p for p in profiles if p["project"] != payload.project]
+    profiles.append(entry)
+    cfg["gsudo_profiles"] = profiles
+    _save_hive_config(cfg)
+    log.info(f"gsudo profile saved: {payload.project} ({payload.preset})")
+    return JSONResponse({"ok": True})
+
+
+@app.delete("/api/config/gsudo/profiles/{project}")
+def api_gsudo_profiles_delete(project: str):
+    cfg = _load_hive_config()
+    before = len(cfg.get("gsudo_profiles", []))
+    cfg["gsudo_profiles"] = [p for p in cfg.get("gsudo_profiles", []) if p["project"] != project]
+    if cfg.get("gsudo_active_profile") == project:
+        cfg.pop("gsudo_active_profile", None)
+    _save_hive_config(cfg)
+    removed = before - len(cfg["gsudo_profiles"])
+    return JSONResponse({"ok": True, "removed": removed})
+
+
+@app.post("/api/config/gsudo/profiles/{project}/apply")
+def api_gsudo_profiles_apply(project: str):
+    cfg      = _load_hive_config()
+    profiles = cfg.get("gsudo_profiles", [])
+    profile  = next((p for p in profiles if p["project"] == project), None)
+    if not profile:
+        raise HTTPException(404, f"No profile for project: {project}")
+    try:
+        from engine.common.qi_elevate_client import run_elevated
+        settings = {
+            "CacheMode":                   profile["CacheMode"],
+            "CacheDuration":               profile["CacheDuration"],
+            "LogLevel":                    profile["LogLevel"],
+            "SecurityEnforceUacIsolation": profile["SecurityEnforceUacIsolation"],
+        }
+        errors = []
+        for key, value in settings.items():
+            r = run_elevated("gsudo", ["config", key, value], submitted_by="dashboard")
+            if r["status"] != "ok":
+                errors.append(f"{key}: {r.get('error','denied')}")
+        if errors:
+            return JSONResponse({"ok": False, "error": "; ".join(errors)}, status_code=500)
+        # Record active profile
+        cfg["gsudo_active_profile"] = project
+        _save_hive_config(cfg)
+        log.info(f"gsudo profile applied: {project} ({profile['preset']})")
+        return JSONResponse({"ok": True, "preset": profile["preset"], "project": project})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ── Theme API ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/theme")
+def api_theme_get():
+    return JSONResponse({"theme": _get_theme()})
+
+@app.post("/api/theme")
+async def api_theme_set(request: Request):
+    body  = await request.json()
+    theme = body.get("theme", "dark")
+    if theme not in VALID_THEMES:
+        raise HTTPException(400, f"theme must be one of {sorted(VALID_THEMES)}")
+    cfg = _load_hive_config()
+    cfg["theme"] = theme
+    _save_hive_config(cfg)
+    return JSONResponse({"ok": True, "theme": theme})
+
+
+# ── CoWork Dispatch ───────────────────────────────────────────────────────────
+
+_DISPATCH_LOG: list[dict] = []   # in-memory ring buffer (last 100)
+_MAX_DISPATCH_LOG = 100
+
+@app.post("/api/dispatch")
+async def api_dispatch(request: Request):
+    """
+    CoWork → Hive integration endpoint.
+    Accepts work orders from CoWork and routes them to the appropriate handler.
+
+    Supported types:
+      brain_update   — forward to Brain inbox (/api/inbox on Brain API)
+      state_update   — update project state in Brain
+      task_create    — add a task to the Hive board
+      note           — log to dispatch log only
+    """
+    import httpx
+    body = await request.json()
+    msg_type   = body.get("type", "note")
+    project_id = body.get("project_id", "unknown")
+    source     = body.get("source", "cowork")
+    result: dict = {"ok": True, "type": msg_type, "project_id": project_id}
+
+    try:
+        if msg_type in ("brain_update", "state_update", "decision", "session", "scope_drop"):
+            # Forward to Brain inbox
+            async with httpx.AsyncClient(timeout=10) as client:
+                r = await client.post(
+                    "http://localhost:9010/api/inbox",
+                    json={**body, "source": source}
+                )
+                result["brain_response"] = r.json()
+
+        elif msg_type == "task_create":
+            task_data = {
+                "title":       body.get("title", "CoWork task"),
+                "description": body.get("description", ""),
+                "project":     project_id,
+                "agent":       body.get("agent", "builder"),
+                "priority":    body.get("priority", "medium"),
+            }
+            tasks = load_tasks()
+            new_task = {
+                "id": "t" + __import__("uuid").uuid4().hex[:6],
+                **task_data,
+                "column": "backlog",
+                "created_at": datetime.now().strftime("%Y-%m-%d"),
+            }
+            tasks.append(new_task)
+            save_tasks(tasks)
+            result["task_id"] = new_task["id"]
+
+        elif msg_type == "note":
+            result["logged"] = True
+
+        else:
+            result["warning"] = f"Unknown dispatch type '{msg_type}' — logged only"
+
+    except Exception as e:
+        result = {"ok": False, "error": str(e), "type": msg_type, "project_id": project_id}
+        log.error(f"dispatch error [{msg_type}]: {e}")
+
+    # Log to ring buffer
+    entry = {**result, "received_at": datetime.now().isoformat(), "source": source}
+    _DISPATCH_LOG.append(entry)
+    if len(_DISPATCH_LOG) > _MAX_DISPATCH_LOG:
+        _DISPATCH_LOG.pop(0)
+
+    return JSONResponse(result)
+
+
+@app.get("/api/dispatch/log")
+def api_dispatch_log():
+    return JSONResponse({"ok": True, "log": list(reversed(_DISPATCH_LOG))})
+
+
+@app.get("/dispatch", response_class=HTMLResponse)
+def dispatch_page():
+    return base_layout("CoWork Dispatch", render_dispatch(), "dispatch")
+
+
+def render_dispatch() -> str:
+    log_rows = ""
+    for e in reversed(_DISPATCH_LOG):
+        status_badge = (
+            '<span class="badge text-bg-success">ok</span>' if e.get("ok")
+            else '<span class="badge text-bg-danger">error</span>'
+        )
+        log_rows += f"""
+        <tr>
+          <td style="font-size:.78rem">{e.get('received_at','')[:19]}</td>
+          <td><code>{e.get('type','—')}</code></td>
+          <td>{e.get('project_id','—')}</td>
+          <td>{e.get('source','—')}</td>
+          <td>{status_badge}</td>
+          <td style="font-size:.75rem">{e.get('error') or '—'}</td>
+        </tr>"""
+
+    return f"""
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title"><i class="bi bi-send-check me-2"></i>CoWork Dispatch</h3>
+            <span class="badge text-bg-primary">POST /api/dispatch</span>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-2">
+              CoWork and other services send work orders to <code>POST /api/dispatch</code>.
+              Supported types: <code>brain_update</code>, <code>state_update</code>,
+              <code>decision</code>, <code>session</code>, <code>task_create</code>,
+              <code>scope_drop</code>, <code>note</code>.
+            </p>
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <div class="small-box text-bg-info">
+                  <div class="inner"><h3>{len(_DISPATCH_LOG)}</h3><p>Messages (session)</p></div>
+                  <i class="small-box-icon bi bi-envelope-arrow-down"></i>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="small-box text-bg-success">
+                  <div class="inner">
+                    <h3>{sum(1 for e in _DISPATCH_LOG if e.get('ok'))}</h3>
+                    <p>Processed OK</p>
+                  </div>
+                  <i class="small-box-icon bi bi-check2-circle"></i>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="small-box text-bg-danger">
+                  <div class="inner">
+                    <h3>{sum(1 for e in _DISPATCH_LOG if not e.get('ok'))}</h3>
+                    <p>Errors</p>
+                  </div>
+                  <i class="small-box-icon bi bi-exclamation-triangle"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="bi bi-list-ul me-2"></i>Dispatch Log (this session)</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+              <thead>
+                <tr><th>Time</th><th>Type</th><th>Project</th><th>Source</th><th>Status</th><th>Error</th></tr>
+              </thead>
+              <tbody>
+                {log_rows or '<tr><td colspan="6" class="text-center text-muted py-3">No messages yet this session</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>"""
 
 
 # ── /logs — tail viewer ───────────────────────────────────────────────────────
@@ -1512,7 +3193,7 @@ def render_logs() -> str:
 
 @app.get("/logs", response_class=HTMLResponse)
 def logs_page():
-    return base_layout("Logs", render_logs(), "logs")
+    return base_layout("Logs", render_logs() + render_log_config(), "logs")
 
 
 @app.get("/api/logs")
@@ -2340,6 +4021,766 @@ def render_activity() -> str:
 @app.get("/activity", response_class=HTMLResponse)
 def activity_page():
     return base_layout("Activity", render_activity(), "activity")
+
+
+# ── CoWork Dispatch — bi-directional task/proposal channel ───────────────────
+
+def _brain_patch(path: str, payload: dict) -> dict | None:
+    try:
+        import urllib.request, json as _json
+        data = _json.dumps(payload).encode()
+        req  = urllib.request.Request(
+            f"http://localhost:9010{path}", data=data,
+            headers={"Content-Type": "application/json"}, method="PATCH"
+        )
+        with urllib.request.urlopen(req, timeout=3) as r:
+            return _json.loads(r.read().decode())
+    except Exception:
+        return None
+
+
+def _brain_post_dispatch(payload: dict) -> dict | None:
+    import urllib.request, json as _json
+    try:
+        data = _json.dumps(payload).encode()
+        req  = urllib.request.Request(
+            "http://localhost:9010/api/dispatch", data=data,
+            headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=3) as r:
+            return _json.loads(r.read().decode())
+    except Exception:
+        return None
+
+
+def _get_dispatches(status_filter: str | None = None) -> list[dict]:
+    import urllib.request, json as _json
+    try:
+        url = "http://localhost:9010/api/dispatches?limit=100"
+        if status_filter:
+            url += f"&status={status_filter}"
+        with urllib.request.urlopen(url, timeout=3) as r:
+            return _json.loads(r.read().decode()).get("dispatches", [])
+    except Exception:
+        return []
+
+
+def render_dispatch() -> str:
+    import json as _json
+    all_dispatches = _get_dispatches()
+    pending    = [d for d in all_dispatches if d["status"] == "pending"]
+    discussing = [d for d in all_dispatches if d["status"] == "discussing"]
+    resolved   = [d for d in all_dispatches if d["status"] in ("approved", "declined", "executed")]
+
+    SOURCE_BADGES = {
+        "cowork":      ("bg-primary",  "CoWork"),
+        "claude_code": ("bg-warning text-dark", "Claude Code"),
+        "renne":       ("bg-success",  "Renne"),
+        "maia":        ("bg-info text-dark", "Maia"),
+        "naya":        ("bg-secondary","Naya"),
+    }
+    TYPE_ICONS = {
+        "report":   "bi-file-text",
+        "brief":    "bi-file-earmark-text",
+        "decision": "bi-lightning",
+        "task":     "bi-check2-square",
+        "review":   "bi-search",
+        "proposal": "bi-lightbulb",
+        "request":  "bi-arrow-right-circle",
+    }
+    PRIORITY_COLORS = {"high": "danger", "normal": "secondary", "low": "success"}
+
+    def dispatch_card(d: dict, show_actions: bool = True) -> str:
+        src_cls, src_label = SOURCE_BADGES.get(d["source"], ("bg-secondary", d["source"]))
+        icon = TYPE_ICONS.get(d["type"], "bi-envelope")
+        pri_color = PRIORITY_COLORS.get(d["priority"], "secondary")
+        try:
+            payload = _json.loads(d["payload"]) if isinstance(d["payload"], str) else d["payload"]
+            payload_str = _json.dumps(payload, indent=2)[:600]
+        except Exception:
+            payload_str = str(d["payload"])[:600]
+        notes_html = ""
+        if d.get("notes"):
+            try:
+                notes = _json.loads(d["notes"]) if isinstance(d["notes"], str) else d["notes"]
+                for n in notes:
+                    notes_html += f'<div class="text-muted small mt-1"><strong>{n.get("by","?")}</strong>: {n.get("note","")} <span class="text-muted">({n.get("at","")[:16]})</span></div>'
+            except Exception:
+                pass
+        actions_html = ""
+        if show_actions:
+            did = d["dispatch_id"]
+            actions_html = f"""
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+              <button class="btn btn-sm btn-success" onclick="reviewDispatch('{did}','approved')">
+                <i class="bi bi-check-circle me-1"></i>Approve
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="reviewDispatch('{did}','declined')">
+                <i class="bi bi-x-circle me-1"></i>Decline
+              </button>
+              <button class="btn btn-sm btn-info" onclick="discussDispatch('{did}')">
+                <i class="bi bi-chat-dots me-1"></i>Discuss
+              </button>
+            </div>"""
+        status_badge = {
+            "pending":    '<span class="badge bg-warning text-dark">Pending</span>',
+            "discussing": '<span class="badge bg-info text-dark">Discussing</span>',
+            "approved":   '<span class="badge bg-success">Approved</span>',
+            "declined":   '<span class="badge bg-danger">Declined</span>',
+            "executed":   '<span class="badge bg-primary">Executed</span>',
+        }.get(d["status"], f'<span class="badge bg-secondary">{d["status"]}</span>')
+        return f"""
+        <div class="card mb-3 shadow-sm">
+          <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi {icon} me-1"></i>
+            <span class="badge {src_cls}">{src_label}</span>
+            <strong class="flex-grow-1">{d['type'].capitalize()}</strong>
+            <span class="badge bg-{pri_color}">{d['priority']}</span>
+            {status_badge}
+            <small class="text-muted ms-2">{d['created_at'][:16]}</small>
+          </div>
+          <div class="card-body">
+            <pre class="bg-body-secondary rounded p-2 small mb-2" style="max-height:200px;overflow-y:auto">{payload_str}</pre>
+            {notes_html}
+            {actions_html}
+          </div>
+        </div>"""
+
+    def section(title: str, icon: str, items: list, show_actions: bool) -> str:
+        cards = "".join(dispatch_card(d, show_actions) for d in items) if items else \
+            '<p class="text-muted small">None</p>'
+        return f"""
+        <div class="mb-4">
+          <h5><i class="bi {icon} me-2"></i>{title} <span class="badge bg-secondary">{len(items)}</span></h5>
+          {cards}
+        </div>"""
+
+    return f"""
+    <div class="container-fluid">
+      <div class="row mb-3">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <h4 class="mb-0"><i class="bi bi-send-check me-2"></i>CoWork Dispatch</h4>
+              <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+              </button>
+            </div>
+            <div class="card-body pb-1">
+              <p class="text-muted small mb-0">
+                Dispatches from <strong>Claude Work</strong>, <strong>Claude Code</strong>, or <strong>Renne</strong>
+                — reviewed here before anything is executed.
+                The loop: <strong>CoWork drafts → Renne approves → Claude Code executes.</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-6">
+          {section("Pending — Awaiting Review", "bi-hourglass-split", pending, True)}
+          {section("Discussing", "bi-chat-dots", discussing, True)}
+        </div>
+        <div class="col-lg-6">
+          {section("Resolved (last 20)", "bi-check2-all", resolved[:20], False)}
+        </div>
+      </div>
+    </div>
+
+    <!-- Discuss modal -->
+    <div class="modal fade" id="discussModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header"><h5 class="modal-title">Add Discussion Note</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+          <div class="modal-body">
+            <input type="hidden" id="discussId"/>
+            <textarea class="form-control" id="discussNote" rows="4" placeholder="Your note..."></textarea>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-info" onclick="submitNote()">Add Note</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    async function reviewDispatch(id, status) {{
+      const note = status === 'declined' ? prompt('Reason for declining?') : null;
+      const body = {{status, reviewed_by: 'renne'}};
+      if (note) body.note = note;
+      await fetch('/api/dispatch/' + id + '/review', {{
+        method: 'POST', headers: {{'Content-Type':'application/json'}}, body: JSON.stringify(body)
+      }});
+      location.reload();
+    }}
+    function discussDispatch(id) {{
+      document.getElementById('discussId').value = id;
+      document.getElementById('discussNote').value = '';
+      new bootstrap.Modal(document.getElementById('discussModal')).show();
+    }}
+    async function submitNote() {{
+      const id = document.getElementById('discussId').value;
+      const note = document.getElementById('discussNote').value;
+      await fetch('/api/dispatch/' + id + '/review', {{
+        method: 'POST', headers: {{'Content-Type':'application/json'}},
+        body: JSON.stringify({{status:'discussing', reviewed_by:'renne', note}})
+      }});
+      bootstrap.Modal.getInstance(document.getElementById('discussModal')).hide();
+      location.reload();
+    }}
+    </script>
+    """
+
+
+@app.post("/api/dispatch/{dispatch_id}/review")
+async def api_review_dispatch(dispatch_id: str, body: dict):
+    result = _brain_patch(f"/api/dispatch/{dispatch_id}", body)
+    return JSONResponse(result or {"ok": False, "error": "Brain offline"})
+
+
+@app.get("/dispatch", response_class=HTMLResponse)
+def dispatch_page():
+    return base_layout("CoWork Dispatch", render_dispatch(), "dispatch")
+
+
+# ── QI Brain — dedicated web UI ───────────────────────────────────────────────
+
+def _brain_get(path: str, params: dict | None = None) -> dict | None:
+    try:
+        import urllib.request, urllib.parse, json as _json
+        url = f"http://localhost:9010{path}"
+        if params:
+            url += "?" + urllib.parse.urlencode({k:v for k,v in params.items() if v is not None})
+        with urllib.request.urlopen(url, timeout=3) as r:
+            return _json.loads(r.read().decode())
+    except Exception:
+        return None
+
+
+def render_brain() -> str:
+    """QI Brain dashboard — ecosystem snapshot, decisions, features, sessions,
+    archive, inbox, and semantic memory search. All data pulled live from
+    Brain API on page load (Brain is authoritative)."""
+
+    snap     = _brain_get("/api/ecosystem_snapshot") or {}
+    status   = _brain_get("/api/status") or {}
+    poll     = _brain_get("/api/poll/status") or {}
+    inbox    = _brain_get("/api/inbox/log",          {"limit": 20}) or {}
+    arc_dec  = _brain_get("/api/archive/decisions",  {"limit": 25}) or {}
+    arc_feat = _brain_get("/api/archive/features",   {"limit": 25}) or {}
+    dist_hx  = _brain_get("/api/distill/history",    {"limit": 25}) or {}
+
+    projects = snap.get("projects", []) if isinstance(snap, dict) else []
+
+    # ── Overview: project grid ──
+    proj_cards = ""
+    for p in projects:
+        pid   = p.get("project_id", "?")
+        name  = p.get("display_name", pid)
+        phase = p.get("phase", "-")
+        stat  = p.get("status", "-")
+        last  = p.get("last_updated", "")[:16] if p.get("last_updated") else "never"
+        color = {"active":"success","paused":"secondary","blocked":"danger",
+                 "complete":"info"}.get(stat, "secondary")
+        proj_cards += f"""
+        <div class="col-md-4 col-lg-3 mb-3">
+          <div class="card h-100">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <strong>{name}</strong>
+                <span class="badge text-bg-{color}">{stat}</span>
+              </div>
+              <div class="small text-muted">{pid}</div>
+              <div class="small mt-2"><i class="bi bi-diagram-3 me-1"></i>{phase}</div>
+              <div class="small text-muted"><i class="bi bi-clock me-1"></i>{last}</div>
+            </div>
+          </div>
+        </div>"""
+
+    # ── Decisions (active, from snapshot) ──
+    dec_rows = ""
+    for p in projects:
+        for d in p.get("recent_decisions", [])[:3]:
+            dec_rows += f"""
+            <tr>
+              <td><span class="badge text-bg-primary">{p.get('project_id','?')}</span></td>
+              <td>{d.get('title','')}</td>
+              <td class="text-muted small">{(d.get('rationale') or '')[:120]}</td>
+              <td class="text-muted small">{(d.get('recorded_at','') or '')[:16]}</td>
+            </tr>"""
+    if not dec_rows:
+        dec_rows = '<tr><td colspan="4" class="text-muted text-center">No recent decisions</td></tr>'
+
+    # ── Features (pending + recent from snapshot) ──
+    feat_rows = ""
+    for p in projects:
+        for f in p.get("recent_features", [])[:3]:
+            feat_rows += f"""
+            <tr>
+              <td><span class="badge text-bg-info">{p.get('project_id','?')}</span></td>
+              <td>{f.get('name','')}</td>
+              <td><span class="badge text-bg-secondary">{f.get('domain','-')}</span></td>
+              <td class="text-muted small">{(f.get('description') or '')[:120]}</td>
+            </tr>"""
+    if not feat_rows:
+        feat_rows = '<tr><td colspan="4" class="text-muted text-center">No recent features</td></tr>'
+
+    # ── Archive: decisions ──
+    arc_dec_rows = ""
+    for d in arc_dec.get("decisions", [])[:25] if isinstance(arc_dec, dict) else []:
+        arc_dec_rows += f"""
+        <tr>
+          <td><span class="badge text-bg-primary">{d.get('project_id','?')}</span></td>
+          <td>{d.get('title','')}</td>
+          <td><span class="badge text-bg-warning">{d.get('archive_reason','-')}</span></td>
+          <td class="text-muted small">{d.get('scope_label','') or '-'}</td>
+          <td class="text-muted small">{(d.get('archived_at','') or '')[:16]}</td>
+        </tr>"""
+    if not arc_dec_rows:
+        arc_dec_rows = '<tr><td colspan="5" class="text-muted text-center">No archived decisions yet</td></tr>'
+
+    # ── Archive: features ──
+    arc_feat_rows = ""
+    for f in arc_feat.get("features", [])[:25] if isinstance(arc_feat, dict) else []:
+        arc_feat_rows += f"""
+        <tr>
+          <td><span class="badge text-bg-info">{f.get('source_project','?')}</span></td>
+          <td>{f.get('name','')}</td>
+          <td><span class="badge text-bg-warning">{f.get('archive_reason','-')}</span></td>
+          <td class="text-muted small">{f.get('scope_label','') or '-'}</td>
+          <td class="text-muted small">{(f.get('archived_at','') or '')[:16]}</td>
+        </tr>"""
+    if not arc_feat_rows:
+        arc_feat_rows = '<tr><td colspan="5" class="text-muted text-center">No archived features yet</td></tr>'
+
+    # ── Distillation history ──
+    dist_rows = ""
+    for d in dist_hx.get("drops", [])[:25] if isinstance(dist_hx, dict) else []:
+        dist_rows += f"""
+        <tr>
+          <td><span class="badge text-bg-primary">{d.get('project_id','?')}</span></td>
+          <td>{d.get('scope_label','-')}</td>
+          <td><span class="badge text-bg-warning">{d.get('reason','-')}</span></td>
+          <td class="small">{d.get('decisions_archived',0)}d / {d.get('features_archived',0)}f</td>
+          <td class="text-muted small">{d.get('dropped_by','-')}</td>
+          <td class="text-muted small">{(d.get('dropped_at','') or '')[:16]}</td>
+        </tr>"""
+    if not dist_rows:
+        dist_rows = '<tr><td colspan="6" class="text-muted text-center">No distillations recorded</td></tr>'
+
+    # ── Inbox log ──
+    inbox_rows = ""
+    for i in inbox.get("entries", [])[:20] if isinstance(inbox, dict) else []:
+        ok = i.get("status") == "processed"
+        badge = "success" if ok else "danger"
+        inbox_rows += f"""
+        <tr>
+          <td><span class="badge text-bg-{badge}">{i.get('status','?')}</span></td>
+          <td>{i.get('source','-')}</td>
+          <td>{i.get('kind','-')}</td>
+          <td class="text-muted small">{(i.get('note') or i.get('error') or '')[:80]}</td>
+          <td class="text-muted small">{(i.get('received_at','') or '')[:16]}</td>
+        </tr>"""
+    if not inbox_rows:
+        inbox_rows = '<tr><td colspan="5" class="text-muted text-center">Inbox empty</td></tr>'
+
+    # Brain version + poller status line
+    ver = status.get("version", "?") if isinstance(status, dict) else "?"
+    poller_alive   = poll.get("poller_alive", False) if isinstance(poll, dict) else False
+    poller_running = poll.get("poller_running", False) if isinstance(poll, dict) else False
+    poll_badge = "success" if poller_alive else "danger"
+    poll_txt   = "Running" if poller_alive else "Stopped"
+    if poller_running:
+        poll_txt += " (polling now)"
+
+    return f"""
+    <div class="content-header">
+      <h1 class="fw-bold"><i class="bi bi-cpu me-2 text-info"></i>QI Brain</h1>
+      <p class="text-muted mb-0">
+        Shared memory, decisions, and ecosystem state for every QI project.
+        Brain API v{ver} on :9010 ·
+        Poller <span class="badge text-bg-{poll_badge}">{poll_txt}</span>
+      </p>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" id="brainTabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button"><i class="bi bi-grid me-1"></i>Overview</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-decisions" type="button"><i class="bi bi-check2-square me-1"></i>Decisions</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-features" type="button"><i class="bi bi-stars me-1"></i>Features</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-archive" type="button"><i class="bi bi-archive me-1"></i>Archive</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-distill" type="button"><i class="bi bi-funnel me-1"></i>Distillation</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-inbox" type="button"><i class="bi bi-inbox me-1"></i>Inbox</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-search" type="button"><i class="bi bi-search me-1"></i>Search</button></li>
+    </ul>
+
+    <div class="tab-content">
+
+      <!-- ─── Overview ─── -->
+      <div class="tab-pane fade show active" id="tab-overview">
+        <h5 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Projects in the Brain</h5>
+        <div class="row">{proj_cards or '<div class="col-12 text-muted">No projects registered yet.</div>'}</div>
+      </div>
+
+      <!-- ─── Decisions ─── -->
+      <div class="tab-pane fade" id="tab-decisions">
+        <div class="card">
+          <div class="card-header"><strong>Recent Active Decisions (from ecosystem snapshot)</strong></div>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Project</th><th>Title</th><th>Rationale</th><th>When</th></tr></thead>
+              <tbody>{dec_rows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Features ─── -->
+      <div class="tab-pane fade" id="tab-features">
+        <div class="card">
+          <div class="card-header"><strong>Recent Features</strong></div>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Project</th><th>Name</th><th>Domain</th><th>Description</th></tr></thead>
+              <tbody>{feat_rows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Archive ─── -->
+      <div class="tab-pane fade" id="tab-archive">
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header"><strong>Archived Decisions</strong></div>
+              <div class="table-responsive" style="max-height:500px;overflow-y:auto">
+                <table class="table table-sm mb-0">
+                  <thead><tr><th>Project</th><th>Title</th><th>Reason</th><th>Scope</th><th>When</th></tr></thead>
+                  <tbody>{arc_dec_rows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header"><strong>Archived Features</strong></div>
+              <div class="table-responsive" style="max-height:500px;overflow-y:auto">
+                <table class="table table-sm mb-0">
+                  <thead><tr><th>Project</th><th>Name</th><th>Reason</th><th>Scope</th><th>When</th></tr></thead>
+                  <tbody>{arc_feat_rows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Distillation history ─── -->
+      <div class="tab-pane fade" id="tab-distill">
+        <div class="card">
+          <div class="card-header"><strong>Distillation History</strong></div>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Project</th><th>Scope</th><th>Reason</th><th>Archived</th><th>By</th><th>When</th></tr></thead>
+              <tbody>{dist_rows}</tbody>
+            </table>
+          </div>
+        </div>
+        <p class="text-muted small mt-2">
+          💡 Trigger a new distillation from <a href="/hive">The Hive</a> page (Distil Brain Memory card).
+        </p>
+      </div>
+
+      <!-- ─── Inbox ─── -->
+      <div class="tab-pane fade" id="tab-inbox">
+        <div class="card">
+          <div class="card-header"><strong>Brain Inbox Log</strong></div>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Status</th><th>Source</th><th>Kind</th><th>Note / Error</th><th>Received</th></tr></thead>
+              <tbody>{inbox_rows}</tbody>
+            </table>
+          </div>
+        </div>
+        <p class="text-muted small mt-2">
+          💡 Drop JSON messages in <code>C:\\QIH\\brain\\inbox\\</code> or POST to <code>/api/inbox</code>.
+        </p>
+      </div>
+
+      <!-- ─── Search ─── -->
+      <div class="tab-pane fade" id="tab-search">
+        <div class="card">
+          <div class="card-header"><strong>Semantic Memory Search</strong></div>
+          <div class="card-body">
+            <div class="row g-2 mb-3">
+              <div class="col-md-7">
+                <input type="text" class="form-control" id="brainSearchQuery"
+                       placeholder="Search decisions, features, sessions, docs…"
+                       onkeydown="if(event.key==='Enter')runBrainSearch()"/>
+              </div>
+              <div class="col-md-3">
+                <select class="form-select" id="brainSearchCollection">
+                  <option value="decisions">Decisions</option>
+                  <option value="features">Features</option>
+                  <option value="sessions">Sessions</option>
+                  <option value="docs">Docs</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="runBrainSearch()">
+                  <i class="bi bi-search me-1"></i>Search
+                </button>
+              </div>
+            </div>
+            <div id="brainSearchResults" class="text-muted">
+              Type a query and press Enter. Uses ChromaDB vector embeddings.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+    async function runBrainSearch() {{
+      const q   = document.getElementById('brainSearchQuery').value.trim();
+      const col = document.getElementById('brainSearchCollection').value;
+      const out = document.getElementById('brainSearchResults');
+      if (!q) {{ out.innerHTML = '<span class="text-muted">Empty query.</span>'; return; }}
+      out.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Searching…';
+      try {{
+        const r = await fetch('http://localhost:9010/api/search_memory', {{
+          method: 'POST', headers: {{'Content-Type':'application/json'}},
+          body: JSON.stringify({{query: q, collection: col, n: 10}})
+        }});
+        const d = await r.json();
+        const hits = d.results || d.hits || d.matches || [];
+        if (!hits.length) {{ out.innerHTML = '<span class="text-muted">No matches.</span>'; return; }}
+        out.innerHTML = hits.map(h => {{
+          const title = h.title || h.name || h.session_title || '(untitled)';
+          const body  = h.rationale || h.description || h.summary || '';
+          const dist  = h.distance != null ? ' · sim=' + (1 - h.distance).toFixed(3) : '';
+          const pid   = h.project_id || h.source_project || '';
+          return `<div class="border-start border-4 border-info ps-2 mb-2">
+            <div class="fw-bold">${{title}}
+              ${{pid ? '<span class="badge text-bg-secondary ms-1">'+pid+'</span>' : ''}}
+              <span class="text-muted small">${{dist}}</span>
+            </div>
+            <div class="small text-muted">${{(body||'').slice(0,240)}}</div>
+          </div>`;
+        }}).join('');
+      }} catch(e) {{
+        out.innerHTML = '<span class="text-danger">Brain API error: '+e+'</span>';
+      }}
+    }}
+    </script>
+    """
+
+
+@app.get("/brain", response_class=HTMLResponse)
+def brain_page():
+    return base_layout("QI Brain", render_brain(), "brain")
+
+
+# ── War Room — live view of every agent, project, and dispatch ────────────────
+
+def render_warroom() -> str:
+    """The War Room: single-pane-of-glass showing all agents, projects, and
+    dispatches in flight. Refreshes every 30s. Data from Brain + Hive registry."""
+
+    snap    = _brain_get("/api/ecosystem_snapshot") or {}
+    poll    = _brain_get("/api/poll/status") or {}
+    inbox   = _brain_get("/api/inbox/log", {"limit": 5}) or {}
+    disp    = _brain_get("/api/dispatches", {"limit": 20}) or {}
+
+    projects    = snap.get("projects", []) if isinstance(snap, dict) else []
+    dispatches  = disp.get("dispatches", []) if isinstance(disp, dict) else []
+    inbox_items = inbox.get("entries", []) if isinstance(inbox, dict) else []
+
+    # ── Agents panel (Claude Code, Claude Work, CoWork, Claude Chat) ──
+    # Infer "last seen" per agent_id from project.last_session/last_active.
+    # Without a dedicated sessions endpoint we aggregate from snapshot.
+    agent_types = [
+        ("claude_code",  "Claude Code",  "bi-terminal",      "primary"),
+        ("claude_work",  "Claude Work",  "bi-window-desktop","info"),
+        ("cowork",       "CoWork",       "bi-people",        "success"),
+        ("claude_chat",  "Claude Chat",  "bi-chat-dots",     "secondary"),
+    ]
+    agent_cards = ""
+    for aid, label, icon, color in agent_types:
+        # Find most recent project.last_active that mentions this agent — best effort
+        last_touch = "never"
+        active_proj = "-"
+        for p in sorted(projects, key=lambda x: x.get("last_active","") or "", reverse=True):
+            if p.get("last_active"):
+                last_touch = (p["last_active"] or "")[:16]
+                active_proj = p.get("display_name", p.get("project_id","?"))
+                break
+        agent_cards += f"""
+        <div class="col-md-6 col-xl-3 mb-3">
+          <div class="card h-100 border-start border-4 border-{color}">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <h5 class="mb-1"><i class="bi {icon} me-2 text-{color}"></i>{label}</h5>
+                <span class="badge text-bg-{color}">agent</span>
+              </div>
+              <div class="small text-muted mb-1">ID: <code>{aid}</code></div>
+              <div class="small">Last active: <strong>{last_touch}</strong></div>
+              <div class="small text-muted">on: {active_proj}</div>
+            </div>
+          </div>
+        </div>"""
+
+    # ── Project heat map ──
+    # Sort projects by last_active desc
+    sorted_proj = sorted(projects, key=lambda p: (p.get("last_active") or ""), reverse=True)
+    proj_rows = ""
+    for p in sorted_proj:
+        pid   = p.get("project_id", "?")
+        name  = p.get("display_name", pid)
+        phase = p.get("last_phase", "-") or "-"
+        stat  = p.get("last_status", "-") or "-"
+        last  = (p.get("last_active") or "")[:16] or "never"
+        summary = (p.get("last_summary") or "")[:140]
+        color = {"active":"success","paused":"secondary","blocked":"danger",
+                 "complete":"info"}.get(stat, "secondary")
+        proj_rows += f"""
+        <tr>
+          <td><strong>{name}</strong><br/><span class="text-muted small">{pid}</span></td>
+          <td><span class="badge text-bg-{color}">{stat}</span></td>
+          <td class="small">{phase}</td>
+          <td class="small text-muted">{summary}</td>
+          <td class="small text-muted">{last}</td>
+        </tr>"""
+    if not proj_rows:
+        proj_rows = '<tr><td colspan="5" class="text-muted text-center">No projects in Brain</td></tr>'
+
+    # ── Active dispatches ──
+    disp_rows = ""
+    for d in dispatches[:15]:
+        status = d.get("status", "?")
+        badge = {"pending":"warning","approved":"success","rejected":"danger",
+                 "discussing":"info","in_progress":"primary","done":"secondary"}.get(status, "secondary")
+        disp_rows += f"""
+        <tr>
+          <td><span class="badge text-bg-{badge}">{status}</span></td>
+          <td>{d.get('project_id','-')}</td>
+          <td class="small">{(d.get('title','') or '')[:60]}</td>
+          <td class="small text-muted">{d.get('from_agent','-')} → {d.get('to_agent','-')}</td>
+          <td class="small text-muted">{(d.get('created_at','') or '')[:16]}</td>
+        </tr>"""
+    if not disp_rows:
+        disp_rows = '<tr><td colspan="5" class="text-muted text-center">No active dispatches</td></tr>'
+
+    # ── Brain heartbeat ──
+    poller_alive   = poll.get("poller_alive", False) if isinstance(poll, dict) else False
+    poller_running = poll.get("poller_running", False) if isinstance(poll, dict) else False
+    last_poll = (poll.get("last_result", {}) or {}).get("finished_at", "never")[:16] if isinstance(poll, dict) else "?"
+    proj_checked = (poll.get("last_result", {}) or {}).get("projects_checked", 0) if isinstance(poll, dict) else 0
+    changes      = (poll.get("last_result", {}) or {}).get("changes_found", 0) if isinstance(poll, dict) else 0
+    brain_color = "success" if poller_alive else "danger"
+
+    # Inbox recent activity
+    inbox_html = ""
+    for i in inbox_items[:5]:
+        ok = i.get("status") == "processed"
+        b = "success" if ok else "danger"
+        inbox_html += f"""
+        <div class="border-start border-4 border-{b} ps-2 mb-2 small">
+          <span class="badge text-bg-{b}">{i.get('status','?')}</span>
+          {i.get('source','-')} · {i.get('kind','-')}
+          <span class="text-muted">· {(i.get('received_at','') or '')[:16]}</span>
+        </div>"""
+    if not inbox_html:
+        inbox_html = '<div class="text-muted small">No recent inbox activity.</div>'
+
+    return f"""
+    <div class="content-header d-flex justify-content-between align-items-start">
+      <div>
+        <h1 class="fw-bold"><i class="bi bi-broadcast-pin me-2 text-danger"></i>War Room</h1>
+        <p class="text-muted mb-0">
+          Single-pane-of-glass across every QI agent, project, and dispatch in flight.
+          Auto-refreshes every 30s.
+        </p>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise me-1"></i>Refresh now
+        </button>
+      </div>
+    </div>
+
+    <!-- Agents strip -->
+    <h5 class="mt-2 mb-2"><i class="bi bi-people-fill me-2"></i>Active Agents</h5>
+    <div class="row">{agent_cards}</div>
+
+    <div class="row">
+
+      <!-- Project heat table -->
+      <div class="col-lg-8 mb-3">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-fire me-2 text-warning"></i>Project Heat — who's being touched</strong>
+            <a href="/brain" class="btn btn-sm btn-outline-secondary">Open Brain →</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Project</th><th>Status</th><th>Phase</th><th>Last Summary</th><th>Last Active</th></tr></thead>
+              <tbody>{proj_rows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Brain heartbeat -->
+      <div class="col-lg-4 mb-3">
+        <div class="card h-100">
+          <div class="card-header"><strong><i class="bi bi-cpu me-2 text-info"></i>Brain Heartbeat</strong></div>
+          <div class="card-body">
+            <div class="mb-2">
+              Poller: <span class="badge text-bg-{brain_color}">{'Running' if poller_alive else 'Stopped'}</span>
+              {'<span class="badge text-bg-warning">Polling now</span>' if poller_running else ''}
+            </div>
+            <div class="small text-muted mb-1">Last poll: <strong>{last_poll}</strong></div>
+            <div class="small text-muted mb-1">Projects checked: <strong>{proj_checked}</strong></div>
+            <div class="small text-muted mb-3">Changes found: <strong>{changes}</strong></div>
+            <h6 class="mt-3 mb-2">Recent Inbox</h6>
+            {inbox_html}
+            <a href="/brain#tab-inbox" class="btn btn-sm btn-outline-secondary mt-2">Open Inbox →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Dispatches -->
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong><i class="bi bi-send-check me-2 text-success"></i>Dispatches in Flight</strong>
+        <a href="/dispatch" class="btn btn-sm btn-outline-secondary">Open Dispatch Center →</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Status</th><th>Project</th><th>Title</th><th>Agents</th><th>Created</th></tr></thead>
+          <tbody>{disp_rows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      // Auto-refresh every 30s
+      setTimeout(() => location.reload(), 30000);
+    </script>
+    """
+
+
+@app.get("/warroom", response_class=HTMLResponse)
+def warroom_page():
+    return base_layout("War Room", render_warroom(), "warroom")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

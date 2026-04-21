@@ -73,6 +73,39 @@
         "^[0-9]+$",
         "^/F$"
       ]
+    },
+    {
+      "name": "gsudo_config_set",
+      "description": "Set a gsudo configuration value",
+      "cmd": "gsudo",
+      "arg_count_min": 3,
+      "arg_count_max": 3,
+      "args_regex": [
+        "^config$",
+        "^(CacheMode|CacheDuration|LogLevel|SecurityEnforceUacIsolation|NewWindow\\.Force)$",
+        "^(Auto|Explicit|Disabled|Infinite|All|Debug|Info|Warning|Error|None|True|False|[0-9]{2}:[0-9]{2}:[0-9]{2})$"
+      ]
+    },
+    {
+      "name": "gsudo_cache_control",
+      "description": "Start or stop the gsudo credentials cache",
+      "cmd": "gsudo",
+      "arg_count_min": 2,
+      "arg_count_max": 2,
+      "args_regex": [
+        "^cache$",
+        "^(on|off)$"
+      ]
+    },
+    {
+      "name": "gsudo_invalidate_cache",
+      "description": "Invalidate all gsudo cached credentials",
+      "cmd": "gsudo",
+      "arg_count_min": 1,
+      "arg_count_max": 1,
+      "args_regex": [
+        "^-k$"
+      ]
     }
   ]
 }
