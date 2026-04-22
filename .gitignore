@@ -29,3 +29,9 @@ chroma/
 brain/inbox/
 brain/inbox/processed/
 brain/inbox/errors/
+
+# UNIVERSAL→QIH Phase 1 migration — mirrored historical content (keep on disk, not in git)
+shared/documentation/
+shared/training/
+shared/sessions_universal/
+.claude_universal/
