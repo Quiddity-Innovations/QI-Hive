@@ -9,8 +9,18 @@ import json
 import os
 import subprocess
 import sys
+import time
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
+
+# ── TTL cache ────────────────────────────────────────────────────────────────
+# run_health_check() fans out many subprocess calls (sc, netstat, git). On
+# every dashboard page load this adds seconds of latency. Cache the result
+# for HEALTH_CACHE_TTL seconds so back-to-back page loads are fast.
+HEALTH_CACHE_TTL = 30  # seconds
+_health_cache = {"t": 0.0, "data": None}
+_health_lock = threading.Lock()
 
 # ── Project registry ────────────────────────────────────────────────────────
 PROJECTS = {
@@ -235,7 +245,21 @@ def check_summary(path):
 
 # ── Main check ───────────────────────────────────────────────────────────────
 
-def run_health_check():
+def run_health_check(force: bool = False):
+    """Cached public entrypoint. Pass force=True to skip the 30s cache."""
+    now = time.time()
+    if not force:
+        with _health_lock:
+            if _health_cache["data"] is not None and (now - _health_cache["t"]) < HEALTH_CACHE_TTL:
+                return _health_cache["data"]
+    data = _compute_health_check()
+    with _health_lock:
+        _health_cache["t"] = time.time()
+        _health_cache["data"] = data
+    return data
+
+
+def _compute_health_check():
     results = {}
     checked_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

@@ -1245,7 +1245,7 @@ def render_hive() -> str:
     <div class="row mb-3">
       <div class="col-12 d-flex justify-content-between align-items-center">
         <div><i class="bi bi-cpu me-2 text-primary"></i><strong>QI Brain</strong> {brain_badge}</div>
-        <a href="http://localhost:9010/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
+        <a href="http://127.0.0.1:9010/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
           <i class="bi bi-box-arrow-up-right me-1"></i>Brain API Docs
         </a>
       </div>
@@ -1361,7 +1361,7 @@ def render_hive() -> str:
     <script>
     // ── Poller status ──────────────────────────────────────────────────────────
     function loadPollerStatus() {{
-      fetch('http://localhost:9010/api/poll/status')
+      fetch('http://127.0.0.1:9010/api/poll/status')
         .then(r => r.json()).then(d => {{
           const el = document.getElementById('pollerStatus');
           const lr = d.last_result || {{}};
@@ -1402,7 +1402,7 @@ def render_hive() -> str:
       const btn = event.target;
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Polling…';
-      fetch('http://localhost:9010/api/poll/trigger', {{method:'POST'}})
+      fetch('http://127.0.0.1:9010/api/poll/trigger', {{method:'POST'}})
         .then(r => r.json()).then(d => {{
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Poll Now';
@@ -1432,7 +1432,7 @@ def render_hive() -> str:
       const el = document.getElementById('distillResult');
       el.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Distilling…';
 
-      fetch('http://localhost:9010/api/distill', {{
+      fetch('http://127.0.0.1:9010/api/distill', {{
         method: 'POST',
         headers: {{'Content-Type':'application/json'}},
         body: JSON.stringify({{
@@ -1634,7 +1634,7 @@ def api_scout_digest():
     """Fetch AI news digest from NEXUS and return top items."""
     import urllib.request, json as _json
     try:
-        with urllib.request.urlopen("http://localhost:8010/scout/digest", timeout=10) as resp:
+        with urllib.request.urlopen("http://127.0.0.1:8010/scout/digest", timeout=10) as resp:
             data = _json.loads(resp.read().decode())
         # Parse the markdown to extract first 5 headlines
         content = data.get("content_md", "")
@@ -2952,7 +2952,7 @@ async def api_dispatch(request: Request):
             # Forward to Brain inbox
             async with httpx.AsyncClient(timeout=10) as client:
                 r = await client.post(
-                    "http://localhost:9010/api/inbox",
+                    "http://127.0.0.1:9010/api/inbox",
                     json={**body, "source": source}
                 )
                 result["brain_response"] = r.json()
@@ -2998,95 +2998,6 @@ async def api_dispatch(request: Request):
 @app.get("/api/dispatch/log")
 def api_dispatch_log():
     return JSONResponse({"ok": True, "log": list(reversed(_DISPATCH_LOG))})
-
-
-@app.get("/dispatch", response_class=HTMLResponse)
-def dispatch_page():
-    return base_layout("CoWork Dispatch", render_dispatch(), "dispatch")
-
-
-def render_dispatch() -> str:
-    log_rows = ""
-    for e in reversed(_DISPATCH_LOG):
-        status_badge = (
-            '<span class="badge text-bg-success">ok</span>' if e.get("ok")
-            else '<span class="badge text-bg-danger">error</span>'
-        )
-        log_rows += f"""
-        <tr>
-          <td style="font-size:.78rem">{e.get('received_at','')[:19]}</td>
-          <td><code>{e.get('type','—')}</code></td>
-          <td>{e.get('project_id','—')}</td>
-          <td>{e.get('source','—')}</td>
-          <td>{status_badge}</td>
-          <td style="font-size:.75rem">{e.get('error') or '—'}</td>
-        </tr>"""
-
-    return f"""
-    <div class="row mb-3">
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-send-check me-2"></i>CoWork Dispatch</h3>
-            <span class="badge text-bg-primary">POST /api/dispatch</span>
-          </div>
-          <div class="card-body">
-            <p class="text-muted mb-2">
-              CoWork and other services send work orders to <code>POST /api/dispatch</code>.
-              Supported types: <code>brain_update</code>, <code>state_update</code>,
-              <code>decision</code>, <code>session</code>, <code>task_create</code>,
-              <code>scope_drop</code>, <code>note</code>.
-            </p>
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <div class="small-box text-bg-info">
-                  <div class="inner"><h3>{len(_DISPATCH_LOG)}</h3><p>Messages (session)</p></div>
-                  <i class="small-box-icon bi bi-envelope-arrow-down"></i>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="small-box text-bg-success">
-                  <div class="inner">
-                    <h3>{sum(1 for e in _DISPATCH_LOG if e.get('ok'))}</h3>
-                    <p>Processed OK</p>
-                  </div>
-                  <i class="small-box-icon bi bi-check2-circle"></i>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="small-box text-bg-danger">
-                  <div class="inner">
-                    <h3>{sum(1 for e in _DISPATCH_LOG if not e.get('ok'))}</h3>
-                    <p>Errors</p>
-                  </div>
-                  <i class="small-box-icon bi bi-exclamation-triangle"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title"><i class="bi bi-list-ul me-2"></i>Dispatch Log (this session)</h3>
-          </div>
-          <div class="card-body p-0">
-            <table class="table table-sm table-hover mb-0">
-              <thead>
-                <tr><th>Time</th><th>Type</th><th>Project</th><th>Source</th><th>Status</th><th>Error</th></tr>
-              </thead>
-              <tbody>
-                {log_rows or '<tr><td colspan="6" class="text-center text-muted py-3">No messages yet this session</td></tr>'}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>"""
 
 
 # ── /logs — tail viewer ───────────────────────────────────────────────────────
@@ -4030,7 +3941,7 @@ def _brain_patch(path: str, payload: dict) -> dict | None:
         import urllib.request, json as _json
         data = _json.dumps(payload).encode()
         req  = urllib.request.Request(
-            f"http://localhost:9010{path}", data=data,
+            f"http://127.0.0.1:9010{path}", data=data,
             headers={"Content-Type": "application/json"}, method="PATCH"
         )
         with urllib.request.urlopen(req, timeout=3) as r:
@@ -4044,7 +3955,7 @@ def _brain_post_dispatch(payload: dict) -> dict | None:
     try:
         data = _json.dumps(payload).encode()
         req  = urllib.request.Request(
-            "http://localhost:9010/api/dispatch", data=data,
+            "http://127.0.0.1:9010/api/dispatch", data=data,
             headers={"Content-Type": "application/json"}, method="POST"
         )
         with urllib.request.urlopen(req, timeout=3) as r:
@@ -4056,7 +3967,7 @@ def _brain_post_dispatch(payload: dict) -> dict | None:
 def _get_dispatches(status_filter: str | None = None) -> list[dict]:
     import urllib.request, json as _json
     try:
-        url = "http://localhost:9010/api/dispatches?limit=100"
+        url = "http://127.0.0.1:9010/api/dispatches?limit=100"
         if status_filter:
             url += f"&status={status_filter}"
         with urllib.request.urlopen(url, timeout=3) as r:
@@ -4248,14 +4159,24 @@ def dispatch_page():
 
 # ── QI Brain — dedicated web UI ───────────────────────────────────────────────
 
+_BRAIN_CACHE: dict[str, tuple[float, dict]] = {}
+_BRAIN_CACHE_TTL = 15.0  # seconds
+
 def _brain_get(path: str, params: dict | None = None) -> dict | None:
+    import time as _t
     try:
         import urllib.request, urllib.parse, json as _json
-        url = f"http://localhost:9010{path}"
+        url = f"http://127.0.0.1:9010{path}"
         if params:
             url += "?" + urllib.parse.urlencode({k:v for k,v in params.items() if v is not None})
+        now = _t.time()
+        hit = _BRAIN_CACHE.get(url)
+        if hit and (now - hit[0]) < _BRAIN_CACHE_TTL:
+            return hit[1]
         with urllib.request.urlopen(url, timeout=3) as r:
-            return _json.loads(r.read().decode())
+            data = _json.loads(r.read().decode())
+        _BRAIN_CACHE[url] = (now, data)
+        return data
     except Exception:
         return None
 
@@ -4553,7 +4474,7 @@ def render_brain() -> str:
       if (!q) {{ out.innerHTML = '<span class="text-muted">Empty query.</span>'; return; }}
       out.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Searching…';
       try {{
-        const r = await fetch('http://localhost:9010/api/search_memory', {{
+        const r = await fetch('http://127.0.0.1:9010/api/search_memory', {{
           method: 'POST', headers: {{'Content-Type':'application/json'}},
           body: JSON.stringify({{query: q, collection: col, n: 10}})
         }});

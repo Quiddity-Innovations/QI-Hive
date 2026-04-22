@@ -9,14 +9,29 @@ import urllib.request
 import urllib.error
 from typing import Any
 
-BRAIN_URL = "http://localhost:9010"
+BRAIN_URL = "http://127.0.0.1:9010"  # 127.0.0.1 not localhost — avoids 2s IPv6-fallback delay on Windows
 TIMEOUT   = 3  # seconds — dashboard must stay fast
+
+import time as _time
+import threading as _threading
+_CACHE: dict[str, tuple[float, dict]] = {}
+_CACHE_TTL = 15.0  # seconds — cuts /hive from 10s → <1s when Brain is steady
+_CACHE_LOCK = _threading.Lock()
 
 
 def _get(path: str) -> dict | None:
+    url = f"{BRAIN_URL}{path}"
+    now = _time.time()
+    with _CACHE_LOCK:
+        hit = _CACHE.get(url)
+        if hit and (now - hit[0]) < _CACHE_TTL:
+            return hit[1]
     try:
-        with urllib.request.urlopen(f"{BRAIN_URL}{path}", timeout=TIMEOUT) as r:
-            return json.loads(r.read().decode())
+        with urllib.request.urlopen(url, timeout=TIMEOUT) as r:
+            data = json.loads(r.read().decode())
+        with _CACHE_LOCK:
+            _CACHE[url] = (_time.time(), data)
+        return data
     except Exception:
         return None
 
