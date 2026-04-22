@@ -2,7 +2,7 @@
 """First Brain Call ceremony — log the founding session to the brain."""
 import sys, asyncio, json
 sys.stdout.reconfigure(encoding='utf-8')
-sys.path.insert(0, 'C:/UNIVERSAL/qi_brain')
+sys.path.insert(0, 'C:/QIH/engine/brain')
 
 import httpx
 

@@ -1114,7 +1114,7 @@ def render_hive() -> str:
         # Decisions proxy: one session-summary docx = roughly one decision set
         decisions = 0
         try:
-            ss = _Path(r"C:\UNIVERSAL\DOCUMENTATION\Session_Summaries")
+            ss = _Path(r"C:\QIH\shared\documentation\session_summaries")
             if ss.exists():
                 decisions = sum(1 for _ in ss.glob("*.docx"))
         except Exception: pass
@@ -1555,7 +1555,7 @@ def health_page(request: Request):
 def board_page(project: str = "All"):
     return base_layout("Task Board", render_board(project), "board")
 
-GUIDE_FILE = Path(r"C:\UNIVERSAL\QI_Claude_Manager_Guide.md")
+GUIDE_FILE = Path(r"C:\QIH\ecosystem\QI_Claude_Manager_Guide.md")
 
 @app.get("/guide", response_class=HTMLResponse)
 def guide_page():

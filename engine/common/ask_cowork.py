@@ -10,7 +10,7 @@ Usage (from any Claude Code session):
         payload={
             "task": "Generate a session summary .docx for the Maia project",
             "context": "Files changed: maia_server.py, config.py. Decisions: switched to FastAPI.",
-            "output_path": "C:/UNIVERSAL/DOCUMENTATION/Session_Summaries/Maia_Summary_2026-04-20_1800.docx",
+            "output_path": "C:/QIH/shared/documentation/session_summaries/Maia_Summary_2026-04-20_1800.docx",
             "format": "docx",
         },
         priority="normal",

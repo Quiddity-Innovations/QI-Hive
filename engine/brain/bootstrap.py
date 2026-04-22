@@ -223,7 +223,7 @@ async def step_seed_projects():
             "  (project_id, display_name, tagline, path, api_port, ui_port, tier) "
             "VALUES ('qi_brain', 'QI Brain', "
             "  'Shared knowledge substrate for the QI ecosystem', "
-            "  'C:/UNIVERSAL/qi_brain', 9010, NULL, 'backbone')"
+            "  'C:/QIH/engine/brain', 9010, NULL, 'backbone')"
         )
         for proj in projects_list:
             pid   = proj.get("id") or proj.get("project_id", "unknown")

@@ -381,8 +381,9 @@
       "id": "universal",
       "name": "QI-Universal",
       "description": "Universal tools and dashboards shared across all QI projects \u2014 QI Launcher, cross-project utilities",
-      "path": "C:\\UNIVERSAL",
-      "github": "https://github.com/Quiddity-Innovations/QI-Universal",
+      "path": "C:\\QIH",
+      "github": "https://github.com/Quiddity-Innovations/QI-Hive",
+      "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 — see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
       "status": "active",
       "primary_language": "HTML/Python",
       "ports": {
@@ -673,6 +674,6 @@
         "Before any port change: check ALL services in this registry, not just the current project"
       ]
     },
-    "qi_brain": "C:\\UNIVERSAL\\qi_brain\\qi_brain.db \u2014 shared knowledge DB (backbone tier, :9010)"
+    "qi_brain": "C:\\QIH\\data\\qi_brain.db \u2014 shared knowledge DB (backbone tier, :9010)"
   }
 }
