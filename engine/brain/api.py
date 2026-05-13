@@ -1000,6 +1000,139 @@ async def add_dispatch_note(dispatch_id: str, body: dict):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Headlines — unified activity stream across the ecosystem
+# ─────────────────────────────────────────────────────────────────────────────
+
+# UNION across the six tables that record meaningful events.
+# Each branch projects into the same shape: (ts, project_id, agent_id, kind,
+# title, summary, ref_id). The wrapping SELECT applies filters + ordering.
+_HEADLINES_SQL = """
+SELECT * FROM (
+    SELECT
+        COALESCE(ended_at, started_at)            AS ts,
+        project_id                                AS project_id,
+        COALESCE(agent_id, 'unknown')             AS agent_id,
+        'session'                                 AS kind,
+        COALESCE(session_title, '(untitled)')     AS title,
+        COALESCE(summary, '')                     AS summary,
+        CAST(session_id AS TEXT)                  AS ref_id
+    FROM session_log
+    WHERE COALESCE(ended_at, started_at) IS NOT NULL
+
+    UNION ALL
+
+    SELECT
+        recorded_at                               AS ts,
+        project_id,
+        COALESCE(agent_id, 'unknown')             AS agent_id,
+        'decision'                                AS kind,
+        title,
+        COALESCE(rationale, '')                   AS summary,
+        CAST(decision_id AS TEXT)                 AS ref_id
+    FROM decisions
+    WHERE superseded_by IS NULL
+
+    UNION ALL
+
+    SELECT
+        recorded_at                               AS ts,
+        source_project                            AS project_id,
+        COALESCE(logged_by_agent, 'unknown')      AS agent_id,
+        'feature'                                 AS kind,
+        name                                      AS title,
+        COALESCE(description, '')                 AS summary,
+        CAST(feature_id AS TEXT)                  AS ref_id
+    FROM features
+
+    UNION ALL
+
+    SELECT
+        created_at                                AS ts,
+        project_id,
+        COALESCE(source, 'unknown')               AS agent_id,
+        'dispatch'                                AS kind,
+        type                                      AS title,
+        COALESCE(payload, '')                     AS summary,
+        dispatch_id                               AS ref_id
+    FROM dispatches
+
+    UNION ALL
+
+    SELECT
+        recorded_at                               AS ts,
+        project_id,
+        'hive_inspector'                          AS agent_id,
+        'compliance'                              AS kind,
+        check_id                                  AS title,
+        COALESCE(message, '')                     AS summary,
+        CAST(log_id AS TEXT)                      AS ref_id
+    FROM compliance_log
+    WHERE status IN ('fail', 'warn')
+      AND severity IN ('critical', 'high', 'medium')
+
+    UNION ALL
+
+    SELECT
+        recorded_at                               AS ts,
+        project_id,
+        COALESCE(agent_id, 'unknown')             AS agent_id,
+        'state'                                   AS kind,
+        COALESCE(phase, '?') || ' / ' || COALESCE(status, '?') AS title,
+        COALESCE(summary, '')                     AS summary,
+        CAST(state_id AS TEXT)                    AS ref_id
+    FROM project_state
+)
+WHERE ts IS NOT NULL
+  AND (:project_id IS NULL OR project_id = :project_id)
+  AND (:since IS NULL OR ts >= :since)
+  AND (:kinds_csv IS NULL OR ',' || :kinds_csv || ',' LIKE '%,' || kind || ',%')
+ORDER BY ts DESC
+LIMIT :limit
+"""
+
+
+@app.get("/api/headlines")
+async def headlines(
+    project_id: Optional[str] = None,
+    since: Optional[str] = None,
+    kinds: Optional[str] = None,
+    limit: int = 100,
+):
+    """Unified chronological activity stream across the QI ecosystem.
+
+    Sources six tables — session_log, decisions, features, dispatches,
+    compliance_log (fail/warn only), project_state — and merges them into a
+    single Twitter/X-style feed.
+
+    Query params:
+        project_id  Filter to a single project (e.g. qi_hive, cognibase).
+        since       ISO timestamp (e.g. "2026-05-01") — only headlines at or
+                    after this point.
+        kinds       Comma-separated subset of:
+                    session,decision,feature,dispatch,compliance,state
+        limit       Cap on rows returned (default 100, max 500).
+
+    Each headline returns:
+        ts, project_id, agent_id, kind, title, summary, ref_id
+    """
+    if limit > 500:
+        limit = 500
+    if limit < 1:
+        limit = 1
+    if project_id:
+        project_id = _norm_pid(project_id)
+    params = {
+        "project_id": project_id,
+        "since":      since,
+        "kinds_csv":  kinds,
+        "limit":      limit,
+    }
+    with open_brain_db() as conn:
+        rows = conn.execute(_HEADLINES_SQL, params).fetchall()
+    return {"ok": True, "headlines": [dict(r) for r in rows], "total": len(rows)}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Utility
 # ─────────────────────────────────────────────────────────────────────────────
 

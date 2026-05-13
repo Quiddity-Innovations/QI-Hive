@@ -33,6 +33,22 @@ _PROJECT_DIR = Path(__file__).parent.parent.parent.parent  # C:\QIH
 STATUS_FILE  = _PROJECT_DIR / "data" / "status.json"
 TASKS_FILE   = _PROJECT_DIR / "data" / "tasks.json"
 AGENTS_DIR   = _PROJECT_DIR / "hive" / "Agents"  # legacy agents folder — stays for now
+BRAIN_DB     = _PROJECT_DIR / "data" / "qi_brain.db"
+
+def _brain_db_query(sql: str, params: tuple = ()) -> list[dict]:
+    """Read-only query against qi_brain.db. Returns [] if DB missing or query fails."""
+    import sqlite3
+    if not BRAIN_DB.exists():
+        return []
+    try:
+        conn = sqlite3.connect(f"file:{BRAIN_DB}?mode=ro", uri=True, timeout=2.0)
+        conn.row_factory = sqlite3.Row
+        try:
+            return [dict(r) for r in conn.execute(sql, params)]
+        finally:
+            conn.close()
+    except Exception:
+        return []
 
 # Wire up QI Logger
 sys.path.insert(0, str(_PROJECT_DIR))
@@ -279,6 +295,7 @@ def _theme_icon(theme: str) -> str:
 def base_layout(title: str, content: str, active: str = "") -> str:
     nav_items = [
         ("dashboard", "/",        "bi-speedometer2",  "Dashboard"),
+        ("launcher",  "/launcher","bi-grid-3x3-gap",  "Launcher"),
         ("hive",      "/hive",    "bi-hexagon",       "The Hive"),
         ("health",    "/health",  "bi-heart-pulse",   "Health Check"),
         ("board",     "/board",   "bi-kanban",        "Task Board"),
@@ -287,6 +304,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("services",  "/services","bi-gear-wide-connected", "Services"),
         ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
         ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage"),
+        ("news",      "/news",    "bi-newspaper",     "Headlines"),
         ("activity",  "/activity","bi-activity",      "Activity"),
         ("dispatch",  "/dispatch","bi-send-check",    "CoWork Dispatch"),
         ("brain",     "/brain",   "bi-cpu",           "QI Brain"),
@@ -499,34 +517,155 @@ def render_dashboard() -> str:
           </div>
         </div>"""
 
-    # Agent table
-    model_colors = {
-        "claude-haiku-4-5-20251001": "secondary",
-        "claude-sonnet-4-6":         "primary",
-        "claude-opus-4-6":           "danger",
+    # Agent table — live from qi_brain.db (agents joined with session_log).
+    # Falls back to legacy AGENTS_DIR config files if Brain DB is unavailable.
+    # Per-role defaults shown only when an agent has zero sessions logged.
+    # These reflect the natural model tier for each role; the dashboard always
+    # prefers the actual model_used from the most recent session.
+    AGENT_MODEL_DEFAULTS = {
+        "hive_architect": "claude-opus-4-7",
+        "hive_builder":   "claude-sonnet-4-6",
+        "hive_inspector": "claude-sonnet-4-6",
+        "hive_ops":       "claude-haiku-4-5-20251001",
+        "hive_scout":     "claude-haiku-4-5-20251001",
+        "hive_scribe":    "claude-haiku-4-5-20251001",
+        "hive_tester":    "claude-haiku-4-5-20251001",
+        "claude":         "claude-sonnet-4-6",
+        "cowork":         "claude-sonnet-4-6",
     }
-    agent_rows = ""
-    for name, cfg in sorted(agents.items()):
-        st  = cfg.get("status","idle")
-        mdl = cfg.get("model_default","—")
-        mshort = mdl.replace("claude-","").replace("-4-6","").replace("-4-5-20251001","")
-        bcol = model_colors.get(mdl,"secondary")
-        st_badge = "success" if st=="active" else "secondary"
-        scope = cfg.get("scope","—")
-        agent_rows += f"""<tr>
-          <td><strong>{name.title()}</strong></td>
-          <td><span class="badge text-bg-{st_badge}">{st}</span></td>
-          <td><span class="badge text-bg-{bcol}">{mshort}</span></td>
-          <td class="text-muted">{scope}</td>
-        </tr>"""
 
-    # Recent sessions
+    def _model_badge(model: str | None) -> str:
+        m = (model or "").lower()
+        if "opus" in m:    cls, label = "danger",    "opus"
+        elif "sonnet" in m: cls, label = "primary",   "sonnet"
+        elif "haiku" in m:  cls, label = "secondary", "haiku"
+        elif m in ("git-only","unknown","",None): return '<span class="text-muted">—</span>'
+        else:               cls, label = "dark",     m
+        # tier suffix: pull "4-7", "4-6", "4-5" if present
+        import re
+        v = re.search(r"\b(\d-\d)\b", m or "")
+        if v: label = f"{label} {v.group(1)}"
+        return f'<span class="badge text-bg-{cls}">{label}</span>'
+
+    brain_agents = _brain_db_query("""
+        SELECT a.agent_id, a.display_name, a.agent_type, a.active, a.description,
+               (SELECT s.ended_at FROM session_log s
+                  WHERE s.agent_id = a.agent_id
+                  ORDER BY COALESCE(s.ended_at, s.started_at) DESC LIMIT 1) AS last_seen,
+               (SELECT s.model_used FROM session_log s
+                  WHERE s.agent_id = a.agent_id
+                  ORDER BY COALESCE(s.ended_at, s.started_at) DESC LIMIT 1) AS last_model,
+               (SELECT COUNT(*) FROM session_log s
+                  WHERE s.agent_id = a.agent_id) AS session_count
+        FROM agents a
+        WHERE a.active = 1
+        ORDER BY (last_seen IS NULL), last_seen DESC, a.display_name
+    """)
+
+    def _fmt_last_seen(ts: str | None) -> str:
+        if not ts:
+            return '<span class="text-muted fst-italic">never</span>'
+        from datetime import datetime, timezone
+        try:
+            dt = datetime.fromisoformat(ts.replace(" ", "T"))
+            now = datetime.now()
+            delta = now - dt
+            secs = delta.total_seconds()
+            if secs < 0:        label = ts
+            elif secs < 3600:   label = f"{int(secs//60)}m ago"
+            elif secs < 86400:  label = f"{int(secs//3600)}h ago"
+            elif secs < 86400*7: label = f"{int(secs//86400)}d ago"
+            else:               label = dt.strftime("%Y-%m-%d")
+            cls = "text-success" if secs < 86400 else ("text-warning" if secs < 86400*7 else "text-muted")
+            return f'<span class="{cls}" title="{ts}">{label}</span>'
+        except Exception:
+            return f'<span class="text-muted">{ts}</span>'
+
+    agent_rows = ""
+    if brain_agents:
+        # Legacy config lookup is used only for scope text (Brain has descriptions too).
+        legacy = {n.lower(): c for n, c in agents.items()}
+        for a in brain_agents:
+            aid   = a["agent_id"]
+            name  = a["display_name"] or aid
+            kind  = a["agent_type"] or ""
+            legacy_key = aid.replace("hive_", "").lower()
+            cfg   = legacy.get(legacy_key, {})
+            scope = cfg.get("scope") or a["description"] or "—"
+            kind_badge = {
+                "hive":   "text-bg-primary",
+                "claude": "text-bg-info",
+                "system": "text-bg-dark",
+            }.get(kind, "text-bg-secondary")
+
+            # Model: prefer actual model_used from most recent session; fall back to role default.
+            last_model = (a.get("last_model") or "").strip().lower()
+            if last_model and last_model not in ("unknown", "git-only", "—"):
+                model_html = _model_badge(last_model)
+            else:
+                default_model = AGENT_MODEL_DEFAULTS.get(aid, "")
+                if default_model:
+                    model_html = (
+                        '<span class="text-muted" style="font-size:.7rem">default:</span> '
+                        + _model_badge(default_model).replace("text-bg-", "text-bg-").replace('class="badge ', 'class="badge opacity-75 ')
+                    )
+                else:
+                    model_html = '<span class="text-muted">—</span>'
+
+            agent_rows += f"""<tr>
+              <td><strong>{name}</strong> <span class="badge {kind_badge} ms-1" style="font-size:.6rem;font-weight:500">{kind}</span></td>
+              <td>{_fmt_last_seen(a.get("last_seen"))}</td>
+              <td><span class="badge text-bg-light">{a.get("session_count",0)}</span></td>
+              <td>{model_html}</td>
+              <td class="text-muted small">{scope}</td>
+            </tr>"""
+    else:
+        # Fallback to legacy static configs (used when Brain DB is offline)
+        for name, cfg in sorted(agents.items()):
+            st  = cfg.get("status","idle")
+            mdl = cfg.get("model_default","—")
+            mshort = mdl.replace("claude-","").replace("-4-6","").replace("-4-5-20251001","")
+            bcol = model_colors.get(mdl,"secondary")
+            scope = cfg.get("scope","—")
+            agent_rows += f"""<tr>
+              <td><strong>{name.title()}</strong></td>
+              <td><span class="text-muted">{st} (static)</span></td>
+              <td>—</td>
+              <td><span class="badge text-bg-{bcol}">{mshort}</span></td>
+              <td class="text-muted small">{scope}</td>
+            </tr>"""
+
+    # Recent sessions — live from qi_brain.db session_log table.
+    sessions = _brain_db_query("""
+        SELECT session_id, project_id, agent_id, session_title, summary,
+               started_at, ended_at, model_used
+        FROM session_log
+        ORDER BY COALESCE(ended_at, started_at) DESC
+        LIMIT 12
+    """)
     session_rows = ""
-    for s in reversed(status.get("session_log", [])):
-        session_rows += f"""<tr>
-          <td><small>{s.get("session","—")}</small></td>
-          <td><small class="text-muted">{s.get("summary","—")}</small></td>
-        </tr>"""
+    if sessions:
+        for s in sessions:
+            ts    = s.get("ended_at") or s.get("started_at") or ""
+            title = s.get("session_title") or "—"
+            proj  = s.get("project_id") or "—"
+            summ  = (s.get("summary") or "").replace("<", "&lt;")
+            if len(summ) > 180:
+                summ = summ[:180] + "…"
+            session_rows += f"""<tr>
+              <td>
+                <div><strong style="font-size:.85rem">{title}</strong></div>
+                <div class="text-muted" style="font-size:.7rem;font-family:Consolas,monospace">{ts} · {proj}</div>
+              </td>
+              <td><small class="text-muted">{summ}</small></td>
+            </tr>"""
+    else:
+        # Fallback to old status.json list if Brain DB unavailable
+        for s in reversed(status.get("session_log", [])):
+            session_rows += f"""<tr>
+              <td><small>{s.get("session","—")}</small></td>
+              <td><small class="text-muted">{s.get("summary","—")}</small></td>
+            </tr>"""
 
     # Open task count badges
     col_counts = {}
@@ -608,10 +747,13 @@ def render_dashboard() -> str:
     <div class="row mt-2">
       <div class="col-lg-6">
         <div class="card">
-          <div class="card-header"><h3 class="card-title"><i class="bi bi-people me-2"></i>Agent Team</h3></div>
+          <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mb-0"><i class="bi bi-people me-2"></i>Agent Team</h3>
+            <span class="ms-auto text-muted" style="font-size:.7rem">live from qi_brain.db</span>
+          </div>
           <div class="card-body p-0">
             <table class="table table-sm table-hover mb-0">
-              <thead><tr><th>Agent</th><th>Status</th><th>Model</th><th>Scope</th></tr></thead>
+              <thead><tr><th>Agent</th><th>Last Active</th><th>Sessions</th><th>Model</th><th>Scope</th></tr></thead>
               <tbody>{agent_rows}</tbody>
             </table>
           </div>
@@ -619,7 +761,10 @@ def render_dashboard() -> str:
       </div>
       <div class="col-lg-6">
         <div class="card">
-          <div class="card-header"><h3 class="card-title"><i class="bi bi-journal-text me-2"></i>Session Log</h3></div>
+          <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mb-0"><i class="bi bi-journal-text me-2"></i>Session Log</h3>
+            <span class="ms-auto text-muted" style="font-size:.7rem">live from qi_brain.db</span>
+          </div>
           <div class="card-body p-0">
             <table class="table table-sm table-hover mb-0">
               <thead><tr><th>Session</th><th>Summary</th></tr></thead>
@@ -1518,6 +1663,283 @@ def render_agent_profile(agent_id: str) -> str:
 @app.get("/", response_class=HTMLResponse)
 def dashboard():
     return base_layout("Dashboard", render_dashboard(), "dashboard")
+
+REGISTRY_PATH = Path(r"C:\QIH\ecosystem\qi_registry.json")
+
+# Known Cloudflare tunnels. Each entry maps a local port to either:
+#   - "json":  path to a tunnel_manager.py-style status file (preferred)
+#   - "log":   path to raw cloudflared log; URL extracted via regex
+# To add a new project's tunnel, point it at one of these and the launcher picks it up.
+_TRYCF_RE = __import__("re").compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+
+KNOWN_TUNNELS = [
+    {"port": 8600, "label": "Hive Dashboard",
+     "json": r"C:\QIH\engine\hive\tunnel\status\tunnel.json"},
+    {"port": 8001, "label": "Maia API",
+     "log":  r"C:\QI\LOGS\tunnel_log.txt"},
+    {"port": 7860, "label": "Maia Demo (Gradio)",
+     "log":  r"C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt"},
+    {"port": 7861, "label": "Naya UI",
+     "log":  r"C:\NAYA\LOGS\QI_NayaTunnel.stderr.log"},
+    {"port": 7880, "label": "NEXUS UI",
+     "log":  r"C:\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log"},
+    {"port": 8650, "label": "CogniBase",
+     "log":  r"C:\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log"},
+    {"port": 9876, "label": "MapSnap",
+     "log":  r"C:\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log"},
+]
+
+def _get_tunnels() -> dict[int, dict]:
+    """Return {port: {url, status, source, updated_at}} for every known tunnel."""
+    out: dict[int, dict] = {}
+    for spec in KNOWN_TUNNELS:
+        port = int(spec["port"])
+        entry = {"url": None, "status": "unknown", "source": None,
+                 "updated_at": None, "label": spec.get("label", "")}
+        # Try JSON state file first
+        if spec.get("json"):
+            p = Path(spec["json"])
+            entry["source"] = str(p)
+            if p.exists():
+                try:
+                    data = json.loads(p.read_text(encoding="utf-8"))
+                    entry["url"]        = data.get("url")
+                    entry["status"]     = data.get("status", "unknown")
+                    entry["updated_at"] = data.get("updated_at")
+                except Exception:
+                    pass
+        # Fall back to log parsing (last trycloudflare URL wins)
+        if not entry["url"] and spec.get("log"):
+            p = Path(spec["log"])
+            entry["source"] = str(p)
+            if p.exists():
+                try:
+                    # Tail-read: only scan last 256 KB to keep this fast
+                    size = p.stat().st_size
+                    with open(p, "rb") as f:
+                        if size > 262144:
+                            f.seek(size - 262144)
+                        tail = f.read().decode("utf-8", errors="ignore")
+                    matches = _TRYCF_RE.findall(tail)
+                    if matches:
+                        entry["url"] = matches[-1]
+                        entry["status"] = "running"
+                        entry["updated_at"] = __import__("datetime").datetime.fromtimestamp(p.stat().st_mtime).isoformat()
+                except Exception:
+                    pass
+        out[port] = entry
+    return out
+
+# Non-QI services worth surfacing in the launcher (not in qi_registry.json).
+# Each tile: (label, host, port, path_suffix)
+LAUNCHER_EXTRAS = [
+    ("Ollama — Shared LLM", [
+        ("Ollama",        "http://localhost", 11434, ""),
+        ("Loaded Models", "http://localhost", 11434, "/api/tags"),
+    ]),
+]
+
+def _port_open(port, host="127.0.0.1", timeout=0.25):
+    import socket
+    try:
+        port = int(port)
+    except (TypeError, ValueError):
+        return False
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(timeout)
+    try:
+        return s.connect_ex((host, port)) == 0
+    except Exception:
+        return False
+    finally:
+        s.close()
+
+def _probe_ports_parallel(ports):
+    """ports: iterable of ints. Returns {port: bool}."""
+    from concurrent.futures import ThreadPoolExecutor
+    unique = sorted({int(p) for p in ports if isinstance(p, (int, str)) and str(p).isdigit()})
+    if not unique:
+        return {}
+    with ThreadPoolExecutor(max_workers=min(16, len(unique))) as ex:
+        results = list(ex.map(_port_open, unique))
+    return dict(zip(unique, results))
+
+def _project_tiles(role: str, port: int):
+    """Tiles for one (role, port). Returns list of (label, href, port_display)."""
+    base = f"http://localhost:{port}"
+    role_l = (role or "").lower()
+    if role_l == "api":
+        return [
+            ("API",    base,             f"{port}"),
+            ("Docs",   f"{base}/docs",   f"{port}/docs"),
+            ("Health", f"{base}/health", f"{port}/health"),
+        ]
+    if role_l == "ui":
+        return [("UI", base, f"{port}")]
+    if role_l == "dashboard":
+        return [("Dashboard", base, f"{port}")]
+    if role_l == "launcher":
+        return [("Launcher", base, f"{port}")]
+    if role_l in ("http", "gateway"):
+        return [(role.title(), base, f"{port}")]
+    # Generic: just expose the root with the role label.
+    return [(role.title() or "Open", base, f"{port}")]
+
+def render_launcher() -> str:
+    try:
+        reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        reg = {"projects": []}
+        load_err = str(e)
+    else:
+        load_err = None
+
+    projects = reg.get("projects", []) or []
+
+    # Gather every numeric port across all projects + extras for parallel probing.
+    all_ports = []
+    for proj in projects:
+        if not isinstance(proj, dict): continue
+        for info in (proj.get("ports") or {}).values():
+            if isinstance(info, dict) and str(info.get("current","")).isdigit():
+                all_ports.append(int(info["current"]))
+    for _, links in LAUNCHER_EXTRAS:
+        for _, _, p, _ in links:
+            all_ports.append(int(p))
+    port_status = _probe_ports_parallel(all_ports)
+
+    # Tunnel state per port — used to surface public Cloudflare URLs.
+    tunnels = _get_tunnels()
+
+    def status_badge(status: str) -> str:
+        s = (status or "").lower()
+        if "production" in s or "active" in s and "dev" not in s and "paused" not in s:
+            cls = "text-bg-success"
+        elif "dev" in s or "pilot" in s or "ready" in s:
+            cls = "text-bg-primary"
+        elif "paused" in s or "pending" in s:
+            cls = "text-bg-warning"
+        elif "merged" in s or "deprecated" in s or "retired" in s:
+            cls = "text-bg-secondary"
+        else:
+            cls = "text-bg-light"
+        return f'<span class="badge {cls} ms-2" style="font-size:.65rem;font-weight:500">{status}</span>' if status else ""
+
+    def render_tile(label, href, port_display, up):
+        cls = "btn-outline-success" if up else "btn-outline-secondary"
+        dot = "🟢" if up else "⚪"
+        return (
+            f'<a href="{href}" target="_blank" rel="noopener" '
+            f'class="btn {cls} btn-sm me-2 mb-2">'
+            f'<span class="me-1" style="font-size:.7rem">{dot}</span>{label} '
+            f'<span class="text-muted ms-1" style="font-family:Consolas,monospace;font-size:.72rem">:{port_display}</span>'
+            f'</a>'
+        )
+
+    groups_html = ""
+
+    for proj in projects:
+        if not isinstance(proj, dict): continue
+        pid    = proj.get("id") or "?"
+        name   = proj.get("name") or pid
+        status = proj.get("status") or ""
+        path   = proj.get("path") or ""
+        ports  = proj.get("ports") or {}
+
+        tiles_html = ""
+        public_tiles_html = ""
+        for role, info in ports.items():
+            if not isinstance(info, dict): continue
+            current = info.get("current")
+            if not (isinstance(current, int) or (isinstance(current, str) and current.isdigit())):
+                continue
+            port = int(current)
+            up   = port_status.get(port, False)
+            for label, href, port_display in _project_tiles(role, port):
+                tiles_html += render_tile(label, href, port_display, up)
+            # If a Cloudflare tunnel maps to this port, emit a Public tile.
+            tinfo = tunnels.get(port)
+            if tinfo and tinfo.get("url") and tinfo.get("status") == "running":
+                public_url = tinfo["url"]
+                tlabel = (tinfo.get("label") or role.title())
+                public_tiles_html += (
+                    f'<a href="{public_url}" target="_blank" rel="noopener" '
+                    f'class="btn btn-success btn-sm me-2 mb-2" '
+                    f'title="{public_url}">'
+                    f'<i class="bi bi-globe2 me-1"></i>Public · {tlabel} '
+                    f'<span class="ms-1 opacity-75" style="font-family:Consolas,monospace;font-size:.7rem">:{port}</span>'
+                    f'</a>'
+                )
+
+        if public_tiles_html:
+            tiles_html = public_tiles_html + tiles_html
+
+        if not tiles_html:
+            tiles_html = '<span class="text-muted fst-italic" style="font-size:.8rem">No HTTP port registered</span>'
+
+        groups_html += f"""
+        <div class="mb-4">
+          <div class="d-flex align-items-center mb-2">
+            <span class="text-uppercase fw-bold" style="font-size:.78rem;letter-spacing:.08em">{name}</span>
+            <span class="text-muted ms-2" style="font-size:.7rem;font-family:Consolas,monospace">{pid}</span>
+            {status_badge(status)}
+            <span class="text-muted ms-auto" style="font-size:.7rem;font-family:Consolas,monospace">{path}</span>
+          </div>
+          <div>{tiles_html}</div>
+        </div>"""
+
+    # Extras (non-registry shared services)
+    for group_name, links in LAUNCHER_EXTRAS:
+        tiles_html = ""
+        for label, host, port, suffix in links:
+            up = port_status.get(int(port), False)
+            href = f"{host}:{port}{suffix}"
+            tiles_html += render_tile(label, href, f"{port}{suffix}", up)
+        groups_html += f"""
+        <div class="mb-4">
+          <div class="d-flex align-items-center mb-2">
+            <span class="text-uppercase fw-bold" style="font-size:.78rem;letter-spacing:.08em">{group_name}</span>
+            <span class="badge text-bg-light ms-2" style="font-size:.65rem;font-weight:500">extra</span>
+          </div>
+          <div>{tiles_html}</div>
+        </div>"""
+
+    # Headline: how many public URLs are live right now
+    public_live = sum(1 for t in tunnels.values() if t.get("url") and t.get("status") == "running")
+    note = (
+        '<div class="alert alert-info py-2 mb-3 d-flex align-items-center" style="font-size:.85rem">'
+        '<i class="bi bi-info-circle me-2"></i>'
+        '<div>Tiles auto-generated from <code>C:\\QIH\\ecosystem\\qi_registry.json</code>. '
+        '🟢 = local port responding · '
+        f'<i class="bi bi-globe2 mx-1"></i><strong>{public_live}</strong> public Cloudflare URL(s) live — green tiles open from any machine. '
+        'Quick Tunnel URLs rotate on restart; this page reads the current value live, no edit needed.</div>'
+        '</div>'
+    )
+    err_html = ""
+    if load_err:
+        err_html = f'<div class="alert alert-danger py-2 mb-3"><i class="bi bi-exclamation-triangle me-1"></i>Registry load failed: {load_err}</div>'
+
+    return f"""
+    <div class="card">
+      <div class="card-header d-flex align-items-center">
+        <h5 class="mb-0"><i class="bi bi-grid-3x3-gap me-2"></i>QI Launcher</h5>
+        <span class="ms-auto text-muted" style="font-size:.75rem">{len(projects)} projects from registry</span>
+      </div>
+      <div class="card-body">
+        {note}
+        {err_html}
+        {groups_html}
+      </div>
+    </div>"""
+
+@app.get("/launcher", response_class=HTMLResponse)
+def launcher_page():
+    return base_layout("Launcher", render_launcher(), "launcher")
+
+@app.get("/api/tunnels")
+def api_tunnels():
+    """Live aggregate of Cloudflare tunnel state across all known QI tunnels."""
+    return JSONResponse({"tunnels": {str(p): v for p, v in _get_tunnels().items()}})
 
 @app.get("/hive", response_class=HTMLResponse)
 def hive_page():
@@ -3932,6 +4354,187 @@ def render_activity() -> str:
 @app.get("/activity", response_class=HTMLResponse)
 def activity_page():
     return base_layout("Activity", render_activity(), "activity")
+
+
+# ── Headlines — unified ecosystem activity stream ─────────────────────────────
+
+_HEADLINE_STYLE = {
+    "session":    ("primary", "bi-chat-square-dots-fill", "Session"),
+    "decision":   ("info",    "bi-signpost-2-fill",       "Decision"),
+    "feature":    ("warning", "bi-stars",                 "Feature"),
+    "dispatch":   ("secondary","bi-send-fill",            "Dispatch"),
+    "compliance": ("danger",  "bi-shield-exclamation",    "Compliance"),
+    "state":      ("dark",    "bi-arrow-repeat",          "State"),
+}
+
+_HEADLINE_KINDS = ["session", "decision", "feature", "dispatch", "compliance", "state"]
+
+
+def _relative_time(iso_str: str) -> str:
+    """Convert an ISO-ish timestamp into a human relative phrase."""
+    if not iso_str:
+        return ""
+    try:
+        s = iso_str[:19].replace("T", " ")
+        dt = datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+    except Exception:
+        try:
+            dt = datetime.strptime(iso_str[:10], "%Y-%m-%d")
+        except Exception:
+            return iso_str
+    delta = datetime.now() - dt
+    secs = int(delta.total_seconds())
+    if secs < 60:                return f"{secs}s ago"
+    if secs < 3600:              return f"{secs // 60}m ago"
+    if secs < 86400:             return f"{secs // 3600}h ago"
+    if secs < 86400 * 7:         return f"{secs // 86400}d ago"
+    if secs < 86400 * 30:        return f"{secs // (86400 * 7)}w ago"
+    if secs < 86400 * 365:       return f"{secs // (86400 * 30)}mo ago"
+    return dt.strftime("%Y-%m-%d")
+
+
+def _headline_row(h: dict) -> str:
+    """Render a single Twitter/X-style headline row."""
+    kind = h.get("kind", "")
+    color, icon, label = _HEADLINE_STYLE.get(kind, ("secondary", "bi-circle", kind.title()))
+    project_id = (h.get("project_id") or "?")
+    agent_id   = (h.get("agent_id")   or "")
+    title      = (h.get("title")      or "").replace("<", "&lt;")
+    summary    = (h.get("summary")    or "").replace("<", "&lt;")
+    if len(summary) > 220:
+        summary = summary[:220] + "…"
+    ts_iso = h.get("ts", "")
+    ts_rel = _relative_time(ts_iso)
+
+    agent_chip = ""
+    if agent_id and agent_id not in ("unknown", "?"):
+        agent_chip = f'<span class="badge text-bg-light border ms-1" style="font-size:.65rem">{agent_id}</span>'
+
+    return f"""
+    <div class="d-flex gap-3 py-3 border-bottom headline-row" data-kind="{kind}" data-project="{project_id}">
+      <div class="flex-shrink-0 text-center" style="width:42px">
+        <span class="d-inline-flex justify-content-center align-items-center rounded-circle text-bg-{color}"
+              style="width:38px;height:38px"><i class="bi {icon}" style="font-size:1.05rem"></i></span>
+      </div>
+      <div class="flex-grow-1 min-width-0">
+        <div class="d-flex flex-wrap align-items-baseline gap-2 mb-1">
+          <span class="badge text-bg-{color}" style="font-size:.65rem;text-transform:uppercase;letter-spacing:.05em">{label}</span>
+          <span class="badge text-bg-dark" style="font-size:.65rem">{project_id}</span>
+          {agent_chip}
+          <small class="text-muted ms-auto" title="{ts_iso}">{ts_rel}</small>
+        </div>
+        <div class="fw-semibold" style="line-height:1.3">{title}</div>
+        <div class="text-muted small mt-1" style="line-height:1.35">{summary}</div>
+      </div>
+    </div>"""
+
+
+def render_news() -> str:
+    """Twitter/X-style chronological feed of everything happening across QI."""
+    data = _brain_get("/api/headlines", {"limit": 200}) or {}
+    headlines_list = data.get("headlines", [])
+
+    # Compute project + kind counts for the filter chips
+    proj_counts: dict[str, int] = {}
+    kind_counts: dict[str, int] = {k: 0 for k in _HEADLINE_KINDS}
+    for h in headlines_list:
+        pid = h.get("project_id") or "?"
+        proj_counts[pid] = proj_counts.get(pid, 0) + 1
+        k = h.get("kind", "")
+        if k in kind_counts:
+            kind_counts[k] += 1
+
+    rows_html = "".join(_headline_row(h) for h in headlines_list)
+    if not rows_html:
+        rows_html = ('<div class="text-center text-muted py-5">'
+                     '<i class="bi bi-newspaper" style="font-size:2rem"></i>'
+                     '<p class="mt-2 mb-0">Brain returned no headlines. Is QI_BrainAPI running?</p>'
+                     '</div>')
+
+    # Kind filter chips
+    kind_chips = ('<button type="button" class="btn btn-sm btn-outline-secondary me-1 mb-1 active" '
+                  'data-filter-kind="all">All <span class="badge text-bg-secondary ms-1">{n}</span></button>'
+                  ).format(n=len(headlines_list))
+    for k in _HEADLINE_KINDS:
+        color, icon, label = _HEADLINE_STYLE[k]
+        n = kind_counts.get(k, 0)
+        kind_chips += (f'<button type="button" class="btn btn-sm btn-outline-{color} me-1 mb-1" '
+                       f'data-filter-kind="{k}"><i class="bi {icon} me-1"></i>{label} '
+                       f'<span class="badge text-bg-{color} ms-1">{n}</span></button>')
+
+    # Project filter chips (sorted by count desc)
+    proj_chips = ('<button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 active" '
+                  'data-filter-project="all">All projects</button>')
+    for pid, n in sorted(proj_counts.items(), key=lambda x: -x[1]):
+        proj_chips += (f'<button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1" '
+                       f'data-filter-project="{pid}">{pid} '
+                       f'<span class="badge text-bg-dark ms-1">{n}</span></button>')
+
+    return f"""
+    <div class="card mb-3">
+      <div class="card-header py-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <h5 class="mb-0 me-3"><i class="bi bi-newspaper me-2"></i>Latest Across the Hive</h5>
+          <small class="text-muted">Showing the last {len(headlines_list)} events — sessions, decisions, features, dispatches, compliance findings, state changes.</small>
+        </div>
+        <div class="mt-2"><div class="d-flex flex-wrap">{kind_chips}</div></div>
+        <div class="mt-2"><div class="d-flex flex-wrap">{proj_chips}</div></div>
+      </div>
+      <div class="card-body p-0">
+        <div id="headlines-stream" class="px-3" style="max-height:75vh;overflow-y:auto">
+          {rows_html}
+        </div>
+      </div>
+    </div>
+    <script>
+    (function() {{
+      const stream = document.getElementById('headlines-stream');
+      if (!stream) return;
+      let curKind = 'all';
+      let curProject = 'all';
+      function applyFilters() {{
+        stream.querySelectorAll('.headline-row').forEach(row => {{
+          const okKind = (curKind === 'all') || (row.dataset.kind === curKind);
+          const okProj = (curProject === 'all') || (row.dataset.project === curProject);
+          row.style.display = (okKind && okProj) ? '' : 'none';
+        }});
+      }}
+      document.querySelectorAll('[data-filter-kind]').forEach(btn => {{
+        btn.addEventListener('click', () => {{
+          document.querySelectorAll('[data-filter-kind]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          curKind = btn.dataset.filterKind;
+          applyFilters();
+        }});
+      }});
+      document.querySelectorAll('[data-filter-project]').forEach(btn => {{
+        btn.addEventListener('click', () => {{
+          document.querySelectorAll('[data-filter-project]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          curProject = btn.dataset.filterProject;
+          applyFilters();
+        }});
+      }});
+    }})();
+    </script>
+    """
+
+
+@app.get("/news", response_class=HTMLResponse)
+def news_page():
+    return base_layout("Headlines", render_news(), "news")
+
+
+@app.get("/api/headlines")
+def api_headlines_proxy(project_id: str | None = None, since: str | None = None,
+                        kinds: str | None = None, limit: int = 100):
+    """Proxy to Brain so the Dashboard exposes the same endpoint shape — useful
+    for Phase 2 (Kaze / Tasuke pulling the feed from the Dashboard URL)."""
+    params = {"project_id": project_id, "since": since, "kinds": kinds, "limit": limit}
+    data = _brain_get("/api/headlines", params)
+    if data is None:
+        return JSONResponse({"ok": False, "error": "brain unreachable"}, status_code=503)
+    return JSONResponse(data)
 
 
 # ── CoWork Dispatch — bi-directional task/proposal channel ───────────────────

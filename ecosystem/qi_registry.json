@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "last_updated": "2026-05-13",
     "maintainer": "Claude (PM delegate) \u2014 Renne Santiago (owner/sponsor)",
-    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection."
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path)."
   },
   "module_interface_contract": {
     "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -305,8 +305,8 @@
       "runtime": "WSL Ubuntu-24.04",
       "ports": {
         "gateway": {
-          "current": null,
-          "notes": "OpenClaw internal gateway \u2014 port via WSL, check OC config"
+          "current": 18789,
+          "notes": "WSL listener on 0.0.0.0:18789 (TCP), non-HTTP gateway protocol. Reachable from Windows via WSL loopback."
         }
       },
       "family_tier": "cousin",
@@ -520,9 +520,9 @@
     {
       "id": "autopdf",
       "name": "AutoPDF",
-      "path": "C:\\Users\\renne\\Downloads\\AUTOPDF",
-      "path_standard": "C:\\AUTOPDF",
-      "path_migration_note": "Currently at non-standard path. Migration to C:\\AUTOPDF is optional \u2014 AutoPDF is portable and reads everything via relative paths.",
+      "path": "C:\\AutoPDF",
+      "path_standard": "C:\\AutoPDF",
+      "path_migration_note": "Migrated 2026-05-13 from C:\\Users\\renne\\Downloads\\AUTOPDF to standardized path C:\\AutoPDF. AutoPDF is fully portable \u2014 reads everything via relative paths, so the move required no code changes.",
       "type": "desktop_tool",
       "status": "Active Dev",
       "tier": "Tool",
@@ -614,7 +614,7 @@
     },
     {
       "id": "mapsnap",
-      "name": "MapSnap (Jenzabar schema browser)",
+      "name": "MapSnap",
       "description": "Standalone local schema browser for Jenzabar EX (university ERP). Reads schema.json built from CSV/SQL exports and renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings. Original product; sibling of mapsnap_onbase.",
       "path": "C:\\MapSnap",
       "github": "https://github.com/rennesan/mapsnap",

@@ -118,11 +118,11 @@ Email organization tool — tier-based inbox management with Gmail API + Apps Sc
 ### FileHQ — `C:\FileHQ` *(MERGED → Naya)*
 Fully absorbed into Naya (`C:\NAYA\filehq\`). `C:\FileHQ` deleted 2026-04-06.
 
-### AutoPDF — `C:\Users\renne\Downloads\AUTOPDF` — *Standalone Tool / Cousin Candidate*
+### AutoPDF — `C:\AutoPDF` — *Standalone Tool / Cousin Candidate*
 Local PDF toolkit: convert / split / extract / catalog. Self-contained — bundles Ghostscript, Poppler, Tesseract, Tabula, PDFtk, JRE. Optional Ollama integration for Smart Mapping (template authoring + AI-extract fields).
 - **Ports:** HTTP :6969 (loopback only); recommended block 8700–8709 for future services
 - **Status:** Active Dev — Phase 2c complete (templates v2 + regex library + test automation)
-- **Path:** Currently at `C:\Users\renne\Downloads\AUTOPDF\` (non-standard). Migration to `C:\AUTOPDF\` is optional — AutoPDF is fully portable, reads everything via relative paths.
+- **Path:** `C:\AutoPDF\` — moved here 2026-05-13 from `C:\Users\renne\Downloads\AUTOPDF\`. Fully portable: reads everything via relative paths, so no code edits were needed.
 - **Exposes:** Template-driven extraction (`/api/template-apply-batch`, `/api/template-test`, `/api/ai-chat`, `/api/regex-library`)
 - **Consumes:** Local Ollama (optional) only — no other QI project at runtime
 - **Future:** Maia/NEXUS could call `/api/template-apply-batch` to extract fields from user-supplied PDFs. Workflow + Scheduler tabs already exist for ecosystem-level orchestration; integration with QI Hive's scheduler is a Phase 3 candidate.

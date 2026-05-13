@@ -265,20 +265,92 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
 | **UI** | `http://localhost:18800/kaze-config/` |
 
-### QI_MapSnapTunnel
+### QI_MapSnap
 | Field | Value |
 |---|---|
-| **Display name** | QI — MapSnap Cloudflare Tunnel |
-| **Description** | Cloudflare quick tunnel exposing MapSnap schema browser (port 9876) for remote access. |
-| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
-| **Parameters** | `tunnel --url http://localhost:9876` |
+| **Display name** | QI - MapSnap Schema Browser |
+| **Description** | MapSnap Jenzabar schema browser. Local Python HTTP server. Added by dashboard registry-driven launcher build. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `Application\server.py` |
 | **Working dir** | `C:\MapSnap` |
-| **Stdout log** | `C:\MapSnap\LOGS\tunnel_service.log` |
-| **Stderr log** | `C:\MapSnap\LOGS\tunnel_service.log` |
+| **Port** | 9876 |
+| **Stdout log** | `C:\MapSnap\LOGS\QI_MapSnap.stdout.log` (rotated at 5 MB) |
+| **Stderr log** | `C:\MapSnap\LOGS\QI_MapSnap.stderr.log` (rotated at 5 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Added** | 2026-05-13 |
+
+### QI_CogniBase
+| Field | Value |
+|---|---|
+| **Display name** | QI - CogniBase OnBase AI Platform |
+| **Description** | CogniBase FastAPI server. Local OnBase metadata mirror + vector store + report generation. Runs from project venv. |
+| **Binary** | `C:\CogniBase\.venv\Scripts\python.exe` |
+| **Parameters** | `-m uvicorn Application.server.app:app --host 127.0.0.1 --port 8650` |
+| **Working dir** | `C:\CogniBase` |
+| **Port** | 8650 |
+| **Stdout log** | `C:\CogniBase\LOGS\QI_CogniBase.stdout.log` (rotated at 5 MB) |
+| **Stderr log** | `C:\CogniBase\LOGS\QI_CogniBase.stderr.log` (rotated at 5 MB) |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Setup note** | Requires `sqlglot` in venv. Run `C:\CogniBase\.venv\Scripts\pip.exe install -r requirements.txt` if dependencies drift. |
+| **Added** | 2026-05-13 |
+
+### QI_NayaTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI - Naya Cloudflare Tunnel |
+| **Description** | Cloudflare quick tunnel exposing Naya Gradio UI (port 7861) for remote demos. |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --url http://localhost:7861` |
+| **Working dir** | `C:\Program Files (x86)\cloudflared` |
+| **Port** | 7861 (proxied) |
+| **Stdout log** | `C:\NAYA\LOGS\QI_NayaTunnel.stdout.log` |
+| **Stderr log** | `C:\NAYA\LOGS\QI_NayaTunnel.stderr.log` |
+| **Start type** | AUTO_START |
+| **Added** | 2026-05-13 |
+
+### QI_NEXUSTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI - NEXUS Cloudflare Tunnel |
+| **Description** | Cloudflare quick tunnel exposing NEXUS UI (port 7880). |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --url http://localhost:7880` |
+| **Working dir** | `C:\Program Files (x86)\cloudflared` |
+| **Port** | 7880 (proxied) |
+| **Stdout log** | `C:\NEXUS\LOGS\QI_NEXUSTunnel.stdout.log` |
+| **Stderr log** | `C:\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log` |
+| **Start type** | AUTO_START |
+| **Added** | 2026-05-13 |
+
+### QI_CogniBaseTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI - CogniBase Cloudflare Tunnel |
+| **Description** | Cloudflare quick tunnel exposing CogniBase FastAPI (port 8650). |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --url http://localhost:8650` |
+| **Working dir** | `C:\Program Files (x86)\cloudflared` |
+| **Port** | 8650 (proxied) |
+| **Stdout log** | `C:\CogniBase\LOGS\QI_CogniBaseTunnel.stdout.log` |
+| **Stderr log** | `C:\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log` |
+| **Start type** | AUTO_START |
+| **Added** | 2026-05-13 |
+
+### QI_MapSnapTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI - MapSnap Cloudflare Tunnel |
+| **Description** | Cloudflare quick tunnel exposing MapSnap schema browser (port 9876) for remote access. |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --url http://localhost:9876` |
+| **Working dir** | `C:\Program Files (x86)\cloudflared` |
 | **Port** | 9876 (proxied) |
-| **Install script** | `C:\MapSnap\install_tunnel_service.bat` (run as Admin once) |
-| **Status** | ⏳ Pending admin install — run install_tunnel_service.bat as Administrator |
-| **Added** | 2026-04-24 |
+| **Stdout log** | `C:\MapSnap\LOGS\QI_MapSnapTunnel.stdout.log` |
+| **Stderr log** | `C:\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log` |
+| **Start type** | AUTO_START |
+| **Status** | ✅ Live as of 2026-05-13 (reinstalled via gsudo + NSSM) |
+| **Added** | 2026-04-24, reinstalled 2026-05-13 |
