@@ -1,10 +1,10 @@
 {
   "_meta": {
-    "name": "Quiddity Innovations \u2014 Ecosystem Registry",
+    "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
     "last_updated": "2026-05-13",
-    "maintainer": "Claude (PM delegate) \u2014 Renne Santiago (owner/sponsor)",
+    "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
     "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path)."
   },
   "module_interface_contract": {
@@ -52,7 +52,7 @@
     "validator_tool": "python C:\\QIH\\ecosystem\\qi_validator.py --project <id>",
     "new_project_tool": "python C:\\QIH\\ecosystem\\qi_new_project.py",
     "rules": [
-      "Registry is updated BEFORE code is written \u2014 never after",
+      "Registry is updated BEFORE code is written — never after",
       "Every project runs standalone without any other QI project",
       "Every project honors the module interface contract",
       "Every project follows QI_Standards.md naming and folder conventions",
@@ -82,7 +82,7 @@
       "7810-7819": "Naya UI family",
       "7820-7829": "NEXUS UI family",
       "7830-7839": "OpenClaw UI family",
-      "7840+": "Reserved \u2014 future"
+      "7840+": "Reserved — future"
     },
     "migration_note": "Existing ports below were created before this registry. They WORK and should NOT be changed unless there is a specific reason. New services MUST follow the block strategy."
   },
@@ -90,7 +90,7 @@
     {
       "id": "filehq",
       "name": "FileHQ",
-      "description": "File intelligence engine \u2014 MERGED into Naya (C:\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
+      "description": "File intelligence engine — MERGED into Naya (C:\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
       "path": "C:\\NAYA\\filehq",
       "original_path": "C:\\FileHQ",
       "github": "TBD",
@@ -100,7 +100,7 @@
         "api": {
           "current": 8000,
           "block": "8000-8099",
-          "notes": "First in block \u2014 good"
+          "notes": "First in block — good"
         }
       },
       "family_tier": "cousin",
@@ -130,12 +130,12 @@
         "api": {
           "current": 8001,
           "recommended_block": "8100",
-          "notes": "Pre-registry \u2014 do not change unless migrating"
+          "notes": "Pre-registry — do not change unless migrating"
         },
         "ui": {
           "current": 7860,
           "recommended_block": "7800",
-          "notes": "Pre-registry \u2014 do not change unless migrating"
+          "notes": "Pre-registry — do not change unless migrating"
         }
       },
       "services": [
@@ -169,20 +169,20 @@
       "exposes_to_ecosystem": [
         "Multi-channel messaging (LINE/Telegram/Messenger/Instagram/WhatsApp)",
         "Personality engine",
-        "LLM chain (MiniMax \u2192 GPT \u2192 Qwen3 \u2192 Gemma3 \u2192 DeepSeek \u2192 Qwen3:4b)",
+        "LLM chain (MiniMax → GPT → Qwen3 → Gemma3 → DeepSeek → Qwen3:4b)",
         "Group/user config system",
-        "RAG (ChromaDB \u2014 in development)"
+        "RAG (ChromaDB — in development)"
       ],
       "consumes_from_ecosystem": [
-        "nexus (/synthesize \u2014 multi-AI answers)",
-        "nexus (/scout/digest \u2014 AI news feed)",
-        "nexus (/bench/recommend \u2014 LLM selection)"
+        "nexus (/synthesize — multi-AI answers)",
+        "nexus (/scout/digest — AI news feed)",
+        "nexus (/bench/recommend — LLM selection)"
       ]
     },
     {
       "id": "naya",
       "name": "Naya",
-      "description": "Personal AI assistant for Renne \u2014 AI/physics/programming/networking domains + file scanning",
+      "description": "Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanning",
       "path": "C:\\NAYA",
       "github": "https://github.com/Quiddity-Innovations/NAYA",
       "status": "active_development",
@@ -191,12 +191,12 @@
         "api": {
           "current": 8002,
           "recommended_block": "8200",
-          "notes": "Pre-registry \u2014 do not change unless migrating"
+          "notes": "Pre-registry — do not change unless migrating"
         },
         "ui": {
           "current": 7861,
           "recommended_block": "7810",
-          "notes": "Pre-registry \u2014 do not change unless migrating"
+          "notes": "Pre-registry — do not change unless migrating"
         }
       },
       "services": [
@@ -208,7 +208,7 @@
           "auto_start": true,
           "internet_exposed": false,
           "cloudflare_tunnel": false,
-          "notes": "LAN-only. Telegram uses outbound long-polling \u2014 no inbound internet access needed. Never expose via Cloudflare."
+          "notes": "LAN-only. Telegram uses outbound long-polling — no inbound internet access needed. Never expose via Cloudflare."
         }
       ],
       "telegram": {
@@ -217,9 +217,9 @@
         "allowed_users": "Renne only",
         "notes": "Telegram is the ONLY chat interface for Naya. No LINE, no Messenger, no Gradio UI for users."
       },
-      "database": "C:\\NAYA\\naya.db (SEPARATE from maia.db \u2014 never share)",
+      "database": "C:\\NAYA\\naya.db (SEPARATE from maia.db — never share)",
       "family_tier": "sibling_candidate",
-      "family_notes": "Personal file management AI for Renne. Absorbed FileHQ as file engine module. Telegram is the only chat interface. LAN-only \u2014 no Cloudflare tunnel, no internet exposure.",
+      "family_notes": "Personal file management AI for Renne. Absorbed FileHQ as file engine module. Telegram is the only chat interface. LAN-only — no Cloudflare tunnel, no internet exposure.",
       "integrates_with": [
         "filehq",
         "nexus",
@@ -233,13 +233,13 @@
       "consumes_from_ecosystem": [
         "nexus (/synthesize)",
         "filehq (file content)",
-        "maia (shared personality/LLM engine \u2014 future)"
+        "maia (shared personality/LLM engine — future)"
       ]
     },
     {
       "id": "nexus",
       "name": "NEXUS",
-      "description": "Neural Exchange and Unified Synthesis \u2014 AI orchestration backbone for all QI projects",
+      "description": "Neural Exchange and Unified Synthesis — AI orchestration backbone for all QI projects",
       "path": "C:\\NEXUS",
       "github": "https://github.com/rennesan/NEXUS",
       "status": "active_development",
@@ -248,12 +248,12 @@
         "api": {
           "current": 8010,
           "recommended_block": "8300",
-          "notes": "Pre-registry \u2014 within safe range, no conflict"
+          "notes": "Pre-registry — within safe range, no conflict"
         },
         "ui": {
           "current": 7880,
           "recommended_block": "7820",
-          "notes": "Pre-registry \u2014 within safe range, no conflict"
+          "notes": "Pre-registry — within safe range, no conflict"
         }
       },
       "services": [
@@ -269,7 +269,7 @@
         }
       ],
       "family_tier": "backbone",
-      "family_notes": "The AI intelligence layer. Not a user-facing product \u2014 it serves all other projects. In the unified app, NEXUS becomes the AI engine module that powers everything.",
+      "family_notes": "The AI intelligence layer. Not a user-facing product — it serves all other projects. In the unified app, NEXUS becomes the AI engine module that powers everything.",
       "integrates_with": [
         "maia",
         "naya",
@@ -277,11 +277,11 @@
         "openclaw"
       ],
       "exposes_to_ecosystem": [
-        "POST /synthesize \u2014 multi-AI parallel dispatch + synthesis",
-        "GET /scout/digest \u2014 daily AI news digest",
-        "POST /scout/run \u2014 trigger news collection",
-        "GET /bench/recommend \u2014 LLM recommendation by use case [Phase 2]",
-        "GET /providers \u2014 list active AI channels"
+        "POST /synthesize — multi-AI parallel dispatch + synthesis",
+        "GET /scout/digest — daily AI news digest",
+        "POST /scout/run — trigger news collection",
+        "GET /bench/recommend — LLM recommendation by use case [Phase 2]",
+        "GET /providers — list active AI channels"
       ],
       "consumes_from_ecosystem": [],
       "ai_providers": [
@@ -297,7 +297,7 @@
     {
       "id": "openclaw",
       "name": "OpenClaw",
-      "description": "Autonomous AI agent platform \u2014 6 custom agents (Tasuke, Kaze, Sentry, Seiri, Yubin, Koe)",
+      "description": "Autonomous AI agent platform — 6 custom agents (Tasuke, Kaze, Sentry, Seiri, Yubin, Koe)",
       "path": "C:\\OC",
       "github": "TBD",
       "status": "active_production",
@@ -316,24 +316,24 @@
         "nexus"
       ],
       "exposes_to_ecosystem": [
-        "Tasuke \u2014 orchestration (Telegram bot, live)",
-        "Kaze \u2014 news/digest (live)",
-        "Yubin \u2014 email/mail (Gmail IMAP, live)",
-        "Sentry \u2014 health monitoring (live)",
-        "Koe \u2014 voice/communication (planned Phase 4)"
+        "Tasuke — orchestration (Telegram bot, live)",
+        "Kaze — news/digest (live)",
+        "Yubin — email/mail (Gmail IMAP, live)",
+        "Sentry — health monitoring (live)",
+        "Koe — voice/communication (planned Phase 4)"
       ],
       "cancelled_agents": [
-        "Seiri \u2014 CANCELLED 2026-04-05. File management fully replaced by Naya (absorbed FileHQ)."
+        "Seiri — CANCELLED 2026-04-05. File management fully replaced by Naya (absorbed FileHQ)."
       ],
       "consumes_from_ecosystem": [
         "nexus (LLM providers via Ollama/Cloudflare)",
-        "maia (future \u2014 action routing)"
+        "maia (future — action routing)"
       ]
     },
     {
       "id": "mq",
       "name": "MQ",
-      "description": "Maia Quiddam \u2014 autonomous AI social media persona for Facebook, Instagram, WhatsApp",
+      "description": "Maia Quiddam — autonomous AI social media persona for Facebook, Instagram, WhatsApp",
       "path": "C:\\MQ",
       "github": "https://github.com/Quiddity-Innovations/MQ",
       "status": "new",
@@ -350,7 +350,7 @@
         }
       },
       "family_tier": "cousin",
-      "family_notes": "New project \u2014 family role to be determined as it develops. Status 2026-05-13: not started yet (was paused_pending_credentials; corrected to new).",
+      "family_notes": "New project — family role to be determined as it develops. Status 2026-05-13: not started yet (was paused_pending_credentials; corrected to new).",
       "integrates_with": [],
       "exposes_to_ecosystem": [
         "GET /health",
@@ -362,7 +362,7 @@
     {
       "id": "easyflow",
       "name": "EasyFlow",
-      "description": "Email organization tool \u2014 tier-based inbox management with Gmail API + Apps Script automation. Free gift tool for family/friends.",
+      "description": "Email organization tool — tier-based inbox management with Gmail API + Apps Script automation. Free gift tool for family/friends.",
       "path": "C:\\EasyFlow",
       "github": "TBD",
       "status": "active_development",
@@ -371,7 +371,7 @@
         "dashboard": {
           "current": 8550,
           "block": "8550-8559",
-          "notes": "Local Flask dashboard \u2014 desktop tool, not a server"
+          "notes": "Local Flask dashboard — desktop tool, not a server"
         }
       },
       "family_tier": "standalone_tool",
@@ -383,21 +383,21 @@
     {
       "id": "universal",
       "name": "QI-Universal",
-      "description": "Universal tools and dashboards shared across all QI projects \u2014 QI Launcher, cross-project utilities",
+      "description": "Universal tools and dashboards shared across all QI projects — QI Launcher, cross-project utilities",
       "path": "C:\\QIH",
       "github": "https://github.com/Quiddity-Innovations/QI-Hive",
-      "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 \u2014 see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
+      "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 — see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
       "status": "active",
       "primary_language": "HTML/Python",
       "ports": {
         "launcher": {
           "current": 8650,
           "block": "8650",
-          "notes": "QI Launcher \u2014 served via python http.server"
+          "notes": "QI Launcher — served via python http.server"
         }
       },
       "family_tier": "infrastructure",
-      "family_notes": "Universal tools layer. Not a product \u2014 shared utilities for all QI projects. QI Launcher at localhost:8650 is the single-page dashboard for all project localhost URLs.",
+      "family_notes": "Universal tools layer. Not a product — shared utilities for all QI projects. QI Launcher at localhost:8650 is the single-page dashboard for all project localhost URLs.",
       "integrates_with": [
         "maia",
         "nexus",
@@ -407,7 +407,7 @@
         "claude_manager"
       ],
       "exposes_to_ecosystem": [
-        "GET http://localhost:8650 \u2014 QI Launcher (all project links in one page)"
+        "GET http://localhost:8650 — QI Launcher (all project links in one page)"
       ],
       "consumes_from_ecosystem": []
     },
@@ -429,7 +429,7 @@
         "mcp": {
           "current": "stdio",
           "block": "N/A",
-          "notes": "stdio MCP \u2014 no port"
+          "notes": "stdio MCP — no port"
         }
       },
       "family": "orchestration",
@@ -459,7 +459,7 @@
     {
       "id": "qi_hive",
       "name": "QI Hive",
-      "description": "Unified agent orchestration and knowledge system \u2014 QI Brain + Dashboard + 7 hive agents. The bee colony.",
+      "description": "Unified agent orchestration and knowledge system — QI Brain + Dashboard + 7 hive agents. The bee colony.",
       "path": "C:\\QIH",
       "github": "https://github.com/Quiddity-Innovations/QI-Hive",
       "status": "active_development",
@@ -493,8 +493,8 @@
         }
       ],
       "sub_systems": {
-        "brain": "C:\\QIH\\engine\\brain \u2014 knowledge substrate (SQLite + ChromaDB + MCP + 12 tools)",
-        "hive": "C:\\QIH\\engine\\hive \u2014 agent system (7 agents, dashboard, skills, tests)"
+        "brain": "C:\\QIH\\engine\\brain — knowledge substrate (SQLite + ChromaDB + MCP + 12 tools)",
+        "hive": "C:\\QIH\\engine\\hive — agent system (7 agents, dashboard, skills, tests)"
       },
       "family_tier": "orchestration",
       "family_notes": "The nervous system and operational layer. Absorbs Claude Manager. QI Brain is the hive mind. Agents are the bees.",
@@ -507,12 +507,12 @@
         "easyflow"
       ],
       "exposes_to_ecosystem": [
-        "GET  http://localhost:8600 \u2014 Hive Dashboard",
-        "GET  http://localhost:9010 \u2014 QI Brain API",
-        "POST http://localhost:9010/api/agent/growth \u2014 agent growth loop",
-        "GET  http://localhost:9010/api/agents \u2014 list all hive agents",
-        "POST http://localhost:9010/api/log_session \u2014 session logging for all projects",
-        "POST http://localhost:9010/api/log_decision \u2014 decisions for all projects"
+        "GET  http://localhost:8600 — Hive Dashboard",
+        "GET  http://localhost:9010 — QI Brain API",
+        "POST http://localhost:9010/api/agent/growth — agent growth loop",
+        "GET  http://localhost:9010/api/agents — list all hive agents",
+        "POST http://localhost:9010/api/log_session — session logging for all projects",
+        "POST http://localhost:9010/api/log_decision — decisions for all projects"
       ],
       "future_structure": "Projects migrate to C:\\QIP one by one. C:\\QI becomes C:\\QIB (business side).",
       "added": "2026-04-19"
@@ -522,7 +522,7 @@
       "name": "AutoPDF",
       "path": "C:\\AutoPDF",
       "path_standard": "C:\\AutoPDF",
-      "path_migration_note": "Migrated 2026-05-13 from C:\\Users\\renne\\Downloads\\AUTOPDF to standardized path C:\\AutoPDF. AutoPDF is fully portable \u2014 reads everything via relative paths, so the move required no code changes.",
+      "path_migration_note": "Migrated 2026-05-13 from C:\\Users\\renne\\Downloads\\AUTOPDF to standardized path C:\\AutoPDF. AutoPDF is fully portable — reads everything via relative paths, so the move required no code changes.",
       "type": "desktop_tool",
       "status": "Active Dev",
       "tier": "Tool",
@@ -534,18 +534,18 @@
         "http": {
           "current": 6969,
           "recommended_block": "8700-8709",
-          "notes": "Pre-registry \u2014 port 6969 chosen independently. Works correctly. Migration to 8700 block recommended only when adopting other ecosystem integrations."
+          "notes": "Pre-registry — port 6969 chosen independently. Works correctly. Migration to 8700 block recommended only when adopting other ecosystem integrations."
         }
       },
       "exposes": [
-        "POST /api/template-apply-batch  (folder \u2192 CSV via template)",
+        "POST /api/template-apply-batch  (folder → CSV via template)",
         "POST /api/template-test         (single PDF verification)",
-        "POST /api/ai-chat               (Smart Mapping chat \u2014 Ollama)",
+        "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
         "POST /api/template-propose      (AI field proposal)",
         "GET  /api/regex-library         (reusable patterns)"
       ],
       "consumes": [
-        "Local Ollama (optional) \u2014 Smart Mapping AI",
+        "Local Ollama (optional) — Smart Mapping AI",
         "Bundled engines: Ghostscript, Poppler, Tesseract, Tabula, PDFtk, Liberica JRE"
       ],
       "ecosystem_role": "Standalone tool. Can be called by Maia / NEXUS / FileHQ in the future to extract fields from user-supplied PDFs.",
@@ -566,16 +566,16 @@
           "Documentation/AutoPDF_Test_Guide.docx"
         ],
         "tests": [
-          "Tests/Run-AutoPDFTests.ps1 (Tier 1 + 2 \u2014 PowerShell)",
-          "Tests/BrowserTests/ (Tier 3 \u2014 Playwright)"
+          "Tests/Run-AutoPDFTests.ps1 (Tier 1 + 2 — PowerShell)",
+          "Tests/BrowserTests/ (Tier 3 — Playwright)"
         ]
       },
       "added_to_registry": "2026-05-01",
       "family_tier": "Tool",
       "exposes_to_ecosystem": [
-        "POST /api/template-apply-batch  (folder \u2192 CSV via template)",
+        "POST /api/template-apply-batch  (folder → CSV via template)",
         "POST /api/template-test         (single PDF verification)",
-        "POST /api/ai-chat               (Smart Mapping chat \u2014 Ollama)",
+        "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
         "POST /api/template-propose      (AI field proposal)",
         "GET  /api/regex-library         (reusable patterns)"
       ]
@@ -586,7 +586,7 @@
       "description": "Local desktop platform that connects to Hyland OnBase, lifts its data into a vector store + data lake, and lets AI correlate, infer, and report across boundaries OnBase itself can't query. Vendor-neutral LLM router (Claude/OpenAI/Gemini/Ollama/LM Studio/llama.cpp), pluggable source connectors, OnBase-Web-Client-style retrieval UI, templated and ad-hoc reports. First source: OnBase. Future sources: filesystem, email, Jenzabar.",
       "path": "C:\\CogniBase",
       "github": "https://github.com/rennesan/cognibase",
-      "status": "phase_b_core_complete_pilot_ready",
+      "status": "pre_poc",
       "primary_language": "Python (FastAPI backend) + React (single-file UI mockup)",
       "ports": {
         "api": {
@@ -596,7 +596,7 @@
         }
       },
       "family_tier": "standalone_tool",
-      "family_notes": "Sibling of MapSnap (Jenzabar schema browser). Renamed from 'mapsnap_onbase' to 'cognibase' on 2026-05-06 to reflect the broader mission: not just an OnBase mirror but a platform that exceeds OnBase.",
+      "family_notes": "Sibling of MapSnap (Jenzabar schema browser). Renamed from 'mapsnap_onbase' to 'cognibase' on 2026-05-06 to reflect the broader mission: not just an OnBase mirror but a platform that exceeds OnBase. Status corrected 2026-05-13: pre_poc (was phase_b_core_complete_pilot_ready; renaming reflects actual maturity stage).",
       "integrates_with": [],
       "exposes_to_ecosystem": [
         "OnBase schema as JSON",
@@ -640,8 +640,8 @@
   "family_taxonomy": {
     "description": "Defines how projects will integrate in the future unified QI platform.",
     "tiers": {
-      "core": "The primary product \u2014 Maia. All roads lead here.",
-      "backbone": "Infrastructure that powers everything \u2014 NEXUS. Never user-facing directly.",
+      "core": "The primary product — Maia. All roads lead here.",
+      "backbone": "Infrastructure that powers everything — NEXUS. Never user-facing directly.",
       "sibling": "Same DNA, different face. Share engine, personality, config. Can run as one app with feature flags.",
       "sibling_candidate": "Not siblings yet but heading there. Will share code as they mature.",
       "cousin": "Related domain, shared data/events, call each other's APIs. Independent deployment.",
@@ -690,7 +690,7 @@
       }
     ],
     "unified_app_vision": {
-      "description": "The future QI unified platform \u2014 one app, many modules.",
+      "description": "The future QI unified platform — one app, many modules.",
       "modules": [
         {
           "module": "AI Engine",
@@ -700,7 +700,7 @@
         {
           "module": "Assistant",
           "source": "maia + naya",
-          "role": "Conversational AI \u2014 multi-channel, multi-persona"
+          "role": "Conversational AI — multi-channel, multi-persona"
         },
         {
           "module": "Agent Layer",
@@ -726,13 +726,13 @@
     }
   },
   "shared_infrastructure": {
-    "database": "SQLite per project (maia.db, nexus.db, etc.) \u2014 no shared DB today. Future: federated or migrated to PostgreSQL.",
+    "database": "SQLite per project (maia.db, nexus.db, etc.) — no shared DB today. Future: federated or migrated to PostgreSQL.",
     "llm_chain": "Maia owns primary chain. NEXUS owns evaluation. All projects should query NEXUS for LLM recommendations.",
-    "auth": "None today \u2014 all local/internal. Future: shared auth token when unified app is built.",
+    "auth": "None today — all local/internal. Future: shared auth token when unified app is built.",
     "messaging": "No internal message bus today. Future: lightweight event bus (Redis Pub/Sub or simple SQLite queue).",
-    "cloudflare_tunnel": "Maia ONLY uses Cloudflare Tunnel \u2014 required for LINE/Telegram/Messenger webhook callbacks. NEXUS, Naya, and all other projects are LAN-only and must NOT be given Cloudflare tunnels without explicit design review.",
+    "cloudflare_tunnel": "Maia ONLY uses Cloudflare Tunnel — required for LINE/Telegram/Messenger webhook callbacks. NEXUS, Naya, and all other projects are LAN-only and must NOT be given Cloudflare tunnels without explicit design review.",
     "nssm_services": {
-      "note": "NSSM binary standardized 2026-04-22 to C:\\QIH\\engine\\bin\\nssm.exe \u2014 all services use this. Service names use the QI_ prefix. Registry below reflects live audit on 2026-05-13.",
+      "note": "NSSM binary standardized 2026-04-22 to C:\\QIH\\engine\\bin\\nssm.exe — all services use this. Service names use the QI_ prefix. Registry below reflects live audit on 2026-05-13.",
       "registered": [
         {
           "name": "QI_MaiaBot",
@@ -745,14 +745,14 @@
           "name": "QI_MaiaTunnel",
           "project": "maia",
           "port": null,
-          "script": "cloudflared tunnel \u2192 :8001",
+          "script": "cloudflared tunnel → :8001",
           "internet_exposed": true
         },
         {
           "name": "QI_MaiaDemoTunnel",
           "project": "maia",
           "port": null,
-          "script": "cloudflared tunnel \u2192 :7860",
+          "script": "cloudflared tunnel → :7860",
           "internet_exposed": true,
           "start_type": "manual"
         },
@@ -799,7 +799,7 @@
           "name": "QI_DashboardTunnel",
           "project": "qi_hive",
           "port": null,
-          "script": "C:\\QIH\\engine\\hive\\tunnel\\tunnel_manager.py (cloudflared \u2192 :8600)",
+          "script": "C:\\QIH\\engine\\hive\\tunnel\\tunnel_manager.py (cloudflared → :8600)",
           "internet_exposed": true
         },
         {
@@ -839,20 +839,20 @@
           "port": null,
           "script": "C:\\OC\\tools\\oc-keepalive-daemon.py",
           "internet_exposed": false,
-          "notes": "Pre-dates QI_ naming convention \u2014 not renamed since it's OpenClaw-internal"
+          "notes": "Pre-dates QI_ naming convention — not renamed since it's OpenClaw-internal"
         }
       ],
-      "naming_rule": "New services: QI_<Project><Role> \u2014 e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
+      "naming_rule": "New services: QI_<Project><Role> — e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
       "safety_rules": [
-        "NEVER kill a port without checking which project owns it \u2014 use qi_registry.json",
-        "NEVER expose Naya, NEXUS, or OC via Cloudflare tunnel \u2014 Maia ONLY",
-        "All services share the same Python (C:\\1-AI\\APPS\\PYTHON\\python.exe) \u2014 a broken pip install affects ALL projects",
-        "Stopping MaiaBot kills LINE/Telegram webhooks \u2014 external users lose service immediately",
-        "NayaBot auto-starts FileHQ engine on port 8200 \u2014 stopping Naya also stops FileHQ",
-        "NSSM auto-restarts failed services \u2014 killing a port may trigger a restart loop",
+        "NEVER kill a port without checking which project owns it — use qi_registry.json",
+        "NEVER expose Naya, NEXUS, or OC via Cloudflare tunnel — Maia ONLY",
+        "All services share the same Python (C:\\1-AI\\APPS\\PYTHON\\python.exe) — a broken pip install affects ALL projects",
+        "Stopping MaiaBot kills LINE/Telegram webhooks — external users lose service immediately",
+        "NayaBot auto-starts FileHQ engine on port 8200 — stopping Naya also stops FileHQ",
+        "NSSM auto-restarts failed services — killing a port may trigger a restart loop",
         "Before any port change: check ALL services in this registry, not just the current project"
       ]
     },
-    "qi_brain": "C:\\QIH\\data\\qi_brain.db \u2014 shared knowledge DB (backbone tier, :9010)"
+    "qi_brain": "C:\\QIH\\data\\qi_brain.db — shared knowledge DB (backbone tier, :9010)"
   }
 }

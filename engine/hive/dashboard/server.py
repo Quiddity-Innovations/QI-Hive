@@ -342,6 +342,10 @@ def base_layout(title: str, content: str, active: str = "") -> str:
   <script src="/static/js/adminlte.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
+    .bg-qi-purple    {{ background-color: #7e57c2 !important; color: #fff !important; }}
+    .bg-qi-purple .small-box-icon,
+    .bg-qi-purple a {{ color: #fff !important; }}
+    .badge-qi-purple {{ background-color: #7e57c2 !important; color: #fff !important; }}
     .priority-high   {{ border-left: 4px solid #dc3545 !important; }}
     .priority-medium {{ border-left: 4px solid #ffc107 !important; }}
     .priority-low    {{ border-left: 4px solid #198754 !important; }}
@@ -426,6 +430,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         <div class="d-flex align-items-center mb-1"><span class="badge text-bg-success me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>In Progress</span></div>
         <div class="d-flex align-items-center mb-1"><span class="badge text-bg-warning me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Backlog / Paused</span></div>
         <div class="d-flex align-items-center mb-1"><span class="badge text-bg-light me-2" style="width:14px;height:14px;padding:0;border:1px solid #555">&nbsp;</span><span>New</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge badge-qi-purple me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Pre-POC</span></div>
         <div class="d-flex align-items-center mb-1"><span class="badge text-bg-secondary me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Retired / Merged</span></div>
         <div class="d-flex align-items-center"><span class="badge text-bg-info me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Unknown status</span></div>
       </div>
@@ -708,8 +713,12 @@ def render_dashboard() -> str:
     #   success   = In Progress / active development
     #   warning   = Backlog / paused (work needed before it can move)
     #   light     = New / not started
+    #   purple    = Pre-POC (custom, see qi-purple CSS class)
     #   secondary = Retired / merged / deprecated (i.e. dead)
     proj_colors = {
+        # Pre-POC (custom purple — needs qi-purple class injected in base_layout CSS)
+        "pre_poc":                              ("qi-purple", "bi-lightbulb"),
+        "pre-poc":                              ("qi-purple", "bi-lightbulb"),
         # Legend statuses (original)
         "complete":                            ("dark",      "bi-check-circle-fill"),
         "in_progress":                         ("success",   "bi-play-circle-fill"),
@@ -744,12 +753,15 @@ def render_dashboard() -> str:
         # which is reserved for retired/merged per the sidebar legend.
         color, icon = proj_colors.get(st.lower() if isinstance(st, str) else st,
                                        ("info", "bi-question-circle"))
+        # qi-purple uses a custom CSS class (text-bg-* doesn't have purple in Bootstrap 5).
+        # Inject inline style fallback so it works even without the CSS class loading first.
+        bg_attr = f'class="small-box bg-qi-purple text-white"' if color == "qi-purple" else f'class="small-box text-bg-{color}"'
         task = p.get("current_task") or "—"
         notes = p.get("notes","")
         open_tasks = sum(1 for t in tasks if t.get("project")==name and t.get("column")!="done")
         project_cards += f"""
         <div class="col-lg-4 col-md-6 col-sm-12">
-          <div class="small-box text-bg-{color}">
+          <div {bg_attr}>
             <div class="inner">
               <h4>{name}</h4>
               <p>{st.replace("_"," ").title()}</p>
