@@ -103,18 +103,24 @@ def get_registered_projects() -> list[str]:
         return [r[0] for r in con.execute("SELECT project_id FROM projects WHERE active=1")]
 
 
-def file_dispatch(project_id: str, check_id: str, message: str, fix_action: str) -> int:
-    """Write to dispatches table, return dispatch_id."""
+def file_dispatch(project_id: str, check_id: str, message: str, fix_action: str) -> str:
+    """Write to dispatches table with a UUID dispatch_id, return the ID.
+
+    NOTE: previously omitted dispatch_id which broke the dashboard's Approve/Decline
+    buttons (they PATCH /api/dispatch/<id> -- null IDs couldn't match). Fixed 2026-05-13.
+    """
+    import uuid
+    did = str(uuid.uuid4())
     with db() as con:
-        cur = con.execute(
-            "INSERT INTO dispatches (source, type, priority, project_id, payload, status, created_at) "
-            "VALUES (?,?,?,?,?, 'pending', ?)",
-            ('hive_inspector', 'compliance', 'medium', project_id,
+        con.execute(
+            "INSERT INTO dispatches (dispatch_id, source, type, priority, project_id, payload, status, created_at) "
+            "VALUES (?,?,?,?,?,?, 'pending', ?)",
+            (did, 'hive_inspector', 'compliance', 'medium', project_id,
              json.dumps({'check_id': check_id, 'message': message, 'suggested_fix': fix_action}),
              datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         )
         con.commit()
-        return cur.lastrowid
+        return did
 
 
 def write_log(run_id: str, mode: str, results: list[CheckResult]):

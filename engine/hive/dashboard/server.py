@@ -5115,13 +5115,17 @@ def render_brain() -> str:
           </div>
         </div>"""
 
-    # ── Decisions (active, from snapshot) ──
+    # ── Decisions (active, live from qi_brain.db) ──
+    # The snapshot endpoint doesn't include nested recent_decisions; query DB directly.
     dec_rows = ""
-    for p in projects:
-        for d in p.get("recent_decisions", [])[:3]:
-            dec_rows += f"""
+    active_decisions = _brain_db_query(
+        "SELECT project_id, title, rationale, recorded_at FROM decisions "
+        "ORDER BY recorded_at DESC LIMIT 30"
+    )
+    for d in active_decisions:
+        dec_rows += f"""
             <tr>
-              <td><span class="badge text-bg-primary">{p.get('project_id','?')}</span></td>
+              <td><span class="badge text-bg-primary">{d.get('project_id','?')}</span></td>
               <td>{d.get('title','')}</td>
               <td class="text-muted small">{(d.get('rationale') or '')[:120]}</td>
               <td class="text-muted small">{(d.get('recorded_at','') or '')[:16]}</td>
@@ -5129,13 +5133,16 @@ def render_brain() -> str:
     if not dec_rows:
         dec_rows = '<tr><td colspan="4" class="text-muted text-center">No recent decisions</td></tr>'
 
-    # ── Features (pending + recent from snapshot) ──
+    # ── Features (active, live from qi_brain.db) ──
     feat_rows = ""
-    for p in projects:
-        for f in p.get("recent_features", [])[:3]:
-            feat_rows += f"""
+    active_features = _brain_db_query(
+        "SELECT source_project AS project_id, name, domain, description, recorded_at "
+        "FROM features ORDER BY recorded_at DESC LIMIT 30"
+    )
+    for f in active_features:
+        feat_rows += f"""
             <tr>
-              <td><span class="badge text-bg-info">{p.get('project_id','?')}</span></td>
+              <td><span class="badge text-bg-info">{f.get('project_id','?')}</span></td>
               <td>{f.get('name','')}</td>
               <td><span class="badge text-bg-secondary">{f.get('domain','-')}</span></td>
               <td class="text-muted small">{(f.get('description') or '')[:120]}</td>
