@@ -336,7 +336,7 @@
       "description": "Maia Quiddam \u2014 autonomous AI social media persona for Facebook, Instagram, WhatsApp",
       "path": "C:\\MQ",
       "github": "https://github.com/Quiddity-Innovations/MQ",
-      "status": "paused_pending_credentials",
+      "status": "new",
       "status_reason": "Awaiting Facebook Page approval + Meta Developer credentials. Entry point exists (Start_MQ.bat -> main.py). Updated 2026-05-11.",
       "primary_language": "Python",
       "ports": {
@@ -350,7 +350,7 @@
         }
       },
       "family_tier": "cousin",
-      "family_notes": "New project \u2014 family role to be determined as it develops.",
+      "family_notes": "New project \u2014 family role to be determined as it develops. Status 2026-05-13: not started yet (was paused_pending_credentials; corrected to new).",
       "integrates_with": [],
       "exposes_to_ecosystem": [
         "GET /health",
