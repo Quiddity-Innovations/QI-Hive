@@ -1,9 +1,9 @@
 # QI Ecosystem — Windows Service Registry
 
 **Authority:** This file is the single source of truth for all QI NSSM Windows services.
-**Location:** `C:\UNIVERSAL\ECOSYSTEM\QI_Service_Registry.md`
+**Location:** `C:\QIH\ecosystem\QI_Service_Registry.md`
 **Convention:** All QI services are prefixed `QI_` so they group together in Windows Services, Task Manager, and Event Viewer.
-**Last updated:** 2026-05-04
+**Last updated:** 2026-05-13 (audit-corrected from live NSSM state)
 
 ---
 
@@ -30,7 +30,7 @@
 |---|---|
 | **Display name** | QI — Maia Bot Server |
 | **Description** | Maia AI assistant platform. FastAPI server handling LINE, Telegram and other channels. Ollama-powered multi-LLM chain. |
-| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` → `C:\Python311\python.exe` after migration |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `maia_server.py` |
 | **Working dir** | `C:\QI` |
 | **Port** | 8001 |
@@ -38,7 +38,7 @@
 | **Stderr log** | `C:\QI\LOGS\maia_error.txt` |
 | **Start type** | AUTO_START (delayed) |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QI\nssm.exe` |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` (standardized 2026-04-22) |
 
 ### QI_MaiaTunnel
 | Field | Value |
@@ -87,7 +87,7 @@
 |---|---|
 | **Display name** | QI — Naya Bot Server |
 | **Description** | Naya personal AI assistant. Telegram bot + file management engine. FastAPI server on port 8002. |
-| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` → `C:\Python311\python.exe` after migration |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `C:\NAYA\naya_server.py` |
 | **Working dir** | `C:\NAYA` |
 | **Port** | 8002 |
@@ -101,10 +101,12 @@
 |---|---|
 | **Display name** | QI — Naya Gradio UI |
 | **Description** | Naya Gradio web interface on port 7861. Provides browser-based UI for Naya AI assistant. |
-| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` → `C:\Python311\python.exe` after migration |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `C:\NAYA\naya_gradio.py` |
-| **Working dir** | `C:\NAYA` *(fixed from C:\1-AI\APPS\PYTHON)* |
+| **Working dir** | `C:\NAYA` |
 | **Port** | 7861 |
+| **Stdout log** | `C:\NAYA\LOGS\naya_gradio_service.log` *(added 2026-05-13 — was empty)* |
+| **Stderr log** | `C:\NAYA\LOGS\naya_gradio_error.log` *(added 2026-05-13 — was empty)* |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 
@@ -113,7 +115,7 @@
 |---|---|
 | **Display name** | QI — NEXUS Scout Engine |
 | **Description** | Quiddity Innovations NEXUS: Neural Exchange and Unified Synthesis. Scout/digest engine with multi-provider LLM dispatch. API port 8010, UI port 7880. |
-| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` → `C:\Python311\python.exe` after migration |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `C:\NEXUS\main.py` |
 | **Working dir** | `C:\NEXUS` |
 | **Ports** | API 8010 · UI 7880 |
@@ -129,22 +131,23 @@
 | **Description** | QI Hive Dashboard. Agent orchestration UI, kanban, health check, hive agent profiles. FastAPI on port 8600. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `C:\QIH\engine\hive\dashboard\server.py` |
-| **Working dir** | `C:\QIH` *(QI Project Standard layout — run C:\QIH\tools\finalize_migration.bat as admin)* |
+| **Working dir** | `C:\QIH` |
 | **Port** | 8600 |
+| **Stdout log** | `C:\QIH\engine\hive\dashboard\LOGS\dashboard.log` *(repointed 2026-05-13 — was C:\UNIVERSAL\dashboard\LOGS\)* |
+| **Stderr log** | `C:\QIH\engine\hive\dashboard\LOGS\dashboard_error.log` *(repointed 2026-05-13)* |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **Current path** | Still pointing to `C:\CLAUDE\Dashboard\server.py` until admin runs `update_services.bat` |
 
 ### QI_DashboardTunnel
 | Field | Value |
 |---|---|
 | **Display name** | QI — Dashboard Cloudflare Tunnel |
-| **Description** | Cloudflare quick tunnel exposing QI Orchestrator (port 9000) to the internet. URL written to status\tunnel.json and displayed in dashboard header. |
-| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` *(fixed from python3)* |
-| **Parameters** | `C:\UNIVERSAL\dashboard\tunnel_manager.py` |
-| **Working dir** | `C:\UNIVERSAL\dashboard` |
-| **Stdout log** | `C:\UNIVERSAL\dashboard\LOGS\tunnel_service.log` |
-| **Stderr log** | `C:\UNIVERSAL\dashboard\LOGS\tunnel_service.log` |
+| **Description** | Cloudflare quick tunnel exposing the Hive Dashboard (port 8600) to the internet. URL written to status\tunnel.json and displayed in dashboard header. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `tunnel_manager.py` |
+| **Working dir** | `C:\QIH\engine\hive\tunnel` |
+| **Stdout log** | `C:\QIH\engine\hive\tunnel\LOGS\tunnel_service.log` |
+| **Stderr log** | `C:\QIH\engine\hive\tunnel\LOGS\tunnel_service.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 
@@ -155,13 +158,40 @@
 | **Description** | QI Brain — hive nervous system. SQLite + ChromaDB + 12 MCP tools. Agent growth loop, decisions, features, sessions. FastAPI on port 9010. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `C:\QIH\engine\brain\api.py` |
-| **Working dir** | `C:\QIH` *(QI Project Standard layout — run C:\QIH\tools\finalize_migration.bat as admin)* |
+| **Working dir** | `C:\QIH` |
 | **Port** | 9010 |
-| **Stdout log** | `C:\QIH\brain\LOGS\qi_brain_api.log` |
-| **Stderr log** | `C:\QIH\brain\LOGS\qi_brain_api.log` |
+| **Stdout log** | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` |
+| **Stderr log** | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **Current path** | Still pointing to `C:\UNIVERSAL\qi_brain\qi_brain_api.py` until admin runs `update_services.bat` |
+
+### QI_Elevate
+| Field | Value |
+|---|---|
+| **Display name** | QI — Elevation Broker |
+| **Description** | Elevation broker daemon. Accepts requests from QI projects/agents to execute commands at admin integrity level. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Working dir** | `C:\QIH\engine\common` |
+| **Stdout log** | `C:\QIH\logs\elevation\broker_stdout.log` |
+| **Stderr log** | `C:\QIH\logs\elevation\broker_stderr.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Registered** | 2026-05-13 (was running but not in registry) |
+
+### QI_HiveIngest
+| Field | Value |
+|---|---|
+| **Display name** | QI — Hive Ingest Worker |
+| **Description** | Hive ingestion worker. Watches sources and ingests events/data into the Hive Brain (qi_brain.db / ChromaDB). |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Working dir** | `C:\QIH\engine\hive\ingest` |
+| **Stdout log** | `C:\QIH\logs\hive\ingest_stdout.log` |
+| **Stderr log** | `C:\QIH\logs\hive\ingest_stderr.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Registered** | 2026-05-13 (was running but not in registry) |
 
 ---
 
@@ -169,14 +199,14 @@
 
 ```bat
 REM Status check (all QI services)
-for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI) do @echo %s: & nssm status %s
+for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_KazeConfigAPI) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
 
-REM Restart a specific service
-C:\UNIVERSAL\dashboard\nssm.exe restart QI_MaiaBot
+REM Restart a specific service (NSSM binary standardized 2026-04-22)
+C:\QIH\engine\bin\nssm.exe restart QI_MaiaBot
 
 REM Check logs
 type C:\QI\LOGS\maia_service_log.txt
-type C:\UNIVERSAL\qi_brain\LOGS\qi_brain_api.log
+type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 ```
 
 ---
@@ -190,23 +220,20 @@ type C:\UNIVERSAL\qi_brain\LOGS\qi_brain_api.log
 | Maia Gradio UI (:7860) down | QI_MaiaGradio | `C:\QI\LOGS\maia_gradio_error.log` | `nssm status QI_MaiaGradio` |
 | Maia Gradio demo down | QI_MaiaDemoTunnel | `C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt` | `nssm status QI_MaiaDemoTunnel` |
 | Naya not responding | QI_NayaBot | `C:\NAYA\LOGS\naya_service_log.txt` | `nssm status QI_NayaBot` |
-| Naya UI down | QI_NayaGradio | `C:\NAYA\LOGS\naya_error.txt` | `nssm status QI_NayaGradio` |
+| Naya UI down | QI_NayaGradio | `C:\NAYA\LOGS\naya_gradio_error.log` | `nssm status QI_NayaGradio` |
 | NEXUS not running | QI_NEXUS | `C:\NEXUS\LOGS\nexus_service.log` | `nssm status QI_NEXUS` |
-| Dashboard (:9000) down | QI_Dashboard | (check process) | `nssm status QI_Dashboard` |
-| Dashboard tunnel URL gone | QI_DashboardTunnel | `C:\UNIVERSAL\dashboard\LOGS\tunnel_service.log` | `nssm status QI_DashboardTunnel` |
-| Brain API (:9010) down | QI_BrainAPI | `C:\QIH\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
+| Dashboard (:8600) down | QI_Dashboard | `C:\QIH\engine\hive\dashboard\LOGS\dashboard.log` | `nssm status QI_Dashboard` |
+| Dashboard tunnel URL gone | QI_DashboardTunnel | `C:\QIH\engine\hive\tunnel\LOGS\tunnel_service.log` | `nssm status QI_DashboardTunnel` |
+| Brain API (:9010) down | QI_BrainAPI | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
+| Elevation broker not responding | QI_Elevate | `C:\QIH\logs\elevation\broker_stderr.log` | `nssm status QI_Elevate` |
+| Hive ingest stalled | QI_HiveIngest | `C:\QIH\logs\hive\ingest_stderr.log` | `nssm status QI_HiveIngest` |
+| Kaze config UI down | QI_KazeConfigAPI | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` | `nssm status QI_KazeConfigAPI` |
 
 ---
 
-## After Python Migration (2026-04-19)
+## Python Migration Note (historical, 2026-04-19)
 
-Every service needs its Python path updated. Run once after migration:
-
-```bat
-C:\UNIVERSAL\dashboard\update_services_python_path.bat
-```
-
-(Script will be created during migration — updates all 6 Python-based services to `C:\Python311\python.exe`)
+All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migration to `C:\Python311\python.exe` was deferred and the legacy interpreter is now the standard. No action required.
 
 ---
 

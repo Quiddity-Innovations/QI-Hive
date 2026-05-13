@@ -3,9 +3,9 @@
     "name": "Quiddity Innovations \u2014 Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-05-09",
+    "last_updated": "2026-05-13",
     "maintainer": "Claude (PM delegate) \u2014 Renne Santiago (owner/sponsor)",
-    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service."
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection."
   },
   "module_interface_contract": {
     "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -47,10 +47,10 @@
     "api_versioning_rule": "Adding response fields = OK. Removing or renaming fields = breaking change. Breaking changes require a new versioned endpoint (/v2/...)."
   },
   "governance": {
-    "principles_doc": "C:\\QI\\ECOSYSTEM\\QI_Architecture_Principles.md",
-    "standards_doc": "C:\\QI\\ECOSYSTEM\\QI_Standards.md",
-    "validator_tool": "python C:\\QI\\ECOSYSTEM\\qi_validator.py --project <id>",
-    "new_project_tool": "python C:\\QI\\ECOSYSTEM\\qi_new_project.py",
+    "principles_doc": "C:\\QIH\\ecosystem\\QI_Architecture_Principles.md",
+    "standards_doc": "C:\\QIH\\ecosystem\\QI_Standards.md",
+    "validator_tool": "python C:\\QIH\\ecosystem\\qi_validator.py --project <id>",
+    "new_project_tool": "python C:\\QIH\\ecosystem\\qi_new_project.py",
     "rules": [
       "Registry is updated BEFORE code is written \u2014 never after",
       "Every project runs standalone without any other QI project",
@@ -482,19 +482,19 @@
           "port": 8600,
           "type": "FastAPI",
           "managed_by": "NSSM",
-          "path": "C:\\QIH\\hive\\Dashboard\\server.py"
+          "path": "C:\\QIH\\engine\\hive\\dashboard\\server.py"
         },
         {
           "name": "QI_BrainAPI",
           "port": 9010,
           "type": "FastAPI",
           "managed_by": "NSSM",
-          "path": "C:\\QIH\brain\\qi_brain_api.py"
+          "path": "C:\\QIH\\engine\\brain\\api.py"
         }
       ],
       "sub_systems": {
-        "brain": "C:\\QIH\brain \u2014 knowledge substrate (SQLite + ChromaDB + MCP + 12 tools)",
-        "hive": "C:\\QIH\\hive  \u2014 agent system (7 agents, dashboard, skills, tests)"
+        "brain": "C:\\QIH\\engine\\brain \u2014 knowledge substrate (SQLite + ChromaDB + MCP + 12 tools)",
+        "hive": "C:\\QIH\\engine\\hive \u2014 agent system (7 agents, dashboard, skills, tests)"
       },
       "family_tier": "orchestration",
       "family_notes": "The nervous system and operational layer. Absorbs Claude Manager. QI Brain is the hive mind. Agents are the bees.",
@@ -732,57 +732,29 @@
     "messaging": "No internal message bus today. Future: lightweight event bus (Redis Pub/Sub or simple SQLite queue).",
     "cloudflare_tunnel": "Maia ONLY uses Cloudflare Tunnel \u2014 required for LINE/Telegram/Messenger webhook callbacks. NEXUS, Naya, and all other projects are LAN-only and must NOT be given Cloudflare tunnels without explicit design review.",
     "nssm_services": {
-      "note": "Each project should have its own NSSM binary for independence. Maia uses C:\\QI\\nssm.exe, Naya uses C:\\NAYA\\nssm.exe. Service names must not conflict.",
+      "note": "NSSM binary standardized 2026-04-22 to C:\\QIH\\engine\\bin\\nssm.exe \u2014 all services use this. Service names use the QI_ prefix. Registry below reflects live audit on 2026-05-13.",
       "registered": [
         {
-          "name": "MaiaBot",
+          "name": "QI_MaiaBot",
           "project": "maia",
           "port": 8001,
-          "script": "maia_server.py",
+          "script": "C:\\QI\\maia_server.py",
           "internet_exposed": true
         },
         {
-          "name": "MaiaTunnel",
+          "name": "QI_MaiaTunnel",
           "project": "maia",
           "port": null,
-          "script": "cloudflare tunnel \u2192 :8001",
+          "script": "cloudflared tunnel \u2192 :8001",
           "internet_exposed": true
         },
         {
-          "name": "MaiaDemoTunnel",
+          "name": "QI_MaiaDemoTunnel",
           "project": "maia",
           "port": null,
-          "script": "cloudflare tunnel \u2192 :7860",
-          "internet_exposed": true
-        },
-        {
-          "name": "NayaBot",
-          "project": "naya",
-          "port": 8002,
-          "script": "naya_server.py (also starts FileHQ on 8200)",
-          "internet_exposed": false
-        },
-        {
-          "name": "NayaGradio",
-          "project": "naya",
-          "port": 7861,
-          "script": "naya_gradio.py",
-          "internet_exposed": false,
-          "depends_on": "NayaBot"
-        },
-        {
-          "name": "NEXUSService",
-          "project": "nexus",
-          "port": 8010,
-          "script": "C:\\NEXUS\\main.py",
-          "internet_exposed": false
-        },
-        {
-          "name": "OC-Keepalive-Service",
-          "project": "openclaw",
-          "port": null,
-          "script": "C:\\OC\\tools\\oc-keepalive-daemon.py",
-          "internet_exposed": false
+          "script": "cloudflared tunnel \u2192 :7860",
+          "internet_exposed": true,
+          "start_type": "manual"
         },
         {
           "name": "QI_MaiaGradio",
@@ -791,9 +763,86 @@
           "script": "C:\\QI\\maia_gradio.py",
           "internet_exposed": false,
           "added": "2026-05-09"
+        },
+        {
+          "name": "QI_NayaBot",
+          "project": "naya",
+          "port": 8002,
+          "script": "C:\\NAYA\\naya_server.py (also starts FileHQ on 8200)",
+          "internet_exposed": false
+        },
+        {
+          "name": "QI_NayaGradio",
+          "project": "naya",
+          "port": 7861,
+          "script": "C:\\NAYA\\naya_gradio.py",
+          "internet_exposed": false,
+          "depends_on": "QI_NayaBot",
+          "notes": "Stdout/Stderr paths added 2026-05-13 (were empty)"
+        },
+        {
+          "name": "QI_NEXUS",
+          "project": "nexus",
+          "port": 8010,
+          "script": "C:\\NEXUS\\main.py",
+          "internet_exposed": false
+        },
+        {
+          "name": "QI_Dashboard",
+          "project": "qi_hive",
+          "port": 8600,
+          "script": "C:\\QIH\\engine\\hive\\dashboard\\server.py",
+          "internet_exposed": false,
+          "notes": "Log paths repointed 2026-05-13 from C:\\UNIVERSAL\\dashboard\\LOGS to C:\\QIH\\engine\\hive\\dashboard\\LOGS"
+        },
+        {
+          "name": "QI_DashboardTunnel",
+          "project": "qi_hive",
+          "port": null,
+          "script": "C:\\QIH\\engine\\hive\\tunnel\\tunnel_manager.py (cloudflared \u2192 :8600)",
+          "internet_exposed": true
+        },
+        {
+          "name": "QI_BrainAPI",
+          "project": "qi_brain",
+          "port": 9010,
+          "script": "C:\\QIH\\engine\\brain\\api.py",
+          "internet_exposed": false
+        },
+        {
+          "name": "QI_Elevate",
+          "project": "qi_hive",
+          "port": null,
+          "script": "C:\\QIH\\engine\\common\\* (elevation broker)",
+          "internet_exposed": false,
+          "registered": "2026-05-13"
+        },
+        {
+          "name": "QI_HiveIngest",
+          "project": "qi_hive",
+          "port": null,
+          "script": "C:\\QIH\\engine\\hive\\ingest\\* (ingestion worker)",
+          "internet_exposed": false,
+          "registered": "2026-05-13"
+        },
+        {
+          "name": "QI_KazeConfigAPI",
+          "project": "openclaw",
+          "port": 8401,
+          "script": "C:\\OC\\repo\\scripts\\kaze\\kaze-config-api.py",
+          "internet_exposed": false,
+          "registered": "2026-05-13"
+        },
+        {
+          "name": "OC-Keepalive-Service",
+          "project": "openclaw",
+          "port": null,
+          "script": "C:\\OC\\tools\\oc-keepalive-daemon.py",
+          "internet_exposed": false,
+          "notes": "Pre-dates QI_ naming convention \u2014 not renamed since it's OpenClaw-internal"
         }
       ],
-      "naming_rule": "New services: <ProjectName><Role> \u2014 e.g. NexusAPI, MQBot. Never reuse names.",
+      "naming_rule": "New services: QI_<Project><Role> \u2014 e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
       "safety_rules": [
         "NEVER kill a port without checking which project owns it \u2014 use qi_registry.json",
         "NEVER expose Naya, NEXUS, or OC via Cloudflare tunnel \u2014 Maia ONLY",

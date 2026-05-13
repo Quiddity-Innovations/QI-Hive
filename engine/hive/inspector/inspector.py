@@ -368,6 +368,104 @@ def check_session_freshness(pid: str, path: Path, auto_fix: bool) -> CheckResult
                        f"Last session {days}d ago")
 
 
+# ── Global (ecosystem-wide) checks ──
+
+# Map service-name prefix → project_id for attributing CheckResults.
+_SERVICE_PROJECT_PREFIX = (
+    ('QI_Maia',       'maia'),
+    ('QI_Naya',       'naya'),
+    ('QI_NEXUS',      'nexus'),
+    ('QI_Brain',      'qi_brain'),
+    ('QI_Hive',       'qi_hive'),
+    ('QI_Dashboard',  'qi_hive'),
+    ('QI_Elevate',    'qi_hive'),
+    ('QI_KazeConfig', 'openclaw'),
+)
+
+
+def _project_for_service(name: str) -> str:
+    for prefix, pid in _SERVICE_PROJECT_PREFIX:
+        if name.startswith(prefix):
+            return pid
+    return 'qi_hive'
+
+
+def _list_qi_services_on_machine() -> Optional[list[str]]:
+    """Return list of QI_* Windows service names, or None if sc.exe fails."""
+    try:
+        out = subprocess.check_output(
+            ['sc.exe', 'query', 'type=', 'service', 'state=', 'all'],
+            text=True, encoding='utf-8', errors='replace', timeout=15,
+        )
+    except Exception:
+        return None
+    names = []
+    for line in out.splitlines():
+        s = line.strip()
+        if s.startswith('SERVICE_NAME:'):
+            n = s.split(':', 1)[1].strip()
+            if n.startswith('QI_'):
+                names.append(n)
+    return names
+
+
+def check_nssm_registry_mismatch(auto_fix: bool) -> list[CheckResult]:
+    """Cross-check installed QI_* services against qi_registry.json.
+
+    Catches the silent-drift gap that let stale C:\\UNIVERSAL log paths
+    persist for weeks before the 2026-05-13 audit: services running on
+    the machine but never added to the registry (and the reverse).
+    """
+    results: list[CheckResult] = []
+    try:
+        with open(REGISTRY, 'r', encoding='utf-8') as f:
+            registry = json.load(f)
+        registered = {
+            entry.get('name')
+            for entry in (registry.get('shared_infrastructure', {})
+                                  .get('nssm_services', {})
+                                  .get('registered', []) or [])
+            if entry.get('name')
+        }
+    except Exception as e:
+        return [CheckResult('nssm_registry', 'qi_hive', 'fail', 'high', False,
+                            f"Could not load registry: {type(e).__name__}: {e}")]
+
+    on_machine = _list_qi_services_on_machine()
+    if on_machine is None:
+        return [CheckResult('nssm_registry', 'qi_hive', 'warn', 'medium', False,
+                            "sc.exe query failed — could not enumerate QI_* services")]
+
+    on_machine_set = set(on_machine)
+    qi_registered = {n for n in registered if n and n.startswith('QI_')}
+
+    missing_from_registry = on_machine_set - registered
+    missing_from_machine  = qi_registered  - on_machine_set
+
+    for svc in sorted(missing_from_registry):
+        pid = _project_for_service(svc)
+        results.append(CheckResult(
+            'nssm_registry', pid, 'fail', 'high', False,
+            f"Service '{svc}' is installed but not in qi_registry.json",
+            fix_action=f"Add entry under shared_infrastructure.nssm_services.registered[] (project={pid})",
+        ))
+
+    for svc in sorted(missing_from_machine):
+        pid = _project_for_service(svc)
+        results.append(CheckResult(
+            'nssm_registry', pid, 'warn', 'medium', False,
+            f"Service '{svc}' is in qi_registry.json but not installed on this machine",
+            fix_action="Install the service, or remove the registry entry",
+        ))
+
+    if not results:
+        results.append(CheckResult(
+            'nssm_registry', 'qi_hive', 'pass', 'high', False,
+            f"All {len(on_machine_set)} QI_* services match registry",
+        ))
+    return results
+
+
 # ── DEEP-only checks ──
 
 def check_module_interface(pid: str, path: Path, auto_fix: bool) -> Optional[list[CheckResult]]:
@@ -462,6 +560,14 @@ def run_scan(project_id: Optional[str] = None, mode: str = 'fast', auto_fix: boo
             except Exception as e:
                 all_results.append(CheckResult('module_interface', pid, 'fail', 'low', False,
                                                f"check raised: {type(e).__name__}: {e}"))
+
+    # Global (ecosystem-wide) checks — run once per scan if scanning all projects.
+    if project_id is None:
+        try:
+            all_results.extend(check_nssm_registry_mismatch(auto_fix))
+        except Exception as e:
+            all_results.append(CheckResult('nssm_registry', 'qi_hive', 'fail', 'low', False,
+                                           f"check raised: {type(e).__name__}: {e}"))
 
     write_log(run_id, mode, all_results)
 
