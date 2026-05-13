@@ -9,9 +9,14 @@ __pycache__/
 .venv/
 node_modules/
 .env
+*.db
 *.db-wal
 *.db-shm
 .claude/
+
+# Auto-generated registry backups — local only
+ecosystem/*.bak_*
+ecosystem/*.backup-*
 
 # Broker request queue + hive report queue — ephemeral, local only
 commands/pending/
