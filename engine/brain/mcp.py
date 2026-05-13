@@ -310,16 +310,14 @@ async def main() -> None:
     sys.stderr.flush()
 
     loop = asyncio.get_event_loop()
-    reader = asyncio.StreamReader()
-    protocol = asyncio.StreamReaderProtocol(reader)
-    await loop.connect_read_pipe(lambda: protocol, sys.stdin.buffer)
 
     while True:
         try:
-            line = await reader.readline()
+            # run_in_executor avoids the Windows ProactorEventLoop connect_read_pipe crash
+            line = await loop.run_in_executor(None, sys.stdin.readline)
             if not line:
                 break
-            line = line.decode("utf-8").strip()
+            line = line.strip()
             if not line:
                 continue
             req = json.loads(line)

@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-05-12T23:35:06.144750+00:00",
+  "tunnels": [
+    {
+      "key": "hive",
+      "label": "QI Hive Dashboard",
+      "port": 8600,
+      "public_url": "https://deutsch-seeds-prominent-filtering.trycloudflare.com",
+      "source": "C:\\QIH\\engine\\hive\\tunnel\\status\\tunnel.json",
+      "updated_at": "2026-05-10T21:04:31.598712Z"
+    },
+    {
+      "key": "maia_api",
+      "label": "Maia API",
+      "port": 8001,
+      "public_url": "https://greatest-enclosed-prisoners-group.trycloudflare.com",
+      "source": "C:\\QI\\LOGS\\tunnel_log.txt",
+      "updated_at": "2026-05-12T16:10:59.683618+00:00"
+    },
+    {
+      "key": "maia_ui",
+      "label": "Maia UI (Gradio)",
+      "port": 7860,
+      "public_url": null,
+      "source": "C:\\QI\\LOGS\\Maia_Gradio_Tunnel_Log.txt",
+      "updated_at": null
+    },
+    {
+      "key": "naya",
+      "label": "Naya",
+      "port": 8002,
+      "public_url": null,
+      "source": "C:\\NAYA\\LOGS\\naya_tunnel_log.txt",
+      "updated_at": null
+    }
+  ]
+}

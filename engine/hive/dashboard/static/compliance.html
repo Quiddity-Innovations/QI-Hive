@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>QI Hive — Standards Compliance</title>
+<style>
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background:#0d0f14; color:#e2e8f0; margin:0; padding:1.5rem; }
+  h1 { font-size: 1.3rem; margin: 0 0 1rem; border-bottom:1px solid #2a3348; padding-bottom:.6rem; }
+  .actions { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+  button { background:#1e2535; color:#e2e8f0; border:1px solid #2a3348; border-radius:6px; padding:.45rem .9rem; font-size:.85rem; cursor:pointer; }
+  button:hover { border-color:#4f8ef7; color:#4f8ef7; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .status { font-size:.8rem; color:#64748b; margin-left:auto; align-self:center; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:.75rem; margin-bottom:1.5rem; }
+  .card { background:#161b26; border:1px solid #2a3348; border-radius:8px; padding:.75rem .9rem; cursor:pointer; }
+  .card:hover { border-color:#4f8ef7; }
+  .card.red    { border-left:4px solid #f87171; }
+  .card.yellow { border-left:4px solid #fbbf24; }
+  .card.green  { border-left:4px solid #4ade80; }
+  .card .name { font-weight:600; font-size:.95rem; margin-bottom:.4rem; }
+  .card .row  { display:flex; gap:.6rem; font-size:.78rem; color:#94a3b8; flex-wrap:wrap; }
+  .pill { padding:.1rem .45rem; border-radius:10px; background:#1e2535; }
+  .pill.fail { color:#f87171; }
+  .pill.warn { color:#fbbf24; }
+  .pill.pass { color:#4ade80; }
+  .pill.fixed { color:#60a5fa; }
+  .pill.disp  { color:#a78bfa; }
+  table { width:100%; border-collapse:collapse; font-size:.83rem; }
+  th, td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid #2a3348; vertical-align:top; }
+  th { color:#94a3b8; font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; }
+  tr.fail   td { background: rgba(248,113,113,.08); }
+  tr.warn   td { background: rgba(251,191,36,.08); }
+  tr.fixed  td { background: rgba(96,165,250,.08); }
+  .muted { color:#64748b; }
+  details { background:#161b26; border:1px solid #2a3348; border-radius:8px; padding:.6rem .9rem; margin-bottom:.5rem; }
+  details summary { cursor:pointer; font-weight:600; }
+  code { font-family: Consolas, monospace; font-size: .78rem; color:#94a3b8; }
+  .meta { font-size:.75rem; color:#64748b; margin-top:.25rem; }
+</style>
+</head>
+<body>
+<h1>QI Hive — Standards Compliance <span class="status" id="updated"></span></h1>
+
+<div class="actions">
+  <button onclick="runScan('fast')" id="b-fast">Run fast scan (auto-fix on)</button>
+  <button onclick="runScan('deep')" id="b-deep">Run deep scan (auto-fix on)</button>
+  <button onclick="runScan('fast', false)">Audit only (no fixes)</button>
+  <button onclick="loadStatus()">Refresh</button>
+  <span class="status" id="lastrun"></span>
+</div>
+
+<div id="grid" class="grid"></div>
+
+<h2 style="font-size:1rem; margin:1.5rem 0 .75rem; color:#94a3b8;">Recent activity (last 50 entries)</h2>
+<div id="recent"></div>
+
+<script>
+const BRAIN = location.origin.replace(/:\d+$/, ':9010');  // assume Brain on same host
+const PROXY = '';  // dashboard proxy at /api/compliance/*
+
+async function fetchJSON(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(path + ' returned ' + r.status);
+  return r.json();
+}
+
+function renderGrid(projects) {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  projects.sort((a,b) => a.project_id.localeCompare(b.project_id));
+  for (const p of projects) {
+    const card = document.createElement('div');
+    card.className = 'card ' + p.overall;
+    card.onclick = () => showProject(p.project_id);
+    card.innerHTML = `
+      <div class="name">${p.project_id}</div>
+      <div class="row">
+        <span class="pill pass">${p.pass||0} pass</span>
+        ${p.fail ? `<span class="pill fail">${p.fail} fail</span>` : ''}
+        ${p.warn ? `<span class="pill warn">${p.warn} warn</span>` : ''}
+        ${p.fixed ? `<span class="pill fixed">${p.fixed} fixed</span>` : ''}
+        ${p.dispatched ? `<span class="pill disp">${p.dispatched} disp</span>` : ''}
+      </div>
+      ${p.highest_severity_failed ? `<div class="meta">highest failure: ${p.highest_severity_failed}</div>` : ''}
+    `;
+    g.appendChild(card);
+  }
+}
+
+function renderRecent(rows) {
+  const r = document.getElementById('recent');
+  if (!rows.length) { r.innerHTML = '<div class="muted">No compliance log entries yet.</div>'; return; }
+  let html = '<table><thead><tr><th>Time</th><th>Project</th><th>Check</th><th>Status</th><th>Sev</th><th>Action</th><th>Message</th></tr></thead><tbody>';
+  for (const x of rows) {
+    const cls = x.action_taken === 'fixed' ? 'fixed' : x.status;
+    html += `<tr class="${cls}">
+      <td><code>${(x.recorded_at||'').replace('T',' ').slice(0,19)}</code></td>
+      <td>${x.project_id}</td>
+      <td><code>${x.check_id}</code></td>
+      <td>${x.status}</td>
+      <td>${x.severity}</td>
+      <td>${x.action_taken}${x.dispatch_id ? ' #'+x.dispatch_id : ''}</td>
+      <td>${escapeHTML(x.message||'')}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  r.innerHTML = html;
+}
+
+function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function loadStatus() {
+  document.getElementById('updated').textContent = 'loading…';
+  try {
+    const s = await fetchJSON('/api/compliance/status');
+    renderGrid(s.projects||[]);
+    const r = await fetchJSON('/api/compliance/recent?limit=50');
+    renderRecent(r.results||[]);
+    document.getElementById('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    document.getElementById('updated').textContent = 'ERROR: ' + e.message;
+  }
+}
+
+async function runScan(mode, autoFix=true) {
+  const btn = mode === 'fast' ? document.getElementById('b-fast') : document.getElementById('b-deep');
+  if (btn) btn.disabled = true;
+  document.getElementById('lastrun').textContent = 'Running '+mode+' scan…';
+  try {
+    const r = await fetch('/api/compliance/scan', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({mode, auto_fix: autoFix})
+    });
+    const d = await r.json();
+    const s = d.summary || {};
+    document.getElementById('lastrun').textContent =
+      `${mode} scan done — ${s.checks_run} checks, ${s.pass} pass, ${s.fail} fail, ${s.warn} warn, ${s.auto_fixed} auto-fixed, ${s.dispatched} dispatched`;
+    await loadStatus();
+  } catch (e) {
+    document.getElementById('lastrun').textContent = 'Scan error: ' + e.message;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function showProject(pid) {
+  const r = await fetchJSON('/api/compliance/recent?project_id=' + encodeURIComponent(pid) + '&limit=100');
+  renderRecent(r.results||[]);
+  window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'});
+}
+
+loadStatus();
+</script>
+</body>
+</html>

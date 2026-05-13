@@ -1218,6 +1218,114 @@ async def inbox_log(project_id: Optional[str] = None, limit: int = 50):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Compliance — Hive Inspector agent
+# ─────────────────────────────────────────────────────────────────────────────
+
+import sys as _sys_compliance
+_INSPECTOR_PATH = r"C:\QIH\engine\hive"
+if _INSPECTOR_PATH not in _sys_compliance.path:
+    _sys_compliance.path.insert(0, _INSPECTOR_PATH)
+
+
+class ComplianceScanReq(BaseModel):
+    project_id: Optional[str] = None
+    mode: str = "fast"
+    auto_fix: bool = True
+
+
+@app.post("/api/compliance/scan")
+async def compliance_scan(req: ComplianceScanReq):
+    """Run a compliance scan. Auto-fixes deterministic issues, dispatches
+    ambiguous ones. Returns run summary + result list."""
+    from inspector.inspector import run_scan
+    if req.mode not in ("fast", "deep"):
+        raise HTTPException(400, "mode must be 'fast' or 'deep'")
+    pid = _norm_pid(req.project_id) if req.project_id else None
+    return run_scan(project_id=pid, mode=req.mode, auto_fix=req.auto_fix)
+
+
+@app.get("/api/compliance/recent")
+async def compliance_recent(project_id: Optional[str] = None, limit: int = 50):
+    """Recent compliance_log entries, optionally filtered by project."""
+    with open_brain_db() as conn:
+        if project_id:
+            rows = conn.execute(
+                "SELECT log_id, run_id, project_id, check_id, status, severity, "
+                "auto_fixable, action_taken, message, fix_action, dispatch_id, mode, recorded_at "
+                "FROM compliance_log WHERE project_id=? ORDER BY log_id DESC LIMIT ?",
+                (_norm_pid(project_id), limit)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT log_id, run_id, project_id, check_id, status, severity, "
+                "auto_fixable, action_taken, message, fix_action, dispatch_id, mode, recorded_at "
+                "FROM compliance_log ORDER BY log_id DESC LIMIT ?",
+                (limit,)
+            ).fetchall()
+    return {"ok": True, "results": [dict(r) for r in rows]}
+
+
+@app.get("/api/compliance/status")
+async def compliance_status():
+    """Current red/yellow/green per project — based on the most recent run for each."""
+    with open_brain_db() as conn:
+        rows = conn.execute("""
+            SELECT cl.project_id, cl.status, cl.severity, cl.check_id, cl.message, cl.action_taken
+            FROM compliance_log cl
+            INNER JOIN (
+                SELECT project_id, MAX(run_id) AS last_run
+                FROM compliance_log
+                GROUP BY project_id
+            ) latest ON cl.project_id = latest.project_id AND cl.run_id = latest.last_run
+        """).fetchall()
+    by_proj: dict[str, dict] = {}
+    for r in rows:
+        d = dict(r)
+        p = by_proj.setdefault(d["project_id"], {
+            "project_id": d["project_id"],
+            "checks": [], "pass": 0, "fail": 0, "warn": 0, "skip": 0,
+            "fixed": 0, "dispatched": 0,
+            "highest_severity_failed": None,
+        })
+        p["checks"].append(d)
+        p[d["status"]] = p.get(d["status"], 0) + 1
+        if d["action_taken"] == "fixed":
+            p["fixed"] += 1
+        if d["action_taken"] == "dispatched":
+            p["dispatched"] += 1
+        if d["status"] == "fail":
+            sev_rank = {"critical": 4, "high": 3, "medium": 2, "low": 1, "info": 0}
+            cur_rank = sev_rank.get(p["highest_severity_failed"], -1)
+            new_rank = sev_rank.get(d["severity"], 0)
+            if new_rank > cur_rank:
+                p["highest_severity_failed"] = d["severity"]
+    # green = 0 fail + 0 warn ; yellow = warn but no fail ; red = any fail
+    for p in by_proj.values():
+        if p["fail"] > 0:
+            p["overall"] = "red"
+        elif p["warn"] > 0:
+            p["overall"] = "yellow"
+        else:
+            p["overall"] = "green"
+    return {"ok": True, "projects": list(by_proj.values())}
+
+
+@app.get("/api/compliance/run/{run_id}")
+async def compliance_run(run_id: str):
+    """Full results from a single scan run."""
+    with open_brain_db() as conn:
+        rows = conn.execute(
+            "SELECT log_id, project_id, check_id, status, severity, auto_fixable, "
+            "action_taken, message, fix_action, dispatch_id, mode, recorded_at "
+            "FROM compliance_log WHERE run_id=? ORDER BY log_id ASC",
+            (run_id,)
+        ).fetchall()
+    if not rows:
+        raise HTTPException(404, f"run_id {run_id} not found")
+    return {"ok": True, "run_id": run_id, "results": [dict(r) for r in rows]}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Entrypoint
 # ─────────────────────────────────────────────────────────────────────────────
 

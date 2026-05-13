@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>QI Panel — Live Tunnel Links</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1f2630; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --accent-2:#f0b429;
+    --good:#3fb950; --bad:#f85149; --idle:#6e7681;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  header{padding:20px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,#1f2630,var(--bg))}
+  header h1{margin:0;font-size:22px;letter-spacing:.5px}
+  header .sub{color:var(--muted);font-size:12px;margin-top:4px}
+  .controls{display:flex;gap:8px;align-items:center}
+  .controls button{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px}
+  .controls button:hover{border-color:var(--accent)}
+  main{padding:24px 28px 48px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--good);border-radius:10px;padding:16px;min-height:140px;display:flex;flex-direction:column}
+  .card.lan-only{border-left-color:var(--idle);opacity:.85}
+  .card h3{margin:0 0 6px;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+  .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;border:1px solid}
+  .badge.live{color:var(--good);border-color:var(--good)}
+  .badge.lan{color:var(--idle);border-color:var(--idle)}
+  .desc{color:var(--muted);font-size:12px;margin-bottom:12px;flex:1}
+  .url{font-family:Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all;margin-bottom:10px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{background:var(--panel-2);color:var(--accent);text-decoration:none;border:1px solid var(--border);padding:6px 12px;border-radius:6px;font-size:12px;font-family:Consolas,monospace;transition:.15s}
+  .btn:hover{background:var(--accent);color:var(--bg)}
+  .btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600}
+  .btn.muted{color:var(--muted);cursor:not-allowed}
+  .meta{font-size:11px;color:var(--muted);margin-top:8px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:16px;border-top:1px solid var(--border)}
+  .status-strip{padding:8px 28px;background:var(--panel);border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+  /* Tabs */
+  .tabs{display:flex;gap:0;padding:0 28px;background:var(--panel);border-bottom:1px solid var(--border)}
+  .tab{background:transparent;color:var(--muted);border:none;border-bottom:2px solid transparent;padding:12px 18px;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .view{display:none}
+  .view.active{display:block}
+  /* Guide */
+  .guide{max-width:880px;margin:0 auto;padding:8px 0 48px}
+  .guide h2{font-size:18px;margin:32px 0 12px;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:6px}
+  .guide h2:first-child{margin-top:8px}
+  .guide ol{padding-left:22px;line-height:1.7}
+  .guide ol li{margin-bottom:14px}
+  .guide p{line-height:1.6;color:var(--text)}
+  .guide code{background:var(--panel-2);padding:2px 6px;border-radius:4px;font-family:Consolas,monospace;font-size:12px;color:var(--accent-2)}
+  .guide pre{background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:12px;overflow-x:auto;font-family:Consolas,monospace;font-size:12px;color:var(--text);line-height:1.5}
+  .guide .note{background:var(--panel);border-left:3px solid var(--accent-2);padding:10px 14px;margin:12px 0;color:var(--muted);font-size:13px;border-radius:0 6px 6px 0}
+  .guide .warn{background:var(--panel);border-left:3px solid var(--bad);padding:10px 14px;margin:12px 0;color:var(--muted);font-size:13px;border-radius:0 6px 6px 0}
+  .guide table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+  .guide th,.guide td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+  .guide th{background:var(--panel-2);color:var(--accent);font-weight:600}
+  .popout-btn{float:right;background:var(--panel-2);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;margin-top:8px}
+  .popout-btn:hover{background:var(--accent);color:var(--bg)}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>QI Panel</h1>
+    <div class="sub">Live tunnel URLs for all QI apps — refreshable from anywhere</div>
+  </div>
+  <div class="controls">
+    <button onclick="refresh()">⟳ Refresh links</button>
+    <button onclick="copyAll()">Copy all URLs</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-view="links" onclick="setView('links')">Links</button>
+  <button class="tab" data-view="guide" onclick="setView('guide')">Guide</button>
+</div>
+
+<div class="status-strip" id="status-strip">
+  <span id="status">Loading…</span>
+  <span id="generated"></span>
+</div>
+
+<main>
+  <!-- LINKS VIEW -->
+  <div class="view active" id="view-links">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- GUIDE VIEW -->
+  <div class="view" id="view-guide">
+    <div class="guide">
+      <button class="popout-btn" onclick="popoutGuide()">⧉ Open in new window</button>
+      <h2>1. Start the panel on the home machine</h2>
+      <ol>
+        <li>On the PowerSpec, double-click <code>Start QI Panel</code> on the Desktop.</li>
+        <li>Wait for the terminal to finish. It will:
+          <ul>
+            <li>Start all required Windows services (Dashboard, Tunnel, Maia, Naya, Link Collector)</li>
+            <li>Refresh <code>links.json</code> with the latest tunnel URLs</li>
+            <li>Save the panel URL to <code>Desktop\QI_PANEL_URL.txt</code> + copy to clipboard</li>
+            <li>Open the panel in your default browser</li>
+          </ul>
+        </li>
+        <li>You should see the panel load. Confirm the top strip shows live tunnels count, e.g. <code>4 live tunnels · 10 LAN-only</code>.</li>
+      </ol>
+
+      <h2>2. Verify each LIVE tunnel works</h2>
+      <ol>
+        <li>For every card with a green <strong>LIVE</strong> badge, click <strong>Open (public)</strong>.</li>
+        <li>The app should open in a new tab. If it does — close the tab, move to the next.</li>
+        <li>If a LIVE link fails to load, the tunnel rotated mid-check. Come back to the panel and click <strong>⟳ Refresh links</strong>.</li>
+      </ol>
+      <div class="note">If a card you expect to be LIVE shows <strong>LAN ONLY</strong>, its underlying tunnel service is down. Open a terminal and run <code>nssm status QI_MaiaTunnel</code> (or the relevant service). Restart it with <code>gsudo nssm restart QI_&lt;Name&gt;</code>.</div>
+
+      <h2>3. Send the panel URL to the other machine</h2>
+      <ol>
+        <li>The URL is already on your clipboard. Pick one delivery method:
+          <ul>
+            <li>Text it to yourself (paste into Signal / SMS)</li>
+            <li>Email it to yourself</li>
+            <li>Open <code>Desktop\QI_PANEL_URL.txt</code> and copy from there</li>
+          </ul>
+        </li>
+        <li>On the other machine, paste the URL into any browser → you'll see the same panel.</li>
+      </ol>
+
+      <h2>4. Use the panel remotely</h2>
+      <ol>
+        <li>Click any <strong>Open (public)</strong> button → the app opens in a new tab on that machine.</li>
+        <li>Cards marked <strong>LAN ONLY</strong> are only reachable from the home network — their <code>Localhost</code> buttons won't work on a remote machine. That's expected.</li>
+        <li>Every 30 seconds, the panel auto-refreshes the link list. You can also click <strong>⟳ Refresh links</strong> manually.</li>
+        <li>Use <strong>Copy all URLs</strong> to grab every live link at once (e.g. to share or save).</li>
+      </ol>
+
+      <h2>5. If a tunnel rotates mid-session</h2>
+      <p>Cloudflare quick tunnels can rotate (rare, but possible). When that happens:</p>
+      <ol>
+        <li>Click <strong>⟳ Refresh links</strong>. The collector reads the new URL from the tunnel log; the panel re-renders with the new URL within 30 seconds.</li>
+        <li>If the <em>panel's own URL</em> (the dashboard tunnel) rotated, the page itself stops loading. Get the new URL from the home machine: re-run <code>Start QI Panel</code> and use the new URL it prints.</li>
+      </ol>
+
+      <h2>6. Troubleshooting</h2>
+      <table>
+        <tr><th>Symptom</th><th>Fix</th></tr>
+        <tr><td>Panel page never loads remotely</td><td>Hive tunnel rotated. Re-run <code>Start QI Panel</code> on the PowerSpec, share the new URL.</td></tr>
+        <tr><td>All cards show LAN ONLY</td><td><code>QI_LinkCollector</code> service is stopped. Run <code>gsudo nssm start QI_LinkCollector</code>.</td></tr>
+        <tr><td>One card stuck on LAN ONLY when its tunnel should be up</td><td>That project's tunnel log moved. Tell Claude — update sources in <code>link_collector.py</code>.</td></tr>
+        <tr><td>"Error loading links.json" in status strip</td><td>Dashboard is up but collector hasn't written links.json yet. Wait 30s, retry.</td></tr>
+        <tr><td>Status strip shows "Updated 30m ago" or older</td><td>Collector stopped. <code>gsudo nssm restart QI_LinkCollector</code>.</td></tr>
+      </table>
+
+      <h2>7. Closing down</h2>
+      <p>Nothing to close — services run 24/7. Just close the browser tabs when you're done. The PowerSpec keeps everything alive.</p>
+
+      <div class="note">All services start automatically with Windows. You only need to run <code>Start QI Panel</code> when you specifically want to know the current public URL or need to nudge a stopped service back to life.</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Powered by <code>link_collector.py</code> · auto-refreshes every 30s
+</footer>
+
+<script>
+  // Static metadata — describes each tunnel + adds LAN-only entries that have no public URL.
+  const META = {
+    hive:     {desc:"Hive operational dashboard — agents, compliance, war room.", color:"core"},
+    maia_api: {desc:"Maia bot backend — multi-channel AI assistant (LINE, Telegram, Messenger).", color:"core"},
+    maia_ui:  {desc:"Maia chat UI (Gradio). Click to test Maia in a browser.", color:"core"},
+    naya:     {desc:"Personal AI for Renne — AI/physics/programming.", color:"family"},
+  };
+  // LAN-only services (no tunnel today). Shown for completeness with localhost links.
+  const LAN_ONLY = [
+    // Backbone
+    {key:"brain",     label:"QI Brain API",     desc:"Shared knowledge substrate — SQLite + ChromaDB + 12-tool MCP.", port:9010, path:"/docs"},
+    {key:"nexus_ui",  label:"NEXUS UI",         desc:"Neural Exchange & Unified Synthesis — AI orchestration backbone.", port:7880},
+    {key:"nexus_api", label:"NEXUS API",        desc:"NEXUS multi-AI dispatch + synthesis API.", port:8010, path:"/docs"},
+    // Assistants
+    {key:"mq_ui",     label:"MQ (Maia Quiddam) UI", desc:"Autonomous AI social-media persona — PAUSED awaiting Meta approval.", port:7840},
+    {key:"mq_api",    label:"MQ API",           desc:"MQ backend — paused until Facebook Page approval.", port:8500},
+    {key:"openclaw",  label:"OpenClaw",         desc:"Autonomous AI agent platform — 5 agents (WSL Ubuntu). No HTTP UI.", port:null},
+    // Tools
+    {key:"cognibase", label:"CogniBase",        desc:"Hyland OnBase → vector store + data lake. Vendor-neutral LLM router.", port:8650},
+    {key:"mapsnap",   label:"MapSnap",          desc:"Standalone Jenzabar EX schema browser — HTML with FK relationships.", port:9876},
+    {key:"autopdf",   label:"AutoPDF",          desc:"Self-contained PDF toolkit — convert / split / extract / catalog.", port:6969},
+    // Infra
+    {key:"ollama",    label:"Ollama",           desc:"Local LLM server — Gemma3, DeepSeek-R1, Qwen3, Kimi-K2.5.", port:11434, path:"/api/tags"},
+  ];
+
+  let LAST = null;
+
+  function fmtTime(iso){
+    if(!iso) return "—";
+    const d=new Date(iso); const s=(Date.now()-d.getTime())/1000;
+    if(s<60) return Math.floor(s)+"s ago";
+    if(s<3600) return Math.floor(s/60)+"m ago";
+    return Math.floor(s/3600)+"h ago";
+  }
+
+  function card(entry){
+    const meta = META[entry.key] || {desc:"", color:""};
+    const live = !!entry.public_url;
+    const localhost = `http://localhost:${entry.port}`;
+    return `
+      <div class="card${live?'':' lan-only'}">
+        <h3>${entry.label}
+          <span class="badge ${live?'live':'lan'}">${live?'LIVE':'LAN ONLY'}</span>
+        </h3>
+        <div class="desc">${meta.desc||''}</div>
+        ${live ? `<div class="url">${entry.public_url}</div>` : ''}
+        <div class="actions">
+          ${live ? `<a class="btn primary" href="${entry.public_url}" target="_blank">Open (public)</a>` : ''}
+          <a class="btn" href="${localhost}" target="_blank">Localhost :${entry.port}</a>
+        </div>
+        <div class="meta">${live ? 'Tunnel URL updated '+fmtTime(entry.updated_at) : 'No tunnel — start one to expose'}</div>
+      </div>`;
+  }
+
+  function lanCard(item){
+    const hasPort = item.port !== null && item.port !== undefined;
+    const localhost = hasPort ? `http://localhost:${item.port}${item.path||''}` : null;
+    return `
+      <div class="card lan-only">
+        <h3>${item.label}<span class="badge lan">LAN ONLY</span></h3>
+        <div class="desc">${item.desc}</div>
+        <div class="actions">
+          ${hasPort ? `<a class="btn" href="${localhost}" target="_blank">Localhost :${item.port}</a>` : `<span class="btn muted">No HTTP UI</span>`}
+        </div>
+        <div class="meta">${hasPort ? 'No tunnel — local network only' : 'CLI / WSL only'}</div>
+      </div>`;
+  }
+
+  async function refresh(){
+    document.getElementById('status').textContent='Refreshing…';
+    try{
+      // cache-bust to always get the freshest links.json
+      const r = await fetch('/static/links.json?t='+Date.now());
+      const data = await r.json();
+      LAST = data;
+      const grid = document.getElementById('grid');
+      grid.innerHTML = data.tunnels.map(card).join('') + LAN_ONLY.map(lanCard).join('');
+      document.getElementById('status').textContent =
+        `${data.tunnels.filter(t=>t.public_url).length} live tunnels · ${LAN_ONLY.length} LAN-only`;
+      document.getElementById('generated').textContent = 'Updated '+fmtTime(data.generated_at);
+    }catch(e){
+      document.getElementById('status').textContent = 'Error loading links.json — is link_collector running?';
+    }
+  }
+
+  function copyAll(){
+    if(!LAST) return;
+    const lines = LAST.tunnels.filter(t=>t.public_url).map(t=>`${t.label}: ${t.public_url}`);
+    navigator.clipboard.writeText(lines.join('\n'));
+    alert('Copied '+lines.length+' URLs to clipboard');
+  }
+
+  // ===== Tabs =====
+  function setView(name){
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view===name));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id==='view-'+name));
+    // Hide the status strip when reading the Guide — it's irrelevant there
+    document.getElementById('status-strip').style.display = (name==='links') ? '' : 'none';
+  }
+
+  // ===== Pop out guide into its own window for side-by-side reading =====
+  function popoutGuide(){
+    const w = window.open('', 'qi-panel-guide', 'width=720,height=900,resizable=yes,scrollbars=yes');
+    if(!w){ alert('Popup blocked. Allow popups for this page.'); return; }
+    const guideHTML = document.getElementById('view-guide').innerHTML;
+    const styles = document.querySelector('style').innerHTML;
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>QI Panel — Guide</title><style>${styles} body{padding:20px}</style></head><body><div class="view active">${guideHTML}</div></body></html>`);
+    w.document.close();
+    // Remove the pop-out button inside the popped window (already popped)
+    const btn = w.document.querySelector('.popout-btn');
+    if(btn) btn.remove();
+  }
+
+  window.addEventListener('load', refresh);
+  setInterval(refresh, 30000);
+</script>
+</body>
+</html>

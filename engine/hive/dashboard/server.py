@@ -4704,6 +4704,64 @@ def warroom_page():
     return base_layout("War Room", render_warroom(), "warroom")
 
 
+# ── Compliance proxy → Brain Inspector ────────────────────────────────────────
+import urllib.request as _ureq
+import urllib.error as _uerr
+
+_BRAIN = "http://127.0.0.1:9010"
+
+
+def _brain_request(method: str, path: str, body: dict | None = None, timeout: float = 30.0):
+    data = json.dumps(body).encode("utf-8") if body is not None else None
+    req = _ureq.Request(
+        f"{_BRAIN}{path}",
+        data=data,
+        headers={"Content-Type": "application/json"} if body is not None else {},
+        method=method,
+    )
+    try:
+        with _ureq.urlopen(req, timeout=timeout) as r:
+            return r.status, json.loads(r.read().decode("utf-8"))
+    except _uerr.HTTPError as e:
+        return e.code, {"ok": False, "error": e.read().decode("utf-8", errors="replace")[:500]}
+    except Exception as e:
+        return 502, {"ok": False, "error": f"{type(e).__name__}: {e}"}
+
+
+@app.get("/compliance", response_class=HTMLResponse)
+def compliance_page():
+    """Standards-compliance UI — talks to /api/compliance/* (proxied to Brain)."""
+    p = Path(__file__).parent / "static" / "compliance.html"
+    return p.read_text(encoding="utf-8")
+
+
+@app.get("/api/compliance/status")
+def api_compliance_status():
+    code, body = _brain_request("GET", "/api/compliance/status")
+    return JSONResponse(content=body, status_code=code)
+
+
+@app.get("/api/compliance/recent")
+def api_compliance_recent(project_id: Optional[str] = None, limit: int = 50):
+    qs = f"?limit={limit}" + (f"&project_id={project_id}" if project_id else "")
+    code, body = _brain_request("GET", f"/api/compliance/recent{qs}")
+    return JSONResponse(content=body, status_code=code)
+
+
+class _ComplianceScanReq(BaseModel):
+    project_id: Optional[str] = None
+    mode: str = "fast"
+    auto_fix: bool = True
+
+
+@app.post("/api/compliance/scan")
+def api_compliance_scan(req: _ComplianceScanReq):
+    code, body = _brain_request("POST", "/api/compliance/scan",
+                                {"project_id": req.project_id, "mode": req.mode, "auto_fix": req.auto_fix},
+                                timeout=120.0)
+    return JSONResponse(content=body, status_code=code)
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
