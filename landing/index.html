@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>QI Launchpad</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1f2630;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-2: #f0b429;
+    --good: #3fb950;
+    --bad: #f85149;
+    --idle: #6e7681;
+    --paused: #a371f7;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(180deg, #1f2630 0%, var(--bg) 100%);
+  }
+  header h1 { margin: 0; font-size: 24px; letter-spacing: 0.5px; }
+  header .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .controls { display: flex; gap: 8px; align-items: center; }
+  .controls input {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; font-size: 14px; width: 240px;
+  }
+  .controls button {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; font-size: 13px; cursor: pointer;
+  }
+  .controls button:hover { background: var(--panel-2); border-color: var(--accent); }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 18px; padding: 10px 32px;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--muted); flex-wrap: wrap;
+  }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .legend .dot.up { background: var(--good); }
+  .legend .dot.down { background: var(--bad); }
+  .legend .dot.idle { background: var(--idle); }
+  .legend .dot.paused { background: var(--paused); }
+  .legend .dot.unk { background: var(--muted); }
+
+  main { padding: 24px 32px 48px; }
+  .tier { margin-bottom: 32px; }
+  .tier h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+    padding-bottom: 8px; margin: 0 0 16px;
+  }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; display: flex; flex-direction: column; min-height: 170px;
+    transition: border-color .15s, transform .15s;
+    position: relative;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card h3 { margin: 0 0 4px; font-size: 17px; }
+  .card .desc { color: var(--muted); font-size: 13px; line-height: 1.4; flex: 1; margin-bottom: 12px; }
+  .card .path { color: var(--muted); font-size: 11px; font-family: Consolas, monospace; margin-bottom: 8px; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px; }
+  .links a {
+    background: var(--panel-2); color: var(--accent); text-decoration: none;
+    border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px;
+    font-size: 12px; font-family: Consolas, monospace;
+    transition: background .15s, color .15s;
+  }
+  .links a:hover { background: var(--accent); color: var(--bg); }
+  .links a.muted { color: var(--muted); }
+
+  .status {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted); margin-left: 6px; vertical-align: middle;
+  }
+  .status.up     { background: var(--good); }
+  .status.down   { background: var(--bad); }
+  .status.idle   { background: var(--idle); }
+  .status.paused { background: var(--paused); }
+  .status.unk    { background: var(--muted); }
+
+  .badge {
+    font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+    background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge.core      { color: var(--accent-2); border-color: var(--accent-2); }
+  .badge.backbone  { color: var(--accent);   border-color: var(--accent); }
+  .badge.tool      { color: var(--good);     border-color: var(--good); }
+  .badge.paused    { color: var(--paused);   border-color: var(--paused); }
+
+  /* Type strip (left edge of card) */
+  .card.type-service     { border-left: 3px solid var(--good); }
+  .card.type-tool        { border-left: 3px solid var(--accent-2); }
+  .card.type-paused      { border-left: 3px solid var(--paused); }
+
+  .head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .type-tag {
+    font-size: 10px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px; font-weight: 600;
+  }
+
+  /* Filter buttons */
+  .filters { padding: 12px 32px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
+  .filters button {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 16px; padding: 4px 12px; font-size: 12px; cursor: pointer;
+  }
+  .filters button.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 16px; border-top: 1px solid var(--border); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>QI Launchpad</h1>
+    <div class="sub">All Quiddity Innovations projects in one click. Source: <code>C:\QIH\ecosystem\qi_registry.json</code></div>
+  </div>
+  <div class="controls">
+    <input id="filter" placeholder="Filter by name / port..." oninput="filterCards()">
+    <button onclick="pingAll()">Ping All</button>
+  </div>
+</header>
+
+<div class="legend">
+  <div class="item"><span class="dot up"></span> <strong>Up</strong> — service running</div>
+  <div class="item"><span class="dot down"></span> <strong>Down</strong> — should be running, isn't</div>
+  <div class="item"><span class="dot idle"></span> <strong>Idle</strong> — on-demand tool, not a daemon</div>
+  <div class="item"><span class="dot paused"></span> <strong>Paused</strong> — waiting on external dependency</div>
+</div>
+
+<div class="filters">
+  <button class="active" data-filter="all" onclick="setFilter(this)">All</button>
+  <button data-filter="service" onclick="setFilter(this)">Services only</button>
+  <button data-filter="tool" onclick="setFilter(this)">Tools only</button>
+  <button data-filter="paused" onclick="setFilter(this)">Paused / WIP</button>
+</div>
+
+<main id="content">
+
+  <!-- ============ CORE ============ -->
+  <section class="tier" data-tier="core">
+    <h2>Core Product</h2>
+    <div class="grid">
+
+      <div class="card type-service" data-type="service" data-keywords="maia core ai bot 8001 7860 line telegram messenger">
+        <div class="head-row">
+          <h3>Maia <span class="badge core">core</span></h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Multi-channel AI assistant (LINE, Telegram, Messenger, Instagram, WhatsApp). The flagship product.</div>
+        <div class="path">C:\QI</div>
+        <div class="links">
+          <a href="http://localhost:7860" target="_blank" data-port="7860" data-type="service">UI :7860 <span class="status unk"></span></a>
+          <a href="http://localhost:8001" target="_blank" data-port="8001" data-type="service">API :8001 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/MAIA" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ BACKBONE ============ -->
+  <section class="tier" data-tier="backbone">
+    <h2>Backbone</h2>
+    <div class="grid">
+
+      <div class="card type-service" data-type="service" data-keywords="nexus llm synthesis ai 8010 7880">
+        <div class="head-row">
+          <h3>NEXUS <span class="badge backbone">backbone</span></h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Neural Exchange & Unified Synthesis. AI orchestration backbone, multi-AI dispatch + synthesis, AI news scout.</div>
+        <div class="path">C:\NEXUS</div>
+        <div class="links">
+          <a href="http://localhost:7880" target="_blank" data-port="7880" data-type="service">UI :7880 <span class="status unk"></span></a>
+          <a href="http://localhost:8010" target="_blank" data-port="8010" data-type="service">API :8010 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/rennesan/NEXUS" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="qi brain knowledge mcp 9010 chromadb">
+        <div class="head-row">
+          <h3>QI Brain <span class="badge backbone">backbone</span></h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Shared knowledge substrate — SQLite + ChromaDB + 12-tool MCP. Cross-project memory and decisions.</div>
+        <div class="path">C:\QIH\engine\brain</div>
+        <div class="links">
+          <a href="http://localhost:9010/docs" target="_blank" data-port="9010" data-type="service">Swagger :9010/docs <span class="status unk"></span></a>
+          <a href="http://localhost:9010/api/agents" target="_blank" data-port="9010" data-type="service">/api/agents</a>
+          <a href="http://localhost:9010/health" target="_blank" data-port="9010" data-type="service">/health</a>
+        </div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="qi hive dashboard agents 8600 inspector">
+        <div class="head-row">
+          <h3>QI Hive Dashboard <span class="badge backbone">backbone</span></h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Hive dashboard — 7 agents, compliance inspector, war room. The operational layer.</div>
+        <div class="path">C:\QIH\engine\hive\dashboard</div>
+        <div class="links">
+          <a href="http://localhost:8600" target="_blank" data-port="8600" data-type="service">Dashboard :8600 <span class="status unk"></span></a>
+          <a href="http://localhost:8600/compliance" target="_blank" data-port="8600" data-type="service">/compliance</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ ASSISTANTS & AGENTS ============ -->
+  <section class="tier" data-tier="family">
+    <h2>Assistants & Agents</h2>
+    <div class="grid">
+
+      <div class="card type-service" data-type="service" data-keywords="naya personal ai telegram 8002 7861">
+        <div class="head-row">
+          <h3>Naya</h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Personal AI for Renne — AI/physics/programming domains + file scanning (FileHQ absorbed). Telegram only, LAN-only.</div>
+        <div class="path">C:\NAYA</div>
+        <div class="links">
+          <a href="http://localhost:7861" target="_blank" data-port="7861" data-type="service">UI :7861 <span class="status unk"></span></a>
+          <a href="http://localhost:8002" target="_blank" data-port="8002" data-type="service">API :8002 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/NAYA" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-paused" data-type="paused" data-keywords="mq maia quiddam social facebook instagram 8500 7840 paused">
+        <div class="head-row">
+          <h3>MQ (Maia Quiddam) <span class="badge paused">paused</span></h3>
+          <span class="type-tag">Paused</span>
+        </div>
+        <div class="desc">Autonomous AI social-media persona. <em>Waiting on Facebook Page approval + Meta Developer credentials.</em> Launch with <code>Start_MQ.bat</code> once approved.</div>
+        <div class="path">C:\MQ</div>
+        <div class="links">
+          <a href="http://localhost:7840" target="_blank" data-port="7840" data-type="paused">UI :7840 <span class="status unk"></span></a>
+          <a href="http://localhost:8500" target="_blank" data-port="8500" data-type="paused">API :8500 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/MQ" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="openclaw oc wsl agents tasuke kaze sentry yubin">
+        <div class="head-row">
+          <h3>OpenClaw</h3>
+          <span class="type-tag">Service (WSL)</span>
+        </div>
+        <div class="desc">Autonomous AI agent platform — 5 agents (Tasuke, Kaze, Sentry, Yubin, Koe). Runs in WSL Ubuntu-24.04 via OC keep-alive.</div>
+        <div class="path">C:\OC (WSL)</div>
+        <div class="links">
+          <a class="muted" href="javascript:void(0)">No HTTP UI</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ STANDALONE TOOLS ============ -->
+  <section class="tier" data-tier="tools">
+    <h2>Standalone Tools <span style="font-size:11px; color:var(--muted); text-transform:none; letter-spacing:0;">— on-demand, launch when you need them</span></h2>
+    <div class="grid">
+
+      <div class="card type-tool" data-type="tool" data-keywords="cognibase onbase hyland vector rag 8650">
+        <div class="head-row">
+          <h3>CogniBase <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Local platform that lifts Hyland OnBase data into a vector store + data lake. Vendor-neutral LLM router, OnBase-style retrieval UI.</div>
+        <div class="path">C:\CogniBase</div>
+        <div class="links">
+          <a href="http://localhost:8650" target="_blank" data-port="8650" data-type="tool">:8650 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/rennesan/cognibase" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="mapsnap jenzabar schema browser erp 9876">
+        <div class="head-row">
+          <h3>MapSnap <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Standalone Jenzabar EX schema browser — navigable HTML with FK relationships, ERD edges, module groupings.</div>
+        <div class="path">C:\MapSnap</div>
+        <div class="links">
+          <a href="http://localhost:9876" target="_blank" data-port="9876" data-type="tool">:9876 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/rennesan/mapsnap" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="autopdf pdf convert split extract 6969">
+        <div class="head-row">
+          <h3>AutoPDF <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Self-contained PDF toolkit — convert / split / extract / catalog. Local-only, smart mapping via Ollama.</div>
+        <div class="path">C:\Users\renne\Downloads\AUTOPDF</div>
+        <div class="links">
+          <a href="http://localhost:6969" target="_blank" data-port="6969" data-type="tool">:6969 <span class="status unk"></span></a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="easyflow email gmail tier inbox 8550">
+        <div class="head-row">
+          <h3>EasyFlow <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Tier-based Gmail inbox management with Apps Script automation. Free gift tool for family/friends.</div>
+        <div class="path">C:\EasyFlow</div>
+        <div class="links">
+          <a href="http://localhost:8550" target="_blank" data-port="8550" data-type="tool">:8550 <span class="status unk"></span></a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ LOCAL INFRA ============ -->
+  <section class="tier" data-tier="infra">
+    <h2>Local Infrastructure</h2>
+    <div class="grid">
+
+      <div class="card type-service" data-type="service" data-keywords="ollama local llm 11434 gemma deepseek qwen">
+        <div class="head-row">
+          <h3>Ollama</h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Local LLM server — Gemma3:27b, Gemma4, DeepSeek-R1, Qwen3, Kimi-K2.5, AutoPDF-Mapper, etc.</div>
+        <div class="path">C:\Users\renne\AppData\Local\Programs\Ollama</div>
+        <div class="links">
+          <a href="http://localhost:11434" target="_blank" data-port="11434" data-type="service">:11434 <span class="status unk"></span></a>
+          <a href="http://localhost:11434/api/tags" target="_blank" data-port="11434" data-type="service">/api/tags</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Last generated 2026-05-11 &middot; Edit at <code>C:\QIH\landing\index.html</code> &middot; Open via <code>C:\QIH\landing\Open-Launchpad.bat</code>
+</footer>
+
+<script>
+  // ===== Filter (search box) =====
+  function filterCards() {
+    const q = document.getElementById('filter').value.trim().toLowerCase();
+    document.querySelectorAll('.card').forEach(card => {
+      const kw = card.getAttribute('data-keywords') || '';
+      const matchSearch = (!q || kw.includes(q));
+      const matchType   = (window._activeFilter === 'all' || card.getAttribute('data-type') === window._activeFilter);
+      card.style.display = (matchSearch && matchType) ? '' : 'none';
+    });
+    document.querySelectorAll('.tier').forEach(tier => {
+      const visible = [...tier.querySelectorAll('.card')].some(c => c.style.display !== 'none');
+      tier.style.display = visible ? '' : 'none';
+    });
+  }
+
+  // ===== Filter (pill buttons) =====
+  window._activeFilter = 'all';
+  function setFilter(btn) {
+    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    window._activeFilter = btn.getAttribute('data-filter');
+    filterCards();
+  }
+
+  // ===== Three-state pinger =====
+  // For each <a data-port data-type>, color its .status dot:
+  //   up      = port is listening (regardless of type)
+  //   down    = port not listening AND type is 'service'  (real problem)
+  //   idle    = port not listening AND type is 'tool'      (expected; on-demand)
+  //   paused  = port not listening AND type is 'paused'    (intentional pause)
+  async function pingPort(port, type, dot) {
+    dot.classList.remove('up','down','idle','paused','unk');
+    let up = false;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 1500);
+      await fetch('http://localhost:' + port, { mode: 'no-cors', signal: ctrl.signal });
+      clearTimeout(t);
+      up = true;
+    } catch (e) {
+      up = false;
+    }
+    if (up) {
+      dot.classList.add('up');
+    } else if (type === 'tool') {
+      dot.classList.add('idle');
+    } else if (type === 'paused') {
+      dot.classList.add('paused');
+    } else {
+      dot.classList.add('down');
+    }
+  }
+  function pingAll() {
+    document.querySelectorAll('.links a[data-port]').forEach(a => {
+      const dot = a.querySelector('.status');
+      if (!dot) return;
+      const port = a.getAttribute('data-port');
+      const type = a.getAttribute('data-type') || 'service';
+      pingPort(port, type, dot);
+    });
+  }
+  // Auto-ping on load
+  window.addEventListener('load', () => setTimeout(pingAll, 200));
+</script>
+
+</body>
+</html>
