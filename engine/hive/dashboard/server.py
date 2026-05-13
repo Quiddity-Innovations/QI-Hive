@@ -1654,7 +1654,12 @@ def render_hive() -> str:
         </div>"""
 
     if not agent_cards:
-        agent_cards = '<div class="col-12"><div class="alert alert-warning">QI Brain offline — agent profiles unavailable.</div></div>'
+        # Distinguish: Brain offline vs Brain online but no agents registered yet.
+        logger.debug("/api/agents returned %d agents (brain_online=%s)", len(agents), online)
+        if not online:
+            agent_cards = '<div class="col-12"><div class="alert alert-warning">QI Brain offline — agent profiles unavailable.</div></div>'
+        else:
+            agent_cards = '<div class="col-12"><div class="alert alert-info">No agents registered yet. Agents appear here once they connect to QI Brain.</div></div>'
 
     # Recent sessions
     sessions = snap.get("recent_sessions", [])[:6]
@@ -3454,7 +3459,7 @@ def render_gsudo_profiles() -> str:
 
 
 def render_config() -> str:
-    return render_gsudo_config() + render_gsudo_profiles()
+    return render_gsudo_config() + render_gsudo_profiles() + render_log_config()
 
 
 class LogLevelPayload(BaseModel):
@@ -3848,7 +3853,7 @@ def render_project(pid: str) -> str:
 
     svc_rows = "".join(
         f"<tr><td><code>{s}</code></td>"
-        f"<td><button class='btn btn-sm btn-outline-secondary' onclick=\"alert('service control coming in Session 06')\">status</button></td></tr>"
+        f"<td><button class='btn btn-sm btn-outline-secondary' disabled title='Coming in Session 06'>status</button></td></tr>"
         for s in services
     ) or '<tr><td colspan="2" class="text-muted">No services registered</td></tr>'
 
@@ -4683,12 +4688,13 @@ def _headline_row(h: dict) -> str:
     color, icon, label = _HEADLINE_STYLE.get(kind, ("secondary", "bi-circle", kind.title()))
     project_id = (h.get("project_id") or "?")
     agent_id   = (h.get("agent_id")   or "")
+    ref_id     = h.get("ref_id") or ""   # NULL ref_id renders as blank, not "never"
     title      = (h.get("title")      or "").replace("<", "&lt;")
     summary    = (h.get("summary")    or "").replace("<", "&lt;")
     if len(summary) > 220:
         summary = summary[:220] + "…"
     ts_iso = h.get("ts", "")
-    ts_rel = _relative_time(ts_iso)
+    ts_rel = _relative_time(ts_iso) or "—"   # humanize helper; fall back to em-dash not "never"
 
     agent_chip = ""
     if agent_id and agent_id not in ("unknown", "?"):
