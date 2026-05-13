@@ -3,9 +3,9 @@
     "name": "Quiddity Innovations \u2014 Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-04-19",
+    "last_updated": "2026-05-09",
     "maintainer": "Claude (PM delegate) \u2014 Renne Santiago (owner/sponsor)",
-    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one."
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service."
   },
   "module_interface_contract": {
     "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -73,7 +73,9 @@
       "8500-8509": "MQ family",
       "8550-8559": "EasyFlow family",
       "8600-8649": "QI Launcher family",
-      "9000-9099": "QI Hive family (Brain at 9010, Dashboard at 8600 migrating)"
+      "9000-9099": "QI Hive family (Brain at 9010, Dashboard at 8600 migrating)",
+      "8700-8709": "AutoPDF family (desktop tool, port 6969 pre-registry)",
+      "8650-8659": "MapSnap family (mapsnap, cognibase)"
     },
     "ui_blocks": {
       "7800-7809": "Maia UI family",
@@ -334,7 +336,8 @@
       "description": "Maia Quiddam \u2014 autonomous AI social media persona for Facebook, Instagram, WhatsApp",
       "path": "C:\\MQ",
       "github": "https://github.com/Quiddity-Innovations/MQ",
-      "status": "active_development",
+      "status": "paused_pending_credentials",
+      "status_reason": "Awaiting Facebook Page approval + Meta Developer credentials. Entry point exists (Start_MQ.bat -> main.py). Updated 2026-05-11.",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -383,7 +386,7 @@
       "description": "Universal tools and dashboards shared across all QI projects \u2014 QI Launcher, cross-project utilities",
       "path": "C:\\QIH",
       "github": "https://github.com/Quiddity-Innovations/QI-Hive",
-      "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 — see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
+      "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 \u2014 see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
       "status": "active",
       "primary_language": "HTML/Python",
       "ports": {
@@ -513,6 +516,125 @@
       ],
       "future_structure": "Projects migrate to C:\\QIP one by one. C:\\QI becomes C:\\QIB (business side).",
       "added": "2026-04-19"
+    },
+    {
+      "id": "autopdf",
+      "name": "AutoPDF",
+      "path": "C:\\Users\\renne\\Downloads\\AUTOPDF",
+      "path_standard": "C:\\AUTOPDF",
+      "path_migration_note": "Currently at non-standard path. Migration to C:\\AUTOPDF is optional \u2014 AutoPDF is portable and reads everything via relative paths.",
+      "type": "desktop_tool",
+      "status": "Active Dev",
+      "tier": "Tool",
+      "description": "Self-contained PDF toolkit: convert / split / extract / catalog. Local-only, no cloud.",
+      "language": "PowerShell + vanilla JS",
+      "phase": "2c",
+      "github": "TBD",
+      "ports": {
+        "http": {
+          "current": 6969,
+          "recommended_block": "8700-8709",
+          "notes": "Pre-registry \u2014 port 6969 chosen independently. Works correctly. Migration to 8700 block recommended only when adopting other ecosystem integrations."
+        }
+      },
+      "exposes": [
+        "POST /api/template-apply-batch  (folder \u2192 CSV via template)",
+        "POST /api/template-test         (single PDF verification)",
+        "POST /api/ai-chat               (Smart Mapping chat \u2014 Ollama)",
+        "POST /api/template-propose      (AI field proposal)",
+        "GET  /api/regex-library         (reusable patterns)"
+      ],
+      "consumes": [
+        "Local Ollama (optional) \u2014 Smart Mapping AI",
+        "Bundled engines: Ghostscript, Poppler, Tesseract, Tabula, PDFtk, Liberica JRE"
+      ],
+      "ecosystem_role": "Standalone tool. Can be called by Maia / NEXUS / FileHQ in the future to extract fields from user-supplied PDFs.",
+      "loopback_only": true,
+      "internet_exposed": false,
+      "documentation": {
+        "root_md": [
+          "README.md",
+          "SUMMARY.md",
+          "INSTALL.md",
+          "CHANGELOG.md",
+          "CLAUDE.md",
+          "NEXT_SESSION_PROMPT.md"
+        ],
+        "docx": [
+          "Documentation/AutoPDF_Technical_Guide.docx",
+          "Documentation/AutoPDF_User_Guide.docx",
+          "Documentation/AutoPDF_Test_Guide.docx"
+        ],
+        "tests": [
+          "Tests/Run-AutoPDFTests.ps1 (Tier 1 + 2 \u2014 PowerShell)",
+          "Tests/BrowserTests/ (Tier 3 \u2014 Playwright)"
+        ]
+      },
+      "added_to_registry": "2026-05-01",
+      "family_tier": "Tool",
+      "exposes_to_ecosystem": [
+        "POST /api/template-apply-batch  (folder \u2192 CSV via template)",
+        "POST /api/template-test         (single PDF verification)",
+        "POST /api/ai-chat               (Smart Mapping chat \u2014 Ollama)",
+        "POST /api/template-propose      (AI field proposal)",
+        "GET  /api/regex-library         (reusable patterns)"
+      ]
+    },
+    {
+      "id": "cognibase",
+      "name": "CogniBase",
+      "description": "Local desktop platform that connects to Hyland OnBase, lifts its data into a vector store + data lake, and lets AI correlate, infer, and report across boundaries OnBase itself can't query. Vendor-neutral LLM router (Claude/OpenAI/Gemini/Ollama/LM Studio/llama.cpp), pluggable source connectors, OnBase-Web-Client-style retrieval UI, templated and ad-hoc reports. First source: OnBase. Future sources: filesystem, email, Jenzabar.",
+      "path": "C:\\CogniBase",
+      "github": "https://github.com/rennesan/cognibase",
+      "status": "phase_b_core_complete_pilot_ready",
+      "primary_language": "Python (FastAPI backend) + React (single-file UI mockup)",
+      "ports": {
+        "api": {
+          "current": 8650,
+          "block": "8650-8659",
+          "notes": "Local FastAPI server. Block reserved for MapSnap family (siblings: mapsnap)."
+        }
+      },
+      "family_tier": "standalone_tool",
+      "family_notes": "Sibling of MapSnap (Jenzabar schema browser). Renamed from 'mapsnap_onbase' to 'cognibase' on 2026-05-06 to reflect the broader mission: not just an OnBase mirror but a platform that exceeds OnBase.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "OnBase schema as JSON",
+        "OnBase metadata RAG search",
+        "OnBase document retrieval (read-only)",
+        "Report generation (.docx)"
+      ],
+      "consumes_from_ecosystem": [
+        "qi_brain (optional, for cross-project context logging)"
+      ],
+      "version": "0.5.0-dev",
+      "last_milestone": "M18 (Discovery + Bridges) + M25-minimal (Lifecycle visualizer) + Portability",
+      "tests": "50/50 passing",
+      "last_updated": "2026-05-09"
+    },
+    {
+      "id": "mapsnap",
+      "name": "MapSnap (Jenzabar schema browser)",
+      "description": "Standalone local schema browser for Jenzabar EX (university ERP). Reads schema.json built from CSV/SQL exports and renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings. Original product; sibling of mapsnap_onbase.",
+      "path": "C:\\MapSnap",
+      "github": "https://github.com/rennesan/mapsnap",
+      "status": "active_stable",
+      "primary_language": "Python (local HTTP server) + static HTML browser",
+      "ports": {
+        "api": {
+          "current": 9876,
+          "block": "8650-8659",
+          "notes": "Legacy port 9876 pre-registry. Block 8650-8659 reserved for MapSnap family but not in use here. Per registry rule, existing ports stay unless there's a reason to migrate."
+        }
+      },
+      "family_tier": "standalone_tool",
+      "family_notes": "Sibling of cognibase (same DNA, different scope). MapSnap = passive Jenzabar schema map. cognibase = live OnBase integration. Kept separate intentionally to insulate the stable browser from the integration product's churn.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Jenzabar schema as JSON",
+        "Schema browser HTML"
+      ],
+      "consumes_from_ecosystem": []
     }
   ],
   "family_taxonomy": {
@@ -661,6 +783,14 @@
           "port": null,
           "script": "C:\\OC\\tools\\oc-keepalive-daemon.py",
           "internet_exposed": false
+        },
+        {
+          "name": "QI_MaiaGradio",
+          "project": "maia",
+          "port": 7860,
+          "script": "C:\\QI\\maia_gradio.py",
+          "internet_exposed": false,
+          "added": "2026-05-09"
         }
       ],
       "naming_rule": "New services: <ProjectName><Role> \u2014 e.g. NexusAPI, MQBot. Never reuse names.",

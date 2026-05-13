@@ -1,2 +1,2 @@
 @echo off
-python "C:\QIH\engine\common\session_stop.py" --project EasyFlow --project-id easyflow
+"C:\1-AI\APPS\PYTHON\python.exe" "C:\QIH\engine\common\session_stop.py" --project EasyFlow --project-id easyflow

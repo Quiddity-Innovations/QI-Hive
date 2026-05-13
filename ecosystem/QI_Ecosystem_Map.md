@@ -26,6 +26,7 @@
 | QI-Universal | Launcher | 8650 | HTTP | — | **NO — LAN only** | Active | Quiddity-Innovations/QI-Universal |
 | OpenClaw | Gateway | 18789 (WSL) | Node.js | — | Local+LAN | Active | rennesan (TBD) |
 | FileHQ | — | (merged→Naya) | — | — | N/A | Merged | — |
+| AutoPDF | HTTP | 6969 | PowerShell | — | **NO — loopback only** | Active Dev (Phase 2c) | TBD |
 
 ### Port Block Allocation (follow for all new services)
 
@@ -38,12 +39,13 @@
 | **8400–8499** | OpenClaw | Future OC Windows-side services |
 | **8500–8509** | MQ | MQ API + future services |
 | **8550–8559** | EasyFlow | EasyFlow dashboard |
+| **8700–8709** | AutoPDF | AutoPDF + future AutoPDF microservices (extraction worker, scheduler agent) |
 | **7800–7809** | Maia | Maia UI variants |
 | **7810–7819** | Naya | Naya UI variants |
 | **7820–7829** | NEXUS | NEXUS UI variants |
 | **7830–7839** | OpenClaw | OC UI variants |
 
-> ⚠️ Ports 8001, 8002, 8010, 7860, 7861, 7880 predate this registry. They work fine — do not change unless doing a deliberate migration.
+> ⚠️ Ports 8001, 8002, 8010, 7860, 7861, 7880, **6969 (AutoPDF)** predate this registry. They work fine — do not change unless doing a deliberate migration.
 
 ---
 
@@ -115,6 +117,16 @@ Email organization tool — tier-based inbox management with Gmail API + Apps Sc
 
 ### FileHQ — `C:\FileHQ` *(MERGED → Naya)*
 Fully absorbed into Naya (`C:\NAYA\filehq\`). `C:\FileHQ` deleted 2026-04-06.
+
+### AutoPDF — `C:\Users\renne\Downloads\AUTOPDF` — *Standalone Tool / Cousin Candidate*
+Local PDF toolkit: convert / split / extract / catalog. Self-contained — bundles Ghostscript, Poppler, Tesseract, Tabula, PDFtk, JRE. Optional Ollama integration for Smart Mapping (template authoring + AI-extract fields).
+- **Ports:** HTTP :6969 (loopback only); recommended block 8700–8709 for future services
+- **Status:** Active Dev — Phase 2c complete (templates v2 + regex library + test automation)
+- **Path:** Currently at `C:\Users\renne\Downloads\AUTOPDF\` (non-standard). Migration to `C:\AUTOPDF\` is optional — AutoPDF is fully portable, reads everything via relative paths.
+- **Exposes:** Template-driven extraction (`/api/template-apply-batch`, `/api/template-test`, `/api/ai-chat`, `/api/regex-library`)
+- **Consumes:** Local Ollama (optional) only — no other QI project at runtime
+- **Future:** Maia/NEXUS could call `/api/template-apply-batch` to extract fields from user-supplied PDFs. Workflow + Scheduler tabs already exist for ecosystem-level orchestration; integration with QI Hive's scheduler is a Phase 3 candidate.
+- **GitHub:** TBD (no remote yet)
 
 ---
 

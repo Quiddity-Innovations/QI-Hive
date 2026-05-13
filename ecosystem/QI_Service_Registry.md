@@ -3,7 +3,7 @@
 **Authority:** This file is the single source of truth for all QI NSSM Windows services.
 **Location:** `C:\UNIVERSAL\ECOSYSTEM\QI_Service_Registry.md`
 **Convention:** All QI services are prefixed `QI_` so they group together in Windows Services, Task Manager, and Event Viewer.
-**Last updated:** 2026-04-19
+**Last updated:** 2026-05-04
 
 ---
 
@@ -64,6 +64,23 @@
 | **Stderr log** | `C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt` |
 | **Start type** | DEMAND_START (manual) |
 | **Account** | LocalSystem |
+
+### QI_MaiaGradio
+| Field | Value |
+|---|---|
+| **Display name** | QI - Maia Gradio UI |
+| **Description** | Maia Gradio web UI on port 7860. Browser-based chat interface for Maia AI assistant. Auto-restart enabled. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `maia_gradio.py` |
+| **Working dir** | `C:\QI` |
+| **Port** | 7860 |
+| **Stdout log** | `C:\QI\LOGS\maia_gradio_service.log` (rotated at 5 MB) |
+| **Stderr log** | `C:\QI\LOGS\maia_gradio_error.log` (rotated at 5 MB) |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **AppExit** | Default = Restart (5 s delay, 10 s throttle) |
+| **Added** | 2026-05-09 |
 
 ### QI_NayaBot
 | Field | Value |
@@ -170,6 +187,7 @@ type C:\UNIVERSAL\qi_brain\LOGS\qi_brain_api.log
 |---|---|---|---|
 | Maia not responding | QI_MaiaBot | `C:\QI\LOGS\maia_service_log.txt` | `nssm status QI_MaiaBot` |
 | Maia tunnel URL gone | QI_MaiaTunnel | `C:\QI\LOGS\tunnel_log.txt` | `nssm status QI_MaiaTunnel` |
+| Maia Gradio UI (:7860) down | QI_MaiaGradio | `C:\QI\LOGS\maia_gradio_error.log` | `nssm status QI_MaiaGradio` |
 | Maia Gradio demo down | QI_MaiaDemoTunnel | `C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt` | `nssm status QI_MaiaDemoTunnel` |
 | Naya not responding | QI_NayaBot | `C:\NAYA\LOGS\naya_service_log.txt` | `nssm status QI_NayaBot` |
 | Naya UI down | QI_NayaGradio | `C:\NAYA\LOGS\naya_error.txt` | `nssm status QI_NayaGradio` |
@@ -201,3 +219,39 @@ C:\UNIVERSAL\dashboard\update_services_python_path.bat
 - **Always set Description** — no blank descriptions
 - **Always set AppDirectory** to the project root, not the Python install path
 - **Register in this file** before installing
+
+---
+
+### QI_KazeConfigAPI
+| Field | Value |
+|---|---|
+| **Display name** | QI - Kaze Config API |
+| **Description** | REST API for Kaze feed/policy configuration UI. Reads and writes kaze-feeds.json and kaze-source-policy.json. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `C:\OC\repo\scripts\kaze\kaze-config-api.py` |
+| **Working dir** | `C:\OC\repo\scripts\kaze` |
+| **Port** | 8401 |
+| **Stdout log** | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` |
+| **Stderr log** | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **UI** | `http://localhost:18800/kaze-config/` |
+
+### QI_MapSnapTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI — MapSnap Cloudflare Tunnel |
+| **Description** | Cloudflare quick tunnel exposing MapSnap schema browser (port 9876) for remote access. |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --url http://localhost:9876` |
+| **Working dir** | `C:\MapSnap` |
+| **Stdout log** | `C:\MapSnap\LOGS\tunnel_service.log` |
+| **Stderr log** | `C:\MapSnap\LOGS\tunnel_service.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Port** | 9876 (proxied) |
+| **Install script** | `C:\MapSnap\install_tunnel_service.bat` (run as Admin once) |
+| **Status** | ⏳ Pending admin install — run install_tunnel_service.bat as Administrator |
+| **Added** | 2026-04-24 |
