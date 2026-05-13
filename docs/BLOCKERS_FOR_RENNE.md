@@ -22,5 +22,17 @@ All work so far is running autonomously. Will update as issues emerge.
 
 ---
 
+## 2026-04-22 — Renne decisions applied
+
+- ✅ **INTRO status JSONs** — reviewed, looks good for now
+- ✅ **Brain project_id convention** — `qi_hive` (internal DB/API, enforced lowercase by Brain), `QI Hive` (display name in all UIs). Brain API's `_norm_pid()` forces lowercase so mixed-case IDs break FK constraints. Decision logged to Brain (#465).
+- ✅ **Blueprint SVGs** — Renne wants them; tracked as pending task (implement after Claude Work dispatch integration is live)
+- ✅ **Claude Desktop restart** — deferred; Renne will restart after Claude Work completes its current tasks
+
+---
+
 ## Resolution / Dismissed
-(Nothing yet.)
+- `qi_hive` project_id → resolved as `QI_Hive` (2026-04-22)
+- Naya/NEXUS/EasyFlow INTRO JSONs → accepted as-is (2026-04-22)
+- ✅ `finalize_migration.bat` run as admin (2026-04-22) — QI_BrainAPI + QI_Dashboard repointed to C:\QIH, both SERVICE_RUNNING
+- ✅ Claude Desktop restarted (2026-04-22) — permission bypass settings now active

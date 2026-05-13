@@ -39,6 +39,19 @@
       ]
     },
     {
+      "name": "nssm_set_application",
+      "description": "Set the executable for a QI_ service to an approved system binary",
+      "cmd": "nssm",
+      "arg_count_min": 4,
+      "arg_count_max": 4,
+      "args_regex": [
+        "^set$",
+        "^QI_[A-Za-z0-9_]+$",
+        "^Application$",
+        "^C:\\\\Windows\\\\System32\\\\(cmd|wsl|python)\\.exe$"
+      ]
+    },
+    {
       "name": "nssm_set_description",
       "description": "Update a QI_ service description string",
       "cmd": "nssm",

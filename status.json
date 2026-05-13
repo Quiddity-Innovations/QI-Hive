@@ -1,0 +1,125 @@
+{
+  "_meta": {
+    "generated": "2026-05-13 02:30:02",
+    "source": "nightly_reconcile.py"
+  },
+  "projects": {
+    "maia": {
+      "phase": "Phase 4 - production on :8001 + Gradio :7860 (newly registered)",
+      "status": "active",
+      "summary": "Maia bot service running. QI_MaiaGradio NSSM service registered 2026-05-09. Multi-channel webhooks live.",
+      "next_steps": "RAG via ChromaDB. Multi-bot template engine. Migrate webhooks from Quick Tunnel to named tunnel once domain is purchased.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 1,
+      "last_session": "2026-04-13T09:09:00"
+    },
+    "naya": {
+      "phase": "Phase 3 - Bot service on :8002, UI on :7861",
+      "status": "active",
+      "summary": "Naya bot + Gradio UI both live, LAN-only. Telegram long-poll active.",
+      "next_steps": "Avatar + voice integration.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 2,
+      "last_session": "2026-04-13T09:09:00"
+    },
+    "nexus": {
+      "phase": "Phase 2 - Service on :8010/:7880, NSSM-supervised",
+      "status": "active",
+      "summary": "NEXUS multi-AI orchestration backbone. 7 providers wired. Scout digest live.",
+      "next_steps": "Weekend installer test (carried since Meeting 05). First candidate to migrate to cloud VPS.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 0,
+      "last_session": null
+    },
+    "cognibase": {
+      "phase": "Phase B core complete - pilot ready",
+      "status": "active",
+      "summary": "OnBase mirror + AI correlation. M18 + M25-minimal + Portability shipped. 50/50 tests passing. 7+ session summaries logged 2026-05-06 to 2026-05-07.",
+      "next_steps": "Pilot prep. Discovery+Bridges next.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 20,
+      "last_session": "2026-05-11 18:57:00"
+    },
+    "mapsnap": {
+      "phase": "Active stable - schema browser",
+      "status": "active",
+      "summary": "Jenzabar schema browser running on :9876. Generic core shipped 2026-05-07. Tunnel install pending.",
+      "next_steps": "Run install_tunnel_service.bat as admin to register QI_MapSnapTunnel.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 4,
+      "last_session": "2026-05-07 08:20:10"
+    },
+    "autopdf": {
+      "phase": "Phase 2c - Smart Mapping + Template Apply",
+      "status": "active",
+      "summary": "PDF toolkit on :6969. Local-only, no cloud. Smart Mapping AI via Ollama. Last summary 2026-05-01.",
+      "next_steps": "No active dev. Resume when triggered.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 1,
+      "last_session": "2026-04-29 23:46:00"
+    },
+    "easyflow": {
+      "phase": "v1.2.x tester feedback cycle - blocked",
+      "status": "blocked",
+      "summary": "EasyFlow Chrome Extension v1.2.1 shipped. All Phase A/B/C features done. Tester package distributed.",
+      "next_steps": "Awaiting tester feedback. Then v1.3 scope: BYOK + in-tandem AI.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 83,
+      "last_session": "2026-04-19T00:00:00"
+    },
+    "qi_hive": {
+      "phase": "Phase 2 - Dashboard live but ingest gap",
+      "status": "active",
+      "summary": "Hive Dashboard :8600 + Brain :9010 running. Polling alive (5,271 polls). Reconciliation pass run 2026-05-09 to backfill missed sessions.",
+      "next_steps": "Fix per-project hooks for cognibase/mapsnap/autopdf/mq/openclaw. Add scheduled reconciler as safety net. Schedule gen_latest.py hourly.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 5,
+      "last_session": "2026-04-22 22:00:00"
+    },
+    "mq": {
+      "phase": "Phase 0 - Scaffolding, blocked on Meta credentials",
+      "status": "blocked",
+      "summary": "MQ public persona platform reserved on :8500/:7840. No services running.",
+      "next_steps": "Awaiting Facebook Page approval + Meta Developer credentials.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 0,
+      "last_session": null
+    },
+    "openclaw": {
+      "phase": "Adjacent - Kaze daily news agent (WSL)",
+      "status": "active_external",
+      "summary": "OpenClaw QI-adjacent. Kaze runs daily news digest in WSL Ubuntu-24.04.",
+      "next_steps": "No QI integration expected.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 1,
+      "last_session": "2026-04-13T09:09:00"
+    },
+    "filehq": {
+      "phase": "Retired - merged into Naya",
+      "status": "retired",
+      "summary": "FileHQ retired. Capabilities absorbed into Naya.",
+      "next_steps": "Archive only.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 0,
+      "last_session": null
+    },
+    "qi_brain": {
+      "phase": "Phase 5 - Verification + Reconciliation pass",
+      "status": "active",
+      "summary": "Brain API on :9010. 392 docs in ChromaDB. Reconciliation pass 2026-05-09 backfilled missing sessions and registered cognibase/mapsnap/autopdf.",
+      "next_steps": "Tighten Stop-hook coverage. Add scheduled compliance check.",
+      "recorded_at": "2026-05-09 11:06:25",
+      "session_count": 4,
+      "last_session": "2026-04-19T11:35:00"
+    },
+    "universal": {
+      "phase": "Phase 0 - MIGRATING into C:/QIH",
+      "status": "migrating",
+      "summary": "C:/UNIVERSAL is slated to be absorbed into C:/QIH and deleted from disk. Current occupants: qi_brain service (:9010), old dashboard service (:9000), ECOSYSTEM registry, DOCUMENTATION/Session_Summaries, TRAINING, node_modules, and 8 QI_* services all reference C:/UNIVERSAL/dashboard/nssm.exe. Migration must be staged to avoid breaking any service.",
+      "next_steps": "Staged migration: 1) Documentation + Training + ECOSYSTEM (low risk). 2) Repoint services to C:/QIH/engine/bin/nssm.exe. 3) Relocate qi_brain. 4) Retire old dashboard (:9000). 5) Delete C:/UNIVERSAL.",
+      "recorded_at": "2026-04-22 11:20:43",
+      "session_count": 21,
+      "last_session": "2026-04-19T11:22:00"
+    }
+  }
+}
