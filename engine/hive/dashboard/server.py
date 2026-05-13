@@ -472,6 +472,132 @@ function setTheme(t) {{
 
 # ── Main Dashboard ────────────────────────────────────────────────────────────
 
+def _get_project_llms() -> list[dict]:
+    """Read each project's Ollama model usage from its own config.
+    Returns list of {project, models: [{name, role, notes}], source}."""
+    import sqlite3
+    out = []
+
+    # Maia + Naya: both have llm_chain tables with the same schema
+    for proj, db_path in [("Maia", r"C:\QI\maia.db"), ("Naya", r"C:\NAYA\naya.db")]:
+        try:
+            c = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True, timeout=2.0)
+            try:
+                rows = list(c.execute(
+                    "SELECT bot_key, priority, model, label, notes FROM llm_chain "
+                    "WHERE provider='ollama' AND active=1 ORDER BY bot_key, priority"
+                ))
+                models = [{
+                    "name":  r[2],
+                    "role":  f"#{r[1]} {r[0]}",
+                    "notes": (r[4] or "")[:80],
+                } for r in rows]
+            finally:
+                c.close()
+            out.append({"project": proj, "source": db_path, "models": models})
+        except Exception as e:
+            out.append({"project": proj, "source": db_path, "models": [], "error": str(e)})
+
+    # NEXUS: hits /providers; specific models come from the running router config
+    try:
+        import urllib.request, json as _j
+        with urllib.request.urlopen("http://localhost:8010/providers", timeout=2.0) as r:
+            prov = _j.loads(r.read().decode()).get("providers", [])
+        models = []
+        if "ollama" in prov:
+            models.append({"name": "ollama (provider configured)", "role": "router", "notes": "specific models chosen per request"})
+        if "gemma4" in prov:
+            models.append({"name": "gemma4:* (provider alias)", "role": "router", "notes": ""})
+        out.append({"project": "NEXUS", "source": "http://localhost:8010/providers", "models": models})
+    except Exception as e:
+        out.append({"project": "NEXUS", "source": "API", "models": [], "error": str(e)})
+
+    # CogniBase: settings.json → vendors[id=ollama]
+    try:
+        cb_cfg = json.loads(Path(r"C:\CogniBase\Settings\settings.json").read_text(encoding="utf-8"))
+        ollama_vendors = [v for v in cb_cfg.get("vendors", []) if "ollama" in (v.get("id") or "").lower()]
+        models = []
+        for v in ollama_vendors:
+            active = "✅ active" if v.get("active") else "⚪ configured"
+            for m in (v.get("models_chat") or []):
+                models.append({"name": m, "role": v.get("id"), "notes": active})
+            if not v.get("models_chat"):
+                models.append({"name": f"({v.get('id')}: no models defined)", "role": v.get("id"), "notes": active})
+        out.append({"project": "CogniBase", "source": r"C:\CogniBase\Settings\settings.json", "models": models})
+    except Exception as e:
+        out.append({"project": "CogniBase", "source": "settings.json", "models": [], "error": str(e)})
+
+    # AutoPDF: autopdf-settings.json
+    try:
+        ap = json.loads(Path(r"C:\AutoPDF\Application\autopdf-settings.json").read_text(encoding="utf-8"))
+        m = ap.get("ollamaModel")
+        models = [{"name": m, "role": "smart-mapping", "notes": "AI template authoring + field extract"}] if m else []
+        out.append({"project": "AutoPDF", "source": r"C:\AutoPDF\Application\autopdf-settings.json", "models": models})
+    except Exception as e:
+        out.append({"project": "AutoPDF", "source": "settings", "models": [], "error": str(e)})
+
+    # OpenClaw: documented in OC repo (router fallback + vision). Hardcoded from repo docs.
+    out.append({"project": "OpenClaw", "source": r"C:\OC\repo\agents (docs)", "models": [
+        {"name": "qwen3:8b",      "role": "kaze-router-fallback", "notes": "activates when Cloudflare Workers AI fails"},
+        {"name": "qwen3-vl:8b",   "role": "vision (default)",     "notes": "Playwright NLM element location, fast"},
+        {"name": "qwen3-vl:32b",  "role": "vision (--accurate)",  "notes": "slower, excellent accuracy"},
+    ]})
+
+    # MapSnap: confirmed no LLM usage (static schema browser)
+    out.append({"project": "MapSnap", "source": r"C:\MapSnap (no LLM)", "models": []})
+
+    # EasyFlow: no Ollama usage detected in source
+    out.append({"project": "EasyFlow", "source": r"C:\EasyFlow (Gmail tooling, no LLM)", "models": []})
+
+    return out
+
+def render_project_llms() -> str:
+    data = _get_project_llms()
+    rows = ""
+    total_models = 0
+    for proj in data:
+        ms = proj.get("models") or []
+        name = proj["project"]
+        if not ms:
+            rows += (
+                f'<tr><td><strong>{name}</strong></td>'
+                f'<td colspan="3" class="text-muted fst-italic" style="font-size:.8rem">'
+                f'No Ollama models registered'
+                f'{" — " + proj["error"] if proj.get("error") else ""}'
+                f'</td></tr>'
+            )
+            continue
+        for i, m in enumerate(ms):
+            total_models += 1
+            mn = m.get("name", "?")
+            role = m.get("role", "")
+            notes = m.get("notes", "")
+            proj_cell = f'<strong>{name}</strong>' if i == 0 else '<span class="text-muted" style="font-size:.7rem">•</span>'
+            badge_cls = "text-bg-success" if "active" in notes.lower() or "default" in notes.lower() else "text-bg-secondary"
+            rows += (
+                f'<tr><td>{proj_cell}</td>'
+                f'<td><span class="badge {badge_cls}" style="font-family:Consolas,monospace;font-size:.72rem">{mn}</span></td>'
+                f'<td class="text-muted" style="font-size:.78rem">{role}</td>'
+                f'<td class="text-muted" style="font-size:.75rem">{notes}</td></tr>'
+            )
+    return f"""
+    <div class="row mt-2">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mb-0"><i class="bi bi-cpu-fill me-2"></i>Local LLMs by Project (Ollama)</h3>
+            <span class="ms-auto text-muted" style="font-size:.7rem">live from each project's config · {total_models} model bindings</span>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+              <thead><tr><th style="width:14%">Project</th><th style="width:24%">Ollama Model</th><th style="width:22%">Role</th><th>Notes</th></tr></thead>
+              <tbody>{rows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>"""
+
 def render_dashboard() -> str:
     status  = load_status()
     agents  = load_agents()
@@ -773,7 +899,10 @@ def render_dashboard() -> str:
           </div>
         </div>
       </div>
-    </div>"""
+    </div>
+
+    {render_project_llms()}
+    """
 
 # ── Health Page ───────────────────────────────────────────────────────────────
 
