@@ -424,9 +424,10 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         <div class="text-uppercase text-secondary fw-bold mb-2" style="letter-spacing:.05em;font-size:.68rem;">Status Legend</div>
         <div class="d-flex align-items-center mb-1"><span class="badge text-bg-dark me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Complete</span></div>
         <div class="d-flex align-items-center mb-1"><span class="badge text-bg-success me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>In Progress</span></div>
-        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-warning me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Backlog</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-warning me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Backlog / Paused</span></div>
         <div class="d-flex align-items-center mb-1"><span class="badge text-bg-light me-2" style="width:14px;height:14px;padding:0;border:1px solid #555">&nbsp;</span><span>New</span></div>
-        <div class="d-flex align-items-center"><span class="badge text-bg-secondary me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Retired</span></div>
+        <div class="d-flex align-items-center mb-1"><span class="badge text-bg-secondary me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Retired / Merged</span></div>
+        <div class="d-flex align-items-center"><span class="badge text-bg-info me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span><span>Unknown status</span></div>
       </div>
     </div>
   </aside>
@@ -702,23 +703,47 @@ def render_dashboard() -> str:
     agents  = load_agents()
     tasks   = load_tasks()
 
+    # Status -> (color, icon). Must match the sidebar legend:
+    #   dark      = Complete / production-stable
+    #   success   = In Progress / active development
+    #   warning   = Backlog / paused (work needed before it can move)
+    #   light     = New / not started
+    #   secondary = Retired / merged / deprecated (i.e. dead)
     proj_colors = {
-        "complete":           ("dark",      "bi-check-circle-fill"),
-        "in_progress":        ("success",   "bi-play-circle-fill"),
-        "backlog":            ("warning",   "bi-inbox-fill"),
-        "new":                ("light",     "bi-stars"),
-        "retired":            ("secondary", "bi-archive-fill"),
-        "idle":               ("secondary", "bi-dash-circle"),
-        "active_production":  ("dark",      "bi-check-circle-fill"),
-        "active_development": ("success",   "bi-play-circle-fill"),
-        "in_development":     ("success",   "bi-play-circle-fill"),
+        # Legend statuses (original)
+        "complete":                            ("dark",      "bi-check-circle-fill"),
+        "in_progress":                         ("success",   "bi-play-circle-fill"),
+        "backlog":                              ("warning",   "bi-inbox-fill"),
+        "new":                                  ("light",     "bi-stars"),
+        "retired":                              ("secondary", "bi-archive-fill"),
+        "idle":                                 ("secondary", "bi-dash-circle"),
+        # Production / complete (dark)
+        "active_production":                    ("dark",      "bi-check-circle-fill"),
+        "active_stable":                        ("dark",      "bi-shield-check"),
+        "phase_b_core_complete_pilot_ready":    ("dark",      "bi-check-circle-fill"),
+        # In Progress / actively developing (success/green)
+        "active_development":                   ("success",   "bi-play-circle-fill"),
+        "in_development":                       ("success",   "bi-play-circle-fill"),
+        "active":                               ("success",   "bi-play-circle-fill"),
+        "active dev":                           ("success",   "bi-play-circle-fill"),  # lowercased
+        # Backlog / paused (warning/yellow)
+        "paused":                               ("warning",   "bi-pause-circle"),
+        "paused_pending_credentials":           ("warning",   "bi-pause-circle"),
+        "pending":                              ("warning",   "bi-hourglass-split"),
+        # Retired-equivalents (secondary/grey)
+        "merged_into_naya":                     ("secondary", "bi-arrow-right-circle"),
+        "deprecated":                           ("secondary", "bi-archive-fill"),
     }
 
     # Project small-boxes
     project_cards = ""
     for name, p in status.get("projects", {}).items():
         st = p.get("status","unknown")
-        color, icon = proj_colors.get(st, ("secondary","bi-circle"))
+        # Case-insensitive lookup so "Active Dev" matches "active dev". Unknown
+        # statuses fall through to INFO (blue) — never to secondary (grey),
+        # which is reserved for retired/merged per the sidebar legend.
+        color, icon = proj_colors.get(st.lower() if isinstance(st, str) else st,
+                                       ("info", "bi-question-circle"))
         task = p.get("current_task") or "—"
         notes = p.get("notes","")
         open_tasks = sum(1 for t in tasks if t.get("project")==name and t.get("column")!="done")
