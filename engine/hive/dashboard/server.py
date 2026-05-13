@@ -472,6 +472,105 @@ function setTheme(t) {{
 
 # ── Main Dashboard ────────────────────────────────────────────────────────────
 
+def _get_agent_activity_overrides() -> dict:
+    """For non-Claude/Hive agents, pull activity from their own production sources.
+    Returns {agent_id: {count, last_seen, label, source}}.
+
+    Honest semantics: 'count' is whatever that agent's natural unit of work is
+    (conversations for chat agents, digests/sessions for orchestrators), NOT
+    Claude Code session_log entries. The Agent Team panel uses this when an
+    override is present; falls back to session_log query otherwise.
+    """
+    import sqlite3
+    overrides = {}
+
+    # Maia: conversations grouped by conv_key (each conv_key = one chat thread)
+    try:
+        c = sqlite3.connect("file:C:/QI/maia.db?mode=ro", uri=True, timeout=2.0)
+        try:
+            total_convs = c.execute("SELECT COUNT(DISTINCT conv_key) FROM conversations").fetchone()[0]
+            last_ts = c.execute("SELECT MAX(ts) FROM conversations").fetchone()[0]
+            msgs_7d = c.execute("SELECT COUNT(*) FROM conversations WHERE ts >= datetime('now','-7 days')").fetchone()[0]
+            overrides["maia"] = {
+                "count": total_convs,
+                "last_seen": last_ts,
+                "label": f"{total_convs} conv · {msgs_7d} msgs 7d",
+                "source": "C:/QI/maia.db conversations",
+                "unit": "conversations",
+            }
+        finally:
+            c.close()
+    except Exception:
+        pass
+
+    # Naya: same shape
+    try:
+        c = sqlite3.connect("file:C:/NAYA/naya.db?mode=ro", uri=True, timeout=2.0)
+        try:
+            total_convs = c.execute("SELECT COUNT(DISTINCT conv_key) FROM conversations").fetchone()[0]
+            last_ts = c.execute("SELECT MAX(ts) FROM conversations").fetchone()[0]
+            msgs_7d = c.execute("SELECT COUNT(*) FROM conversations WHERE ts >= datetime('now','-7 days')").fetchone()[0]
+            overrides["naya"] = {
+                "count": total_convs,
+                "last_seen": last_ts,
+                "label": f"{total_convs} conv · {msgs_7d} msgs 7d",
+                "source": "C:/NAYA/naya.db conversations",
+                "unit": "conversations",
+            }
+        finally:
+            c.close()
+    except Exception:
+        pass
+
+    # NEXUS: scout digests + synthesis sessions
+    try:
+        c = sqlite3.connect("file:C:/NEXUS/nexus.db?mode=ro", uri=True, timeout=2.0)
+        try:
+            digests = c.execute("SELECT COUNT(*) FROM scout_digests").fetchone()[0]
+            sessions = c.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
+            last_digest = c.execute("SELECT MAX(created_at) FROM scout_digests").fetchone()[0]
+            last_sess = c.execute("SELECT MAX(created_at) FROM sessions").fetchone()[0]
+            last = max(filter(None, [last_digest, last_sess]), default=None)
+            overrides["nexus"] = {
+                "count": digests + sessions,
+                "last_seen": last,
+                "label": f"{digests} digests · {sessions} synth",
+                "source": "C:/NEXUS/nexus.db",
+                "unit": "digests + sessions",
+            }
+        finally:
+            c.close()
+    except Exception:
+        pass
+
+    # OpenClaw: count log files per known agent folder + latest mtime
+    try:
+        oc_logs = Path(r"C:\OC\runtime\logs\agents")
+        if oc_logs.exists():
+            total_logs = 0
+            latest = None
+            for sub in oc_logs.iterdir():
+                if sub.is_dir():
+                    logs = list(sub.glob("*.log"))
+                    total_logs += len(logs)
+                    if logs:
+                        m = max(p.stat().st_mtime for p in logs)
+                        if latest is None or m > latest:
+                            latest = m
+            from datetime import datetime as _dt
+            last_str = _dt.fromtimestamp(latest).strftime("%Y-%m-%d %H:%M:%S") if latest else None
+            overrides["openclaw"] = {
+                "count": total_logs,
+                "last_seen": last_str,
+                "label": f"{total_logs} agent log files",
+                "source": "C:/OC/runtime/logs/agents",
+                "unit": "log files",
+            }
+    except Exception:
+        pass
+
+    return overrides
+
 def _get_project_llms() -> list[dict]:
     """Read each project's Ollama model usage from its own config.
     Returns list of {project, models: [{name, role, notes}], source}."""
@@ -707,6 +806,8 @@ def render_dashboard() -> str:
         except Exception:
             return f'<span class="text-muted">{ts}</span>'
 
+    activity_overrides = _get_agent_activity_overrides()
+
     agent_rows = ""
     if brain_agents:
         # Legacy config lookup is used only for scope text (Brain has descriptions too).
@@ -718,6 +819,17 @@ def render_dashboard() -> str:
             legacy_key = aid.replace("hive_", "").lower()
             cfg   = legacy.get(legacy_key, {})
             scope = cfg.get("scope") or a["description"] or "—"
+
+            # Activity override: for non-Claude/Hive agents, pull from production source.
+            ov = activity_overrides.get(aid)
+            if ov:
+                # Replace the Brain-DB-derived last_seen / count with production data.
+                a = dict(a)
+                a["last_seen"]      = ov.get("last_seen") or a.get("last_seen")
+                a["session_count"]  = ov.get("count", a.get("session_count", 0))
+                a["_activity_label"] = ov.get("label")
+                a["_activity_source"] = ov.get("source")
+                a["_activity_unit"]   = ov.get("unit")
             kind_badge = {
                 "hive":   "text-bg-primary",
                 "claude": "text-bg-info",
@@ -738,10 +850,16 @@ def render_dashboard() -> str:
                 else:
                     model_html = '<span class="text-muted">—</span>'
 
+            activity_cell = (
+                f'<span class="badge text-bg-light" title="{a.get("_activity_source","")}">'
+                f'{a.get("session_count",0)}</span>'
+                + (f' <small class="text-muted ms-1">{a.get("_activity_label")}</small>'
+                   if a.get("_activity_label") else '')
+            )
             agent_rows += f"""<tr>
               <td><strong>{name}</strong> <span class="badge {kind_badge} ms-1" style="font-size:.6rem;font-weight:500">{kind}</span></td>
               <td>{_fmt_last_seen(a.get("last_seen"))}</td>
-              <td><span class="badge text-bg-light">{a.get("session_count",0)}</span></td>
+              <td>{activity_cell}</td>
               <td>{model_html}</td>
               <td class="text-muted small">{scope}</td>
             </tr>"""
@@ -879,7 +997,7 @@ def render_dashboard() -> str:
           </div>
           <div class="card-body p-0">
             <table class="table table-sm table-hover mb-0">
-              <thead><tr><th>Agent</th><th>Last Active</th><th>Sessions</th><th>Model</th><th>Scope</th></tr></thead>
+              <thead><tr><th>Agent</th><th>Last Active</th><th>Activity <small class="text-muted fw-normal">(unit varies)</small></th><th>Model</th><th>Scope</th></tr></thead>
               <tbody>{agent_rows}</tbody>
             </table>
           </div>
