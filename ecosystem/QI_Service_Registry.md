@@ -205,7 +205,7 @@
 | **Stderr log** | `C:\QIH\logs\hive_apply.log` |
 | **Port** | none |
 | **Start type** | AUTO_START |
-| **Account** | user account (parity with QI_HiveIngest) |
+| **Account** | LocalSystem (matches QI_HiveIngest — re-evaluate during Phase 2) |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
 | **Kill switch** | Create `C:\QIH\engine\hive\apply\HALT` to drain queued items without stopping service |
 | **Inbox dir** | `C:\QIH\inbox\hive_builder\` |

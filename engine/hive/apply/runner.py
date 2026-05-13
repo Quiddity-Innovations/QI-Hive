@@ -139,6 +139,16 @@ def handle_run(run_id: int, dispatch_id: str) -> None:
 
     log.info("run_id=%d dispatch_id=%s: state -> in_progress", run_id, dispatch_id)
 
+    # === Phase 2 enforcement gate (NOT YET ACTIVE) ===
+    # Before the headless builder runs in Phase 2, this point MUST enforce:
+    #   - forbidden_paths: .env*, *.db, qi_registry.json, QI_Standards.md,
+    #     QI_Architecture_Principles.md, QI_Service_Registry.md, C:\Windows, C:\Program Files*
+    #   - forbidden_ops: deletes, renames, mode changes, binary writes, NSSM/service config edits
+    #   - max_files_changed = 1, max_lines (added+removed) = 40
+    # These are documented in dispatch_runs.meta for human reviewers in Phase 1.
+    # Phase 2 builder: DO NOT bypass this gate — it is the only thing between an approved
+    # dispatch and a destructive write to the live tree.
+
     # ── Step 3: Write prompt envelope to inbox ────────────────────────────────
     envelope = {
         "dispatch_id":    dispatch_id,
@@ -166,6 +176,14 @@ def handle_run(run_id: int, dispatch_id: str) -> None:
         "run_id=%d dispatch_id=%s: Phase 1 complete — awaiting operator pickup at %s",
         run_id, dispatch_id, inbox_path
     )
+
+    # === Phase 2 commit/push gate (NOT YET ACTIVE) ===
+    # Before any git commit/push in Phase 2:
+    #   1. Read C:\QIH\ecosystem\qi_registry.json
+    #   2. Check projects[<project_id>].auto_merge_approved_fixes (default: false)
+    #   3. If false → open PR via gh; do NOT push to default branch
+    #   4. If true → commit on isolated worktree; fast-forward only if hive-inspector verdict=pass
+    # This implements Decision C from Auto_Apply_Pipeline_Design_2026-05-13.md.
 
 
 def _reject(run_id: int, dispatch_id: str, reason: str) -> None:

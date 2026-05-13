@@ -34,6 +34,13 @@ def run_once() -> None:
         return
 
     with _open_db() as conn:
+        existing = conn.execute(
+            "SELECT 1 FROM dispatch_runs WHERE state='in_progress' LIMIT 1"
+        ).fetchone()
+        if existing:
+            log.debug("Concurrency mutex: run already in_progress — skipping cycle")
+            return
+
         row = conn.execute(
             "SELECT id, dispatch_id FROM dispatch_runs WHERE state='queued' ORDER BY id ASC LIMIT 1"
         ).fetchone()
