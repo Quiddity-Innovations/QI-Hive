@@ -5084,15 +5084,20 @@ def render_brain() -> str:
     projects = snap.get("projects", []) if isinstance(snap, dict) else []
 
     # ── Overview: project grid ──
+    # API returns last_phase / last_status / last_active / decisions / last_summary.
+    # Older code used phase / status / last_updated -- mismatch caused "never" / "-" everywhere.
     proj_cards = ""
     for p in projects:
         pid   = p.get("project_id", "?")
         name  = p.get("display_name", pid)
-        phase = p.get("phase", "-")
-        stat  = p.get("status", "-")
-        last  = p.get("last_updated", "")[:16] if p.get("last_updated") else "never"
-        color = {"active":"success","paused":"secondary","blocked":"danger",
-                 "complete":"info"}.get(stat, "secondary")
+        phase = p.get("last_phase") or p.get("phase") or "-"
+        stat  = p.get("last_status") or p.get("status") or "-"
+        last  = (p.get("last_active") or p.get("last_updated") or "")[:16] or "never"
+        ndec  = p.get("decisions", 0)
+        summary = (p.get("last_summary") or "")[:140]
+        color = {"active":"success","active_production":"dark","active_development":"success",
+                 "paused":"warning","blocked":"danger","complete":"info","pre_poc":"info",
+                 "retired":"secondary","merged_into_naya":"secondary"}.get(stat, "secondary")
         proj_cards += f"""
         <div class="col-md-4 col-lg-3 mb-3">
           <div class="card h-100">
@@ -5103,7 +5108,9 @@ def render_brain() -> str:
               </div>
               <div class="small text-muted">{pid}</div>
               <div class="small mt-2"><i class="bi bi-diagram-3 me-1"></i>{phase}</div>
-              <div class="small text-muted"><i class="bi bi-clock me-1"></i>{last}</div>
+              <div class="small text-muted mt-1"><i class="bi bi-clock me-1"></i>{last}</div>
+              <div class="small text-muted mt-1"><i class="bi bi-lightbulb me-1"></i>{ndec} decisions</div>
+              {f'<div class="small text-muted mt-1" style="font-size:.72rem">{summary}…</div>' if summary else ''}
             </div>
           </div>
         </div>"""
