@@ -4688,7 +4688,6 @@ def _headline_row(h: dict) -> str:
     color, icon, label = _HEADLINE_STYLE.get(kind, ("secondary", "bi-circle", kind.title()))
     project_id = (h.get("project_id") or "?")
     agent_id   = (h.get("agent_id")   or "")
-    ref_id     = h.get("ref_id") or ""   # NULL ref_id renders as blank, not "never"
     title      = (h.get("title")      or "").replace("<", "&lt;")
     summary    = (h.get("summary")    or "").replace("<", "&lt;")
     if len(summary) > 220:
