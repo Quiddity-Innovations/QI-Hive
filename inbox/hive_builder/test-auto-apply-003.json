@@ -1,0 +1,10 @@
+{
+  "dispatch_id": "test-auto-apply-003",
+  "project_id": "qi_hive",
+  "suggested_fix": "Fix teh->the",
+  "rationale": "Fix typo in README",
+  "allowed_paths": [],
+  "max_diff_lines": 40,
+  "fix_category": "typo_fix",
+  "worktree_path": "C:\\QIH\\worktrees\\apply\\test-auto-apply-003"
+}

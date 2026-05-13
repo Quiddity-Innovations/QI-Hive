@@ -951,7 +951,9 @@ async def get_dispatch(dispatch_id: str):
 
 @app.patch("/api/dispatch/{dispatch_id}")
 async def review_dispatch(dispatch_id: str, req: DispatchReview):
-    """Approve / Decline / mark Discussing. Appends note to notes JSON array."""
+    """Approve / Decline / mark Discussing. Appends note to notes JSON array.
+    On approval also inserts a dispatch_runs row (state=queued) so QI_HiveApply
+    can pick it up. Both writes are in a single transaction."""
     with open_brain_db() as conn:
         row = conn.execute(
             "SELECT notes FROM dispatches WHERE dispatch_id=?", (dispatch_id,)
@@ -969,13 +971,31 @@ async def review_dispatch(dispatch_id: str, req: DispatchReview):
 
         conn.execute(
             """UPDATE dispatches
-               SET status=?, reviewed_by=?, reviewed_at=?, notes=?
+               SET status=?, reviewed_by=?, reviewed_at=?, notes=?,
+                   apply_state=CASE WHEN ? = 'approved' THEN 'queued' ELSE apply_state END
                WHERE dispatch_id=?""",
             (req.status, req.reviewed_by, datetime.now().isoformat(),
-             json.dumps(notes), dispatch_id)
+             json.dumps(notes), req.status, dispatch_id)
         )
+
+        run_id = None
+        if req.status == "approved":
+            cur = conn.execute(
+                """INSERT INTO dispatch_runs (dispatch_id, state, started_at)
+                   VALUES (?, 'queued', datetime('now'))""",
+                (dispatch_id,)
+            )
+            run_id = cur.lastrowid
+            # Link run back to dispatch
+            conn.execute(
+                "UPDATE dispatches SET apply_run_id=? WHERE dispatch_id=?",
+                (run_id, dispatch_id)
+            )
+
         conn.commit()
-    return {"ok": True, "dispatch_id": dispatch_id, "status": req.status}
+
+    return {"ok": True, "dispatch_id": dispatch_id, "status": req.status,
+            "apply_run_id": run_id}
 
 
 @app.post("/api/dispatch/{dispatch_id}/note")

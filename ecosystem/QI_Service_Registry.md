@@ -193,13 +193,31 @@
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
 | **Registered** | 2026-05-13 (was running but not in registry) |
 
+### QI_HiveApply
+| Field | Value |
+|---|---|
+| **Display name** | QI — Hive Auto-Apply Pipeline |
+| **Description** | QI Hive auto-apply pipeline for approved CoWork dispatches. Phase 1: inbox-fallback mode. Polls dispatch_runs every 10s. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `C:\QIH\engine\hive\apply\main.py` |
+| **Working dir** | `C:\QIH\engine\hive\apply` |
+| **Stdout log** | `C:\QIH\logs\hive_apply.log` |
+| **Stderr log** | `C:\QIH\logs\hive_apply.log` |
+| **Port** | none |
+| **Start type** | AUTO_START |
+| **Account** | user account (parity with QI_HiveIngest) |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Kill switch** | Create `C:\QIH\engine\hive\apply\HALT` to drain queued items without stopping service |
+| **Inbox dir** | `C:\QIH\inbox\hive_builder\` |
+| **Registered** | 2026-05-13 |
+
 ---
 
 ## Quick Reference — NSSM Commands
 
 ```bat
 REM Status check (all QI services)
-for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_KazeConfigAPI) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
+for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_HiveApply QI_KazeConfigAPI) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
 
 REM Restart a specific service (NSSM binary standardized 2026-04-22)
 C:\QIH\engine\bin\nssm.exe restart QI_MaiaBot
@@ -227,6 +245,7 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | Brain API (:9010) down | QI_BrainAPI | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
 | Elevation broker not responding | QI_Elevate | `C:\QIH\logs\elevation\broker_stderr.log` | `nssm status QI_Elevate` |
 | Hive ingest stalled | QI_HiveIngest | `C:\QIH\logs\hive\ingest_stderr.log` | `nssm status QI_HiveIngest` |
+| Auto-apply pipeline stalled / dispatches stuck in queued | QI_HiveApply | `C:\QIH\logs\hive_apply.log` | `nssm status QI_HiveApply`; check for HALT file |
 | Kaze config UI down | QI_KazeConfigAPI | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` | `nssm status QI_KazeConfigAPI` |
 
 ---

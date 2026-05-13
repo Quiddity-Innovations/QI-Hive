@@ -4932,6 +4932,15 @@ def render_dispatch() -> str:
             "declined":   '<span class="badge bg-danger">Declined</span>',
             "executed":   '<span class="badge bg-primary">Executed</span>',
         }.get(d["status"], f'<span class="badge bg-secondary">{d["status"]}</span>')
+        apply_state = d.get("apply_state") or None
+        apply_badge = {
+            "queued":        '<span class="badge bg-secondary ms-1" title="Apply: queued">Apply: queued</span>',
+            "in_progress":   '<span class="badge bg-info text-dark ms-1" title="Apply: in progress">Apply: in&nbsp;progress</span>',
+            "review":        '<span class="badge bg-warning text-dark ms-1" title="Apply: needs review">Apply: review</span>',
+            "applied":       '<span class="badge bg-success ms-1" title="Apply: applied">Apply: applied</span>',
+            "failed":        '<span class="badge bg-danger ms-1" title="Apply: failed">Apply: failed</span>',
+            "rejected_auto": '<span class="badge bg-dark ms-1" title="Apply: rejected automatically">Apply: rejected</span>',
+        }.get(apply_state, "") if apply_state else ""
         return f"""
         <div class="card mb-3 shadow-sm">
           <div class="card-header d-flex align-items-center gap-2">
@@ -4939,7 +4948,7 @@ def render_dispatch() -> str:
             <span class="badge {src_cls}">{src_label}</span>
             <strong class="flex-grow-1">{d['type'].capitalize()}</strong>
             <span class="badge bg-{pri_color}">{d['priority']}</span>
-            {status_badge}
+            {status_badge}{apply_badge}
             <small class="text-muted ms-2">{d['created_at'][:16]}</small>
           </div>
           <div class="card-body">
@@ -5041,7 +5050,11 @@ def render_dispatch() -> str:
 @app.post("/api/dispatch/{dispatch_id}/review")
 async def api_review_dispatch(dispatch_id: str, body: dict):
     result = _brain_patch(f"/api/dispatch/{dispatch_id}", body)
-    return JSONResponse(result or {"ok": False, "error": "Brain offline"})
+    if result is None:
+        return JSONResponse({"ok": False, "error": "Brain offline"})
+    # Return 202 when approved — caller does not wait for apply pipeline
+    status_code = 202 if body.get("status") == "approved" else 200
+    return JSONResponse(result, status_code=status_code)
 
 
 @app.get("/dispatch", response_class=HTMLResponse)
