@@ -1082,6 +1082,80 @@ async def review_dispatch(dispatch_id: str, req: DispatchReview):
             "apply_run_id": run_id}
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Inspector verdict — hive-inspector POSTs here after reviewing a pending_review run
+# ─────────────────────────────────────────────────────────────────────────────
+
+class InspectorVerdictIn(BaseModel):
+    verdict:  Literal["pass", "fail"]
+    reasons:  list[str] = Field(default_factory=list, max_length=20)
+    severity: Literal["info", "minor", "major", "critical"] | None = None
+    reviewer: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_\-]+$")
+
+
+@app.post("/api/dispatch/{dispatch_id}/inspector_verdict", status_code=200)
+async def post_inspector_verdict(dispatch_id: str, payload: InspectorVerdictIn):
+    """Hive-inspector POSTs its pass/fail verdict here after reviewing a pending_review dispatch.
+
+    Updates the latest dispatch_runs row for this dispatch_id:
+    - Sets inspector_verdict and inspector_reasons (JSON).
+    - Sets finished_at to now (run completion time).
+    - Leaves state=pending_review — the worker's _resolve_pending_reviews() loop
+      advances it to applied or review on its next tick.
+
+    Also writes a compliance_log row so the audit trail captures the verdict.
+    """
+    reasons_json = json.dumps(payload.reasons)
+    with open_brain_db() as conn:
+        run = conn.execute(
+            """SELECT id FROM dispatch_runs
+               WHERE dispatch_id=? AND state='pending_review'
+               ORDER BY id DESC LIMIT 1""",
+            (dispatch_id,),
+        ).fetchone()
+        if not run:
+            raise HTTPException(
+                404,
+                f"No pending_review run found for dispatch_id={dispatch_id!r}",
+            )
+        run_id = run["id"]
+
+        conn.execute(
+            """UPDATE dispatch_runs
+               SET inspector_verdict=?, inspector_reasons=?, finished_at=datetime('now')
+               WHERE id=?""",
+            (payload.verdict, reasons_json, run_id),
+        )
+
+        sev_map = {"info": "low", "minor": "low", "major": "medium", "critical": "high"}
+        sev = sev_map.get(payload.severity or "info", "low")
+        conn.execute(
+            """INSERT INTO compliance_log
+               (run_id, project_id, check_id, status, severity, action_taken, message, dispatch_id, mode)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                f"inspector_verdict_{dispatch_id}",
+                "qi_hive",
+                "inspector_verdict",
+                "pass" if payload.verdict == "pass" else "fail",
+                sev,
+                payload.reviewer,
+                f"actor={payload.reviewer} verdict={payload.verdict} dispatch={dispatch_id}"
+                + (f" reasons={payload.reasons}" if payload.reasons else ""),
+                None,
+                "fast",
+            ),
+        )
+        conn.commit()
+
+    return {
+        "ok": True,
+        "dispatch_id": dispatch_id,
+        "run_id": run_id,
+        "verdict": payload.verdict,
+    }
+
+
 @app.post("/api/dispatch/{dispatch_id}/note")
 async def add_dispatch_note(dispatch_id: str, body: dict):
     """Add a discussion note to a dispatch without changing its status."""

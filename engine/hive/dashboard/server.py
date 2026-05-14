@@ -5308,12 +5308,13 @@ def render_dispatch() -> str:
         }.get(d["status"], f'<span class="badge bg-secondary">{d["status"]}</span>')
         apply_state = d.get("apply_state") or None
         apply_badge = {
-            "queued":        '<span class="badge bg-secondary ms-1" title="Apply: queued">Apply: queued</span>',
-            "in_progress":   '<span class="badge bg-info text-dark ms-1" title="Apply: in progress">Apply: in&nbsp;progress</span>',
-            "review":        '<span class="badge bg-warning text-dark ms-1" title="Apply: needs review">Apply: review</span>',
-            "applied":       '<span class="badge bg-success ms-1" title="Apply: applied">Apply: applied</span>',
-            "failed":        '<span class="badge bg-danger ms-1" title="Apply: failed">Apply: failed</span>',
-            "rejected_auto": '<span class="badge bg-dark ms-1" title="Apply: rejected automatically">Apply: rejected</span>',
+            "queued":         '<span class="badge bg-secondary ms-1" title="Apply: queued">Apply: queued</span>',
+            "in_progress":    '<span class="badge bg-info text-dark ms-1" title="Apply: in progress">Apply: in&nbsp;progress</span>',
+            "pending_review": '<span class="badge bg-info text-dark ms-1" title="Apply: awaiting inspector verdict">Apply: inspector</span>',
+            "review":         '<span class="badge bg-warning text-dark ms-1" title="Apply: inspector failed — needs human review">Apply: review</span>',
+            "applied":        '<span class="badge bg-success ms-1" title="Apply: applied">Apply: applied</span>',
+            "failed":         '<span class="badge bg-danger ms-1" title="Apply: failed">Apply: failed</span>',
+            "rejected_auto":  '<span class="badge bg-dark ms-1" title="Apply: rejected automatically">Apply: rejected</span>',
         }.get(apply_state, "") if apply_state else ""
         return f"""
         <div class="card mb-3 shadow-sm">

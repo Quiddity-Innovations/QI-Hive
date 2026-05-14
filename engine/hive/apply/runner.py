@@ -200,6 +200,189 @@ def _mark_pending_review(
     )
 
 
+# ── Project flag helper ───────────────────────────────────────────────────────
+
+def _project_flag(project_id: str, flag_name: str, default=False):
+    """Read a flag from qi_registry.json for a given project. Returns default if absent."""
+    registry_path = Path(r"C:\QIH\ecosystem\qi_registry.json")
+    try:
+        data = json.loads(registry_path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+    for proj in data.get("projects", []):
+        if proj.get("id") == project_id:
+            return proj.get(flag_name, default)
+    return default
+
+
+# ── Inspector-verdict resolution ──────────────────────────────────────────────
+
+def _resolve_pending_reviews(conn: sqlite3.Connection) -> None:
+    """For each pending_review run with an inspector verdict, advance state to applied or review.
+
+    Called by dispatcher each tick — runs inside the dispatcher's existing connection
+    so no separate open_db() needed here. Caller is responsible for commit.
+    """
+    rows = conn.execute(
+        """SELECT id, dispatch_id, worktree_path, inspector_verdict, inspector_reasons
+           FROM dispatch_runs
+           WHERE state='pending_review' AND inspector_verdict IS NOT NULL
+           LIMIT 5"""
+    ).fetchall()
+
+    for run in rows:
+        if run["inspector_verdict"] == "pass":
+            _commit_and_advance(conn, run)
+        else:
+            _hold_for_review(conn, run)
+
+
+def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
+    """Inspector passed: commit worktree diff, then open a PR (default) or push direct (opt-in)."""
+    worktree = Path(run["worktree_path"]) if run["worktree_path"] else None
+    if not worktree or not worktree.exists():
+        _mark_failed(run["id"], run["dispatch_id"], "worktree_missing_at_commit_time")
+        return
+
+    dispatch = conn.execute(
+        "SELECT project_id, payload FROM dispatches WHERE dispatch_id=?",
+        (run["dispatch_id"],),
+    ).fetchone()
+    if not dispatch:
+        _mark_failed(run["id"], run["dispatch_id"], "dispatch_row_missing_at_commit_time")
+        return
+
+    project_id = dispatch["project_id"] or ""
+    try:
+        payload = json.loads(dispatch["payload"]) if dispatch["payload"] else {}
+    except Exception:
+        payload = {}
+    fix_category = payload.get("fix_category") or payload.get("check_id") or "unknown"
+
+    project_root = _resolve_project_root(project_id)
+    if not project_root:
+        _mark_failed(run["id"], run["dispatch_id"], "project_root_not_in_registry")
+        return
+
+    # Commit inside the worktree
+    msg = (
+        f"qi-apply: {fix_category} {run['dispatch_id']}\n\n"
+        "Co-Authored-By: hive-inspector <noreply@quiddity.ai>"
+    )
+    r = subprocess.run(["git", "add", "-A"], cwd=worktree, capture_output=True, text=True)
+    if r.returncode != 0:
+        _mark_failed(run["id"], run["dispatch_id"], f"git_add: {r.stderr.strip()}")
+        return
+
+    r = subprocess.run(["git", "commit", "-m", msg], cwd=worktree, capture_output=True, text=True)
+    if r.returncode != 0:
+        # Nothing staged = transform already committed or no diff — treat as success
+        if "nothing to commit" in r.stdout + r.stderr:
+            log.warning(
+                "run_id=%d dispatch_id=%s: nothing to commit in worktree — treating as applied",
+                run["id"], run["dispatch_id"],
+            )
+        else:
+            _mark_failed(run["id"], run["dispatch_id"], f"git_commit: {r.stderr.strip()}")
+            return
+
+    commit_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=worktree, capture_output=True, text=True
+    ).stdout.strip()
+
+    auto_merge = _project_flag(project_id, "auto_merge_approved_fixes", default=False)
+
+    if auto_merge:
+        r = subprocess.run(["git", "push"], cwd=worktree, capture_output=True, text=True)
+        if r.returncode != 0:
+            _mark_failed(run["id"], run["dispatch_id"], f"git_push: {r.stderr.strip()}")
+            return
+        conn.execute(
+            "UPDATE dispatch_runs SET state='applied', commit_sha=?, finished_at=datetime('now') WHERE id=?",
+            (commit_sha, run["id"]),
+        )
+        conn.execute(
+            "UPDATE dispatches SET apply_state='applied', applied_at=datetime('now'), applied_commit=? WHERE dispatch_id=?",
+            (commit_sha, run["dispatch_id"]),
+        )
+    else:
+        # PR path: push a branch then open a PR via gh CLI
+        branch = f"qi-apply/{run['dispatch_id'][:8]}"
+        subprocess.run(
+            ["git", "checkout", "-b", branch], cwd=worktree, capture_output=True, text=True
+        )
+        r = subprocess.run(
+            ["git", "push", "-u", "origin", branch], cwd=worktree, capture_output=True, text=True
+        )
+        if r.returncode != 0:
+            _mark_failed(run["id"], run["dispatch_id"], f"git_push_branch: {r.stderr.strip()}")
+            return
+
+        pr_title = f"qi-apply: {fix_category} ({run['dispatch_id'][:8]})"
+        pr_body = "\n".join([
+            "Auto-applied by QI_HiveApply worker.",
+            f"- Category: {fix_category}",
+            f"- Dispatch: {run['dispatch_id']}",
+            "- Inspector verdict: pass",
+            "",
+            "Mechanical inspector checks all passed; hive-inspector verdict recorded in dispatch_runs.",
+        ])
+        r = subprocess.run(
+            ["gh", "pr", "create", "--title", pr_title, "--body", pr_body],
+            cwd=worktree, capture_output=True, text=True,
+        )
+        if r.returncode != 0:
+            # gh failure is non-fatal — the branch is pushed; PR can be opened manually.
+            log.warning(
+                "run_id=%d dispatch_id=%s: gh pr create failed: %s",
+                run["id"], run["dispatch_id"], r.stderr.strip(),
+            )
+
+        conn.execute(
+            "UPDATE dispatch_runs SET state='applied', commit_sha=?, finished_at=datetime('now') WHERE id=?",
+            (commit_sha, run["id"]),
+        )
+        conn.execute(
+            "UPDATE dispatches SET apply_state='applied', applied_at=datetime('now'), applied_commit=? WHERE dispatch_id=?",
+            (commit_sha, run["dispatch_id"]),
+        )
+
+    conn.commit()
+
+    # Clean up worktree after successful commit+push
+    subprocess.run(
+        ["git", "worktree", "remove", str(worktree), "--force"],
+        cwd=project_root, capture_output=True, text=True,
+    )
+    _log_compliance(conn, run["dispatch_id"], "dispatch.applied", f"commit={commit_sha}")
+    conn.commit()
+
+    log.info(
+        "run_id=%d dispatch_id=%s: applied — commit=%s auto_merge=%s",
+        run["id"], run["dispatch_id"], commit_sha, auto_merge,
+    )
+
+
+def _hold_for_review(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
+    """Inspector failed: worktree retained. state -> review."""
+    conn.execute(
+        "UPDATE dispatch_runs SET state='review', finished_at=datetime('now') WHERE id=?",
+        (run["id"],),
+    )
+    conn.execute(
+        "UPDATE dispatches SET apply_state='review' WHERE dispatch_id=?",
+        (run["dispatch_id"],),
+    )
+    conn.commit()
+    _log_compliance(conn, run["dispatch_id"], "dispatch.review", "inspector_verdict=fail")
+    conn.commit()
+
+    log.info(
+        "run_id=%d dispatch_id=%s: held for review — inspector verdict=fail",
+        run["id"], run["dispatch_id"],
+    )
+
+
 # ── Phase 2 deterministic path ────────────────────────────────────────────────
 
 def _run_deterministic_transform(

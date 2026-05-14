@@ -10,7 +10,7 @@ import logging
 import sqlite3
 from pathlib import Path
 
-from runner import handle_run
+from runner import handle_run, _resolve_pending_reviews
 
 _DB_PATH  = Path(r"C:\QIH\data\qi_brain.db")
 _HALT     = Path(r"C:\QIH\engine\hive\apply\HALT")
@@ -34,6 +34,11 @@ def run_once() -> None:
         return
 
     with _open_db() as conn:
+        # Step 1: Resolve any pending_review runs that have received a verdict.
+        # Runs in the same connection so _resolve_pending_reviews can commit inside.
+        _resolve_pending_reviews(conn)
+
+        # Step 2: Concurrency guard — only one active run at a time.
         existing = conn.execute(
             "SELECT 1 FROM dispatch_runs WHERE state='in_progress' LIMIT 1"
         ).fetchone()
