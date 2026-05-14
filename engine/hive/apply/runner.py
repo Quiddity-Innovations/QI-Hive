@@ -59,6 +59,9 @@ _FORBIDDEN_PATHS = [
 
 log = logging.getLogger("hive_apply.runner")
 
+# LocalSystem runs this worker; repos are owned by Renne — git refuses without this.
+_GIT = ["git", "-c", "safe.directory=*"]
+
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -269,12 +272,12 @@ def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
         f"qi-apply: {fix_category} {run['dispatch_id']}\n\n"
         "Co-Authored-By: hive-inspector <noreply@quiddity.ai>"
     )
-    r = subprocess.run(["git", "add", "-A"], cwd=worktree, capture_output=True, text=True)
+    r = subprocess.run([*_GIT, "add", "-A"], cwd=worktree, capture_output=True, text=True)
     if r.returncode != 0:
         _mark_failed(run["id"], run["dispatch_id"], f"git_add: {r.stderr.strip()}")
         return
 
-    r = subprocess.run(["git", "commit", "-m", msg], cwd=worktree, capture_output=True, text=True)
+    r = subprocess.run([*_GIT, "commit", "-m", msg], cwd=worktree, capture_output=True, text=True)
     if r.returncode != 0:
         # Nothing staged = transform already committed or no diff — treat as success
         if "nothing to commit" in r.stdout + r.stderr:
@@ -287,13 +290,13 @@ def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
             return
 
     commit_sha = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=worktree, capture_output=True, text=True
+        [*_GIT, "rev-parse", "HEAD"], cwd=worktree, capture_output=True, text=True
     ).stdout.strip()
 
     auto_merge = _project_flag(project_id, "auto_merge_approved_fixes", default=False)
 
     if auto_merge:
-        r = subprocess.run(["git", "push"], cwd=worktree, capture_output=True, text=True)
+        r = subprocess.run([*_GIT, "push"], cwd=worktree, capture_output=True, text=True)
         if r.returncode != 0:
             _mark_failed(run["id"], run["dispatch_id"], f"git_push: {r.stderr.strip()}")
             return
@@ -309,10 +312,10 @@ def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
         # PR path: push a branch then open a PR via gh CLI
         branch = f"qi-apply/{run['dispatch_id'][:8]}"
         subprocess.run(
-            ["git", "checkout", "-b", branch], cwd=worktree, capture_output=True, text=True
+            [*_GIT, "checkout", "-b", branch], cwd=worktree, capture_output=True, text=True
         )
         r = subprocess.run(
-            ["git", "push", "-u", "origin", branch], cwd=worktree, capture_output=True, text=True
+            [*_GIT, "push", "-u", "origin", branch], cwd=worktree, capture_output=True, text=True
         )
         if r.returncode != 0:
             _mark_failed(run["id"], run["dispatch_id"], f"git_push_branch: {r.stderr.strip()}")
@@ -351,7 +354,7 @@ def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
 
     # Clean up worktree after successful commit+push
     subprocess.run(
-        ["git", "worktree", "remove", str(worktree), "--force"],
+        [*_GIT, "worktree", "remove", str(worktree), "--force"],
         cwd=project_root, capture_output=True, text=True,
     )
     _log_compliance(conn, run["dispatch_id"], "dispatch.applied", f"commit={commit_sha}")
@@ -429,7 +432,7 @@ def _run_deterministic_transform(
     worktree = _WORKTREE_ROOT / dispatch_id
     _WORKTREE_ROOT.mkdir(parents=True, exist_ok=True)
     r = subprocess.run(
-        ["git", "worktree", "add", str(worktree), "HEAD"],
+        [*_GIT, "worktree", "add", str(worktree), "HEAD"],
         cwd=project_root,
         capture_output=True,
         text=True,
@@ -454,10 +457,10 @@ def _run_deterministic_transform(
 
     # Capture diff + changed files
     diff = subprocess.run(
-        ["git", "diff"], cwd=worktree, capture_output=True, text=True
+        [*_GIT, "diff"], cwd=worktree, capture_output=True, text=True
     ).stdout
     changed_raw = subprocess.run(
-        ["git", "diff", "--name-only"], cwd=worktree, capture_output=True, text=True
+        [*_GIT, "diff", "--name-only"], cwd=worktree, capture_output=True, text=True
     ).stdout
     changed_files = [worktree / f.strip() for f in changed_raw.splitlines() if f.strip()]
 

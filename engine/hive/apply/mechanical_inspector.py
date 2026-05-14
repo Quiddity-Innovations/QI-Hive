@@ -5,6 +5,9 @@ import re
 import subprocess
 from pathlib import Path
 
+# LocalSystem runs this worker; repos are owned by Renne — git refuses without this.
+_GIT = ["git", "-c", "safe.directory=*"]
+
 
 def check_python_syntax(file: Path) -> tuple[bool, str | None]:
     if file.suffix != ".py":
@@ -38,7 +41,7 @@ def check_markdown_links(file: Path, project_root: Path) -> tuple[bool, list[str
 
 def check_git_diff(worktree: Path) -> tuple[bool, str | None]:
     r = subprocess.run(
-        ["git", "diff", "--check"],
+        [*_GIT, "diff", "--check"],
         cwd=worktree,
         capture_output=True,
         text=True,
@@ -50,7 +53,7 @@ def check_git_diff(worktree: Path) -> tuple[bool, str | None]:
 
 def check_size_limits(worktree: Path, max_files: int = 1, max_lines: int = 40) -> tuple[bool, str | None]:
     r = subprocess.run(
-        ["git", "diff", "--numstat"],
+        [*_GIT, "diff", "--numstat"],
         cwd=worktree,
         capture_output=True,
         text=True,
