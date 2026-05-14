@@ -120,6 +120,13 @@ def validate_project(pid: str, live: bool = False) -> tuple[int, int]:
     c("family_tier declared", "family_tier" in proj)
     c("exposes_to_ecosystem declared", "exposes_to_ecosystem" in proj, critical=False)
 
+    # paths.logs — warn if missing or non-existent (not a hard fail)
+    logs_path_str = (proj.get("paths") or {}).get("logs")
+    if logs_path_str:
+        c(f"paths.logs exists on disk ({logs_path_str})", Path(logs_path_str).exists(), critical=False)
+    else:
+        check("paths.logs declared in registry", False, critical=False)
+
     # ── CLAUDE.md content checks ───────────────────────────────────
     print("\n  [ CLAUDE.md Content ]")
     claude_path = path / "CLAUDE.md"

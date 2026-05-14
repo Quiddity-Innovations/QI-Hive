@@ -3726,62 +3726,144 @@ def api_dispatch_log():
     return JSONResponse({"ok": True, "log": list(reversed(_DISPATCH_LOG))})
 
 
-# ── /logs — tail viewer ───────────────────────────────────────────────────────
+# ── /logs — cross-project tail viewer ────────────────────────────────────────
 
+# Legacy single-root kept for backward compat (old /api/log/<filename> callers)
 LOGS_ROOT = _PROJECT_DIR / "logs"
 
+# Project chip colors for the UI
+_PROJECT_COLORS: dict[str, str] = {
+    "qi_hive":  "#7c3aed",  # purple
+    "maia":     "#2563eb",  # blue
+    "naya":     "#db2777",  # pink
+    "nexus":    "#0891b2",  # cyan
+    "openclaw": "#16a34a",  # green
+    "filehq":   "#ea580c",  # orange
+    "easyflow": "#ca8a04",  # yellow
+}
 
-def _list_log_files() -> list[dict]:
-    if not LOGS_ROOT.exists():
-        return []
+# Cache — populated lazily, cleared by POST /api/logs/reload
+_LOG_ROOTS_CACHE: dict[str, Path] | None = None
+
+
+def _resolve_log_roots() -> dict[str, Path]:
+    """Read qi_registry.json and return {project_id: root_path} for existing log roots."""
+    reg_path = Path(r"C:\QIH\ecosystem\qi_registry.json")
+    if not reg_path.exists():
+        return {"qi_hive": Path(r"C:\QIH\logs")}
+    reg = json.loads(reg_path.read_text(encoding="utf-8"))
+    out: dict[str, Path] = {}
+    for proj in reg.get("projects", []):
+        pid = (proj.get("id") or "").lower()
+        logs = (proj.get("paths") or {}).get("logs")
+        if pid and logs:
+            p = Path(logs)
+            if p.exists():
+                out[pid] = p
+    out.setdefault("qi_hive", Path(r"C:\QIH\logs"))
+    return out
+
+
+def _get_log_roots() -> dict[str, Path]:
+    global _LOG_ROOTS_CACHE
+    if _LOG_ROOTS_CACHE is None:
+        _LOG_ROOTS_CACHE = _resolve_log_roots()
+    return _LOG_ROOTS_CACHE
+
+
+def _list_log_files(project_id: str | None = None) -> list[dict]:
+    """Return [{project_id, name, rel_path, size_bytes, mtime}, ...] sorted by mtime desc."""
+    roots = _get_log_roots()
+    if project_id:
+        pid_lower = project_id.lower()
+        if pid_lower not in roots:
+            return []
+        scan = {pid_lower: roots[pid_lower]}
+    else:
+        scan = roots
+
     out = []
-    for p in LOGS_ROOT.rglob("*.log"):
-        try:
-            st = p.stat()
-            out.append({
-                "path": str(p.relative_to(LOGS_ROOT)).replace("\\", "/"),
-                "size": st.st_size,
-                "mtime": st.st_mtime,
-            })
-        except OSError:
-            pass
+    for pid, root in scan.items():
+        if not root.exists():
+            continue
+        for p in root.rglob("*.log"):
+            try:
+                st = p.stat()
+                rel = str(p.relative_to(root)).replace("\\", "/")
+                out.append({
+                    "project_id": pid,
+                    "name": p.name,
+                    "rel_path": rel,
+                    "size_bytes": st.st_size,
+                    "mtime": st.st_mtime,
+                })
+            except OSError:
+                pass
     out.sort(key=lambda x: x["mtime"], reverse=True)
     return out
 
 
-def _tail_file(path: Path, lines: int = 200) -> str:
+def _tail_file(path: Path, n_lines: int, max_bytes: int = 5_000_000) -> str:
+    """Reverse-block tail — efficient even on files >100 MB."""
     if not path.exists():
         return ""
     try:
-        with open(path, "rb") as f:
-            f.seek(0, 2)
-            size = f.tell()
-            block = 8192
-            data = b""
-            while size > 0 and data.count(b"\n") <= lines:
-                read = min(block, size)
-                size -= read
-                f.seek(size)
-                data = f.read(read) + data
-        text = data.decode("utf-8", errors="replace")
-        return "\n".join(text.splitlines()[-lines:])
+        size = path.stat().st_size
+        if size <= 65_536:
+            text = path.read_text(encoding="utf-8", errors="replace")
+            return "\n".join(text.splitlines()[-n_lines:])
+        with path.open("rb") as f:
+            chunks: list[bytes] = []
+            pos = size
+            newlines = 0
+            while pos > 0 and newlines <= n_lines and sum(len(c) for c in chunks) < max_bytes:
+                step = min(65536, pos)
+                pos -= step
+                f.seek(pos)
+                block = f.read(step)
+                newlines += block.count(b"\n")
+                chunks.insert(0, block)
+            data = b"".join(chunks).decode("utf-8", errors="replace")
+            return "\n".join(data.splitlines()[-n_lines:])
     except OSError as e:
         return f"[error reading log: {e}]"
 
 
 def render_logs() -> str:
-    files = _list_log_files()
-    options = "".join(
-        f'<option value="{f["path"]}">{f["path"]}  ({f["size"]//1024} KB)</option>'
-        for f in files
-    ) or '<option value="">(no logs yet)</option>'
+    roots = _get_log_roots()
+    all_files = _list_log_files()
+
+    # Build project dropdown options — only for roots that actually exist
+    project_labels = {
+        "": "All projects",
+        "qi_hive":  "QI Hive",
+        "maia":     "Maia",
+        "naya":     "Naya",
+        "nexus":    "NEXUS",
+        "openclaw": "OpenClaw",
+        "filehq":   "FileHQ",
+        "easyflow": "EasyFlow",
+    }
+    proj_options = '<option value="">All projects</option>'
+    for pid in sorted(roots.keys()):
+        label = project_labels.get(pid, pid)
+        proj_options += f'<option value="{pid}">{label}</option>'
+
+    # Inline color map for JS
+    color_map_js = json.dumps(_PROJECT_COLORS)
+
+    # Pre-render all file rows as JSON for JS to consume
+    files_json = json.dumps(all_files)
+
     return f"""
     <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="mb-0"><i class="bi bi-journal-text"></i> Logs</h5>
-        <div class="d-flex gap-2 align-items-center">
-          <select id="log-file" class="form-select form-select-sm" style="width:320px"
-                  onchange="loadLog()">{options}</select>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <select id="log-project" class="form-select form-select-sm" style="width:160px"
+                  onchange="filterProject()">{proj_options}</select>
+          <select id="log-file" class="form-select form-select-sm" style="width:300px"
+                  onchange="loadLog()"><option value="">(select a file)</option></select>
           <select id="log-lines" class="form-select form-select-sm" style="width:110px"
                   onchange="loadLog()">
             <option value="100">100 lines</option>
@@ -3790,7 +3872,7 @@ def render_logs() -> str:
             <option value="1000">1000 lines</option>
           </select>
           <input type="text" id="log-filter" class="form-control form-control-sm"
-                 placeholder="filter (substring)" style="width:180px" oninput="applyFilter()">
+                 placeholder="filter (substring)" style="width:160px" oninput="applyFilter()">
           <label class="form-check form-switch small mb-0 ms-2">
             <input class="form-check-input" type="checkbox" id="log-auto" checked> auto
           </label>
@@ -3799,22 +3881,86 @@ def render_logs() -> str:
           </button>
         </div>
       </div>
-      <div class="card-body p-0">
-        <pre id="log-content" style="max-height:70vh;overflow:auto;padding:12px;margin:0;
-             background:#0e0e10;color:#c9d1d9;font-size:12px;line-height:1.4;">loading...</pre>
+      <!-- file table -->
+      <div class="table-responsive" style="max-height:260px;overflow-y:auto;">
+        <table class="table table-sm table-hover mb-0" id="log-table">
+          <thead class="table-dark sticky-top">
+            <tr>
+              <th style="width:14px"></th>
+              <th>Project</th>
+              <th>File</th>
+              <th>Size</th>
+              <th>Modified</th>
+            </tr>
+          </thead>
+          <tbody id="log-table-body"></tbody>
+        </table>
+      </div>
+      <div class="card-body p-0 border-top">
+        <pre id="log-content" style="max-height:55vh;overflow:auto;padding:12px;margin:0;
+             background:#0e0e10;color:#c9d1d9;font-size:12px;line-height:1.4;">Select a log file above.</pre>
       </div>
     </div>
     <script>
+    const _ALL_FILES = {files_json};
+    const _COLORS   = {color_map_js};
     let _lastRaw = "";
+    let _currentProject = null;
+    let _currentFile    = null;
+
+    function _chip(pid) {{
+      const bg = _COLORS[pid] || "#6c757d";
+      return `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${{bg}};"></span>`;
+    }}
+
+    function _fmtSize(b) {{
+      if (b < 1024) return b + " B";
+      if (b < 1048576) return (b/1024).toFixed(1) + " KB";
+      return (b/1048576).toFixed(1) + " MB";
+    }}
+
+    function _fmtTime(ts) {{
+      return new Date(ts*1000).toLocaleString();
+    }}
+
+    function filterProject() {{
+      _currentProject = document.getElementById('log-project').value || null;
+      const filtered = _currentProject
+        ? _ALL_FILES.filter(f => f.project_id === _currentProject)
+        : _ALL_FILES;
+      const tbody = document.getElementById('log-table-body');
+      tbody.innerHTML = filtered.map(f => `
+        <tr style="cursor:pointer" onclick="selectFile('${{f.project_id}}','${{f.rel_path.replace(/'/g,"\\\\'")}}')"
+            id="row-${{f.project_id}}-${{encodeURIComponent(f.rel_path)}}">
+          <td>${{_chip(f.project_id)}}</td>
+          <td><small>${{f.project_id}}</small></td>
+          <td><small>${{f.rel_path}}</small></td>
+          <td><small>${{_fmtSize(f.size_bytes)}}</small></td>
+          <td><small>${{_fmtTime(f.mtime)}}</small></td>
+        </tr>`).join('');
+      // auto-select first file if available
+      if (filtered.length) selectFile(filtered[0].project_id, filtered[0].rel_path);
+    }}
+
+    function selectFile(pid, relPath) {{
+      _currentFile = {{pid, relPath}};
+      // highlight row
+      document.querySelectorAll('#log-table-body tr').forEach(r => r.classList.remove('table-active'));
+      const row = document.getElementById('row-'+pid+'-'+encodeURIComponent(relPath));
+      if (row) row.classList.add('table-active');
+      loadLog();
+    }}
+
     async function loadLog() {{
-      const f = document.getElementById('log-file').value;
+      if (!_currentFile) return;
       const n = document.getElementById('log-lines').value;
-      if (!f) return;
-      const r = await fetch(`/api/logs/tail?path=${{encodeURIComponent(f)}}&lines=${{n}}`);
+      const url = `/api/logs/tail?project=${{encodeURIComponent(_currentFile.pid)}}&path=${{encodeURIComponent(_currentFile.relPath)}}&lines=${{n}}`;
+      const r = await fetch(url);
       const j = await r.json();
-      _lastRaw = j.content || "";
+      _lastRaw = j.content || (j.detail ? '[Error: '+j.detail+']' : '');
       applyFilter();
     }}
+
     function applyFilter() {{
       const q = document.getElementById('log-filter').value.toLowerCase();
       const pre = document.getElementById('log-content');
@@ -3822,8 +3968,9 @@ def render_logs() -> str:
       else pre.textContent = _lastRaw.split("\\n").filter(l => l.toLowerCase().includes(q)).join("\\n");
       pre.scrollTop = pre.scrollHeight;
     }}
+
     setInterval(() => {{ if (document.getElementById('log-auto').checked) loadLog(); }}, 3000);
-    loadLog();
+    filterProject();  // populate table on load
     </script>
     """
 
@@ -3834,18 +3981,51 @@ def logs_page():
 
 
 @app.get("/api/logs")
-def api_list_logs():
-    return {"logs": _list_log_files(), "root": str(LOGS_ROOT)}
+def api_list_logs(project: str | None = None):
+    roots = _get_log_roots()
+    return {
+        "logs": _list_log_files(project_id=project),
+        "roots": {pid: str(p) for pid, p in roots.items()},
+    }
+
+
+@app.post("/api/logs/reload")
+def api_logs_reload():
+    """Clear the log-roots cache and re-resolve from registry."""
+    global _LOG_ROOTS_CACHE
+    _LOG_ROOTS_CACHE = None
+    new_roots = _get_log_roots()
+    return {"ok": True, "roots": {pid: str(p) for pid, p in new_roots.items()}, "count": len(new_roots)}
 
 
 @app.get("/api/logs/tail")
-def api_tail_log(path: str, lines: int = 200):
-    full = (LOGS_ROOT / path).resolve()
+def api_tail_log(project: str, path: str, lines: int = 500):
+    """Tail a log file. project = project_id; path = rel_path within that project's log root."""
+    # Cap at 5000 lines to bound response size
+    lines = min(lines, 5000)
+    roots = _get_log_roots()
+    pid = project.lower()
+    if pid not in roots:
+        raise HTTPException(404, f"Unknown project_id '{project}'. Known: {list(roots.keys())}")
+    root = roots[pid]
     try:
-        full.relative_to(LOGS_ROOT.resolve())
+        full = (root / path).resolve()
+        full.relative_to(root.resolve())
     except ValueError:
-        raise HTTPException(400, "path must be under logs/")
-    return {"path": path, "lines": lines, "content": _tail_file(full, lines)}
+        raise HTTPException(400, "path escapes the project log root")
+    return {"project": pid, "path": path, "lines": lines, "content": _tail_file(full, lines)}
+
+
+# Backward-compat: old callers that hit /api/log/<filename> get qi_hive root
+@app.get("/api/log/{filename}")
+def api_tail_log_legacy(filename: str, lines: int = 200):
+    root = LOGS_ROOT
+    try:
+        full = (root / filename).resolve()
+        full.relative_to(root.resolve())
+    except ValueError:
+        raise HTTPException(400, "path escapes logs root")
+    return {"path": filename, "lines": lines, "content": _tail_file(full, lines)}
 
 
 # ── /project/{id} — per-project detail page ─────────────────────────────────

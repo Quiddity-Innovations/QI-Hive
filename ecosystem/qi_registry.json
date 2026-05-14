@@ -93,6 +93,9 @@
       "description": "File intelligence engine — MERGED into Naya (C:\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
       "path": "C:\\NAYA\\filehq",
       "original_path": "C:\\FileHQ",
+      "paths": {
+        "logs": "C:\\FileHQ\\LOGS"
+      },
       "github": "TBD",
       "status": "merged_into_naya",
       "primary_language": "Python",
@@ -123,6 +126,9 @@
       "name": "Maia",
       "description": "Multi-channel AI assistant platform (LINE, Telegram, Messenger, Instagram, WhatsApp)",
       "path": "C:\\QI",
+      "paths": {
+        "logs": "C:\\QI\\LOGS"
+      },
       "github": "https://github.com/Quiddity-Innovations/MAIA",
       "status": "active_production",
       "primary_language": "Python",
@@ -184,6 +190,9 @@
       "name": "Naya",
       "description": "Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanning",
       "path": "C:\\NAYA",
+      "paths": {
+        "logs": "C:\\NAYA\\LOGS"
+      },
       "github": "https://github.com/Quiddity-Innovations/NAYA",
       "status": "active_development",
       "primary_language": "Python",
@@ -241,6 +250,9 @@
       "name": "NEXUS",
       "description": "Neural Exchange and Unified Synthesis — AI orchestration backbone for all QI projects",
       "path": "C:\\NEXUS",
+      "paths": {
+        "logs": "C:\\NEXUS\\LOGS"
+      },
       "github": "https://github.com/rennesan/NEXUS",
       "status": "active_development",
       "primary_language": "Python",
@@ -299,6 +311,9 @@
       "name": "OpenClaw",
       "description": "Autonomous AI agent platform — 6 custom agents (Tasuke, Kaze, Sentry, Seiri, Yubin, Koe)",
       "path": "C:\\OC",
+      "paths": {
+        "logs": "C:\\OC\\LOGS"
+      },
       "github": "TBD",
       "status": "active_production",
       "primary_language": "Node.js (OpenClaw framework) + Python (custom agents)",
@@ -364,6 +379,9 @@
       "name": "EasyFlow",
       "description": "Email organization tool — tier-based inbox management with Gmail API + Apps Script automation. Free gift tool for family/friends.",
       "path": "C:\\EasyFlow",
+      "paths": {
+        "logs": "C:\\EasyFlow\\LOGS"
+      },
       "github": "TBD",
       "status": "active_development",
       "primary_language": "Python (Flask dashboard) + Google Apps Script",
@@ -461,6 +479,9 @@
       "name": "QI Hive",
       "description": "Unified agent orchestration and knowledge system — QI Brain + Dashboard + 7 hive agents. The bee colony.",
       "path": "C:\\QIH",
+      "paths": {
+        "logs": "C:\\QIH\\logs"
+      },
       "github": "https://github.com/Quiddity-Innovations/QI-Hive",
       "status": "active_development",
       "primary_language": "Python",
