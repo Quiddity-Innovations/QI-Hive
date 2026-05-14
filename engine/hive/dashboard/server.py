@@ -4,11 +4,16 @@ QI Hive Dashboard — port 8600
 AdminLTE v4 + Bootstrap 5 + SortableJS kanban
 Powered by QI Brain (port 9010) as the hive's nervous system.
 """
+import html
 import json
+import logging
+import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
@@ -3757,6 +3762,9 @@ def _resolve_log_roots() -> dict[str, Path]:
         pid = (proj.get("id") or "").lower()
         logs = (proj.get("paths") or {}).get("logs")
         if pid and logs:
+            if logs.startswith("\\\\") or logs.startswith("//"):
+                logger.warning("Skipping UNC log path for project %s: %s", pid, logs)
+                continue
             p = Path(logs)
             if p.exists():
                 out[pid] = p
@@ -3769,6 +3777,9 @@ def _get_log_roots() -> dict[str, Path]:
     if _LOG_ROOTS_CACHE is None:
         _LOG_ROOTS_CACHE = _resolve_log_roots()
     return _LOG_ROOTS_CACHE
+
+
+_MAX_LOG_FILES = 500
 
 
 def _list_log_files(project_id: str | None = None) -> list[dict]:
@@ -3800,19 +3811,26 @@ def _list_log_files(project_id: str | None = None) -> list[dict]:
             except OSError:
                 pass
     out.sort(key=lambda x: x["mtime"], reverse=True)
+    if len(out) > _MAX_LOG_FILES:
+        logger.warning("Log file walk returned %d files; truncating to %d", len(out), _MAX_LOG_FILES)
+        out = out[:_MAX_LOG_FILES]
     return out
 
 
 def _tail_file(path: Path, n_lines: int, max_bytes: int = 5_000_000) -> str:
-    """Reverse-block tail — efficient even on files >100 MB."""
-    if not path.exists():
-        return ""
+    """Reverse-block tail — efficient even on files >100 MB.
+
+    Opens before stat to close the TOCTOU window: if the file disappears or
+    becomes unreadable between the exists() check and the open, the OSError
+    handler returns "" rather than crashing.
+    """
     try:
-        size = path.stat().st_size
-        if size <= 65_536:
-            text = path.read_text(encoding="utf-8", errors="replace")
-            return "\n".join(text.splitlines()[-n_lines:])
         with path.open("rb") as f:
+            size = f.seek(0, 2)  # seek to end to get size without a separate stat
+            f.seek(0)
+            if size <= 65_536:
+                data = f.read().decode("utf-8", errors="replace")
+                return "\n".join(data.splitlines()[-n_lines:])
             chunks: list[bytes] = []
             pos = size
             newlines = 0
@@ -3825,6 +3843,8 @@ def _tail_file(path: Path, n_lines: int, max_bytes: int = 5_000_000) -> str:
                 chunks.insert(0, block)
             data = b"".join(chunks).decode("utf-8", errors="replace")
             return "\n".join(data.splitlines()[-n_lines:])
+    except (FileNotFoundError, PermissionError):
+        return ""
     except OSError as e:
         return f"[error reading log: {e}]"
 
@@ -4131,9 +4151,34 @@ def project_page(pid: str):
     return base_layout(pid, render_project(pid), "dashboard")
 
 
+def _allowed_qi_services() -> set:
+    """Return the set of QI_* service names declared in qi_registry.json."""
+    reg_path = Path(r"C:\QIH\ecosystem\qi_registry.json")
+    allowed: set = set()
+    if reg_path.exists():
+        try:
+            reg = json.loads(reg_path.read_text(encoding="utf-8"))
+            for proj in reg.get("projects", []):
+                for svc in (proj.get("services") or []):
+                    sname = svc.get("nssm_name") or svc.get("name")
+                    if sname and sname.startswith("QI_"):
+                        allowed.add(sname)
+        except Exception:
+            pass
+    # Canonical core services — fallback if registry not yet fully populated.
+    allowed.update({
+        "QI_MaiaBot", "QI_MaiaTunnel", "QI_MaiaDemoTunnel",
+        "QI_NayaBot", "QI_NayaGradio",
+        "QI_NEXUS", "QI_Dashboard", "QI_DashboardTunnel",
+        "QI_BrainAPI", "QI_Elevate", "QI_HiveIngest", "QI_HiveApply",
+    })
+    return allowed
+
+
 @app.get("/api/services/{name}/status")
 def api_service_status(name: str):
-    import subprocess
+    if name not in _allowed_qi_services():
+        raise HTTPException(status_code=400, detail=f"Service '{name}' not in QI allowlist")
     try:
         result = subprocess.run(
             ["gsudo", r"C:\QIH\engine\bin\nssm.exe", "status", name],
@@ -5716,10 +5761,10 @@ def render_warroom() -> str:
     for aid, label, icon, color in agent_types:
         seen = last_seen_by_agent.get(aid)
         if seen:
-            last_touch  = (seen.get("last_ts") or "")[:16] or "never"
-            active_proj = seen.get("last_project") or "-"
-            last_event  = seen.get("last_event") or "-"
-            last_model  = seen.get("last_model") or ""
+            last_touch  = html.escape((seen.get("last_ts") or "")[:16] or "never")
+            active_proj = html.escape(seen.get("last_project") or "-")
+            last_event  = html.escape(seen.get("last_event") or "-")
+            last_model  = html.escape(seen.get("last_model") or "")
             card_color  = color
             sub_line    = f'on: {active_proj} &nbsp;<span class="text-muted">({last_event})</span>'
             if last_model:
@@ -5748,14 +5793,14 @@ def render_warroom() -> str:
     sorted_proj = sorted(projects, key=lambda p: (p.get("last_active") or ""), reverse=True)
     proj_rows = ""
     for p in sorted_proj:
-        pid   = p.get("project_id", "?")
-        name  = p.get("display_name", pid)
-        phase = p.get("last_phase", "-") or "-"
-        stat  = p.get("last_status", "-") or "-"
-        last  = (p.get("last_active") or "")[:16] or "never"
-        summary = (p.get("last_summary") or "")[:140]
+        pid     = html.escape(p.get("project_id", "?"))
+        name    = html.escape(p.get("display_name", pid))
+        phase   = html.escape(p.get("last_phase", "-") or "-")
+        stat    = html.escape(p.get("last_status", "-") or "-")
+        last    = html.escape((p.get("last_active") or "")[:16] or "never")
+        summary = html.escape((p.get("last_summary") or "")[:140])
         color = {"active":"success","paused":"secondary","blocked":"danger",
-                 "complete":"info"}.get(stat, "secondary")
+                 "complete":"info"}.get(p.get("last_status") or "", "secondary")
         proj_rows += f"""
         <tr>
           <td><strong>{name}</strong><br/><span class="text-muted small">{pid}</span></td>
@@ -5770,16 +5815,22 @@ def render_warroom() -> str:
     # ── Active dispatches ──
     disp_rows = ""
     for d in dispatches[:15]:
-        status = d.get("status", "?")
+        status      = d.get("status", "?")
         badge = {"pending":"warning","approved":"success","rejected":"danger",
                  "discussing":"info","in_progress":"primary","done":"secondary"}.get(status, "secondary")
+        d_status    = html.escape(status)
+        d_proj      = html.escape(d.get("project_id") or "-")
+        d_title     = html.escape((d.get("title") or "")[:60])
+        d_from      = html.escape(d.get("from_agent") or "-")
+        d_to        = html.escape(d.get("to_agent") or "-")
+        d_created   = html.escape((d.get("created_at") or "")[:16])
         disp_rows += f"""
         <tr>
-          <td><span class="badge text-bg-{badge}">{status}</span></td>
-          <td>{d.get('project_id','-')}</td>
-          <td class="small">{(d.get('title','') or '')[:60]}</td>
-          <td class="small text-muted">{d.get('from_agent','-')} → {d.get('to_agent','-')}</td>
-          <td class="small text-muted">{(d.get('created_at','') or '')[:16]}</td>
+          <td><span class="badge text-bg-{badge}">{d_status}</span></td>
+          <td>{d_proj}</td>
+          <td class="small">{d_title}</td>
+          <td class="small text-muted">{d_from} → {d_to}</td>
+          <td class="small text-muted">{d_created}</td>
         </tr>"""
     if not disp_rows:
         disp_rows = '<tr><td colspan="5" class="text-muted text-center">No active dispatches</td></tr>'
@@ -5797,11 +5848,15 @@ def render_warroom() -> str:
     for i in inbox_items[:5]:
         ok = i.get("status") == "processed"
         b = "success" if ok else "danger"
+        i_status   = html.escape(i.get("status") or "?")
+        i_source   = html.escape(i.get("source") or "-")
+        i_kind     = html.escape(i.get("kind") or "-")
+        i_received = html.escape((i.get("received_at") or "")[:16])
         inbox_html += f"""
         <div class="border-start border-4 border-{b} ps-2 mb-2 small">
-          <span class="badge text-bg-{b}">{i.get('status','?')}</span>
-          {i.get('source','-')} · {i.get('kind','-')}
-          <span class="text-muted">· {(i.get('received_at','') or '')[:16]}</span>
+          <span class="badge text-bg-{b}">{i_status}</span>
+          {i_source} · {i_kind}
+          <span class="text-muted">· {i_received}</span>
         </div>"""
     if not inbox_html:
         inbox_html = '<div class="text-muted small">No recent inbox activity.</div>'

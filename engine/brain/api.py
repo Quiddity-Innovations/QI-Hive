@@ -42,13 +42,13 @@ import json
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 def _norm_pid(pid: str) -> str:
@@ -892,12 +892,12 @@ _WARROOM_AGENTS = ("claude_code", "claude_work", "cowork", "claude_chat")
 
 
 class HeartbeatIn(BaseModel):
-    agent_id:    str
-    agent_kind:  str                   # interactive | subagent | service
-    event:       str                   # start | tool_call | stop | heartbeat
-    project_id:  Optional[str] = None
-    session_ref: Optional[str] = None
-    model:       Optional[str] = None
+    agent_id:   str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_\-]+$")
+    agent_kind: Literal["interactive", "subagent", "service"]
+    event:      Literal["start", "tool_call", "stop", "heartbeat"]
+    project_id:  Optional[str] = Field(default=None, max_length=64, pattern=r"^[a-zA-Z0-9_\-]*$")
+    session_ref: Optional[str] = Field(default=None, max_length=128)
+    model:       Optional[str] = Field(default=None, max_length=64)
     meta:        Optional[dict] = None
 
 
