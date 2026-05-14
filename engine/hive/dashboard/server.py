@@ -55,6 +55,28 @@ def _brain_db_query(sql: str, params: tuple = ()) -> list[dict]:
     except Exception:
         return []
 
+
+def _brain_db_agents_last_seen() -> list[dict]:
+    """Read agent_heartbeats directly from Brain SQLite (avoids HTTP hop + Brain restart dependency).
+
+    Returns one row per agent with the latest heartbeat.  Keys match what the
+    Brain HTTP /api/agents/last_seen endpoint returns so render_warroom needs
+    no further changes.
+    """
+    return _brain_db_query(
+        """
+        SELECT h.agent_id, h.ts AS last_ts, h.project_id AS last_project,
+               h.model AS last_model, h.event AS last_event
+        FROM agent_heartbeats h
+        INNER JOIN (
+            SELECT agent_id, MAX(ts) AS max_ts
+            FROM agent_heartbeats
+            WHERE agent_id IN ('claude_code','claude_work','cowork','claude_chat')
+            GROUP BY agent_id
+        ) m ON m.agent_id = h.agent_id AND m.max_ts = h.ts
+        """
+    )
+
 # Wire up QI Logger
 sys.path.insert(0, str(_PROJECT_DIR))
 from engine.common.qi_logger import get_logger, set_level, list_services
@@ -5765,13 +5787,10 @@ def render_warroom() -> str:
     inbox_items = inbox.get("entries", []) if isinstance(inbox, dict) else []
 
     # ── Agents panel (Claude Code, Claude Work, CoWork, Claude Chat) ──
-    # Data comes from agent_heartbeats via GET /api/agents/last_seen.
-    # Each agent gets its own real timestamp instead of the same "most recent
-    # project" value being applied to every card.
-    last_seen_data = _brain_get("/api/agents/last_seen") or {}
+    # Read directly from Brain SQLite — no HTTP hop, no Brain restart needed.
     last_seen_by_agent = {
         a["agent_id"]: a
-        for a in last_seen_data.get("agents", [])
+        for a in _brain_db_agents_last_seen()
     }
 
     agent_types = [
