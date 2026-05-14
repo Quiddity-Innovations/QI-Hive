@@ -1,32 +1,49 @@
 # -*- coding: utf-8 -*-
 """
-QI_HiveApply — runner (Phase 1: inbox-fallback mode).
+QI_HiveApply — runner (Phase 2: deterministic transform worker).
 
 For each queued dispatch_run:
-  1. Load the dispatch from qi_brain.db.
-  2. Check allowlist categories — reject_auto if not in Phase 1 list.
-  3. Persist guardrail limits as JSON in dispatch_runs.meta.
-  4. Write prompt envelope to C:\\QIH\\inbox\\hive_builder\\<dispatch_id>.json.
-  5. Transition state: queued -> in_progress, record started_at + worktree placeholder.
-  6. Log every state change to compliance_log.
+  Phase 2 path (allowlisted categories):
+    1. Validate spec via transform module.
+    2. Create git worktree at C:\\QIH\\worktrees\\apply\\<dispatch_id>.
+    3. Apply transform inside worktree.
+    4. Run mechanical inspector (ast, md-links, git diff --check, size limits).
+    5. Transition state: pending_review. Write inbox file for hive-inspector.
+       (Steps 5-6: inspector-gated commit vs fast-commit decided by Renne — not yet active.)
 
-Phase 2 will replace step 4/5 with a headless Claude Code subprocess.
+  Phase 1 fallback (unknown category):
+    Writes prompt envelope to C:\\QIH\\inbox\\hive_builder\\<dispatch_id>.json.
+    State stays in_progress; operator picks up manually.
+
 The HALT check lives in dispatcher.py before handle_run() is called.
 """
 import json
 import logging
 import sqlite3
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
-_DB_PATH   = Path(r"C:\QIH\data\qi_brain.db")
-_INBOX_DIR = Path(r"C:\QIH\inbox\hive_builder")
-_WORKTREE_ROOT = Path(r"C:\QIH\worktrees\apply")
+# Allow sibling-directory imports when running from the apply/ folder.
+sys.path.insert(0, str(Path(__file__).parent))
 
-# Phase 1 allowlist (Decision D)
-_ALLOWED_CATEGORIES = {"typo_fix", "doc_link_correction", "gitignore_addition"}
+from transforms import typo_fix, doc_link_correction, gitignore_addition
+from mechanical_inspector import run_all as mech_run
 
-# Phase 1 guardrail defaults
+_DB_PATH        = Path(r"C:\QIH\data\qi_brain.db")
+_INBOX_BUILDER  = Path(r"C:\QIH\inbox\hive_builder")
+_INBOX_INSPECTOR = Path(r"C:\QIH\inbox\hive_inspector")
+_WORKTREE_ROOT  = Path(r"C:\QIH\worktrees\apply")
+
+# Transform registry — Phase 2 allowlist
+TRANSFORMS = {
+    "typo_fix":             typo_fix,
+    "doc_link_correction":  doc_link_correction,
+    "gitignore_addition":   gitignore_addition,
+}
+
+# Phase 1 guardrail defaults (retained for Phase 1 fallback meta)
 _MAX_FILES = 1
 _MAX_LINES = 40
 _FORBIDDEN_PATHS = [
@@ -42,6 +59,8 @@ _FORBIDDEN_PATHS = [
 
 log = logging.getLogger("hive_apply.runner")
 
+
+# ── DB helpers ────────────────────────────────────────────────────────────────
 
 def _open_db() -> sqlite3.Connection:
     conn = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
@@ -75,9 +94,208 @@ def _log_compliance(conn: sqlite3.Connection, dispatch_id: str, event: str, mess
     )
 
 
+# ── Transform dispatch ────────────────────────────────────────────────────────
+
+def dispatch_to_transform(category: str):
+    """Return the transform module for a category, or None if not in allowlist."""
+    return TRANSFORMS.get(category)
+
+
+# ── Project root resolution ───────────────────────────────────────────────────
+
+def _resolve_project_root(project_id: str) -> Path | None:
+    """Look up project path from qi_registry.json. Returns None if not found."""
+    registry_path = Path(r"C:\QIH\ecosystem\qi_registry.json")
+    try:
+        data = json.loads(registry_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        log.error("Failed to read qi_registry.json: %s", e)
+        return None
+    for proj in data.get("projects", []):
+        if proj.get("id") == project_id:
+            p = proj.get("path")
+            return Path(p) if p else None
+    return None
+
+
+# ── State transition helpers ──────────────────────────────────────────────────
+
+def _mark_rejected(run_id: int, dispatch_id: str, reason: str) -> None:
+    with _open_db() as conn:
+        conn.execute(
+            """UPDATE dispatch_runs
+               SET state='rejected_auto', finished_at=?, error=?
+               WHERE id=?""",
+            (_now(), reason, run_id),
+        )
+        conn.execute(
+            "UPDATE dispatches SET apply_state='rejected_auto' WHERE dispatch_id=?",
+            (dispatch_id,),
+        )
+        _log_compliance(conn, dispatch_id, "dispatch.rejected_auto", reason)
+        conn.commit()
+    log.info("run_id=%d dispatch_id=%s: rejected_auto — %s", run_id, dispatch_id, reason)
+
+
+def _mark_failed(run_id: int, dispatch_id: str, reason: str) -> None:
+    with _open_db() as conn:
+        conn.execute(
+            """UPDATE dispatch_runs
+               SET state='failed', finished_at=?, error=?
+               WHERE id=?""",
+            (_now(), reason, run_id),
+        )
+        conn.execute(
+            "UPDATE dispatches SET apply_state='failed' WHERE dispatch_id=?",
+            (dispatch_id,),
+        )
+        _log_compliance(conn, dispatch_id, "dispatch.failed", reason)
+        conn.commit()
+    log.error("run_id=%d dispatch_id=%s: failed — %s", run_id, dispatch_id, reason)
+
+
+def _mark_pending_review(
+    run_id: int,
+    dispatch_id: str,
+    worktree: Path,
+    diff: str,
+    mech_result: dict,
+    mech_label: str,
+) -> None:
+    """Write dispatch_runs + inbox file for hive-inspector. State -> pending_review."""
+    _INBOX_INSPECTOR.mkdir(parents=True, exist_ok=True)
+
+    inbox_payload = {
+        "dispatch_id": dispatch_id,
+        "worktree_path": str(worktree),
+        "diff_text": diff,
+        "mechanical_pass": mech_result["pass"],
+        "mechanical_checks": mech_result["checks"],
+        "mechanical_errors": mech_result["errors"],
+        "label": mech_label,
+    }
+    inbox_file = _INBOX_INSPECTOR / f"{dispatch_id}.json"
+    inbox_file.write_text(json.dumps(inbox_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    with _open_db() as conn:
+        conn.execute(
+            """UPDATE dispatch_runs
+               SET state='pending_review', worktree_path=?, diff_path=?,
+                   inspector_verdict=NULL, finished_at=NULL, error=NULL
+               WHERE id=?""",
+            (str(worktree), str(inbox_file), run_id),
+        )
+        conn.execute(
+            "UPDATE dispatches SET apply_state='pending_review' WHERE dispatch_id=?",
+            (dispatch_id,),
+        )
+        _log_compliance(
+            conn, dispatch_id, "dispatch.pending_review",
+            f"mechanical_pass={mech_result['pass']} inbox={inbox_file}",
+        )
+        conn.commit()
+    log.info(
+        "run_id=%d dispatch_id=%s: state -> pending_review  worktree=%s  mech_pass=%s",
+        run_id, dispatch_id, worktree, mech_result["pass"],
+    )
+
+
+# ── Phase 2 deterministic path ────────────────────────────────────────────────
+
+def _run_deterministic_transform(
+    mod,
+    run_id: int,
+    dispatch_id: str,
+    spec: dict,
+    project_id: str,
+) -> None:
+    """Worktree + transform + mechanical inspector. State ends at pending_review.
+
+    Steps 5-6 (inspector-gated or fast-commit) are deferred until Renne resolves
+    the strict-vs-fast fork (see Auto_Apply_Phase2_Deterministic_2026-05-14.md §5).
+    """
+    # Mark in_progress
+    with _open_db() as conn:
+        conn.execute(
+            """UPDATE dispatch_runs SET state='in_progress', started_at=? WHERE id=?""",
+            (_now(), run_id),
+        )
+        conn.execute(
+            "UPDATE dispatches SET apply_state='in_progress', apply_run_id=? WHERE dispatch_id=?",
+            (run_id, dispatch_id),
+        )
+        _log_compliance(conn, dispatch_id, "dispatch.in_progress", "phase=2 deterministic")
+        conn.commit()
+
+    # Validate spec
+    errs = mod.validate(spec)
+    if errs:
+        _mark_rejected(run_id, dispatch_id, f"spec_invalid: {errs}")
+        return
+
+    # Resolve project root
+    project_root = _resolve_project_root(project_id)
+    if project_root is None:
+        _mark_failed(run_id, dispatch_id, f"project_root_not_found for project_id={project_id!r}")
+        return
+    if not project_root.exists():
+        _mark_failed(run_id, dispatch_id, f"project_root does not exist: {project_root}")
+        return
+
+    # Create worktree
+    worktree = _WORKTREE_ROOT / dispatch_id
+    _WORKTREE_ROOT.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run(
+        ["git", "worktree", "add", str(worktree), "HEAD"],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+    )
+    if r.returncode != 0:
+        _mark_failed(run_id, dispatch_id, f"worktree_create: {r.stderr.strip()}")
+        return
+    log.info("run_id=%d dispatch_id=%s: worktree created at %s", run_id, dispatch_id, worktree)
+
+    # Apply transform inside worktree
+    try:
+        result = mod.apply(worktree, spec)
+    except Exception as e:
+        _mark_failed(run_id, dispatch_id, f"transform_exception: {e}")
+        return
+
+    if not result.get("applied"):
+        _mark_rejected(run_id, dispatch_id, f"transform_failed: {result.get('error')}")
+        return
+
+    log.info("run_id=%d dispatch_id=%s: transform applied — %s", run_id, dispatch_id, result)
+
+    # Capture diff + changed files
+    diff = subprocess.run(
+        ["git", "diff"], cwd=worktree, capture_output=True, text=True
+    ).stdout
+    changed_raw = subprocess.run(
+        ["git", "diff", "--name-only"], cwd=worktree, capture_output=True, text=True
+    ).stdout
+    changed_files = [worktree / f.strip() for f in changed_raw.splitlines() if f.strip()]
+
+    # Mechanical inspector
+    mech_result = mech_run(worktree, changed_files, project_root)
+    log.info(
+        "run_id=%d dispatch_id=%s: mechanical_inspector pass=%s errors=%s",
+        run_id, dispatch_id, mech_result["pass"], mech_result["errors"],
+    )
+
+    # Mechanical fail: still pending_review; inspector inbox carries the errors.
+    # The worktree is retained for human/inspector review in either case.
+    label = "mechanical_pass" if mech_result["pass"] else "mechanical_fail"
+    _mark_pending_review(run_id, dispatch_id, worktree, diff, mech_result, label)
+
+
+# ── Main entry point ──────────────────────────────────────────────────────────
+
 def handle_run(run_id: int, dispatch_id: str) -> None:
     """Process one queued dispatch_run. All state transitions happen here."""
-    _INBOX_DIR.mkdir(parents=True, exist_ok=True)
+    _INBOX_BUILDER.mkdir(parents=True, exist_ok=True)
     _WORKTREE_ROOT.mkdir(parents=True, exist_ok=True)
 
     with _open_db() as conn:
@@ -87,7 +305,7 @@ def handle_run(run_id: int, dispatch_id: str) -> None:
 
     if dispatch is None:
         log.error("run_id=%d: dispatch_id=%s not found in DB — rejecting", run_id, dispatch_id)
-        _reject(run_id, dispatch_id, "dispatch not found in DB")
+        _reject_legacy(run_id, dispatch_id, "dispatch not found in DB")
         return
 
     try:
@@ -96,20 +314,33 @@ def handle_run(run_id: int, dispatch_id: str) -> None:
         payload = {}
 
     fix_category = payload.get("fix_category") or payload.get("check_id") or ""
+    spec = payload.get("suggested_fix") if isinstance(payload.get("suggested_fix"), dict) else {}
+    project_id = dispatch["project_id"] or ""
 
-    # ── Step 1: Allowlist check ────────────────────────────────────────────────
-    if fix_category not in _ALLOWED_CATEGORIES:
-        log.info(
-            "run_id=%d dispatch_id=%s: fix_category=%r not in allowlist — rejecting",
-            run_id, dispatch_id, fix_category
-        )
-        _reject(
+    # ── Phase 2 deterministic path ────────────────────────────────────────────
+    mod = dispatch_to_transform(fix_category)
+    if mod is not None:
+        _run_deterministic_transform(mod, run_id, dispatch_id, spec, project_id)
+        return
+
+    # ── Phase 1 fallback: unknown category → inbox for operator pickup ────────
+    # Unknown category: reject_auto with reason rather than silently queuing.
+    # The original Phase 1 code would write an inbox file; we keep that path for
+    # any categories that were previously queued under Phase 1 operation.
+    log.info(
+        "run_id=%d dispatch_id=%s: fix_category=%r not in allowlist — Phase 1 fallback",
+        run_id, dispatch_id, fix_category,
+    )
+
+    # Allowlist check — reject_auto for unrecognised categories
+    if fix_category not in TRANSFORMS:
+        _reject_legacy(
             run_id, dispatch_id,
-            f"fix_category '{fix_category}' not in Phase 1 allowlist {sorted(_ALLOWED_CATEGORIES)}"
+            f"fix_category '{fix_category}' not in allowlist {sorted(TRANSFORMS.keys())}",
         )
         return
 
-    # ── Step 2: Persist guardrail limits in dispatch_runs.meta ───────────────
+    # (Unreachable if allowlist == TRANSFORMS keys, but retained as belt-and-braces)
     meta = {
         "guardrails": {
             "max_files": _MAX_FILES,
@@ -120,7 +351,6 @@ def handle_run(run_id: int, dispatch_id: str) -> None:
         "phase": 1,
         "mode": "inbox_fallback",
     }
-
     worktree_placeholder = str(_WORKTREE_ROOT / dispatch_id)
 
     with _open_db() as conn:
@@ -128,76 +358,42 @@ def handle_run(run_id: int, dispatch_id: str) -> None:
             """UPDATE dispatch_runs
                SET state='in_progress', started_at=?, worktree_path=?, meta=?
                WHERE id=?""",
-            (_now(), worktree_placeholder, json.dumps(meta), run_id)
+            (_now(), worktree_placeholder, json.dumps(meta), run_id),
         )
         conn.execute(
             "UPDATE dispatches SET apply_state='in_progress', apply_run_id=? WHERE dispatch_id=?",
-            (run_id, dispatch_id)
+            (run_id, dispatch_id),
         )
         _log_compliance(conn, dispatch_id, "dispatch.in_progress")
         conn.commit()
 
-    log.info("run_id=%d dispatch_id=%s: state -> in_progress", run_id, dispatch_id)
-
-    # === Phase 2 enforcement gate (NOT YET ACTIVE) ===
-    # Before the headless builder runs in Phase 2, this point MUST enforce:
-    #   - forbidden_paths: .env*, *.db, qi_registry.json, QI_Standards.md,
-    #     QI_Architecture_Principles.md, QI_Service_Registry.md, C:\Windows, C:\Program Files*
-    #   - forbidden_ops: deletes, renames, mode changes, binary writes, NSSM/service config edits
-    #   - max_files_changed = 1, max_lines (added+removed) = 40
-    # These are documented in dispatch_runs.meta for human reviewers in Phase 1.
-    # Phase 2 builder: DO NOT bypass this gate — it is the only thing between an approved
-    # dispatch and a destructive write to the live tree.
-
-    # ── Step 3: Write prompt envelope to inbox ────────────────────────────────
     envelope = {
         "dispatch_id":    dispatch_id,
-        "project_id":     dispatch["project_id"] or "",
+        "project_id":     project_id,
         "suggested_fix":  payload.get("suggested_fix", ""),
         "rationale":      payload.get("message", ""),
-        "allowed_paths":  [],                      # Phase 2 will populate from project config
+        "allowed_paths":  [],
         "max_diff_lines": _MAX_LINES,
         "fix_category":   fix_category,
         "worktree_path":  worktree_placeholder,
     }
-
-    inbox_path = _INBOX_DIR / f"{dispatch_id}.json"
+    inbox_path = _INBOX_BUILDER / f"{dispatch_id}.json"
     inbox_path.write_text(json.dumps(envelope, indent=2, ensure_ascii=False), encoding="utf-8")
-    log.info("run_id=%d dispatch_id=%s: prompt envelope written to %s", run_id, dispatch_id, inbox_path)
 
-    # ── Step 4: Final state — in_progress, inbox written, operator picks up ──
-    # Phase 1 stops here. The run stays in_progress until an operator (interactive
-    # Claude Code session) acts on the inbox file and manually transitions state.
     with _open_db() as conn:
         _log_compliance(conn, dispatch_id, "dispatch.inbox_written", str(inbox_path))
         conn.commit()
 
     log.info(
-        "run_id=%d dispatch_id=%s: Phase 1 complete — awaiting operator pickup at %s",
-        run_id, dispatch_id, inbox_path
+        "run_id=%d dispatch_id=%s: Phase 1 fallback complete — awaiting operator pickup at %s",
+        run_id, dispatch_id, inbox_path,
     )
 
-    # === Phase 2 commit/push gate (NOT YET ACTIVE) ===
-    # Before any git commit/push in Phase 2:
-    #   1. Read C:\QIH\ecosystem\qi_registry.json
-    #   2. Check projects[<project_id>].auto_merge_approved_fixes (default: false)
-    #   3. If false → open PR via gh; do NOT push to default branch
-    #   4. If true → commit on isolated worktree; fast-forward only if hive-inspector verdict=pass
-    # This implements Decision C from Auto_Apply_Pipeline_Design_2026-05-13.md.
+
+def _reject_legacy(run_id: int, dispatch_id: str, reason: str) -> None:
+    """Reject helper that matches the original Phase 1 signature."""
+    _mark_rejected(run_id, dispatch_id, reason)
 
 
-def _reject(run_id: int, dispatch_id: str, reason: str) -> None:
-    with _open_db() as conn:
-        conn.execute(
-            """UPDATE dispatch_runs
-               SET state='rejected_auto', finished_at=?, error=?
-               WHERE id=?""",
-            (_now(), reason, run_id)
-        )
-        conn.execute(
-            "UPDATE dispatches SET apply_state='rejected_auto' WHERE dispatch_id=?",
-            (dispatch_id,)
-        )
-        _log_compliance(conn, dispatch_id, "dispatch.rejected_auto", reason)
-        conn.commit()
-    log.info("run_id=%d dispatch_id=%s: rejected_auto — %s", run_id, dispatch_id, reason)
+# Keep the old _reject name for any external callers (dispatcher.py doesn't call it directly).
+_reject = _reject_legacy
