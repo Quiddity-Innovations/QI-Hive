@@ -1,45 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>QI Hive — Standards Compliance</title>
 <style>
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background:#0d0f14; color:#e2e8f0; margin:0; padding:1.5rem; }
-  h1 { font-size: 1.3rem; margin: 0 0 1rem; border-bottom:1px solid #2a3348; padding-bottom:.6rem; }
-  .actions { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
-  button { background:#1e2535; color:#e2e8f0; border:1px solid #2a3348; border-radius:6px; padding:.45rem .9rem; font-size:.85rem; cursor:pointer; }
-  button:hover { border-color:#4f8ef7; color:#4f8ef7; }
-  button:disabled { opacity:.5; cursor:not-allowed; }
-  .status { font-size:.8rem; color:#64748b; margin-left:auto; align-self:center; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:.75rem; margin-bottom:1.5rem; }
-  .card { background:#161b26; border:1px solid #2a3348; border-radius:8px; padding:.75rem .9rem; cursor:pointer; }
-  .card:hover { border-color:#4f8ef7; }
-  .card.red    { border-left:4px solid #f87171; }
-  .card.yellow { border-left:4px solid #fbbf24; }
-  .card.green  { border-left:4px solid #4ade80; }
-  .card .name { font-weight:600; font-size:.95rem; margin-bottom:.4rem; }
-  .card .row  { display:flex; gap:.6rem; font-size:.78rem; color:#94a3b8; flex-wrap:wrap; }
-  .pill { padding:.1rem .45rem; border-radius:10px; background:#1e2535; }
-  .pill.fail { color:#f87171; }
-  .pill.warn { color:#fbbf24; }
-  .pill.pass { color:#4ade80; }
-  .pill.fixed { color:#60a5fa; }
-  .pill.disp  { color:#a78bfa; }
-  table { width:100%; border-collapse:collapse; font-size:.83rem; }
-  th, td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid #2a3348; vertical-align:top; }
-  th { color:#94a3b8; font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; }
-  tr.fail   td { background: rgba(248,113,113,.08); }
-  tr.warn   td { background: rgba(251,191,36,.08); }
-  tr.fixed  td { background: rgba(96,165,250,.08); }
-  .muted { color:#64748b; }
-  details { background:#161b26; border:1px solid #2a3348; border-radius:8px; padding:.6rem .9rem; margin-bottom:.5rem; }
-  details summary { cursor:pointer; font-weight:600; }
-  code { font-family: Consolas, monospace; font-size: .78rem; color:#94a3b8; }
-  .meta { font-size:.75rem; color:#64748b; margin-top:.25rem; }
+  .qi-compliance-wrap { font-family: 'Segoe UI', system-ui, sans-serif; }
+  .qi-compliance-wrap .actions { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .qi-compliance-wrap button { background:#1e2535; color:#e2e8f0; border:1px solid #2a3348; border-radius:6px; padding:.45rem .9rem; font-size:.85rem; cursor:pointer; }
+  .qi-compliance-wrap button:hover { border-color:#4f8ef7; color:#4f8ef7; }
+  .qi-compliance-wrap button:disabled { opacity:.5; cursor:not-allowed; }
+  .qi-compliance-wrap .status { font-size:.8rem; color:#64748b; margin-left:auto; align-self:center; }
+  .qi-compliance-wrap .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:.75rem; margin-bottom:1.5rem; }
+  .qi-compliance-wrap .card-qi { background:#161b26; border:1px solid #2a3348; border-radius:8px; padding:.75rem .9rem; cursor:pointer; }
+  .qi-compliance-wrap .card-qi:hover { border-color:#4f8ef7; }
+  .qi-compliance-wrap .card-qi.red    { border-left:4px solid #f87171; }
+  .qi-compliance-wrap .card-qi.yellow { border-left:4px solid #fbbf24; }
+  .qi-compliance-wrap .card-qi.green  { border-left:4px solid #4ade80; }
+  .qi-compliance-wrap .card-qi .name { font-weight:600; font-size:.95rem; margin-bottom:.4rem; }
+  .qi-compliance-wrap .card-qi .row  { display:flex; gap:.6rem; font-size:.78rem; color:#94a3b8; flex-wrap:wrap; }
+  .qi-compliance-wrap .pill { padding:.1rem .45rem; border-radius:10px; background:#1e2535; }
+  .qi-compliance-wrap .pill.fail { color:#f87171; }
+  .qi-compliance-wrap .pill.warn { color:#fbbf24; }
+  .qi-compliance-wrap .pill.pass { color:#4ade80; }
+  .qi-compliance-wrap .pill.fixed { color:#60a5fa; }
+  .qi-compliance-wrap .pill.disp  { color:#a78bfa; }
+  .qi-compliance-wrap table { width:100%; border-collapse:collapse; font-size:.83rem; }
+  .qi-compliance-wrap th, .qi-compliance-wrap td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid #2a3348; vertical-align:top; }
+  .qi-compliance-wrap th { color:#94a3b8; font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; }
+  .qi-compliance-wrap tr.fail   td { background: rgba(248,113,113,.08); }
+  .qi-compliance-wrap tr.warn   td { background: rgba(251,191,36,.08); }
+  .qi-compliance-wrap tr.fixed  td { background: rgba(96,165,250,.08); }
+  .qi-compliance-wrap .muted { color:#64748b; }
+  .qi-compliance-wrap details { background:#161b26; border:1px solid #2a3348; border-radius:8px; padding:.6rem .9rem; margin-bottom:.5rem; }
+  .qi-compliance-wrap details summary { cursor:pointer; font-weight:600; }
+  .qi-compliance-wrap code { font-family: Consolas, monospace; font-size: .78rem; color:#94a3b8; }
+  .qi-compliance-wrap .meta { font-size:.75rem; color:#64748b; margin-top:.25rem; }
 </style>
-</head>
-<body>
-<h1>QI Hive — Standards Compliance <span class="status" id="updated"></span></h1>
+
+<div class="qi-compliance-wrap">
+<h1 class="mb-3">QI Hive &mdash; Standards Compliance <span class="status" id="updated"></span></h1>
 
 <div class="actions">
   <button onclick="runScan('fast')" id="b-fast">Run fast scan (auto-fix on)</button>
@@ -53,11 +47,9 @@
 
 <h2 style="font-size:1rem; margin:1.5rem 0 .75rem; color:#94a3b8;">Recent activity (last 50 entries)</h2>
 <div id="recent"></div>
+</div>
 
 <script>
-const BRAIN = location.origin.replace(/:\d+$/, ':9010');  // assume Brain on same host
-const PROXY = '';  // dashboard proxy at /api/compliance/*
-
 async function fetchJSON(path) {
   const r = await fetch(path);
   if (!r.ok) throw new Error(path + ' returned ' + r.status);
@@ -70,7 +62,7 @@ function renderGrid(projects) {
   projects.sort((a,b) => a.project_id.localeCompare(b.project_id));
   for (const p of projects) {
     const card = document.createElement('div');
-    card.className = 'card ' + p.overall;
+    card.className = 'card-qi ' + p.overall;
     card.onclick = () => showProject(p.project_id);
     card.innerHTML = `
       <div class="name">${p.project_id}</div>
@@ -150,6 +142,5 @@ async function showProject(pid) {
 }
 
 loadStatus();
+setInterval(loadStatus, 30000);
 </script>
-</body>
-</html>

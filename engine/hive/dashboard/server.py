@@ -19,7 +19,7 @@ from qi_brain_client import (
 )
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -981,11 +981,11 @@ def render_dashboard() -> str:
       </div>
     </div>
 
-    <!-- Claude usage strip (today + 30d) -->
+    <!-- Claude usage strip (today + 30d) — API list-price equivalents; MAX plan covers actual cost -->
     <div class="row mb-1">
       <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="small-box text-bg-primary">
-          <div class="inner"><h4>{tokens_today}</h4><p>Tokens Today</p></div>
+          <div class="inner"><h4>{tokens_today}</h4><p>Tokens Today <span class="opacity-75" style="font-size:.7rem">(fresh, ex-cache-reads)</span></p></div>
           <i class="small-box-icon bi bi-lightning-charge-fill"></i>
           <a href="/usage" class="small-box-footer text-white text-decoration-none">
             Details <i class="bi bi-arrow-right"></i>
@@ -994,7 +994,7 @@ def render_dashboard() -> str:
       </div>
       <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="small-box text-bg-success">
-          <div class="inner"><h4>{cost_today}</h4><p>Spend Today</p></div>
+          <div class="inner"><h4>{cost_today}</h4><p>API Equiv. Today <span class="opacity-75" style="font-size:.7rem">(MAX plan covers)</span></p></div>
           <i class="small-box-icon bi bi-currency-dollar"></i>
           <a href="/usage" class="small-box-footer text-white text-decoration-none">
             Details <i class="bi bi-arrow-right"></i>
@@ -1012,7 +1012,7 @@ def render_dashboard() -> str:
       </div>
       <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="small-box text-bg-warning">
-          <div class="inner"><h4>{cost_30}</h4><p>Spend (30d)</p></div>
+          <div class="inner"><h4>{cost_30}</h4><p>API Equiv. (30d) <span class="opacity-75" style="font-size:.7rem">(list-price)</span></p></div>
           <i class="small-box-icon bi bi-calendar-range"></i>
           <a href="/usage" class="small-box-footer text-dark text-decoration-none">
             Breakdown <i class="bi bi-arrow-right"></i>
@@ -2102,7 +2102,7 @@ def render_launcher() -> str:
 
     def status_badge(status: str) -> str:
         s = (status or "").lower()
-        if "production" in s or "active" in s and "dev" not in s and "paused" not in s:
+        if ("production" in s) or ("active" in s and "dev" not in s and "paused" not in s):
             cls = "text-bg-success"
         elif "dev" in s or "pilot" in s or "ready" in s:
             cls = "text-bg-primary"
@@ -2279,7 +2279,7 @@ def guide_page():
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title"><i class="bi bi-book me-2"></i>QI Claude Manager — Cheatsheet</h3>
-            <a href="/static/guide.md" class="btn btn-sm btn-outline-secondary">
+            <a href="/api/guide/raw" class="btn btn-sm btn-outline-secondary">
               <i class="bi bi-download me-1"></i>Raw .md
             </a>
           </div>
@@ -2303,6 +2303,12 @@ def guide_page():
         '<div class="markdown-body p-2">' + marked.parse(`{md_escaped}`) + '</div>';
     </script>"""
     return base_layout("Guide", content, "guide")
+
+
+@app.get("/api/guide/raw")
+def api_guide_raw():
+    text = GUIDE_FILE.read_text(encoding="utf-8") if GUIDE_FILE.exists() else "# Guide not found"
+    return Response(content=text, media_type="text/plain")
 
 # ── API: Status ───────────────────────────────────────────────────────────────
 
@@ -2477,6 +2483,12 @@ def render_tests() -> str:
             skipped = summary.get("skipped", 0)
             total   = summary.get("total", passed + failed + skipped)
 
+            if total != passed + failed + skipped:
+                log.warning(
+                    "tests total mismatch: %d != %d+%d+%d",
+                    total, passed, failed, skipped,
+                )
+
             p_pct = round((passed / total * 100) if total else 0)
             f_color = "danger" if failed else "success"
 
@@ -2610,6 +2622,9 @@ def render_tests() -> str:
           }});
         }});
     }}
+    setInterval(() => {{
+      if (document.visibilityState === 'visible') location.reload();
+    }}, 30000);
     </script>"""
 
 
@@ -3846,14 +3861,14 @@ def render_project(pid: str) -> str:
     try:
         if registry_path.exists():
             reg = json.loads(registry_path.read_text(encoding="utf-8"))
-            p = reg.get("projects", {}).get(pid.lower(), {})
+            p = next((x for x in reg.get("projects", []) if x.get("id", "").lower() == pid.lower()), {})
             services = p.get("services", []) or []
     except Exception:
         pass
 
     svc_rows = "".join(
         f"<tr><td><code>{s}</code></td>"
-        f"<td><button class='btn btn-sm btn-outline-secondary' disabled title='Coming in Session 06'>status</button></td></tr>"
+        f"<td><button class='btn btn-sm btn-outline-secondary' onclick=\"checkSvcStatus(this,'{s}')\">status</button></td></tr>"
         for s in services
     ) or '<tr><td colspan="2" class="text-muted">No services registered</td></tr>'
 
@@ -3911,12 +3926,49 @@ def render_project(pid: str) -> str:
         </dl></div>
       </div></div>
     </div>
+    <script>
+    function checkSvcStatus(btn, name) {{
+      btn.disabled = true;
+      btn.textContent = '...';
+      fetch('/api/services/' + encodeURIComponent(name) + '/status')
+        .then(r => r.json())
+        .then(d => {{
+          const s = d.status;
+          btn.textContent = s;
+          btn.className = s === 'running' ? 'btn btn-sm btn-success'
+                        : s === 'stopped' ? 'btn btn-sm btn-danger'
+                        : 'btn btn-sm btn-warning';
+          btn.disabled = false;
+        }})
+        .catch(() => {{ btn.textContent = 'err'; btn.disabled = false; }});
+    }}
+    </script>
     """
 
 
 @app.get("/project/{pid}", response_class=HTMLResponse)
 def project_page(pid: str):
     return base_layout(pid, render_project(pid), "dashboard")
+
+
+@app.get("/api/services/{name}/status")
+def api_service_status(name: str):
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["gsudo", r"C:\QIH\engine\bin\nssm.exe", "status", name],
+            capture_output=True, text=True, timeout=5,
+        )
+        raw = result.stdout.strip().lower()
+        if "service_running" in raw:
+            status = "running"
+        elif "service_stopped" in raw:
+            status = "stopped"
+        else:
+            status = "unknown"
+    except Exception:
+        status = "unknown"
+    return JSONResponse({"status": status, "service": name})
 
 
 # ── Project Status (Maia-style, 7 tabs) ──────────────────────────────────────
@@ -4288,22 +4340,45 @@ def render_usage() -> str:
       .chart-legend .sw {{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:middle; }}
     </style>
 
+    <!-- MAX-plan disclaimer: these are API list-price equivalents, not actual subscription cost -->
+    <div class="alert alert-info d-flex align-items-start mb-3" style="border-left:4px solid #0dcaf0">
+      <i class="bi bi-info-circle-fill fs-5 me-2 mt-1"></i>
+      <div class="small">
+        <strong>Estimates use Anthropic API list pricing.</strong>
+        You're on the <strong>Claude MAX plan</strong> — the figures below are <em>what this workload would cost via direct API access</em>, not what you actually pay. Your real monthly outlay is the flat MAX subscription. Use this page to track relative usage trends, plan-tier sizing, and savings from local offload / batch — not as a bill.
+        <br>
+        <strong>Tokens Today</strong> excludes cache re-reads (same prefix loaded each turn — they don't represent fresh consumption). The cache-read volume is shown separately under each card so you can see what the model is actually re-loading.
+      </div>
+    </div>
+
     <!-- Row 1: actual spend -->
     <div class="row row-compact mb-1">
       <div class="col-md-3"><div class="small-box text-bg-primary">
-        <div class="inner"><h4>{t['tokens']/1_000_000:.1f}M</h4><p>Tokens Today</p></div>
+        <div class="inner">
+          <h4>{t['tokens']/1_000_000:.1f}M</h4>
+          <p>Tokens Today <span class="opacity-75" style="font-size:.65rem">(+ {t.get('cache_reads',0)/1_000_000:.0f}M cache re-reads)</span></p>
+        </div>
         <i class="small-box-icon bi bi-lightning-charge-fill"></i>
       </div></div>
       <div class="col-md-3"><div class="small-box text-bg-success">
-        <div class="inner"><h4>${t['cost_usd']:.2f}</h4><p>Spend Today</p></div>
+        <div class="inner">
+          <h4>${t['cost_usd']:.2f}</h4>
+          <p>API Equiv. Today <span class="opacity-75" style="font-size:.65rem">(MAX plan covers this)</span></p>
+        </div>
         <i class="small-box-icon bi bi-currency-dollar"></i>
       </div></div>
       <div class="col-md-3"><div class="small-box text-bg-info">
-        <div class="inner"><h4>${t7['cost_usd']:,.0f}</h4><p>Spend (7d)</p></div>
+        <div class="inner">
+          <h4>${t7['cost_usd']:,.0f}</h4>
+          <p>API Equiv. (7d) <span class="opacity-75" style="font-size:.65rem">(list-price)</span></p>
+        </div>
         <i class="small-box-icon bi bi-calendar-week"></i>
       </div></div>
       <div class="col-md-3"><div class="small-box text-bg-warning">
-        <div class="inner"><h4>${t30['cost_usd']:,.0f}</h4><p>Spend (30d)</p></div>
+        <div class="inner">
+          <h4>${t30['cost_usd']:,.0f}</h4>
+          <p>API Equiv. (30d) <span class="opacity-75" style="font-size:.65rem">(list-price)</span></p>
+        </div>
         <i class="small-box-icon bi bi-calendar-range"></i>
       </div></div>
     </div>
@@ -5651,7 +5726,8 @@ def _brain_request(method: str, path: str, body: dict | None = None, timeout: fl
 def compliance_page():
     """Standards-compliance UI — talks to /api/compliance/* (proxied to Brain)."""
     p = Path(__file__).parent / "static" / "compliance.html"
-    return p.read_text(encoding="utf-8")
+    content = p.read_text(encoding="utf-8")
+    return base_layout("Compliance", content, "compliance")
 
 
 @app.get("/api/compliance/status")
