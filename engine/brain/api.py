@@ -29,6 +29,10 @@ Hive agent growth loop:
     GET  /api/agent/{id}/growth    → recent growth entries
     GET  /api/agents               → list all registered hive agents
 
+Agent heartbeats (War Room Section 9):
+    POST /api/agent/heartbeat      → record a heartbeat for any QI agent
+    GET  /api/agents/last_seen     → latest heartbeat per War Room agent
+
 Run:
     python qi_brain_api.py
     uvicorn qi_brain_api:app --host 0.0.0.0 --port 9010 --reload
@@ -879,6 +883,73 @@ async def list_agents(active_only: bool = True):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Agent Heartbeats — per-agent last-seen tracking for War Room Section 9
+# Writers: SessionStart/SubagentStop hooks, dispatch approve route, future
+#          Claude Work / Claude Chat integration.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_WARROOM_AGENTS = ("claude_code", "claude_work", "cowork", "claude_chat")
+
+
+class HeartbeatIn(BaseModel):
+    agent_id:    str
+    agent_kind:  str                   # interactive | subagent | service
+    event:       str                   # start | tool_call | stop | heartbeat
+    project_id:  Optional[str] = None
+    session_ref: Optional[str] = None
+    model:       Optional[str] = None
+    meta:        Optional[dict] = None
+
+
+@app.post("/api/agent/heartbeat", status_code=201)
+async def post_heartbeat(req: HeartbeatIn):
+    """Record a heartbeat for any QI agent.
+
+    Any writer (hook, dashboard, CoWork webhook) can call this endpoint.
+    The row is inserted and the new row id is returned so callers can
+    correlate follow-up events.
+    """
+    meta_json = json.dumps(req.meta) if req.meta else None
+    with open_brain_db() as conn:
+        cur = conn.execute(
+            """INSERT INTO agent_heartbeats
+               (agent_id, agent_kind, event, project_id, session_ref, model, meta_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (req.agent_id, req.agent_kind, req.event,
+             req.project_id, req.session_ref, req.model, meta_json),
+        )
+        row_id = cur.lastrowid
+        conn.commit()
+    return {"status": "ok", "id": row_id}
+
+
+@app.get("/api/agents/last_seen")
+async def agents_last_seen():
+    """Return the most-recent heartbeat per War Room agent.
+
+    Only the four war-room-tracked agents are queried. Agents with zero
+    heartbeats are omitted — the dashboard renders 'never' for missing entries.
+    """
+    sql = """
+        SELECT h.agent_id,
+               h.ts         AS last_ts,
+               h.project_id AS last_project,
+               h.model      AS last_model,
+               h.event      AS last_event
+        FROM agent_heartbeats h
+        INNER JOIN (
+            SELECT agent_id, MAX(ts) AS max_ts
+            FROM agent_heartbeats
+            WHERE agent_id IN ('claude_code','claude_work','cowork','claude_chat')
+            GROUP BY agent_id
+        ) m ON m.agent_id = h.agent_id AND m.max_ts = h.ts
+    """
+    with open_brain_db() as conn:
+        rows = conn.execute(sql).fetchall()
+    return {"agents": [dict(r) for r in rows]}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CoWork Dispatch — bi-directional task/proposal channel
 # Sources: cowork | claude_code | renne | maia | naya
 # Types:   report | brief | decision | task | review | proposal | request
@@ -990,6 +1061,19 @@ async def review_dispatch(dispatch_id: str, req: DispatchReview):
             conn.execute(
                 "UPDATE dispatches SET apply_run_id=? WHERE dispatch_id=?",
                 (run_id, dispatch_id)
+            )
+            # Heartbeat: CoWork is the service that processes approved dispatches.
+            # Writing here gives the War Room real data even before Phase 2 hooks land.
+            _dispatch_row = conn.execute(
+                "SELECT project_id FROM dispatches WHERE dispatch_id=?", (dispatch_id,)
+            ).fetchone()
+            _proj = _dispatch_row["project_id"] if _dispatch_row else None
+            conn.execute(
+                """INSERT INTO agent_heartbeats
+                   (agent_id, agent_kind, event, project_id, meta_json)
+                   VALUES (?, ?, ?, ?, ?)""",
+                ("cowork", "service", "stop", _proj,
+                 json.dumps({"dispatch_id": dispatch_id})),
             )
 
         conn.commit()

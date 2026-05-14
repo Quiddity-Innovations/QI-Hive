@@ -5517,8 +5517,15 @@ def render_warroom() -> str:
     inbox_items = inbox.get("entries", []) if isinstance(inbox, dict) else []
 
     # ── Agents panel (Claude Code, Claude Work, CoWork, Claude Chat) ──
-    # Infer "last seen" per agent_id from project.last_session/last_active.
-    # Without a dedicated sessions endpoint we aggregate from snapshot.
+    # Data comes from agent_heartbeats via GET /api/agents/last_seen.
+    # Each agent gets its own real timestamp instead of the same "most recent
+    # project" value being applied to every card.
+    last_seen_data = _brain_get("/api/agents/last_seen") or {}
+    last_seen_by_agent = {
+        a["agent_id"]: a
+        for a in last_seen_data.get("agents", [])
+    }
+
     agent_types = [
         ("claude_code",  "Claude Code",  "bi-terminal",      "primary"),
         ("claude_work",  "Claude Work",  "bi-window-desktop","info"),
@@ -5527,25 +5534,31 @@ def render_warroom() -> str:
     ]
     agent_cards = ""
     for aid, label, icon, color in agent_types:
-        # Find most recent project.last_active that mentions this agent — best effort
-        last_touch = "never"
-        active_proj = "-"
-        for p in sorted(projects, key=lambda x: x.get("last_active","") or "", reverse=True):
-            if p.get("last_active"):
-                last_touch = (p["last_active"] or "")[:16]
-                active_proj = p.get("display_name", p.get("project_id","?"))
-                break
+        seen = last_seen_by_agent.get(aid)
+        if seen:
+            last_touch  = (seen.get("last_ts") or "")[:16] or "never"
+            active_proj = seen.get("last_project") or "-"
+            last_event  = seen.get("last_event") or "-"
+            last_model  = seen.get("last_model") or ""
+            card_color  = color
+            sub_line    = f'on: {active_proj} &nbsp;<span class="text-muted">({last_event})</span>'
+            if last_model:
+                sub_line += f'<br/><span class="text-muted small">model: {last_model}</span>'
+        else:
+            last_touch  = "never"
+            card_color  = "secondary"
+            sub_line    = '<span class="text-muted">no heartbeats recorded</span>'
         agent_cards += f"""
         <div class="col-md-6 col-xl-3 mb-3">
-          <div class="card h-100 border-start border-4 border-{color}">
+          <div class="card h-100 border-start border-4 border-{card_color}">
             <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-start">
-                <h5 class="mb-1"><i class="bi {icon} me-2 text-{color}"></i>{label}</h5>
-                <span class="badge text-bg-{color}">agent</span>
+                <h5 class="mb-1"><i class="bi {icon} me-2 text-{card_color}"></i>{label}</h5>
+                <span class="badge text-bg-{card_color}">agent</span>
               </div>
               <div class="small text-muted mb-1">ID: <code>{aid}</code></div>
               <div class="small">Last active: <strong>{last_touch}</strong></div>
-              <div class="small text-muted">on: {active_proj}</div>
+              <div class="small">{sub_line}</div>
             </div>
           </div>
         </div>"""
