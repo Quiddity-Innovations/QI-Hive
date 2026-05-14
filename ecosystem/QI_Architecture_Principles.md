@@ -4,7 +4,7 @@
 *This document is the architectural constitution of the QI platform.*
 *It supersedes convenience, shortcuts, and personal preference.*
 *Every project, every session, every decision must honor these principles.*
-*Last updated: 2026-04-05*
+*Last updated: 2026-05-13*
 
 ---
 
@@ -21,7 +21,7 @@ one module at a time.
 
 ---
 
-## The Five Laws
+## The Six Laws
 
 ### Law 1 — The Registry is the Source of Truth
 
@@ -111,6 +111,26 @@ When changing a port or endpoint:
 2. Then update the code
 
 **Why:** The registry drives CORS configs, monitoring, health checks, and eventually service discovery in the unified app. A stale registry is a silent failure waiting to happen.
+
+---
+
+### Law 6 — Owner Override and Best-Practice Surfacing
+
+Architectural and engineering decisions made by Claude, sub-agents, or automation are **always provisional**. Renne (the QI owner) has final, binding authority on every decision — including those already shipped, already documented, or already validated by an agent review pass. An owner override does not require justification and does not need to be reconciled against prior agent recommendations: it simply replaces them.
+
+In exchange, agents owe Renne **proactive best-practice surfacing**:
+
+- The `hive-architect` MUST flag when a proposed approach — whether from Renne, Claude, or another agent — diverges from established industry best practice. State the divergence in one or two sentences, cite the standard practice, and note the trade-off. Do this even when the question put to you is narrower.
+- The `hive-inspector` MUST flag the same in code review (not only against QI Standards but against industry norms — testing pyramids, error handling, security defaults, observability conventions).
+- Other agents (`hive-builder`, `hive-ops`, `hive-scout`, `hive-tester`, `hive-scribe`) MUST surface any best-practice concern they notice in passing, even outside their primary mandate. They are not required to research it deeply; flagging is enough.
+
+Once Renne has heard the flag and chosen, that choice is binding. Agents do not relitigate. The next agent in the chain treats the owner's decision as the new baseline and operates from there.
+
+**Why:** The agentic system is a thinking partner, not a committee. Best-practice surfacing protects Renne from drift and silent compromises; owner override protects velocity and aligns the system with the business context only Renne carries. Without both halves, the system either rubber-stamps or stalls.
+
+**Violations:**
+- Agent argues against an owner override after Renne has decided. Result: time lost, partnership eroded.
+- Agent silently implements a sub-optimal approach because Renne didn't explicitly ask for best practice. Result: technical debt that Renne never agreed to.
 
 ---
 
