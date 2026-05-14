@@ -93,9 +93,6 @@
       "description": "File intelligence engine — MERGED into Naya (C:\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
       "path": "C:\\NAYA\\filehq",
       "original_path": "C:\\FileHQ",
-      "paths": {
-        "logs": "C:\\FileHQ\\LOGS"
-      },
       "github": "TBD",
       "status": "merged_into_naya",
       "primary_language": "Python",
@@ -147,18 +144,21 @@
       "services": [
         {
           "name": "maia_server",
+          "nssm_name": "QI_MaiaBot",
           "port": 8001,
           "type": "FastAPI",
           "managed_by": "NSSM"
         },
         {
           "name": "maia_gradio",
+          "nssm_name": "QI_MaiaDemoTunnel",
           "port": 7860,
           "type": "Gradio",
           "managed_by": "NSSM"
         },
         {
           "name": "maia_tunnel",
+          "nssm_name": "QI_MaiaTunnel",
           "port": null,
           "type": "Cloudflare Tunnel",
           "managed_by": "NSSM"

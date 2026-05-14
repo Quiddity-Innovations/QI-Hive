@@ -36,7 +36,11 @@ brain/inbox/processed/
 brain/inbox/errors/
 
 # UNIVERSAL→QIH Phase 1 migration — mirrored historical content (keep on disk, not in git)
-shared/documentation/
+# Allow .md design docs; ignore only binary/ephemeral subtrees
+shared/documentation/session_summaries/
+shared/documentation/*.docx
+shared/documentation/*.py
+shared/documentation/*.txt
 shared/training/
 shared/sessions_universal/
 .claude_universal/

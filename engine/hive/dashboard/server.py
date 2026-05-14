@@ -4111,11 +4111,24 @@ def render_project(pid: str) -> str:
     except Exception:
         pass
 
-    svc_rows = "".join(
-        f"<tr><td><code>{s}</code></td>"
-        f"<td><button class='btn btn-sm btn-outline-secondary' onclick=\"checkSvcStatus(this,'{s}')\">status</button></td></tr>"
-        for s in services
-    ) or '<tr><td colspan="2" class="text-muted">No services registered</td></tr>'
+    def _svc_row(s: dict) -> str:
+        label = s.get("name", "?")
+        nssm = s.get("nssm_name", "")
+        port = s.get("port")
+        port_badge = f' <span class="badge bg-light text-dark border">:{port}</span>' if port else ""
+        if nssm and nssm.startswith("QI_"):
+            btn = (
+                f'<button class="btn btn-sm btn-outline-secondary" '
+                f'onclick="checkSvcStatus(this,\'{nssm}\')" '
+                f'data-status-for="{nssm}">status</button>'
+                f'<span class="ms-2 badge bg-secondary" data-status-label="{nssm}"></span>'
+            )
+        else:
+            btn = '<button class="btn btn-sm btn-outline-secondary" disabled title="no NSSM service registered">status</button>'
+        return f"<tr><td><code>{label}</code>{port_badge}</td><td>{btn}</td></tr>"
+
+    svc_rows = "".join(_svc_row(s) for s in services) or \
+        '<tr><td colspan="2" class="text-muted">No services registered</td></tr>'
 
     sessions = status.get("session_log", [])
     sess_rows = "".join(
@@ -4172,20 +4185,36 @@ def render_project(pid: str) -> str:
       </div></div>
     </div>
     <script>
-    function checkSvcStatus(btn, name) {{
+    async function checkSvcStatus(btn, name) {{
       btn.disabled = true;
-      btn.textContent = '...';
-      fetch('/api/services/' + encodeURIComponent(name) + '/status')
-        .then(r => r.json())
-        .then(d => {{
-          const s = d.status;
-          btn.textContent = s;
-          btn.className = s === 'running' ? 'btn btn-sm btn-success'
-                        : s === 'stopped' ? 'btn btn-sm btn-danger'
-                        : 'btn btn-sm btn-warning';
+      btn.textContent = 'checking...';
+      const badge = document.querySelector('[data-status-label="' + name + '"]');
+      try {{
+        const r = await fetch('/api/services/' + encodeURIComponent(name) + '/status');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        const s = d.status || 'unknown';
+        if (badge) {{
+          badge.textContent = s;
+          badge.className = 'ms-2 badge ' + (
+            s === 'running' ? 'bg-success' :
+            s === 'stopped' ? 'bg-danger' :
+            'bg-secondary'
+          );
+        }}
+        btn.className = s === 'running' ? 'btn btn-sm btn-success'
+                      : s === 'stopped' ? 'btn btn-sm btn-danger'
+                      : 'btn btn-sm btn-warning';
+      }} catch(e) {{
+        btn.textContent = 'error';
+        if (badge) {{ badge.textContent = ''; }}
+      }} finally {{
+        setTimeout(() => {{
           btn.disabled = false;
-        }})
-        .catch(() => {{ btn.textContent = 'err'; btn.disabled = false; }});
+          btn.textContent = 'status';
+          btn.className = 'btn btn-sm btn-outline-secondary';
+        }}, 2000);
+      }}
     }}
     </script>
     """
