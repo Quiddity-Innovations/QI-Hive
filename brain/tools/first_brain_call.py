@@ -6,7 +6,7 @@ sys.path.insert(0, 'C:/UNIVERSAL/qi_brain')
 
 import httpx
 
-BRAIN = 'http://localhost:9010'
+BRAIN = 'http://localhost:9011'
 
 async def main():
     async with httpx.AsyncClient(timeout=30) as client:

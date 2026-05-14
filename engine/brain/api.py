@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-QI Brain — FastAPI server at port 9010.
+QI Brain — FastAPI server at port 9011.
 
 All brain logic lives here. The MCP server (qi_brain_mcp.py) is a thin
 stdio client that forwards every tool call to these endpoints.
@@ -35,7 +35,7 @@ Agent heartbeats (War Room Section 9):
 
 Run:
     python qi_brain_api.py
-    uvicorn qi_brain_api:app --host 0.0.0.0 --port 9010 --reload
+    uvicorn qi_brain_api:app --host 0.0.0.0 --port 9011 --reload
 """
 from __future__ import annotations
 import json
@@ -104,7 +104,7 @@ BRAIN_BUILD   = "2026-04-20"
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "qi_brain", "port": 9010, "version": BRAIN_VERSION}
+    return {"status": "ok", "service": "qi_brain", "port": 9011, "version": BRAIN_VERSION}
 
 
 @app.get("/version")
@@ -121,7 +121,7 @@ async def info():
         "service":      "qi_brain",
         "version":      BRAIN_VERSION,
         "build":        BRAIN_BUILD,
-        "port":         9010,
+        "port":         9011,
         "python":       sys.version.split()[0],
         "platform":     platform.system(),
         "capabilities": [
@@ -1568,4 +1568,4 @@ async def compliance_run(run_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api:app", host="0.0.0.0", port=9010, reload=False)
+    uvicorn.run("api:app", host="0.0.0.0", port=9011, reload=False)

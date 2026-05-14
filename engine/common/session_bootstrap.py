@@ -6,7 +6,7 @@ Emits JSON to stdout per Claude Code hook protocol:
                           "additionalContext": "<text>"}}
 
 Combines:
-  1. QI Brain context (qi.get_context) if Brain API is up at :9010
+  1. QI Brain context (qi.get_context) if Brain API is up at :9011
   2. C:\\QIH\\docs\\LATEST.md (cross-session broadcast board)
   3. Also emits hive_report session_start (fire-and-forget)
 
@@ -20,7 +20,7 @@ from __future__ import annotations
 import argparse, json, sys, subprocess, urllib.request, urllib.error
 from pathlib import Path
 
-BRAIN_URL = "http://127.0.0.1:9010"
+BRAIN_URL = "http://127.0.0.1:9011"
 LATEST_MD = Path(r"C:\QIH\docs\LATEST.md")
 HIVE_REPORT = Path(r"C:\QIH\engine\common\hive_report.py")
 

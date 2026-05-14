@@ -22,7 +22,7 @@ from docx import Document
 
 SUMMARY_DIR = Path(r"C:\UNIVERSAL\DOCUMENTATION\Session_Summaries")
 BRAIN_DB    = Path(r"C:\QIH\data\qi_brain.db")
-BRAIN_URL   = "http://localhost:9010"
+BRAIN_URL   = "http://localhost:9011"
 
 # Filename prefix → brain project_id
 PREFIX_MAP = {

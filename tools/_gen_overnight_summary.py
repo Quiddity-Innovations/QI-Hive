@@ -55,7 +55,7 @@ for svc, status in [
     ("QI_Dashboard (:8600)", "RUNNING — autonomous"),
     ("QI_HiveIngest", "RUNNING"),
     ("QI_Elevate (broker)", "RUNNING — AppExit=Restart + watchdog"),
-    ("QI_BrainAPI (:9010)", "RUNNING"),
+    ("QI_BrainAPI (:9011)", "RUNNING"),
     ("QI_ElevateWatchdog (Task Scheduler)", "registered, 1-min cadence, SYSTEM"),
 ]:
     row = tbl.add_row().cells

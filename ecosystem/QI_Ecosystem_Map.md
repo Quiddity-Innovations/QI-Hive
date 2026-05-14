@@ -163,7 +163,7 @@ All projects share `C:\QI\nssm.exe`. **Every service must have a unique name.**
 | `QI_NEXUS` | NEXUS | `main.py` (port 8010) |
 | `QI_Dashboard` | Universal | dashboard server (port 9000) |
 | `QI_DashboardTunnel` | Universal | Cloudflare tunnel (dashboard) |
-| `QI_BrainAPI` | Universal | `qi_brain` FastAPI (port 9010) |
+| `QI_BrainAPI` | Universal | `qi_brain` FastAPI (port 9011) |
 
 **Rule:** All NSSM services MUST be prefixed `QI_`. Format: `QI_<Project><Role>`. Never duplicate or reuse a service name. Check `QI_Service_Registry.md` before creating any new service.
 

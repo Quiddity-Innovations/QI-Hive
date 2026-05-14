@@ -17,7 +17,7 @@ qi_brain_entry = {
     'primary_language': 'Python',
     'tier': 'backbone',
     'ports': {
-        'api': {'current': 9010, 'block': '9000-9099', 'notes': 'QI Orchestration block'},
+        'api': {'current': 9011, 'block': '9000-9099', 'notes': 'QI Orchestration block'},
         'mcp': {'current': 'stdio', 'block': 'N/A', 'notes': 'stdio MCP — no port'}
     },
     'family': 'orchestration',
@@ -47,7 +47,7 @@ else:
 
 # Update shared_infrastructure
 si = d.get('shared_infrastructure', {})
-si['qi_brain'] = r'C:\UNIVERSAL\qi_brain\qi_brain.db — shared knowledge DB (backbone tier, :9010)'
+si['qi_brain'] = r'C:\UNIVERSAL\qi_brain\qi_brain.db — shared knowledge DB (backbone tier, :9011)'
 d['shared_infrastructure'] = si
 
 with open(path, 'w', encoding='utf-8') as f:

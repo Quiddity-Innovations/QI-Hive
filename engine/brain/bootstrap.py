@@ -190,7 +190,7 @@ async def step_seed_config():
         ("context_days",    "14",                 "Days of decisions to include in get_context"),
         ("backup_enabled",  "true",               "Enable nightly backups"),
         ("backup_retain",   "30",                 "Days of backup retention"),
-        ("api_port",        "9010",               "FastAPI server port"),
+        ("api_port",        "9011",               "FastAPI server port"),
         ("version",         "001",                "Brain plan version"),
     ]
     with open_brain_db() as conn:
@@ -223,7 +223,7 @@ async def step_seed_projects():
             "  (project_id, display_name, tagline, path, api_port, ui_port, tier) "
             "VALUES ('qi_brain', 'QI Brain', "
             "  'Shared knowledge substrate for the QI ecosystem', "
-            "  'C:/QIH/engine/brain', 9010, NULL, 'backbone')"
+            "  'C:/QIH/engine/brain', 9011, NULL, 'backbone')"
         )
         for proj in projects_list:
             pid   = proj.get("id") or proj.get("project_id", "unknown")

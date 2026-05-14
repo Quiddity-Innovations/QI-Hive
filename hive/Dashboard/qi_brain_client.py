@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Thin client for QI Brain API (port 9010).
+Thin client for QI Brain API (port 9011).
 Dashboard uses this to pull live hive state — agents, sessions, decisions.
 Falls back gracefully if Brain is offline.
 """
@@ -9,7 +9,7 @@ import urllib.request
 import urllib.error
 from typing import Any
 
-BRAIN_URL = "http://localhost:9010"
+BRAIN_URL = "http://localhost:9011"
 TIMEOUT   = 3  # seconds — dashboard must stay fast
 
 

@@ -2,7 +2,7 @@
 """
 QI Hive Dashboard — port 8600
 AdminLTE v4 + Bootstrap 5 + SortableJS kanban
-Powered by QI Brain (port 9010) as the hive's nervous system.
+Powered by QI Brain (port 9011) as the hive's nervous system.
 """
 import html
 import json
@@ -128,7 +128,7 @@ PAGE_READMES: dict[str, str] = {
     "hive": """
         <p><strong>The Hive</strong> is QI Brain's control panel — the intelligence layer that connects all QI projects.</p>
         <ul class="mb-2">
-          <li><strong>Brain status</strong> — shows whether QI Brain (port 9010) is online. If offline, agents fall back gracefully but session logging and cross-project memory are suspended.</li>
+          <li><strong>Brain status</strong> — shows whether QI Brain (port 9011) is online. If offline, agents fall back gracefully but session logging and cross-project memory are suspended.</li>
           <li><strong>Stats row</strong> — active projects, logged decisions, tracked features, and sessions recorded in the Brain database.</li>
           <li><strong>Agent cards</strong> — profiles for each of the 7 Hive agents. Each agent has a speciality (architecture, building, testing, etc.), a growth log, and a list of known patterns. Click an agent card to see its full profile.</li>
           <li><strong>Ecosystem snapshot</strong> — a live read from QI Brain of the current state of every registered project.</li>
@@ -1549,7 +1549,7 @@ def render_hive() -> str:
     bstatus = get_brain_status()
 
     brain_badge = (
-        '<span class="badge text-bg-success"><i class="bi bi-circle-fill me-1"></i>Online :9010</span>'
+        '<span class="badge text-bg-success"><i class="bi bi-circle-fill me-1"></i>Online :9011</span>'
         if online else
         '<span class="badge text-bg-danger"><i class="bi bi-circle-fill me-1"></i>Offline</span>'
     )
@@ -1706,7 +1706,7 @@ def render_hive() -> str:
     <div class="row mb-3">
       <div class="col-12 d-flex justify-content-between align-items-center">
         <div><i class="bi bi-cpu me-2 text-primary"></i><strong>QI Brain</strong> {brain_badge}</div>
-        <a href="http://127.0.0.1:9010/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
+        <a href="http://127.0.0.1:9011/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
           <i class="bi bi-box-arrow-up-right me-1"></i>Brain API Docs
         </a>
       </div>
@@ -1822,7 +1822,7 @@ def render_hive() -> str:
     <script>
     // ── Poller status ──────────────────────────────────────────────────────────
     function loadPollerStatus() {{
-      fetch('http://127.0.0.1:9010/api/poll/status')
+      fetch('http://127.0.0.1:9011/api/poll/status')
         .then(r => r.json()).then(d => {{
           const el = document.getElementById('pollerStatus');
           const lr = d.last_result || {{}};
@@ -1863,7 +1863,7 @@ def render_hive() -> str:
       const btn = event.target;
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Polling…';
-      fetch('http://127.0.0.1:9010/api/poll/trigger', {{method:'POST'}})
+      fetch('http://127.0.0.1:9011/api/poll/trigger', {{method:'POST'}})
         .then(r => r.json()).then(d => {{
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Poll Now';
@@ -1893,7 +1893,7 @@ def render_hive() -> str:
       const el = document.getElementById('distillResult');
       el.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Distilling…';
 
-      fetch('http://127.0.0.1:9010/api/distill', {{
+      fetch('http://127.0.0.1:9011/api/distill', {{
         method: 'POST',
         headers: {{'Content-Type':'application/json'}},
         body: JSON.stringify({{
@@ -3728,7 +3728,7 @@ async def api_dispatch(request: Request):
             # Forward to Brain inbox
             async with httpx.AsyncClient(timeout=10) as client:
                 r = await client.post(
-                    "http://127.0.0.1:9010/api/inbox",
+                    "http://127.0.0.1:9011/api/inbox",
                     json={**body, "source": source}
                 )
                 result["brain_response"] = r.json()
@@ -5207,7 +5207,7 @@ def _brain_patch(path: str, payload: dict) -> dict | None:
         import urllib.request, json as _json
         data = _json.dumps(payload).encode()
         req  = urllib.request.Request(
-            f"http://127.0.0.1:9010{path}", data=data,
+            f"http://127.0.0.1:9011{path}", data=data,
             headers={"Content-Type": "application/json"}, method="PATCH"
         )
         with urllib.request.urlopen(req, timeout=3) as r:
@@ -5221,7 +5221,7 @@ def _brain_post_dispatch(payload: dict) -> dict | None:
     try:
         data = _json.dumps(payload).encode()
         req  = urllib.request.Request(
-            "http://127.0.0.1:9010/api/dispatch", data=data,
+            "http://127.0.0.1:9011/api/dispatch", data=data,
             headers={"Content-Type": "application/json"}, method="POST"
         )
         with urllib.request.urlopen(req, timeout=3) as r:
@@ -5233,7 +5233,7 @@ def _brain_post_dispatch(payload: dict) -> dict | None:
 def _get_dispatches(status_filter: str | None = None) -> list[dict]:
     import urllib.request, json as _json
     try:
-        url = "http://127.0.0.1:9010/api/dispatches?limit=100"
+        url = "http://127.0.0.1:9011/api/dispatches?limit=100"
         if status_filter:
             url += f"&status={status_filter}"
         with urllib.request.urlopen(url, timeout=3) as r:
@@ -5445,7 +5445,7 @@ def _brain_get(path: str, params: dict | None = None) -> dict | None:
     import time as _t
     try:
         import urllib.request, urllib.parse, json as _json
-        url = f"http://127.0.0.1:9010{path}"
+        url = f"http://127.0.0.1:9011{path}"
         if params:
             url += "?" + urllib.parse.urlencode({k:v for k,v in params.items() if v is not None})
         now = _t.time()
@@ -5615,7 +5615,7 @@ def render_brain() -> str:
       <h1 class="fw-bold"><i class="bi bi-cpu me-2 text-info"></i>QI Brain</h1>
       <p class="text-muted mb-0">
         Shared memory, decisions, and ecosystem state for every QI project.
-        Brain API v{ver} on :9010 ·
+        Brain API v{ver} on :9011 ·
         Poller <span class="badge text-bg-{poll_badge}">{poll_txt}</span>
       </p>
     </div>
@@ -5767,7 +5767,7 @@ def render_brain() -> str:
       if (!q) {{ out.innerHTML = '<span class="text-muted">Empty query.</span>'; return; }}
       out.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Searching…';
       try {{
-        const r = await fetch('http://127.0.0.1:9010/api/search_memory', {{
+        const r = await fetch('http://127.0.0.1:9011/api/search_memory', {{
           method: 'POST', headers: {{'Content-Type':'application/json'}},
           body: JSON.stringify({{query: q, collection: col, n: 10}})
         }});
@@ -6021,7 +6021,7 @@ def warroom_page():
 import urllib.request as _ureq
 import urllib.error as _uerr
 
-_BRAIN = "http://127.0.0.1:9010"
+_BRAIN = "http://127.0.0.1:9011"
 
 
 def _brain_request(method: str, path: str, body: dict | None = None, timeout: float = 30.0):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-QI Brain — FastAPI server at port 9010.
+QI Brain — FastAPI server at port 9011.
 
 All brain logic lives here. The MCP server (qi_brain_mcp.py) is a thin
 stdio client that forwards every tool call to these endpoints.
@@ -31,7 +31,7 @@ Hive agent growth loop:
 
 Run:
     python qi_brain_api.py
-    uvicorn qi_brain_api:app --host 0.0.0.0 --port 9010 --reload
+    uvicorn qi_brain_api:app --host 0.0.0.0 --port 9011 --reload
 """
 from __future__ import annotations
 import json
@@ -87,7 +87,7 @@ def _cfg(key: str, default: str = "") -> str:
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "qi_brain", "port": 9010, "version": "001"}
+    return {"status": "ok", "service": "qi_brain", "port": 9011, "version": "001"}
 
 
 @app.get("/api/status")
@@ -833,4 +833,4 @@ def _est_tokens(text: str) -> int:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("qi_brain_api:app", host="0.0.0.0", port=9010, reload=False)
+    uvicorn.run("qi_brain_api:app", host="0.0.0.0", port=9011, reload=False)

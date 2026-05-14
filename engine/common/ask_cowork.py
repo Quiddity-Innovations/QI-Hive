@@ -37,7 +37,7 @@ from pathlib import Path
 _THIS   = Path(__file__).parent                     # engine/common/
 _QIH    = _THIS.parent.parent                       # C:\QIH
 DISPATCH_DIR = _QIH / "cowork-dispatch"
-BRAIN_URL    = "http://localhost:9010"
+BRAIN_URL    = "http://localhost:9011"
 
 sys.path.insert(0, str(_QIH / "engine" / "brain"))
 

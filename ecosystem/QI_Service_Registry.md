@@ -155,11 +155,11 @@
 | Field | Value |
 |---|---|
 | **Display name** | QI — Brain API |
-| **Description** | QI Brain — hive nervous system. SQLite + ChromaDB + 12 MCP tools. Agent growth loop, decisions, features, sessions. FastAPI on port 9010. |
+| **Description** | QI Brain — hive nervous system. SQLite + ChromaDB + 12 MCP tools. Agent growth loop, decisions, features, sessions. FastAPI on port 9011. (Port 9010 permanently squatted by Logitech G HUB lghub_agent.exe — moved 2026-05-14.) |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `C:\QIH\engine\brain\api.py` |
 | **Working dir** | `C:\QIH` |
-| **Port** | 9010 |
+| **Port** | 9011 |
 | **Stdout log** | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` |
 | **Stderr log** | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` |
 | **Start type** | AUTO_START |
@@ -242,7 +242,7 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | NEXUS not running | QI_NEXUS | `C:\NEXUS\LOGS\nexus_service.log` | `nssm status QI_NEXUS` |
 | Dashboard (:8600) down | QI_Dashboard | `C:\QIH\engine\hive\dashboard\LOGS\dashboard.log` | `nssm status QI_Dashboard` |
 | Dashboard tunnel URL gone | QI_DashboardTunnel | `C:\QIH\engine\hive\tunnel\LOGS\tunnel_service.log` | `nssm status QI_DashboardTunnel` |
-| Brain API (:9010) down | QI_BrainAPI | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
+| Brain API (:9011) down | QI_BrainAPI | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
 | Elevation broker not responding | QI_Elevate | `C:\QIH\logs\elevation\broker_stderr.log` | `nssm status QI_Elevate` |
 | Hive ingest stalled | QI_HiveIngest | `C:\QIH\logs\hive\ingest_stderr.log` | `nssm status QI_HiveIngest` |
 | Auto-apply pipeline stalled / dispatches stuck in queued | QI_HiveApply | `C:\QIH\logs\hive_apply.log` | `nssm status QI_HiveApply`; check for HALT file |

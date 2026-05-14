@@ -21,7 +21,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-BRAIN_URL   = "http://127.0.0.1:9010"  # 127.0.0.1 not localhost — avoids Windows IPv6 2s fallback
+BRAIN_URL   = "http://127.0.0.1:9011"  # 127.0.0.1 not localhost — avoids Windows IPv6 2s fallback
 MEM_DIR     = r"C:\Users\renne\.claude\projects\C--Users-renne-Downloads\memory"
 SESSION_STATE = Path(r"C:\QIH\qi_session\session_state.json")  # migrated 2026-04-22 from C:\UNIVERSAL\qi_session
 

@@ -67,7 +67,7 @@ for svc, status in [
     ("QI_Dashboard (:8600)", "RUNNING"),
     ("QI_HiveIngest", "RUNNING"),
     ("QI_Elevate (broker)", "RUNNING — AppExit=Restart + watchdog"),
-    ("QI_BrainAPI (:9010)", "RUNNING"),
+    ("QI_BrainAPI (:9011)", "RUNNING"),
     ("qwen2.5:7b (ollama)", "Available — used for backfill"),
 ]:
     row = tbl.add_row().cells
@@ -80,7 +80,7 @@ for item in [
     "Review auto-generated INTRO files for accuracy — especially EasyFlow (thin source docs) "
     "and NEXUS (Word docs not readable, marked TBD).",
     "Review C:\\QIH\\docs\\BLOCKERS_FOR_RENNE.md for open items.",
-    "Check Brain stats at :9010/api/status — decisions and features should have increased "
+    "Check Brain stats at :9011/api/status — decisions and features should have increased "
     "significantly after backfill.",
     "Consider Blueprint SVGs for Project Status pages (architecture diagrams).",
 ]:

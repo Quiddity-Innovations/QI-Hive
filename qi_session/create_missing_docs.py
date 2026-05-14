@@ -363,14 +363,14 @@ write_if_missing(NAYA / "Naya_Version_History.md", f"""\
 
 # ─────────────────────────────────────────────────────────────────────────────
 # UNIVERSAL / QI ORCHESTRATOR
-# Dashboard :9000 + Brain API :9010
+# Dashboard :9000 + Brain API :9011
 # ─────────────────────────────────────────────────────────────────────────────
 UNI = Path(r"C:\UNIVERSAL\DOCUMENTATION")
 
 write_if_missing(UNI / "QIOrchestrator_Implementation_Log.md", f"""\
 # QI Orchestrator — Implementation Log
 
-> Covers: QI Dashboard (port 9000) + QI Brain API (port 9010)
+> Covers: QI Dashboard (port 9000) + QI Brain API (port 9011)
 > Root: `C:\\UNIVERSAL\\`
 
 ---
@@ -379,7 +379,7 @@ write_if_missing(UNI / "QIOrchestrator_Implementation_Log.md", f"""\
 **Session Focus:** Rename all NSSM services to QI_ prefix; build Brain API; nightly backup
 
 ### Built
-- QI Brain API (C:\\UNIVERSAL\\qi_brain\\) — FastAPI on port 9010
+- QI Brain API (C:\\UNIVERSAL\\qi_brain\\) — FastAPI on port 9011
   - Decision memory (SQLite + ChromaDB)
   - Feature propagation engine (qwen3:8b evaluates cross-project ideas)
   - Session logging
@@ -515,7 +515,7 @@ write_if_missing(UNI / "QIOrchestrator_Version_History.md", f"""\
 ## v1.0 — 2026-04-19
 **Type:** Full QI_ service rename sweep + Brain API + nightly backup
 ### Added
-- QI Brain API (port 9010) — full decision memory + feature propagation
+- QI Brain API (port 9011) — full decision memory + feature propagation
 - Nightly backup (1AM, all 5 DBs, 30-day retention)
 - 19 files updated to QI_ naming convention
 - QI Service Registry (single source of truth for all 9 services)
@@ -567,14 +567,14 @@ write_if_missing(UNI / "QIOrchestrator_Master_Status_Report.md", f"""\
 | Status | Active |
 | Phase | Production — continuous improvement |
 | Dashboard URL | http://localhost:9000 |
-| Brain API URL | http://localhost:9010 |
+| Brain API URL | http://localhost:9011 |
 
 ## Services Running
 | Service | Port | Status |
 |---------|------|--------|
 | QI_Dashboard | 9000 | ✅ Running |
 | QI_DashboardTunnel | — | ✅ Running |
-| QI_BrainAPI | 9010 | ✅ Running |
+| QI_BrainAPI | 9011 | ✅ Running |
 
 ## Feature Status
 
@@ -593,7 +593,7 @@ write_if_missing(UNI / "QIOrchestrator_Master_Status_Report.md", f"""\
 | Control panel (start/stop services) | ✅ Live |
 | Per-project log viewer | ✅ Live |
 
-### Brain API (port 9010)
+### Brain API (port 9011)
 | Feature | Status |
 |---------|--------|
 | Decision memory | ✅ Live |

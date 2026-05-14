@@ -17,7 +17,7 @@ s['projects']['QI_Hive'] = {
     "current_task": None,
     "locked_files": [],
     "last_activity": "2026-04-19",
-    "notes": "QI Hive created. Brain at C:\\QIH\\brain (port 9010), Dashboard at C:\\QIH\\hive (port 8600). GitHub: Quiddity-Innovations/QI-Hive. Run C:\\QIH\\update_services.bat as admin to complete NSSM migration."
+    "notes": "QI Hive created. Brain at C:\\QIH\\brain (port 9011), Dashboard at C:\\QIH\\hive (port 8600). GitHub: Quiddity-Innovations/QI-Hive. Run C:\\QIH\\update_services.bat as admin to complete NSSM migration."
 }
 
 s['projects']['Claude_Manager']['notes'] = "Superseded by QI Hive (C:\\QIH). Old code preserved at C:\\CLAUDE until NSSM migration confirmed."
@@ -26,7 +26,7 @@ s['projects']['Claude_Manager']['status'] = "migrating"
 s['infrastructure']['dashboard']['note'] = "QI Hive Dashboard v3.0. New Hive page wired to QI Brain. Code at C:\\QIH\\hive\\Dashboard\\server.py. Still running from C:\\CLAUDE until admin runs update_services.bat."
 
 s['infrastructure']['qi_brain'] = {
-    "url": "http://localhost:9010",
+    "url": "http://localhost:9011",
     "status": "running_as_nssm_service",
     "note": "QI Brain — hive nervous system. Code at C:\\QIH\\brain. 12 MCP tools + 4 new growth loop endpoints. Still running from C:\\UNIVERSAL\\qi_brain until admin runs update_services.bat.",
     "endpoints": ["/api/agents", "/api/agent/{id}/profile", "/api/agent/growth", "/api/log_session", "/api/log_decision", "/api/ecosystem_snapshot"]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-QI Brain — MCP stdio server (thin client to FastAPI :9010).
+QI Brain — MCP stdio server (thin client to FastAPI :9011).
 
 Per Supplement A I-01: ALL logic lives in qi_brain_api.py.
 This server is a stdio ↔ HTTP bridge — ~150 LOC of forwarders.
@@ -31,7 +31,7 @@ from typing import Any, Optional
 
 import httpx
 
-BRAIN_API = "http://localhost:9010"
+BRAIN_API = "http://localhost:9011"
 TIMEOUT   = 30
 
 # ── JSON-RPC helpers ──────────────────────────────────────────────────────────
@@ -264,7 +264,7 @@ async def handle_request(req: dict) -> Optional[dict]:
             result = await dispatch_tool(tool_name, args)
             return _ok(req_id, {"content": [{"type": "text", "text": json.dumps(result)}]})
         except httpx.ConnectError:
-            return _err(req_id, -32000, "QI Brain API unreachable at :9010. Is qi_brain_api.py running?")
+            return _err(req_id, -32000, "QI Brain API unreachable at :9011. Is qi_brain_api.py running?")
         except Exception as exc:
             return _err(req_id, -32000, str(exc))
 

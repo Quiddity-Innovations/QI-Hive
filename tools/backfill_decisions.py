@@ -24,7 +24,7 @@ except ImportError:
     sys.exit(1)
 
 SUMMARIES_DIR = Path(r"C:\UNIVERSAL\DOCUMENTATION\Session_Summaries")
-BRAIN_URL = "http://127.0.0.1:9010"
+BRAIN_URL = "http://127.0.0.1:9011"
 OLLAMA_URL = "http://127.0.0.1:11434"
 OLLAMA_MODEL = "qwen2.5:7b"
 

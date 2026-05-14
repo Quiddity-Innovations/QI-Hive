@@ -10,7 +10,7 @@ Parses the transcript (JSONL) to extract:
   - files touched (Edit/Write tool calls)
   - decisions (look for "decision:" / "decided:" / "chose " markers)
 
-Posts qi.log_session to the Brain API at :9010.
+Posts qi.log_session to the Brain API at :9011.
 Also fires the existing hive_report session_end (fire-and-forget).
 
 Silent-on-failure. Exit 0 always so it never blocks session close.
@@ -23,7 +23,7 @@ import argparse, json, sys, subprocess, urllib.request, urllib.error, re
 from datetime import datetime
 from pathlib import Path
 
-BRAIN_URL = "http://127.0.0.1:9010"
+BRAIN_URL = "http://127.0.0.1:9011"
 HIVE_REPORT = Path(r"C:\QIH\engine\common\hive_report.py")
 
 DECISION_PATTERNS = [

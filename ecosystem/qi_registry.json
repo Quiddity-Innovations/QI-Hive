@@ -73,7 +73,7 @@
       "8500-8509": "MQ family",
       "8550-8559": "EasyFlow family",
       "8600-8649": "QI Launcher family",
-      "9000-9099": "QI Hive family (Brain at 9010, Dashboard at 8600 migrating)",
+      "9000-9099": "QI Hive family (Brain at 9011, Dashboard at 8600 migrating)",
       "8700-8709": "AutoPDF family (desktop tool, port 6969 pre-registry)",
       "8650-8659": "MapSnap family (mapsnap, cognibase)"
     },
@@ -440,9 +440,9 @@
       "tier": "backbone",
       "ports": {
         "api": {
-          "current": 9010,
+          "current": 9011,
           "block": "9000-9099",
-          "notes": "QI Orchestration block"
+          "notes": "QI Orchestration block. Port 9010 is permanently squatted by Logitech G HUB (lghub_agent.exe) on 127.0.0.1:9010 — moved to 9011 on 2026-05-14."
         },
         "mcp": {
           "current": "stdio",
@@ -492,9 +492,9 @@
           "notes": "Hive dashboard"
         },
         "brain_api": {
-          "current": 9010,
+          "current": 9011,
           "block": "9000-9099",
-          "notes": "QI Brain API"
+          "notes": "QI Brain API. Moved from 9010 to 9011 on 2026-05-14 — port 9010 squatted by Logitech G HUB."
         }
       },
       "services": [
@@ -507,7 +507,7 @@
         },
         {
           "name": "QI_BrainAPI",
-          "port": 9010,
+          "port": 9011,
           "type": "FastAPI",
           "managed_by": "NSSM",
           "path": "C:\\QIH\\engine\\brain\\api.py"
@@ -529,11 +529,11 @@
       ],
       "exposes_to_ecosystem": [
         "GET  http://localhost:8600 — Hive Dashboard",
-        "GET  http://localhost:9010 — QI Brain API",
-        "POST http://localhost:9010/api/agent/growth — agent growth loop",
-        "GET  http://localhost:9010/api/agents — list all hive agents",
-        "POST http://localhost:9010/api/log_session — session logging for all projects",
-        "POST http://localhost:9010/api/log_decision — decisions for all projects"
+        "GET  http://localhost:9011 — QI Brain API",
+        "POST http://localhost:9011/api/agent/growth — agent growth loop",
+        "GET  http://localhost:9011/api/agents — list all hive agents",
+        "POST http://localhost:9011/api/log_session — session logging for all projects",
+        "POST http://localhost:9011/api/log_decision — decisions for all projects"
       ],
       "future_structure": "Projects migrate to C:\\QIP one by one. C:\\QI becomes C:\\QIB (business side).",
       "added": "2026-04-19"
@@ -826,7 +826,7 @@
         {
           "name": "QI_BrainAPI",
           "project": "qi_brain",
-          "port": 9010,
+          "port": 9011,
           "script": "C:\\QIH\\engine\\brain\\api.py",
           "internet_exposed": false
         },
@@ -874,6 +874,6 @@
         "Before any port change: check ALL services in this registry, not just the current project"
       ]
     },
-    "qi_brain": "C:\\QIH\\data\\qi_brain.db — shared knowledge DB (backbone tier, :9010)"
+    "qi_brain": "C:\\QIH\\data\\qi_brain.db — shared knowledge DB (backbone tier, :9011)"
   }
 }

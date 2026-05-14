@@ -2,7 +2,7 @@
 import sys, json, urllib.request
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-BRAIN_URL = "http://127.0.0.1:9010"
+BRAIN_URL = "http://127.0.0.1:9011"
 
 body = {
     "project_id": "qi_hive",

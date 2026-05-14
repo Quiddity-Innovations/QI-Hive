@@ -2,7 +2,7 @@
 """
 QI Hive Dashboard — port 8600
 AdminLTE v4 + Bootstrap 5 + SortableJS kanban
-Powered by QI Brain (port 9010) as the hive's nervous system.
+Powered by QI Brain (port 9011) as the hive's nervous system.
 """
 import json
 import sys
@@ -610,7 +610,7 @@ def render_hive() -> str:
     bstatus = get_brain_status()
 
     brain_badge = (
-        '<span class="badge text-bg-success"><i class="bi bi-circle-fill me-1"></i>Online :9010</span>'
+        '<span class="badge text-bg-success"><i class="bi bi-circle-fill me-1"></i>Online :9011</span>'
         if online else
         '<span class="badge text-bg-danger"><i class="bi bi-circle-fill me-1"></i>Offline</span>'
     )
@@ -698,7 +698,7 @@ def render_hive() -> str:
     <div class="row mb-3">
       <div class="col-12 d-flex justify-content-between align-items-center">
         <div><i class="bi bi-cpu me-2 text-primary"></i><strong>QI Brain</strong> {brain_badge}</div>
-        <a href="http://localhost:9010/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
+        <a href="http://localhost:9011/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
           <i class="bi bi-box-arrow-up-right me-1"></i>Brain API Docs
         </a>
       </div>

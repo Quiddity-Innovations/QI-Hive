@@ -18,7 +18,7 @@ from pathlib import Path
 from datetime import datetime
 import urllib.request
 
-BRAIN_URL   = "http://127.0.0.1:9010"
+BRAIN_URL   = "http://127.0.0.1:9011"
 MEM_DIR     = Path(r"C:\Users\renne\.claude\projects\C--Users-renne-Downloads\memory")
 ECOSYSTEM   = Path(r"C:\QIH\ecosystem")  # migrated 2026-04-22 from C:\UNIVERSAL\ECOSYSTEM
 REGISTRY    = ECOSYSTEM / "qi_registry.json"
@@ -61,7 +61,7 @@ Log: {path}\\LOGS\\service_log.txt
 
 ## Session start protocol
 1. Read `MEMORY.md` → `project_{brain_id}.md`
-2. Check Brain API context: `POST http://localhost:9010/api/context {{project_id: "{brain_id}"}}`
+2. Check Brain API context: `POST http://localhost:9011/api/context {{project_id: "{brain_id}"}}`
 3. Tail `LOGS\\service_log.txt` for last errors
 4. Report state and Next Up
 
