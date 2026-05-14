@@ -1,0 +1,34 @@
+{
+  "dispatch_id": "e2e-1778778436",
+  "worktree_path": "C:\\QIH\\worktrees\\apply\\e2e-1778778436",
+  "diff_text": "diff --git a/README.md b/README.md\nindex 316320e..3421784 100644\n--- a/README.md\n+++ b/README.md\n@@ -1 +1 @@\n-This is teh problem.\n+This is the problem.\n",
+  "mechanical_pass": true,
+  "mechanical_checks": [
+    {
+      "file": "C:\\QIH\\worktrees\\apply\\e2e-1778778436\\README.md",
+      "check": "py_syntax",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "C:\\QIH\\worktrees\\apply\\e2e-1778778436\\README.md",
+      "check": "md_links",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "*",
+      "check": "git_diff_check",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "*",
+      "check": "size_limits",
+      "pass": true,
+      "error": null
+    }
+  ],
+  "mechanical_errors": [],
+  "label": "mechanical_pass"
+}

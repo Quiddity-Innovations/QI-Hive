@@ -211,13 +211,33 @@
 | **Inbox dir** | `C:\QIH\inbox\hive_builder\` |
 | **Registered** | 2026-05-13 |
 
+### QI_HiveInspectorDrain
+| Field | Value |
+|---|---|
+| **Display name** | QI — Hive Inspector Auto-Drain |
+| **Description** | Deterministic inspector verdict drain. No LLM. Drains pending_review envelopes from C:\QIH\inbox\hive_inspector\ every 60s, auto-approves or rejects via mechanical checks, posts verdict to Brain API. Phase 2 zero-cost path. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `C:\QIH\engine\hive\inspect\main.py` |
+| **Working dir** | `C:\QIH\engine\hive\inspect` |
+| **Stdout log** | `C:\QIH\logs\hive_inspector_drain.log` |
+| **Stderr log** | `C:\QIH\logs\hive_inspector_drain.log` |
+| **Port** | none |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Inbox dir** | `C:\QIH\inbox\hive_inspector\` |
+| **Done dir** | `C:\QIH\inbox\hive_inspector\done\` |
+| **Quarantine dir** | `C:\QIH\inbox\hive_inspector\quarantine\` |
+| **Kill switch** | `nssm stop QI_HiveInspectorDrain` — envelopes accumulate harmlessly, no data loss |
+| **Registered** | 2026-05-14 |
+
 ---
 
 ## Quick Reference — NSSM Commands
 
 ```bat
 REM Status check (all QI services)
-for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_HiveApply QI_KazeConfigAPI) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
+for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_HiveApply QI_HiveInspectorDrain QI_KazeConfigAPI) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
 
 REM Restart a specific service (NSSM binary standardized 2026-04-22)
 C:\QIH\engine\bin\nssm.exe restart QI_MaiaBot
@@ -246,6 +266,7 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | Elevation broker not responding | QI_Elevate | `C:\QIH\logs\elevation\broker_stderr.log` | `nssm status QI_Elevate` |
 | Hive ingest stalled | QI_HiveIngest | `C:\QIH\logs\hive\ingest_stderr.log` | `nssm status QI_HiveIngest` |
 | Auto-apply pipeline stalled / dispatches stuck in queued | QI_HiveApply | `C:\QIH\logs\hive_apply.log` | `nssm status QI_HiveApply`; check for HALT file |
+| Inspector inbox not draining / envelopes stuck in pending_review | QI_HiveInspectorDrain | `C:\QIH\logs\hive_inspector_drain.log` | `nssm status QI_HiveInspectorDrain`; check quarantine/ dir |
 | Kaze config UI down | QI_KazeConfigAPI | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` | `nssm status QI_KazeConfigAPI` |
 
 ---
