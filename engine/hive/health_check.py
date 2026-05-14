@@ -331,6 +331,69 @@ def _compute_health_check():
     return {"checked_at": checked_at, "projects": results}
 
 
+BRAIN_DB = Path(r"C:\QIH\data\qi_brain.db")
+
+
+def _promote_dispatches_to_tasks(tasks: list) -> list:
+    """Promote approved/applied dispatches from Brain into the task list."""
+    if not BRAIN_DB.exists():
+        return tasks
+    existing_ids = {t.get("id") for t in tasks}
+    try:
+        import sqlite3 as _sql
+        conn = _sql.connect(BRAIN_DB)
+        conn.row_factory = _sql.Row
+        rows = conn.execute(
+            """SELECT dispatch_id, project_id, status, apply_state, payload,
+                      reviewed_at, created_at
+               FROM dispatches
+               WHERE reviewed_at IS NOT NULL OR apply_state IS NOT NULL
+               ORDER BY COALESCE(reviewed_at, created_at) DESC
+               LIMIT 200"""
+        ).fetchall()
+        conn.close()
+    except Exception as e:
+        print(f"[health_check] dispatch promotion query failed: {e}", file=sys.stderr)
+        return tasks
+
+    import json as _json
+    for r in rows:
+        task_id = f"disp-{r['dispatch_id']}"
+        if task_id in existing_ids:
+            continue
+        try:
+            payload = _json.loads(r["payload"]) if r["payload"] else {}
+        except Exception:
+            payload = {}
+        title = (payload.get("message") or f"Dispatch {r['dispatch_id'][:8]}")[:120]
+        suggested_fix = (payload.get("suggested_fix") or "")[:500]
+        fix_category = payload.get("fix_category") or ""
+        apply_state = (r["apply_state"] or "").lower()
+        if apply_state in ("applied",):
+            column = "done"
+        elif apply_state in ("in_progress", "queued", "review"):
+            column = "in_progress"
+        elif apply_state in ("rejected_auto", "failed"):
+            column = "review"
+        else:
+            column = "backlog"
+        ts = (r["created_at"] or r["reviewed_at"] or "")
+        tasks.append({
+            "id": task_id,
+            "title": title,
+            "project": r["project_id"] or "qihive",
+            "agent": "cowork",
+            "priority": "medium",
+            "description": suggested_fix,
+            "column": column,
+            "created_at": ts.split("T")[0] if "T" in ts else ts[:10],
+            "category": fix_category,
+            "source": "brain_dispatch",
+        })
+        existing_ids.add(task_id)
+    return tasks
+
+
 def sync_tasks(health_data: dict):
     """
     Keep tasks.json in sync with actual project state.
@@ -340,13 +403,15 @@ def sync_tasks(health_data: dict):
     """
     import uuid as _uuid
 
-    tasks_path = Path(r"C:\Claude\tasks.json")
+    tasks_path = Path(r"C:\QIH\data\tasks.json")
     if not tasks_path.exists():
         return
 
     with open(tasks_path, encoding="utf-8") as f:
         tasks_data = json.load(f)
     tasks = tasks_data.get("tasks", [])
+
+    tasks = _promote_dispatches_to_tasks(tasks)
 
     # Issue fingerprint → task auto-resolution rules
     # If condition is now clear, move matching open task to done

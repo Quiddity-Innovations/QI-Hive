@@ -2449,6 +2449,29 @@ def api_delete_task(task_id: str):
     save_tasks(tasks)
     return JSONResponse({"ok": True})
 
+# ── Background board sync ─────────────────────────────────────────────────────
+
+import asyncio as _asyncio
+
+async def _board_sync_loop():
+    while True:
+        try:
+            from health_check import run_health_check, sync_tasks as _sync_tasks
+            await _asyncio.to_thread(lambda: _sync_tasks(run_health_check()))
+        except Exception as e:
+            log.warning("board sync loop error: %s", e)
+        await _asyncio.sleep(300)  # 5 minutes
+
+@app.on_event("startup")
+async def _start_board_sync():
+    # Run one sync immediately so the board is fresh within seconds of restart.
+    try:
+        from health_check import run_health_check, sync_tasks as _sync_tasks
+        _sync_tasks(run_health_check())
+    except Exception as e:
+        log.warning("board startup sync error: %s", e)
+    _asyncio.create_task(_board_sync_loop())
+
 # ── Tests Page ───────────────────────────────────────────────────────────────
 
 TESTS_RESULTS = Path(r"C:\Claude\Tests\results\latest.json")
