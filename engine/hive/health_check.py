@@ -366,7 +366,12 @@ def _promote_dispatches_to_tasks(tasks: list) -> list:
         except Exception:
             payload = {}
         title = (payload.get("message") or f"Dispatch {r['dispatch_id'][:8]}")[:120]
-        suggested_fix = (payload.get("suggested_fix") or "")[:500]
+        _sf = payload.get("suggested_fix") or ""
+        if isinstance(_sf, dict):
+            _sf = _json.dumps(_sf, ensure_ascii=False)
+        elif not isinstance(_sf, str):
+            _sf = str(_sf)
+        suggested_fix = _sf[:500]
         fix_category = payload.get("fix_category") or ""
         apply_state = (r["apply_state"] or "").lower()
         if apply_state in ("applied",):
