@@ -14,6 +14,10 @@ node_modules/
 *.db-shm
 .claude/
 
+# Local-only credentials store (LINE tokens, recovery codes, bot secrets)
+# NEVER commit — keep entirely local
+secrets/
+
 # Auto-generated registry backups — local only
 ecosystem/*.bak_*
 ecosystem/*.backup-*
