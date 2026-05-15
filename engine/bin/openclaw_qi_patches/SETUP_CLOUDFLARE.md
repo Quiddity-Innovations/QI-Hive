@@ -35,7 +35,7 @@ Three prompts will appear. Paste values from `C:/QIH/secrets/cloudflare_workers_
 Then set model + fallback:
 
 ```bash
-openclaw models set --agent main "cloudflare-ai-gateway/@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+openclaw models set --agent main "cloudflare-ai-gateway/workers-ai/@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 openclaw models fallbacks add --agent main "ollama/gemma4:26b"
 ```
 
@@ -45,7 +45,7 @@ openclaw models fallbacks add --agent main "ollama/gemma4:26b"
 openclaw --profile kaze models auth login --provider cloudflare-ai-gateway
 # Same 3 prompts, SAME values
 
-openclaw --profile kaze models set --agent kaze "cloudflare-ai-gateway/@cf/meta/llama-3.1-8b-instruct"
+openclaw --profile kaze models set --agent kaze "cloudflare-ai-gateway/workers-ai/@cf/meta/llama-3.1-8b-instruct"
 openclaw --profile kaze models fallbacks add --agent kaze "ollama/gemma4:26b"
 ```
 
@@ -70,12 +70,12 @@ Perspective to Tasuke or Kaze — they reply from Cloudflare's llama models.
 ```bash
 echo "── Tasuke (default profile) ──"
 openclaw models auth login --provider cloudflare-ai-gateway   # paste 3 values
-openclaw models set --agent main "cloudflare-ai-gateway/@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+openclaw models set --agent main "cloudflare-ai-gateway/workers-ai/@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 openclaw models fallbacks add --agent main "ollama/gemma4:26b" || true
 
 echo "── Kaze (--profile kaze) ──"
 openclaw --profile kaze models auth login --provider cloudflare-ai-gateway   # paste 3 values
-openclaw --profile kaze models set --agent kaze "cloudflare-ai-gateway/@cf/meta/llama-3.1-8b-instruct"
+openclaw --profile kaze models set --agent kaze "cloudflare-ai-gateway/workers-ai/@cf/meta/llama-3.1-8b-instruct"
 openclaw --profile kaze models fallbacks add --agent kaze "ollama/gemma4:26b" || true
 
 echo "── Restart ──"
