@@ -1,0 +1,55 @@
+{
+  "agents": {
+    "tasuke": {
+      "name": "Tasuke Hattori",
+      "role": "QI Hive Senior Analyst",
+      "voice": "am_adam",
+      "voice_speed": 0.95,
+      "photo": "inputs/tasuke.jpg",
+      "language": "en-us",
+      "description": "Sharp, methodical male analyst. Deep voice. Speaks with authority."
+    },
+    "maia": {
+      "name": "Maia",
+      "role": "QI Assistant",
+      "voice": "af_sarah",
+      "voice_speed": 1.0,
+      "photo": "inputs/maia.png",
+      "language": "en-us",
+      "description": "Warm, empathetic female assistant. Clear and approachable."
+    },
+    "naya": {
+      "name": "Naya",
+      "role": "QI Creative Director",
+      "voice": "af_nova",
+      "voice_speed": 1.0,
+      "photo": "inputs/naya.png",
+      "language": "en-us",
+      "description": "Creative, expressive female voice. Energetic and imaginative."
+    },
+    "kaze": {
+      "name": "Kaze",
+      "role": "QI Strategy Lead",
+      "voice": "am_michael",
+      "voice_speed": 0.92,
+      "photo": "inputs/kaze.jpg",
+      "language": "en-us",
+      "description": "Calm, strategic male voice. Measured and thoughtful."
+    }
+  },
+  "kokoro": {
+    "lang_code": "a",
+    "sample_rate": 24000
+  },
+  "hallo2": {
+    "wsl_distro": "Ubuntu-24.04",
+    "conda_env": "/home/hyosuke/miniconda3/envs/hallo",
+    "repo_path": "~/qi_avatar/hallo2",
+    "config": "configs/inference/long.yaml",
+    "pose_weight": 1.0,
+    "face_weight": 1.0,
+    "lip_weight": 1.0,
+    "face_expand_ratio": 1.2,
+    "output_base": "~/qi_avatar/hallo2/output_long/debug"
+  }
+}
