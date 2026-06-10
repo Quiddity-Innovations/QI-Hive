@@ -550,7 +550,7 @@
       "description": "Self-contained PDF toolkit: convert / split / extract / catalog. Local-only, no cloud.",
       "language": "PowerShell + vanilla JS",
       "phase": "2c",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/AutoPDF",
       "ports": {
         "http": {
           "current": 6969,
@@ -662,7 +662,7 @@
       "name": "M2V",
       "description": "Music to Video — AI-powered music video generator from lyrics + audio track",
       "path": "C:\\M2V",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/M2V",
       "status": "new",
       "primary_language": "Python",
       "ports": {
@@ -690,7 +690,7 @@
       "name": "PersonalSong Studio",
       "description": "Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone. Web app via serve.py (uvicorn in-process).",
       "path": "C:\\PersonalSong",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/PersonalSong",
       "status": "active_development",
       "primary_language": "Python",
       "ports": {

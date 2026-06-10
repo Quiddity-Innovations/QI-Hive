@@ -36,13 +36,15 @@ PROJECT_PREFIX = {
     'MapSnap': 'mapsnap', 'AutoPDF': 'autopdf', 'EasyFlow': 'easyflow',
     'Maia': 'maia', 'Naya': 'naya', 'NEXUS': 'nexus',
     'MQ': 'mq', 'QIHive': 'qi_hive',
+    'PersonalSong': 'personalsong', 'M2V': 'm2v',
 }
 
 GIT_PROJECTS = {
     'cognibase': r'C:\CogniBase', 'mapsnap': r'C:\MapSnap',
-    'autopdf': r'C:\Users\renne\Downloads\AUTOPDF',
+    'autopdf': r'C:\AutoPDF',
     'easyflow': r'C:\EasyFlow', 'maia': r'C:\QI', 'naya': r'C:\NAYA',
     'nexus': r'C:\NEXUS', 'mq': r'C:\MQ', 'qi_hive': r'C:\QIH',
+    'personalsong': r'C:\PersonalSong', 'm2v': r'C:\M2V',
 }
 
 def main():
