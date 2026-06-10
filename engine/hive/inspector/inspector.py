@@ -44,8 +44,10 @@ PROJECT_PATHS = {
     'mq':        r'C:\MQ',
     'cognibase': r'C:\CogniBase',
     'mapsnap':   r'C:\MapSnap',
-    'autopdf':   r'C:\Users\renne\Downloads\AUTOPDF',
+    'autopdf':   r'C:\AutoPDF',
     'qi_hive':   r'C:\QIH',
+    'personalsong': r'C:\PersonalSong',
+    'm2v':       r'C:\M2V',
 }
 
 # Skip hook checks for these (adjacent / external / retired)
@@ -374,6 +376,70 @@ def check_session_freshness(pid: str, path: Path, auto_fix: bool) -> CheckResult
                        f"Last session {days}d ago")
 
 
+def check_brain_drift(pid: str, path: Path, auto_fix: bool) -> Optional[CheckResult]:
+    """Evidence-vs-Brain drift: git commits or session-summary .docx newer than
+    the project's last session_log row mean work happened that Brain never saw.
+
+    Added 2026-06-10 after the Phase 3 audit found project_state frozen at the
+    2026-05-09 bulk stamp and two projects (personalsong, m2v) entirely absent.
+    check_session_freshness only catches silence — this catches unlogged work.
+    """
+    evidence: list[tuple[str, str]] = []  # (date 'YYYY-MM-DD', source description)
+
+    if (path / '.git').exists():
+        try:
+            out = subprocess.check_output(
+                ['git', '-C', str(path), 'log', '-1', '--format=%cs'],
+                text=True, timeout=15).strip()
+            if out:
+                evidence.append((out, f'git commit {out}'))
+        except Exception:
+            pass
+
+    summaries = Path(r'C:\QIH\shared\documentation\session_summaries')
+    prefixes = {
+        'qi_hive': 'qihive', 'qi_brain': 'qibrain', 'claude_manager': 'claudemanager',
+        'openclaw': 'oc', 'personalsong': 'personalsong',
+    }
+    prefix = prefixes.get(pid, pid.replace('_', ''))
+    if summaries.exists():
+        newest = None
+        for f in summaries.glob('*.docx'):
+            stem = f.stem.lower().replace('_', '')
+            if stem.startswith(prefix):
+                d = datetime.fromtimestamp(f.stat().st_mtime).strftime('%Y-%m-%d')
+                if newest is None or d > newest:
+                    newest = d
+        if newest:
+            evidence.append((newest, f'session summary docx {newest}'))
+
+    if not evidence:
+        return None  # nothing to compare against — freshness check covers silence
+
+    with db() as con:
+        last = con.execute(
+            "SELECT MAX(started_at) FROM session_log WHERE project_id=?", (pid,)
+        ).fetchone()[0]
+    last_day = (last or '1970-01-01')[:10]
+
+    newest_date, source = max(evidence)
+    gap = (datetime.strptime(newest_date, '%Y-%m-%d')
+           - datetime.strptime(last_day, '%Y-%m-%d')).days
+    if gap > 1:
+        if last:
+            msg = (f"Brain is {gap}d behind reality: newest evidence is {source}, "
+                   f"but last session_log row is {last_day}")
+        else:
+            msg = (f"Work evidence exists ({source}) but this project has never "
+                   f"logged a session to Brain")
+        fix = "Backfill a session_log entry (qi.log_session) and refresh project_state"
+        did = file_dispatch(pid, 'brain_drift', msg, fix)
+        return CheckResult('brain_drift', pid, 'warn', 'medium', False, msg, fix,
+                           dispatch_id=did)
+    return CheckResult('brain_drift', pid, 'pass', 'medium', False,
+                       f"Brain current (last session {last_day} >= {source})")
+
+
 # ── Global (ecosystem-wide) checks ──
 
 # Map service-name prefix → project_id for attributing CheckResults.
@@ -541,7 +607,8 @@ def run_scan(project_id: Optional[str] = None, mode: str = 'fast', auto_fix: boo
                                            f"check raised: {type(e).__name__}: {e}"))
 
         for fn in (check_brain_registered, check_settings_json,
-                   check_claudemd_exists, check_gitignore_secrets, check_session_freshness):
+                   check_claudemd_exists, check_gitignore_secrets, check_session_freshness,
+                   check_brain_drift):
             try:
                 r = fn(pid, path, auto_fix)
                 if r is None:

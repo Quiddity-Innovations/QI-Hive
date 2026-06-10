@@ -3,9 +3,9 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-05-13",
+    "last_updated": "2026-06-10",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
-    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path)."
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check."
   },
   "module_interface_contract": {
     "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -656,6 +656,63 @@
         "Schema browser HTML"
       ],
       "consumes_from_ecosystem": []
+    },
+    {
+      "id": "m2v",
+      "name": "M2V",
+      "description": "Music to Video — AI-powered music video generator from lyrics + audio track",
+      "path": "C:\\M2V",
+      "github": "TBD",
+      "status": "new",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8501,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7841,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "New project — family role to be determined as it develops.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "personalsong",
+      "name": "PersonalSong Studio",
+      "description": "Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone. Web app via serve.py (uvicorn in-process).",
+      "path": "C:\\PersonalSong",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "ui": {
+          "current": 8088,
+          "recommended_block": "8500-8599",
+          "notes": "Pre-registry — port 8088 chosen before registration (registered 2026-06-10). Outside all allocated blocks; works, keep unless migrating. If migrated, use 8502 in the 8500-8599 cousin block."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Sibling-in-spirit of M2V (song generation feeds music-video generation). Registered 2026-06-10 during Brain drift reconciliation.",
+      "integrates_with": [
+        "m2v"
+      ],
+      "exposes_to_ecosystem": [
+        "Song generation (ACE-Step)",
+        "Voice cloning (Demucs/Seed-VC)"
+      ],
+      "consumes_from_ecosystem": [],
+      "loopback_only": true,
+      "internet_exposed": false,
+      "added_to_registry": "2026-06-10"
     }
   ],
   "family_taxonomy": {
