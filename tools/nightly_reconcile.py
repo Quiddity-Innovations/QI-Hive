@@ -45,6 +45,7 @@ GIT_PROJECTS = {
     'easyflow': r'C:\EasyFlow', 'maia': r'C:\QI', 'naya': r'C:\NAYA',
     'nexus': r'C:\NEXUS', 'mq': r'C:\MQ', 'qi_hive': r'C:\QIH',
     'personalsong': r'C:\PersonalSong', 'm2v': r'C:\M2V',
+    'claude_manager': r'C:\CLAUDE',
 }
 
 def main():
@@ -114,7 +115,7 @@ def main():
     for r in cur.execute("SELECT project_id, phase, status, summary, next_steps, recorded_at FROM project_state ORDER BY recorded_at DESC"):
         if r[0] not in states: states[r[0]] = r
     sc = {r[0]: r[1] for r in cur.execute("SELECT project_id, COUNT(*) FROM session_log GROUP BY project_id")}
-    last = {r[0]: r[1] for r in cur.execute("SELECT project_id, MAX(started_at) FROM session_log GROUP BY project_id")}
+    last = {r[0]: r[1] for r in cur.execute("SELECT project_id, MAX(COALESCE(ended_at, started_at)) FROM session_log GROUP BY project_id")}
 
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     md = [f"# QI Hive — LATEST", "", f"_Auto-generated: {now} (nightly reconciler)_", "",
