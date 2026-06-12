@@ -477,6 +477,65 @@ def check_brain_drift(pid: str, path: Path, auto_fix: bool) -> Optional[CheckRes
                        f"Brain current (last session {last_day} >= {source})")
 
 
+def check_tunnel_write_auth(auto_fix: bool) -> list[CheckResult]:
+    """Probe tunnel-exposed services: do anonymous WRITES through the tunnel
+    get rejected? Sends POST to a bogus path with a forged Cf-Ray header
+    (cloudflared always adds one to real tunnel traffic). 401/403 = guarded.
+    Non-mutating by design: the probe path does not exist, so an unguarded
+    service just 404s — which proves the request would have been processed.
+
+    Added 2026-06-12 alongside the dashboard tunnel write-guard
+    (decision OWNER-2026-06-12-TUNNEL).
+    """
+    import urllib.request
+    # (service label, local port, project, expectation)
+    # 'guard'    — must reject anonymous tunnel writes (401/403)
+    # 'webhook'  — accepts unauthenticated POSTs by design, verifies per-channel
+    #              signatures internally (LINE/Telegram) — skip with note
+    tunnels = [
+        ('QI_DashboardTunnel → :8600', 8600, 'qi_hive',    'guard'),
+        ('QI_MaiaTunnel → :8001',      8001, 'maia',       'webhook'),
+        ('QI_MaiaDemoTunnel → :7860',  7860, 'maia',       'info'),
+        ('QI_NayaTunnel → :8002',      8002, 'naya',       'info'),
+        ('QI_NEXUSTunnel → :8010',     8010, 'nexus',      'info'),
+        ('QI_MapSnapTunnel → :9876',   9876, 'mapsnap',    'info'),
+        ('QI_CogniBaseTunnel → :8650', 8650, 'cognibase',  'info'),
+    ]
+    results = []
+    for label, port, pid, expect in tunnels:
+        if expect == 'webhook':
+            results.append(CheckResult('tunnel_write_auth', pid, 'skip', 'medium', False,
+                                       f"{label}: webhook service — channel signature validation, blanket guard would break LINE/Telegram"))
+            continue
+        try:
+            req = urllib.request.Request(
+                f"http://127.0.0.1:{port}/__qi_tunnel_auth_probe",
+                data=b'{}', method='POST',
+                headers={'Cf-Ray': 'qi-inspector-probe', 'Content-Type': 'application/json'})
+            try:
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    code = resp.status
+            except urllib.error.HTTPError as e:
+                code = e.code
+        except Exception:
+            results.append(CheckResult('tunnel_write_auth', pid, 'skip', 'medium', False,
+                                       f"{label}: service not reachable — cannot probe"))
+            continue
+        guarded = code in (401, 403)
+        if guarded:
+            results.append(CheckResult('tunnel_write_auth', pid, 'pass', 'high', False,
+                                       f"{label}: anonymous tunnel writes rejected ({code})"))
+        elif expect == 'guard':
+            msg = f"{label}: anonymous write via tunnel NOT rejected (got {code}) — write-guard missing or broken"
+            did = file_dispatch(pid, 'tunnel_write_auth', msg, 'Restore the tunnel write-guard middleware')
+            results.append(CheckResult('tunnel_write_auth', pid, 'fail', 'high', False, msg,
+                                       'Restore write-guard', dispatch_id=did))
+        else:
+            results.append(CheckResult('tunnel_write_auth', pid, 'warn', 'medium', False,
+                                       f"{label}: tunnel-exposed service accepts anonymous writes (got {code}) — owner risk-accepted 2026-06-12, surfaced per Law 6"))
+    return results
+
+
 # ── Global (ecosystem-wide) checks ──
 
 # Map service-name prefix → project_id for attributing CheckResults.
@@ -684,6 +743,11 @@ def run_scan(project_id: Optional[str] = None, mode: str = 'fast', auto_fix: boo
             all_results.extend(check_nssm_registry_mismatch(auto_fix))
         except Exception as e:
             all_results.append(CheckResult('nssm_registry', 'qi_hive', 'fail', 'low', False,
+                                           f"check raised: {type(e).__name__}: {e}"))
+        try:
+            all_results.extend(check_tunnel_write_auth(auto_fix))
+        except Exception as e:
+            all_results.append(CheckResult('tunnel_write_auth', 'qi_hive', 'fail', 'low', False,
                                            f"check raised: {type(e).__name__}: {e}"))
 
     write_log(run_id, mode, all_results)
