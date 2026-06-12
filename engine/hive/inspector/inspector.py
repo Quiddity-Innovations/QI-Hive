@@ -376,6 +376,43 @@ def check_session_freshness(pid: str, path: Path, auto_fix: bool) -> CheckResult
                        f"Last session {days}d ago")
 
 
+def check_secrets_in_source(pid: str, path: Path, auto_fix: bool) -> Optional[CheckResult]:
+    """Scan git-tracked source for credential shapes (deep mode only).
+
+    Added 2026-06-12 after live LINE/FB/Telegram tokens were found hardcoded
+    in maia_server.py and pushed to GitHub. Uses `git grep` so gitignored
+    files (secrets/, .env) are never flagged. Detection only — never auto-fix.
+    """
+    if not (path / '.git').exists():
+        return None
+    patterns = [
+        (r'[0-9]{8,10}:AA[A-Za-z0-9_-]{30,}',  'Telegram bot token'),
+        (r'sk-ant-[A-Za-z0-9_-]{20,}',          'Anthropic API key'),
+        (r'sk-proj-[A-Za-z0-9_-]{20,}',         'OpenAI API key'),
+        (r'AIza[0-9A-Za-z_-]{30,}',             'Google API key'),
+        (r'EAA[A-Za-z0-9]{60,}',                'Meta page/access token'),
+        (r'gh[ops]_[A-Za-z0-9]{30,}',           'GitHub token'),
+    ]
+    hits = []
+    for pat, label in patterns:
+        try:
+            out = subprocess.run(
+                ['git', '-C', str(path), 'grep', '-l', '-E', pat,
+                 '--', '*.py', '*.js', '*.json', '*.ps1', '*.md', '*.bat'],
+                capture_output=True, text=True, timeout=30)
+            for f in out.stdout.split():
+                hits.append(f"{label} in {f}")
+        except Exception:
+            continue
+    if hits:
+        msg = f"Possible credentials committed to git: {'; '.join(sorted(set(hits))[:5])}"
+        fix = "Move values to a gitignored secrets/ .env file, load via environment, rotate the credential"
+        did = file_dispatch(pid, 'secrets_in_source', msg, fix)
+        return CheckResult('secrets_in_source', pid, 'fail', 'high', False, msg, fix, dispatch_id=did)
+    return CheckResult('secrets_in_source', pid, 'pass', 'high', False,
+                       'No credential patterns in tracked source')
+
+
 def check_brain_drift(pid: str, path: Path, auto_fix: bool) -> Optional[CheckResult]:
     """Evidence-vs-Brain drift: git commits or session-summary .docx newer than
     the project's last session_log row mean work happened that Brain never saw.
@@ -632,6 +669,13 @@ def run_scan(project_id: Optional[str] = None, mode: str = 'fast', auto_fix: boo
                     all_results.extend(deep)
             except Exception as e:
                 all_results.append(CheckResult('module_interface', pid, 'fail', 'low', False,
+                                               f"check raised: {type(e).__name__}: {e}"))
+            try:
+                r = check_secrets_in_source(pid, path, auto_fix)
+                if r:
+                    all_results.append(r)
+            except Exception as e:
+                all_results.append(CheckResult('secrets_in_source', pid, 'fail', 'low', False,
                                                f"check raised: {type(e).__name__}: {e}"))
 
     # Global (ecosystem-wide) checks — run once per scan if scanning all projects.

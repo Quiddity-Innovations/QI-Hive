@@ -34,6 +34,32 @@ app = FastAPI(title="QI Hive", version="3.0.0")
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+# ── Tunnel write-protection (2026-06-12, decision OWNER-2026-06-12-TUNNEL) ──
+# The public Cloudflare quick tunnel stays up (owner call), but mutating
+# requests that arrive THROUGH the tunnel must carry the shared token.
+# Tunnel traffic is identified by the Cf-Ray / CF-Connecting-IP headers that
+# cloudflared injects; direct localhost/LAN requests have neither and pass
+# untouched, so local workflow and hive agents are unaffected.
+_WRITE_TOKEN_FILE = Path(r"C:\QIH\secrets\dashboard_write_token.txt")
+
+def _write_token() -> str:
+    try:
+        return _WRITE_TOKEN_FILE.read_text(encoding="utf-8").strip()
+    except Exception:
+        return ""
+
+@app.middleware("http")
+async def tunnel_write_guard(request: Request, call_next):
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        via_tunnel = bool(request.headers.get("cf-ray") or request.headers.get("cf-connecting-ip"))
+        if via_tunnel:
+            tok = _write_token()
+            supplied = request.headers.get("x-qi-token") or request.query_params.get("qi_token", "")
+            if not tok or supplied != tok:
+                return JSONResponse({"status": "error", "error": "write access via tunnel requires X-QI-Token"},
+                                    status_code=403)
+    return await call_next(request)
+
 _PROJECT_DIR = Path(__file__).parent.parent.parent.parent  # C:\QIH
 STATUS_FILE  = _PROJECT_DIR / "data" / "status.json"
 TASKS_FILE   = _PROJECT_DIR / "data" / "tasks.json"
