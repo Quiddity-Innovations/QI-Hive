@@ -88,6 +88,20 @@ def validate_project(pid: str, live: bool = False) -> tuple[int, int]:
     if doc_path.exists():
         c("Session Summaries subfolder exists", (doc_path / "Session Summaries").exists(), critical=False)
 
+    # INTRO set (the 6 files the Hive "Project Status" tab renders)
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(ECOSYSTEM_DIR))
+        from qi_intro import intro_dir as _intro_dir, SIX_FILES as _SIX
+        _id = _intro_dir(proj)
+        c("INTRO dir exists", _id.exists(), critical=False)
+        if _id.exists():
+            _missing = [f for f in _SIX if not (_id / f).exists()]
+            c(f"INTRO has all 6 status files{(' (missing: '+', '.join(_missing)+')') if _missing else ''}",
+              not _missing, critical=False)
+    except Exception as _e:
+        check(f"INTRO check skipped ({type(_e).__name__})", True, critical=False)
+
     # ── Registry checks ────────────────────────────────────────────
     print("\n  [ Registry ]")
 

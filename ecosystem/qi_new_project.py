@@ -469,6 +469,19 @@ def main():
     scaffold_project(name, project_id, description, path,
                      api_port, ui_port, family_tier)
 
+    print("\n  [ Step 2b: Scaffold INTRO (Project Status content) ]")
+    try:
+        sys.path.insert(0, str(ECOSYSTEM_DIR))
+        from qi_intro import make_intro
+        proj = {"id": project_id, "name": name, "description": description,
+                "path": str(path), "family_tier": family_tier,
+                "primary_language": "Python",
+                "ports": {"api": {"current": api_port}, "ui": {"current": ui_port}}}
+        d, files = make_intro(proj)
+        print(f"  [OK] INTRO created ({len(files)} files) at {d}")
+    except Exception as e:
+        print(f"  [WARN] INTRO scaffold failed: {e}")
+
     print("\n  [ Step 3: Initialize git ]")
     try:
         subprocess.run(["git", "init"], cwd=str(path), capture_output=True)
