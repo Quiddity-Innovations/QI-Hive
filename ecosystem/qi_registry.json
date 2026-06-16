@@ -729,7 +729,7 @@
       "name": "CypherMiner",
       "description": "Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools",
       "path": "C:\\CypherMiner",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/CypherMiner",
       "status": "new",
       "primary_language": "Python",
       "ports": {
@@ -760,7 +760,7 @@
       "name": "LotteryWiz",
       "description": "Fantasy 5 covering-design app — generates optimal play sets with guaranteed coverage. FastAPI + export to .xlsx/.csv.",
       "path": "C:\\Lottery Wiz",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/LotteryWiz",
       "status": "active",
       "primary_language": "Python",
       "ports": {
@@ -787,7 +787,7 @@
       "name": "Digitization Cost Tool",
       "description": "BU Digitization Cost Comparison Tool — client-side HTML calculator for Document Imaging & Services pricing/scenarios. Ships with technical docs + user guide.",
       "path": "C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/DigitizationCostTool",
       "status": "active",
       "primary_language": "HTML/JS",
       "ports": {},
@@ -804,7 +804,7 @@
       "name": "TubeScout",
       "description": "YouTube subscription intelligence: organize subs, sweep daily uploads, transcript-to-news page, feeds NEXUS Scout/Kaze digest + QI Brain implement-scouting",
       "path": "C:\\TUBESCOUT",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/TubeScout",
       "status": "active_development",
       "primary_language": "Python",
       "ports": {
@@ -866,7 +866,7 @@
       "name": "Fidelity Portfolio Analyzer",
       "description": "Ingests a Fidelity positions CSV export and computes allocation, concentration risk (top-5 + HHI), drift vs target, and rebalancing trade recommendations. FastAPI + Gradio.",
       "path": "C:\\FidelityAnalyzer",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/FidelityAnalyzer",
       "status": "active",
       "primary_language": "Python",
       "ports": {
@@ -901,7 +901,7 @@
       "name": "AvatarStudio",
       "description": "QI Avatar Studio — Gradio pipeline that turns a script into a talking-head avatar video (TTS via Kokoro/edge-tts → background removal → Hallo2/LivePortrait render in WSL2 → video-retalking lip-sync → MP4). Multi-language.",
       "path": "C:\\1-AI\\APPS\\AvatarStudio",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/AvatarStudio",
       "status": "active",
       "primary_language": "Python",
       "ports": {
