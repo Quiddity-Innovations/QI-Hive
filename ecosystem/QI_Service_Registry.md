@@ -20,6 +20,8 @@
 | QIDashboard | QI_Dashboard | ✅ 2026-04-19 | Fixed AppDirectory bug |
 | QIDashboardTunnel | QI_DashboardTunnel | ✅ 2026-04-19 | Fixed python3→real Python path bug |
 | QIBrainAPI | QI_BrainAPI | ✅ 2026-04-19 | |
+| AutoPDF | QI_AutoPDF | ✅ 2026-06-15 | Web server 127.0.0.1:6969; AppDir C:\AutoPDF\Application; env AUTOPDF_NO_BROWSER=1 |
+| AutoPDFTunnel | QI_AutoPDFTunnel | ✅ 2026-06-15 | Cloudflare quick tunnel → :6969; URL in Application\status\tunnel.json; PIN-gated |
 
 ---
 
@@ -394,3 +396,65 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Start type** | AUTO_START |
 | **Status** | ✅ Live as of 2026-05-13 (reinstalled via gsudo + NSSM) |
 | **Added** | 2026-04-24, reinstalled 2026-05-13 |
+
+### QI_LotteryWiz
+| Field | Value |
+|---|---|
+| **Display name** | QI Lottery Wiz (Fantasy 5) |
+| **Description** | Lottery Wiz — Fantasy 5 covering-design app (FastAPI). Generators, backtest, Brutal Ledger, AI dock, draw updates. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `C:\Lottery Wiz\server.py` |
+| **Working dir** | `C:\Lottery Wiz` |
+| **Port** | 8777 |
+| **Stdout/Stderr log** | `C:\Lottery Wiz\LOGS\service.log` |
+| **Start type** | AUTO_START |
+| **Install** | `C:\Lottery Wiz\install_service.bat` (self-elevating) · remove via `uninstall_service.bat` |
+| **Status** | ⏳ Pending install (run install_service.bat as admin) — added 2026-06-14 |
+| **Added** | 2026-06-14 |
+
+### QI_LotteryWizTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI Lottery Wiz Cloudflare Tunnel |
+| **Description** | Cloudflare quick tunnel exposing Lottery Wiz (localhost:8777) to the internet. Public URL written to `C:\Lottery Wiz\LOGS\tunnel.log` (search `trycloudflare.com`). |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --protocol http2 --no-autoupdate --url http://localhost:8777` |
+| **Working dir** | `C:\Program Files (x86)\cloudflared` |
+| **Exposes port** | 8777 (QI_LotteryWiz) |
+| **Stdout/Stderr log** | `C:\Lottery Wiz\LOGS\tunnel.log` |
+| **Start type** | AUTO_START |
+| **Install** | `C:\Lottery Wiz\install_tunnel.bat` (self-elevating) · remove via `uninstall_tunnel.bat` |
+| **Note** | Quick tunnel → URL changes on each (re)start. For a stable custom hostname, switch to a named tunnel + a domain on the Cloudflare account. |
+| **Status** | ⏳ Pending install (run install_tunnel.bat as admin). Verified working ad-hoc 2026-06-15. |
+| **Added** | 2026-06-15 |
+
+### QI_CypherMinerUI
+| Field | Value |
+|---|---|
+| **Display name** | QI - CypherMiner UI (static build, port 7842) |
+| **Description** | Serves the CypherMiner production build (dist) on port 7842 for the Cloudflare tunnel. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `-m http.server 7842 --bind 127.0.0.1 --directory C:\CypherMiner\frontend\dist` |
+| **Working dir** | `C:\CypherMiner` |
+| **Port** | 7842 |
+| **Stdout/Stderr log** | `C:\CypherMiner\LOGS\ui_service.log` |
+| **Start type** | AUTO_START |
+| **Install** | `C:\CypherMiner\TOOLS\setup_services.ps1` (run elevated; idempotent) |
+| **Status** | ✅ Live as of 2026-06-15 |
+| **Added** | 2026-06-15 |
+
+### QI_CypherMinerTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI - CypherMiner Cloudflare Tunnel |
+| **Description** | Cloudflare quick tunnel exposing CypherMiner (localhost:7842) to the internet. Public URL written to `C:\CypherMiner\LOGS\tunnel.log` (search `trycloudflare.com`). |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --url http://localhost:7842 --logfile C:\CypherMiner\LOGS\tunnel.log --loglevel info` |
+| **Working dir** | `C:\CypherMiner` |
+| **Exposes port** | 7842 (QI_CypherMinerUI) |
+| **Stdout/Stderr log** | `C:\CypherMiner\LOGS\tunnel_service.log` |
+| **Start type** | AUTO_START |
+| **Install** | `C:\CypherMiner\TOOLS\setup_services.ps1` (run elevated; idempotent) |
+| **Note** | Quick tunnel → URL changes on each (re)start. For a stable custom hostname, switch to a named tunnel + a domain on the Cloudflare account. |
+| **Status** | ✅ Live as of 2026-06-15 — https://deluxe-peas-lesson-modular.trycloudflare.com |
+| **Added** | 2026-06-15 |

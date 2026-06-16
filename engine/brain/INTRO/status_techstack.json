@@ -1,0 +1,24 @@
+{
+  "table": [
+    {
+      "layer": "Runtime",
+      "technology": "Python 3.11+",
+      "role": "Primary language (placeholder — confirm).",
+      "license": "Open source (PSF)",
+      "version": "3.11"
+    },
+    {
+      "layer": "Hosting",
+      "technology": "Local Windows",
+      "role": "Runs on the Quiddity dev machine at C:\\QIH\\engine\\brain.",
+      "license": "N/A",
+      "version": ""
+    }
+  ],
+  "descriptions": [
+    {
+      "title": "Stack details pending",
+      "body": "This is a seed entry. Replace with the real technology breakdown once the QI Brain stack is finalised."
+    }
+  ]
+}

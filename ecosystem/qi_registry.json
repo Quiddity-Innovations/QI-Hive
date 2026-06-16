@@ -3,7 +3,7 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-06-10",
+    "last_updated": "2026-06-15",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
     "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check."
   },
@@ -372,7 +372,10 @@
         "GET /version",
         "GET /info"
       ],
-      "consumes_from_ecosystem": []
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\MQ\\data\\logs"
+      }
     },
     {
       "id": "easyflow",
@@ -407,15 +410,9 @@
       "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 — see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
       "status": "active",
       "primary_language": "HTML/Python",
-      "ports": {
-        "launcher": {
-          "current": 8650,
-          "block": "8650",
-          "notes": "QI Launcher — served via python http.server"
-        }
-      },
+      "ports": {},
       "family_tier": "infrastructure",
-      "family_notes": "Universal tools layer. Not a product — shared utilities for all QI projects. QI Launcher at localhost:8650 is the single-page dashboard for all project localhost URLs.",
+      "family_notes": "Universal tools layer. Not a product — shared utilities for all QI projects. QI Launcher at localhost:8650 is the single-page dashboard for all project localhost URLs. | Launcher port 8650 removed 2026-06-15 (conflicted with cognibase; QI Launcher superseded by Hive Dashboard :8600).",
       "integrates_with": [
         "maia",
         "nexus",
@@ -472,7 +469,10 @@
         "qi.explain",
         "qi.override_evaluation"
       ],
-      "added": "2026-04-19"
+      "added": "2026-04-19",
+      "paths": {
+        "logs": "C:\\QIH\\engine\\brain\\LOGS"
+      }
     },
     {
       "id": "qi_hive",
@@ -480,7 +480,7 @@
       "description": "Unified agent orchestration and knowledge system — QI Brain + Dashboard + 7 hive agents. The bee colony.",
       "path": "C:\\QIH",
       "paths": {
-        "logs": "C:\\QIH\\logs"
+        "logs": "C:\\QIH\\engine\\hive\\dashboard\\LOGS"
       },
       "github": "https://github.com/Quiddity-Innovations/QI-Hive",
       "status": "active_development",
@@ -490,11 +490,6 @@
           "current": 8600,
           "block": "8600-8649",
           "notes": "Hive dashboard"
-        },
-        "brain_api": {
-          "current": 9011,
-          "block": "9000-9099",
-          "notes": "QI Brain API. Moved from 9010 to 9011 on 2026-05-14 — port 9010 squatted by Logitech G HUB."
         }
       },
       "services": [
@@ -536,7 +531,10 @@
         "POST http://localhost:9011/api/log_decision — decisions for all projects"
       ],
       "future_structure": "Projects migrate to C:\\QIP one by one. C:\\QI becomes C:\\QIB (business side).",
-      "added": "2026-04-19"
+      "added": "2026-04-19",
+      "consumes_from_ecosystem": [
+        "qi_brain (Brain API :9011)"
+      ]
     },
     {
       "id": "autopdf",
@@ -599,7 +597,10 @@
         "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
         "POST /api/template-propose      (AI field proposal)",
         "GET  /api/regex-library         (reusable patterns)"
-      ]
+      ],
+      "paths": {
+        "logs": "C:\\AutoPDF\\Application\\LOGS"
+      }
     },
     {
       "id": "cognibase",
@@ -631,7 +632,10 @@
       "version": "0.5.0-dev",
       "last_milestone": "M18 (Discovery + Bridges) + M25-minimal (Lifecycle visualizer) + Portability",
       "tests": "50/50 passing",
-      "last_updated": "2026-05-09"
+      "last_updated": "2026-05-09",
+      "paths": {
+        "logs": "C:\\CogniBase\\LOGS"
+      }
     },
     {
       "id": "mapsnap",
@@ -655,7 +659,10 @@
         "Jenzabar schema as JSON",
         "Schema browser HTML"
       ],
-      "consumes_from_ecosystem": []
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\MapSnap\\LOGS"
+      }
     },
     {
       "id": "m2v",
@@ -683,7 +690,10 @@
         "GET /version",
         "GET /info"
       ],
-      "consumes_from_ecosystem": []
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\M2V\\data\\logs"
+      }
     },
     {
       "id": "personalsong",
@@ -713,6 +723,227 @@
       "loopback_only": true,
       "internet_exposed": false,
       "added_to_registry": "2026-06-10"
+    },
+    {
+      "id": "cypherminer",
+      "name": "CypherMiner",
+      "description": "Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools",
+      "path": "C:\\CypherMiner",
+      "github": "TBD",
+      "status": "new",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8502,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7842,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "New project — family role to be determined as it develops.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\CypherMiner\\LOGS"
+      }
+    },
+    {
+      "id": "lotterywiz",
+      "name": "LotteryWiz",
+      "description": "Fantasy 5 covering-design app — generates optimal play sets with guaranteed coverage. FastAPI + export to .xlsx/.csv.",
+      "path": "C:\\Lottery Wiz",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8777,
+          "block": "8770-8779",
+          "notes": "Pre-registry ad-hoc port — works, kept per migration_note. UI served from same FastAPI app."
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "Standalone utility app. NSSM service QI_LotteryWiz + public tunnel QI_LotteryWizTunnel (installed 2026-06-15).",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Fantasy 5 covering-design generator",
+        "Play-set export API"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\Lottery Wiz\\LOGS"
+      }
+    },
+    {
+      "id": "digitization",
+      "name": "Digitization Cost Tool",
+      "description": "BU Digitization Cost Comparison Tool — client-side HTML calculator for Document Imaging & Services pricing/scenarios. Ships with technical docs + user guide.",
+      "path": "C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "HTML/JS",
+      "ports": {},
+      "family_tier": "sibling",
+      "family_notes": "Self-contained single-file HTML tool (no server). NOT YET migrated to a C:\\ project root — still under Downloads. Migration to QI standard layout pending.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Digitization cost comparison / scenario modelling (standalone)"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "tubescout",
+      "name": "TubeScout",
+      "description": "YouTube subscription intelligence: organize subs, sweep daily uploads, transcript-to-news page, feeds NEXUS Scout/Kaze digest + QI Brain implement-scouting",
+      "path": "C:\\TUBESCOUT",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8503,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7843,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "YouTube subscription intelligence. Feeds NEXUS Scout (Kaze digest) + QI Brain implement-scoring. Sibling-in-spirit of NEXUS Scout.",
+      "integrates_with": [
+        "nexus",
+        "qi_brain",
+        "openclaw"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET /news (authed news page)",
+        "GET /api/news",
+        "GET /stats",
+        "GET /channels",
+        "GET /videos"
+      ],
+      "consumes_from_ecosystem": [
+        "nexus (/synthesize summaries + scoring)",
+        "nexus (/scout/import/opml -> Kaze)",
+        "qi_brain (/api/log_feature)"
+      ],
+      "scheduled_tasks": [
+        "QI_TubeScout_AM (07:00 daily)",
+        "QI_TubeScout_PM (19:00 daily)"
+      ],
+      "planned_services": [
+        {
+          "name": "QI_TubeScout",
+          "port": 8503,
+          "status": "pending_admin_install",
+          "installer": "C:\\TUBESCOUT\\install_service_admin.bat"
+        },
+        {
+          "name": "QI_TubeScoutTunnel",
+          "type": "cloudflare",
+          "start": "manual",
+          "status": "pending_admin_install"
+        }
+      ],
+      "paths": {
+        "logs": "C:\\TUBESCOUT\\data\\logs"
+      }
+    },
+    {
+      "id": "fidelityanalyzer",
+      "name": "Fidelity Portfolio Analyzer",
+      "description": "Ingests a Fidelity positions CSV export and computes allocation, concentration risk (top-5 + HHI), drift vs target, and rebalancing trade recommendations. FastAPI + Gradio.",
+      "path": "C:\\FidelityAnalyzer",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8504,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7844,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "Personal-finance utility. Automates the manual Fidelity portfolio review/rebalancing previously done by hand (see Downloads analysis docs).",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET /target",
+        "POST /analyze",
+        "POST /analyze_text",
+        "POST /rebalance"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\FidelityAnalyzer\\data\\logs"
+      }
+    },
+    {
+      "id": "avatarstudio",
+      "name": "AvatarStudio",
+      "description": "QI Avatar Studio — Gradio pipeline that turns a script into a talking-head avatar video (TTS via Kokoro/edge-tts → background removal → Hallo2/LivePortrait render in WSL2 → video-retalking lip-sync → MP4). Multi-language.",
+      "path": "C:\\1-AI\\APPS\\AvatarStudio",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "ui": {
+          "current": 7862,
+          "block": "7840-7869",
+          "notes": "Pre-registry Gradio port. Works; keep per migration_note."
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "Media-generation studio. Depends on WSL2 for avatar render backends. Shares the avatar/voice vision used across QI agents.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Talking-head avatar video generation (Gradio UI :7862)"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\1-AI\\APPS\\AvatarStudio\\logs"
+      }
+    },
+    {
+      "id": "claude_manager",
+      "name": "Claude Manager",
+      "description": "Claude Code management workspace — QI Hive orchestration, ecosystem reconciliation scripts, Brain backfills, and cross-project session management. Meta/management project (no served ports).",
+      "path": "C:\\CLAUDE",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {},
+      "family_tier": "backbone",
+      "family_notes": "Management/meta workspace that operates ON the ecosystem rather than being a deployed app.",
+      "integrates_with": [
+        "qi_hive",
+        "qi_brain"
+      ],
+      "exposes_to_ecosystem": [
+        "Ecosystem reconciliation + project registration tooling"
+      ],
+      "consumes_from_ecosystem": [
+        "qi_brain",
+        "qi_hive"
+      ]
     }
   ],
   "family_taxonomy": {

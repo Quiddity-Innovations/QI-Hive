@@ -1,0 +1,19 @@
+[
+  {
+    "category": "Codebase",
+    "features": [
+      {
+        "name": "Source tree",
+        "file": "C:\\QIH\\engine\\brain",
+        "status": "live",
+        "detail": "Live source folder for the project."
+      },
+      {
+        "name": "Component-level dev matrix",
+        "file": "INTRO/status_features_dev.json",
+        "status": "planned",
+        "detail": "Populate with module/file-level status entries."
+      }
+    ]
+  }
+]

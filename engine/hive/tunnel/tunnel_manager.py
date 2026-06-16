@@ -62,7 +62,7 @@ def main():
     write_status(status="starting", url=None)
 
     proc = subprocess.Popen(
-        [CLOUDFLARED, "tunnel", "--url", f"http://127.0.0.1:{DASHBOARD_PORT}"],
+        [CLOUDFLARED, "tunnel", "--protocol", "http2", "--url", f"http://127.0.0.1:{DASHBOARD_PORT}"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

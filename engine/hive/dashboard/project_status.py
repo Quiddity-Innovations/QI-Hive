@@ -23,16 +23,55 @@ import html
 import json
 from pathlib import Path
 
-# Project id -> (display_name, INTRO dir). Single source of truth for which
-# projects get a Project Status page.
+_REGISTRY_PATH = Path(r"C:\QIH\ecosystem\qi_registry.json")
+
+# Hardcoded overrides: pid -> (display_name, INTRO dir).
+# These take precedence over registry-derived paths. Keep as-is — do not delete.
 PROJECT_INTRO: dict[str, tuple[str, Path]] = {
-    "maia":     ("Maia",      Path(r"C:\QI\INTRO")),
-    "naya":     ("Naya",      Path(r"C:\NAYA\INTRO")),
-    "nexus":    ("NEXUS",     Path(r"C:\NEXUS\INTRO")),
-    "easyflow": ("EasyFlow",  Path(r"C:\EasyFlow\INTRO")),
-    "qi_hive":  ("QI Hive",   Path(r"C:\QIH\INTRO")),
-    "qi_brain": ("QI Brain",  Path(r"C:\QIH\engine\brain\INTRO")),
+    "maia":      ("Maia",      Path(r"C:\QI\INTRO")),
+    "naya":      ("Naya",      Path(r"C:\NAYA\INTRO")),
+    "nexus":     ("NEXUS",     Path(r"C:\NEXUS\INTRO")),
+    "easyflow":  ("EasyFlow",  Path(r"C:\EasyFlow\INTRO")),
+    "qi_hive":   ("QI Hive",   Path(r"C:\QIH\INTRO")),
+    "qi_brain":  ("QI Brain",  Path(r"C:\QIH\engine\brain\INTRO")),
+    "filehq":    ("FileHQ",    Path(r"C:\NAYA\filehq\INTRO")),
+    "openclaw":  ("OpenClaw",  Path(r"C:\OC\INTRO")),
+    "mq":        ("MQ",        Path(r"C:\MQ\INTRO")),
+    "autopdf":   ("AutoPDF",   Path(r"C:\AutoPDF\INTRO")),
+    "cognibase": ("CogniBase", Path(r"C:\CogniBase\INTRO")),
+    "mapsnap":   ("MapSnap",   Path(r"C:\MapSnap\INTRO")),
 }
+
+
+def _load_registry() -> dict[str, dict]:
+    """Return {pid: registry_entry} for every project in qi_registry.json."""
+    try:
+        data = json.loads(_REGISTRY_PATH.read_text(encoding="utf-8"))
+        return {p["id"].lower(): p for p in data.get("projects", []) if "id" in p}
+    except Exception:
+        return {}
+
+
+# Registry snapshot loaded once at import time.
+_REGISTRY: dict[str, dict] = _load_registry()
+
+
+def _registry_intro(pid: str) -> tuple[str, Path] | None:
+    """Derive (display_name, INTRO dir) from the registry for a given pid.
+
+    Tries <path>\\INTRO first, then the project root itself as a fallback so
+    the page at least has something to show even when INTRO hasn't been seeded.
+    Returns None if pid is not in the registry.
+    """
+    entry = _REGISTRY.get(pid.lower())
+    if not entry:
+        return None
+    name = entry.get("name", pid)
+    proj_path = entry.get("path", "")
+    if not proj_path:
+        return None
+    intro = Path(proj_path) / "INTRO"
+    return (name, intro)
 
 STATUS_BADGE = {
     "live":     '<span class="badge bg-success">Live</span>',
@@ -49,14 +88,48 @@ PRIORITY_BADGE = {
 }
 
 
-def list_projects() -> list[dict]:
-    """List projects whose INTRO dir exists, for the selector nav."""
-    out = []
+def _all_project_entries() -> list[tuple[str, str, Path]]:
+    """Return (pid, display_name, intro_path) for every known project.
+
+    Registry drives the full list. PROJECT_INTRO overrides name/path where
+    it has an explicit entry. Projects only in PROJECT_INTRO (not in registry)
+    are appended at the end so they are never silently dropped.
+    """
+    seen: set[str] = set()
+    result: list[tuple[str, str, Path]] = []
+
+    # Registry order first (canonical source for all 22 projects).
+    for pid, reg_entry in _REGISTRY.items():
+        seen.add(pid)
+        if pid in PROJECT_INTRO:
+            name, intro = PROJECT_INTRO[pid]
+        else:
+            name = reg_entry.get("name", pid)
+            proj_path = reg_entry.get("path", "")
+            intro = Path(proj_path) / "INTRO" if proj_path else Path("")
+        result.append((pid, name, intro))
+
+    # Append anything in the hardcoded dict that the registry doesn't know yet.
     for pid, (name, intro) in PROJECT_INTRO.items():
+        if pid not in seen:
+            result.append((pid, name, intro))
+
+    return result
+
+
+def list_projects() -> list[dict]:
+    """List all known projects (registry + overrides) for the selector nav."""
+    out = []
+    for pid, name, intro in _all_project_entries():
+        ready = False
+        try:
+            ready = intro.exists() and any(intro.iterdir())
+        except Exception:
+            pass
         out.append({
             "pid": pid,
             "name": name,
-            "ready": intro.exists() and any(intro.iterdir()),
+            "ready": ready,
             "intro": str(intro),
         })
     return out
@@ -330,21 +403,44 @@ def _render_md_table_row(line: str) -> str:
 
 def render_project_status(pid: str, tab: str = "overview") -> tuple[str, str]:
     """Return (page_title, html_body) for /project/<pid>/status."""
-    entry = PROJECT_INTRO.get(pid.lower())
+    pid = pid.lower()
+    entry = PROJECT_INTRO.get(pid)
     if not entry:
-        return (
-            pid,
-            _empty(f"No Project Status mapping for '{pid}'. "
-                   "Add it to PROJECT_INTRO in project_status.py."),
-        )
-    name, intro = entry
+        # Fall back to registry-derived path/name.
+        reg = _registry_intro(pid)
+        if reg is None:
+            return (
+                pid,
+                _empty(f"Unknown project '{pid}': not found in PROJECT_INTRO or "
+                       f"qi_registry.json."),
+            )
+        name, intro = reg
+    else:
+        name, intro = entry
+
     if not intro.exists():
-        return (
-            f"{name} — Project Status",
-            _empty(f"INTRO folder not found: {intro}\n"
-                   f"Seed it with status_*.json + status_intro.md "
-                   f"(copy the shape from C:\\QI\\INTRO\\)."),
+        # Render a minimal informational page from registry metadata instead of
+        # an opaque error so new projects at least have a usable status page.
+        reg_entry = _REGISTRY.get(pid, {})
+        desc = html.escape(reg_entry.get("description", "No description available."))
+        path_val = html.escape(reg_entry.get("path", str(intro.parent)))
+        status_val = html.escape(str(reg_entry.get("status", "unknown")))
+        minimal_body = (
+            f"<div class='card mb-3'><div class='card-body'>"
+            f"<h5 class='text-primary'>{html.escape(name)}</h5>"
+            f"<p>{desc}</p>"
+            f"<table class='table table-sm'><tbody>"
+            f"<tr><th>Path</th><td><code>{path_val}</code></td></tr>"
+            f"<tr><th>Status</th><td>{status_val}</td></tr>"
+            f"</tbody></table>"
+            f"</div></div>"
+            + _empty(
+                f"INTRO folder not found: {intro} — "
+                f"seed it with status_*.json + status_intro.md "
+                f"(copy the shape from C:\\QI\\INTRO\\) to unlock all tabs."
+            )
         )
+        return (f"{name} — Project Status", minimal_body)
 
     tabs = [
         ("overview",  "bi-clipboard-data", "Overview & Features"),

@@ -37,6 +37,9 @@ PROJECT_PREFIX = {
     'Maia': 'maia', 'Naya': 'naya', 'NEXUS': 'nexus',
     'MQ': 'mq', 'QIHive': 'qi_hive',
     'PersonalSong': 'personalsong', 'M2V': 'm2v',
+    'LotteryWiz': 'lotterywiz', 'CypherMiner': 'cypherminer',
+    'Digitization': 'digitization', 'FidelityAnalyzer': 'fidelityanalyzer',
+    'AvatarStudio': 'avatarstudio', 'TubeScout': 'tubescout',
 }
 
 GIT_PROJECTS = {
@@ -46,6 +49,10 @@ GIT_PROJECTS = {
     'nexus': r'C:\NEXUS', 'mq': r'C:\MQ', 'qi_hive': r'C:\QIH',
     'personalsong': r'C:\PersonalSong', 'm2v': r'C:\M2V',
     'claude_manager': r'C:\CLAUDE',
+    'cypherminer': r'C:\CypherMiner',
+    'fidelityanalyzer': r'C:\FidelityAnalyzer',
+    'avatarstudio': r'C:\1-AI\APPS\AvatarStudio',
+    'tubescout': r'C:\TUBESCOUT',
 }
 
 def main():

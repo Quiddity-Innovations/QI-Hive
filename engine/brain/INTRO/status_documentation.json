@@ -1,0 +1,23 @@
+{
+  "sections": [
+    {
+      "name": "Project Documentation",
+      "documents": [
+        {
+          "title": "QI Brain README",
+          "type": "Reference",
+          "location": "C:\\QIH\\engine\\brain\\",
+          "file": "README.md",
+          "description": "Top-level overview of QI Brain."
+        },
+        {
+          "title": "QI Ecosystem Map",
+          "type": "Reference",
+          "location": "C:\\QIH\\ecosystem\\",
+          "file": "QI_Ecosystem_Map.md",
+          "description": "Where this project sits in the QI port/family map."
+        }
+      ]
+    }
+  ]
+}

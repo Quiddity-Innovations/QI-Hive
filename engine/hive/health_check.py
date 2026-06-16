@@ -22,8 +22,108 @@ HEALTH_CACHE_TTL = 30  # seconds
 _health_cache = {"t": 0.0, "data": None}
 _health_lock = threading.Lock()
 
+# ── Service name map ────────────────────────────────────────────────────────
+# Registry project IDs that have known NSSM service names not derivable from
+# the registry alone. Keys are registry `id` values (lowercase).
+_SERVICE_MAP = {
+    "maia":             "QI_MaiaBot",
+    "naya":             "QI_NayaBot",
+    "nexus":            "QI_NEXUS",
+    "cognibase":        "QI_CogniBase",
+    "mapsnap":          "QI_MapSnap",
+    "autopdf":          "QI_AutoPDF",
+    "lotterywiz":       "QI_LotteryWiz",
+    "cypherminer":      "QI_CypherMinerUI",
+    "tubescout":        "QI_TubeScout",
+    "fidelityanalyzer": "QI_FidelityAnalyzer",
+    "avatarstudio":     "QI_AvatarStudio",
+    "personalsong":     "QI_PersonalSong",
+    "m2v":              "QI_M2V",
+    "mq":               "QI_MQ",
+    "qi_brain":         "QI_BrainAPI",
+    "qi_hive":          "QI_Dashboard",
+}
+
+# Project IDs that have a public Cloudflare tunnel service.
+_TUNNEL_IDS = {
+    "maia", "naya", "nexus", "cognibase", "mapsnap",
+    "autopdf", "lotterywiz", "cypherminer", "tubescout", "m2v",
+}
+
+# Project IDs that have no NSSM service at all (static sites, WSL, no-op).
+_NO_SERVICE_IDS = {
+    "openclaw", "easyflow", "universal", "filehq",
+    "claude_manager", "digitization", "digicost",
+}
+
+_REGISTRY_PATH = Path(r"C:\QIH\ecosystem\qi_registry.json")
+
+
+def _first_port(ports_dict: dict) -> int | None:
+    """Return the first usable integer port from a registry project's `ports` dict."""
+    for key in ("api", "http", "dashboard", "ui", "gateway"):
+        entry = ports_dict.get(key)
+        if isinstance(entry, dict):
+            val = entry.get("current")
+            if isinstance(val, int):
+                return val
+    return None
+
+
+def _build_projects_from_registry() -> dict:
+    """
+    Dynamically build the PROJECTS structure from qi_registry.json.
+    Returns a dict keyed by display name with the same shape the health-check
+    logic and dashboard renderer expect.
+    """
+    with open(_REGISTRY_PATH, encoding="utf-8") as fh:
+        reg = json.load(fh)
+
+    projects = {}
+    for entry in reg.get("projects", []):
+        pid = entry.get("id", "").lower()
+        name = entry.get("name") or pid
+        path = entry.get("path") or entry.get("path_standard") or ""
+
+        ports = entry.get("ports", {})
+        api_port = _first_port(ports)
+
+        # UI port: second pass for explicit "ui" key when api already consumed another
+        ui_port = None
+        ui_entry = ports.get("ui")
+        if isinstance(ui_entry, dict):
+            ui_port = ui_entry.get("current") if isinstance(ui_entry.get("current"), int) else None
+
+        service = None if pid in _NO_SERVICE_IDS else _SERVICE_MAP.get(pid)
+        tunnel = f"QI_{name.replace(' ', '')}Tunnel" if pid in _TUNNEL_IDS else None
+
+        # Derive sensible doc_path: prefer DOCUMENTATION sub-folder; fall back to path root.
+        doc_path = str(Path(path) / "DOCUMENTATION") if path else path
+
+        cfg = {
+            "path": path,
+            "service": service,
+            "tunnel": tunnel,
+            "api_port": api_port,
+            "ui_port": ui_port,
+            "db": None,
+            "doc_path": doc_path,
+            "key_files": [],
+        }
+
+        note = entry.get("status_reason") or entry.get("family_notes") or entry.get("path_migration_note")
+        if note:
+            cfg["note"] = note[:200]
+
+        # Use the human-readable name as key to keep dashboard display consistent.
+        projects[name] = cfg
+
+    return projects
+
+
 # ── Project registry ────────────────────────────────────────────────────────
-PROJECTS = {
+# Fallback used when the registry file cannot be read.
+_PROJECTS_FALLBACK = {
     "Maia": {
         "path": r"C:\QI",
         "service": "QI_MaiaBot",
@@ -76,26 +176,26 @@ PROJECTS = {
         "key_files": [],
         "note": "Not yet live — waiting on Meta credentials",
     },
-    "QI_Hive": {
+    "QI Hive": {
         "path": r"C:\QIH",
         "service": "QI_Dashboard",
         "tunnel": None,
         "api_port": 8600,
         "ui_port": None,
         "db": None,
-        "doc_path": r"C:\QIH\hive\Session Summaries",
-        "key_files": ["hive/Dashboard/server.py"],
+        "doc_path": r"C:\QIH\engine\hive\dashboard\LOGS",
+        "key_files": ["engine/hive/dashboard/server.py"],
         "note": "QI Hive — dashboard + agent system. Brain at port 9011.",
     },
-    "QI_Brain": {
-        "path": r"C:\QIH\brain",
+    "QI Brain": {
+        "path": r"C:\QIH\engine\brain",
         "service": "QI_BrainAPI",
         "tunnel": None,
         "api_port": 9011,
         "ui_port": None,
-        "db": r"C:\QIH\brain\qi_brain.db",
-        "doc_path": r"C:\QIH\brain",
-        "key_files": ["qi_brain_api.py"],
+        "db": r"C:\QIH\data\qi_brain.db",
+        "doc_path": r"C:\QIH\engine\brain",
+        "key_files": ["api.py"],
         "note": "QI Brain — hive nervous system. SQLite + ChromaDB + MCP.",
     },
     "EasyFlow": {
@@ -107,29 +207,18 @@ PROJECTS = {
         "db": None,
         "doc_path": r"C:\EasyFlow\DOCUMENTATION",
         "key_files": ["app.py"],
-        "note": "Email/inbox tier automation — 43% of 30d Claude spend. Local Flask dashboard (not NSSM).",
+        "note": "Email/inbox tier automation. Local Flask dashboard (not NSSM).",
     },
-    "Claude_Manager": {
-        "path": r"C:\Claude",
+    "Claude Manager": {
+        "path": r"C:\CLAUDE",
         "service": None,
         "tunnel": None,
         "api_port": None,
         "ui_port": None,
         "db": None,
-        "doc_path": r"C:\Claude\DOCUMENTATION",
+        "doc_path": r"C:\CLAUDE\DOCUMENTATION",
         "key_files": [],
-        "note": "Orchestration/PM layer. Dashboard responsibility migrated to QI_Hive (2026-04-19). Retained for historical tasks/status tracking.",
-    },
-    "QI_Universal": {
-        "path": r"C:\UNIVERSAL",
-        "service": None,
-        "tunnel": None,
-        "api_port": None,
-        "ui_port": None,
-        "db": None,
-        "doc_path": r"C:\UNIVERSAL\DOCUMENTATION",
-        "key_files": [],
-        "note": "Ecosystem registry + shared DOCUMENTATION/Session_Summaries. Not a service.",
+        "note": "Orchestration/PM layer. No served ports.",
     },
     "FileHQ": {
         "path": r"C:\NAYA\filehq",
@@ -140,9 +229,20 @@ PROJECTS = {
         "db": None,
         "doc_path": r"C:\NAYA\filehq",
         "key_files": [],
-        "note": "Merged into Naya 2026-Q1. Kept for visibility — no active work expected.",
+        "note": "Merged into Naya 2026-Q1. Kept for visibility.",
     },
 }
+
+try:
+    PROJECTS = _build_projects_from_registry()
+except Exception as _reg_err:
+    import warnings as _warnings
+    _warnings.warn(
+        f"[health_check] Failed to load registry ({_reg_err}); using fallback PROJECTS dict.",
+        RuntimeWarning,
+        stacklevel=1,
+    )
+    PROJECTS = _PROJECTS_FALLBACK
 
 STATUS_FILE = Path(r"C:\Claude\status.json")
 

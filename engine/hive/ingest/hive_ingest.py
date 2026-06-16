@@ -136,6 +136,19 @@ def ingest(path: Path) -> None:
         shutil.move(str(path), str(ARCHIVE / f"BAD_{path.name}"))
         return
 
+    # Defensive: this folder is for session stubs only. Anything that isn't a
+    # dict with a string-or-empty 'summary' is a stray (manifest, log dump,
+    # report, etc.) and must be quarantined — otherwise the slice on line ~141
+    # crashes the loop with "TypeError: unhashable type: 'slice'", which is
+    # exactly the failure mode that caused the 2026-05-15 Brain coverage gap.
+    if not isinstance(payload, dict) or not isinstance(payload.get("summary") or "", str):
+        log(f"[SKIP] {path.name} is not a session stub (summary not a string). Quarantining.")
+        try:
+            shutil.move(str(path), str(ARCHIVE / f"NON_STUB_{path.name}"))
+        except Exception:
+            pass
+        return
+
     project = payload.get("project", "?")
     event   = payload.get("event", payload.get("type", "?"))
     log(f"[{project}] {event} - {(payload.get('summary') or '')[:80]}")

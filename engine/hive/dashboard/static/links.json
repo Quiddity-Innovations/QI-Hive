@@ -1,29 +1,29 @@
 {
-  "generated_at": "2026-05-12T23:35:06.144750+00:00",
+  "generated_at": "2026-05-16T18:15:47.666236+00:00",
   "tunnels": [
     {
       "key": "hive",
       "label": "QI Hive Dashboard",
       "port": 8600,
-      "public_url": "https://deutsch-seeds-prominent-filtering.trycloudflare.com",
+      "public_url": "https://mechanisms-notebook-castle-mounting.trycloudflare.com",
       "source": "C:\\QIH\\engine\\hive\\tunnel\\status\\tunnel.json",
-      "updated_at": "2026-05-10T21:04:31.598712Z"
+      "updated_at": "2026-05-14T21:53:29.335019Z"
     },
     {
       "key": "maia_api",
       "label": "Maia API",
       "port": 8001,
-      "public_url": "https://greatest-enclosed-prisoners-group.trycloudflare.com",
+      "public_url": "https://leading-webmaster-citysearch-clocks.trycloudflare.com",
       "source": "C:\\QI\\LOGS\\tunnel_log.txt",
-      "updated_at": "2026-05-12T16:10:59.683618+00:00"
+      "updated_at": "2026-05-15T21:53:34.683585+00:00"
     },
     {
       "key": "maia_ui",
       "label": "Maia UI (Gradio)",
       "port": 7860,
-      "public_url": null,
+      "public_url": "https://tell-live-entities-actual.trycloudflare.com",
       "source": "C:\\QI\\LOGS\\Maia_Gradio_Tunnel_Log.txt",
-      "updated_at": null
+      "updated_at": "2026-05-15T21:53:36.856399+00:00"
     },
     {
       "key": "naya",

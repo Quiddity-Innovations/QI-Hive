@@ -13,6 +13,45 @@
       ]
     },
     {
+      "name": "nssm_install_qi",
+      "description": "Install a new QI_ NSSM service. App must be python.exe under approved roots; script must be .py under C:\\QIH or C:\\QIP.",
+      "cmd": "nssm",
+      "arg_count_min": 4,
+      "arg_count_max": 4,
+      "args_regex": [
+        "^install$",
+        "^QI_[A-Za-z0-9_]+$",
+        "^(C:\\\\Windows\\\\System32\\\\python\\.exe|C:\\\\1-AI\\\\APPS\\\\PYTHON\\\\python\\.exe|C:\\\\Python[0-9]*\\\\python\\.exe)$",
+        "^C:\\\\(QIH|QIP)(\\\\[A-Za-z0-9_.-]+)*\\.py$"
+      ]
+    },
+    {
+      "name": "nssm_set_stdout_stderr",
+      "description": "Set AppStdout or AppStderr log path under C:\\QIH or C:\\QIP",
+      "cmd": "nssm",
+      "arg_count_min": 4,
+      "arg_count_max": 4,
+      "args_regex": [
+        "^set$",
+        "^QI_[A-Za-z0-9_]+$",
+        "^App(Stdout|Stderr)$",
+        "^C:\\\\(QIH|QIP)(\\\\[A-Za-z0-9_.-]+)*\\.log$"
+      ]
+    },
+    {
+      "name": "nssm_set_start_mode",
+      "description": "Set the Start mode for a QI_ service",
+      "cmd": "nssm",
+      "arg_count_min": 4,
+      "arg_count_max": 4,
+      "args_regex": [
+        "^set$",
+        "^QI_[A-Za-z0-9_]+$",
+        "^Start$",
+        "^SERVICE_(AUTO_START|DEMAND_START|DISABLED|DELAYED_AUTO_START)$"
+      ]
+    },
+    {
       "name": "nssm_set_appdir",
       "description": "Repoint a QI_ service AppDirectory under C:\\QIH or C:\\QIP",
       "cmd": "nssm",
@@ -36,6 +75,19 @@
         "^QI_[A-Za-z0-9_]+$",
         "^AppParameters$",
         "^C:\\\\(QIH|QIP)(\\\\[A-Za-z0-9_.-]+)*\\.(py|bat)$"
+      ]
+    },
+    {
+      "name": "nssm_set_appparams_cloudflared_tunnel",
+      "description": "Set AppParameters for a QI_*Tunnel service to a cloudflared Quick Tunnel invocation (tunnel [--protocol http2|auto|h2mux|quic] --url http://localhost:<port>)",
+      "cmd": "nssm",
+      "arg_count_min": 4,
+      "arg_count_max": 4,
+      "args_regex": [
+        "^set$",
+        "^QI_[A-Za-z0-9_]+Tunnel$",
+        "^AppParameters$",
+        "^tunnel(\\s--protocol\\s(http2|auto|h2mux|quic))?\\s--url\\shttp://localhost:[0-9]{2,5}$"
       ]
     },
     {

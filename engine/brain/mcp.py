@@ -7,18 +7,18 @@ Per Supplement A I-01: ALL logic lives in qi_brain_api.py.
 This server is a stdio ↔ HTTP bridge — ~150 LOC of forwarders.
 
 Tools exposed (12 total):
-    qi.get_context            → POST /api/context
-    qi.log_decision           → POST /api/log_decision
-    qi.log_feature            → POST /api/log_feature
-    qi.get_pending_features   → GET  /api/pending_features
-    qi.decide_on_feature      → POST /api/decide_feature
-    qi.update_project_state   → POST /api/update_project_state
-    qi.search_memory          → POST /api/search_memory
-    qi.log_session            → POST /api/log_session
-    qi.get_ecosystem_snapshot → GET  /api/ecosystem_snapshot
-    qi.supersede_decision     → POST /api/supersede_decision
-    qi.explain                → POST /api/explain
-    qi.override_evaluation    → POST /api/override_evaluation
+    qi_get_context            → POST /api/context
+    qi_log_decision           → POST /api/log_decision
+    qi_log_feature            → POST /api/log_feature
+    qi_get_pending_features   → GET  /api/pending_features
+    qi_decide_on_feature      → POST /api/decide_feature
+    qi_update_project_state   → POST /api/update_project_state
+    qi_search_memory          → POST /api/search_memory
+    qi_log_session            → POST /api/log_session
+    qi_get_ecosystem_snapshot → GET  /api/ecosystem_snapshot
+    qi_supersede_decision     → POST /api/supersede_decision
+    qi_explain                → POST /api/explain
+    qi_override_evaluation    → POST /api/override_evaluation
 
 MCP protocol: JSON-RPC 2.0 over stdio (stdin/stdout).
 Register globally in: C:\\Users\\renne\\.claude\\claude.json
@@ -69,7 +69,7 @@ async def _get(path: str, params: Optional[dict] = None) -> dict:
 
 TOOLS = [
     {
-        "name": "qi.get_context",
+        "name": "qi_get_context",
         "description": "Get ranked ecosystem context for session start. Returns current project state, recent decisions, pending feature evaluations, and ecosystem snapshot.",
         "inputSchema": {
             "type": "object",
@@ -81,7 +81,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.log_decision",
+        "name": "qi_log_decision",
         "description": "Log an architectural or significant decision to the brain.",
         "inputSchema": {
             "type": "object",
@@ -98,7 +98,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.log_feature",
+        "name": "qi_log_feature",
         "description": "Log a new feature or pattern discovered in a project for cross-project propagation.",
         "inputSchema": {
             "type": "object",
@@ -115,7 +115,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.get_pending_features",
+        "name": "qi_get_pending_features",
         "description": "Get feature evaluations awaiting a decision for a project.",
         "inputSchema": {
             "type": "object",
@@ -125,7 +125,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.decide_on_feature",
+        "name": "qi_decide_on_feature",
         "description": "Record your decision on a pending feature evaluation.",
         "inputSchema": {
             "type": "object",
@@ -138,7 +138,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.update_project_state",
+        "name": "qi_update_project_state",
         "description": "Update the current phase and status of a project.",
         "inputSchema": {
             "type": "object",
@@ -155,7 +155,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.search_memory",
+        "name": "qi_search_memory",
         "description": "Semantic search across brain memory collections.",
         "inputSchema": {
             "type": "object",
@@ -169,7 +169,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.log_session",
+        "name": "qi_log_session",
         "description": "Log a completed session summary to the brain.",
         "inputSchema": {
             "type": "object",
@@ -189,12 +189,12 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.get_ecosystem_snapshot",
+        "name": "qi_get_ecosystem_snapshot",
         "description": "Get a full snapshot of all active QI projects and their current states.",
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
-        "name": "qi.supersede_decision",
+        "name": "qi_supersede_decision",
         "description": "Mark an old decision as superseded by a newer one.",
         "inputSchema": {
             "type": "object",
@@ -207,7 +207,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.explain",
+        "name": "qi_explain",
         "description": "Get a markdown explanation of a decision, feature, session, or project.",
         "inputSchema": {
             "type": "object",
@@ -219,7 +219,7 @@ TOOLS = [
         },
     },
     {
-        "name": "qi.override_evaluation",
+        "name": "qi_override_evaluation",
         "description": "Override a brain feature evaluation with your own recommendation.",
         "inputSchema": {
             "type": "object",
@@ -274,29 +274,29 @@ async def handle_request(req: dict) -> Optional[dict]:
 async def dispatch_tool(name: str, args: dict) -> dict:
     """Route tool name to the correct FastAPI endpoint."""
     match name:
-        case "qi.get_context":
+        case "qi_get_context":
             return await _post("/api/context", args)
-        case "qi.log_decision":
+        case "qi_log_decision":
             return await _post("/api/log_decision", args)
-        case "qi.log_feature":
+        case "qi_log_feature":
             return await _post("/api/log_feature", args)
-        case "qi.get_pending_features":
+        case "qi_get_pending_features":
             return await _get("/api/pending_features", {"project_id": args.get("project_id")})
-        case "qi.decide_on_feature":
+        case "qi_decide_on_feature":
             return await _post("/api/decide_feature", args)
-        case "qi.update_project_state":
+        case "qi_update_project_state":
             return await _post("/api/update_project_state", args)
-        case "qi.search_memory":
+        case "qi_search_memory":
             return await _post("/api/search_memory", args)
-        case "qi.log_session":
+        case "qi_log_session":
             return await _post("/api/log_session", args)
-        case "qi.get_ecosystem_snapshot":
+        case "qi_get_ecosystem_snapshot":
             return await _get("/api/ecosystem_snapshot")
-        case "qi.supersede_decision":
+        case "qi_supersede_decision":
             return await _post("/api/supersede_decision", args)
-        case "qi.explain":
+        case "qi_explain":
             return await _post("/api/explain", args)
-        case "qi.override_evaluation":
+        case "qi_override_evaluation":
             return await _post("/api/override_evaluation", args)
         case _:
             return {"ok": False, "error": f"Unknown tool: {name}"}

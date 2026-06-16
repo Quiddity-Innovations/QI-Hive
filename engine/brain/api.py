@@ -837,7 +837,7 @@ async def get_agent_profile(agent_id: str):
         "agent_id": agent["agent_id"],
         "display_name": agent["display_name"],
         "agent_type": agent["agent_type"],
-        "description": agent.get("description"),
+        "description": (agent["description"] if "description" in agent.keys() else None),
         "active": bool(agent["active"]),
         "created_at": agent["created_at"],
         "stats": {"total_tasks": task_count},

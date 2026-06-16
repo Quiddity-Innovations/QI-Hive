@@ -1,125 +1,152 @@
 {
   "_meta": {
-    "generated": "2026-05-13 02:30:02",
+    "generated": "2026-06-15 02:30:02",
     "source": "nightly_reconcile.py"
   },
   "projects": {
-    "maia": {
-      "phase": "Phase 4 - production on :8001 + Gradio :7860 (newly registered)",
+    "claude_manager": {
+      "phase": "Operational",
       "status": "active",
-      "summary": "Maia bot service running. QI_MaiaGradio NSSM service registered 2026-05-09. Multi-channel webhooks live.",
-      "next_steps": "RAG via ChromaDB. Multi-bot template engine. Migrate webhooks from Quick Tunnel to named tunnel once domain is purchased.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 1,
-      "last_session": "2026-04-13T09:09:00"
+      "summary": "Ecosystem fully booted + reconciled 2026-06-10..12. Drift watchdog live. 3 new GitHub remotes synced nightly.",
+      "next_steps": "Named tunnels after domain purchase; monitor brain_drift checks",
+      "recorded_at": "2026-06-12 08:45:00",
+      "session_count": 15,
+      "last_session": "2026-06-12 08:45:00"
+    },
+    "maia": {
+      "phase": "Phase 4 \u2014 production",
+      "status": "active",
+      "summary": "Bot :8001 + Gradio :7860 + tunnels live under NSSM. Last code work 2026-05-15 (BP overrides, sibling filter, topic propagation, Cloudflare primary).",
+      "next_steps": "Multi-bot template engine + RAG (ChromaDB)",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 6,
+      "last_session": "2026-05-15 14:34:32"
     },
     "naya": {
-      "phase": "Phase 3 - Bot service on :8002, UI on :7861",
+      "phase": "Phase 3 \u2014 bot + UI live",
       "status": "active",
-      "summary": "Naya bot + Gradio UI both live, LAN-only. Telegram long-poll active.",
-      "next_steps": "Avatar + voice integration.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 2,
-      "last_session": "2026-04-13T09:09:00"
+      "summary": "Bot :8002 + Gradio :7861 + tunnel, LAN-only, Telegram long-poll. Last code work 2026-05-15 (BP overrides, parse fix).",
+      "next_steps": "FileHQ Phase 2 code absorption (pending Renne approval)",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 4,
+      "last_session": "2026-05-15 12:00:00"
     },
     "nexus": {
-      "phase": "Phase 2 - Service on :8010/:7880, NSSM-supervised",
+      "phase": "Phase 2 \u2014 NSSM-supervised",
       "status": "active",
-      "summary": "NEXUS multi-AI orchestration backbone. 7 providers wired. Scout digest live.",
-      "next_steps": "Weekend installer test (carried since Meeting 05). First candidate to migrate to cloud VPS.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 0,
-      "last_session": null
-    },
-    "cognibase": {
-      "phase": "Phase B core complete - pilot ready",
-      "status": "active",
-      "summary": "OnBase mirror + AI correlation. M18 + M25-minimal + Portability shipped. 50/50 tests passing. 7+ session summaries logged 2026-05-06 to 2026-05-07.",
-      "next_steps": "Pilot prep. Discovery+Bridges next.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 20,
-      "last_session": "2026-05-11 18:57:00"
-    },
-    "mapsnap": {
-      "phase": "Active stable - schema browser",
-      "status": "active",
-      "summary": "Jenzabar schema browser running on :9876. Generic core shipped 2026-05-07. Tunnel install pending.",
-      "next_steps": "Run install_tunnel_service.bat as admin to register QI_MapSnapTunnel.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 4,
-      "last_session": "2026-05-07 08:20:10"
-    },
-    "autopdf": {
-      "phase": "Phase 2c - Smart Mapping + Template Apply",
-      "status": "active",
-      "summary": "PDF toolkit on :6969. Local-only, no cloud. Smart Mapping AI via Ollama. Last summary 2026-05-01.",
-      "next_steps": "No active dev. Resume when triggered.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 1,
-      "last_session": "2026-04-29 23:46:00"
-    },
-    "easyflow": {
-      "phase": "v1.2.x tester feedback cycle - blocked",
-      "status": "blocked",
-      "summary": "EasyFlow Chrome Extension v1.2.1 shipped. All Phase A/B/C features done. Tester package distributed.",
-      "next_steps": "Awaiting tester feedback. Then v1.3 scope: BYOK + in-tandem AI.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 83,
-      "last_session": "2026-04-19T00:00:00"
-    },
-    "qi_hive": {
-      "phase": "Phase 2 - Dashboard live but ingest gap",
-      "status": "active",
-      "summary": "Hive Dashboard :8600 + Brain :9010 running. Polling alive (5,271 polls). Reconciliation pass run 2026-05-09 to backfill missed sessions.",
-      "next_steps": "Fix per-project hooks for cognibase/mapsnap/autopdf/mq/openclaw. Add scheduled reconciler as safety net. Schedule gen_latest.py hourly.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 5,
-      "last_session": "2026-04-22 22:00:00"
-    },
-    "mq": {
-      "phase": "Phase 0 - Scaffolding, blocked on Meta credentials",
-      "status": "blocked",
-      "summary": "MQ public persona platform reserved on :8500/:7840. No services running.",
-      "next_steps": "Awaiting Facebook Page approval + Meta Developer credentials.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 0,
-      "last_session": null
+      "summary": "API :8010 + UI :7880 + tunnel live. 7 providers wired, Scout digest live.",
+      "next_steps": "Fix chain routing; Judge/Bench Phase 2",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 6,
+      "last_session": "2026-06-13 00:37:00"
     },
     "openclaw": {
-      "phase": "Adjacent - Kaze daily news agent (WSL)",
-      "status": "active_external",
-      "summary": "OpenClaw QI-adjacent. Kaze runs daily news digest in WSL Ubuntu-24.04.",
-      "next_steps": "No QI integration expected.",
-      "recorded_at": "2026-05-09 11:06:25",
+      "phase": "Phase 2 \u2014 agent expansion",
+      "status": "active",
+      "summary": "Agents live in WSL (Tasuke, Kaze, Yubin, Sentry, Asa, Koe, Kakei). Kaze Config API :8401. Keepalive service running.",
+      "next_steps": "NotebookLM connection re-evaluation; Maia action routing",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 16,
+      "last_session": "2026-06-06 11:24:48"
+    },
+    "mq": {
+      "phase": "Phase 0 \u2014 scaffold",
+      "status": "blocked",
+      "summary": "API scaffold runs on :8500 (/health ok). Started 2026-06-10 as part of full-ecosystem boot.",
+      "next_steps": "Obtain Meta credentials",
+      "recorded_at": "2026-06-10 10:45:00",
       "session_count": 1,
-      "last_session": "2026-04-13T09:09:00"
+      "last_session": "2026-04-06 12:00:00"
+    },
+    "easyflow": {
+      "phase": "v1.2.x tester feedback cycle",
+      "status": "blocked",
+      "summary": "Pivoted to Chrome/Edge extension v1.2.1; tester package distributed. No local server anymore (old :8550 dashboard retired). MailBrain rename under assessment.",
+      "next_steps": "Decide on MailBrain rename; process tester feedback",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 85,
+      "last_session": "2026-05-22 15:24:39"
     },
     "filehq": {
-      "phase": "Retired - merged into Naya",
+      "phase": "Retired \u2014 merged into Naya",
       "status": "retired",
-      "summary": "FileHQ retired. Capabilities absorbed into Naya.",
-      "next_steps": "Archive only.",
-      "recorded_at": "2026-05-09 11:06:25",
+      "summary": "Capabilities absorbed into Naya (C:\\NAYA\\filehq). Original C:\\FileHQ marked for deletion.",
+      "next_steps": null,
+      "recorded_at": "2026-06-10 10:45:00",
       "session_count": 0,
       "last_session": null
     },
-    "qi_brain": {
-      "phase": "Phase 5 - Verification + Reconciliation pass",
-      "status": "active",
-      "summary": "Brain API on :9010. 392 docs in ChromaDB. Reconciliation pass 2026-05-09 backfilled missing sessions and registered cognibase/mapsnap/autopdf.",
-      "next_steps": "Tighten Stop-hook coverage. Add scheduled compliance check.",
-      "recorded_at": "2026-05-09 11:06:25",
-      "session_count": 4,
-      "last_session": "2026-04-19T11:35:00"
-    },
     "universal": {
-      "phase": "Phase 0 - MIGRATING into C:/QIH",
+      "phase": "Migration into C:\\QIH",
       "status": "migrating",
-      "summary": "C:/UNIVERSAL is slated to be absorbed into C:/QIH and deleted from disk. Current occupants: qi_brain service (:9010), old dashboard service (:9000), ECOSYSTEM registry, DOCUMENTATION/Session_Summaries, TRAINING, node_modules, and 8 QI_* services all reference C:/UNIVERSAL/dashboard/nssm.exe. Migration must be staged to avoid breaking any service.",
-      "next_steps": "Staged migration: 1) Documentation + Training + ECOSYSTEM (low risk). 2) Repoint services to C:/QIH/engine/bin/nssm.exe. 3) Relocate qi_brain. 4) Retire old dashboard (:9000). 5) Delete C:/UNIVERSAL.",
-      "recorded_at": "2026-04-22 11:20:43",
+      "summary": "C:\\UNIVERSAL absorbed into C:\\QIH (2026-04-22). Folder slated for deletion.",
+      "next_steps": "Delete C:\\UNIVERSAL after final verification",
+      "recorded_at": "2026-06-10 10:45:00",
       "session_count": 21,
-      "last_session": "2026-04-19T11:22:00"
+      "last_session": "2026-04-20 01:16:46"
+    },
+    "qi_brain": {
+      "phase": "Phase 5 \u2014 operational",
+      "status": "active",
+      "summary": "Brain API on :9011 (moved from 9010 on 2026-05-14 \u2014 Logitech G HUB squats 9010). SQLite + ChromaDB + 12 MCP tools. NSSM QI_BrainAPI running.",
+      "next_steps": "Self-logging discipline; ChromaDB doc refresh",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 4,
+      "last_session": "2026-04-20 01:16:39"
+    },
+    "qi_hive": {
+      "phase": "Phase 3 \u2014 agentic operation",
+      "status": "active",
+      "summary": "Dashboard :8600 + tunnel, 7 hive agents, Inspector/Ingest/Apply/Elevate/InspectorDrain services all running. Scheduled tasks logging sessions daily.",
+      "next_steps": "Brain-drift watchdog check (added 2026-06-10); avatar pipeline Phase N",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 51,
+      "last_session": "2026-06-14 13:07:05"
+    },
+    "autopdf": {
+      "phase": "Phase 2c \u2014 Smart Mapping",
+      "status": "active",
+      "summary": "Path standardized to C:\\AutoPDF (2026-05-13). Server on :6969 running. Git repo initialized 2026-06-10.",
+      "next_steps": "Resume Phase 2c work; consider 8700-block migration",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 4,
+      "last_session": "2026-06-10 12:12:26"
+    },
+    "cognibase": {
+      "phase": "Pre-POC \u2014 Phase B core complete",
+      "status": "active",
+      "summary": "M18 + M25-minimal + portability shipped, 50/50 tests passing. Runs as QI_CogniBase service :8650 + tunnel.",
+      "next_steps": "BU pilot preparation",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 22,
+      "last_session": "2026-05-13 12:44:54"
+    },
+    "mapsnap": {
+      "phase": "Active stable",
+      "status": "active",
+      "summary": "Schema browser :9876 running as QI_MapSnap service + QI_MapSnapTunnel (tunnel live \u2014 registry note stale).",
+      "next_steps": ".expk reader verification follow-up",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 17,
+      "last_session": "2026-05-29 12:47:19"
+    },
+    "personalsong": {
+      "phase": "Working app",
+      "status": "active",
+      "summary": "Studio on :8088 (ACE-Step vocals + Demucs/Seed-VC clone). 4 session summaries 2026-06-05/06. Git repo initialized 2026-06-10.",
+      "next_steps": "Register tunnel/port block decision; continue feature work",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 6,
+      "last_session": "2026-06-10 15:06:50"
+    },
+    "m2v": {
+      "phase": "v0.1.0 \u2014 scaffold + first render",
+      "status": "active",
+      "summary": "API :8501 live (/health ok). First test video produced (forro_anime_mv.mp4).",
+      "next_steps": "Define pipeline phases; wire to PersonalSong output",
+      "recorded_at": "2026-06-10 10:45:00",
+      "session_count": 3,
+      "last_session": "2026-06-10 15:06:52"
     }
   }
 }

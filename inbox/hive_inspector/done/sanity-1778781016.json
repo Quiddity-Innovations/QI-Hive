@@ -1,0 +1,34 @@
+{
+  "dispatch_id": "sanity-1778781016",
+  "worktree_path": "C:\\QIH\\worktrees\\apply\\sanity-1778781016",
+  "diff_text": "diff --git a/README.md b/README.md\nindex 34189a7..b8f2884 100644\n--- a/README.md\n+++ b/README.md\n@@ -1 +1 @@\n-Auto-drain teh test.\n+Auto-drain the test.\n",
+  "mechanical_pass": true,
+  "mechanical_checks": [
+    {
+      "file": "C:\\QIH\\worktrees\\apply\\sanity-1778781016\\README.md",
+      "check": "py_syntax",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "C:\\QIH\\worktrees\\apply\\sanity-1778781016\\README.md",
+      "check": "md_links",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "*",
+      "check": "git_diff_check",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "*",
+      "check": "size_limits",
+      "pass": true,
+      "error": null
+    }
+  ],
+  "mechanical_errors": [],
+  "label": "mechanical_pass"
+}

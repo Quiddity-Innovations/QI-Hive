@@ -1,0 +1,18 @@
+[
+  {
+    "category": "Core Capabilities",
+    "features": [
+      {
+        "name": "Project registered in QI ecosystem",
+        "description": "Listed in qi_registry.json with port allocation, path, and status.",
+        "status": "live"
+      },
+      {
+        "name": "Detailed feature matrix",
+        "description": "Per-feature business view — pending population.",
+        "status": "planned",
+        "notes": "Fill in by editing status_features_business.json in the INTRO folder."
+      }
+    ]
+  }
+]

@@ -1,99 +1,120 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-05-13 02:30:02 (nightly reconciler)_
+_Auto-generated: 2026-06-15 02:30:02 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
-| autopdf | Phase 2c - Smart Mapping + Template Apply | active | 1 | 2026-04-29 23:46:00 |
-| cognibase | Phase B core complete - pilot ready | active | 20 | 2026-05-11 18:57:00 |
-| easyflow | v1.2.x tester feedback cycle - blocked | blocked | 83 | 2026-04-19T00:00:00 |
-| filehq | Retired - merged into Naya | retired | 0 | — |
-| maia | Phase 4 - production on :8001 + Gradio :7860 (newly registered) | active | 1 | 2026-04-13T09:09:00 |
-| mapsnap | Active stable - schema browser | active | 4 | 2026-05-07 08:20:10 |
-| mq | Phase 0 - Scaffolding, blocked on Meta credentials | blocked | 0 | — |
-| naya | Phase 3 - Bot service on :8002, UI on :7861 | active | 2 | 2026-04-13T09:09:00 |
-| nexus | Phase 2 - Service on :8010/:7880, NSSM-supervised | active | 0 | — |
-| openclaw | Adjacent - Kaze daily news agent (WSL) | active_external | 1 | 2026-04-13T09:09:00 |
-| qi_brain | Phase 5 - Verification + Reconciliation pass | active | 4 | 2026-04-19T11:35:00 |
-| qi_hive | Phase 2 - Dashboard live but ingest gap | active | 5 | 2026-04-22 22:00:00 |
-| universal | Phase 0 - MIGRATING into C:/QIH | migrating | 21 | 2026-04-19T11:22:00 |
+| autopdf | Phase 2c — Smart Mapping | active | 4 | 2026-06-10 12:12:26 |
+| claude_manager | Operational | active | 15 | 2026-06-12 08:45:00 |
+| cognibase | Pre-POC — Phase B core complete | active | 22 | 2026-05-13 12:44:54 |
+| easyflow | v1.2.x tester feedback cycle | blocked | 85 | 2026-05-22 15:24:39 |
+| filehq | Retired — merged into Naya | retired | 0 | — |
+| m2v | v0.1.0 — scaffold + first render | active | 3 | 2026-06-10 15:06:52 |
+| maia | Phase 4 — production | active | 6 | 2026-05-15 14:34:32 |
+| mapsnap | Active stable | active | 17 | 2026-05-29 12:47:19 |
+| mq | Phase 0 — scaffold | blocked | 1 | 2026-04-06 12:00:00 |
+| naya | Phase 3 — bot + UI live | active | 4 | 2026-05-15 12:00:00 |
+| nexus | Phase 2 — NSSM-supervised | active | 6 | 2026-06-13 00:37:00 |
+| openclaw | Phase 2 — agent expansion | active | 16 | 2026-06-06 11:24:48 |
+| personalsong | Working app | active | 6 | 2026-06-10 15:06:50 |
+| qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
+| qi_hive | Phase 3 — agentic operation | active | 51 | 2026-06-14 13:07:05 |
+| universal | Migration into C:\QIH | migrating | 21 | 2026-04-20 01:16:46 |
 
 ## Per-project
 
 ### autopdf
-- **Phase:** Phase 2c - Smart Mapping + Template Apply
+- **Phase:** Phase 2c — Smart Mapping
 - **Status:** active
-- **Summary:** PDF toolkit on :6969. Local-only, no cloud. Smart Mapping AI via Ollama. Last summary 2026-05-01.
-- **Next:** No active dev. Resume when triggered.
+- **Summary:** Path standardized to C:\AutoPDF (2026-05-13). Server on :6969 running. Git repo initialized 2026-06-10.
+- **Next:** Resume Phase 2c work; consider 8700-block migration
+
+### claude_manager
+- **Phase:** Operational
+- **Status:** active
+- **Summary:** Ecosystem fully booted + reconciled 2026-06-10..12. Drift watchdog live. 3 new GitHub remotes synced nightly.
+- **Next:** Named tunnels after domain purchase; monitor brain_drift checks
 
 ### cognibase
-- **Phase:** Phase B core complete - pilot ready
+- **Phase:** Pre-POC — Phase B core complete
 - **Status:** active
-- **Summary:** OnBase mirror + AI correlation. M18 + M25-minimal + Portability shipped. 50/50 tests passing. 7+ session summaries logged 2026-05-06 to 2026-05-07.
-- **Next:** Pilot prep. Discovery+Bridges next.
+- **Summary:** M18 + M25-minimal + portability shipped, 50/50 tests passing. Runs as QI_CogniBase service :8650 + tunnel.
+- **Next:** BU pilot preparation
 
 ### easyflow
-- **Phase:** v1.2.x tester feedback cycle - blocked
+- **Phase:** v1.2.x tester feedback cycle
 - **Status:** blocked
-- **Summary:** EasyFlow Chrome Extension v1.2.1 shipped. All Phase A/B/C features done. Tester package distributed.
-- **Next:** Awaiting tester feedback. Then v1.3 scope: BYOK + in-tandem AI.
+- **Summary:** Pivoted to Chrome/Edge extension v1.2.1; tester package distributed. No local server anymore (old :8550 dashboard retired). MailBrain rename under assessment.
+- **Next:** Decide on MailBrain rename; process tester feedback
 
 ### filehq
-- **Phase:** Retired - merged into Naya
+- **Phase:** Retired — merged into Naya
 - **Status:** retired
-- **Summary:** FileHQ retired. Capabilities absorbed into Naya.
-- **Next:** Archive only.
+- **Summary:** Capabilities absorbed into Naya (C:\NAYA\filehq). Original C:\FileHQ marked for deletion.
+- **Next:** None
+
+### m2v
+- **Phase:** v0.1.0 — scaffold + first render
+- **Status:** active
+- **Summary:** API :8501 live (/health ok). First test video produced (forro_anime_mv.mp4).
+- **Next:** Define pipeline phases; wire to PersonalSong output
 
 ### maia
-- **Phase:** Phase 4 - production on :8001 + Gradio :7860 (newly registered)
+- **Phase:** Phase 4 — production
 - **Status:** active
-- **Summary:** Maia bot service running. QI_MaiaGradio NSSM service registered 2026-05-09. Multi-channel webhooks live.
-- **Next:** RAG via ChromaDB. Multi-bot template engine. Migrate webhooks from Quick Tunnel to named tunnel once domain is purchased.
+- **Summary:** Bot :8001 + Gradio :7860 + tunnels live under NSSM. Last code work 2026-05-15 (BP overrides, sibling filter, topic propagation, Cloudflare primary).
+- **Next:** Multi-bot template engine + RAG (ChromaDB)
 
 ### mapsnap
-- **Phase:** Active stable - schema browser
+- **Phase:** Active stable
 - **Status:** active
-- **Summary:** Jenzabar schema browser running on :9876. Generic core shipped 2026-05-07. Tunnel install pending.
-- **Next:** Run install_tunnel_service.bat as admin to register QI_MapSnapTunnel.
+- **Summary:** Schema browser :9876 running as QI_MapSnap service + QI_MapSnapTunnel (tunnel live — registry note stale).
+- **Next:** .expk reader verification follow-up
 
 ### mq
-- **Phase:** Phase 0 - Scaffolding, blocked on Meta credentials
+- **Phase:** Phase 0 — scaffold
 - **Status:** blocked
-- **Summary:** MQ public persona platform reserved on :8500/:7840. No services running.
-- **Next:** Awaiting Facebook Page approval + Meta Developer credentials.
+- **Summary:** API scaffold runs on :8500 (/health ok). Started 2026-06-10 as part of full-ecosystem boot.
+- **Next:** Obtain Meta credentials
 
 ### naya
-- **Phase:** Phase 3 - Bot service on :8002, UI on :7861
+- **Phase:** Phase 3 — bot + UI live
 - **Status:** active
-- **Summary:** Naya bot + Gradio UI both live, LAN-only. Telegram long-poll active.
-- **Next:** Avatar + voice integration.
+- **Summary:** Bot :8002 + Gradio :7861 + tunnel, LAN-only, Telegram long-poll. Last code work 2026-05-15 (BP overrides, parse fix).
+- **Next:** FileHQ Phase 2 code absorption (pending Renne approval)
 
 ### nexus
-- **Phase:** Phase 2 - Service on :8010/:7880, NSSM-supervised
+- **Phase:** Phase 2 — NSSM-supervised
 - **Status:** active
-- **Summary:** NEXUS multi-AI orchestration backbone. 7 providers wired. Scout digest live.
-- **Next:** Weekend installer test (carried since Meeting 05). First candidate to migrate to cloud VPS.
+- **Summary:** API :8010 + UI :7880 + tunnel live. 7 providers wired, Scout digest live.
+- **Next:** Fix chain routing; Judge/Bench Phase 2
 
 ### openclaw
-- **Phase:** Adjacent - Kaze daily news agent (WSL)
-- **Status:** active_external
-- **Summary:** OpenClaw QI-adjacent. Kaze runs daily news digest in WSL Ubuntu-24.04.
-- **Next:** No QI integration expected.
+- **Phase:** Phase 2 — agent expansion
+- **Status:** active
+- **Summary:** Agents live in WSL (Tasuke, Kaze, Yubin, Sentry, Asa, Koe, Kakei). Kaze Config API :8401. Keepalive service running.
+- **Next:** NotebookLM connection re-evaluation; Maia action routing
+
+### personalsong
+- **Phase:** Working app
+- **Status:** active
+- **Summary:** Studio on :8088 (ACE-Step vocals + Demucs/Seed-VC clone). 4 session summaries 2026-06-05/06. Git repo initialized 2026-06-10.
+- **Next:** Register tunnel/port block decision; continue feature work
 
 ### qi_brain
-- **Phase:** Phase 5 - Verification + Reconciliation pass
+- **Phase:** Phase 5 — operational
 - **Status:** active
-- **Summary:** Brain API on :9010. 392 docs in ChromaDB. Reconciliation pass 2026-05-09 backfilled missing sessions and registered cognibase/mapsnap/autopdf.
-- **Next:** Tighten Stop-hook coverage. Add scheduled compliance check.
+- **Summary:** Brain API on :9011 (moved from 9010 on 2026-05-14 — Logitech G HUB squats 9010). SQLite + ChromaDB + 12 MCP tools. NSSM QI_BrainAPI running.
+- **Next:** Self-logging discipline; ChromaDB doc refresh
 
 ### qi_hive
-- **Phase:** Phase 2 - Dashboard live but ingest gap
+- **Phase:** Phase 3 — agentic operation
 - **Status:** active
-- **Summary:** Hive Dashboard :8600 + Brain :9010 running. Polling alive (5,271 polls). Reconciliation pass run 2026-05-09 to backfill missed sessions.
-- **Next:** Fix per-project hooks for cognibase/mapsnap/autopdf/mq/openclaw. Add scheduled reconciler as safety net. Schedule gen_latest.py hourly.
+- **Summary:** Dashboard :8600 + tunnel, 7 hive agents, Inspector/Ingest/Apply/Elevate/InspectorDrain services all running. Scheduled tasks logging sessions daily.
+- **Next:** Brain-drift watchdog check (added 2026-06-10); avatar pipeline Phase N
 
 ### universal
-- **Phase:** Phase 0 - MIGRATING into C:/QIH
+- **Phase:** Migration into C:\QIH
 - **Status:** migrating
-- **Summary:** C:/UNIVERSAL is slated to be absorbed into C:/QIH and deleted from disk. Current occupants: qi_brain service (:9010), old dashboard service (:9000), ECOSYSTEM registry, DOCUMENTATION/Session_Summaries, TRAINING, node_modules, and 8 QI_* services all reference C:/UNIVERSAL/dashboard/nssm.exe. Migration must be staged to avoid breaking any service.
-- **Next:** Staged migration: 1) Documentation + Training + ECOSYSTEM (low risk). 2) Repoint services to C:/QIH/engine/bin/nssm.exe. 3) Relocate qi_brain. 4) Retire old dashboard (:9000). 5) Delete C:/UNIVERSAL.
+- **Summary:** C:\UNIVERSAL absorbed into C:\QIH (2026-04-22). Folder slated for deletion.
+- **Next:** Delete C:\UNIVERSAL after final verification

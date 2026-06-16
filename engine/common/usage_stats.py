@@ -11,8 +11,9 @@ aggregates. No API calls, no keys. Shapes:
 
 Pricing is per 1M tokens. Cache-read billed at 10% of input, cache-write
 (ephemeral_5m) at 125%, cache-write (ephemeral_1h) at 200%. Sourced from
-Anthropic public pricing (Jan 2026). If a model is unknown, it's billed
-at the Sonnet rate (conservative middle-ground) and flagged.
+Anthropic public pricing (Jan 2026). Unknown models are bucketed as family
+"other" (billed at sonnet rate, surfaced separately in the model breakdown)
+rather than silently merged into the sonnet family.
 
 Results are cached in-memory for 30s to keep the dashboard cheap.
 """
@@ -30,6 +31,12 @@ MODEL_PRICING = {
     "opus":   (15.00, 75.00),
     "sonnet": ( 3.00, 15.00),
     "haiku":  ( 0.80,  4.00),
+    # Fable 5: frontier reasoning tier — mirrored from opus until Anthropic
+    # publishes official Fable pricing. Update when pricing is confirmed.
+    "fable":  (15.00, 75.00),
+    # Catch-all: priced at sonnet so unknowns don't go free, but they are
+    # tracked under their own "other" family to make the gap visible.
+    "other":  ( 3.00, 15.00),
 }
 CACHE_READ_MULT  = 0.10   # read-back of cached prefix
 CACHE_WRITE_5M_MULT = 1.25
@@ -43,6 +50,8 @@ LOCAL_OFFLOAD_BY_FAMILY = {
     "haiku":  1.00,   # trivial ops — gemma4:9.6b or qwen3:8b handles these fine
     "sonnet": 0.40,   # ~40% of sonnet work is routine enough for gpt-oss-20b / gemma4:31b
     "opus":   0.00,   # deep reasoning / architecture — keep on Opus
+    "fable":  0.00,   # frontier reasoning — keep on Fable
+    "other":  0.40,   # unknown models treated conservatively like sonnet
 }
 
 # Anthropic Batch API: 50% discount for tasks that can tolerate async execution
@@ -54,6 +63,7 @@ BATCH_WINDOW_START_HOUR = 0   # midnight
 BATCH_WINDOW_END_HOUR   = 6   # 06:00
 
 import os as _os
+import os.path as _osp
 
 def _find_projects_dir() -> Path:
     """Locate ~/.claude/projects regardless of the user running the service.
@@ -81,12 +91,15 @@ _TTL = 30.0
 
 def _model_family(name: str | None) -> str:
     if not name:
-        return "sonnet"
+        return "other"
     n = name.lower()
     if "opus" in n:   return "opus"
-    if "haiku" in n:  return "haiku"
+    if "fable" in n:  return "fable"
     if "sonnet" in n: return "sonnet"
-    return "sonnet"
+    if "haiku" in n:  return "haiku"
+    # Unknown model: explicit "other" so it doesn't silently masquerade as sonnet
+    # and the dashboard can surface it in the model breakdown.
+    return "other"
 
 
 def _cost(usage: dict, model: str) -> float:
@@ -109,49 +122,150 @@ def _cost(usage: dict, model: str) -> float:
 
 
 def _tokens(usage: dict) -> int:
+    """'Fresh' tokens — what was actually generated or written into cache this
+    turn. Excludes cache_read_input_tokens because those are re-reads of the
+    same cached prefix and inflate the headline by 5–20× without representing
+    new consumption. Use _cache_reads() to surface the re-read volume separately."""
     return (
         (usage.get("input_tokens", 0) or 0)
         + (usage.get("output_tokens", 0) or 0)
-        + (usage.get("cache_read_input_tokens", 0) or 0)
         + (usage.get("cache_creation_input_tokens", 0) or 0)
     )
 
 
+def _cache_reads(usage: dict) -> int:
+    """Tokens read back from the prompt cache (billed at 10% of input rate).
+    Tracked separately from _tokens so the headline 'Tokens Today' reflects
+    fresh consumption, not the same prefix being re-read N times."""
+    return usage.get("cache_read_input_tokens", 0) or 0
+
+
 _PROJECT_RE = re.compile(r"[A-Z]-{2,}([^\\/-]+)")
+
+_REGISTRY_PATH = r"C:\QIH\ecosystem\qi_registry.json"
+
+# Aliases for paths/folder-names not in the registry or that appear in
+# worktree folder names (e.g. C--CLAUDE-worktree-abc → claude_manager).
+_FOLDER_ALIASES: dict[str, str] = {
+    "CLAUDE":         "claude_manager",
+    "QIH":            "qi_hive",
+    "QI":             "maia",
+    "NAYA":           "naya",
+    "NEXUS":          "nexus",
+    "OC":             "openclaw",
+    "OPENCLAW":       "openclaw",
+    "EASYFLOW":       "easyflow",
+    "FILEHQ":         "filehq",
+    "MQ":             "mq",
+    "UNIVERSAL":      "universal",
+    "AUTOPDF":        "autopdf",
+    "COGNIBASE":      "cognibase",
+    "MAPSNAP":        "mapsnap",
+    "M2V":            "m2v",
+    "PERSONALSONG":   "personalsong",
+    "CYPHERMINER":    "cypherminer",
+    "LOTTERYWIZ":     "lotterywiz",
+    "LOTTERY WIZ":    "lotterywiz",
+    "TUBESCOUT":      "tubescout",
+    "FIDELITYANALYZER": "fidelityanalyzer",
+    "AVATARSTUDIO":   "avatarstudio",
+}
+
+
+def _load_registry_path_map() -> list[tuple[str, str]]:
+    """Build a normalized (upper-case, no trailing slash) path → project-id list,
+    sorted longest-first so the most-specific prefix wins in matching.
+
+    When two projects share the same path (e.g. qi_hive and universal both live
+    at C:\\QIH), qi_hive wins because it is the actively developed project;
+    universal is the legacy label for the same directory before migration.
+    Similarly, qi_brain wins over qi_hive for C:\\QIH\\engine\\brain because
+    it has a longer (more-specific) path.
+    """
+    # Projects that should win tie-breaks when multiple entries share a path.
+    # Higher value = higher priority (wins over lower-value entries at same path).
+    _TIE_PRIORITY = {
+        "qi_brain": 10,   # sub-path of qi_hive — longer path anyway, so this rarely fires
+        "qi_hive":  5,    # wins over "universal" which shares C:\QIH
+    }
+    try:
+        with open(_REGISTRY_PATH, encoding="utf-8") as f:
+            reg = json.load(f)
+        rows: list[tuple[str, str]] = []
+        for proj in reg.get("projects", []):
+            pid = proj.get("id", "").strip()
+            if not pid:
+                continue
+            for key in ("path", "original_path", "path_standard"):
+                raw = proj.get(key)
+                if raw and isinstance(raw, str):
+                    norm = raw.replace("/", "\\").rstrip("\\").upper()
+                    rows.append((norm, pid))
+        # Sort: longest path first (most-specific wins), then higher tie-priority
+        # first for same-length paths.
+        rows.sort(
+            key=lambda t: (len(t[0]), _TIE_PRIORITY.get(t[1], 0)),
+            reverse=True,
+        )
+        return rows
+    except Exception:
+        return []
+
+
+_REG_PATH_MAP: list[tuple[str, str]] = _load_registry_path_map()
 
 
 def _project_from_cwd(cwd: str | None, folder_name: str) -> str:
-    """Best-effort project label.
+    """Best-effort canonical project id (lowercase, matches qi_registry.json id field).
+
     Priority:
-      1. cwd path: C:\QIH → 'QI_Hive', C:\QI → 'Maia', etc.
-      2. Folder name prefix
+      1. Longest-prefix match of cwd against registry project paths.
+      2. Alias map check on the worktree folder name (handles C--CLAUDE-... forms
+         and bare single-segment folder names).
       3. 'unknown'
+
+    Falls back to the old heuristic list if the registry failed to load, so the
+    dashboard keeps working even if qi_registry.json is temporarily unreadable.
     """
     if cwd:
-        c = cwd.replace("/", "\\").upper()
-        if   c.startswith("C:\\QIH"):      return "QI_Hive"
-        elif c.startswith("C:\\QI\\")  or c == "C:\\QI": return "Maia"
-        elif c.startswith("C:\\NAYA"):     return "Naya"
-        elif c.startswith("C:\\NEXUS"):    return "NEXUS"
-        elif c.startswith("C:\\OC") or c.startswith("C:\\OPENCLAW"): return "OpenClaw"
-        elif c.startswith("C:\\EASYFLOW"): return "EasyFlow"
-        elif c.startswith("C:\\FILEHQ"):   return "FileHQ"
-        elif c.startswith("C:\\CLAUDE"):   return "Claude_Manager"
-        elif c.startswith("C:\\MQ"):       return "MQ"
-        elif c.startswith("C:\\UNIVERSAL"):return "QI_Universal"
-        elif c.startswith("C:\\GMAIL"):    return "Gmail_Beyond"
-        elif "LINE BOTS" in c or "\\MAIA" in c or "\\RENNE\\DOWNLOADS" in c: return "Maia"
-        # Any leftover user-profile path → best-effort from cwd
-        elif c.startswith("C:\\USERS\\"):
-            # E.g. C:\Users\renne\projects\foo → "foo"
-            parts = [p for p in c.split("\\") if p and p.upper() != "USERS"]
-            # parts[0] = drive (C:), parts[1] = renne, parts[2] = first meaningful folder
-            if len(parts) >= 3:
-                return parts[2].replace(" ", "_")
-    # fallback — try to extract from folder name (e.g. C--CLAUDE-... → CLAUDE)
-    parts = folder_name.split("--")
-    if len(parts) >= 2:
-        return parts[1].split("-")[0] or "unknown"
+        c = cwd.replace("/", "\\").rstrip("\\").upper()
+        # Registry-driven: longest-matching prefix wins
+        if _REG_PATH_MAP:
+            for reg_path, pid in _REG_PATH_MAP:
+                if c == reg_path or c.startswith(reg_path + "\\"):
+                    return pid
+        else:
+            # Fallback to hardcoded list when registry is unreadable
+            if   c.startswith("C:\\QIH\\ENGINE\\BRAIN"): return "qi_brain"
+            elif c.startswith("C:\\QIH"):                return "qi_hive"
+            elif c.startswith("C:\\QI\\") or c == "C:\\QI": return "maia"
+            elif c.startswith("C:\\NAYA"):               return "naya"
+            elif c.startswith("C:\\NEXUS"):              return "nexus"
+            elif c.startswith("C:\\OC") or c.startswith("C:\\OPENCLAW"): return "openclaw"
+            elif c.startswith("C:\\EASYFLOW"):           return "easyflow"
+            elif c.startswith("C:\\FILEHQ"):             return "filehq"
+            elif c.startswith("C:\\CLAUDE"):             return "claude_manager"
+            elif c.startswith("C:\\MQ"):                 return "mq"
+            elif c.startswith("C:\\UNIVERSAL"):          return "universal"
+            elif "LINE BOTS" in c or "\\MAIA" in c:     return "maia"
+
+    # Alias map against the worktree folder name.
+    # Handles forms like:
+    #   "C--CLAUDE-worktree-abc123"  → segment after C-- → "CLAUDE"
+    #   "C--CLAUDE"                  → segment after C-- → "CLAUDE"
+    #   "C--1-AI--APPS--AVATARSTUDIO-xyz" → walk segments looking for alias hit
+    fn_upper = folder_name.upper()
+    # Strip leading drive+separator segment (C-- or C--USERS-- etc.)
+    parts = [p for p in fn_upper.replace("--", "\x00").split("\x00") if p]
+    # Try progressively from the back (deepest folder) to the front
+    for part in reversed(parts):
+        # Strip trailing worktree hash (alphanumeric suffix after last "-")
+        stem = re.sub(r"-[0-9A-F]{4,}$", "", part, flags=re.IGNORECASE)
+        if stem in _FOLDER_ALIASES:
+            return _FOLDER_ALIASES[stem]
+        if part in _FOLDER_ALIASES:
+            return _FOLDER_ALIASES[part]
+
     return "unknown"
 
 
@@ -188,13 +302,14 @@ def _iter_events(force: bool = False):
                     except Exception:
                         continue
                     events.append({
-                        "ts":      ts,
-                        "model":   model or "unknown",
-                        "family":  _model_family(model),
-                        "project": _project_from_cwd(d.get("cwd"), folder),
-                        "session": d.get("sessionId") or folder,
-                        "tokens":  _tokens(usage),
-                        "cost":    _cost(usage, model),
+                        "ts":          ts,
+                        "model":       model or "unknown",
+                        "family":      _model_family(model),
+                        "project":     _project_from_cwd(d.get("cwd"), folder),
+                        "session":     d.get("sessionId") or folder,
+                        "tokens":      _tokens(usage),
+                        "cache_reads": _cache_reads(usage),
+                        "cost":        _cost(usage, model),
                     })
         except (PermissionError, OSError):
             continue
@@ -206,11 +321,11 @@ def _iter_events(force: bool = False):
 
 def today() -> dict:
     evs = _iter_events()
-    today_utc = datetime.now(timezone.utc).date()
     today_local = date.today()
     sessions = set()
     turns = 0
     tokens = 0
+    cache_reads = 0
     cost = 0.0
     for e in evs:
         d_local = e["ts"].astimezone().date()
@@ -218,9 +333,11 @@ def today() -> dict:
             sessions.add(e["session"])
             turns += 1
             tokens += e["tokens"]
+            cache_reads += e.get("cache_reads", 0)
             cost += e["cost"]
     return {
         "tokens":           tokens,
+        "cache_reads":      cache_reads,
         "cost_usd":         round(cost, 2),
         "sessions":         len(sessions),
         "assistant_turns":  turns,
@@ -587,6 +704,7 @@ def totals(days: int = 30) -> dict:
     evs = _iter_events()
     cutoff = date.today() - timedelta(days=days - 1)
     tokens = 0
+    cache_reads = 0
     cost = 0.0
     turns = 0
     sessions = set()
@@ -594,15 +712,17 @@ def totals(days: int = 30) -> dict:
         if e["ts"].astimezone().date() < cutoff:
             continue
         tokens += e["tokens"]
+        cache_reads += e.get("cache_reads", 0)
         cost += e["cost"]
         turns += 1
         sessions.add(e["session"])
     return {
-        "days":     days,
-        "tokens":   tokens,
-        "cost_usd": round(cost, 2),
-        "turns":    turns,
-        "sessions": len(sessions),
+        "days":        days,
+        "tokens":      tokens,
+        "cache_reads": cache_reads,
+        "cost_usd":    round(cost, 2),
+        "turns":       turns,
+        "sessions":    len(sessions),
     }
 
 

@@ -97,7 +97,7 @@ def _brain_db_agents_last_seen() -> list[dict]:
         INNER JOIN (
             SELECT agent_id, MAX(ts) AS max_ts
             FROM agent_heartbeats
-            WHERE agent_id IN ('claude_code','claude_work','cowork','claude_chat')
+            WHERE agent_id IN ('claude_code','claude','claude_work','cowork','claude_chat')
             GROUP BY agent_id
         ) m ON m.agent_id = h.agent_id AND m.max_ts = h.ts
         """
@@ -660,7 +660,7 @@ def _get_project_llms() -> list[dict]:
     try:
         import urllib.request, json as _j
         with urllib.request.urlopen("http://localhost:8010/providers", timeout=2.0) as r:
-            prov = _j.loads(r.read().decode()).get("providers", [])
+            prov = _j.loads(r.read().decode('utf-8')).get("providers", [])
         models = []
         if "ollama" in prov:
             models.append({"name": "ollama (provider configured)", "role": "router", "notes": "specific models chosen per request"})
@@ -816,16 +816,16 @@ def render_dashboard() -> str:
         <div class="col-lg-4 col-md-6 col-sm-12">
           <div {bg_attr}>
             <div class="inner">
-              <h4>{name}</h4>
+              <h4>{p.get("display_name", name)}</h4>
               <p>{st.replace("_"," ").title()}</p>
             </div>
             <i class="small-box-icon bi {icon}"></i>
             <div class="small-box-footer d-flex justify-content-between">
-              <a href="/project/{name}" class="text-white text-decoration-none">
+              <a href="/project/{p.get("id", name)}" class="text-white text-decoration-none">
                 <i class="bi bi-box-arrow-up-right"></i> Details
               </a>
               <span>{open_tasks} open tasks</span>
-              <a href="/board?project={name}" class="text-white text-decoration-none">
+              <a href="/board?project={p.get("id", name)}" class="text-white text-decoration-none">
                 Board <i class="bi bi-arrow-right"></i>
               </a>
             </div>
@@ -1714,8 +1714,10 @@ def render_hive() -> str:
         else:
             agent_cards = '<div class="col-12"><div class="alert alert-info">No agents registered yet. Agents appear here once they connect to QI Brain.</div></div>'
 
-    # Recent sessions
-    sessions = snap.get("recent_sessions", [])[:6]
+    # Recent sessions — query Brain DB directly (ecosystem_snapshot has no recent_sessions key)
+    sessions = _brain_db_query(
+        "SELECT session_title, project_id, summary, COALESCE(ended_at,started_at) AS ended_at "
+        "FROM session_log ORDER BY ended_at DESC LIMIT 6")
     session_rows = ""
     for s in sessions:
         session_rows += f"""<tr>
@@ -2029,6 +2031,14 @@ KNOWN_TUNNELS = [
      "log":  r"C:\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log"},
     {"port": 9876, "label": "MapSnap",
      "log":  r"C:\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log"},
+    {"port": 8777, "label": "LotteryWiz",
+     "log":  r"C:\Lottery Wiz\LOGS\tunnel.log"},
+    {"port": 7842, "label": "CypherMiner",
+     "log":  r"C:\CypherMiner\LOGS\tunnel.log"},
+    {"port": 7841, "label": "M2V",
+     "log":  r"C:\M2V\logs\tunnel.log"},
+    {"port": 8503, "label": "TubeScout",
+     "log":  r"C:\TUBESCOUT\data\logs\tunnel.log"},
 ]
 
 def _get_tunnels() -> dict[int, dict]:
@@ -2919,15 +2929,27 @@ GSUDO_PRESETS = {
 }
 
 QI_PROJECTS = [
-    ("maia",      "Maia"),
-    ("naya",      "Naya"),
-    ("nexus",     "NEXUS"),
-    ("openclaw",  "OpenClaw"),
-    ("mq",        "MQ"),
-    ("easyflow",  "EasyFlow"),
-    ("qi_hive",   "QI Hive"),
-    ("qi_brain",  "QI Brain"),
-    ("universal", "QI-Universal"),
+    ("maia",         "Maia"),
+    ("naya",         "Naya"),
+    ("nexus",        "NEXUS"),
+    ("openclaw",     "OpenClaw"),
+    ("mq",           "MQ"),
+    ("easyflow",     "EasyFlow"),
+    ("qi_hive",      "QI Hive"),
+    ("qi_brain",     "QI Brain"),
+    ("universal",    "QI-Universal"),
+    ("cognibase",    "CogniBase"),
+    ("mapsnap",      "MapSnap"),
+    ("autopdf",      "AutoPDF"),
+    ("personalsong", "PersonalSong Studio"),
+    ("m2v",          "M2V"),
+    ("lotterywiz",   "LotteryWiz"),
+    ("cypherminer",  "CypherMiner"),
+    ("digitization", "Digitization Cost Tool"),
+    ("fidelityanalyzer", "Fidelity Portfolio Analyzer"),
+    ("avatarstudio", "AvatarStudio"),
+    ("tubescout", "TubeScout"),
+    ("claude_manager", "Claude Manager"),
 ]
 
 
@@ -3868,19 +3890,26 @@ def _list_log_files(project_id: str | None = None) -> list[dict]:
     for pid, root in scan.items():
         if not root.exists():
             continue
-        for p in root.rglob("*.log"):
-            try:
-                st = p.stat()
-                rel = str(p.relative_to(root)).replace("\\", "/")
-                out.append({
-                    "project_id": pid,
-                    "name": p.name,
-                    "rel_path": rel,
-                    "size_bytes": st.st_size,
-                    "mtime": st.st_mtime,
-                })
-            except OSError:
-                pass
+        collected = 0
+        for pat in ("*.log", "*.txt", "*.err", "*.out"):
+            if collected >= 300:
+                break
+            for p in root.rglob(pat):
+                try:
+                    st = p.stat()
+                    rel = str(p.relative_to(root)).replace("\\", "/")
+                    out.append({
+                        "project_id": pid,
+                        "name": p.name,
+                        "rel_path": rel,
+                        "size_bytes": st.st_size,
+                        "mtime": st.st_mtime,
+                    })
+                    collected += 1
+                    if collected >= 300:  # per-project cap (e.g. Maia has 25k+ .txt)
+                        break
+                except OSError:
+                    pass
     out.sort(key=lambda x: x["mtime"], reverse=True)
     if len(out) > _MAX_LOG_FILES:
         logger.warning("Log file walk returned %d files; truncating to %d", len(out), _MAX_LOG_FILES)
@@ -4123,19 +4152,41 @@ def api_tail_log_legacy(filename: str, lines: int = 200):
 
 def render_project(pid: str) -> str:
     status = load_status()
-    proj = status.get("projects", {}).get(pid)
-    if not proj:
-        return f'<div class="alert alert-warning">Project <code>{pid}</code> not found in status.json</div>'
+    projects = status.get("projects", {})
+    # Case-insensitive lookup (status.json is keyed by lowercase canonical id).
+    proj = projects.get(pid) or projects.get(pid.lower()) \
+        or next((v for k, v in projects.items() if k.lower() == pid.lower()), None)
 
     registry_path = _PROJECT_DIR / "ecosystem" / "qi_registry.json"
-    services = []
+    reg_entry = {}
     try:
         if registry_path.exists():
             reg = json.loads(registry_path.read_text(encoding="utf-8"))
-            p = next((x for x in reg.get("projects", []) if x.get("id", "").lower() == pid.lower()), {})
-            services = p.get("services", []) or []
+            reg_entry = next((x for x in reg.get("projects", [])
+                              if x.get("id", "").lower() == pid.lower()), {})
     except Exception:
         pass
+
+    # Fall back to registry + Brain so any registered project still renders.
+    if not proj:
+        if not reg_entry:
+            return f'<div class="alert alert-warning">Project <code>{pid}</code> not found in registry or status.</div>'
+        bst = _brain_db_query(
+            "SELECT phase,status,summary,next_steps FROM project_state "
+            "WHERE LOWER(project_id)=LOWER(?) ORDER BY recorded_at DESC LIMIT 1", (pid,))
+        bst = bst[0] if bst else {}
+        proj = {
+            "id": pid.lower(),
+            "display_name": reg_entry.get("name", pid),
+            "status": bst.get("status", reg_entry.get("status", "active")),
+            "notes": bst.get("summary", reg_entry.get("description", "")),
+            "current_task": bst.get("next_steps", "—"),
+            "path": reg_entry.get("path", "(no path)"),
+            "last_activity": "", "locked_files": [],
+        }
+
+    pid = proj.get("id", pid.lower())
+    services = reg_entry.get("services", []) or []
 
     def _svc_row(s: dict) -> str:
         label = s.get("name", "?")
@@ -4156,12 +4207,15 @@ def render_project(pid: str) -> str:
     svc_rows = "".join(_svc_row(s) for s in services) or \
         '<tr><td colspan="2" class="text-muted">No services registered</td></tr>'
 
-    sessions = status.get("session_log", [])
+    sessions = _brain_db_query(
+        "SELECT session_title, summary, COALESCE(ended_at,started_at) AS ts "
+        "FROM session_log WHERE LOWER(project_id)=LOWER(?) ORDER BY ts DESC LIMIT 6", (pid,))
     sess_rows = "".join(
-        f"<tr><td><small>{s.get('session','')}</small></td>"
+        f"<tr><td><small>{s.get('session_title','') or ''}</small>"
+        f"<div class='text-muted' style='font-size:.7rem'>{(s.get('ts','') or '')[:16]}</div></td>"
         f"<td class='text-muted small'>{(s.get('summary','') or '')[:200]}</td></tr>"
-        for s in sessions[-5:][::-1]
-    ) or '<tr><td colspan="2" class="text-muted">No sessions logged</td></tr>'
+        for s in sessions
+    ) or '<tr><td colspan="2" class="text-muted">No sessions logged for this project</td></tr>'
 
     return f"""
     <div class="row g-3">
@@ -4169,8 +4223,8 @@ def render_project(pid: str) -> str:
         <div class="card"><div class="card-body">
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <h4 class="mb-0">{pid}</h4>
-              <div class="text-muted small"><code>{proj.get('path','(no path)')}</code></div>
+              <h4 class="mb-0">{proj.get('display_name', pid)}</h4>
+              <div class="text-muted small"><code>{proj.get('path','(no path)')}</code> · <span class="badge bg-light text-dark border">{pid}</span></div>
             </div>
             <div class="d-flex gap-2">
               <a href="/project/{pid}/status" class="btn btn-sm btn-primary">
@@ -4373,7 +4427,7 @@ def _collect_services() -> list[dict]:
 def _collect_tasks() -> list[dict]:
     """List QI-relevant scheduled tasks with schedule + last result."""
     ps = r"""
-    $patterns = @('QI-','OC-','Maia','Naya','NEXUS','openclaw','claude','nlm')
+    $patterns = @('QI_','QI-','OC-','Maia','Naya','NEXUS','openclaw','claude','nlm','Reconcile','Kaze','TubeScout','Hive','Inspector','Compliance','Backfill')
     Get-ScheduledTask | Where-Object {
       $n = $_.TaskName; $patterns | Where-Object { $n -like "*$_*" }
     } | ForEach-Object {
@@ -5237,7 +5291,7 @@ def _brain_patch(path: str, payload: dict) -> dict | None:
             headers={"Content-Type": "application/json"}, method="PATCH"
         )
         with urllib.request.urlopen(req, timeout=3) as r:
-            return _json.loads(r.read().decode())
+            return _json.loads(r.read().decode('utf-8'))
     except Exception:
         return None
 
@@ -5251,7 +5305,7 @@ def _brain_post_dispatch(payload: dict) -> dict | None:
             headers={"Content-Type": "application/json"}, method="POST"
         )
         with urllib.request.urlopen(req, timeout=3) as r:
-            return _json.loads(r.read().decode())
+            return _json.loads(r.read().decode('utf-8'))
     except Exception:
         return None
 
@@ -5263,7 +5317,7 @@ def _get_dispatches(status_filter: str | None = None) -> list[dict]:
         if status_filter:
             url += f"&status={status_filter}"
         with urllib.request.urlopen(url, timeout=3) as r:
-            return _json.loads(r.read().decode()).get("dispatches", [])
+            return _json.loads(r.read().decode('utf-8')).get("dispatches", [])
     except Exception:
         return []
 
@@ -5273,14 +5327,18 @@ def render_dispatch() -> str:
     all_dispatches = _get_dispatches()
     pending    = [d for d in all_dispatches if d["status"] == "pending"]
     discussing = [d for d in all_dispatches if d["status"] == "discussing"]
-    resolved   = [d for d in all_dispatches if d["status"] in ("approved", "declined", "executed")]
+    resolved   = [d for d in all_dispatches if d["status"] in ("approved", "declined", "executed", "resolved")]
+    # The inspector can queue thousands of pending dispatches — cap rendering.
+    pending_total = len(pending)
+    pending = pending[:30]
 
     SOURCE_BADGES = {
-        "cowork":      ("bg-primary",  "CoWork"),
-        "claude_code": ("bg-warning text-dark", "Claude Code"),
-        "renne":       ("bg-success",  "Renne"),
-        "maia":        ("bg-info text-dark", "Maia"),
-        "naya":        ("bg-secondary","Naya"),
+        "cowork":         ("bg-primary",  "CoWork"),
+        "claude_code":    ("bg-warning text-dark", "Claude Code"),
+        "renne":          ("bg-success",  "Renne"),
+        "maia":           ("bg-info text-dark", "Maia"),
+        "naya":           ("bg-secondary","Naya"),
+        "hive_inspector": ("bg-dark",     "Inspector"),
     }
     TYPE_ICONS = {
         "report":   "bi-file-text",
@@ -5290,8 +5348,10 @@ def render_dispatch() -> str:
         "review":   "bi-search",
         "proposal": "bi-lightbulb",
         "request":  "bi-arrow-right-circle",
+        "compliance":"bi-clipboard-check",
+        "auto_apply":"bi-magic",
     }
-    PRIORITY_COLORS = {"high": "danger", "normal": "secondary", "low": "success"}
+    PRIORITY_COLORS = {"high": "danger", "normal": "secondary", "medium": "warning", "low": "success"}
 
     def dispatch_card(d: dict, show_actions: bool = True) -> str:
         src_cls, src_label = SOURCE_BADGES.get(d["source"], ("bg-secondary", d["source"]))
@@ -5392,7 +5452,7 @@ def render_dispatch() -> str:
 
       <div class="row">
         <div class="col-lg-6">
-          {section("Pending — Awaiting Review", "bi-hourglass-split", pending, True)}
+          {section(f"Pending — Awaiting Review (showing {len(pending)} of {pending_total})", "bi-hourglass-split", pending, True)}
           {section("Discussing", "bi-chat-dots", discussing, True)}
         </div>
         <div class="col-lg-6">
@@ -5480,7 +5540,7 @@ def _brain_get(path: str, params: dict | None = None) -> dict | None:
         if hit and (now - hit[0]) < _BRAIN_CACHE_TTL:
             return hit[1]
         with urllib.request.urlopen(url, timeout=3) as r:
-            data = _json.loads(r.read().decode())
+            data = _json.loads(r.read().decode('utf-8'))
         _BRAIN_CACHE[url] = (now, data)
         return data
     except Exception:
@@ -5851,9 +5911,9 @@ def render_warroom() -> str:
 
     agent_types = [
         ("claude_code",  "Claude Code",  "bi-terminal",      "primary"),
-        ("claude_work",  "Claude Work",  "bi-window-desktop","info"),
+        ("claude",       "Claude (Interactive)", "bi-chat-square-dots","info"),
         ("cowork",       "CoWork",       "bi-people",        "success"),
-        ("claude_chat",  "Claude Chat",  "bi-chat-dots",     "secondary"),
+        ("claude_work",  "Claude Work",  "bi-window-desktop","secondary"),
     ]
     agent_cards = ""
     for aid, label, icon, color in agent_types:
@@ -5914,14 +5974,20 @@ def render_warroom() -> str:
     disp_rows = ""
     for d in dispatches[:15]:
         status      = d.get("status", "?")
-        badge = {"pending":"warning","approved":"success","rejected":"danger",
+        badge = {"pending":"warning","approved":"success","rejected":"danger","declined":"danger",
+                 "resolved":"secondary","executed":"secondary",
                  "discussing":"info","in_progress":"primary","done":"secondary"}.get(status, "secondary")
+        # Real dispatch schema is source/type/payload/project_id — map accordingly.
+        try:
+            _pl = json.loads(d.get("payload") or "{}")
+        except Exception:
+            _pl = {}
         d_status    = html.escape(status)
         d_proj      = html.escape(d.get("project_id") or "-")
-        d_title     = html.escape((d.get("title") or "")[:60])
-        d_from      = html.escape(d.get("from_agent") or "-")
-        d_to        = html.escape(d.get("to_agent") or "-")
-        d_created   = html.escape((d.get("created_at") or "")[:16])
+        d_title     = html.escape((d.get("title") or _pl.get("message") or d.get("type") or "")[:60])
+        d_from      = html.escape(d.get("from_agent") or d.get("source") or "-")
+        d_to        = html.escape(d.get("to_agent") or d.get("reviewed_by") or "—")
+        d_created   = html.escape((d.get("created_at") or d.get("ts") or "")[:16])
         disp_rows += f"""
         <tr>
           <td><span class="badge text-bg-{badge}">{d_status}</span></td>

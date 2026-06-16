@@ -1,0 +1,24 @@
+{
+  "categories": [
+    {
+      "name": "Documentation",
+      "priority": "high",
+      "items": [
+        {
+          "title": "Populate full INTRO content",
+          "detail": "Replace this seed with the real feature matrix, blueprint SVG, technology stack, and documentation index."
+        }
+      ]
+    },
+    {
+      "name": "Roadmap",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "Capture this project's roadmap here",
+          "detail": "Add high / medium / low priority items as planning progresses."
+        }
+      ]
+    }
+  ]
+}
