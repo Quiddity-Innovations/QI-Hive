@@ -2019,6 +2019,8 @@ _TRYCF_RE = __import__("re").compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
 KNOWN_TUNNELS = [
     {"port": 8600, "label": "Hive Dashboard",
      "json": r"C:\QIH\engine\hive\tunnel\status\tunnel.json"},
+    {"port": 6969, "label": "AutoPDF",
+     "json": r"C:\AUTOPDF\Application\status\tunnel.json"},
     {"port": 8001, "label": "Maia API",
      "log":  r"C:\QI\LOGS\tunnel_log.txt"},
     {"port": 7860, "label": "Maia Demo (Gradio)",
@@ -2116,28 +2118,33 @@ def _probe_ports_parallel(ports):
         results = list(ex.map(_port_open, unique))
     return dict(zip(unique, results))
 
-def _project_tiles(role: str, port: int):
-    """Tiles for one (role, port). Returns list of (label, href, port_display)."""
-    base = f"http://localhost:{port}"
-    role_l = (role or "").lower()
-    if role_l == "api":
-        return [
-            ("API",    base,             f"{port}"),
-            ("Docs",   f"{base}/docs",   f"{port}/docs"),
-            ("Health", f"{base}/health", f"{port}/health"),
-        ]
-    if role_l == "ui":
-        return [("UI", base, f"{port}")]
-    if role_l == "dashboard":
-        return [("Dashboard", base, f"{port}")]
-    if role_l == "launcher":
-        return [("Launcher", base, f"{port}")]
-    if role_l in ("http", "gateway"):
-        return [(role.title(), base, f"{port}")]
-    # Generic: just expose the root with the role label.
-    return [(role.title() or "Open", base, f"{port}")]
+def _role_tiles(role: str, base: str, public: bool = False):
+    """Tiles for one role rooted at `base` (a localhost origin OR a public tunnel URL).
 
-def render_launcher() -> str:
+    Returns list of (label, href). The label is derived from the registry ROLE so a
+    project's public links read 'Public UI' / 'Public API' / 'Public Docs' — never a
+    hand-maintained per-port name that drifts (the old 'Public Maia API' bug).
+    Health is local-only (not useful through a public tunnel)."""
+    role_l = (role or "").lower()
+    b = base.rstrip("/")
+    pre = "Public " if public else ""
+    if role_l == "api":
+        tiles = [(f"{pre}API", b), (f"{pre}Docs", f"{b}/docs")]
+        if not public:
+            tiles.append(("Health", f"{b}/health"))
+        return tiles
+    if role_l == "ui":
+        return [(f"{pre}UI", b)]
+    if role_l == "dashboard":
+        return [(f"{pre}Dashboard", b)]
+    if role_l == "launcher":
+        return [(f"{pre}Launcher", b)]
+    if role_l in ("http", "gateway"):
+        return [(f"{pre}{role.title()}", b)]
+    # Generic: just expose the root with the role label.
+    return [(f"{pre}{role.title() or 'Open'}", b)]
+
+def render_launcher(via_tunnel: bool = False) -> str:
     try:
         reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
     except Exception as e:
@@ -2177,14 +2184,40 @@ def render_launcher() -> str:
             cls = "text-bg-light"
         return f'<span class="badge {cls} ms-2" style="font-size:.65rem;font-weight:500">{status}</span>' if status else ""
 
-    def render_tile(label, href, port_display, up):
-        cls = "btn-outline-success" if up else "btn-outline-secondary"
-        dot = "🟢" if up else "⚪"
+    def render_local_tile(label, href, port_display, up):
+        # When the panel is loaded THROUGH a tunnel (remote machine), localhost links
+        # point at the viewer's own machine and cannot work — dim them and say so.
+        if via_tunnel:
+            cls = "btn-outline-secondary disabled"
+            dot = "🏠"
+            title = "Local only — this link works only on the machine running the Hive"
+        else:
+            cls = "btn-outline-success" if up else "btn-outline-secondary"
+            dot = "🟢" if up else "⚪"
+            title = href
         return (
-            f'<a href="{href}" target="_blank" rel="noopener" '
+            f'<a href="{href}" target="_blank" rel="noopener" title="{title}" '
             f'class="btn {cls} btn-sm me-2 mb-2">'
             f'<span class="me-1" style="font-size:.7rem">{dot}</span>{label} '
             f'<span class="text-muted ms-1" style="font-family:Consolas,monospace;font-size:.72rem">:{port_display}</span>'
+            f'</a>'
+        )
+
+    def render_public_tile(label, href, port, full_url, origin_up):
+        # Absolute trycloudflare URL — works from any machine, including when this
+        # very panel is being viewed through a tunnel. The colour reflects the ORIGIN
+        # app's health (probed locally on the Hive host): a tunnel can be up while the
+        # app behind it is down, in which case the link 502s. Amber = will not launch.
+        if origin_up:
+            cls, mark, title = "btn-success", "", full_url
+        else:
+            cls, mark = "btn-warning", '<i class="bi bi-exclamation-triangle-fill me-1"></i>'
+            title = f"Tunnel is up but the app on port {port} is not responding — this link will fail (502). Start the app."
+        return (
+            f'<a href="{href}" target="_blank" rel="noopener" title="{title}" '
+            f'class="btn {cls} btn-sm me-2 mb-2">'
+            f'{mark}<i class="bi bi-globe2 me-1"></i>{label} '
+            f'<span class="ms-1 opacity-75" style="font-family:Consolas,monospace;font-size:.7rem">:{port}</span>'
             f'</a>'
         )
 
@@ -2207,21 +2240,16 @@ def render_launcher() -> str:
                 continue
             port = int(current)
             up   = port_status.get(port, False)
-            for label, href, port_display in _project_tiles(role, port):
-                tiles_html += render_tile(label, href, port_display, up)
-            # If a Cloudflare tunnel maps to this port, emit a Public tile.
+            # Public tiles first — labelled by role, pointing at the live tunnel URL.
             tinfo = tunnels.get(port)
             if tinfo and tinfo.get("url") and tinfo.get("status") == "running":
-                public_url = tinfo["url"]
-                tlabel = (tinfo.get("label") or role.title())
-                public_tiles_html += (
-                    f'<a href="{public_url}" target="_blank" rel="noopener" '
-                    f'class="btn btn-success btn-sm me-2 mb-2" '
-                    f'title="{public_url}">'
-                    f'<i class="bi bi-globe2 me-1"></i>Public · {tlabel} '
-                    f'<span class="ms-1 opacity-75" style="font-family:Consolas,monospace;font-size:.7rem">:{port}</span>'
-                    f'</a>'
-                )
+                pub_url = tinfo["url"]
+                for label, href in _role_tiles(role, pub_url, public=True):
+                    public_tiles_html += render_public_tile(label, href, port, pub_url, up)
+            # Local tiles (localhost) — full standard set per role.
+            for label, href in _role_tiles(role, f"http://localhost:{port}", public=False):
+                pdisp = href.split(f":{port}", 1)[-1]
+                tiles_html += render_local_tile(label, href, f"{port}{pdisp}", up)
 
         if public_tiles_html:
             tiles_html = public_tiles_html + tiles_html
@@ -2246,7 +2274,7 @@ def render_launcher() -> str:
         for label, host, port, suffix in links:
             up = port_status.get(int(port), False)
             href = f"{host}:{port}{suffix}"
-            tiles_html += render_tile(label, href, f"{port}{suffix}", up)
+            tiles_html += render_local_tile(label, href, f"{port}{suffix}", up)
         groups_html += f"""
         <div class="mb-4">
           <div class="d-flex align-items-center mb-2">
@@ -2258,15 +2286,28 @@ def render_launcher() -> str:
 
     # Headline: how many public URLs are live right now
     public_live = sum(1 for t in tunnels.values() if t.get("url") and t.get("status") == "running")
-    note = (
-        '<div class="alert alert-info py-2 mb-3 d-flex align-items-center" style="font-size:.85rem">'
-        '<i class="bi bi-info-circle me-2"></i>'
-        '<div>Tiles auto-generated from <code>C:\\QIH\\ecosystem\\qi_registry.json</code>. '
-        '🟢 = local port responding · '
-        f'<i class="bi bi-globe2 mx-1"></i><strong>{public_live}</strong> public Cloudflare URL(s) live — green tiles open from any machine. '
-        'Quick Tunnel URLs rotate on restart; this page reads the current value live, no edit needed.</div>'
-        '</div>'
-    )
+    if via_tunnel:
+        note = (
+            '<div class="alert alert-success py-2 mb-3 d-flex align-items-center" style="font-size:.85rem">'
+            '<i class="bi bi-globe2 me-2"></i>'
+            '<div>You are viewing the Hive <strong>through a public tunnel</strong>, so use the '
+            '<span class="badge bg-success">green Public</span> buttons — they open from any machine. '
+            '<span class="badge bg-warning text-dark">amber ⚠</span> = tunnel up but the app is down (will 502 — start the app). '
+            'The 🏠 <em>local</em> buttons are disabled here because <code>localhost</code> would point at '
+            f'<strong>your</strong> device, not the Hive host. <strong>{public_live}</strong> public URL(s) live. '
+            'An app with no Public button at all has its <code>QI_&lt;App&gt;Tunnel</code> service stopped.</div>'
+            '</div>'
+        )
+    else:
+        note = (
+            '<div class="alert alert-info py-2 mb-3 d-flex align-items-center" style="font-size:.85rem">'
+            '<i class="bi bi-info-circle me-2"></i>'
+            '<div>Tiles auto-generated from <code>C:\\QIH\\ecosystem\\qi_registry.json</code>. '
+            '🟢 = local port responding · '
+            f'<i class="bi bi-globe2 mx-1"></i><strong>{public_live}</strong> public Cloudflare URL(s) live — green tiles open from any machine. '
+            'Quick Tunnel URLs rotate on restart; this page reads the current value live, no edit needed.</div>'
+            '</div>'
+        )
     err_html = ""
     if load_err:
         err_html = f'<div class="alert alert-danger py-2 mb-3"><i class="bi bi-exclamation-triangle me-1"></i>Registry load failed: {load_err}</div>'
@@ -2285,8 +2326,16 @@ def render_launcher() -> str:
     </div>"""
 
 @app.get("/launcher", response_class=HTMLResponse)
-def launcher_page():
-    return base_layout("Launcher", render_launcher(), "launcher")
+def launcher_page(request: Request):
+    # Detect whether this page itself arrived via a Cloudflare tunnel, so the launcher
+    # can prefer public URLs (localhost tiles are useless from a remote machine).
+    h = request.headers
+    via_tunnel = bool(h.get("cf-ray") or h.get("cf-connecting-ip"))
+    if not via_tunnel:
+        host = (h.get("host") or "").split(":")[0].lower()
+        via_tunnel = host.endswith(".trycloudflare.com") or (
+            host not in ("localhost", "127.0.0.1", "") and not host.startswith("192.168."))
+    return base_layout("Launcher", render_launcher(via_tunnel), "launcher")
 
 @app.get("/api/tunnels")
 def api_tunnels():
