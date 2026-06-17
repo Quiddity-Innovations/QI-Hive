@@ -992,14 +992,24 @@ async def create_dispatch(req: DispatchCreate):
 
 
 @app.get("/api/dispatches")
-async def list_dispatches(status: Optional[str] = None, source: Optional[str] = None, limit: int = 50):
-    """List dispatches. Filter by status and/or source."""
+async def list_dispatches(status: Optional[str] = None, source: Optional[str] = None,
+                          exclude_source: Optional[str] = None, exclude_type: Optional[str] = None,
+                          limit: int = 50):
+    """List dispatches. Filter by status and/or source.
+
+    exclude_source / exclude_type drop a channel (e.g. hive_inspector / compliance) so the
+    CoWork Dispatch board can request the most-recent *human* dispatches without the inspector
+    compliance volume crowding out the LIMIT window (added 2026-06-17)."""
     with open_brain_db() as conn:
         conditions, params = [], []
         if status:
             conditions.append("status = ?"); params.append(status)
         if source:
             conditions.append("source = ?"); params.append(source)
+        if exclude_source:
+            conditions.append("source != ?"); params.append(exclude_source)
+        if exclude_type:
+            conditions.append("type != ?"); params.append(exclude_type)
         where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
         rows = conn.execute(
             f"SELECT * FROM dispatches {where} ORDER BY created_at DESC LIMIT ?",

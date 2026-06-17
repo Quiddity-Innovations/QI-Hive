@@ -5310,33 +5310,51 @@ def _brain_post_dispatch(payload: dict) -> dict | None:
         return None
 
 
-def _get_dispatches(status_filter: str | None = None) -> list[dict]:
+def _get_dispatches(status_filter: str | None = None, extra: str = "", limit: int = 100) -> list[dict]:
     import urllib.request, json as _json
     try:
-        url = "http://127.0.0.1:9011/api/dispatches?limit=100"
+        url = f"http://127.0.0.1:9011/api/dispatches?limit={limit}" + extra
         if status_filter:
             url += f"&status={status_filter}"
-        with urllib.request.urlopen(url, timeout=3) as r:
+        with urllib.request.urlopen(url, timeout=5) as r:
             return _json.loads(r.read().decode('utf-8')).get("dispatches", [])
     except Exception:
         return []
 
 
+def _count_dispatches(status: str, source: str | None = None) -> int:
+    """Cheap count via the API (uses the returned list length, capped at limit)."""
+    import urllib.request, json as _json
+    try:
+        url = f"http://127.0.0.1:9011/api/dispatches?status={status}&limit=5000"
+        if source:
+            url += f"&source={source}"
+        with urllib.request.urlopen(url, timeout=4) as r:
+            return len(_json.loads(r.read().decode('utf-8')).get("dispatches", []))
+    except Exception:
+        return 0
+
+
 def render_dispatch() -> str:
     import json as _json
-    all_dispatches = _get_dispatches()
     # CoWork Dispatch is the human loop: CoWork drafts → Renne approves → Claude Code
     # executes. Inspector compliance findings are a SEPARATE channel surfaced on
     # /compliance — they must NOT pollute this human-review queue (fixed 2026-06-17,
     # after 2,844 stale inspector dispatches buried the genuine CoWork items).
+    #
+    # We ask the API to EXCLUDE the inspector/compliance channel server-side, otherwise
+    # the LIMIT window fills with inspector rows and the genuine human dispatches
+    # (pending AND resolved) fall off the end and render as empty lists.
+    # Belt-and-suspenders: pull a wide window AND filter client-side, so this works even
+    # if the Brain API predates the exclude_source/exclude_type params.
     def _is_human(d: dict) -> bool:
         return not (d.get("source") == "hive_inspector" or d.get("type") == "compliance")
-    human      = [d for d in all_dispatches if _is_human(d)]
+    raw = _get_dispatches(extra="&exclude_source=hive_inspector&exclude_type=compliance", limit=5000)
+    human = [d for d in raw if _is_human(d)]
     pending    = [d for d in human if d["status"] == "pending"]
     discussing = [d for d in human if d["status"] == "discussing"]
     resolved   = [d for d in human if d["status"] in ("approved", "declined", "executed", "resolved")]
-    inspector_pending = len([d for d in all_dispatches
-                             if d["status"] == "pending" and not _is_human(d)])
+    inspector_pending = _count_dispatches("pending", source="hive_inspector")
     pending_total = len(pending)
     pending = pending[:30]
 
