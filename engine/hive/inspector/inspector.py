@@ -110,16 +110,39 @@ def file_dispatch(project_id: str, check_id: str, message: str, fix_action: str)
 
     NOTE: previously omitted dispatch_id which broke the dashboard's Approve/Decline
     buttons (they PATCH /api/dispatch/<id> -- null IDs couldn't match). Fixed 2026-05-13.
+
+    IDEMPOTENT (fixed 2026-06-17): a compliance finding is a *standing* condition, not
+    a one-shot event. Previously every 4-hour run inserted a fresh pending dispatch for
+    the same (project_id, check_id), so identical findings piled up into the thousands and
+    flooded the CoWork Dispatch "Pending — Awaiting Review" board (2,844 stale rows found).
+    Now: if an OPEN dispatch (pending/discussing) already exists for this project+check,
+    reuse it — refresh its payload + timestamp instead of creating a duplicate.
     """
     import uuid
-    did = str(uuid.uuid4())
+    payload = json.dumps({'check_id': check_id, 'message': message, 'suggested_fix': fix_action})
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     with db() as con:
+        existing = con.execute(
+            "SELECT dispatch_id FROM dispatches "
+            "WHERE source='hive_inspector' AND project_id=? "
+            "  AND status IN ('pending','discussing') "
+            "  AND json_extract(payload,'$.check_id')=? "
+            "ORDER BY created_at DESC LIMIT 1",
+            (project_id, check_id)
+        ).fetchone()
+        if existing:
+            did = existing[0]
+            con.execute(
+                "UPDATE dispatches SET payload=?, created_at=? WHERE dispatch_id=?",
+                (payload, now, did)
+            )
+            con.commit()
+            return did
+        did = str(uuid.uuid4())
         con.execute(
             "INSERT INTO dispatches (dispatch_id, source, type, priority, project_id, payload, status, created_at) "
             "VALUES (?,?,?,?,?,?, 'pending', ?)",
-            (did, 'hive_inspector', 'compliance', 'medium', project_id,
-             json.dumps({'check_id': check_id, 'message': message, 'suggested_fix': fix_action}),
-             datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            (did, 'hive_inspector', 'compliance', 'medium', project_id, payload, now)
         )
         con.commit()
         return did

@@ -5325,10 +5325,18 @@ def _get_dispatches(status_filter: str | None = None) -> list[dict]:
 def render_dispatch() -> str:
     import json as _json
     all_dispatches = _get_dispatches()
-    pending    = [d for d in all_dispatches if d["status"] == "pending"]
-    discussing = [d for d in all_dispatches if d["status"] == "discussing"]
-    resolved   = [d for d in all_dispatches if d["status"] in ("approved", "declined", "executed", "resolved")]
-    # The inspector can queue thousands of pending dispatches — cap rendering.
+    # CoWork Dispatch is the human loop: CoWork drafts → Renne approves → Claude Code
+    # executes. Inspector compliance findings are a SEPARATE channel surfaced on
+    # /compliance — they must NOT pollute this human-review queue (fixed 2026-06-17,
+    # after 2,844 stale inspector dispatches buried the genuine CoWork items).
+    def _is_human(d: dict) -> bool:
+        return not (d.get("source") == "hive_inspector" or d.get("type") == "compliance")
+    human      = [d for d in all_dispatches if _is_human(d)]
+    pending    = [d for d in human if d["status"] == "pending"]
+    discussing = [d for d in human if d["status"] == "discussing"]
+    resolved   = [d for d in human if d["status"] in ("approved", "declined", "executed", "resolved")]
+    inspector_pending = len([d for d in all_dispatches
+                             if d["status"] == "pending" and not _is_human(d)])
     pending_total = len(pending)
     pending = pending[:30]
 
@@ -5445,6 +5453,10 @@ def render_dispatch() -> str:
                 — reviewed here before anything is executed.
                 The loop: <strong>CoWork drafts → Renne approves → Claude Code executes.</strong>
               </p>
+              {f'''<p class="small mb-0 mt-2"><span class="badge bg-dark">Inspector</span>
+                {inspector_pending} open compliance finding(s) live on the
+                <a href="/compliance">Compliance board →</a> — they are kept out of this
+                human-review queue on purpose.</p>''' if inspector_pending else ''}
             </div>
           </div>
         </div>
