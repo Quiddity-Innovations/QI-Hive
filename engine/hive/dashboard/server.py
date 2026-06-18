@@ -1031,25 +1031,53 @@ def render_dashboard() -> str:
     for t in tasks:
         col_counts[t.get("column","backlog")] = col_counts.get(t.get("column","backlog"),0)+1
 
-    # Claude usage snapshot
+    # Claude usage snapshot — consumption ladder: today / week / 30d / QTD / YTD.
+    from datetime import date as _date
+    def _fmt_tok(t):
+        t = t or 0
+        if t >= 1_000_000: return f'{t/1_000_000:.1f}M'
+        if t >= 1_000:     return f'{t/1_000:.0f}K'
+        return str(int(t))
     try:
+        _today_d = _date.today()
+        _q_num   = (_today_d.month - 1) // 3 + 1
+        _q_start = _date(_today_d.year, (_q_num - 1) * 3 + 1, 1)
+        _y_start = _date(_today_d.year, 1, 1)
         u_today = usage_stats.today()
+        u_week  = usage_stats.totals(7)
         u_30    = usage_stats.totals(30)
-        tokens_today   = f'{u_today["tokens"]/1_000_000:.1f}M'
-        cost_today     = f'${u_today["cost_usd"]:.2f}'
+        u_qtd   = usage_stats.totals_since(_q_start)
+        u_ytd   = usage_stats.totals_since(_y_start)
+        tokens_today   = _fmt_tok(u_today["tokens"])
+        cost_today     = f'${u_today["cost_usd"]:,.2f}'
         sessions_today = u_today["sessions"]
         turns_today    = u_today["assistant_turns"]
-        cost_30        = f'${u_30["cost_usd"]:,.0f}'
+        cost_week = f'${u_week["cost_usd"]:,.0f}'
+        cost_30   = f'${u_30["cost_usd"]:,.0f}'
+        cost_qtd  = f'${u_qtd["cost_usd"]:,.0f}'
+        cost_ytd  = f'${u_ytd["cost_usd"]:,.0f}'
+        sub_today = f'{turns_today} turns'
+        sub_week  = f'{_fmt_tok(u_week["tokens"])} tok'
+        sub_30    = f'{_fmt_tok(u_30["tokens"])} tok'
+        sub_qtd   = f'{_fmt_tok(u_qtd["tokens"])} tok'
+        sub_ytd   = f'{_fmt_tok(u_ytd["tokens"])} tok'
+        q_label   = f'Q{_q_num} to date'
     except Exception as e:
-        tokens_today = cost_today = sessions_today = turns_today = cost_30 = "—"
+        tokens_today = cost_today = sessions_today = turns_today = "—"
+        cost_week = cost_30 = cost_qtd = cost_ytd = "—"
+        sub_today = sub_week = sub_30 = sub_qtd = sub_ytd = ""
+        q_label = "Quarter"
         log.warning(f"usage_stats failed: {e}")
 
-    def _tile(label, value, href="/usage"):
+    def _tile(label, value, href="/usage", sub=""):
+        sub_html = (f'<div class="text-body-tertiary" style="font-size:.62rem;line-height:1.1">{sub}</div>'
+                    if sub else '')
         return (
             f'<div class="col"><a href="{href}" class="text-decoration-none">'
             f'<div class="card border-0 bg-body-secondary h-100"><div class="card-body py-2 px-3">'
             f'<div class="text-body-secondary" style="font-size:.72rem">{label}</div>'
             f'<div class="fw-medium text-body" style="font-size:1.2rem;line-height:1.2">{value}</div>'
+            f'{sub_html}'
             f'</div></div></a></div>'
         )
 
@@ -1068,13 +1096,20 @@ def render_dashboard() -> str:
         </div>
       </div>
       <div class="col-12 col-lg-8">
-        <div class="row row-cols-2 row-cols-md-3 g-2 h-100">
-          {_tile("API today", cost_today, "/usage")}
-          {_tile("API 30d", cost_30, "/usage")}
-          {_tile("In progress", col_counts.get("in_progress",0), "/board")}
-          {_tile("Backlog", col_counts.get("backlog",0), "/board")}
-          {_tile("In review", col_counts.get("review",0), "/board")}
-          {_tile("Done", col_counts.get("done",0), "/board")}
+        <div class="d-flex flex-column gap-2 h-100">
+          <div class="row row-cols-2 row-cols-md-5 g-2">
+            {_tile("API today", cost_today, "/usage", sub_today)}
+            {_tile("Week (7d)", cost_week, "/usage", sub_week)}
+            {_tile("30 days", cost_30, "/usage", sub_30)}
+            {_tile(q_label, cost_qtd, "/usage", sub_qtd)}
+            {_tile("Year to date", cost_ytd, "/usage", sub_ytd)}
+          </div>
+          <div class="row row-cols-2 row-cols-md-4 g-2">
+            {_tile("In progress", col_counts.get("in_progress",0), "/board")}
+            {_tile("Backlog", col_counts.get("backlog",0), "/board")}
+            {_tile("In review", col_counts.get("review",0), "/board")}
+            {_tile("Done", col_counts.get("done",0), "/board")}
+          </div>
         </div>
       </div>
     </div>

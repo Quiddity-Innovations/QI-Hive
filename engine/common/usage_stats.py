@@ -726,6 +726,36 @@ def totals(days: int = 30) -> dict:
     }
 
 
+def totals_since(start: date) -> dict:
+    """Cumulative totals from `start` (inclusive, local date) through today.
+    Used for calendar-aligned windows like quarter-to-date and year-to-date,
+    which a rolling N-day `totals()` can't express. Note the floor is the
+    earliest JSONL event on disk — if logs began after `start`, the figure is
+    cumulative over the data that exists, not back-filled."""
+    evs = _iter_events()
+    tokens = 0
+    cache_reads = 0
+    cost = 0.0
+    turns = 0
+    sessions = set()
+    for e in evs:
+        if e["ts"].astimezone().date() < start:
+            continue
+        tokens += e["tokens"]
+        cache_reads += e.get("cache_reads", 0)
+        cost += e["cost"]
+        turns += 1
+        sessions.add(e["session"])
+    return {
+        "since":       start.isoformat(),
+        "tokens":      tokens,
+        "cache_reads": cache_reads,
+        "cost_usd":    round(cost, 2),
+        "turns":       turns,
+        "sessions":    len(sessions),
+    }
+
+
 if __name__ == "__main__":
     import sys
     sys.stdout.reconfigure(encoding="utf-8")
