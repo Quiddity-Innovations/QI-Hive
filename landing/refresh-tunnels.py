@@ -79,10 +79,10 @@ TUNNELS = {
     },
 }
 
-# tunnels.js is written to each of these folders (both launcher copies).
+# Canonical launcher lives in C:\QIH\landing (QI-Hive is the source of truth).
+# ecosystem\launcher is a thin redirect to this one, so we write tunnels.js here only.
 TARGET_DIRS = [
     r"C:\QIH\landing",
-    r"C:\QIH\ecosystem\launcher",
 ]
 
 
