@@ -826,6 +826,8 @@ def render_dashboard() -> str:
         "pending":                              ("warning",   "bi-hourglass-split"),
         # Retired-equivalents (secondary/grey)
         "merged_into_naya":                     ("secondary", "bi-arrow-right-circle"),
+        "merged":                               ("secondary", "bi-arrow-right-circle"),
+        "migrating":                            ("secondary", "bi-arrow-right-circle"),
         "deprecated":                           ("secondary", "bi-archive-fill"),
     }
 

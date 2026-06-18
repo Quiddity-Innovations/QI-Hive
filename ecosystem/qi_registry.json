@@ -408,7 +408,7 @@
       "path": "C:\\QIH",
       "github": "https://github.com/Quiddity-Innovations/QI-Hive",
       "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 — see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
-      "status": "active",
+      "status": "merged",
       "primary_language": "HTML/Python",
       "ports": {},
       "family_tier": "infrastructure",
@@ -730,7 +730,7 @@
       "description": "Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools",
       "path": "C:\\CypherMiner",
       "github": "https://github.com/Quiddity-Innovations/CypherMiner",
-      "status": "new",
+      "status": "complete",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -788,7 +788,7 @@
       "description": "BU Digitization Cost Comparison Tool — client-side HTML calculator for Document Imaging & Services pricing/scenarios. Ships with technical docs + user guide.",
       "path": "C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS",
       "github": "https://github.com/Quiddity-Innovations/DigitizationCostTool",
-      "status": "active",
+      "status": "complete",
       "primary_language": "HTML/JS",
       "ports": {},
       "family_tier": "sibling",
