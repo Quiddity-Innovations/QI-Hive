@@ -5,6 +5,8 @@
 **Convention:** All QI services are prefixed `QI_` so they group together in Windows Services, Task Manager, and Event Viewer.
 **Last updated:** 2026-05-13 (audit-corrected from live NSSM state)
 
+> **Looking for Scheduled Tasks (not services)?** — e.g. a task popping a command window, or you need to enable/disable one — see the sibling **`QI_Scheduled_Tasks_Registry.md`**.
+
 ---
 
 ## Service Name Mapping (Old → New)
