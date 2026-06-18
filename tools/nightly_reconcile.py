@@ -29,7 +29,12 @@ def log(msg):
 DB = r'C:\QIH\data\qi_brain.db'
 SUMMARIES = Path(r'C:\QIH\shared\documentation\session_summaries')
 LATEST_MD = Path(r'C:\QIH\LATEST.md')
-STATUS_JSON = Path(r'C:\QIH\status.json')
+# The dashboard reads C:\QIH\data\status.json. Historically this pointed at
+# C:\QIH\status.json (root) — a file nothing reads — so reconcile never refreshed
+# the dashboard and statuses drifted. qi_brain.db project_state is the single
+# source of truth for status; we MERGE it into the live file below.
+STATUS_JSON = Path(r'C:\QIH\data\status.json')
+REGISTRY    = Path(r'C:\QIH\ecosystem\qi_registry.json')
 
 PROJECT_PREFIX = {
     'CogniBase': 'cognibase', 'MapSnapOnBase': 'cognibase',
@@ -54,6 +59,72 @@ GIT_PROJECTS = {
     'avatarstudio': r'C:\1-AI\APPS\AvatarStudio',
     'tubescout': r'C:\TUBESCOUT',
 }
+
+def regenerate_views(cur):
+    """Rebuild LATEST.md (a Brain-derived view) and MERGE Brain status into the
+    dashboard's status.json. qi_brain.db project_state is the single source of
+    truth for status/phase; the dashboard's editorial fields (display_name, id,
+    current_task, notes, ports, …) are preserved and projects Brain hasn't
+    recorded a state for are never dropped. Returns the number of projects
+    refreshed from Brain."""
+    states = {}
+    for r in cur.execute("SELECT project_id, phase, status, summary, next_steps, recorded_at FROM project_state ORDER BY recorded_at DESC"):
+        if r[0] not in states: states[r[0]] = r
+    sc = {r[0]: r[1] for r in cur.execute("SELECT project_id, COUNT(*) FROM session_log GROUP BY project_id")}
+    last = {r[0]: r[1] for r in cur.execute("SELECT project_id, MAX(COALESCE(ended_at, started_at)) FROM session_log GROUP BY project_id")}
+
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    md = [f"# QI Hive — LATEST", "", f"_Auto-generated: {now} (nightly reconciler)_", "",
+          "| Project | Phase | Status | Sessions | Last |", "|---|---|---|---|---|"]
+    for pid in sorted(states):
+        _,phase,status,_,_,_ = states[pid]
+        md.append(f"| {pid} | {phase} | {status} | {sc.get(pid,0)} | {last.get(pid,'—')} |")
+    md += ["", "## Per-project", ""]
+    for pid in sorted(states):
+        _,phase,status,summary,nxt,_ = states[pid]
+        md += [f"### {pid}", f"- **Phase:** {phase}", f"- **Status:** {status}",
+               f"- **Summary:** {summary}", f"- **Next:** {nxt}", ""]
+    LATEST_MD.write_text("\n".join(md), encoding='utf-8')
+
+    try:
+        doc = json.loads(STATUS_JSON.read_text(encoding='utf-8')) if STATUS_JSON.exists() else {}
+    except Exception as e:
+        log(f"  status.json unreadable ({e}); starting fresh")
+        doc = {}
+    if not isinstance(doc, dict):
+        doc = {}
+    projects = doc.setdefault('projects', {})
+
+    try:
+        reg = {p['id']: p for p in json.loads(REGISTRY.read_text(encoding='utf-8')).get('projects', [])}
+    except Exception:
+        reg = {}
+
+    updated = 0
+    for pid, s in states.items():
+        _, phase, status, summary, nxt, recorded = s
+        entry = projects.get(pid)
+        if entry is None:
+            entry = {"id": pid,
+                     "display_name": (reg.get(pid, {}).get('name') or pid.replace('_', ' ').title())}
+            projects[pid] = entry
+        # Source of truth from Brain:
+        entry['status'] = status
+        entry['phase'] = phase
+        # Bookkeeping (dashboard ignores these; handy for debugging/audits):
+        entry['summary'] = summary
+        entry['next_steps'] = nxt
+        entry['recorded_at'] = recorded
+        entry['session_count'] = sc.get(pid, 0)
+        entry['last_session'] = last.get(pid)
+        updated += 1
+
+    doc['_meta'] = {"generated": now, "source": "nightly_reconcile.py",
+                    "status_source_of_truth": "qi_brain.db project_state"}
+    STATUS_JSON.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding='utf-8')
+    log(f"  Wrote LATEST.md and merged Brain status into {STATUS_JSON.name} ({updated} projects)")
+    return updated
+
 
 def main():
     log("=== Nightly reconciler START ===")
@@ -117,33 +188,8 @@ def main():
     con.commit()
     log(f"  docx-backfilled: {docx_added}, git-backfilled: {git_added}")
 
-    # Regenerate LATEST.md + status.json
-    states = {}
-    for r in cur.execute("SELECT project_id, phase, status, summary, next_steps, recorded_at FROM project_state ORDER BY recorded_at DESC"):
-        if r[0] not in states: states[r[0]] = r
-    sc = {r[0]: r[1] for r in cur.execute("SELECT project_id, COUNT(*) FROM session_log GROUP BY project_id")}
-    last = {r[0]: r[1] for r in cur.execute("SELECT project_id, MAX(COALESCE(ended_at, started_at)) FROM session_log GROUP BY project_id")}
-
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    md = [f"# QI Hive — LATEST", "", f"_Auto-generated: {now} (nightly reconciler)_", "",
-          "| Project | Phase | Status | Sessions | Last |", "|---|---|---|---|---|"]
-    for pid in sorted(states):
-        _,phase,status,_,_,_ = states[pid]
-        md.append(f"| {pid} | {phase} | {status} | {sc.get(pid,0)} | {last.get(pid,'—')} |")
-    md += ["", "## Per-project", ""]
-    for pid in sorted(states):
-        _,phase,status,summary,nxt,_ = states[pid]
-        md += [f"### {pid}", f"- **Phase:** {phase}", f"- **Status:** {status}",
-               f"- **Summary:** {summary}", f"- **Next:** {nxt}", ""]
-    LATEST_MD.write_text("\n".join(md), encoding='utf-8')
-
-    obj = {"_meta": {"generated": now, "source": "nightly_reconcile.py"},
-           "projects": {pid: {"phase": s[1], "status": s[2], "summary": s[3],
-                              "next_steps": s[4], "recorded_at": s[5],
-                              "session_count": sc.get(pid,0), "last_session": last.get(pid)}
-                        for pid, s in states.items()}}
-    STATUS_JSON.write_text(json.dumps(obj, indent=2), encoding='utf-8')
-    log(f"  Wrote LATEST.md and status.json")
+    # Regenerate LATEST.md (Brain view) + merge live status into the dashboard's status.json
+    regenerate_views(cur)
 
     con.close()
 
