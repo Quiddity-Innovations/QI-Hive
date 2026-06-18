@@ -1665,32 +1665,20 @@ def render_hive() -> str:
     except Exception:
         pass
 
+    def _stat_tile(label, value):
+        return (
+            f'<div class="col"><div class="card border-0 bg-body-secondary h-100">'
+            f'<div class="card-body py-2 px-3">'
+            f'<div class="text-body-secondary" style="font-size:.72rem">{label}</div>'
+            f'<div class="fw-medium text-body" style="font-size:1.4rem;line-height:1.2">{value}</div>'
+            f'</div></div></div>'
+        )
     stats_html = f"""
-    <div class="row mb-3">
-      <div class="col-lg-3 col-md-6">
-        <div class="small-box text-bg-primary">
-          <div class="inner"><h3>{n_projects}</h3><p>Active Projects</p></div>
-          <i class="small-box-icon bi bi-folder2-open"></i>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="small-box text-bg-success">
-          <div class="inner"><h3>{n_decisions}</h3><p>Decisions Logged</p></div>
-          <i class="small-box-icon bi bi-journal-check"></i>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="small-box text-bg-warning">
-          <div class="inner"><h3>{n_features}</h3><p>Features Tracked</p></div>
-          <i class="small-box-icon bi bi-stars"></i>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="small-box text-bg-info">
-          <div class="inner"><h3>{n_sessions}</h3><p>Sessions Logged</p></div>
-          <i class="small-box-icon bi bi-calendar2-check"></i>
-        </div>
-      </div>
+    <div class="row row-cols-2 row-cols-md-4 g-2 mb-3">
+      {_stat_tile("Active projects", n_projects)}
+      {_stat_tile("Decisions logged", n_decisions)}
+      {_stat_tile("Features tracked", n_features)}
+      {_stat_tile("Sessions logged", n_sessions)}
     </div>"""
 
     # Agent cards
