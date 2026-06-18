@@ -438,6 +438,19 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     .health-bad      {{ color: #dc3545; }}
     .sortable-ghost  {{ opacity: .4; }}
   </style>
+  <script>
+    /* Resolve the theme onto <html> so EVERY component (incl. dropdowns/modals
+       portaled to body) inherits it. 'auto' follows the OS and reacts live —
+       Bootstrap has no native 'auto', so we map it here. */
+    (function(){{
+      var t = "{theme}";
+      var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      function resolve(){{ return t === 'auto' ? (mq && mq.matches ? 'dark' : 'light') : t; }}
+      function apply(){{ document.documentElement.setAttribute('data-bs-theme', resolve()); }}
+      apply();
+      if (t === 'auto' && mq && mq.addEventListener) mq.addEventListener('change', apply);
+    }})();
+  </script>
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary" {bs_theme_attr}>
 <div class="app-wrapper">
@@ -2399,6 +2412,7 @@ def render_launcher(via_tunnel: bool = False) -> str:
 
     css = """
 #qi-lp{--bg:#0d1117;--panel:#161b22;--panel-2:#1f2630;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--accent-2:#f0b429;--good:#3fb950;--bad:#f85149;--idle:#6e7681;--paused:#a371f7;color:var(--text);}
+[data-bs-theme=light] #qi-lp{--bg:#ffffff;--panel:#ffffff;--panel-2:#f6f8fa;--border:#d0d7de;--text:#1f2328;--muted:#57606a;--accent:#0969da;--accent-2:#9a6700;--good:#1a7f37;--bad:#cf222e;--idle:#6e7681;--paused:#8250df;}
 #qi-lp *{box-sizing:border-box;}
 #qi-lp .lp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
 #qi-lp .lp-head h2{margin:0;font-size:20px;}
@@ -2565,6 +2579,7 @@ def render_tunnels() -> str:
 
     css = """
 #qi-tn{--bg:#0d1117;--panel:#161b22;--panel-2:#1f2630;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--accent-2:#f0b429;--good:#3fb950;color:var(--text);}
+[data-bs-theme=light] #qi-tn{--bg:#ffffff;--panel:#ffffff;--panel-2:#f6f8fa;--border:#d0d7de;--text:#1f2328;--muted:#57606a;--accent:#0969da;--accent-2:#9a6700;--good:#1a7f37;}
 #qi-tn *{box-sizing:border-box;}
 #qi-tn .tn-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
 #qi-tn .tn-head h2{margin:0;font-size:20px;}
