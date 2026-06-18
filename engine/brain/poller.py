@@ -12,7 +12,7 @@ Poll sources per project:
   • git log --since=<last_check>                    — recent commits
 
 Brain inbox (file-based, for any sender):
-  C:\\QIH\\brain\\inbox\\*.json  — drop a message here, poller picks it up
+  C:\\QIH\\engine\\brain\\inbox\\*.json  — drop a message here, poller picks it up
 
 Configuration (brain_config table):
   poll_interval_s      — seconds between cycles (default 300)

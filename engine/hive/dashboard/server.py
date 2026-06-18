@@ -312,8 +312,9 @@ PAGE_READMES: dict[str, str] = {
     "guide": """
         <p>The <strong>Guide</strong> is the built-in reference library for the QI ecosystem — cheatsheets, architecture notes, and quick-reference cards in one place.</p>
         <ul class="mb-2">
-          <li>Content is loaded from <code>C:\\UNIVERSAL\\QI_Claude_Manager_Guide.md</code> and rendered as formatted HTML.</li>
+          <li>Content is loaded from <code>C:\\QIH\\ecosystem\\QI_Claude_Manager_Guide.md</code> and rendered as formatted HTML.</li>
           <li>Use <code>Ctrl+F</code> to search within the page — the guide is fully text-searchable.</li>
+          <li><strong>NEW — Documentation Brain:</strong> 900+ docs across the ecosystem are now indexed and semantically searchable via the <code>qi_docs</code> collection, with a typed knowledge graph and the <code>hive-librarian</code> agent. See PART 12 of the Guide.</li>
         </ul>
         <p class="mb-0 text-muted">Planned additions: QI Standards reference, port registry table, NSSM command cheatsheet, LLM chain topology diagram, and a new-project quickstart walkthrough. These will be migrated here once the higher-priority dashboard rebuild is complete.</p>
     """,
@@ -380,6 +381,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("warroom",   "/warroom", "bi-broadcast-pin", "War Room"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
+        ("library",   "/library", "bi-journals",      "Library"),
         ("guide",     "/guide",   "bi-book",          "Guide"),
     ]
     nav_html = ""
@@ -2705,6 +2707,384 @@ def guide_page():
 def api_guide_raw():
     text = GUIDE_FILE.read_text(encoding="utf-8") if GUIDE_FILE.exists() else "# Guide not found"
     return Response(content=text, media_type="text/plain")
+
+
+# ── Documentation Library (Documentation Brain — Stage 1: search tile) ──────────
+
+@app.get("/api/library/facets")
+def api_library_facets():
+    """Index health + filter facets, read straight from qi_brain.db docs catalog."""
+    stats = _brain_db_query(
+        "SELECT COUNT(*) n, COALESCE(SUM(embedded),0) emb, COALESCE(SUM(stale),0) stale FROM docs")
+    edges = _brain_db_query("SELECT COUNT(*) n FROM doc_relationships")
+    projects = _brain_db_query(
+        "SELECT COALESCE(project_id,'(none)') id, COUNT(*) n FROM docs "
+        "GROUP BY id ORDER BY n DESC")
+    types = _brain_db_query(
+        "SELECT COALESCE(doc_type,'other') t, COUNT(*) n FROM docs "
+        "GROUP BY t ORDER BY n DESC")
+    s = stats[0] if stats else {}
+    return {
+        "total":    s.get("n", 0),
+        "embedded": s.get("emb", 0),
+        "stale":    s.get("stale", 0),
+        "edges":    (edges[0]["n"] if edges else 0),
+        "projects": projects,
+        "types":    types,
+    }
+
+
+@app.get("/api/library/search")
+def api_library_search(q: str = "", project: str = "", doc_type: str = "",
+                       stale: int = 0, limit: int = 30):
+    """Search the Documentation Brain.
+
+    With a query: semantic search via the Brain API (collection=docs), enriched
+    from the catalog. Falls back to keyword LIKE if the Brain API is offline.
+    Without a query: most-recently-modified docs. Project/type/stale filter on top.
+    """
+    q = (q or "").strip()
+    rows: list[dict] = []
+    mode = "recent"
+
+    if q:
+        try:
+            import urllib.request, json as _j
+            body = _j.dumps({"query": q, "collection": "docs",
+                             "n": max(limit * 2, 40)}).encode("utf-8")
+            req = urllib.request.Request(
+                "http://localhost:9011/api/search_memory", data=body,
+                headers={"Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(req, timeout=8) as r:
+                data = _j.loads(r.read().decode("utf-8"))
+            ids = [x["id"] for x in data.get("results", [])]
+            dist = {x["id"]: x.get("distance") for x in data.get("results", [])}
+            if ids:
+                ph = ",".join("?" * len(ids))
+                cmap = {c["doc_id"]: c for c in
+                        _brain_db_query(f"SELECT * FROM docs WHERE doc_id IN ({ph})", tuple(ids))}
+                for i in ids:                     # preserve similarity ranking
+                    c = cmap.get(i)
+                    if c:
+                        c = dict(c)
+                        c["distance"] = dist.get(i)
+                        rows.append(c)
+                mode = "semantic"
+        except Exception:
+            rows = []
+        if not rows:                              # Brain API down → keyword fallback
+            like = f"%{q}%"
+            rows = _brain_db_query(
+                "SELECT * FROM docs WHERE title LIKE ? OR path LIKE ? "
+                "ORDER BY mtime DESC LIMIT 200", (like, like))
+            mode = "keyword"
+    else:
+        rows = _brain_db_query("SELECT * FROM docs ORDER BY mtime DESC LIMIT 300")
+
+    def keep(r: dict) -> bool:
+        if project and (r.get("project_id") or "") != project:
+            return False
+        if doc_type and (r.get("doc_type") or "") != doc_type:
+            return False
+        if stale and not r.get("stale"):
+            return False
+        return True
+
+    rows = [r for r in rows if keep(r)][:limit]
+    return {"ok": True, "mode": mode, "count": len(rows), "results": rows}
+
+
+@app.get("/api/library/graph")
+def api_library_graph(node: str = "root:qi"):
+    """Return the neighbourhood of one node — the TheBrain 'Plex'. Clicking a node
+    re-centers by re-querying this with that node. Sources both doc_relationships
+    edges and the natural foreign keys in decisions/features/session_log."""
+    try:
+        ntype, nid = node.split(":", 1)
+    except ValueError:
+        ntype, nid = "root", "qi"
+
+    nodes: dict[str, dict] = {}
+    links: list[dict] = []
+
+    def add(_id, label, _type, sub="", path=""):
+        nodes[_id] = {"id": _id, "label": label, "type": _type, "sub": sub, "path": path}
+
+    def link(a, b, lbl):
+        links.append({"from": a, "to": b, "label": lbl})
+
+    if ntype == "root":
+        add("root:qi", "QI Ecosystem", "root", "click a project")
+        for p in _brain_db_query(
+                "SELECT COALESCE(project_id,'(none)') id, COUNT(*) n FROM docs "
+                "GROUP BY id ORDER BY n DESC LIMIT 24"):
+            add(f"project:{p['id']}", p["id"], "project", f"{p['n']} docs")
+            link("root:qi", f"project:{p['id']}", "project")
+
+    elif ntype == "project":
+        add(f"project:{nid}", nid, "project")
+        add("root:qi", "QI Ecosystem", "root")
+        link("root:qi", f"project:{nid}", "project")
+        for r in _brain_db_query("SELECT doc_id, title, path, doc_type FROM docs "
+                                 "WHERE project_id=? ORDER BY mtime DESC LIMIT 14", (nid,)):
+            add(f"doc:{r['doc_id']}", (r["title"] or "(untitled)")[:38], "doc",
+                r.get("doc_type") or "", r.get("path") or "")
+            link(f"project:{nid}", f"doc:{r['doc_id']}", "has")
+        for r in _brain_db_query("SELECT decision_id, title FROM decisions "
+                                 "WHERE project_id=? AND superseded_by IS NULL "
+                                 "ORDER BY recorded_at DESC LIMIT 8", (nid,)):
+            add(f"decision:{r['decision_id']}", (r["title"] or "decision")[:38], "decision")
+            link(f"project:{nid}", f"decision:{r['decision_id']}", "decided")
+        for r in _brain_db_query("SELECT feature_id, name FROM features "
+                                 "WHERE source_project=? ORDER BY recorded_at DESC LIMIT 8", (nid,)):
+            add(f"feature:{r['feature_id']}", (r["name"] or "feature")[:38], "feature")
+            link(f"project:{nid}", f"feature:{r['feature_id']}", "implements")
+        for r in _brain_db_query("SELECT session_id, session_title FROM session_log "
+                                 "WHERE project_id=? ORDER BY ended_at DESC LIMIT 8", (nid,)):
+            add(f"session:{r['session_id']}", (r["session_title"] or "session")[:38], "session")
+            link(f"project:{nid}", f"session:{r['session_id']}", "produced")
+
+    elif ntype == "doc":
+        d = _brain_db_query("SELECT doc_id, title, project_id, path, doc_type "
+                            "FROM docs WHERE doc_id=?", (nid,))
+        if d:
+            d = d[0]
+            add(f"doc:{nid}", (d["title"] or "(untitled)")[:48], "doc",
+                d.get("doc_type") or "", d.get("path") or "")
+            if d.get("project_id"):
+                add(f"project:{d['project_id']}", d["project_id"], "project")
+                link(f"project:{d['project_id']}", f"doc:{nid}", "has")
+                for r in _brain_db_query("SELECT doc_id, title, path FROM docs WHERE project_id=? "
+                                         "AND doc_id<>? ORDER BY mtime DESC LIMIT 6",
+                                         (d["project_id"], nid)):
+                    add(f"doc:{r['doc_id']}", (r["title"] or "(untitled)")[:34], "doc",
+                        "", r.get("path") or "")
+                    link(f"project:{d['project_id']}", f"doc:{r['doc_id']}", "has")
+            for r in _brain_db_query("SELECT dst_id FROM doc_relationships WHERE src_type='doc' "
+                                     "AND src_id=? AND edge_type='mentions' AND dst_type='project'", (nid,)):
+                add(f"project:{r['dst_id']}", r["dst_id"], "project")
+                link(f"doc:{nid}", f"project:{r['dst_id']}", "mentions")
+
+    elif ntype in ("decision", "feature", "session"):
+        spec = {"decision": ("decisions", "decision_id", "title", "project_id"),
+                "feature":  ("features", "feature_id", "name", "source_project"),
+                "session":  ("session_log", "session_id", "session_title", "project_id")}[ntype]
+        r = _brain_db_query(
+            f"SELECT {spec[1]} id, {spec[2]} label, {spec[3]} pid FROM {spec[0]} WHERE {spec[1]}=?", (nid,))
+        if r:
+            r = r[0]
+            add(f"{ntype}:{nid}", (r["label"] or ntype)[:48], ntype)
+            if r.get("pid"):
+                add(f"project:{r['pid']}", r["pid"], "project")
+                link(f"project:{r['pid']}", f"{ntype}:{nid}", ntype)
+
+    return {"focus": node, "nodes": list(nodes.values()), "links": links}
+
+
+@app.get("/library", response_class=HTMLResponse)
+def library_page():
+    content = """
+    <div class="row mb-2"><div class="col-12">
+      <div class="btn-group" role="group">
+        <button id="lib-tab-search" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Search</button>
+        <button id="lib-tab-graph" class="btn btn-sm btn-outline-primary"><i class="bi bi-diagram-3 me-1"></i>Graph (Plex)</button>
+      </div>
+    </div></div>
+    <div id="lib-search-view">
+    <div class="row mb-3"><div class="col-12">
+      <div class="card"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+          <h3 class="card-title mb-0"><i class="bi bi-journals me-2"></i>Documentation Library</h3>
+          <div id="lib-stats" class="small text-muted">loading index…</div>
+        </div>
+        <p class="text-muted small mb-3">Semantic search across every doc in the QI ecosystem — the face of the Documentation Brain (<code>qi_docs</code>). Backed by <code>/api/search_memory</code> on QI Brain :9011.</p>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-5">
+            <label class="form-label small mb-1">Search</label>
+            <input id="lib-q" class="form-control" placeholder="e.g. NEXUS digest spec, elevation broker, dispatch queue…" autocomplete="off">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Project</label>
+            <select id="lib-project" class="form-select"><option value="">All projects</option></select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">Type</label>
+            <select id="lib-type" class="form-select"><option value="">All types</option></select>
+          </div>
+          <div class="col-md-2 d-grid">
+            <button id="lib-go" class="btn btn-primary"><i class="bi bi-search me-1"></i>Search</button>
+          </div>
+        </div>
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" id="lib-stale">
+          <label class="form-check-label small" for="lib-stale">Only stale docs</label>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="row"><div class="col-12">
+      <div class="card"><div class="card-body">
+        <div id="lib-mode" class="small text-muted mb-2"></div>
+        <div id="lib-results"><div class="text-muted">Searching…</div></div>
+      </div></div>
+    </div></div>
+    <script>
+    (function(){
+      const $ = id => document.getElementById(id);
+      const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      function badge(t, cls){ return '<span class="badge '+(cls||'text-bg-secondary')+'">'+esc(t)+'</span>'; }
+
+      async function loadFacets(){
+        try{
+          const f = await (await fetch('/api/library/facets')).json();
+          $('lib-stats').innerHTML =
+            '<i class="bi bi-files me-1"></i>'+f.total+' docs · '+
+            '<i class="bi bi-cpu me-1"></i>'+f.embedded+' embedded · '+
+            '<i class="bi bi-diagram-3 me-1"></i>'+f.edges+' edges · '+
+            '<span class="text-warning"><i class="bi bi-clock-history me-1"></i>'+f.stale+' stale</span>';
+          const ps = $('lib-project');
+          (f.projects||[]).forEach(p => { const o=document.createElement('option'); o.value=p.id; o.textContent=p.id+' ('+p.n+')'; ps.appendChild(o); });
+          const ts = $('lib-type');
+          (f.types||[]).forEach(t => { const o=document.createElement('option'); o.value=t.t; o.textContent=t.t+' ('+t.n+')'; ts.appendChild(o); });
+        }catch(e){ $('lib-stats').textContent = 'index unavailable'; }
+      }
+
+      function simBadge(d){
+        if(d===null||d===undefined) return '';
+        const sim = Math.max(0, Math.round((1-d)*100));
+        const cls = sim>=70?'text-bg-success':(sim>=50?'text-bg-info':'text-bg-secondary');
+        return '<span class="badge '+cls+'">'+sim+'%</span>';
+      }
+
+      function render(data){
+        $('lib-mode').innerHTML = 'Mode: '+badge(data.mode,'text-bg-dark')+' · '+data.count+' result'+(data.count===1?'':'s');
+        if(!data.results.length){ $('lib-results').innerHTML='<div class="text-muted py-3">No documents match.</div>'; return; }
+        let h = '<div class="table-responsive"><table class="table table-sm table-hover align-middle"><thead><tr>'+
+          '<th>Document</th><th>Project</th><th>Type</th><th>Modified</th><th>Match</th><th></th></tr></thead><tbody>';
+        data.results.forEach(r => {
+          const stale = r.stale ? ' <span class="badge text-bg-warning" title="'+esc(r.stale_reason||'stale')+'">stale</span>' : '';
+          h += '<tr>'+
+            '<td><div class="fw-semibold">'+esc(r.title||'(untitled)')+stale+'</div>'+
+              '<div class="small text-muted text-truncate" style="max-width:520px">'+esc(r.path)+'</div></td>'+
+            '<td>'+badge(r.project_id||'—','text-bg-primary')+'</td>'+
+            '<td>'+badge(r.doc_type||'other')+'</td>'+
+            '<td class="small text-muted">'+esc((r.mtime||'').slice(0,10))+'</td>'+
+            '<td>'+simBadge(r.distance)+'</td>'+
+            '<td><button class="btn btn-sm btn-outline-secondary lib-copy" data-p="'+esc(r.path)+'" title="Copy path"><i class="bi bi-clipboard"></i></button></td>'+
+          '</tr>';
+        });
+        h += '</tbody></table></div>';
+        $('lib-results').innerHTML = h;
+        document.querySelectorAll('.lib-copy').forEach(b => b.addEventListener('click', () => {
+          navigator.clipboard.writeText(b.dataset.p);
+          const i=b.querySelector('i'); i.className='bi bi-check2'; setTimeout(()=>i.className='bi bi-clipboard',1200);
+        }));
+      }
+
+      async function search(){
+        $('lib-results').innerHTML='<div class="text-muted py-3"><span class="spinner-border spinner-border-sm me-2"></span>Searching…</div>';
+        const p = new URLSearchParams({ q:$('lib-q').value, project:$('lib-project').value,
+          doc_type:$('lib-type').value, stale:$('lib-stale').checked?1:0, limit:40 });
+        try{ render(await (await fetch('/api/library/search?'+p)).json()); }
+        catch(e){ $('lib-results').innerHTML='<div class="text-danger">Search failed.</div>'; }
+      }
+
+      $('lib-go').addEventListener('click', search);
+      $('lib-q').addEventListener('keydown', e => { if(e.key==='Enter') search(); });
+      ['lib-project','lib-type','lib-stale'].forEach(id => $(id).addEventListener('change', search));
+      loadFacets(); search();
+    })();
+    </script>
+    </div><!-- /lib-search-view -->
+
+    <div id="lib-graph-view" style="display:none">
+      <div class="row"><div class="col-12"><div class="card"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+          <div><i class="bi bi-diagram-3 me-2"></i><span id="plex-crumb" class="fw-semibold">QI Ecosystem</span></div>
+          <div class="small">
+            <span class="badge text-bg-primary">project</span>
+            <span class="badge text-bg-secondary">&#128196; doc</span>
+            <span class="badge" style="background:#b45309">&#9878; decision</span>
+            <span class="badge text-bg-success">&#10024; feature</span>
+            <span class="badge" style="background:#7c3aed">&#128221; session</span>
+            <button id="plex-home" class="btn btn-sm btn-outline-secondary ms-2" title="Back to ecosystem root"><i class="bi bi-house"></i></button>
+          </div>
+        </div>
+        <div id="plex" style="height:72vh;border:1px solid var(--bs-border-color,#30363d);border-radius:8px"></div>
+        <div class="small text-muted mt-2">Click any node to re-center the Plex on it. Hover a doc to see its full path.</div>
+      </div></div></div></div>
+    </div>
+
+    <script>
+    (function(){
+      const $ = id => document.getElementById(id);
+      let net=null, nodes=null, edges=null, loaded=false;
+      const COLORS={root:'#2563eb',project:'#3b82f6',doc:'#9ca3af',decision:'#b45309',feature:'#16a34a',session:'#7c3aed'};
+      const EMOJI={root:'\\uD83C\\uDF10',project:'',doc:'\\uD83D\\uDCC4',decision:'\\u2696\\uFE0F',feature:'\\u2728',session:'\\uD83D\\uDCDD'};
+
+      function loadVis(cb){
+        if(window.vis){ cb(); return; }
+        const s=document.createElement('script');
+        s.src='https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js';
+        s.onload=cb;
+        s.onerror=()=>{ $('plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; };
+        document.head.appendChild(s);
+      }
+      function visNodes(data){
+        return data.nodes.map(n => ({
+          id:n.id,
+          label:(EMOJI[n.type]?EMOJI[n.type]+' ':'')+n.label+(n.sub?'\\n'+n.sub:''),
+          title:n.path||n.sub||'',
+          shape:(n.type==='root'||n.type==='project')?'ellipse':'box',
+          color:{background:n.id===data.focus?'#dbeafe':'#f8f9fa',border:COLORS[n.type]||'#9ca3af'},
+          borderWidth:n.id===data.focus?3:1,
+          font:{size:n.id===data.focus?16:13}
+        }));
+      }
+      function visEdges(data){
+        return data.links.map((l,i)=>({id:'e'+i,from:l.from,to:l.to,label:l.label,
+          font:{size:10,color:'#9aa0a6',strokeWidth:0,align:'top'},color:{color:'#c8ccd1'},smooth:{type:'continuous'}}));
+      }
+      async function recenter(id){
+        try{
+          const data = await (await fetch('/api/library/graph?node='+encodeURIComponent(id))).json();
+          nodes.clear(); edges.clear();
+          nodes.add(visNodes(data)); edges.add(visEdges(data));
+          const f=data.nodes.find(n=>n.id===data.focus);
+          $('plex-crumb').textContent = f? f.label : id;
+          setTimeout(()=>{ try{ net.focus(id,{scale:0.95,animation:{duration:500}}); }catch(e){} }, 60);
+        }catch(e){ /* keep current view */ }
+      }
+      function init(){
+        loadVis(()=>{
+          nodes=new vis.DataSet([]); edges=new vis.DataSet([]);
+          net=new vis.Network($('plex'),{nodes,edges},{
+            physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-65,springLength:135,springConstant:0.05},stabilization:{iterations:120}},
+            nodes:{shape:'box',margin:9,widthConstraint:{maximum:180}},
+            edges:{arrows:{to:{enabled:false}}},
+            interaction:{hover:true,tooltipDelay:120}
+          });
+          net.on('click', p=>{ if(p.nodes.length) recenter(p.nodes[0]); });
+          loaded=true; recenter('root:qi');
+        });
+      }
+      window.__plexInit = ()=>{ if(!loaded) init(); };
+      const home=$('plex-home'); if(home) home.addEventListener('click', ()=>recenter('root:qi'));
+    })();
+    </script>
+
+    <script>
+    (function(){
+      const s=document.getElementById('lib-tab-search'), g=document.getElementById('lib-tab-graph');
+      const sv=document.getElementById('lib-search-view'), gv=document.getElementById('lib-graph-view');
+      s.addEventListener('click',()=>{ sv.style.display=''; gv.style.display='none';
+        s.className='btn btn-sm btn-primary'; g.className='btn btn-sm btn-outline-primary'; });
+      g.addEventListener('click',()=>{ sv.style.display='none'; gv.style.display='';
+        g.className='btn btn-sm btn-primary'; s.className='btn btn-sm btn-outline-primary';
+        if(window.__plexInit) window.__plexInit(); });
+    })();
+    </script>"""
+    return base_layout("Library", content, "library")
+
 
 # ── API: Status ───────────────────────────────────────────────────────────────
 
@@ -6190,7 +6570,7 @@ def render_brain() -> str:
           </div>
         </div>
         <p class="text-muted small mt-2">
-          💡 Drop JSON messages in <code>C:\\QIH\\brain\\inbox\\</code> or POST to <code>/api/inbox</code>.
+          💡 Drop JSON messages in <code>C:\\QIH\\engine\\brain\\inbox\\</code> or POST to <code>/api/inbox</code>.
         </p>
       </div>
 
