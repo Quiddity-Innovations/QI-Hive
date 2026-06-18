@@ -816,52 +816,46 @@ def render_dashboard() -> str:
         "deprecated":                           ("secondary", "bi-archive-fill"),
     }
 
-    # Project small-boxes
-    project_cards = ""
+    # Project status rows — compact table (replaces the old saturated small-boxes).
+    # Status drives a small theme-safe dot instead of a full colored card so the
+    # screen reads calmly; the per-project detail/board links live in the row.
+    _dot_colors = {
+        "success":   "var(--bs-success)",   # in progress / active dev
+        "warning":   "var(--bs-warning)",   # backlog / paused
+        "info":      "var(--bs-info)",       # unknown
+        "secondary": "var(--bs-secondary)",  # retired / merged
+        "dark":      "var(--bs-emphasis-color)",  # complete / production (adapts per theme)
+        "light":     "var(--bs-tertiary-color)",  # new / not started
+        "qi-purple": "#7e57c2",             # pre-POC
+    }
+    project_rows = ""
     for name, p in status.get("projects", {}).items():
         st = p.get("status","unknown")
-        # Case-insensitive lookup so "Active Dev" matches "active dev". Unknown
-        # statuses fall through to INFO (blue) — never to secondary (grey),
-        # which is reserved for retired/merged per the sidebar legend.
-        color, icon = proj_colors.get(st.lower() if isinstance(st, str) else st,
+        # Case-insensitive lookup; unknown statuses fall through to INFO (blue),
+        # never secondary (grey) which is reserved for retired/merged.
+        color, _icon = proj_colors.get(st.lower() if isinstance(st, str) else st,
                                        ("info", "bi-question-circle"))
-        # qi-purple uses a custom CSS class (text-bg-* doesn't have purple in Bootstrap 5).
-        # Inject inline style fallback so it works even without the CSS class loading first.
-        bg_attr = f'class="small-box bg-qi-purple text-white"' if color == "qi-purple" else f'class="small-box text-bg-{color}"'
-        task = p.get("current_task") or "—"
-        notes = p.get("notes","")
+        dotc = _dot_colors.get(color, "var(--bs-info)")
+        pid  = p.get("id", name)
         open_tasks = sum(1 for t in tasks if t.get("project")==name and t.get("column")!="done")
-        _rd = readiness.get(name) or readiness.get(p.get("id", name)) or {}
+        _rd = readiness.get(name) or readiness.get(pid) or {}
         _pct = _rd.get("pct")
         if isinstance(_pct, (int, float)):
-            _rc = "success" if _pct >= 95 else "info" if _pct >= 75 else "warning" if _pct >= 50 else "danger"
-            readiness_html = (
-                f'<div class="mt-1"><div class="progress" style="height:6px;background:rgba(255,255,255,.35)">'
-                f'<div class="progress-bar bg-{_rc}" style="width:{_pct}%"></div></div>'
-                f'<small>{_pct}% &middot; {html.escape(str(_rd.get("label","")))}</small></div>'
+            prog = (
+                f'<div class="progress flex-grow-1" style="height:5px;max-width:120px;">'
+                f'<div class="progress-bar bg-secondary opacity-50" style="width:{_pct}%"></div></div>'
+                f'<small class="text-body-tertiary ms-2" style="font-family:Consolas,monospace">{_pct}%</small>'
             )
         else:
-            readiness_html = ""
-        project_cards += f"""
-        <div class="col-lg-4 col-md-6 col-sm-12">
-          <div {bg_attr}>
-            <div class="inner">
-              <h4>{p.get("display_name", name)}</h4>
-              <p>{st.replace("_"," ").title()}</p>
-              {readiness_html}
-            </div>
-            <i class="small-box-icon bi {icon}"></i>
-            <div class="small-box-footer d-flex justify-content-between">
-              <a href="/project/{p.get("id", name)}" class="text-white text-decoration-none">
-                <i class="bi bi-box-arrow-up-right"></i> Details
-              </a>
-              <span>{open_tasks} open tasks</span>
-              <a href="/board?project={p.get("id", name)}" class="text-white text-decoration-none">
-                Board <i class="bi bi-arrow-right"></i>
-              </a>
-            </div>
-          </div>
-        </div>"""
+            prog = '<small class="text-body-tertiary">—</small>'
+        project_rows += f"""<tr>
+          <td style="width:16px"><span class="d-inline-block rounded-circle" style="width:8px;height:8px;background:{dotc}" title="{st.replace("_"," ").title()}"></span></td>
+          <td><a href="/project/{pid}" class="text-decoration-none fw-medium text-body">{p.get("display_name", name)}</a></td>
+          <td><span class="text-body-secondary small">{st.replace("_"," ").title()}</span></td>
+          <td><div class="d-flex align-items-center">{prog}</div></td>
+          <td class="text-end text-body-secondary small">{open_tasks}</td>
+          <td class="text-end"><a href="/board?project={pid}" class="text-decoration-none small">Board <i class="bi bi-arrow-right"></i></a></td>
+        </tr>"""
 
     # Agent table — live from qi_brain.db (agents joined with session_log).
     # Falls back to legacy AGENTS_DIR config files if Brain DB is unavailable.
@@ -1050,89 +1044,81 @@ def render_dashboard() -> str:
         tokens_today = cost_today = sessions_today = turns_today = cost_30 = "—"
         log.warning(f"usage_stats failed: {e}")
 
+    def _tile(label, value, href="/usage"):
+        return (
+            f'<div class="col"><a href="{href}" class="text-decoration-none">'
+            f'<div class="card border-0 bg-body-secondary h-100"><div class="card-body py-2 px-3">'
+            f'<div class="text-body-secondary" style="font-size:.72rem">{label}</div>'
+            f'<div class="fw-medium text-body" style="font-size:1.2rem;line-height:1.2">{value}</div>'
+            f'</div></div></a></div>'
+        )
+
     return f"""
-    <!-- Summary row -->
-    <div class="row">
-      <div class="col-12 mb-3">
-        <div class="d-flex gap-3 flex-wrap">
-          <span class="badge text-bg-warning fs-6"><i class="bi bi-inbox me-1"></i> Backlog: {col_counts.get("backlog",0)}</span>
-          <span class="badge text-bg-success fs-6"><i class="bi bi-play-circle me-1"></i> In Progress: {col_counts.get("in_progress",0)}</span>
-          <span class="badge text-bg-info fs-6"><i class="bi bi-search me-1"></i> Review: {col_counts.get("review",0)}</span>
-          <span class="badge text-bg-success fs-6"><i class="bi bi-check-circle me-1"></i> Done: {col_counts.get("done",0)}</span>
-          <a href="/board" class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-kanban me-1"></i> Open Board</a>
-          <a href="/health" class="btn btn-sm btn-outline-success"><i class="bi bi-heart-pulse me-1"></i> Health Check</a>
+    <!-- Bento metric tiles: token consumption + cost + task counts -->
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 bg-body-secondary h-100">
+          <div class="card-body d-flex flex-column justify-content-between py-3 px-3">
+            <span class="text-body-secondary d-flex align-items-center gap-1" style="font-size:.75rem"><i class="bi bi-lightning-charge"></i> Tokens today</span>
+            <div>
+              <div class="fw-medium" style="font-size:1.9rem;line-height:1.05">{tokens_today}</div>
+              <div class="text-body-tertiary" style="font-size:.7rem">fresh, ex-cache · {sessions_today} sessions · {turns_today} turns · <a href="/usage" class="text-decoration-none">details</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-8">
+        <div class="row row-cols-2 row-cols-md-3 g-2 h-100">
+          {_tile("API today", cost_today, "/usage")}
+          {_tile("API 30d", cost_30, "/usage")}
+          {_tile("In progress", col_counts.get("in_progress",0), "/board")}
+          {_tile("Backlog", col_counts.get("backlog",0), "/board")}
+          {_tile("In review", col_counts.get("review",0), "/board")}
+          {_tile("Done", col_counts.get("done",0), "/board")}
         </div>
       </div>
     </div>
 
-    <!-- Claude usage strip (today + 30d) — API list-price equivalents; MAX plan covers actual cost -->
-    <div class="row mb-1">
-      <div class="col-lg-3 col-md-6 col-sm-12">
-        <div class="small-box text-bg-primary">
-          <div class="inner"><h4>{tokens_today}</h4><p>Tokens Today <span class="opacity-75" style="font-size:.7rem">(fresh, ex-cache-reads)</span></p></div>
-          <i class="small-box-icon bi bi-lightning-charge-fill"></i>
-          <a href="/usage" class="small-box-footer text-white text-decoration-none">
-            Details <i class="bi bi-arrow-right"></i>
-          </a>
-        </div>
+    <!-- Project status table -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center py-2">
+        <span class="fw-medium"><i class="bi bi-folder2-open me-2 text-body-secondary"></i>Projects</span>
+        <a href="/board" class="ms-auto small text-decoration-none">Open board <i class="bi bi-arrow-right"></i></a>
       </div>
-      <div class="col-lg-3 col-md-6 col-sm-12">
-        <div class="small-box text-bg-success">
-          <div class="inner"><h4>{cost_today}</h4><p>API Equiv. Today <span class="opacity-75" style="font-size:.7rem">(MAX plan covers)</span></p></div>
-          <i class="small-box-icon bi bi-currency-dollar"></i>
-          <a href="/usage" class="small-box-footer text-white text-decoration-none">
-            Details <i class="bi bi-arrow-right"></i>
-          </a>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-12">
-        <div class="small-box text-bg-info">
-          <div class="inner"><h4>{sessions_today} · {turns_today}</h4><p>Sessions · Turns Today</p></div>
-          <i class="small-box-icon bi bi-chat-left-dots"></i>
-          <a href="/usage" class="small-box-footer text-white text-decoration-none">
-            Details <i class="bi bi-arrow-right"></i>
-          </a>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-12">
-        <div class="small-box text-bg-warning">
-          <div class="inner"><h4>{cost_30}</h4><p>API Equiv. (30d) <span class="opacity-75" style="font-size:.7rem">(list-price)</span></p></div>
-          <i class="small-box-icon bi bi-calendar-range"></i>
-          <a href="/usage" class="small-box-footer text-dark text-decoration-none">
-            Breakdown <i class="bi bi-arrow-right"></i>
-          </a>
-        </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead><tr class="text-body-secondary" style="font-size:.72rem">
+            <th></th><th>Project</th><th>Status</th><th>Progress</th><th class="text-end">Open</th><th></th>
+          </tr></thead>
+          <tbody>{project_rows}</tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Project cards -->
-    <div class="row">{project_cards}</div>
-
-    <!-- Agents + Sessions -->
-    <div class="row mt-2">
+    <!-- Agents + Sessions: clean summaries; full detail on their own pages -->
+    <div class="row g-3">
       <div class="col-lg-6">
-        <div class="card">
-          <div class="card-header d-flex align-items-center">
-            <h3 class="card-title mb-0"><i class="bi bi-people me-2"></i>Agent Team</h3>
-            <span class="ms-auto text-muted" style="font-size:.7rem">live from qi_brain.db</span>
+        <div class="card h-100">
+          <div class="card-header d-flex align-items-center py-2">
+            <span class="fw-medium"><i class="bi bi-people me-2 text-body-secondary"></i>Agent team</span>
+            <a href="/hive" class="ms-auto small text-decoration-none">The Hive <i class="bi bi-arrow-right"></i></a>
           </div>
           <div class="card-body p-0">
-            <table class="table table-sm table-hover mb-0">
-              <thead><tr><th>Agent</th><th>Last Active</th><th>Activity <small class="text-muted fw-normal">(unit varies)</small></th><th>Model</th><th>Scope</th></tr></thead>
+            <table class="table table-sm table-hover align-middle mb-0" style="font-size:.82rem">
+              <thead><tr class="text-body-secondary" style="font-size:.72rem"><th>Agent</th><th>Last active</th><th>Activity</th><th>Model</th><th>Scope</th></tr></thead>
               <tbody>{agent_rows}</tbody>
             </table>
           </div>
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="card">
-          <div class="card-header d-flex align-items-center">
-            <h3 class="card-title mb-0"><i class="bi bi-journal-text me-2"></i>Session Log</h3>
-            <span class="ms-auto text-muted" style="font-size:.7rem">live from qi_brain.db</span>
+        <div class="card h-100">
+          <div class="card-header d-flex align-items-center py-2">
+            <span class="fw-medium"><i class="bi bi-journal-text me-2 text-body-secondary"></i>Session log</span>
+            <a href="/hive" class="ms-auto small text-decoration-none">View all <i class="bi bi-arrow-right"></i></a>
           </div>
           <div class="card-body p-0">
-            <table class="table table-sm table-hover mb-0">
-              <thead><tr><th>Session</th><th>Summary</th></tr></thead>
+            <table class="table table-sm table-hover align-middle mb-0" style="font-size:.82rem">
               <tbody>{session_rows}</tbody>
             </table>
           </div>
