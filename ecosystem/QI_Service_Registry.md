@@ -239,7 +239,7 @@
 
 ```bat
 REM Status check (all QI services)
-for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_HiveApply QI_HiveInspectorDrain QI_KazeConfigAPI) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
+for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_HiveApply QI_HiveInspectorDrain QI_KazeConfigAPI QI_KazeNewsTunnel) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
 
 REM Restart a specific service (NSSM binary standardized 2026-04-22)
 C:\QIH\engine\bin\nssm.exe restart QI_MaiaBot
@@ -270,6 +270,9 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | Auto-apply pipeline stalled / dispatches stuck in queued | QI_HiveApply | `C:\QIH\logs\hive_apply.log` | `nssm status QI_HiveApply`; check for HALT file |
 | Inspector inbox not draining / envelopes stuck in pending_review | QI_HiveInspectorDrain | `C:\QIH\logs\hive_inspector_drain.log` | `nssm status QI_HiveInspectorDrain`; check quarantine/ dir |
 | Kaze config UI down | QI_KazeConfigAPI | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` | `nssm status QI_KazeConfigAPI` |
+| Kaze news tunnel URL gone / can't view news on phone | QI_KazeNewsTunnel | `C:\OC\runtime\logs\tunnel\kaze-news-tunnel.err.log` (current URL in `news-tunnel-url.txt`) | `nssm status QI_KazeNewsTunnel` |
+| TubeScout (:8503) news page / API down | QI_TubeScout | `C:\TUBESCOUT\data\logs\service.log` | `nssm status QI_TubeScout` (AppDirectory must be `C:\TUBESCOUT`) |
+| TubeScout tunnel URL gone / not showing in Hive | QI_TubeScoutTunnel | `C:\TUBESCOUT\data\logs\tunnel.log` (current URL = last `trycloudflare.com`) | `nssm status QI_TubeScoutTunnel`; confirm AppStdout/Stderr point at tunnel.log |
 
 ---
 
@@ -458,3 +461,59 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Note** | Quick tunnel → URL changes on each (re)start. For a stable custom hostname, switch to a named tunnel + a domain on the Cloudflare account. |
 | **Status** | ✅ Live as of 2026-06-15 — https://deluxe-peas-lesson-modular.trycloudflare.com |
 | **Added** | 2026-06-15 |
+
+### QI_KazeNewsTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI Kaze News Tunnel |
+| **Description** | Cloudflare quick tunnel exposing the Kaze news page (OC dashboard localhost:18800, routes `/ai-digest/` + `/news-digest/` — "Prepared via Kaze \| By Maia Quiddam") for phone/remote viewing. Part of OpenClaw. |
+| **Binary** | `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe` (wrapper → cloudflared) |
+| **Parameters** | `-NoProfile -ExecutionPolicy Bypass -File C:\OC\scripts\tunnel\kaze-news-tunnel.ps1` |
+| **Working dir** | `C:\OC` |
+| **Exposes port** | 18800 (OC dashboard / Kaze digest, served from WSL) |
+| **Stdout/Stderr log** | `C:\OC\runtime\logs\tunnel\service.out.log` / `service.err.log` (cloudflared output: `kaze-news-tunnel.out.log` / `.err.log`) |
+| **Current public URL** | `C:\OC\runtime\dashboard\news-tunnel-url.txt` + redirect page `news-tunnel.html` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Install** | `C:\OC\scripts\tunnel\install-kaze-news-tunnel.bat` (run elevated) |
+| **Note** | Quick tunnel → URL changes on each (re)start. Wrapper captures the new URL, writes it to `news-tunnel-url.txt` + `news-tunnel.html`, and pushes it to Telegram (Kaze's bot) on every start. For a stable custom hostname, switch to a named tunnel + a domain on the Cloudflare account. |
+| **Status** | ✅ Live as of 2026-06-17 |
+| **Added** | 2026-06-17 |
+
+### QI_TubeScout
+| Field | Value |
+|---|---|
+| **Display name** | QI_TubeScout |
+| **Description** | TubeScout - YouTube subscription news page + API (port 8503). |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `-m uvicorn api.main:app --host 127.0.0.1 --port 8503 --log-level warning` |
+| **Working dir** | `C:\TUBESCOUT` |
+| **Port** | 8503 |
+| **Stdout/Stderr log** | `C:\TUBESCOUT\data\logs\service.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Install** | `C:\TUBESCOUT\tools\fix_services.ps1` (run elevated via gsudo; idempotent) |
+| **Note** | Reinstalled 2026-06-18 — **AppDirectory was wrong** (`C:\1-AI\APPS\PYTHON`), so `api.main` could not be imported and the service sat PAUSED. Corrected to `C:\TUBESCOUT`. The old logon-Startup `QI_TubeScout_Server.vbs` was disabled to stop a second uvicorn competing for :8503. |
+| **Status** | ✅ Live as of 2026-06-18 — health `{"status":"ok"}` |
+| **Added** | 2026-06-18 |
+
+### QI_TubeScoutTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI_TubeScoutTunnel |
+| **Description** | TubeScout public Cloudflare tunnel (auto-start) exposing the news page + API (:8503) for remote/phone access. |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --url http://127.0.0.1:8503` |
+| **Working dir** | `C:\TUBESCOUT` |
+| **Exposes port** | 8503 (QI_TubeScout) |
+| **Stdout/Stderr log** | `C:\TUBESCOUT\data\logs\tunnel.log` |
+| **Current public URL** | Parsed from `tunnel.log` (search `trycloudflare.com`); surfaced live by the Hive dashboard (`KNOWN_TUNNELS` → port 8503) |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Install** | `C:\TUBESCOUT\tools\fix_services.ps1` (run elevated via gsudo; idempotent) |
+| **Note** | Reinstalled 2026-06-18 — **AppStdout/AppStderr were empty**, so cloudflared's output (which carries the public URL) went nowhere and the Hive dashboard found no URL → TubeScout never appeared under the Hive. Now logged to `tunnel.log`, the exact path the dashboard reads. Quick tunnel → URL changes on each (re)start; for a stable hostname switch to a named tunnel + a domain on the Cloudflare account. |
+| **Status** | ✅ Live as of 2026-06-18 |
+| **Added** | 2026-06-18 |

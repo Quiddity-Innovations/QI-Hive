@@ -32,6 +32,7 @@ SOURCES = [
     ("maia_api",   "Maia API",          "log",   r"C:\QI\LOGS\tunnel_log.txt",                    8001),
     ("maia_ui",    "Maia UI (Gradio)",  "log",   r"C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt",        7860),
     ("naya",       "Naya",              "log",   r"C:\NAYA\LOGS\naya_tunnel_log.txt",             8002),
+    ("tubescout",  "TubeScout",         "log",   r"C:\TUBESCOUT\data\logs\tunnel.log",            8503),
 ]
 
 

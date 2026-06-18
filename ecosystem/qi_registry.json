@@ -843,18 +843,27 @@
         "QI_TubeScout_AM (07:00 daily)",
         "QI_TubeScout_PM (19:00 daily)"
       ],
-      "planned_services": [
+      "services": [
         {
-          "name": "QI_TubeScout",
+          "name": "tubescout_api",
+          "nssm_name": "QI_TubeScout",
           "port": 8503,
-          "status": "pending_admin_install",
-          "installer": "C:\\TUBESCOUT\\install_service_admin.bat"
+          "type": "FastAPI",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": false,
+          "installed": "2026-06-18"
         },
         {
-          "name": "QI_TubeScoutTunnel",
-          "type": "cloudflare",
-          "start": "manual",
-          "status": "pending_admin_install"
+          "name": "tubescout_tunnel",
+          "nssm_name": "QI_TubeScoutTunnel",
+          "port": null,
+          "type": "Cloudflare Tunnel",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": true,
+          "installed": "2026-06-18",
+          "notes": "Public quick tunnel -> :8503. URL is ephemeral (regenerated each restart). Hive dashboard parses the current URL from C:\\TUBESCOUT\\data\\logs\\tunnel.log"
         }
       ],
       "paths": {
@@ -862,11 +871,11 @@
       }
     },
     {
-      "id": "fidelityanalyzer",
-      "name": "Fidelity Portfolio Analyzer",
-      "description": "Ingests a Fidelity positions CSV export and computes allocation, concentration risk (top-5 + HHI), drift vs target, and rebalancing trade recommendations. FastAPI + Gradio.",
-      "path": "C:\\FidelityAnalyzer",
-      "github": "https://github.com/Quiddity-Innovations/FidelityAnalyzer",
+      "id": "retirementanalyzer",
+      "name": "Retirement Analyzer",
+      "description": "Ingests a Fidelity positions CSV export and computes allocation, tax-bucket split (Taxable/Tax-Deferred/Roth), concentration risk (top-5 + HHI), glide-path drift vs a years-to-retirement target, rebalancing trades, and a 5-year retirement readiness plan (spending gap, 3-yr cash buffer, withdrawal rate vs 4% rule, income layers, blueprint checklist). FastAPI + Gradio. Formerly Fidelity Portfolio Analyzer (id fidelityanalyzer).",
+      "path": "C:\\RetirementAnalyzer",
+      "github": "https://github.com/Quiddity-Innovations/RetirementAnalyzer",
       "status": "active",
       "primary_language": "Python",
       "ports": {
@@ -880,20 +889,22 @@
         }
       },
       "family_tier": "sibling",
-      "family_notes": "Personal-finance utility. Automates the manual Fidelity portfolio review/rebalancing previously done by hand (see Downloads analysis docs).",
+      "family_notes": "Personal-finance utility. Automates the manual Fidelity portfolio review/rebalancing previously done by hand (see Downloads analysis docs), extended with a 5-year retirement-readiness planning layer.",
       "integrates_with": [],
       "exposes_to_ecosystem": [
         "GET /health",
         "GET /version",
         "GET /info",
         "GET /target",
+        "GET /blueprint",
         "POST /analyze",
         "POST /analyze_text",
-        "POST /rebalance"
+        "POST /rebalance",
+        "POST /retirement"
       ],
       "consumes_from_ecosystem": [],
       "paths": {
-        "logs": "C:\\FidelityAnalyzer\\data\\logs"
+        "logs": "C:\\RetirementAnalyzer\\data\\logs"
       }
     },
     {
@@ -1149,6 +1160,25 @@
           "script": "C:\\OC\\tools\\oc-keepalive-daemon.py",
           "internet_exposed": false,
           "notes": "Pre-dates QI_ naming convention — not renamed since it's OpenClaw-internal"
+        },
+        {
+          "name": "QI_TubeScout",
+          "project": "tubescout",
+          "port": 8503,
+          "script": "C:\\TUBESCOUT (uvicorn api.main:app → :8503)",
+          "internet_exposed": false,
+          "registered": "2026-06-18",
+          "notes": "Reinstalled 2026-06-18 — AppDirectory corrected to C:\\TUBESCOUT (was C:\\1-AI\\APPS\\PYTHON, which broke api.main import and left the service PAUSED). Startup VBS (QI_TubeScout_Server.vbs) disabled to stop dual-server on :8503."
+        },
+        {
+          "name": "QI_TubeScoutTunnel",
+          "project": "tubescout",
+          "port": null,
+          "script": "cloudflared tunnel → :8503",
+          "internet_exposed": true,
+          "start_type": "auto",
+          "registered": "2026-06-18",
+          "notes": "AppStdout/AppStderr set to C:\\TUBESCOUT\\data\\logs\\tunnel.log so the Hive dashboard can scrape the ephemeral public URL."
         }
       ],
       "naming_rule": "New services: QI_<Project><Role> — e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
