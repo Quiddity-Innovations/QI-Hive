@@ -60,6 +60,21 @@ async def tunnel_write_guard(request: Request, call_next):
                                     status_code=403)
     return await call_next(request)
 
+# ── No-store for dynamic HTML (2026-06-18) ──
+# Dashboard pages render live every request. Without this, browsers cache the
+# HTML per-origin, so a public-tunnel origin can show a stale launcher even
+# after services/tunnels change while localhost looks fresh. Force revalidation
+# on HTML only; /static assets keep their own caching.
+@app.middleware("http")
+async def no_store_html(request: Request, call_next):
+    response = await call_next(request)
+    ctype = response.headers.get("content-type", "")
+    if ctype.startswith("text/html"):
+        response.headers["Cache-Control"] = "no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 _PROJECT_DIR = Path(__file__).parent.parent.parent.parent  # C:\QIH
 STATUS_FILE  = _PROJECT_DIR / "data" / "status.json"
 TASKS_FILE   = _PROJECT_DIR / "data" / "tasks.json"
