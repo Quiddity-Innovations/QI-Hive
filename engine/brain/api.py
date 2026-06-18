@@ -38,7 +38,9 @@ Run:
     uvicorn qi_brain_api:app --host 0.0.0.0 --port 9011 --reload
 """
 from __future__ import annotations
+import difflib
 import json
+import logging
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -57,6 +59,40 @@ def _norm_pid(pid: str) -> str:
     if not isinstance(pid, str):
         return pid
     return pid.strip().lower().replace(" ", "_").replace("-", "_")
+
+
+log = logging.getLogger("qi_brain.api")
+
+
+def _resolve_pid(conn, pid: str, field: str = "project_id") -> str:
+    """Resolve a caller-supplied project id to one that actually exists in the
+    projects table, so a typo can never reach the DB as a raw FOREIGN KEY 500.
+
+    Resolution order:
+      1. exact match after _norm_pid (case/whitespace/hyphen normalization)
+      2. separator-insensitive match ('qihive' -> 'qi_hive') — deterministic, safe
+    Anything still unresolved raises HTTP 400 with the valid list + closest
+    suggestions, instead of letting the INSERT blow up with an opaque
+    IntegrityError that callers see as a generic 500."""
+    norm = _norm_pid(pid)
+    known = [r["project_id"] for r in conn.execute("SELECT project_id FROM projects")]
+    if norm in known:
+        return norm
+    flat_map = {k.replace("_", ""): k for k in known}
+    canon = flat_map.get(norm.replace("_", ""))
+    if canon:
+        log.warning("auto-corrected %s '%s' -> '%s'", field, pid, canon)
+        return canon
+    suggestions = difflib.get_close_matches(norm, known, n=3, cutoff=0.4)
+    raise HTTPException(
+        status_code=400,
+        detail={
+            "error": f"unknown {field} '{pid}'",
+            "normalized": norm,
+            "did_you_mean": suggestions,
+            "valid_project_ids": sorted(known),
+        },
+    )
 
 from core.db import open_brain_db
 from core.memory_store import MemoryStore, COL_DECISIONS, COL_FEATURES, COL_SESSIONS, COL_DOCS
@@ -282,6 +318,7 @@ class LogDecisionRequest(BaseModel):
 async def log_decision(req: LogDecisionRequest):
     tags_json = json.dumps(req.tags or [])
     with open_brain_db() as conn:
+        req.project_id = _resolve_pid(conn, req.project_id)
         cur = conn.execute(
             """
             INSERT INTO decisions
@@ -329,6 +366,7 @@ class LogFeatureRequest(BaseModel):
 @app.post("/api/log_feature")
 async def log_feature(req: LogFeatureRequest):
     with open_brain_db() as conn:
+        req.source_project = _resolve_pid(conn, req.source_project, "source_project")
         cur = conn.execute(
             """
             INSERT INTO features
@@ -437,6 +475,7 @@ class UpdateProjectStateRequest(BaseModel):
 @app.post("/api/update_project_state")
 async def update_project_state(req: UpdateProjectStateRequest):
     with open_brain_db() as conn:
+        req.project_id = _resolve_pid(conn, req.project_id)
         cur = conn.execute(
             """
             INSERT INTO project_state
@@ -502,6 +541,7 @@ class LogSessionRequest(BaseModel):
 async def log_session(req: LogSessionRequest):
     files_json = json.dumps(req.files_changed or [])
     with open_brain_db() as conn:
+        req.project_id = _resolve_pid(conn, req.project_id)
         cur = conn.execute(
             """
             INSERT INTO session_log
