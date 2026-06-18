@@ -364,6 +364,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     nav_items = [
         ("dashboard", "/",        "bi-speedometer2",  "Dashboard"),
         ("launcher",  "/launcher","bi-grid-3x3-gap",  "Launcher"),
+        ("tunnels",   "/tunnels", "bi-globe2",        "Tunnels"),
         ("hive",      "/hive",    "bi-hexagon",       "The Hive"),
         ("health",    "/health",  "bi-heart-pulse",   "Health Check"),
         ("board",     "/board",   "bi-kanban",        "Task Board"),
@@ -410,6 +411,8 @@ def base_layout(title: str, content: str, active: str = "") -> str:
   <script src="/static/js/adminlte.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
+    /* Hide decorative small-box corner icons (flash/dollar/chat/calendar/play/etc.) — pure chrome, removed to de-clutter. Delete this rule to restore them. */
+    .small-box-icon {{ display: none !important; }}
     .bg-qi-purple    {{ background-color: #7e57c2 !important; color: #fff !important; }}
     .bg-qi-purple .small-box-icon,
     .bg-qi-purple a {{ color: #fff !important; }}
@@ -775,6 +778,7 @@ def render_dashboard() -> str:
     status  = load_status()
     agents  = load_agents()
     tasks   = load_tasks()
+    readiness = load_json(Path(r"C:\QIH\data\project_readiness.json"))
 
     # Status -> (color, icon). Must match the sidebar legend:
     #   dark      = Complete / production-stable
@@ -827,12 +831,24 @@ def render_dashboard() -> str:
         task = p.get("current_task") or "—"
         notes = p.get("notes","")
         open_tasks = sum(1 for t in tasks if t.get("project")==name and t.get("column")!="done")
+        _rd = readiness.get(name) or readiness.get(p.get("id", name)) or {}
+        _pct = _rd.get("pct")
+        if isinstance(_pct, (int, float)):
+            _rc = "success" if _pct >= 95 else "info" if _pct >= 75 else "warning" if _pct >= 50 else "danger"
+            readiness_html = (
+                f'<div class="mt-1"><div class="progress" style="height:6px;background:rgba(255,255,255,.35)">'
+                f'<div class="progress-bar bg-{_rc}" style="width:{_pct}%"></div></div>'
+                f'<small>{_pct}% &middot; {html.escape(str(_rd.get("label","")))}</small></div>'
+            )
+        else:
+            readiness_html = ""
         project_cards += f"""
         <div class="col-lg-4 col-md-6 col-sm-12">
           <div {bg_attr}>
             <div class="inner">
               <h4>{p.get("display_name", name)}</h4>
               <p>{st.replace("_"," ").title()}</p>
+              {readiness_html}
             </div>
             <i class="small-box-icon bi {icon}"></i>
             <div class="small-box-footer d-flex justify-content-between">
@@ -1749,7 +1765,7 @@ def render_hive() -> str:
     <div class="row mb-3">
       <div class="col-12 d-flex justify-content-between align-items-center">
         <div><i class="bi bi-cpu me-2 text-primary"></i><strong>QI Brain</strong> {brain_badge}</div>
-        <a href="http://127.0.0.1:9011/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
+        <a href="/brain/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
           <i class="bi bi-box-arrow-up-right me-1"></i>Brain API Docs
         </a>
       </div>
@@ -1865,7 +1881,7 @@ def render_hive() -> str:
     <script>
     // ── Poller status ──────────────────────────────────────────────────────────
     function loadPollerStatus() {{
-      fetch('http://127.0.0.1:9011/api/poll/status')
+      fetch('/brain/api/poll/status')
         .then(r => r.json()).then(d => {{
           const el = document.getElementById('pollerStatus');
           const lr = d.last_result || {{}};
@@ -1906,7 +1922,7 @@ def render_hive() -> str:
       const btn = event.target;
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Polling…';
-      fetch('http://127.0.0.1:9011/api/poll/trigger', {{method:'POST'}})
+      fetch('/brain/api/poll/trigger', {{method:'POST'}})
         .then(r => r.json()).then(d => {{
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Poll Now';
@@ -1936,7 +1952,7 @@ def render_hive() -> str:
       const el = document.getElementById('distillResult');
       el.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Distilling…';
 
-      fetch('http://127.0.0.1:9011/api/distill', {{
+      fetch('/brain/api/distill', {{
         method: 'POST',
         headers: {{'Content-Type':'application/json'}},
         body: JSON.stringify({{
@@ -2160,185 +2176,307 @@ def _role_tiles(role: str, base: str, public: bool = False):
     return [(f"{pre}{role.title() or 'Open'}", b)]
 
 def render_launcher(via_tunnel: bool = False) -> str:
+    """QI Launcher — full Launchpad look (categorized dark cards, status dots,
+    public-tunnel buttons) with a grid <-> columns toggle. Card data is built
+    live from qi_registry.json + the dashboard's port probe + tunnel resolver,
+    so URLs (including rotating Quick Tunnel URLs) are always current.
+    Scoped under #qi-lp so it never collides with the dashboard's Bootstrap CSS.
+    """
+    import html as _html
     try:
         reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+        load_err = None
     except Exception as e:
         reg = {"projects": []}
         load_err = str(e)
-    else:
-        load_err = None
+    projects = [p for p in (reg.get("projects") or []) if isinstance(p, dict)]
 
-    projects = reg.get("projects", []) or []
+    CATEGORIES = [
+        ("Core Product",        "core",     ["maia"]),
+        ("Backbone",            "backbone", ["nexus", "qi_brain", "qi_hive", "claude_manager"]),
+        ("Assistants",          "",         ["naya", "mq", "openclaw"]),
+        ("Standalone Tools",    "tool",     ["cognibase", "mapsnap", "autopdf", "easyflow"]),
+        ("Utilities & Media",   "tool",     ["lotterywiz", "cypherminer", "tubescout",
+                                             "retirementanalyzer", "m2v", "personalsong",
+                                             "avatarstudio", "digitization"]),
+    ]
+    HIDE = {"filehq", "universal"}
+    ROLE_LABEL = {"api": "API", "ui": "UI", "dashboard": "Dashboard",
+                  "gateway": "Gateway", "http": "App", "desktop": "App"}
+    TOOL_CATS = {"Standalone Tools", "Utilities & Media"}
+    STRIP_TOOL = {"Standalone Tools"}
 
-    # Gather every numeric port across all projects + extras for parallel probing.
+    EXTRA_CARDS = [
+        ("Assistants & Agents", {
+            "name": "Kaze News Tunnel", "badge": "", "type_tag": "Service",
+            "desc": "Public Cloudflare tunnel for the Kaze news digest — viewable anywhere, "
+                    "including phone. Public link rotates per restart and is pushed to Telegram.",
+            "path": "QI_KazeNewsTunnel · C:\\OC", "strip": "type-service", "is_tool": False,
+            "local": [("News (local) :18800", "http://localhost:18800/ai-digest/", 18800)],
+            "extra_links": [("⛅ Public link ↗",
+                             "file:///C:/OC/runtime/dashboard/news-tunnel.html", "tunnel")],
+            "github": "",
+        }),
+        ("Local Infrastructure", {
+            "name": "Ollama", "badge": "", "type_tag": "Service",
+            "desc": "Local LLM server — Gemma3, DeepSeek-R1, Qwen3, Kimi, etc. "
+                    "Shared by Maia, NEXUS, Naya, AutoPDF.",
+            "path": "Ollama", "strip": "type-service", "is_tool": False,
+            "local": [("Ollama :11434", "http://localhost:11434", 11434),
+                      ("/api/tags", "http://localhost:11434/api/tags", 11434)],
+            "extra_links": [], "github": "",
+        }),
+    ]
+
+    # gather ports + probe + resolve tunnels (all live, from the Hive host)
     all_ports = []
     for proj in projects:
-        if not isinstance(proj, dict): continue
         for info in (proj.get("ports") or {}).values():
-            if isinstance(info, dict) and str(info.get("current","")).isdigit():
+            if isinstance(info, dict) and str(info.get("current", "")).isdigit():
                 all_ports.append(int(info["current"]))
-    for _, links in LAUNCHER_EXTRAS:
-        for _, _, p, _ in links:
+    for _cat, c in EXTRA_CARDS:
+        for _l, _h, p in c.get("local", []):
             all_ports.append(int(p))
     port_status = _probe_ports_parallel(all_ports)
-
-    # Tunnel state per port — used to surface public Cloudflare URLs.
     tunnels = _get_tunnels()
 
-    def status_badge(status: str) -> str:
-        s = (status or "").lower()
-        if ("production" in s) or ("active" in s and "dev" not in s and "paused" not in s):
-            cls = "text-bg-success"
-        elif "dev" in s or "pilot" in s or "ready" in s:
-            cls = "text-bg-primary"
-        elif "paused" in s or "pending" in s:
-            cls = "text-bg-warning"
-        elif "merged" in s or "deprecated" in s or "retired" in s:
-            cls = "text-bg-secondary"
-        else:
-            cls = "text-bg-light"
-        return f'<span class="badge {cls} ms-2" style="font-size:.65rem;font-weight:500">{status}</span>' if status else ""
+    cat_of, cat_badge = {}, {}
+    for cname, badge, ids in CATEGORIES:
+        cat_badge[cname] = badge
+        for i in ids:
+            cat_of[i] = cname
+    order = ["Core Product", "Backbone", "Assistants", "Agents",
+             "Standalone Tools", "Utilities & Media", "Local Infrastructure", "Other"]
+    buckets = {c: [] for c in order}
 
-    def render_local_tile(label, href, port_display, up):
-        # When the panel is loaded THROUGH a tunnel (remote machine), localhost links
-        # point at the viewer's own machine and cannot work — dim them and say so.
-        if via_tunnel:
-            cls = "btn-outline-secondary disabled"
-            dot = "🏠"
-            title = "Local only — this link works only on the machine running the Hive"
-        else:
-            cls = "btn-outline-success" if up else "btn-outline-secondary"
-            dot = "🟢" if up else "⚪"
-            title = href
+    def esc(s):
+        return _html.escape(str(s if s is not None else ""))
+
+    def loc_tile(label, href, up, is_tool):
+        dot = "up" if up else ("idle" if is_tool else "down")
+        dim = " local-dim" if via_tunnel else ""
+        title = "Local only — works on the machine running the Hive" if via_tunnel else href
+        return (f'<a class="local{dim}" href="{esc(href)}" target="_blank" rel="noopener" '
+                f'title="{esc(title)}">{esc(label)} <span class="status {dot}"></span></a>')
+
+    def tun_tile(url, label="⛅ Tunnel"):
+        return (f'<a class="tunnel" href="{esc(url)}" target="_blank" rel="noopener" '
+                f'title="Public tunnel — {esc(url)}">{esc(label)}</a>')
+
+    def gh_tile(github):
+        if github and str(github).startswith("http"):
+            return f'<a class="muted" href="{esc(github)}" target="_blank" rel="noopener">GitHub</a>'
+        return ""
+
+    def card_html(name, badge, type_tag, desc, path, links_html, keywords, strip):
+        badge_html = f'<span class="badge2 {badge}">{badge}</span>' if badge else ""
+        d = (desc or "").strip()
+        if len(d) > 180:
+            d = d[:177] + "…"
         return (
-            f'<a href="{href}" target="_blank" rel="noopener" title="{title}" '
-            f'class="btn {cls} btn-sm me-2 mb-2">'
-            f'<span class="me-1" style="font-size:.7rem">{dot}</span>{label} '
-            f'<span class="text-muted ms-1" style="font-family:Consolas,monospace;font-size:.72rem">:{port_display}</span>'
-            f'</a>'
+            f'<div class="card {strip}" data-keywords="{esc(keywords.lower())}">'
+            f'<div class="head-row"><h4>{esc(name)} {badge_html}</h4>'
+            f'<span class="type-tag">{esc(type_tag)}</span></div>'
+            f'<div class="desc">{esc(d)}</div>'
+            f'<div class="path">{esc(path)}</div>'
+            f'<div class="links">{links_html}</div></div>'
         )
-
-    def render_public_tile(label, href, port, full_url, origin_up):
-        # Absolute trycloudflare URL — works from any machine, including when this
-        # very panel is being viewed through a tunnel. The colour reflects the ORIGIN
-        # app's health (probed locally on the Hive host): a tunnel can be up while the
-        # app behind it is down, in which case the link 502s. Amber = will not launch.
-        if origin_up:
-            cls, mark, title = "btn-success", "", full_url
-        else:
-            cls, mark = "btn-warning", '<i class="bi bi-exclamation-triangle-fill me-1"></i>'
-            title = f"Tunnel is up but the app on port {port} is not responding — this link will fail (502). Start the app."
-        return (
-            f'<a href="{href}" target="_blank" rel="noopener" title="{title}" '
-            f'class="btn {cls} btn-sm me-2 mb-2">'
-            f'{mark}<i class="bi bi-globe2 me-1"></i>{label} '
-            f'<span class="ms-1 opacity-75" style="font-family:Consolas,monospace;font-size:.7rem">:{port}</span>'
-            f'</a>'
-        )
-
-    groups_html = ""
 
     for proj in projects:
-        if not isinstance(proj, dict): continue
-        pid    = proj.get("id") or "?"
-        name   = proj.get("name") or pid
+        pid = proj.get("id") or "?"
+        if pid in HIDE:
+            continue
+        name = proj.get("name") or pid
         status = proj.get("status") or ""
-        path   = proj.get("path") or ""
-        ports  = proj.get("ports") or {}
+        reason = proj.get("status_reason") or ""
+        path = proj.get("path") or ""
+        ports = proj.get("ports") or {}
+        github = proj.get("github") or ""
+        cname = cat_of.get(pid, "Other")
+        badge = cat_badge.get(cname, "")
+        is_tool = cname in TOOL_CATS
+        sl = (status + " " + reason).lower()
+        paused = any(k in sl for k in ("paused", "pending", "awaiting"))
+        strip = "type-paused" if paused else ("type-tool" if cname in STRIP_TOOL else "type-service")
+        type_tag = "Paused" if paused else ("On-demand" if cname in STRIP_TOOL else "Service")
 
-        tiles_html = ""
-        public_tiles_html = ""
+        local_html, tunnel_html = "", ""
+        kw = f"{name} {pid} {cname}"
         for role, info in ports.items():
-            if not isinstance(info, dict): continue
-            current = info.get("current")
-            if not (isinstance(current, int) or (isinstance(current, str) and current.isdigit())):
+            if not isinstance(info, dict):
                 continue
-            port = int(current)
-            up   = port_status.get(port, False)
-            # Public tiles first — labelled by role, pointing at the live tunnel URL.
-            tinfo = tunnels.get(port)
-            if tinfo and tinfo.get("url") and tinfo.get("status") == "running":
-                pub_url = tinfo["url"]
-                for label, href in _role_tiles(role, pub_url, public=True):
-                    public_tiles_html += render_public_tile(label, href, port, pub_url, up)
-            # Local tiles (localhost) — full standard set per role.
-            for label, href in _role_tiles(role, f"http://localhost:{port}", public=False):
-                pdisp = href.split(f":{port}", 1)[-1]
-                tiles_html += render_local_tile(label, href, f"{port}{pdisp}", up)
+            cur = info.get("current")
+            if not (isinstance(cur, int) or (isinstance(cur, str) and str(cur).isdigit())):
+                continue
+            port = int(cur)
+            up = port_status.get(port, False)
+            label = ROLE_LABEL.get(role.lower(), role.title()) + f" :{port}"
+            local_html += loc_tile(label, f"http://localhost:{port}", up, is_tool)
+            kw += f" {port}"
+            ti = tunnels.get(port)
+            if ti and ti.get("url") and ti.get("status") == "running":
+                tunnel_html += tun_tile(ti["url"])
+        if not (local_html or tunnel_html):
+            local_html = '<span class="desc" style="margin:0">No HTTP port</span>'
+        links_html = local_html + tunnel_html + gh_tile(github)
+        buckets[cname].append(card_html(name, badge, type_tag,
+                                        proj.get("description") or "", path, links_html, kw, strip))
 
-        if public_tiles_html:
-            tiles_html = public_tiles_html + tiles_html
-
-        if not tiles_html:
-            tiles_html = '<span class="text-muted fst-italic" style="font-size:.8rem">No HTTP port registered</span>'
-
-        groups_html += f"""
-        <div class="mb-4">
-          <div class="d-flex align-items-center mb-2">
-            <span class="text-uppercase fw-bold" style="font-size:.78rem;letter-spacing:.08em">{name}</span>
-            <span class="text-muted ms-2" style="font-size:.7rem;font-family:Consolas,monospace">{pid}</span>
-            {status_badge(status)}
-            <span class="text-muted ms-auto" style="font-size:.7rem;font-family:Consolas,monospace">{path}</span>
-          </div>
-          <div>{tiles_html}</div>
-        </div>"""
-
-    # Extras (non-registry shared services)
-    for group_name, links in LAUNCHER_EXTRAS:
-        tiles_html = ""
-        for label, host, port, suffix in links:
+    for cname, c in EXTRA_CARDS:
+        local_html, extra_html = "", ""
+        kw = c["name"] + " " + cname
+        for label, href, port in c.get("local", []):
             up = port_status.get(int(port), False)
-            href = f"{host}:{port}{suffix}"
-            tiles_html += render_local_tile(label, href, f"{port}{suffix}", up)
-        groups_html += f"""
-        <div class="mb-4">
-          <div class="d-flex align-items-center mb-2">
-            <span class="text-uppercase fw-bold" style="font-size:.78rem;letter-spacing:.08em">{group_name}</span>
-            <span class="badge text-bg-light ms-2" style="font-size:.65rem;font-weight:500">extra</span>
-          </div>
-          <div>{tiles_html}</div>
-        </div>"""
+            local_html += loc_tile(label, href, up, c.get("is_tool", False))
+            kw += f" {port}"
+        for label, href, kind in c.get("extra_links", []):
+            if kind == "tunnel":
+                extra_html += tun_tile(href, label)
+            else:
+                extra_html += f'<a href="{esc(href)}" target="_blank" rel="noopener">{esc(label)}</a>'
+        links_html = local_html + extra_html + gh_tile(c.get("github", ""))
+        buckets.setdefault(cname, []).append(
+            card_html(c["name"], c.get("badge", ""), c.get("type_tag", "Service"),
+                      c.get("desc", ""), c.get("path", ""), links_html, kw,
+                      c.get("strip", "type-service")))
 
-    # Headline: how many public URLs are live right now
+    # ---- Hive agents (the team behind "The Hive") ----
+    AGENTS = [
+        ("hive_architect", "🏗️ Architect", "Designs the plan before anyone builds — blueprints, trade-off decisions (ADRs), and a step-by-step build plan. Decides HOW, never writes the final code."),
+        ("hive_builder",   "🔨 Builder",   "The hands of the Hive. Takes the Architect's plan and writes the actual code — Python, SQL, APIs, config. Gets features built and shipped."),
+        ("hive_scout",     "🔍 Scout",     "The researcher. Looks up APIs, libraries, pricing and AI news, and investigates unknowns. Fast, cheap first-responder for 'how does X work?'"),
+        ("hive_scribe",    "✍️ Scribe",    "The writer. Produces all documentation — session summaries, meeting minutes, version history and guides. Keeps the project's memory readable."),
+        ("hive_ops",       "🛠️ Ops",       "The custodian. Watches the services, restarts what's down, reads the logs and keeps every app healthy. Operational triage for the ecosystem."),
+        ("hive_inspector", "🛡️ Inspector", "The reviewer. Checks code and config for bugs, security issues and QI-standards compliance before anything ships. A read-only quality gate."),
+        ("hive_tester",    "✅ Tester",    "The quality guardian. Runs API, UI and load tests across every QI project and reports what passed or failed. Cross-project regression checks."),
+    ]
+    for aid, aname, adesc in AGENTS:
+        links_html = (f'<a class="local" href="/hive/agent/{aid}" target="_blank" rel="noopener">Profile ↗</a>'
+                      f'<a class="local" href="/hive" target="_blank" rel="noopener">The Hive ↗</a>')
+        kw = f"{aname} {aid} agent hive"
+        buckets["Agents"].append(
+            card_html(aname, "agent", "Hive Agent", adesc, f"QI Hive · {aid}", links_html, kw, "type-agent"))
+
+    sections = ""
+    for cname in order:
+        cards = buckets.get(cname) or []
+        if not cards:
+            continue
+        sections += (f'<section class="tier"><h3>{esc(cname)}</h3>'
+                     f'<div class="grid">{"".join(cards)}</div></section>')
+
     public_live = sum(1 for t in tunnels.values() if t.get("url") and t.get("status") == "running")
-    if via_tunnel:
-        note = (
-            '<div class="alert alert-success py-2 mb-3 d-flex align-items-center" style="font-size:.85rem">'
-            '<i class="bi bi-globe2 me-2"></i>'
-            '<div>You are viewing the Hive <strong>through a public tunnel</strong>, so use the '
-            '<span class="badge bg-success">green Public</span> buttons — they open from any machine. '
-            '<span class="badge bg-warning text-dark">amber ⚠</span> = tunnel up but the app is down (will 502 — start the app). '
-            'The 🏠 <em>local</em> buttons are disabled here because <code>localhost</code> would point at '
-            f'<strong>your</strong> device, not the Hive host. <strong>{public_live}</strong> public URL(s) live. '
-            'An app with no Public button at all has its <code>QI_&lt;App&gt;Tunnel</code> service stopped.</div>'
-            '</div>'
-        )
-    else:
-        note = (
-            '<div class="alert alert-info py-2 mb-3 d-flex align-items-center" style="font-size:.85rem">'
-            '<i class="bi bi-info-circle me-2"></i>'
-            '<div>Tiles auto-generated from <code>C:\\QIH\\ecosystem\\qi_registry.json</code>. '
-            '🟢 = local port responding · '
-            f'<i class="bi bi-globe2 mx-1"></i><strong>{public_live}</strong> public Cloudflare URL(s) live — green tiles open from any machine. '
-            'Quick Tunnel URLs rotate on restart; this page reads the current value live, no edit needed.</div>'
-            '</div>'
-        )
+    n_proj = len([p for p in projects if (p.get("id") not in HIDE)])
+
     err_html = ""
     if load_err:
-        err_html = f'<div class="alert alert-danger py-2 mb-3"><i class="bi bi-exclamation-triangle me-1"></i>Registry load failed: {load_err}</div>'
+        err_html = (f'<div style="background:#3a1d1d;border:1px solid #f85149;color:#ffb3ad;'
+                    f'padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:13px">'
+                    f'Registry load failed: {esc(load_err)}</div>')
 
-    return f"""
-    <div class="card">
-      <div class="card-header d-flex align-items-center">
-        <h5 class="mb-0"><i class="bi bi-grid-3x3-gap me-2"></i>QI Launcher</h5>
-        <span class="ms-auto text-muted" style="font-size:.75rem">{len(projects)} projects from registry</span>
-      </div>
-      <div class="card-body">
-        {note}
-        {err_html}
-        {groups_html}
-      </div>
-    </div>"""
+    note = ('<div class="legend">'
+            '<div class="item"><span class="dot up"></span> Up — port responding</div>'
+            '<div class="item"><span class="dot down"></span> Down — service not responding</div>'
+            '<div class="item"><span class="dot idle"></span> Idle — on-demand tool</div>'
+            '<div class="item"><span class="dot paused"></span> Paused — waiting on dependency</div>'
+            f'<div class="item">⛅ <strong style="color:var(--accent-2)">&nbsp;{public_live}</strong>'
+            f'&nbsp;public tunnel(s) live</div>'
+            '</div>')
+
+    via_note = ""
+    if via_tunnel:
+        via_note = ('<div class="legend" style="color:var(--accent-2)">Viewing through a public tunnel — '
+                    'use the ⛅ tunnel buttons; localhost buttons are dimmed (they point at your own device).</div>')
+
+    css = """
+#qi-lp{--bg:#0d1117;--panel:#161b22;--panel-2:#1f2630;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--accent-2:#f0b429;--good:#3fb950;--bad:#f85149;--idle:#6e7681;--paused:#a371f7;color:var(--text);}
+#qi-lp *{box-sizing:border-box;}
+#qi-lp .lp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+#qi-lp .lp-head h2{margin:0;font-size:20px;}
+#qi-lp .lp-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+#qi-lp .lp-controls input{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 11px;font-size:13px;width:210px;}
+#qi-lp .lp-controls button{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 11px;font-size:13px;cursor:pointer;}
+#qi-lp .lp-controls button:hover{border-color:var(--accent);}
+#qi-lp .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:14px;align-items:center;}
+#qi-lp .legend .item{display:flex;align-items:center;gap:6px;}
+#qi-lp .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+#qi-lp .dot.up{background:var(--good);}
+#qi-lp .dot.down{background:var(--bad);}
+#qi-lp .dot.idle{background:var(--idle);}
+#qi-lp .dot.paused{background:var(--paused);}
+#qi-lp .tier{margin-bottom:26px;}
+#qi-lp .tier h3{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:8px;margin:0 0 14px;}
+#qi-lp .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+#qi-lp .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:15px;display:flex;flex-direction:column;min-height:150px;transition:border-color .15s,transform .15s;}
+#qi-lp .card:hover{border-color:var(--accent);transform:translateY(-2px);}
+#qi-lp .card.type-service{border-left:3px solid var(--good);}
+#qi-lp .card.type-tool{border-left:3px solid var(--accent-2);}
+#qi-lp .card.type-paused{border-left:3px solid var(--paused);}
+#qi-lp .card.type-agent{border-left:3px solid var(--paused);}
+#qi-lp .head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;}
+#qi-lp .card h4{margin:0;font-size:16px;font-weight:600;}
+#qi-lp .type-tag{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;white-space:nowrap;}
+#qi-lp .badge2{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--panel-2);color:var(--muted);border:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;margin-left:6px;}
+#qi-lp .badge2.core{color:var(--accent-2);border-color:var(--accent-2);}
+#qi-lp .badge2.backbone{color:var(--accent);border-color:var(--accent);}
+#qi-lp .badge2.tool{color:var(--good);border-color:var(--good);}
+#qi-lp .badge2.agent{color:var(--paused);border-color:var(--paused);}
+#qi-lp .desc{color:var(--muted);font-size:12.5px;line-height:1.4;flex:1;margin-bottom:10px;}
+#qi-lp .path{color:var(--muted);font-size:11px;font-family:Consolas,monospace;margin-bottom:8px;}
+#qi-lp .links{display:flex;flex-wrap:wrap;gap:6px;}
+#qi-lp .links a{background:var(--panel-2);color:var(--accent);text-decoration:none;border:1px solid var(--border);padding:5px 9px;border-radius:6px;font-size:12px;font-family:Consolas,monospace;display:inline-flex;align-items:center;gap:5px;}
+#qi-lp .links a:hover{background:var(--accent);color:var(--bg);}
+#qi-lp .links a.muted{color:var(--muted);}
+#qi-lp .links a.local-dim{opacity:.45;}
+#qi-lp .links a.tunnel{color:var(--accent-2);border-color:#3a3324;}
+#qi-lp .links a.tunnel:hover{background:var(--accent-2);color:var(--bg);}
+#qi-lp .status{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;}
+#qi-lp .status.up{background:var(--good);}
+#qi-lp .status.down{background:var(--bad);}
+#qi-lp .status.idle{background:var(--idle);}
+#qi-lp #qilp-content.view-columns{display:flex;gap:18px;align-items:flex-start;overflow-x:auto;padding-bottom:20px;}
+#qi-lp #qilp-content.view-columns .tier{flex:0 0 320px;margin-bottom:0;}
+#qi-lp #qilp-content.view-columns .grid{grid-template-columns:1fr;}
+#qi-lp #qilp-content.view-columns .card{min-height:0;}
+"""
+
+    js = """
+(function(){
+  function f(){
+    var q=(document.getElementById('qilp-filter').value||'').trim().toLowerCase();
+    document.querySelectorAll('#qi-lp .card').forEach(function(c){
+      var kw=c.getAttribute('data-keywords')||'';
+      c.style.display=(!q||kw.indexOf(q)>=0)?'':'none';
+    });
+    document.querySelectorAll('#qi-lp .tier').forEach(function(t){
+      var vis=Array.prototype.slice.call(t.querySelectorAll('.card')).some(function(c){return c.style.display!=='none';});
+      t.style.display=vis?'':'none';
+    });
+  }
+  function apply(mode){
+    var c=document.getElementById('qilp-content'),b=document.getElementById('qilp-viewToggle');
+    if(!c||!b)return;
+    if(mode==='columns'){c.classList.add('view-columns');b.textContent='▤ Grid view';}
+    else{c.classList.remove('view-columns');b.textContent='▥ Columns view';}
+    try{localStorage.setItem('qiHiveLauncherView',mode);}catch(e){}
+  }
+  window.qilpFilter=f;
+  window.qilpToggleView=function(){apply(document.getElementById('qilp-content').classList.contains('view-columns')?'grid':'columns');};
+  var saved='grid';try{saved=localStorage.getItem('qiHiveLauncherView')||'grid';}catch(e){}
+  apply(saved);
+})();
+"""
+
+    return (f'<div id="qi-lp"><style>{css}</style>'
+            f'<div class="lp-head"><h2>QI Launcher</h2>'
+            f'<div class="lp-controls">'
+            f'<input id="qilp-filter" placeholder="Filter by name / port…" oninput="qilpFilter()">'
+            f'<button id="qilp-viewToggle" onclick="qilpToggleView()" title="Switch grid / columns">▥ Columns view</button>'
+            f'<span style="color:#8b949e;font-size:12px">{n_proj} projects</span>'
+            f'</div></div>'
+            f'{note}{via_note}{err_html}'
+            f'<div id="qilp-content">{sections}</div>'
+            f'<script>{js}</script></div>')
 
 @app.get("/launcher", response_class=HTMLResponse)
 def launcher_page(request: Request):
@@ -2356,6 +2494,111 @@ def launcher_page(request: Request):
 def api_tunnels():
     """Live aggregate of Cloudflare tunnel state across all known QI tunnels."""
     return JSONResponse({"tunnels": {str(p): v for p, v in _get_tunnels().items()}})
+
+def render_tunnels() -> str:
+    """Human-readable view of every live Cloudflare tunnel: clickable URL,
+    copy-to-clipboard button, and an offline QR code (segno) for phone access."""
+    import html as _html
+    tunnels = _get_tunnels()
+
+    def esc(s):
+        return _html.escape(str(s if s is not None else ""))
+
+    def qr_svg(data):
+        try:
+            import io as _io, base64 as _b64, segno
+            buf = _io.BytesIO()
+            segno.make(data, error="m").save(buf, kind="png", scale=6, border=4,
+                                             dark="#000000", light="#ffffff")
+            b = _b64.b64encode(buf.getvalue()).decode("ascii")
+            return f'<img alt="QR code" src="data:image/png;base64,{b}">'
+        except Exception:
+            return ""
+
+    live, offline = [], []
+    for port, t in sorted(tunnels.items()):
+        label = t.get("label") or f"Port {port}"
+        url = t.get("url")
+        status = (t.get("status") or "").lower()
+        if url and status == "running":
+            live.append((port, label, url))
+        else:
+            offline.append((port, label, status or "unknown"))
+
+    cards = ""
+    for port, label, url in live:
+        cards += (
+            '<div class="tn-card">'
+            f'<div class="tn-qr">{qr_svg(url)}</div>'
+            '<div class="tn-body">'
+            f'<div class="tn-name">{esc(label)} <span class="tn-port">:{port}</span> '
+            '<span class="tn-pill up">live</span></div>'
+            f'<a class="tn-url" href="{esc(url)}" target="_blank" rel="noopener">{esc(url)}</a>'
+            '<div class="tn-actions">'
+            f'<button class="tn-btn" data-url="{esc(url)}" onclick="tnCopy(this)">Copy</button>'
+            f'<a class="tn-btn" href="{esc(url)}" target="_blank" rel="noopener">Open ↗</a>'
+            '</div>'
+            '<div class="tn-updated">📱 scan the QR to open on your phone</div>'
+            '</div></div>'
+        )
+    live_html = cards or '<div class="tn-empty">No tunnels are running right now.</div>'
+
+    off_html = ""
+    if offline:
+        rows = "".join(
+            f'<li>{esc(l)} <span class="tn-port">:{p}</span> — <span class="tn-off">{esc(s)}</span></li>'
+            for p, l, s in offline)
+        off_html = (
+            f'<div class="tn-offline"><div class="tn-offline-h">Not running ({len(offline)})</div>'
+            f'<ul>{rows}</ul>'
+            '<div class="tn-updated">Start the matching <code>QI_&lt;App&gt;Tunnel</code> service, then refresh.</div></div>'
+        )
+
+    css = """
+#qi-tn{--bg:#0d1117;--panel:#161b22;--panel-2:#1f2630;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--accent-2:#f0b429;--good:#3fb950;color:var(--text);}
+#qi-tn *{box-sizing:border-box;}
+#qi-tn .tn-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+#qi-tn .tn-head h2{margin:0;font-size:20px;}
+#qi-tn .tn-sub{color:var(--muted);font-size:13px;}
+#qi-tn .tn-card{display:flex;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--good);border-radius:10px;padding:14px;margin-bottom:12px;}
+#qi-tn .tn-qr{flex:0 0 auto;width:150px;height:150px;background:#fff;border-radius:8px;padding:8px;}
+#qi-tn .tn-qr img{width:100%;height:100%;display:block;image-rendering:pixelated;}
+#qi-tn .tn-body{min-width:0;flex:1;}
+#qi-tn .tn-name{font-size:15px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#qi-tn .tn-port{color:var(--muted);font-family:Consolas,monospace;font-size:12px;font-weight:400;}
+#qi-tn .tn-pill{font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px;font-weight:600;}
+#qi-tn .tn-pill.up{background:rgba(63,185,80,.15);color:var(--good);border:1px solid var(--good);}
+#qi-tn .tn-url{display:block;color:var(--accent);font-family:Consolas,monospace;font-size:13px;word-break:break-all;text-decoration:none;margin-bottom:8px;}
+#qi-tn .tn-url:hover{text-decoration:underline;}
+#qi-tn .tn-actions{display:flex;gap:8px;}
+#qi-tn .tn-btn{background:var(--panel-2);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;text-decoration:none;display:inline-block;}
+#qi-tn .tn-btn:hover{background:var(--accent);color:var(--bg);}
+#qi-tn .tn-updated{color:var(--muted);font-size:11px;margin-top:8px;}
+#qi-tn .tn-empty{color:var(--muted);padding:20px;text-align:center;background:var(--panel);border:1px solid var(--border);border-radius:10px;}
+#qi-tn .tn-offline{margin-top:18px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;}
+#qi-tn .tn-offline-h{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;}
+#qi-tn .tn-offline ul{margin:0;padding-left:18px;}
+#qi-tn .tn-offline li{font-size:13px;margin-bottom:4px;}
+#qi-tn .tn-off{color:var(--accent-2);}
+#qi-tn code{color:#94a3b8;}
+"""
+    js = """
+function tnCopy(btn){
+  var u=btn.getAttribute('data-url');
+  function done(){var o=btn.textContent;btn.textContent='Copied!';setTimeout(function(){btn.textContent=o;},1200);}
+  function fb(){var t=document.createElement('textarea');t.value=u;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(t);done();}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(done,fb);}else{fb();}
+}
+"""
+    return ('<div id="qi-tn"><style>' + css + '</style>'
+            '<div class="tn-head"><h2>Public Tunnels</h2>'
+            f'<span class="tn-sub">{len(live)} live · scan a QR to open on your phone</span></div>'
+            + live_html + off_html
+            + '<script>' + js + '</script></div>')
+
+@app.get("/tunnels", response_class=HTMLResponse)
+def tunnels_page():
+    return base_layout("Tunnels", render_tunnels(), "tunnels")
 
 @app.get("/hive", response_class=HTMLResponse)
 def hive_page():
@@ -5948,10 +6191,7 @@ def render_brain() -> str:
       if (!q) {{ out.innerHTML = '<span class="text-muted">Empty query.</span>'; return; }}
       out.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Searching…';
       try {{
-        const r = await fetch('http://127.0.0.1:9011/api/search_memory', {{
-          method: 'POST', headers: {{'Content-Type':'application/json'}},
-          body: JSON.stringify({{query: q, collection: col, n: 10}})
-        }});
+        const r = await fetch('/brain-search?q=' + encodeURIComponent(q) + '&collection=' + encodeURIComponent(col) + '&n=10');
         const d = await r.json();
         const hits = d.results || d.hits || d.matches || [];
         if (!hits.length) {{ out.innerHTML = '<span class="text-muted">No matches.</span>'; return; }}
@@ -6261,6 +6501,58 @@ def api_compliance_scan(req: _ComplianceScanReq):
                                 {"project_id": req.project_id, "mode": req.mode, "auto_fix": req.auto_fix},
                                 timeout=120.0)
     return JSONResponse(content=body, status_code=code)
+
+
+# ── Brain reverse-proxy (tunnel parity) ──────────────────────────────────────
+# Lets the dashboard's browser code reach the Brain API (:9011) through the
+# dashboard's OWN origin, so it behaves identically on localhost and over the
+# public HTTPS tunnel (no mixed-content block, no "127.0.0.1 = the viewer's
+# machine" problem). GET is open (read-only views). Mutating verbs still pass
+# through the tunnel_write_guard middleware above, so they remain token-gated
+# when they arrive via the tunnel — security posture is unchanged.
+
+def _brain_proxy_raw(method: str, path: str, query: str, body: bytes | None, ctype: str | None):
+    url = f"{_BRAIN}/{path}"
+    if query:
+        url += "?" + query
+    headers = {"Content-Type": ctype} if ctype else {}
+    req = _ureq.Request(url, data=body, headers=headers, method=method)
+    try:
+        with _ureq.urlopen(req, timeout=60) as r:
+            return r.status, r.read(), r.headers.get("Content-Type", "application/json")
+    except _uerr.HTTPError as e:
+        return e.code, e.read(), e.headers.get("Content-Type", "application/json")
+    except Exception as e:
+        import json as _json
+        return 502, _json.dumps({"ok": False, "error": f"{type(e).__name__}: {e}"}).encode(), "application/json"
+
+
+@app.get("/brain/docs", response_class=HTMLResponse)
+def brain_docs_proxy():
+    """Proxy Brain's Swagger UI, rewriting its spec URL to the proxied path so it
+    renders over the tunnel (swagger-ui assets come from a CDN and load fine)."""
+    status, raw, _ = _brain_proxy_raw("GET", "docs", "", None, None)
+    html_text = raw.decode("utf-8", errors="replace").replace("/openapi.json", "/brain/openapi.json")
+    return HTMLResponse(content=html_text, status_code=status)
+
+
+@app.get("/brain-search")
+def brain_search_proxy(q: str, collection: str = "decisions", n: int = 10):
+    """Read-only Brain memory search usable over the tunnel (GET → not gated)."""
+    code, body = _brain_request("POST", "/api/search_memory",
+                                {"query": q, "collection": collection, "n": n})
+    return JSONResponse(content=body, status_code=code)
+
+
+@app.api_route("/brain/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def brain_proxy(path: str, request: Request):
+    raw_body = await request.body()
+    status, raw, ctype = _brain_proxy_raw(
+        request.method, path, request.url.query,
+        raw_body if raw_body else None,
+        request.headers.get("content-type"),
+    )
+    return Response(content=raw, status_code=status, media_type=ctype)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
