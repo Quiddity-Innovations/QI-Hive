@@ -194,7 +194,7 @@
         "logs": "C:\\NAYA\\LOGS"
       },
       "github": "https://github.com/Quiddity-Innovations/NAYA",
-      "status": "active_development",
+      "status": "paused",
       "primary_language": "Python",
       "ports": {
         "api": {
