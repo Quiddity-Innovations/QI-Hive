@@ -829,6 +829,7 @@
         "GET /version",
         "GET /info",
         "GET /news (authed news page)",
+        "GET /digest (Kaze AI Digest by Maia Quiddam, served via TubeScout tunnel)",
         "GET /api/news",
         "GET /stats",
         "GET /channels",
