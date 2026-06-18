@@ -36,7 +36,7 @@ from core.db import open_brain_db
 
 log = logging.getLogger("qi.brain.poller")
 
-INBOX_DIR     = Path(r"C:\QIH\brain\inbox")
+INBOX_DIR     = Path(r"C:\QIH\engine\brain\inbox")
 PROCESSED_DIR = INBOX_DIR / "processed"
 ERROR_DIR     = INBOX_DIR / "errors"
 

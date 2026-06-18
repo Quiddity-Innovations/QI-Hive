@@ -78,14 +78,14 @@ PROJECTS = {
         "note": "QI Hive — dashboard + agent system. Brain at port 9011.",
     },
     "QI_Brain": {
-        "path": r"C:\QIH\brain",
+        "path": r"C:\QIH\engine\brain",
         "service": "QI_BrainAPI",
         "tunnel": None,
         "api_port": 9011,
         "ui_port": None,
-        "db": r"C:\QIH\brain\qi_brain.db",
-        "doc_path": r"C:\QIH\brain",
-        "key_files": ["qi_brain_api.py"],
+        "db": r"C:\QIH\data\qi_brain.db",
+        "doc_path": r"C:\QIH\engine\brain",
+        "key_files": ["api.py"],
         "note": "QI Brain — hive nervous system. SQLite + ChromaDB + MCP.",
     },
 }
