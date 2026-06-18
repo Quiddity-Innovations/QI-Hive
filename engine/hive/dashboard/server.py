@@ -4911,6 +4911,11 @@ def render_usage() -> str:
     t = usage_stats.today()
     t7 = usage_stats.totals(7)
     t30 = usage_stats.totals(30)
+    from datetime import date as _date
+    _td = _date.today()
+    _qn = (_td.month - 1) // 3 + 1
+    t_qtd = usage_stats.totals_since(_date(_td.year, (_qn - 1) * 3 + 1, 1))
+    t_ytd = usage_stats.totals_since(_date(_td.year, 1, 1))
     daily = usage_stats.daily(30)
     projects_sav = usage_stats.savings_by_project(30)
     s_models = usage_stats.savings_by_model(30)
@@ -5046,35 +5051,49 @@ def render_usage() -> str:
       </div>
     </div>
 
-    <!-- Row 1: actual spend -->
-    <div class="row row-compact mb-1">
-      <div class="col-md-3"><div class="small-box text-bg-primary">
+    <!-- Row 1: actual spend — consumption ladder: today / 7d / 30d / QTD / YTD -->
+    <div class="row row-compact g-2 mb-1">
+      <div class="col-6 col-md-2"><div class="small-box text-bg-primary">
         <div class="inner">
           <h4>{t['tokens']/1_000_000:.1f}M</h4>
-          <p>Tokens Today <span class="opacity-75" style="font-size:.65rem">(+ {t.get('cache_reads',0)/1_000_000:.0f}M cache re-reads)</span></p>
+          <p>Tokens Today <span class="opacity-75" style="font-size:.62rem">(+{t.get('cache_reads',0)/1_000_000:.0f}M re-reads)</span></p>
         </div>
         <i class="small-box-icon bi bi-lightning-charge-fill"></i>
       </div></div>
-      <div class="col-md-3"><div class="small-box text-bg-success">
+      <div class="col-6 col-md-2"><div class="small-box text-bg-success">
         <div class="inner">
           <h4>${t['cost_usd']:.2f}</h4>
-          <p>API Equiv. Today <span class="opacity-75" style="font-size:.65rem">(MAX plan covers this)</span></p>
+          <p>API Equiv. Today</p>
         </div>
         <i class="small-box-icon bi bi-currency-dollar"></i>
       </div></div>
-      <div class="col-md-3"><div class="small-box text-bg-info">
+      <div class="col-6 col-md-2"><div class="small-box text-bg-info">
         <div class="inner">
           <h4>${t7['cost_usd']:,.0f}</h4>
-          <p>API Equiv. (7d) <span class="opacity-75" style="font-size:.65rem">(list-price)</span></p>
+          <p>API Equiv. (7d)</p>
         </div>
         <i class="small-box-icon bi bi-calendar-week"></i>
       </div></div>
-      <div class="col-md-3"><div class="small-box text-bg-warning">
+      <div class="col-6 col-md-2"><div class="small-box text-bg-warning">
         <div class="inner">
           <h4>${t30['cost_usd']:,.0f}</h4>
-          <p>API Equiv. (30d) <span class="opacity-75" style="font-size:.65rem">(list-price)</span></p>
+          <p>API Equiv. (30d)</p>
         </div>
         <i class="small-box-icon bi bi-calendar-range"></i>
+      </div></div>
+      <div class="col-6 col-md-2"><div class="small-box text-bg-secondary">
+        <div class="inner">
+          <h4>${t_qtd['cost_usd']:,.0f}</h4>
+          <p>Q{_qn} to date</p>
+        </div>
+        <i class="small-box-icon bi bi-calendar3"></i>
+      </div></div>
+      <div class="col-6 col-md-2"><div class="small-box text-bg-dark">
+        <div class="inner">
+          <h4>${t_ytd['cost_usd']:,.0f}</h4>
+          <p>Year to date</p>
+        </div>
+        <i class="small-box-icon bi bi-calendar-check"></i>
       </div></div>
     </div>
 
