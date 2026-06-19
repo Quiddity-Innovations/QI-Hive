@@ -125,6 +125,18 @@ def _memory() -> MemoryStore:
     return _store
 
 
+def _reload_memory() -> None:
+    """Drop the cached MemoryStore so the next call re-reads Chroma from disk.
+
+    ChromaDB's PersistentClient is not consistent across processes: when the
+    doc_harvester writes from a separate process (e.g. the nightly reconciler),
+    this long-running API keeps serving its stale in-memory HNSW segment. Calling
+    this (via POST /api/admin/reload_memory) after a harvest forces a fresh read.
+    """
+    global _store
+    _store = None
+
+
 def _cfg(key: str, default: str = "") -> str:
     with open_brain_db() as conn:
         row = conn.execute("SELECT value FROM brain_config WHERE key = ?", (key,)).fetchone()
@@ -514,6 +526,19 @@ async def search_memory(req: SearchMemoryRequest):
     where = {"project_id": req.project_id} if req.project_id else None
     results = await _memory().search(req.query, collection=col_name, n=req.n, where=where)
     return {"ok": True, "results": results, "collection": req.collection}
+
+
+@app.post("/api/admin/reload_memory")
+async def admin_reload_memory():
+    """Force the API to re-read ChromaDB from disk (use after an out-of-process
+    doc_harvester run so the qi_docs index is served fresh without a restart)."""
+    _reload_memory()
+    counts = {}
+    try:
+        counts = _memory().collection_counts()
+    except Exception:  # noqa: BLE001
+        pass
+    return {"ok": True, "reloaded": True, "counts": counts}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -987,6 +1012,78 @@ async def agents_last_seen():
     with open_brain_db() as conn:
         rows = conn.execute(sql).fetchall()
     return {"agents": [dict(r) for r in rows]}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# War Room Chat — Phase N Stage 0: minimal multi-way text chat
+# Writers: Renne (via dashboard), Claude Code, Claude Work, CoWork, Hive agents.
+# Storage: warroom_messages table (migration 2026_06_18_warroom_chat.sql).
+# See:     C:\QIH\shared\documentation\Phase_N_War_Room_Spec_2026-06-18.md
+# ─────────────────────────────────────────────────────────────────────────────
+
+_WARROOM_LABELS = {
+    "renne":       "Renne",
+    "claude_code": "Claude Code",
+    "claude":      "Claude (Interactive)",
+    "claude_work": "Claude Work",
+    "cowork":      "CoWork",
+    "architect":   "Architect",
+    "builder":     "Builder",
+    "inspector":   "Inspector",
+    "ops":         "Ops",
+    "scout":       "Scout",
+    "scribe":      "Scribe",
+    "tester":      "Tester",
+}
+
+
+class WarRoomMessageIn(BaseModel):
+    agent_id:    str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_\-]+$")
+    body:        str = Field(min_length=1, max_length=8000)
+    agent_label: Optional[str] = Field(default=None, max_length=64)
+    project_id:  Optional[str] = Field(default=None, max_length=64, pattern=r"^[a-zA-Z0-9_\-]*$")
+    reply_to:    Optional[int] = None
+
+
+@app.post("/api/warroom/message", status_code=201)
+async def post_warroom_message(req: WarRoomMessageIn):
+    """Post a message to the War Room chat.
+
+    Any QI agent (or Renne via the dashboard) can call this. The label is
+    resolved from a known-agent map unless the caller supplies its own.
+    """
+    label = req.agent_label or _WARROOM_LABELS.get(req.agent_id, req.agent_id)
+    with open_brain_db() as conn:
+        cur = conn.execute(
+            """INSERT INTO warroom_messages
+               (agent_id, agent_label, body, project_id, reply_to)
+               VALUES (?, ?, ?, ?, ?)""",
+            (req.agent_id, label, req.body, req.project_id, req.reply_to),
+        )
+        row_id = cur.lastrowid
+        conn.commit()
+    return {"status": "ok", "id": row_id}
+
+
+@app.get("/api/warroom/messages")
+async def get_warroom_messages(limit: int = 100, since_id: int = 0):
+    """Return War Room messages in chronological order.
+
+    - since_id=0 (default): the most recent `limit` messages.
+    - since_id>0: only messages newer than that id (for incremental polling).
+    """
+    limit = max(1, min(limit, 500))
+    with open_brain_db() as conn:
+        rows = conn.execute(
+            """SELECT id, agent_id, agent_label, body, project_id, reply_to, ts
+               FROM warroom_messages
+               WHERE id > ?
+               ORDER BY id DESC
+               LIMIT ?""",
+            (since_id, limit),
+        ).fetchall()
+    msgs = [dict(r) for r in rows][::-1]   # flip to chronological
+    return {"messages": msgs, "last_id": (msgs[-1]["id"] if msgs else since_id)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────

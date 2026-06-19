@@ -204,6 +204,27 @@ def main():
     except Exception as e:
         log(f"  Compliance deep-scan FAILED: {type(e).__name__}: {e}")
 
+    # Documentation Brain — harvest docs into qi_docs index + knowledge graph
+    try:
+        sys.path.insert(0, r'C:\QIH\engine\brain')
+        from doc_harvester import harvest as _harvest
+        r = _harvest(do_embed=True)
+        log(f"  Doc harvest: new={r['new']} changed={r['changed']} "
+            f"edges={r['edges']} stale={r['stale']} dups={r['duplicates']} "
+            f"embedded={r['embedded']}")
+        # Tell the long-running Brain API to re-read Chroma from disk (the harvest
+        # ran in THIS process; the API caches its own client). Best effort.
+        try:
+            import urllib.request
+            urllib.request.urlopen(
+                urllib.request.Request("http://localhost:9011/api/admin/reload_memory",
+                                       method="POST"), timeout=10)
+            log("  Brain API memory reloaded")
+        except Exception as e:
+            log(f"  Brain API reload skipped: {type(e).__name__}")
+    except Exception as e:
+        log(f"  Doc harvest FAILED: {type(e).__name__}: {e}")
+
     log("=== Nightly reconciler END ===\n")
 
 if __name__ == '__main__':

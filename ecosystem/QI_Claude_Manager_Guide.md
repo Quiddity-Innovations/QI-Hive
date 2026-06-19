@@ -203,7 +203,7 @@ This guide. Rendered as HTML from `QI_Claude_Manager_Guide.md`.
 | **CypherMiner** | C:\CypherMiner | New | Crypto/encoding/math/text tools (bilingual EN/PT, offline) |
 | **LotteryWiz** | C:\Lottery Wiz | Active | Fantasy 5 covering design (FastAPI + .xlsx/.csv export) |
 | **Digitization Cost Tool** | C:\Users\renne\Downloads\DIGITIZATION COSTS | Active | BU cost comparison calculator (static HTML, client-side) |
-| **FidelityAnalyzer** | C:\FidelityAnalyzer | Active | Fidelity portfolio allocation + rebalancing (FastAPI + Gradio) |
+| **RetirementAnalyzer** | C:\RetirementAnalyzer | Active | Retirement readiness + portfolio allocation/rebalancing from Fidelity exports (FastAPI + Gradio); formerly FidelityAnalyzer |
 | **AvatarStudio** | C:\1-AI\APPS\AvatarStudio | Active | Avatar video generation (TTS→bg removal→Hallo2/LivePortrait→lip-sync) |
 | **FileHQ** | C:\NAYA\filehq | Merged | ~~Standalone~~ — now embedded in Naya (file scanning engine) |
 | **MQ** | C:\MQ | New | Maia Quiddam — autonomous social media persona (FB/IG/WhatsApp) |
@@ -486,5 +486,43 @@ Both are kept current by automated and manual processes. The dashboard reads the
 
 ---
 
+## PART 12 — THE DOCUMENTATION BRAIN (Librarian + Knowledge Graph)
+
+*Added 2026-06-18. Inspired by TheBrain — docs, projects, decisions, features and sessions become connected "thoughts" you navigate, not files you hunt for.*
+
+**The problem it solves:** 900+ documents live across 9 project drives. They are well-organised but were not *findable* — the only way to locate one was to already know its path.
+
+**The model — three layers (storage stays federated; the index is centralized):**
+
+| Layer | What | Where |
+|---|---|---|
+| 1. Federated storage | Docs stay in each project's `docs/` folder; session summaries in the shared store; governance in `ecosystem/`. Nothing moves. | per project |
+| 2. Central index | A catalog + a knowledge graph + semantic embeddings — built nightly. | `qi_brain.db` + `qi_docs` (Chroma) |
+| 3. Librarian | The `hive-librarian` agent: finds, curates, flags stale, dedupes, enforces compliance. | `Agent(subagent_type='hive-librarian')` |
+
+**Under the hood:**
+- **Catalog** — `docs` table in `C:\QIH\data\qi_brain.db`: one row per file (path, title, project, type, hash, mtime, embedded, stale).
+- **Graph** — `doc_relationships` table: typed edges (`belongs_to`, `links_to`, `mentions`, `supersedes`) connecting docs ↔ projects ↔ decisions ↔ features ↔ sessions. This is the "Plex".
+- **Semantic search** — the `qi_docs` ChromaDB collection (nomic-embed-text), queried via `POST http://localhost:9011/api/search_memory` with `{"collection":"docs"}`.
+- **Builder** — `C:\QIH\engine\brain\doc_harvester.py`. Runs nightly inside the reconciler. Manual use:
+  ```bash
+  python C:\QIH\engine\brain\doc_harvester.py            # full: catalog + graph + embed
+  python C:\QIH\engine\brain\doc_harvester.py --no-embed # fast catalog/graph refresh
+  python C:\QIH\engine\brain\doc_harvester.py --stats    # index health: counts, stale, by-project
+  ```
+
+**How to use it:**
+| I want to… | Do this |
+|---|---|
+| Find a doc by meaning | `Agent(subagent_type='hive-librarian')` → "where is the NEXUS digest spec?" |
+| See index health | `python C:\QIH\engine\brain\doc_harvester.py --stats` |
+| Find stale logs | librarian, or `SELECT path, stale_reason FROM docs WHERE stale=1` |
+| Find duplicates | check `C:\QIH\logs\doc_harvest.log` for `DUP:` lines |
+| Refresh after a doc dump | `doc_harvester.py --no-embed` (instant), then full run for embeddings |
+
+**Status (2026-06-18 first build):** 936 docs cataloged · 2,142 graph edges · 25 stale flags · 175 duplicate-groups detected. Roadmap: a clickable "Plex" graph tile on the dashboard (re-centers on any node, TheBrain-style).
+
+---
+
 **End of Guide**  
-Last refreshed: 2026-06-16 from `qi_registry.json` (22 projects, 14 active services)
+Last refreshed: 2026-06-18 — added PART 12 (Documentation Brain). From `qi_registry.json` (22 projects, 14 active services)

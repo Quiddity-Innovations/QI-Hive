@@ -97,12 +97,35 @@ def _brain_db_query(sql: str, params: tuple = ()) -> list[dict]:
         return []
 
 
+def _brain_db_execute(sql: str, params: tuple = ()) -> int | None:
+    """Read-WRITE statement against qi_brain.db. Returns lastrowid or None on failure.
+
+    WAL mode + busy_timeout let this coexist with the Brain process writing the
+    same DB. Used by the War Room chat so Renne can post without a Brain restart.
+    """
+    import sqlite3
+    if not BRAIN_DB.exists():
+        return None
+    try:
+        conn = sqlite3.connect(str(BRAIN_DB), timeout=5.0)
+        try:
+            conn.execute("PRAGMA journal_mode = WAL")
+            conn.execute("PRAGMA busy_timeout = 5000")
+            cur = conn.execute(sql, params)
+            conn.commit()
+            return cur.lastrowid
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+
 def _brain_db_agents_last_seen() -> list[dict]:
     """Read agent_heartbeats directly from Brain SQLite (avoids HTTP hop + Brain restart dependency).
 
     Returns one row per agent with the latest heartbeat.  Keys match what the
-    Brain HTTP /api/agents/last_seen endpoint returns so render_warroom needs
-    no further changes.
+    Brain HTTP /api/agents/last_seen endpoint returns so render_mission_control
+    needs no further changes.
     """
     return _brain_db_query(
         """
@@ -378,7 +401,8 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("activity",  "/activity","bi-activity",      "Activity"),
         ("dispatch",  "/dispatch","bi-send-check",    "CoWork Dispatch"),
         ("brain",     "/brain",   "bi-cpu",           "QI Brain"),
-        ("warroom",   "/warroom", "bi-broadcast-pin", "War Room"),
+        ("mission",   "/mission-control", "bi-broadcast-pin", "Mission Control"),
+        ("warroom",   "/warroom", "bi-chat-dots",     "War Room"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
         ("library",   "/library", "bi-journals",      "Library"),
@@ -406,12 +430,12 @@ def base_layout(title: str, content: str, active: str = "") -> str:
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>{title} | QI Claude Manager</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="/static/vendor/overlayscrollbars.min.css"/>
+  <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css"/>
   <link rel="stylesheet" href="/static/css/adminlte.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/vendor/bootstrap.bundle.min.js"></script>
   <script src="/static/js/adminlte.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="/static/vendor/Sortable.min.js"></script>
   <style>
     /* Hide decorative small-box corner icons (flash/dollar/chat/calendar/play/etc.) — pure chrome, removed to de-clutter. Delete this rule to restore them. */
     .small-box-icon {{ display: none !important; }}
@@ -551,7 +575,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
   </footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es5.min.js"></script>
+<script src="/static/vendor/overlayscrollbars.browser.es5.min.js"></script>
 <script>
 function setTheme(t) {{
   fetch('/api/theme', {{method:'POST', headers:{{'Content-Type':'application/json'}},
@@ -2685,7 +2709,7 @@ def guide_page():
         </div>
       </div>
     </div>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown-dark.min.css"/>
+    <link rel="stylesheet" href="/static/vendor/github-markdown-dark.min.css"/>
     <style>
       .markdown-body {{ background:transparent!important; color:inherit!important; }}
       .markdown-body table {{ width:100%; }}
@@ -2695,7 +2719,7 @@ def guide_page():
       .markdown-body h2 {{ font-size:1.25rem; margin-top:1.5rem; }}
       .markdown-body h3 {{ font-size:1rem; color:#58a6ff; }}
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="/static/vendor/marked.min.js"></script>
     <script>
       document.getElementById('guide-content').innerHTML =
         '<div class="markdown-body p-2">' + marked.parse(`{md_escaped}`) + '</div>';
@@ -2881,206 +2905,373 @@ def api_library_graph(node: str = "root:qi"):
     return {"focus": node, "nodes": list(nodes.values()), "links": links}
 
 
+# ── Documentation Library — file actions (open / reveal / download) ─────────────
+# These act on the HOST machine, and the dashboard is reachable via the public
+# tunnel, so they are gated to LOCAL requests only: anything arriving through the
+# Cloudflare tunnel carries forwarding headers and is refused. Paths are resolved
+# from the docs catalog by doc_id (never trusted from the client) and limited to a
+# safe extension allowlist.
+_DOC_OPEN_EXT = {".md", ".docx", ".doc", ".pdf", ".txt", ".pptx", ".xlsx", ".csv", ".rtf"}
+
+
+def _request_is_local(request: Request) -> bool:
+    if (request.headers.get("x-forwarded-for") or request.headers.get("cf-connecting-ip")
+            or request.headers.get("cf-ray") or request.headers.get("x-forwarded-host")):
+        return False
+    host = request.client.host if request.client else ""
+    return host in ("127.0.0.1", "::1", "localhost")
+
+
+def _doc_path_by_id(doc_id: str):
+    rows = _brain_db_query("SELECT path FROM docs WHERE doc_id=?", (doc_id,))
+    return rows[0]["path"] if rows else None
+
+
+@app.post("/api/library/open")
+def api_library_open(request: Request, doc_id: str = ""):
+    if not _request_is_local(request):
+        raise HTTPException(403, "Opening files is allowed only from the local machine.")
+    path = _doc_path_by_id(doc_id)
+    if not path:
+        raise HTTPException(404, "Unknown document.")
+    p = Path(path)
+    if p.suffix.lower() not in _DOC_OPEN_EXT or not p.exists():
+        raise HTTPException(400, "Document is not openable or no longer exists.")
+    try:
+        import os
+        os.startfile(str(p))  # open in the OS default application
+        return {"ok": True, "opened": str(p)}
+    except Exception as e:
+        raise HTTPException(500, f"Could not open: {e}")
+
+
+@app.post("/api/library/reveal")
+def api_library_reveal(request: Request, doc_id: str = ""):
+    if not _request_is_local(request):
+        raise HTTPException(403, "Reveal is allowed only from the local machine.")
+    path = _doc_path_by_id(doc_id)
+    if not path or not Path(path).exists():
+        raise HTTPException(404, "Document not found.")
+    try:
+        subprocess.Popen(["explorer", "/select,", str(Path(path))])
+        return {"ok": True}
+    except Exception as e:
+        raise HTTPException(500, f"Could not reveal: {e}")
+
+
+@app.get("/api/library/file")
+def api_library_file(request: Request, doc_id: str = ""):
+    if not _request_is_local(request):
+        raise HTTPException(403, "Download is allowed only from the local machine.")
+    path = _doc_path_by_id(doc_id)
+    if not path or not Path(path).exists():
+        raise HTTPException(404, "Document not found.")
+    from fastapi.responses import FileResponse
+    return FileResponse(path, filename=Path(path).name)
+
+
 @app.get("/library", response_class=HTMLResponse)
 def library_page():
     content = """
-    <div class="row mb-2"><div class="col-12">
+    <div class="row mb-2"><div class="col-12 d-flex align-items-center flex-wrap gap-2">
       <div class="btn-group" role="group">
-        <button id="lib-tab-search" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Search</button>
-        <button id="lib-tab-graph" class="btn btn-sm btn-outline-primary"><i class="bi bi-diagram-3 me-1"></i>Graph (Plex)</button>
+        <button id="lt-search" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Search</button>
+        <button id="lt-graph" class="btn btn-sm btn-outline-primary"><i class="bi bi-diagram-3 me-1"></i>Graph (Plex)</button>
+        <button id="lt-split" class="btn btn-sm btn-outline-primary"><i class="bi bi-layout-split me-1"></i>Split</button>
       </div>
+      <span id="lib-stats" class="small text-muted ms-2">loading index&hellip;</span>
     </div></div>
-    <div id="lib-search-view">
-    <div class="row mb-3"><div class="col-12">
-      <div class="card"><div class="card-body">
-        <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
-          <h3 class="card-title mb-0"><i class="bi bi-journals me-2"></i>Documentation Library</h3>
-          <div id="lib-stats" class="small text-muted">loading index…</div>
-        </div>
-        <p class="text-muted small mb-3">Semantic search across every doc in the QI ecosystem — the face of the Documentation Brain (<code>qi_docs</code>). Backed by <code>/api/search_memory</code> on QI Brain :9011.</p>
+
+    <div id="v-search">
+      <div class="card mb-3"><div class="card-body">
         <div class="row g-2 align-items-end">
-          <div class="col-md-5">
-            <label class="form-label small mb-1">Search</label>
-            <input id="lib-q" class="form-control" placeholder="e.g. NEXUS digest spec, elevation broker, dispatch queue…" autocomplete="off">
-          </div>
-          <div class="col-md-3">
-            <label class="form-label small mb-1">Project</label>
-            <select id="lib-project" class="form-select"><option value="">All projects</option></select>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label small mb-1">Type</label>
-            <select id="lib-type" class="form-select"><option value="">All types</option></select>
-          </div>
-          <div class="col-md-2 d-grid">
-            <button id="lib-go" class="btn btn-primary"><i class="bi bi-search me-1"></i>Search</button>
-          </div>
+          <div class="col-md-5"><label class="form-label small mb-1">Search</label>
+            <input id="s-q" class="form-control" placeholder="e.g. NEXUS digest spec, elevation broker, dispatch queue&hellip;" autocomplete="off"></div>
+          <div class="col-md-3"><label class="form-label small mb-1">Project</label>
+            <select id="s-project" class="form-select"><option value="">All projects</option></select></div>
+          <div class="col-md-2"><label class="form-label small mb-1">Type</label>
+            <select id="s-type" class="form-select"><option value="">All types</option></select></div>
+          <div class="col-md-2 d-grid"><button id="s-go" class="btn btn-primary"><i class="bi bi-search me-1"></i>Search</button></div>
         </div>
-        <div class="form-check mt-2">
-          <input class="form-check-input" type="checkbox" id="lib-stale">
-          <label class="form-check-label small" for="lib-stale">Only stale docs</label>
-        </div>
+        <div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="s-stale"><label class="form-check-label small" for="s-stale">Only stale docs</label></div>
       </div></div>
-    </div></div>
-    <div class="row"><div class="col-12">
       <div class="card"><div class="card-body">
-        <div id="lib-mode" class="small text-muted mb-2"></div>
-        <div id="lib-results"><div class="text-muted">Searching…</div></div>
+        <div id="s-mode" class="small text-muted mb-2"></div>
+        <div id="s-results"></div>
       </div></div>
-    </div></div>
-    <script>
-    (function(){
-      const $ = id => document.getElementById(id);
-      const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-      function badge(t, cls){ return '<span class="badge '+(cls||'text-bg-secondary')+'">'+esc(t)+'</span>'; }
+    </div>
 
-      async function loadFacets(){
-        try{
-          const f = await (await fetch('/api/library/facets')).json();
-          $('lib-stats').innerHTML =
-            '<i class="bi bi-files me-1"></i>'+f.total+' docs · '+
-            '<i class="bi bi-cpu me-1"></i>'+f.embedded+' embedded · '+
-            '<i class="bi bi-diagram-3 me-1"></i>'+f.edges+' edges · '+
-            '<span class="text-warning"><i class="bi bi-clock-history me-1"></i>'+f.stale+' stale</span>';
-          const ps = $('lib-project');
-          (f.projects||[]).forEach(p => { const o=document.createElement('option'); o.value=p.id; o.textContent=p.id+' ('+p.n+')'; ps.appendChild(o); });
-          const ts = $('lib-type');
-          (f.types||[]).forEach(t => { const o=document.createElement('option'); o.value=t.t; o.textContent=t.t+' ('+t.n+')'; ts.appendChild(o); });
-        }catch(e){ $('lib-stats').textContent = 'index unavailable'; }
-      }
-
-      function simBadge(d){
-        if(d===null||d===undefined) return '';
-        const sim = Math.max(0, Math.round((1-d)*100));
-        const cls = sim>=70?'text-bg-success':(sim>=50?'text-bg-info':'text-bg-secondary');
-        return '<span class="badge '+cls+'">'+sim+'%</span>';
-      }
-
-      function render(data){
-        $('lib-mode').innerHTML = 'Mode: '+badge(data.mode,'text-bg-dark')+' · '+data.count+' result'+(data.count===1?'':'s');
-        if(!data.results.length){ $('lib-results').innerHTML='<div class="text-muted py-3">No documents match.</div>'; return; }
-        let h = '<div class="table-responsive"><table class="table table-sm table-hover align-middle"><thead><tr>'+
-          '<th>Document</th><th>Project</th><th>Type</th><th>Modified</th><th>Match</th><th></th></tr></thead><tbody>';
-        data.results.forEach(r => {
-          const stale = r.stale ? ' <span class="badge text-bg-warning" title="'+esc(r.stale_reason||'stale')+'">stale</span>' : '';
-          h += '<tr>'+
-            '<td><div class="fw-semibold">'+esc(r.title||'(untitled)')+stale+'</div>'+
-              '<div class="small text-muted text-truncate" style="max-width:520px">'+esc(r.path)+'</div></td>'+
-            '<td>'+badge(r.project_id||'—','text-bg-primary')+'</td>'+
-            '<td>'+badge(r.doc_type||'other')+'</td>'+
-            '<td class="small text-muted">'+esc((r.mtime||'').slice(0,10))+'</td>'+
-            '<td>'+simBadge(r.distance)+'</td>'+
-            '<td><button class="btn btn-sm btn-outline-secondary lib-copy" data-p="'+esc(r.path)+'" title="Copy path"><i class="bi bi-clipboard"></i></button></td>'+
-          '</tr>';
-        });
-        h += '</tbody></table></div>';
-        $('lib-results').innerHTML = h;
-        document.querySelectorAll('.lib-copy').forEach(b => b.addEventListener('click', () => {
-          navigator.clipboard.writeText(b.dataset.p);
-          const i=b.querySelector('i'); i.className='bi bi-check2'; setTimeout(()=>i.className='bi bi-clipboard',1200);
-        }));
-      }
-
-      async function search(){
-        $('lib-results').innerHTML='<div class="text-muted py-3"><span class="spinner-border spinner-border-sm me-2"></span>Searching…</div>';
-        const p = new URLSearchParams({ q:$('lib-q').value, project:$('lib-project').value,
-          doc_type:$('lib-type').value, stale:$('lib-stale').checked?1:0, limit:40 });
-        try{ render(await (await fetch('/api/library/search?'+p)).json()); }
-        catch(e){ $('lib-results').innerHTML='<div class="text-danger">Search failed.</div>'; }
-      }
-
-      $('lib-go').addEventListener('click', search);
-      $('lib-q').addEventListener('keydown', e => { if(e.key==='Enter') search(); });
-      ['lib-project','lib-type','lib-stale'].forEach(id => $(id).addEventListener('change', search));
-      loadFacets(); search();
-    })();
-    </script>
-    </div><!-- /lib-search-view -->
-
-    <div id="lib-graph-view" style="display:none">
-      <div class="row"><div class="col-12"><div class="card"><div class="card-body">
-        <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
-          <div><i class="bi bi-diagram-3 me-2"></i><span id="plex-crumb" class="fw-semibold">QI Ecosystem</span></div>
+    <div id="v-graph" style="display:none">
+      <div class="card"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+          <div><i class="bi bi-diagram-3 me-2"></i><span id="g-crumb" class="fw-semibold">QI Ecosystem</span></div>
           <div class="small">
             <span class="badge text-bg-primary">project</span>
             <span class="badge text-bg-secondary">&#128196; doc</span>
             <span class="badge" style="background:#b45309">&#9878; decision</span>
             <span class="badge text-bg-success">&#10024; feature</span>
             <span class="badge" style="background:#7c3aed">&#128221; session</span>
-            <button id="plex-home" class="btn btn-sm btn-outline-secondary ms-2" title="Back to ecosystem root"><i class="bi bi-house"></i></button>
+            <button id="g-home" class="btn btn-sm btn-outline-secondary ms-2" title="Ecosystem root"><i class="bi bi-house"></i></button>
           </div>
         </div>
-        <div id="plex" style="height:72vh;border:1px solid var(--bs-border-color,#30363d);border-radius:8px"></div>
-        <div class="small text-muted mt-2">Click any node to re-center the Plex on it. Hover a doc to see its full path.</div>
-      </div></div></div></div>
+        <div id="g-plex" style="height:72vh;border:1px solid var(--bs-border-color,#30363d);border-radius:8px"></div>
+        <div class="small text-muted mt-2">Click any node to re-center the Plex on it. Hover a doc for its full path.</div>
+      </div></div>
+    </div>
+
+    <div id="v-split" style="display:none">
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="card h-100"><div class="card-body">
+            <div class="input-group input-group-sm mb-2">
+              <input id="sp-q" class="form-control" placeholder="Search docs&hellip;" autocomplete="off">
+              <button id="sp-go" class="btn btn-primary"><i class="bi bi-search"></i></button>
+            </div>
+            <div class="d-flex gap-2 mb-2">
+              <select id="sp-project" class="form-select form-select-sm"><option value="">All projects</option></select>
+              <select id="sp-type" class="form-select form-select-sm"><option value="">All types</option></select>
+            </div>
+            <div id="sp-results" style="max-height:64vh;overflow:auto"></div>
+          </div></div>
+        </div>
+        <div class="col-lg-7">
+          <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+              <div><i class="bi bi-diagram-3 me-2"></i><span id="sp-crumb" class="fw-semibold">QI Ecosystem</span></div>
+              <button id="sp-home" class="btn btn-sm btn-outline-secondary" title="Ecosystem root"><i class="bi bi-house"></i></button>
+            </div>
+            <div id="sp-plex" style="height:64vh;border:1px solid var(--bs-border-color,#30363d);border-radius:8px"></div>
+            <div class="small text-muted mt-2">List &rarr; graph: click a result to center it. Graph &rarr; list: click a project to filter, a doc to highlight.</div>
+          </div></div>
+        </div>
+      </div>
     </div>
 
     <script>
     (function(){
       const $ = id => document.getElementById(id);
-      let net=null, nodes=null, edges=null, loaded=false;
+      const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      const badge = (t,c) => '<span class="badge '+(c||'text-bg-secondary')+'">'+esc(t)+'</span>';
+      const sim = d => { if(d==null) return ''; const v=Math.max(0,Math.round((1-d)*100));
+        const c=v>=70?'text-bg-success':(v>=50?'text-bg-info':'text-bg-secondary'); return '<span class="badge '+c+'">'+v+'%</span>'; };
+      const api = {
+        facets: () => fetch('/api/library/facets').then(r=>r.json()),
+        search: p => fetch('/api/library/search?'+new URLSearchParams(p)).then(r=>r.json()),
+        graph:  id => fetch('/api/library/graph?node='+encodeURIComponent(id)).then(r=>r.json())
+      };
+
+      function renderList(el, data, opts){
+        opts = opts || {};
+        if(!data.results.length){ el.innerHTML='<div class="text-muted py-3">No documents match.</div>'; return; }
+        let h='<table class="table table-sm table-hover align-middle mb-0"><tbody>';
+        data.results.forEach(r => {
+          const stale = r.stale ? ' <span class="badge text-bg-warning" title="'+esc(r.stale_reason||'stale')+'">stale</span>' : '';
+          h += '<tr data-doc="'+esc(r.doc_id)+'" style="cursor:pointer">'+
+            '<td><div class="fw-semibold" style="font-size:13px">'+esc(r.title||'(untitled)')+stale+'</div>'+
+            '<div class="text-muted" style="font-size:11px">'+badge(r.project_id||'\\u2014','text-bg-primary')+' '+badge(r.doc_type||'other')+(r.distance!=null?' '+sim(r.distance):'')+'</div>'+
+            (opts.path ? '<div class="text-muted text-truncate" style="font-size:11px;max-width:560px">'+esc(r.path)+'</div>' : '')+
+            '</td>'+
+            (opts.copy ? '<td class="text-end"><button class="btn btn-sm btn-outline-secondary lib-copy" data-p="'+esc(r.path)+'" title="Copy path"><i class="bi bi-clipboard"></i></button></td>' : '')+
+            '</tr>';
+        });
+        h += '</tbody></table>';
+        el.innerHTML = h;
+        el.querySelectorAll('.lib-copy').forEach(b => b.addEventListener('click', e => {
+          e.stopPropagation(); navigator.clipboard.writeText(b.dataset.p);
+          const i=b.querySelector('i'); i.className='bi bi-check2'; setTimeout(()=>i.className='bi bi-clipboard',1200);
+        }));
+        if(opts.onRow){
+          el.querySelectorAll('tr[data-doc]').forEach(tr => tr.addEventListener('click', () => {
+            el.querySelectorAll('tr.table-active').forEach(x=>x.classList.remove('table-active'));
+            tr.classList.add('table-active');
+            opts.onRow(data.results.find(x => x.doc_id===tr.getAttribute('data-doc')));
+          }));
+        }
+      }
+
       const COLORS={root:'#2563eb',project:'#3b82f6',doc:'#9ca3af',decision:'#b45309',feature:'#16a34a',session:'#7c3aed'};
       const EMOJI={root:'\\uD83C\\uDF10',project:'',doc:'\\uD83D\\uDCC4',decision:'\\u2696\\uFE0F',feature:'\\u2728',session:'\\uD83D\\uDCDD'};
-
+      let visLoading=false, visQ=[];
       function loadVis(cb){
-        if(window.vis){ cb(); return; }
+        if(window.vis){ cb(true); return; }
+        visQ.push(cb);
+        if(visLoading) return; visLoading=true;
         const s=document.createElement('script');
-        s.src='https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js';
-        s.onload=cb;
-        s.onerror=()=>{ $('plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; };
+        s.src='/static/vendor/vis-network.min.js';
+        s.onload=()=>{ visQ.forEach(f=>f(true)); visQ=[]; };
+        s.onerror=()=>{ visQ.forEach(f=>f(false)); visQ=[]; };
         document.head.appendChild(s);
       }
-      function visNodes(data){
-        return data.nodes.map(n => ({
-          id:n.id,
-          label:(EMOJI[n.type]?EMOJI[n.type]+' ':'')+n.label+(n.sub?'\\n'+n.sub:''),
-          title:n.path||n.sub||'',
-          shape:(n.type==='root'||n.type==='project')?'ellipse':'box',
-          color:{background:n.id===data.focus?'#dbeafe':'#f8f9fa',border:COLORS[n.type]||'#9ca3af'},
-          borderWidth:n.id===data.focus?3:1,
-          font:{size:n.id===data.focus?16:13}
-        }));
+      function vNodes(d){ return d.nodes.map(n=>{ const focus=n.id===d.focus, bd=COLORS[n.type]||'#9ca3af';
+        const bg=focus?'rgba(219,234,254,0.78)':'rgba(248,249,250,0.55)';
+        const hl=focus?'rgba(219,234,254,0.95)':'rgba(237,241,244,0.88)';
+        return {id:n.id,
+        label:(EMOJI[n.type]?EMOJI[n.type]+' ':'')+n.label+(n.sub?'\\n'+n.sub:''),
+        title:n.path||n.sub||'', shape:(n.type==='root'||n.type==='project')?'ellipse':'box',
+        color:{background:bg,border:bd,highlight:{background:hl,border:bd},hover:{background:hl,border:bd}},
+        borderWidth:focus?3:1, font:{size:focus?16:13,color:'#1f2937'}}; }); }
+      function vEdges(d){ return d.links.map((l,i)=>({id:'e'+i,from:l.from,to:l.to,label:l.label,
+        font:{size:10,color:'#9aa0a6',strokeWidth:0,align:'top'},color:{color:'#c8ccd1'},smooth:{type:'continuous'}})); }
+      function toast(msg, kind){
+        let t=document.getElementById('plex-toast');
+        if(!t){ t=document.createElement('div'); t.id='plex-toast';
+          t.style.cssText='position:fixed;bottom:18px;right:18px;z-index:3100;padding:10px 14px;border-radius:8px;font-size:13px;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.3);display:none';
+          document.body.appendChild(t); }
+        t.style.background = kind==='danger' ? 'var(--bs-danger,#b02a37)' : 'var(--bs-success,#198754)';
+        t.textContent=msg; t.style.display='block';
+        clearTimeout(t._h); t._h=setTimeout(()=>{ t.style.display='none'; }, 2800);
       }
-      function visEdges(data){
-        return data.links.map((l,i)=>({id:'e'+i,from:l.from,to:l.to,label:l.label,
-          font:{size:10,color:'#9aa0a6',strokeWidth:0,align:'top'},color:{color:'#c8ccd1'},smooth:{type:'continuous'}}));
+      function copyText(t){ navigator.clipboard.writeText(t); toast('Copied to clipboard.','success'); }
+      async function openDoc(docId){
+        try{ const r=await fetch('/api/library/open?doc_id='+encodeURIComponent(docId),{method:'POST'});
+          if(r.ok){ toast('Opened in default app.','success'); }
+          else { const j=await r.json().catch(()=>({})); toast(j.detail||'Could not open (local machine only).','danger'); }
+        }catch(e){ toast('Open failed.','danger'); }
       }
-      async function recenter(id){
+      async function revealDoc(docId){
+        try{ const r=await fetch('/api/library/reveal?doc_id='+encodeURIComponent(docId),{method:'POST'});
+          if(!r.ok){ const j=await r.json().catch(()=>({})); toast(j.detail||'Reveal is local only.','danger'); }
+        }catch(e){ toast('Reveal failed.','danger'); }
+      }
+      function downloadDoc(docId){ window.open('/api/library/file?doc_id='+encodeURIComponent(docId),'_blank'); }
+      function plexMenu(){
+        let m=document.getElementById('plex-menu');
+        if(!m){ m=document.createElement('div'); m.id='plex-menu';
+          m.style.cssText='position:fixed;z-index:3050;display:none;min-width:190px;background:var(--bs-body-bg,#1f1f1f);border:1px solid var(--bs-border-color,#444);border-radius:8px;padding:4px;box-shadow:0 8px 28px rgba(0,0,0,.35);font-size:13px';
+          document.body.appendChild(m);
+          document.addEventListener('click',()=>{ m.style.display='none'; });
+          window.addEventListener('blur',()=>{ m.style.display='none'; });
+        }
+        return m;
+      }
+      function showMenu(x,y,items){
+        const m=plexMenu(); m.innerHTML='';
+        items.forEach(it=>{ const d=document.createElement('div');
+          d.innerHTML='<i class="bi '+it.icon+' me-2"></i>'+it.label;
+          d.style.cssText='padding:7px 11px;border-radius:6px;cursor:pointer;white-space:nowrap;color:var(--bs-body-color,#e6e6e6)';
+          d.onmouseenter=()=>d.style.background='var(--bs-tertiary-bg,#333)';
+          d.onmouseleave=()=>d.style.background='';
+          d.onclick=e=>{ e.stopPropagation(); m.style.display='none'; it.fn(); };
+          m.appendChild(d);
+        });
+        m.style.left=Math.min(x, window.innerWidth-210)+'px';
+        m.style.top=Math.min(y, window.innerHeight-40-items.length*36)+'px';
+        m.style.display='block';
+      }
+      function makeGraph(container, crumbEl, onNode){
+        const nodes=new vis.DataSet([]), edges=new vis.DataSet([]);
+        const net=new vis.Network(container,{nodes,edges},{
+          physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-65,springLength:130,springConstant:0.05},stabilization:{iterations:110}},
+          nodes:{shape:'box',margin:9,widthConstraint:{maximum:175}},
+          edges:{arrows:{to:{enabled:false}}}, interaction:{hover:true,tooltipDelay:120}
+        });
+        net.on('click', p => { if(p.nodes.length && onNode) onNode(p.nodes[0]); });
+        net.on('doubleClick', p => { if(p.nodes.length && p.nodes[0].indexOf('doc:')===0) openDoc(p.nodes[0].slice(4)); });
+        net.on('oncontext', p => {
+          p.event.preventDefault();
+          const id=net.getNodeAt(p.pointer.DOM);
+          const menu=document.getElementById('plex-menu');
+          if(!id){ if(menu) menu.style.display='none'; return; }
+          const nd=nodes.get(id), type=id.split(':')[0], rest=id.split(':').slice(1).join(':');
+          const path=nd&&nd.title, items=[];
+          if(type==='doc'){
+            items.push({label:'Open document',icon:'bi-box-arrow-up-right',fn:()=>openDoc(rest)});
+            items.push({label:'Reveal in folder',icon:'bi-folder2-open',fn:()=>revealDoc(rest)});
+            items.push({label:'Download',icon:'bi-download',fn:()=>downloadDoc(rest)});
+            if(path) items.push({label:'Copy path',icon:'bi-clipboard',fn:()=>copyText(path)});
+            items.push({label:'Center here',icon:'bi-bullseye',fn:()=>recenter(id)});
+          } else if(type==='project'){
+            items.push({label:'Expand / center',icon:'bi-bullseye',fn:()=>recenter(id)});
+            items.push({label:'Copy project id',icon:'bi-clipboard',fn:()=>copyText(rest)});
+          } else {
+            items.push({label:'Center here',icon:'bi-bullseye',fn:()=>recenter(id)});
+            items.push({label:'Copy id',icon:'bi-clipboard',fn:()=>copyText(id)});
+          }
+          showMenu(p.event.clientX, p.event.clientY, items);
+        });
+        async function recenter(id){
+          const d=await api.graph(id);
+          nodes.clear(); edges.clear(); nodes.add(vNodes(d)); edges.add(vEdges(d));
+          if(crumbEl){ const f=d.nodes.find(n=>n.id===d.focus); crumbEl.textContent=f?f.label:id; }
+          setTimeout(()=>{ try{ net.focus(id,{scale:0.95,animation:{duration:450}}); }catch(e){} }, 60);
+          return d;
+        }
+        return {recenter, net};
+      }
+
+      async function loadFacets(){
         try{
-          const data = await (await fetch('/api/library/graph?node='+encodeURIComponent(id))).json();
-          nodes.clear(); edges.clear();
-          nodes.add(visNodes(data)); edges.add(visEdges(data));
-          const f=data.nodes.find(n=>n.id===data.focus);
-          $('plex-crumb').textContent = f? f.label : id;
-          setTimeout(()=>{ try{ net.focus(id,{scale:0.95,animation:{duration:500}}); }catch(e){} }, 60);
-        }catch(e){ /* keep current view */ }
-      }
-      function init(){
-        loadVis(()=>{
-          nodes=new vis.DataSet([]); edges=new vis.DataSet([]);
-          net=new vis.Network($('plex'),{nodes,edges},{
-            physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-65,springLength:135,springConstant:0.05},stabilization:{iterations:120}},
-            nodes:{shape:'box',margin:9,widthConstraint:{maximum:180}},
-            edges:{arrows:{to:{enabled:false}}},
-            interaction:{hover:true,tooltipDelay:120}
+          const f=await api.facets();
+          $('lib-stats').innerHTML='<i class="bi bi-files me-1"></i>'+f.total+' docs &middot; '+
+            '<i class="bi bi-cpu me-1"></i>'+f.embedded+' embedded &middot; '+
+            '<i class="bi bi-diagram-3 me-1"></i>'+f.edges+' edges &middot; '+
+            '<span class="text-warning">'+f.stale+' stale</span>';
+          [['s-project','projects','id'],['sp-project','projects','id'],['s-type','types','t'],['sp-type','types','t']].forEach(spec=>{
+            const el=$(spec[0]); (f[spec[1]]||[]).forEach(o=>{ const op=document.createElement('option');
+              op.value=o[spec[2]]; op.textContent=o[spec[2]]+' ('+o.n+')'; el.appendChild(op); });
           });
-          net.on('click', p=>{ if(p.nodes.length) recenter(p.nodes[0]); });
-          loaded=true; recenter('root:qi');
+        }catch(e){ $('lib-stats').textContent='index unavailable'; }
+      }
+
+      async function searchMain(){
+        $('s-results').innerHTML='<div class="text-muted py-3"><span class="spinner-border spinner-border-sm me-2"></span>Searching&hellip;</div>';
+        const d=await api.search({q:$('s-q').value,project:$('s-project').value,doc_type:$('s-type').value,stale:$('s-stale').checked?1:0,limit:40});
+        $('s-mode').innerHTML='Mode: '+badge(d.mode,'text-bg-dark')+' &middot; '+d.count+' result'+(d.count===1?'':'s');
+        renderList($('s-results'), d, {path:true, copy:true});
+      }
+      $('s-go').addEventListener('click', searchMain);
+      $('s-q').addEventListener('keydown', e => { if(e.key==='Enter') searchMain(); });
+      ['s-project','s-type','s-stale'].forEach(id => $(id).addEventListener('change', searchMain));
+
+      let mainGraph=null;
+      function initGraph(){
+        if(mainGraph) return;
+        loadVis(ok => { if(!ok){ $('g-plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; return; }
+          mainGraph=makeGraph($('g-plex'), $('g-crumb'), id => mainGraph.recenter(id));
+          mainGraph.recenter('root:qi');
         });
       }
-      window.__plexInit = ()=>{ if(!loaded) init(); };
-      const home=$('plex-home'); if(home) home.addEventListener('click', ()=>recenter('root:qi'));
-    })();
-    </script>
+      $('g-home').addEventListener('click', () => { if(mainGraph) mainGraph.recenter('root:qi'); });
 
-    <script>
-    (function(){
-      const s=document.getElementById('lib-tab-search'), g=document.getElementById('lib-tab-graph');
-      const sv=document.getElementById('lib-search-view'), gv=document.getElementById('lib-graph-view');
-      s.addEventListener('click',()=>{ sv.style.display=''; gv.style.display='none';
-        s.className='btn btn-sm btn-primary'; g.className='btn btn-sm btn-outline-primary'; });
-      g.addEventListener('click',()=>{ sv.style.display='none'; gv.style.display='';
-        g.className='btn btn-sm btn-primary'; s.className='btn btn-sm btn-outline-primary';
-        if(window.__plexInit) window.__plexInit(); });
+      let splitGraph=null, splitInited=false;
+      async function splitSearch(){
+        const d=await api.search({q:$('sp-q').value,project:$('sp-project').value,doc_type:$('sp-type').value,limit:40});
+        renderList($('sp-results'), d, {onRow:r => { if(splitGraph) splitGraph.recenter('doc:'+r.doc_id); }});
+      }
+      function highlightDoc(docId){
+        const tr=$('sp-results').querySelector('tr[data-doc="'+(window.CSS&&CSS.escape?CSS.escape(docId):docId)+'"]');
+        if(tr){ $('sp-results').querySelectorAll('tr.table-active').forEach(x=>x.classList.remove('table-active'));
+          tr.classList.add('table-active'); tr.scrollIntoView({block:'nearest'}); }
+      }
+      function initSplit(){
+        if(splitInited) return; splitInited=true;
+        loadVis(ok => { if(!ok){ $('sp-plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; return; }
+          splitGraph=makeGraph($('sp-plex'), $('sp-crumb'), id => {
+            splitGraph.recenter(id);
+            const t=id.split(':')[0], rest=id.split(':').slice(1).join(':');
+            if(t==='project'){ $('sp-project').value=rest; splitSearch(); }
+            else if(t==='doc'){ highlightDoc(rest); }
+          });
+          splitGraph.recenter('root:qi');
+        });
+        splitSearch();
+      }
+      $('sp-go').addEventListener('click', splitSearch);
+      $('sp-q').addEventListener('keydown', e => { if(e.key==='Enter') splitSearch(); });
+      ['sp-project','sp-type'].forEach(id => $(id).addEventListener('change', splitSearch));
+      $('sp-home').addEventListener('click', () => { if(splitGraph) splitGraph.recenter('root:qi'); });
+
+      const TABS=[['lt-search','v-search',null,()=>null],['lt-graph','v-graph',initGraph,()=>mainGraph],['lt-split','v-split',initSplit,()=>splitGraph]];
+      function show(active){
+        TABS.forEach(t => { $(t[1]).style.display=(t[0]===active)?'':'none';
+          $(t[0]).className='btn btn-sm '+(t[0]===active?'btn-primary':'btn-outline-primary'); });
+      }
+      TABS.forEach(t => $(t[0]).addEventListener('click', () => {
+        show(t[0]); if(t[2]) t[2]();
+        const g=t[3](); if(g&&g.net) setTimeout(()=>{ try{ g.net.redraw(); g.net.fit({animation:false}); }catch(e){} }, 90);
+      }));
+
+      loadFacets(); searchMain();
     })();
     </script>"""
     return base_layout("Library", content, "library")
@@ -3117,7 +3308,8 @@ def api_info():
         "python":          sys.version.split()[0],
         "platform":        platform.system(),
         "capabilities":    ["dashboard", "task_board", "services", "brain_ui",
-                            "warroom", "cowork_dispatch", "themes", "scheduled_tasks"],
+                            "mission_control", "warroom_chat", "cowork_dispatch",
+                            "themes", "scheduled_tasks"],
         "endpoints_total": len([r for r in app.routes if hasattr(r, "path")]),
         "docs_url":        "/docs",
     })
@@ -6646,10 +6838,13 @@ def brain_page():
     return base_layout("QI Brain", render_brain(), "brain")
 
 
-# ── War Room — live view of every agent, project, and dispatch ────────────────
+# ── Mission Control — live monitoring of every agent, project, and dispatch ───
+# NOTE: This is the read-only status board. The interactive multi-agent CHAT
+# lives at /warroom (render_warroom_chat). The name "War Room" was reclaimed
+# for the chat on 2026-06-18 — see Phase_N_War_Room_Spec_2026-06-18.md.
 
-def render_warroom() -> str:
-    """The War Room: single-pane-of-glass showing all agents, projects, and
+def render_mission_control() -> str:
+    """Mission Control: single-pane-of-glass showing all agents, projects, and
     dispatches in flight. Refreshes every 30s. Data from Brain + Hive registry."""
 
     snap    = _brain_get("/api/ecosystem_snapshot") or {}
@@ -6787,10 +6982,11 @@ def render_warroom() -> str:
     return f"""
     <div class="content-header d-flex justify-content-between align-items-start">
       <div>
-        <h1 class="fw-bold"><i class="bi bi-broadcast-pin me-2 text-danger"></i>War Room</h1>
+        <h1 class="fw-bold"><i class="bi bi-broadcast-pin me-2 text-danger"></i>Mission Control</h1>
         <p class="text-muted mb-0">
           Single-pane-of-glass across every QI agent, project, and dispatch in flight.
           Auto-refreshes every 30s.
+          <a href="/warroom" class="ms-2"><i class="bi bi-chat-dots"></i> Open the War Room chat &rarr;</a>
         </p>
       </div>
       <div>
@@ -6864,9 +7060,207 @@ def render_warroom() -> str:
     """
 
 
+@app.get("/mission-control", response_class=HTMLResponse)
+def mission_control_page():
+    return base_layout("Mission Control", render_mission_control(), "mission")
+
+
+# Back-compat: old /warroom bookmarks now land on the CHAT (below). The monitoring
+# board moved to /mission-control. Anyone deep-linking the old status board can use
+# /mission-control directly.
+
+
+# ── War Room — Phase N Stage 0: live multi-agent text chat ────────────────────
+# Renne + every QI agent talk in one room. Messages live in qi_brain.db
+# (warroom_messages). This page polls the dashboard's own /warroom/messages proxy
+# (same-origin, so it works through the public tunnel). Avatars + voice = later
+# stages — see Phase_N_War_Room_Spec_2026-06-18.md.
+
+_WARROOM_LABELS = {
+    "renne":       ("Renne",                "person-circle",     "warning"),
+    "claude_code": ("Claude Code",          "terminal",          "primary"),
+    "claude":      ("Claude (Interactive)", "chat-square-dots",  "info"),
+    "claude_work": ("Claude Work",          "window-desktop",    "secondary"),
+    "cowork":      ("CoWork",               "people",            "success"),
+    "architect":  ("Architect",  "compass",        "primary"),
+    "builder":    ("Builder",    "hammer",         "success"),
+    "inspector":  ("Inspector",  "search",         "danger"),
+    "ops":        ("Ops",        "gear",           "secondary"),
+    "scout":      ("Scout",      "binoculars",     "info"),
+    "scribe":     ("Scribe",     "pencil",         "warning"),
+    "tester":     ("Tester",     "bug",            "danger"),
+}
+
+
+def _warroom_meta(agent_id: str) -> tuple[str, str, str]:
+    """(label, bootstrap-icon, color) for an agent_id; sensible fallback if unknown."""
+    return _WARROOM_LABELS.get(agent_id, (agent_id, "robot", "secondary"))
+
+
+def render_warroom_chat() -> str:
+    """The War Room chat: text-only multi-way conversation between Renne and every
+    QI agent. Phase N Stage 0 — the foundation for the avatar/voice vision."""
+
+    rows = _brain_db_query(
+        """SELECT id, agent_id, agent_label, body, project_id, ts
+           FROM warroom_messages ORDER BY id DESC LIMIT 100"""
+    )[::-1]
+
+    bubbles = ""
+    last_id = 0
+    for m in rows:
+        last_id = max(last_id, m.get("id") or 0)
+        aid   = m.get("agent_id") or "?"
+        _lbl, icon, color = _warroom_meta(aid)
+        label = html.escape(m.get("agent_label") or _lbl)
+        body  = html.escape(m.get("body") or "").replace("\n", "<br/>")
+        ts    = html.escape((m.get("ts") or "")[:16])
+        mine  = " warroom-mine" if aid == "renne" else ""
+        bubbles += f"""
+        <div class="warroom-msg{mine}">
+          <div class="warroom-avatar text-bg-{color}"><i class="bi bi-{icon}"></i></div>
+          <div class="warroom-bubble">
+            <div class="warroom-meta"><strong>{label}</strong> <span class="text-muted small">{ts}</span></div>
+            <div class="warroom-body">{body}</div>
+          </div>
+        </div>"""
+    if not bubbles:
+        bubbles = '<div class="text-muted text-center p-4">No messages yet. Say hello 👋</div>'
+
+    return f"""
+    <div class="content-header">
+      <h1 class="fw-bold"><i class="bi bi-chat-dots me-2 text-info"></i>War Room</h1>
+      <p class="text-muted mb-0">
+        Live text chat between Renne and every QI agent — Claude Code, Claude Work,
+        CoWork and the seven Hive agents. Phase N Stage 0 (avatars &amp; voice come later;
+        see <a href="/mission-control">Mission Control</a> for the live status board).
+      </p>
+    </div>
+
+    <style>
+      #warroom-feed {{ max-height:62vh; overflow-y:auto; padding:1rem;
+                       border:1px solid var(--bs-border-color); border-radius:.6rem; }}
+      .warroom-msg {{ display:flex; gap:.6rem; margin-bottom:1rem; align-items:flex-start; }}
+      .warroom-msg.warroom-mine {{ flex-direction:row-reverse; }}
+      .warroom-avatar {{ width:38px; height:38px; min-width:38px; border-radius:50%;
+                         display:flex; align-items:center; justify-content:center; font-size:1.1rem; }}
+      .warroom-bubble {{ background:var(--bs-tertiary-bg); border-radius:.7rem; padding:.5rem .8rem; max-width:78%; }}
+      .warroom-mine .warroom-bubble {{ background:var(--bs-warning-bg-subtle); }}
+      .warroom-meta {{ margin-bottom:.15rem; }}
+      .warroom-body {{ white-space:normal; word-break:break-word; }}
+    </style>
+
+    <div id="warroom-feed" data-last="{last_id}">{bubbles}</div>
+
+    <form id="warroom-form" class="mt-3 d-flex gap-2" onsubmit="return warroomSend(event)">
+      <input type="text" id="warroom-input" class="form-control"
+             placeholder="Message the War Room as Renne…" autocomplete="off" maxlength="8000" />
+      <button class="btn btn-info" type="submit"><i class="bi bi-send"></i> Send</button>
+    </form>
+    <div class="form-text">Posts as <strong>renne</strong>. Agents post here via the Brain API
+      <code>POST /api/warroom/message</code>. Feed auto-refreshes every 4s.</div>
+
+    <script>
+      const feed = document.getElementById('warroom-feed');
+      const AGENT_COLORS = {{
+        renne:'warning', claude_code:'primary', claude:'info', claude_work:'secondary',
+        cowork:'success', architect:'primary', builder:'success', inspector:'danger',
+        ops:'secondary', scout:'info', scribe:'warning', tester:'danger'
+      }};
+      const AGENT_ICONS = {{
+        renne:'person-circle', claude_code:'terminal', claude:'chat-square-dots',
+        claude_work:'window-desktop', cowork:'people', architect:'compass',
+        builder:'hammer', inspector:'search', ops:'gear', scout:'binoculars',
+        scribe:'pencil', tester:'bug'
+      }};
+      function esc(s) {{ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }}
+      function addMsg(m) {{
+        const color = AGENT_COLORS[m.agent_id] || 'secondary';
+        const icon  = AGENT_ICONS[m.agent_id]  || 'robot';
+        const mine  = m.agent_id === 'renne' ? ' warroom-mine' : '';
+        const div = document.createElement('div');
+        div.className = 'warroom-msg' + mine;
+        div.innerHTML =
+          '<div class="warroom-avatar text-bg-'+color+'"><i class="bi bi-'+icon+'"></i></div>' +
+          '<div class="warroom-bubble"><div class="warroom-meta"><strong>'+esc(m.agent_label||m.agent_id)+
+          '</strong> <span class="text-muted small">'+esc((m.ts||'').slice(0,16))+'</span></div>' +
+          '<div class="warroom-body">'+esc(m.body).replace(/\\n/g,'<br/>')+'</div></div>';
+        feed.appendChild(div);
+      }}
+      async function poll() {{
+        try {{
+          const since = feed.dataset.last || 0;
+          const r = await fetch('/warroom/messages?since_id='+since);
+          const j = await r.json();
+          if (j.messages && j.messages.length) {{
+            const empty = feed.querySelector('.text-muted.text-center');
+            if (empty) empty.remove();
+            const atBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
+            j.messages.forEach(addMsg);
+            feed.dataset.last = j.last_id;
+            if (atBottom) feed.scrollTop = feed.scrollHeight;
+          }}
+        }} catch (e) {{ /* transient — keep polling */ }}
+      }}
+      async function warroomSend(ev) {{
+        ev.preventDefault();
+        const inp = document.getElementById('warroom-input');
+        const text = inp.value.trim();
+        if (!text) return false;
+        inp.value = '';
+        try {{
+          await fetch('/warroom/send', {{
+            method:'POST', headers:{{'Content-Type':'application/json'}},
+            body: JSON.stringify({{ body: text }})
+          }});
+          await poll();
+        }} catch (e) {{ inp.value = text; }}
+        return false;
+      }}
+      feed.scrollTop = feed.scrollHeight;
+      setInterval(poll, 4000);
+    </script>
+    """
+
+
 @app.get("/warroom", response_class=HTMLResponse)
 def warroom_page():
-    return base_layout("War Room", render_warroom(), "warroom")
+    return base_layout("War Room", render_warroom_chat(), "warroom")
+
+
+@app.get("/warroom/messages")
+def warroom_messages(since_id: int = 0, limit: int = 100):
+    """Same-origin JSON feed for the War Room poller (reads Brain SQLite directly,
+    so it works with no Brain restart and through the public tunnel)."""
+    limit = max(1, min(limit, 500))
+    rows = _brain_db_query(
+        """SELECT id, agent_id, agent_label, body, project_id, ts
+           FROM warroom_messages WHERE id > ? ORDER BY id DESC LIMIT ?""",
+        (since_id, limit),
+    )[::-1]
+    return JSONResponse({"messages": rows, "last_id": (rows[-1]["id"] if rows else since_id)})
+
+
+@app.post("/warroom/send")
+async def warroom_send(request: Request):
+    """Post a message to the War Room as Renne. Writes straight to qi_brain.db
+    (WAL-safe) so the human chat never depends on a Brain restart."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    text = (body.get("body") or "").strip()
+    if not text:
+        return JSONResponse({"ok": False, "error": "empty"}, status_code=400)
+    text = text[:8000]
+    new_id = _brain_db_execute(
+        """INSERT INTO warroom_messages (agent_id, agent_label, body, project_id)
+           VALUES ('renne', 'Renne', ?, ?)""",
+        (text, body.get("project_id")),
+    )
+    if new_id is None:
+        return JSONResponse({"ok": False, "error": "write_failed"}, status_code=500)
+    return JSONResponse({"ok": True, "id": new_id})
 
 
 # ── Compliance proxy → Brain Inspector ────────────────────────────────────────
