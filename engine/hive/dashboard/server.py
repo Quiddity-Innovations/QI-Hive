@@ -3019,9 +3019,23 @@ def library_page():
       </div></div>
     </div>
 
+    <style>
+      .lib-split{display:flex;align-items:stretch;width:100%}
+      .lib-split .lib-pane{min-width:240px;overflow:hidden}
+      .lib-split #sp-left{flex:0 0 40%}
+      .lib-split #sp-right{flex:1 1 auto}
+      #sp-gutter{flex:0 0 14px;cursor:col-resize;display:flex;align-items:center;justify-content:center;user-select:none}
+      #sp-gutter .lib-grip{width:4px;height:48px;border-radius:3px;background:var(--bs-border-color,#888);opacity:.55;transition:opacity .12s,background .12s}
+      #sp-gutter:hover .lib-grip,#sp-gutter.dragging .lib-grip{opacity:1;background:var(--bs-primary,#3b82f6)}
+      @media (max-width:820px){
+        .lib-split{flex-direction:column}
+        .lib-split #sp-left,.lib-split #sp-right{flex:1 1 auto !important;width:100%}
+        #sp-gutter{display:none}
+      }
+    </style>
     <div id="v-split" style="display:none">
-      <div class="row g-3">
-        <div class="col-lg-5">
+      <div id="sp-split" class="lib-split">
+        <div id="sp-left" class="lib-pane">
           <div class="card h-100"><div class="card-body">
             <div class="input-group input-group-sm mb-2">
               <input id="sp-q" class="form-control" placeholder="Search docs&hellip;" autocomplete="off">
@@ -3034,14 +3048,15 @@ def library_page():
             <div id="sp-results" style="max-height:64vh;overflow:auto"></div>
           </div></div>
         </div>
-        <div class="col-lg-7">
+        <div id="sp-gutter" title="Drag to resize"><div class="lib-grip"></div></div>
+        <div id="sp-right" class="lib-pane">
           <div class="card h-100"><div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
               <div><i class="bi bi-diagram-3 me-2"></i><span id="sp-crumb" class="fw-semibold">QI Ecosystem</span></div>
               <button id="sp-home" class="btn btn-sm btn-outline-secondary" title="Ecosystem root"><i class="bi bi-house"></i></button>
             </div>
             <div id="sp-plex" style="height:64vh;border:1px solid var(--bs-border-color,#30363d);border-radius:8px"></div>
-            <div class="small text-muted mt-2">List &rarr; graph: click a result to center it. Graph &rarr; list: click a project to filter, a doc to highlight.</div>
+            <div class="small text-muted mt-2">List &rarr; graph: click a result to center it. Graph &rarr; list: click a project to filter, a doc to highlight. Drag the divider to resize.</div>
           </div></div>
         </div>
       </div>
@@ -3165,6 +3180,7 @@ def library_page():
           nodes:{shape:'box',margin:9,widthConstraint:{maximum:175}},
           edges:{arrows:{to:{enabled:false}}}, interaction:{hover:true,tooltipDelay:120}
         });
+        try{ new ResizeObserver(()=>{ try{ net.setSize(container.clientWidth+'px', container.clientHeight+'px'); net.redraw(); }catch(e){} }).observe(container); }catch(e){}
         net.on('click', p => { if(p.nodes.length && onNode) onNode(p.nodes[0]); });
         net.on('doubleClick', p => { if(p.nodes.length && p.nodes[0].indexOf('doc:')===0) openDoc(p.nodes[0].slice(4)); });
         net.on('oncontext', p => {
@@ -3260,6 +3276,34 @@ def library_page():
       $('sp-q').addEventListener('keydown', e => { if(e.key==='Enter') splitSearch(); });
       ['sp-project','sp-type'].forEach(id => $(id).addEventListener('change', splitSearch));
       $('sp-home').addEventListener('click', () => { if(splitGraph) splitGraph.recenter('root:qi'); });
+
+      (function(){
+        const split=$('sp-split'), left=$('sp-left'), gutter=$('sp-gutter');
+        if(!split || !gutter || !left) return;
+        const KEY='qi_lib_split_w';
+        const saved=localStorage.getItem(KEY); if(saved) left.style.flexBasis=saved;
+        let dragging=false;
+        function move(clientX){
+          const r=split.getBoundingClientRect();
+          let pct=((clientX - r.left)/r.width)*100;
+          pct=Math.max(20, Math.min(78, pct));
+          left.style.flexBasis=pct.toFixed(1)+'%';
+        }
+        function start(e){ dragging=true; gutter.classList.add('dragging'); document.body.style.cursor='col-resize';
+          document.body.style.userSelect='none'; e.preventDefault();
+          window.addEventListener('mousemove', onMouse); window.addEventListener('mouseup', stop);
+          window.addEventListener('touchmove', onTouch, {passive:false}); window.addEventListener('touchend', stop); }
+        function onMouse(e){ if(dragging) move(e.clientX); }
+        function onTouch(e){ if(dragging && e.touches[0]){ e.preventDefault(); move(e.touches[0].clientX); } }
+        function stop(){ if(!dragging) return; dragging=false; gutter.classList.remove('dragging');
+          document.body.style.cursor=''; document.body.style.userSelect='';
+          localStorage.setItem(KEY, left.style.flexBasis);
+          window.removeEventListener('mousemove', onMouse); window.removeEventListener('mouseup', stop);
+          window.removeEventListener('touchmove', onTouch); window.removeEventListener('touchend', stop); }
+        gutter.addEventListener('mousedown', start);
+        gutter.addEventListener('touchstart', start, {passive:false});
+        gutter.addEventListener('dblclick', () => { left.style.flexBasis='40%'; localStorage.setItem(KEY,'40%'); });
+      })();
 
       const TABS=[['lt-search','v-search',null,()=>null],['lt-graph','v-graph',initGraph,()=>mainGraph],['lt-split','v-split',initSplit,()=>splitGraph]];
       function show(active){
@@ -3434,6 +3478,13 @@ async def _start_board_sync():
     except Exception as e:
         log.warning("board startup sync error: %s", e)
     _asyncio.create_task(_board_sync_loop())
+    # War Room responder — agents actually reply (via NEXUS local LLM, not Claude).
+    try:
+        from engine.common.qi_warroom_responder import start_in_thread as _wr_start
+        _wr_start()
+        log.info("war room responder thread started")
+    except Exception as e:
+        log.warning("war room responder failed to start: %s", e)
 
 # ── Tests Page ───────────────────────────────────────────────────────────────
 
