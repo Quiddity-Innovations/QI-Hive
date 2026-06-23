@@ -63,7 +63,7 @@ This is the canonical roster of every Quiddity Innovations conversational bot �
 - Code: `C:/NAYA/naya_server.py` (Flask) + `C:/NAYA/naya_line.py` (LINE handler)
 - DB: `C:/NAYA/naya.db` + `naya_brain.db`
 - Service: `QI_NayaBot` (NSSM, port 8002)
-- LINE webhook: `/webhook/line` on tunnel `length-loose-img-guestbook.trycloudflare.com`
+- LINE webhook: `/webhook/line` via STATIC NAMED tunnel → **https://naya-line.quiddityinnovations.com/webhook/line** (qi-naya ingress, port 8002). ⚠️ Re-register this URL in the LINE Developer Console.
 - Secrets: `C:/NAYA/secrets/naya-line.env` (Win) + `~/.openclaw/secrets/naya-line.env` (WSL mirror, 0600)
 
 **Persona:**
@@ -91,7 +91,7 @@ Per Renne's "identity-as-feature" call (2026-05-14): a separate OpenClaw agent t
 - Telegram brain: `~/.openclaw/agents/main/` + workspace `~/.openclaw/workspace/` (shared workspace)
 - LINE brain: `~/.openclaw/agents/tasuke-line/agent/` + workspace `~/.openclaw/agents/tasuke-line/workspace/` (mirrored from main)
 - LINE webhook: routed by OpenClaw gateway at `127.0.0.1:18789/line/webhook` (account `tasuke-line`)
-- Tunnel: `remain-gnome-placing-canyon.trycloudflare.com` (shared with Kaze)
+- Tunnel: STATIC NAMED → **https://oc-line.quiddityinnovations.com/line/webhook** (qi-kaze ingress, port 18789; shared with Kaze). ⚠️ Re-register in LINE console.
 - Secrets: `C:/OC/secrets/tasuke-line.env` + WSL mirror
 
 **Notes:**
@@ -124,7 +124,7 @@ Per Renne's "identity-as-feature" call (2026-05-14): a separate OpenClaw agent t
 - Brain: `~/.openclaw/agents/kaze/` + workspace `~/.openclaw/agents/kaze/workspace/`
 - IDENTITY: `~/.openclaw/agents/kaze/workspace/IDENTITY.md` (updated 2026-05-14 with new bio)
 - LINE webhook: same OpenClaw gateway as Tasuke (`/line/webhook`, account `kaze-line`)
-- Tunnel: shared with Tasuke (`remain-gnome-placing-canyon.trycloudflare.com`)
+- Tunnel: shared with Tasuke → STATIC NAMED **https://oc-line.quiddityinnovations.com/line/webhook** (qi-kaze ingress, port 18789).
 - Secrets: `C:/OC/secrets/kaze-line.env` + WSL mirror
 
 ---
@@ -138,7 +138,7 @@ LINE phone app
    │
    │  HTTPS POST {events: [...]}
    ▼
-Cloudflare tunnel (remain-gnome-placing-canyon.trycloudflare.com)
+Cloudflare named tunnel (oc-line.quiddityinnovations.com → qi-kaze, port 18789)
    │
    ▼
 OpenClaw gateway (127.0.0.1:18789, /line/webhook)
@@ -173,9 +173,14 @@ All four now in `chatMode=bot` (verified 2026-05-14 22:50 EDT) with webhook rout
 
 ---
 
-## Tunnels (production caveat)
+## Tunnels (migrated to static named tunnels — 2026-06-20/23)
 
-Both tunnels currently use Cloudflare's `*.trycloudflare.com` quick tunnel — temporary URLs that die if cloudflared restarts. **Convert to named tunnels** under `quiddityinnovations.com` before this is production-grade. Suggested:
-- `naya-line.quiddityinnovations.com` → `127.0.0.1:8002/webhook/line`
-- `oc-line.quiddityinnovations.com` → `127.0.0.1:18789/line/webhook` (carries both Tasuke + Kaze)
-- `maia-line.quiddityinnovations.com` → existing Maia tunnel
+The quick (`*.trycloudflare.com`) tunnels are **retired**. All LINE webhooks now run on STATIC NAMED tunnels under `quiddityinnovations.com`, defined in `C:\QIH\engine\tunnels\tunnels.json` and provisioned by `migrate_named_tunnels.py`:
+
+| Webhook | Permanent URL | tunnels.json entry → port |
+|---|---|---|
+| Naya LINE | `https://naya-line.quiddityinnovations.com/webhook/line` | qi-naya → 8002 |
+| Tasuke + Kaze LINE | `https://oc-line.quiddityinnovations.com/line/webhook` | qi-kaze → 18789 |
+| Maia LINE | `https://maia.quiddityinnovations.com` (+ `maia.quiddam.com`) | qi-maia → 8001 |
+
+⚠️ **Action required (LINE platform, only Renne can do):** after `migrate_named_tunnels.py` provisions these, update each bot's **Webhook URL** in the LINE Developer Console to the permanent URL above. Until then the bots still answer on the old quick-tunnel URL only while that process happens to be alive.

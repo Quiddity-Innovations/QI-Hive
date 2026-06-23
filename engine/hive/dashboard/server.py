@@ -1203,6 +1203,15 @@ def render_dashboard() -> str:
     </div>
 
     {render_project_llms()}
+
+    <!-- Live tiles: the QI_HiveIngest service refreshes status.json every ~90s.
+         Reload only when this tab is in the foreground so background tabs and
+         other pages are never disturbed. -->
+    <script>
+      setInterval(() => {{
+        if (document.visibilityState === 'visible') location.reload();
+      }}, 90000);
+    </script>
     """
 
 # ── Health Page ───────────────────────────────────────────────────────────────
@@ -2091,11 +2100,23 @@ def dashboard():
 
 REGISTRY_PATH = Path(r"C:\QIH\ecosystem\qi_registry.json")
 
-# Known Cloudflare tunnels. Each entry maps a local port to either:
-#   - "json":  path to a tunnel_manager.py-style status file (preferred)
-#   - "log":   path to raw cloudflared log; URL extracted via regex
-# To add a new project's tunnel, point it at one of these and the launcher picks it up.
+# Known Cloudflare tunnels. As of the 2026-06-20 migration to STATIC NAMED
+# tunnels on quiddityinnovations.com, the public URL of each port is PERMANENT
+# and resolved from engine/tunnels/tunnels.json (static_urls.url_for_port).
+# The "json"/"log" fields below are kept only as a legacy fallback for any port
+# still on a quick tunnel.
 _TRYCF_RE = __import__("re").compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+
+# Shared resolver for the static quiddityinnovations.com URLs (source of truth)
+import sys as _sys
+_TUN_DIR = r"C:\QIH\engine\tunnels"
+if _TUN_DIR not in _sys.path:
+    _sys.path.insert(0, _TUN_DIR)
+try:
+    from static_urls import url_for_port as _static_url_for_port
+except Exception:
+    def _static_url_for_port(_port):
+        return None
 
 KNOWN_TUNNELS = [
     {"port": 8600, "label": "Hive Dashboard",
@@ -2131,6 +2152,15 @@ def _get_tunnels() -> dict[int, dict]:
         port = int(spec["port"])
         entry = {"url": None, "status": "unknown", "source": None,
                  "updated_at": None, "label": spec.get("label", "")}
+        # Permanent static URL from tunnels.json (source of truth) wins.
+        static_url = _static_url_for_port(port)
+        if static_url:
+            entry["url"] = static_url
+            entry["status"] = "running"
+            entry["source"] = "tunnels.json"
+            entry["updated_at"] = "static-named-tunnel"
+            out[port] = entry
+            continue
         # Try JSON state file first
         if spec.get("json"):
             p = Path(spec["json"])
@@ -3485,6 +3515,13 @@ async def _start_board_sync():
         log.info("war room responder thread started")
     except Exception as e:
         log.warning("war room responder failed to start: %s", e)
+    # War Room -> Telegram outbound relay (mirrors the room to Renne's DM via Tasuke).
+    try:
+        from engine.common.qi_warroom_telegram import start_in_thread as _wrtg_start
+        _wrtg_start()
+        log.info("war room telegram relay thread started")
+    except Exception as e:
+        log.warning("war room telegram relay failed to start: %s", e)
 
 # ── Tests Page ───────────────────────────────────────────────────────────────
 
@@ -7129,6 +7166,7 @@ def mission_control_page():
 
 _WARROOM_LABELS = {
     "renne":       ("Renne",                "person-circle",     "warning"),
+    "hive":        ("Hive (host)",          "hexagon-fill",      "info"),
     "claude_code": ("Claude Code",          "terminal",          "primary"),
     "claude":      ("Claude (Interactive)", "chat-square-dots",  "info"),
     "claude_work": ("Claude Work",          "window-desktop",    "secondary"),
@@ -7208,18 +7246,20 @@ def render_warroom_chat() -> str:
              placeholder="Message the War Room as Renne…" autocomplete="off" maxlength="8000" />
       <button class="btn btn-info" type="submit"><i class="bi bi-send"></i> Send</button>
     </form>
-    <div class="form-text">Posts as <strong>renne</strong>. Agents post here via the Brain API
-      <code>POST /api/warroom/message</code>. Feed auto-refreshes every 4s.</div>
+    <div class="form-text">Posts as <strong>renne</strong>. The <strong>Hive</strong> host replies by
+      default; address a specialist with <code>@architect</code>, <code>@builder</code>, <code>@inspector</code>,
+      <code>@ops</code>, <code>@scout</code>, <code>@scribe</code> or <code>@tester</code>. Replies are generated
+      by the local NEXUS LLM. Feed auto-refreshes every 4s.</div>
 
     <script>
       const feed = document.getElementById('warroom-feed');
       const AGENT_COLORS = {{
-        renne:'warning', claude_code:'primary', claude:'info', claude_work:'secondary',
+        renne:'warning', hive:'info', claude_code:'primary', claude:'info', claude_work:'secondary',
         cowork:'success', architect:'primary', builder:'success', inspector:'danger',
         ops:'secondary', scout:'info', scribe:'warning', tester:'danger'
       }};
       const AGENT_ICONS = {{
-        renne:'person-circle', claude_code:'terminal', claude:'chat-square-dots',
+        renne:'person-circle', hive:'hexagon-fill', claude_code:'terminal', claude:'chat-square-dots',
         claude_work:'window-desktop', cowork:'people', architect:'compass',
         builder:'hammer', inspector:'search', ops:'gear', scout:'binoculars',
         scribe:'pencil', tester:'bug'
@@ -7290,6 +7330,29 @@ def warroom_messages(since_id: int = 0, limit: int = 100):
         (since_id, limit),
     )[::-1]
     return JSONResponse({"messages": rows, "last_id": (rows[-1]["id"] if rows else since_id)})
+
+
+@app.post("/warroom/ingest")
+async def warroom_ingest(request: Request):
+    """Inbound bridge endpoint (e.g. Telegram via Tasuke in WSL). Writes the message
+    on the Windows side — avoids SQLite-WAL-over-WSL-/mnt 'disk I/O error'. Tagged
+    project_id='telegram_in' so the outbound relay never echoes it back."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    text = (body.get("text") or body.get("body") or "").strip()
+    if not text:
+        return JSONResponse({"ok": False, "error": "empty"}, status_code=400)
+    label = body.get("label") or "Renne (Telegram)"
+    new_id = _brain_db_execute(
+        """INSERT INTO warroom_messages (agent_id, agent_label, body, project_id)
+           VALUES ('renne', ?, ?, 'telegram_in')""",
+        (label[:64], text[:8000]),
+    )
+    if new_id is None:
+        return JSONResponse({"ok": False, "error": "write_failed"}, status_code=500)
+    return JSONResponse({"ok": True, "id": new_id})
 
 
 @app.post("/warroom/send")

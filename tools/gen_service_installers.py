@@ -8,6 +8,16 @@ Decision (2026-06-15):
   - tubescout already ships install_service_admin.bat -> reuse it
   - MQ skipped (scaffold)
 
+DEPRECATED tunnel path (2026-06-23):
+  Quick tunnels (random *.trycloudflare.com) are RETIRED. Public exposure now
+  uses STATIC NAMED tunnels on quiddityinnovations.com — defined in
+  C:\\QIH\\engine\\tunnels\\tunnels.json and provisioned by
+  migrate_named_tunnels.py. M2V is now a named tunnel (qi-m2v -> m2v.
+  quiddityinnovations.com), so every APP below is service-only here. The
+  tunnel_bat() generator is kept ONLY for reference; do NOT generate new quick
+  tunnels. To expose a new app, add an entry to tunnels.json and run:
+      python C:\\QIH\\engine\\tunnels\\migrate_named_tunnels.py --only qi-<name>
+
 Each per-app bat self-elevates; the master elevates once and `call`s each
 (so the children see admin and don't re-prompt). One UAC click does everything.
 """
@@ -33,7 +43,9 @@ APPS = [
     dict(svc="QI_M2V", dir=r"C:\M2V",
          py=r"C:\M2V\.venv\Scripts\python.exe", params="main.py",
          desc="M2V Music-to-Video - FastAPI :8501 + Gradio UI :7841.",
-         tunnel=7841),
+         # tunnel=None: M2V is now a STATIC NAMED tunnel (qi-m2v) on
+         # quiddityinnovations.com via tunnels.json, not a quick tunnel.
+         tunnel=None),
 ]
 
 ELEV = (
@@ -78,6 +90,9 @@ def tunnel_bat(a):
     tsvc = a["svc"] + "Tunnel"
     port = a["tunnel"]
     return f"""@echo off
+REM DEPRECATED: quick tunnels (*.trycloudflare.com) are retired. Use a STATIC
+REM NAMED tunnel instead — add this app to C:\\QIH\\engine\\tunnels\\tunnels.json
+REM and run migrate_named_tunnels.py. This script is kept for reference only.
 REM Install {tsvc} - independent public Cloudflare tunnel for {a['svc']} (:{port}). Double-click + approve UAC.
 {ELEV}
 set NSSM={NSSM}

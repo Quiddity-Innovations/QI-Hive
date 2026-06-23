@@ -26,6 +26,18 @@ from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 import uvicorn
 
+# Shared resolver for the static quiddityinnovations.com URLs (source of truth).
+# Since 2026-06-20 every QI service is on a permanent named tunnel; the URL is
+# resolved from engine/tunnels/tunnels.json by the local port it serves.
+_TUN = r"C:\QIH\engine\tunnels"
+if _TUN not in sys.path:
+    sys.path.insert(0, _TUN)
+try:
+    from static_urls import url_for_port as _static_url_for_port
+except Exception:
+    def _static_url_for_port(_port):
+        return None
+
 # ─────────────────────────────────────────────────────────────────────────────
 # PROJECT REGISTRY — add new projects here
 # ─────────────────────────────────────────────────────────────────────────────
@@ -272,7 +284,8 @@ def project_status(pid: str) -> dict:
     tunnels_resolved = []
     tunnel_by_port: dict[int, dict] = {}
     for t in cfg.get("tunnels", []) or []:
-        url = current_tunnel_url(t.get("log"))
+        # Permanent static URL by port (source of truth); fall back to log parse.
+        url = _static_url_for_port(t.get("serves_port")) or current_tunnel_url(t.get("log"))
         entry = {
             "label":       t.get("label", "tunnel"),
             "serves_port": t.get("serves_port"),

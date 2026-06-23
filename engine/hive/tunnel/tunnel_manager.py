@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
 """
-QI Hive Dashboard Tunnel Manager
+QI Hive Dashboard Tunnel Manager — DEPRECATED (2026-06-23)
 
-Starts a Cloudflare Quick Tunnel for the Hive Dashboard (port 8600), parses
-the public URL from cloudflared's stderr, and writes it to status/tunnel.json
-so the dashboard can display it in the header.
+This used to start a Cloudflare QUICK tunnel for the Hive Dashboard (:8600),
+scrape the random *.trycloudflare.com URL from stderr, and write it to
+status/tunnel.json.
 
-Relocated from C:\\UNIVERSAL\\dashboard as part of the UNIVERSAL->QIH
-migration (2026-04-22). The previous version tunneled port 9000, which no
-longer listens — the old standalone dashboard was retired when QI_Dashboard
-was repurposed to serve the Hive UI on 8600.
+That model is RETIRED. The Hive Dashboard is now served by the STATIC NAMED
+tunnel `qi-hive` -> https://hive.quiddityinnovations.com, run by the
+QI_DashboardTunnel service (`cloudflared tunnel run qi-hive`), defined in
+C:\\QIH\\engine\\tunnels\\tunnels.json. Starting a quick tunnel here would
+create a SECOND, competing tunnel and clobber status/tunnel.json with an
+ephemeral URL.
 
-The dashboard's /api/tunnel endpoint reads the same status/tunnel.json file.
+To preserve any caller (and the dashboard's /api/tunnel endpoint, which reads
+status/tunnel.json), this script now simply writes the PERMANENT static URL to
+status/tunnel.json and exits. It no longer launches cloudflared.
 
-Run:  python tunnel_manager.py
-Stop: Ctrl+C (or kill the python process)
+Run:  python tunnel_manager.py   (writes static status, exits 0)
 """
 from __future__ import annotations
 import json
-import os
-import re
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -28,13 +28,23 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-CLOUDFLARED = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
-DASHBOARD_PORT = 8600  # QI Hive Dashboard (was 9000 for the retired standalone dashboard)
+DASHBOARD_PORT = 8600  # QI Hive Dashboard
 HERE = Path(__file__).parent
 STATUS_FILE = HERE / "status" / "tunnel.json"
 LOG_FILE = HERE / "LOGS" / "tunnel_manager.log"
 
-URL_RE = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+# Resolve the permanent URL from the single source of truth (tunnels.json).
+_TUN = r"C:\QIH\engine\tunnels"
+if _TUN not in sys.path:
+    sys.path.insert(0, _TUN)
+try:
+    from static_urls import url_for_port
+except Exception:
+    def url_for_port(_port):
+        return None
+
+# Hard fallback if the resolver is somehow unavailable.
+STATIC_URL = url_for_port(DASHBOARD_PORT) or "https://hive.quiddityinnovations.com"
 
 
 def write_status(**fields):
@@ -53,43 +63,10 @@ def log(msg):
 
 
 def main():
-    if not os.path.exists(CLOUDFLARED):
-        log(f"ERROR: cloudflared not found at {CLOUDFLARED}")
-        write_status(status="error", error="cloudflared not installed", url=None)
-        sys.exit(1)
-
-    log(f"Starting quick tunnel to http://127.0.0.1:{DASHBOARD_PORT}")
-    write_status(status="starting", url=None)
-
-    proc = subprocess.Popen(
-        [CLOUDFLARED, "tunnel", "--protocol", "http2", "--url", f"http://127.0.0.1:{DASHBOARD_PORT}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        bufsize=1,
-    )
-
-    url_captured = None
-    try:
-        for line in proc.stdout:
-            line = line.rstrip()
-            if not line:
-                continue
-            log(line)
-            m = URL_RE.search(line)
-            if m and not url_captured:
-                url_captured = m.group(0)
-                write_status(status="running", url=url_captured, pid=proc.pid)
-                log(f">>> TUNNEL UP: {url_captured}")
-    except KeyboardInterrupt:
-        log("Interrupted — shutting tunnel down")
-    finally:
-        if proc.poll() is None:
-            proc.terminate()
-        write_status(status="stopped", url=None)
-        log("Tunnel stopped")
+    log("DEPRECATED: quick tunnel retired. Hive Dashboard is now the static "
+        f"named tunnel qi-hive -> {STATIC_URL} (service QI_DashboardTunnel).")
+    write_status(status="running", url=STATIC_URL, static=True, tunnel="qi-hive")
+    log(f"Wrote static URL to {STATUS_FILE}. Not launching cloudflared.")
 
 
 if __name__ == "__main__":

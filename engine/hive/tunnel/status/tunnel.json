@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-06-12T12:48:45.468418Z",
-  "status": "running",
-  "url": "https://newman-holmes-bundle-vote.trycloudflare.com",
-  "pid": 13308
+  "url": "https://hive.quiddityinnovations.com",
+  "static": true,
+  "tunnel": "qi-hive",
+  "updated": "named-tunnel"
 }

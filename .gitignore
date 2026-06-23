@@ -6,7 +6,7 @@ archive/
 __pycache__/
 
 # QI Launchpad — auto-generated each launch by refresh-tunnels.py
-# (contains ephemeral trycloudflare URLs + QR blobs; not source)
+# (static quiddityinnovations.com tunnel URLs + QR blobs; not source)
 landing/tunnels.js
 *.pyc
 *.pyo

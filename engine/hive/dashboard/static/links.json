@@ -1,37 +1,45 @@
 {
-  "generated_at": "2026-05-16T18:15:47.666236+00:00",
+  "generated_at": "2026-06-23T16:50:37.605883+00:00",
   "tunnels": [
     {
       "key": "hive",
       "label": "QI Hive Dashboard",
       "port": 8600,
-      "public_url": "https://mechanisms-notebook-castle-mounting.trycloudflare.com",
-      "source": "C:\\QIH\\engine\\hive\\tunnel\\status\\tunnel.json",
-      "updated_at": "2026-05-14T21:53:29.335019Z"
+      "public_url": "https://hive.quiddityinnovations.com",
+      "source": "tunnels.json",
+      "updated_at": "static-named-tunnel"
     },
     {
       "key": "maia_api",
       "label": "Maia API",
       "port": 8001,
-      "public_url": "https://leading-webmaster-citysearch-clocks.trycloudflare.com",
-      "source": "C:\\QI\\LOGS\\tunnel_log.txt",
-      "updated_at": "2026-05-15T21:53:34.683585+00:00"
+      "public_url": "https://maia.quiddityinnovations.com",
+      "source": "tunnels.json",
+      "updated_at": "static-named-tunnel"
     },
     {
       "key": "maia_ui",
       "label": "Maia UI (Gradio)",
       "port": 7860,
-      "public_url": "https://tell-live-entities-actual.trycloudflare.com",
-      "source": "C:\\QI\\LOGS\\Maia_Gradio_Tunnel_Log.txt",
-      "updated_at": "2026-05-15T21:53:36.856399+00:00"
+      "public_url": "https://maia-demo.quiddityinnovations.com",
+      "source": "tunnels.json",
+      "updated_at": "static-named-tunnel"
     },
     {
       "key": "naya",
       "label": "Naya",
-      "port": 8002,
-      "public_url": null,
-      "source": "C:\\NAYA\\LOGS\\naya_tunnel_log.txt",
-      "updated_at": null
+      "port": 7861,
+      "public_url": "https://naya.quiddityinnovations.com",
+      "source": "tunnels.json",
+      "updated_at": "static-named-tunnel"
+    },
+    {
+      "key": "tubescout",
+      "label": "TubeScout",
+      "port": 8503,
+      "public_url": "https://tubescout.quiddityinnovations.com",
+      "source": "tunnels.json",
+      "updated_at": "static-named-tunnel"
     }
   ]
 }

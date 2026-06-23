@@ -1,0 +1,8 @@
+# Secrets — Cloudflare tunnel credentials. NEVER commit.
+creds/
+
+# Generated at provision time / runtime — not source.
+configs/
+LOGS/
+__pycache__/
+*.pyc
