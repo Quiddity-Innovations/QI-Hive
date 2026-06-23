@@ -60,13 +60,28 @@ GIT_PROJECTS = {
     'tubescout': r'C:\TUBESCOUT',
 }
 
-def regenerate_views(cur):
+# Brain stamps summaries with provenance markers ("[auto:state_file] ",
+# "[auto:git] "). They are internal bookkeeping and must be stripped before the
+# summary is surfaced in status.json / LATEST.md — otherwise (because qi_hive's
+# state file is this same status.json) the poller re-ingests them and the marker
+# compounds. See poller._strip_auto_prefix for the matching read-side guard.
+_AUTO_PREFIX_RE = re.compile(r"^(?:\[auto:[^\]]*\]\s*)+")
+
+
+def _clean_summary(summary):
+    return _AUTO_PREFIX_RE.sub("", summary or "").strip()
+
+
+def regenerate_views(cur, source="nightly_reconcile.py"):
     """Rebuild LATEST.md (a Brain-derived view) and MERGE Brain status into the
     dashboard's status.json. qi_brain.db project_state is the single source of
     truth for status/phase; the dashboard's editorial fields (display_name, id,
     current_task, notes, ports, …) are preserved and projects Brain hasn't
     recorded a state for are never dropped. Returns the number of projects
-    refreshed from Brain."""
+    refreshed from Brain.
+
+    `source` is stamped into status.json _meta so the dashboard/debugging can
+    tell whether the last refresh was the nightly job or the live ingest loop."""
     states = {}
     for r in cur.execute("SELECT project_id, phase, status, summary, next_steps, recorded_at FROM project_state ORDER BY recorded_at DESC"):
         if r[0] not in states: states[r[0]] = r
@@ -83,7 +98,7 @@ def regenerate_views(cur):
     for pid in sorted(states):
         _,phase,status,summary,nxt,_ = states[pid]
         md += [f"### {pid}", f"- **Phase:** {phase}", f"- **Status:** {status}",
-               f"- **Summary:** {summary}", f"- **Next:** {nxt}", ""]
+               f"- **Summary:** {_clean_summary(summary)}", f"- **Next:** {nxt}", ""]
     LATEST_MD.write_text("\n".join(md), encoding='utf-8')
 
     try:
@@ -112,14 +127,28 @@ def regenerate_views(cur):
         entry['status'] = status
         entry['phase'] = phase
         # Bookkeeping (dashboard ignores these; handy for debugging/audits):
-        entry['summary'] = summary
+        entry['summary'] = _clean_summary(summary)
         entry['next_steps'] = nxt
         entry['recorded_at'] = recorded
         entry['session_count'] = sc.get(pid, 0)
         entry['last_session'] = last.get(pid)
         updated += 1
 
-    doc['_meta'] = {"generated": now, "source": "nightly_reconcile.py",
+    # Self-heal: dedupe recent_sessions (the transcript backfiller can re-append
+    # identical entries). Keep first occurrence, cap at 20.
+    for entry in projects.values():
+        rs = entry.get('recent_sessions')
+        if not rs:
+            continue
+        seen = set(); out = []
+        for s in rs:
+            sig = (s.get('at'), (s.get('summary') or '')[:80])
+            if sig in seen:
+                continue
+            seen.add(sig); out.append(s)
+        entry['recent_sessions'] = out[-20:]
+
+    doc['_meta'] = {"generated": now, "source": source,
                     "status_source_of_truth": "qi_brain.db project_state"}
     STATUS_JSON.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding='utf-8')
     log(f"  Wrote LATEST.md and merged Brain status into {STATUS_JSON.name} ({updated} projects)")

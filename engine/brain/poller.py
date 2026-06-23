@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import subprocess
 import threading
 import time
@@ -127,6 +128,22 @@ def _read_state_file(project_path: Path, candidates: list[str]) -> tuple[Path | 
     return None, {}
 
 
+# Leading provenance markers the poller/reconciler stamp onto summaries, e.g.
+# "[auto:state_file] ", "[auto:git] ". These are internal bookkeeping and must
+# never be treated as part of the real summary. Critically, qi_hive's state file
+# IS C:\QIH\data\status.json — the same file the reconciler writes Brain
+# summaries back into — so without stripping, each poll re-prefixes the previous
+# summary and the marker compounds ("[auto:state_file] [auto:state_file] …")
+# until the real content is pushed past the 300-char cap. Strip on read to break
+# that feedback loop.
+_AUTO_PREFIX_RE = re.compile(r"^(?:\[auto:[^\]]*\]\s*)+")
+
+
+def _strip_auto_prefix(summary: str) -> str:
+    """Remove any leading [auto:...] provenance markers from a summary."""
+    return _AUTO_PREFIX_RE.sub("", summary or "").strip()
+
+
 def _extract_phase_status(data: dict, project_id: str) -> tuple[str, str, str]:
     """Best-effort extraction of (phase, status, summary) from heterogeneous state files."""
     # QI Hive status.json has a top-level 'projects' dict
@@ -134,13 +151,13 @@ def _extract_phase_status(data: dict, project_id: str) -> tuple[str, str, str]:
         proj = data["projects"][project_id]
         phase  = str(proj.get("phase", proj.get("stage", "active")))
         status = str(proj.get("status", "active")).lower()
-        summary = str(proj.get("summary", proj.get("description", "")))[:300]
+        summary = _strip_auto_prefix(str(proj.get("summary", proj.get("description", ""))))[:300]
         return phase, status, summary
 
     # Generic state.json
     phase   = str(data.get("phase",  data.get("stage",  "active")))
     status  = str(data.get("status", "active")).lower()
-    summary = str(data.get("summary", data.get("description", "")))[:300]
+    summary = _strip_auto_prefix(str(data.get("summary", data.get("description", ""))))[:300]
     return phase, status, summary
 
 
@@ -365,10 +382,13 @@ def run_poll_cycle() -> dict:
                 if age >= min_age_s and state_data:
                     phase, status, summary = _extract_phase_status(state_data, project_id)
                     last = _last_project_state(project_id)
+                    # Compare against the stored summary with its [auto:...] marker
+                    # stripped, otherwise an unchanged state would re-trigger every
+                    # cycle (stored summaries always carry the prefix).
                     changed = (
                         last.get("phase")   != phase  or
                         last.get("status")  != status or
-                        last.get("summary") != summary
+                        _strip_auto_prefix(last.get("summary", "")) != summary
                     )
                     if changed and summary:
                         _write_project_state(project_id, phase, status, summary, "state_file")
