@@ -14,6 +14,13 @@ import subprocess, sys
 from datetime import datetime
 from pathlib import Path
 
+# Secret gate — abort a repo's commit/push if a real secret is staged.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from secret_gate import scan_staged
+except Exception:  # pragma: no cover - gate must never silently vanish
+    scan_staged = None
+
 REPOS = [
     r"C:\AutoPDF",
     r"C:\PersonalSong",
@@ -44,6 +51,18 @@ def sync(repo: str):
         log(f"SKIP {repo}: not a git repo")
         return
     git(repo, "add", "-A")
+    # --- SECRET GATE: never commit/push a staged secret ---
+    if scan_staged is None:
+        git(repo, "reset")
+        log(f"ABORT {repo}: secret_gate unavailable — refusing to sync blind")
+        return
+    findings = scan_staged(repo)
+    if findings:
+        git(repo, "reset")  # unstage everything; commit nothing
+        names = ", ".join(sorted({f["pattern"] for f in findings}))
+        log(f"ABORT {repo}: staged secret(s) detected [{names}] — "
+            f"{len(findings)} hit(s). Nothing committed/pushed. Fix .gitignore.")
+        return
     status = git(repo, "status", "--porcelain")
     if status.stdout.strip():
         msg = f"chore: nightly auto-sync {datetime.now().strftime('%Y-%m-%d')}"
