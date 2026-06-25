@@ -52,3 +52,26 @@ shared/documentation/*.txt
 shared/training/
 shared/sessions_universal/
 .claude_universal/
+
+# Env / secret files — match ANY *.env, not just literal ".env"
+# (e.g. config/warroom_telegram.env carries a live Telegram bot token).
+# Keep committable example templates.
+*.env
+!*.env.example
+
+# Editor / script backups — never commit
+*.bak
+*.bak-*
+*.bak_*
+
+# Scratch + local archive dirs — root-level only, local & regeneratable
+# (anchored so nested dirs like docs/_archive/ stay tracked)
+/temp/
+/_archive/
+
+# Tooling binaries — keep on disk, never commit to source control
+# (caddy.exe ~51MB, nssm.exe, rcedit.exe, per-product *_NSSM.exe copies).
+# See engine/bin/README.md for what they are and where to get them.
+engine/bin/*.exe
+# ...except the sanctioned, already-tracked standardized NSSM binary.
+!engine/bin/nssm.exe
