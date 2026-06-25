@@ -339,10 +339,13 @@ def _tab_techstack(intro: Path) -> str:
 
     dives = []
     for d in data.get("descriptions", []):
+        # Tolerate both key conventions: title/body (standard) and technology/text (Maia)
+        dive_title = d.get("title") or d.get("technology") or ""
+        dive_body = d.get("body") or d.get("text") or ""
         dives.append(
             f"<div class='card mb-2'><div class='card-body'>"
-            f"<h6 class='mb-2'>{html.escape(d.get('title',''))}</h6>"
-            f"<div class='small'>{html.escape(d.get('body',''))}</div>"
+            f"<h6 class='mb-2'>{html.escape(dive_title)}</h6>"
+            f"<div class='small'>{html.escape(dive_body)}</div>"
             f"</div></div>"
         )
     dive_section = ("<h6 class='mt-3 mb-2'>Technology Deep Dives</h6>" + "\n".join(dives)) if dives else ""
