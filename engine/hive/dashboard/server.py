@@ -380,6 +380,12 @@ VALID_THEMES = {"dark", "light", "auto"}
 def _get_theme() -> str:
     return _load_hive_config().get("theme", "dark")
 
+def _get_header_lock() -> bool:
+    """When True, each page's header area (top navbar + title/breadcrumb bar)
+    stays pinned while only the content below scrolls. When False, the whole
+    page scrolls together (legacy behaviour)."""
+    return bool(_load_hive_config().get("lock_header", True))
+
 def _theme_icon(theme: str) -> str:
     return {"dark": "bi-moon-stars-fill", "light": "bi-sun-fill", "auto": "bi-circle-half"}.get(theme, "bi-circle-half")
 
@@ -424,6 +430,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     t_icon = _theme_icon(theme)
     # 'auto' maps to no data-bs-theme (Bootstrap auto-detects from OS)
     bs_theme_attr = f'data-bs-theme="{theme}"' if theme != "auto" else ""
+    header_lock_cls = "lock-header" if _get_header_lock() else ""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -463,6 +470,43 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     .health-warn     {{ color: #ffc107; }}
     .health-bad      {{ color: #dc3545; }}
     .sortable-ghost  {{ opacity: .4; }}
+    /* ── Locked header area ──────────────────────────────────────────────
+       When <body> has .lock-header, the layout becomes truly fixed: the
+       wrapper is pinned to the viewport so the top navbar (Home/date/theme)
+       and footer stay in place, and only .app-main scrolls internally
+       (it already has overflow:auto). The per-page title/breadcrumb strip
+       is stuck to the top of that scroll area. Toggle lives under
+       Config → "Header area on scroll". */
+    body.lock-header .app-wrapper {{
+      height: 100vh;
+      overflow: hidden;
+    }}
+    body.lock-header .app-content-header {{
+      position: sticky; top: 0; z-index: 1020;
+      background: var(--bs-body-bg);
+      box-shadow: 0 1px 0 var(--bs-border-color-translucent);
+    }}
+    /* ── Mobile display fixes (≤991px — where the sidebar already collapses) ──
+       Two phone-only problems are fixed here without touching desktop:
+       1. The desktop header-lock pins the app to 100vh + overflow:hidden. On
+          phones 100vh sits behind the browser address bar, so the bottom gets
+          clipped and you can't scroll to it — release it on small screens so
+          the page uses normal document scrolling.
+       2. Horizontal overflow ("content too wide"): wide tables scroll inside
+          their own box, fixed-width blocks/images/SVG shrink to fit, and the
+          wrapper never lets the page scroll sideways. */
+    @media (max-width: 991.98px) {{
+      body.lock-header .app-wrapper {{ height: auto; overflow: visible; }}
+      body.lock-header .app-main    {{ overflow: visible; }}
+      .app-wrapper                  {{ overflow-x: hidden; }}
+      .app-content table            {{ display: block; width: 100%;
+                                        overflow-x: auto; -webkit-overflow-scrolling: touch; }}
+      .app-content [style*="width"] {{ max-width: 100%; }}
+      .app-content img,
+      .app-content svg,
+      .app-content canvas,
+      .app-content pre              {{ max-width: 100%; height: auto; }}
+    }}
   </style>
   <script>
     /* Resolve the theme onto <html> so EVERY component (incl. dropdowns/modals
@@ -478,7 +522,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     }})();
   </script>
 </head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary" {bs_theme_attr}>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary {header_lock_cls}" {bs_theme_attr}>
 <div class="app-wrapper">
 
   <!-- Navbar -->
@@ -509,6 +553,13 @@ def base_layout(title: str, content: str, active: str = "") -> str:
                    href="#" onclick="setTheme('auto');return false;">
               <i class="bi bi-circle-half me-2"></i>System</a></li>
           </ul>
+        </li>
+        <!-- Write-access unlock (needed for in-page saves through the tunnel) -->
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="qiLockToggle" title="Write access"
+             onclick="return qiUnlock();">
+            <i class="bi bi-lock-fill" id="qiLockIcon"></i>
+          </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/health" title="Run Health Check">
@@ -577,10 +628,77 @@ def base_layout(title: str, content: str, active: str = "") -> str:
 
 <script src="/static/vendor/overlayscrollbars.browser.es5.min.js"></script>
 <script>
+/* ── Tunnel write-access unlock ───────────────────────────────────────────────
+   The server's tunnel_write_guard rejects mutating requests that arrive through
+   the public tunnel unless they carry X-QI-Token. We store the token in this
+   browser (localStorage) once, then transparently attach it to every same-origin
+   write so in-page saves (theme, tasks, config…) work remotely. Anonymous
+   visitors who never enter the token stay read-only. */
+(function(){{
+  var TKEY = 'qiWriteToken';
+  function tok(){{ try {{ return localStorage.getItem(TKEY) || ''; }} catch(e) {{ return ''; }} }}
+
+  var _fetch = window.fetch.bind(window);
+  window.fetch = function(input, init){{
+    init = init || {{}};
+    var method = (init.method || (input && input.method) || 'GET').toUpperCase();
+    var url    = (typeof input === 'string') ? input : (input && input.url) || '';
+    var sameOrigin = url.indexOf('/') === 0 || url.indexOf(location.origin) === 0;
+    if (sameOrigin && ['POST','PUT','PATCH','DELETE'].indexOf(method) !== -1) {{
+      var t = tok();
+      if (t) {{
+        var h = new Headers(init.headers || (typeof input !== 'string' && input.headers) || {{}});
+        h.set('X-QI-Token', t);
+        init.headers = h;
+      }}
+    }}
+    return _fetch(input, init);
+  }};
+
+  function setIcon(unlocked){{
+    var i = document.getElementById('qiLockIcon');
+    if (i) i.className = 'bi ' + (unlocked ? 'bi-unlock-fill text-success' : 'bi-lock-fill');
+    var a = document.getElementById('qiLockToggle');
+    if (a) a.title = unlocked ? 'Write access unlocked — click to clear'
+                              : 'Locked — click to enter write token';
+  }}
+
+  window.qiUnlock = function(){{
+    if (tok()) {{
+      if (confirm('Clear stored write token? Saves through the tunnel will be blocked again.')) {{
+        try {{ localStorage.removeItem(TKEY); }} catch(e) {{}}
+        setIcon(false);
+      }}
+      return false;
+    }}
+    var t = (prompt('Enter dashboard write token\\n(from C:\\\\QIH\\\\secrets\\\\dashboard_write_token.txt):') || '').trim();
+    if (!t) return false;
+    _fetch('/api/write-token/verify', {{headers: {{'X-QI-Token': t}}}})
+      .then(function(r){{ return r.json(); }})
+      .then(function(d){{
+        if (d && d.ok) {{
+          try {{ localStorage.setItem(TKEY, t); }} catch(e) {{}}
+          setIcon(true);
+          alert('Unlocked — in-page saves will now work through the tunnel.');
+        }} else {{
+          alert('Invalid token — not stored.');
+        }}
+      }})
+      .catch(function(){{ alert('Could not verify token.'); }});
+    return false;
+  }};
+
+  document.addEventListener('DOMContentLoaded', function(){{ setIcon(!!tok()); }});
+}})();
+
 function setTheme(t) {{
   fetch('/api/theme', {{method:'POST', headers:{{'Content-Type':'application/json'}},
     body: JSON.stringify({{theme: t}})
-  }}).then(() => location.reload());
+  }}).then(function(r){{
+    if (r.ok) {{ location.reload(); return; }}
+    if (r.status === 403) {{ alert('Theme change blocked — click the lock icon and enter your write token first.'); }}
+    else {{ alert('Could not change theme (HTTP ' + r.status + ').'); }}
+  }}).catch(function(){{ alert('Could not reach the server to change theme.'); }});
 }}
 </script>
 </body>
@@ -2143,6 +2261,8 @@ KNOWN_TUNNELS = [
      "log":  r"C:\M2V\logs\tunnel.log"},
     {"port": 8503, "label": "TubeScout",
      "log":  r"C:\TUBESCOUT\data\logs\tunnel.log"},
+    {"port": 8710, "label": "Gamez (WC2026)",
+     "log":  r"C:\Gamez\proxy\LOGS\tunnel_log.txt"},
 ]
 
 def _get_tunnels() -> dict[int, dict]:
@@ -2275,10 +2395,11 @@ def render_launcher(via_tunnel: bool = False) -> str:
         ("Core Product",        "core",     ["maia"]),
         ("Backbone",            "backbone", ["nexus", "qi_brain", "qi_hive", "claude_manager"]),
         ("Assistants",          "",         ["naya", "mq", "openclaw"]),
-        ("Standalone Tools",    "tool",     ["cognibase", "mapsnap", "autopdf", "easyflow"]),
+        ("Standalone Tools",    "tool",     ["cognibase", "mapsnap", "autopdf", "easyflow",
+                                             "digitization"]),
         ("Utilities & Media",   "tool",     ["lotterywiz", "cypherminer", "tubescout",
                                              "retirementanalyzer", "m2v", "personalsong",
-                                             "avatarstudio", "digitization"]),
+                                             "avatarstudio", "gamez"]),
     ]
     HIDE = {"filehq", "universal"}
     ROLE_LABEL = {"api": "API", "ui": "UI", "dashboard": "Dashboard",
@@ -2380,8 +2501,9 @@ def render_launcher(via_tunnel: bool = False) -> str:
         strip = "type-paused" if paused else ("type-tool" if cname in STRIP_TOOL else "type-service")
         type_tag = "Paused" if paused else ("On-demand" if cname in STRIP_TOOL else "Service")
 
-        local_html, tunnel_html = "", ""
+        local_html = ""
         kw = f"{name} {pid} {cname}"
+        tunnel_candidates = []  # (role, url) for each port with a live tunnel
         for role, info in ports.items():
             if not isinstance(info, dict):
                 continue
@@ -2395,7 +2517,15 @@ def render_launcher(via_tunnel: bool = False) -> str:
             kw += f" {port}"
             ti = tunnels.get(port)
             if ti and ti.get("url") and ti.get("status") == "running":
-                tunnel_html += tun_tile(ti["url"])
+                tunnel_candidates.append((role.lower(), ti["url"]))
+        # One tunnel button per card. The API is already reachable via its local
+        # "API" link, so when a card has both an API tunnel and a real UI/app
+        # tunnel (Maia, Naya, MQ), drop the redundant API one and keep the public
+        # entry point. Cards whose ONLY tunnel is the API still show that one.
+        tunnel_html = ""
+        if tunnel_candidates:
+            non_api = [u for r, u in tunnel_candidates if r != "api"]
+            tunnel_html = tun_tile(non_api[0] if non_api else tunnel_candidates[0][1])
         if not (local_html or tunnel_html):
             local_html = '<span class="desc" style="margin:0">No HTTP port</span>'
         links_html = local_html + tunnel_html + gh_tile(github)
@@ -3008,6 +3138,7 @@ def library_page():
         <button id="lt-search" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Search</button>
         <button id="lt-graph" class="btn btn-sm btn-outline-primary"><i class="bi bi-diagram-3 me-1"></i>Graph (Plex)</button>
         <button id="lt-split" class="btn btn-sm btn-outline-primary"><i class="bi bi-layout-split me-1"></i>Split</button>
+        <button id="lt-status" class="btn btn-sm btn-outline-primary"><i class="bi bi-clipboard-data me-1"></i>Project Status</button>
       </div>
       <span id="lib-stats" class="small text-muted ms-2">loading index&hellip;</span>
     </div></div>
@@ -3029,6 +3160,23 @@ def library_page():
         <div id="s-mode" class="small text-muted mb-2"></div>
         <div id="s-results"></div>
       </div></div>
+    </div>
+
+    <div id="v-status" style="display:none">
+      <div class="card mb-3"><div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-5"><label class="form-label small mb-1">Project / Product</label>
+            <select id="ps-project" class="form-select"><!--PS_OPTIONS--></select></div>
+          <div class="col-md-4"><div class="small text-muted">Published documentation for every QI project &mdash; Overview, Blueprint, Feature Status (Business &amp; Dev), Code Explained, Future, Tech Stack &amp; Docs &mdash; in one place.</div></div>
+          <div class="col-md-3 d-grid"><a id="ps-open" class="btn btn-outline-primary" target="_blank" href="/project/maia/status"><i class="bi bi-box-arrow-up-right me-1"></i>Open full page</a></div>
+        </div>
+      </div></div>
+      <div class="card mb-3"><div class="card-body p-2">
+        <iframe id="ps-frame" title="Project Status" src="about:blank" style="width:100%;height:80vh;border:0;border-radius:6px;background:var(--bs-body-bg)"></iframe>
+      </div></div>
+      <div class="card"><div class="card-header"><i class="bi bi-grid-3x3-gap me-1"></i>All projects &amp; products</div>
+        <div class="card-body"><div class="row g-2"><!--PS_CARDS--></div></div>
+      </div>
     </div>
 
     <div id="v-graph" style="display:none">
@@ -3335,7 +3483,17 @@ def library_page():
         gutter.addEventListener('dblclick', () => { left.style.flexBasis='40%'; localStorage.setItem(KEY,'40%'); });
       })();
 
-      const TABS=[['lt-search','v-search',null,()=>null],['lt-graph','v-graph',initGraph,()=>mainGraph],['lt-split','v-split',initSplit,()=>splitGraph]];
+      function selPS(pid){
+        var f=$('ps-frame'); if(f) f.src='/project/'+pid+'/status?embed=1';
+        var o=$('ps-open'); if(o) o.href='/project/'+pid+'/status';
+        var sel=$('ps-project'); if(sel && sel.value!==pid) sel.value=pid;
+      }
+      window.selPS=selPS;
+      let psInited=false;
+      function initStatus(){ if(psInited) return; psInited=true;
+        var sel=$('ps-project'); selPS(sel && sel.value ? sel.value : 'maia'); }
+      (function(){ var sel=$('ps-project'); if(sel) sel.addEventListener('change', function(){ selPS(sel.value); }); })();
+      const TABS=[['lt-search','v-search',null,()=>null],['lt-graph','v-graph',initGraph,()=>mainGraph],['lt-split','v-split',initSplit,()=>splitGraph],['lt-status','v-status',initStatus,()=>null]];
       function show(active){
         TABS.forEach(t => { $(t[1]).style.display=(t[0]===active)?'':'none';
           $(t[0]).className='btn btn-sm '+(t[0]===active?'btn-primary':'btn-outline-primary'); });
@@ -3348,6 +3506,24 @@ def library_page():
       loadFacets(); searchMain();
     })();
     </script>"""
+    # Project Status hub — server-render the dropdown + project grid from the
+    # same project list the per-project status pages use.
+    _ps = _ps_list()
+    _opts, _cards = [], []
+    for p in _ps:
+        sel = " selected" if p["pid"] == "maia" else ""
+        _opts.append(f"<option value='{p['pid']}'{sel}>{html.escape(p['name'])}</option>")
+        badge = ("<span class='badge bg-success'>ready</span>" if p["ready"]
+                 else "<span class='badge bg-secondary'>empty</span>")
+        _cards.append(
+            f"<div class='col-sm-6 col-md-4 col-lg-3'>"
+            f"<a href='#' onclick=\"selPS('{p['pid']}');return false;\" "
+            f"class='d-block text-decoration-none border rounded p-2 h-100'>"
+            f"<div class='fw-semibold text-body'>{html.escape(p['name'])}</div>"
+            f"<div class='small mt-1'>{badge}</div></a></div>"
+        )
+    content = content.replace("<!--PS_OPTIONS-->", "".join(_opts))
+    content = content.replace("<!--PS_CARDS-->", "".join(_cards))
     return base_layout("Library", content, "library")
 
 
@@ -4564,8 +4740,53 @@ def render_gsudo_profiles() -> str:
     """
 
 
+def render_header_lock_config() -> str:
+    """Toggle: lock each tab's header area on scroll vs. scroll the whole page."""
+    locked = _get_header_lock()
+    return f"""
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-layout-text-window-reverse"></i> Header area on scroll</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          Controls what happens to a page's header — the top bar (Home, date,
+          theme) and the title/breadcrumb strip — when you scroll down.
+        </p>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" role="switch"
+                 id="headerLockSwitch" {"checked" if locked else ""}
+                 onchange="setHeaderLock(this.checked)">
+          <label class="form-check-label" for="headerLockSwitch">
+            <strong>Lock the header area</strong> — keep it pinned, scroll only the content below it
+          </label>
+        </div>
+        <p class="text-muted small mb-0">
+          Off = scroll the whole page together (the header scrolls out of view).
+        </p>
+        <div id="header-lock-toast" class="text-success small mt-2"></div>
+      </div>
+    </div>
+    <script>
+    async function setHeaderLock(on) {{
+      document.body.classList.toggle('lock-header', on);   // live, no reload
+      const r = await fetch('/api/config/header-lock', {{
+        method: 'POST',
+        headers: {{'Content-Type':'application/json'}},
+        body: JSON.stringify({{lock: on}})
+      }});
+      const j = await r.json();
+      const toast = document.getElementById('header-lock-toast');
+      toast.textContent = j.ok ? (on ? '✓ Header locked' : '✓ Header scrolls with page') : '✗ Failed';
+      setTimeout(() => toast.textContent = '', 3000);
+    }}
+    </script>
+    """
+
+
 def render_config() -> str:
-    return render_gsudo_config() + render_gsudo_profiles() + render_log_config()
+    return (render_header_lock_config() + render_gsudo_config()
+            + render_gsudo_profiles() + render_log_config())
 
 
 class LogLevelPayload(BaseModel):
@@ -4738,6 +4959,29 @@ async def api_theme_set(request: Request):
     cfg["theme"] = theme
     _save_hive_config(cfg)
     return JSONResponse({"ok": True, "theme": theme})
+
+
+@app.get("/api/write-token/verify")
+def api_write_token_verify(request: Request):
+    """Lets the browser confirm a pasted write token before storing it. GET, so it
+    is not itself blocked by tunnel_write_guard. Returns {"ok": bool}."""
+    tok = _write_token()
+    supplied = request.headers.get("x-qi-token") or request.query_params.get("qi_token", "")
+    return JSONResponse({"ok": bool(tok) and supplied == tok})
+
+
+@app.get("/api/config/header-lock")
+def api_header_lock_get():
+    return JSONResponse({"lock": _get_header_lock()})
+
+@app.post("/api/config/header-lock")
+async def api_header_lock_set(request: Request):
+    body = await request.json()
+    lock = bool(body.get("lock", True))
+    cfg = _load_hive_config()
+    cfg["lock_header"] = lock
+    _save_hive_config(cfg)
+    return JSONResponse({"ok": True, "lock": lock})
 
 
 # ── CoWork Dispatch ───────────────────────────────────────────────────────────
@@ -5347,9 +5591,24 @@ def api_service_status(name: str):
 from project_status import render_project_status, list_projects as _ps_list
 
 
+def _status_embed_html(title: str, body: str) -> str:
+    """Minimal standalone page (no sidebar) for iframe embedding in the Library."""
+    theme = _get_theme()
+    bs = f'data-bs-theme="{theme}"' if theme != "auto" else ""
+    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"/>'
+            f'<meta name="viewport" content="width=device-width,initial-scale=1"/>'
+            f'<title>{html.escape(title)}</title>'
+            f'<link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css"/>'
+            f'<link rel="stylesheet" href="/static/css/adminlte.min.css"/>'
+            f'<script src="/static/vendor/bootstrap.bundle.min.js"></script>'
+            f'</head><body class="bg-body" {bs}><div class="p-3">{body}</div></body></html>')
+
+
 @app.get("/project/{pid}/status", response_class=HTMLResponse)
-def project_status_page(pid: str, tab: str = "overview"):
-    title, body = render_project_status(pid, tab)
+def project_status_page(pid: str, tab: str = "overview", embed: int = 0):
+    title, body = render_project_status(pid, tab, embed=bool(embed))
+    if embed:
+        return HTMLResponse(_status_embed_html(title, body))
     return base_layout(title, body, "dashboard")
 
 
@@ -5583,6 +5842,19 @@ def api_usage_savings_today():
 def api_usage_savings_by_model(days: int = 30):
     return JSONResponse({"days": days, "rows": usage_stats.savings_by_model(days)})
 
+@app.get("/api/usage/range")
+def api_usage_range(start: str, end: str = ""):
+    """Token + cost + savings metrics for an inclusive [start, end] local-date
+    window. Powers the LLM-Usage date-range picker and click-a-bar drilldown.
+    `end` defaults to `start` (single-day select). Dates are ISO yyyy-mm-dd."""
+    from datetime import date as _d
+    try:
+        s = _d.fromisoformat(start)
+        e = _d.fromisoformat(end) if end else s
+    except (ValueError, TypeError):
+        return JSONResponse({"error": "dates must be ISO yyyy-mm-dd"}, status_code=400)
+    return JSONResponse(usage_stats.range_stats(s, e))
+
 
 def render_usage() -> str:
     t = usage_stats.today()
@@ -5602,22 +5874,31 @@ def render_usage() -> str:
     s_7  = usage_stats.savings(7)
     s_30 = usage_stats.savings(30)
 
+    # Share of 30d spend that stays on Claude (Opus/Fable = 0% local-offload).
+    # Drives the "why does Batch save more than Local" explainer — when this is
+    # high, near-zero local savings is correct, not a bug.
+    _tot_actual = sum(r["actual_usd"] for r in s_models) or 1.0
+    _opus_share = sum(r["actual_usd"] for r in s_models
+                      if r["family"] in ("opus", "fable")) / _tot_actual * 100
+
     # Daily chart: 3 thin bars per day (Actual / w-Local / w-Combined)
     max_cost = max((d["cost_usd"] for d in daily), default=0) or 1
     daily_bars = ""
     for d in daily:
         ha = int((d["cost_usd"]          / max_cost) * 100) if max_cost else 0
         hl = int((d["local_cost_usd"]    / max_cost) * 100) if max_cost else 0
+        hb = int((d["batch_cost_usd"]    / max_cost) * 100) if max_cost else 0
         hc = int((d["combined_cost_usd"] / max_cost) * 100) if max_cost else 0
-        tip = (f"{d['date']} — Actual ${d['cost_usd']:.2f} · "
+        tip = (f"{d['date']} — click to load this day · Actual ${d['cost_usd']:.2f} · "
                f"w/ Local ${d['local_cost_usd']:.2f} · "
                f"w/ Batch ${d['batch_cost_usd']:.2f} · "
                f"Combined ${d['combined_cost_usd']:.2f}")
         daily_bars += f'''
-        <div class="daily-bar-wrap" title="{tip}">
+        <div class="daily-bar-wrap" data-date="{d['date']}" title="{tip}">
           <div class="daily-trio">
             <div class="daily-bar bar-actual"   style="height:{ha}%;"></div>
             <div class="daily-bar bar-local"    style="height:{hl}%;"></div>
+            <div class="daily-bar bar-batch"    style="height:{hb}%;"></div>
             <div class="daily-bar bar-combined" style="height:{hc}%;"></div>
           </div>
           <small class="daily-label">{d['date'][-5:]}</small>
@@ -5703,11 +5984,15 @@ def render_usage() -> str:
         width: 100%; height: 100%; justify-content: center;
       }}
       .daily-bar {{
-        width: 30%; border-radius: 2px 2px 0 0; min-height: 2px;
+        width: 23%; border-radius: 2px 2px 0 0; min-height: 2px;
       }}
       .bar-actual   {{ background: linear-gradient(to top, #6366f1, #a5b4fc); }}
       .bar-local    {{ background: linear-gradient(to top, #0dcaf0, #7fdfff); }}
+      .bar-batch    {{ background: linear-gradient(to top, #ffc107, #ffe08a); }}
       .bar-combined {{ background: linear-gradient(to top, #198754, #6fd2a0); }}
+      .daily-bar-wrap {{ cursor: pointer; transition: background .12s; border-radius: 3px; }}
+      .daily-bar-wrap:hover {{ background: rgba(99,102,241,.10); }}
+      .daily-bar-wrap.selected {{ background: rgba(99,102,241,.22); outline: 1px solid rgba(99,102,241,.5); }}
       .daily-label {{
         position: absolute; bottom: -22px; font-size: 10px;
         color: #6c757d; white-space: nowrap;
@@ -5715,6 +6000,11 @@ def render_usage() -> str:
       }}
       .chart-legend {{ font-size: .8rem; }}
       .chart-legend .sw {{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:middle; }}
+
+      /* Collapsible areas: clickable header + chevron that rotates when collapsed */
+      .area-toggle {{ cursor: pointer; user-select: none; }}
+      .area-chevron {{ transition: transform .2s; font-size: .9rem; opacity: .7; }}
+      .area-toggle.collapsed .area-chevron {{ transform: rotate(-90deg); }}
     </style>
 
     <!-- MAX-plan disclaimer: these are API list-price equivalents, not actual subscription cost -->
@@ -5728,7 +6018,65 @@ def render_usage() -> str:
       </div>
     </div>
 
-    <!-- Row 1: actual spend — consumption ladder: today / 7d / 30d / QTD / YTD -->
+    <!-- Expand / collapse all areas -->
+    <div class="d-flex justify-content-end mb-2">
+      <div class="btn-group btn-group-sm" role="group" aria-label="expand or collapse all areas">
+        <button type="button" id="area-expand-all" class="btn btn-outline-secondary"><i class="bi bi-arrows-expand me-1"></i>Expand all</button>
+        <button type="button" id="area-collapse-all" class="btn btn-outline-secondary"><i class="bi bi-arrows-collapse me-1"></i>Collapse all</button>
+      </div>
+    </div>
+
+    <!-- Interactive Selected-Period panel — driven by the date picker + clickable bars -->
+    <div class="card mb-3" style="border-left:4px solid #6366f1">
+      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h3 class="card-title mb-0 area-toggle d-inline-flex align-items-center gap-2"
+            data-bs-toggle="collapse" data-bs-target="#sp-body" role="button" aria-expanded="true">
+          <i class="bi bi-chevron-down area-chevron"></i>
+          <span><i class="bi bi-calendar-range me-2"></i>Selected Period —
+          <span id="sp-label" class="text-primary">today</span></span>
+        </h3>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <div class="btn-group btn-group-sm" role="group" aria-label="quick ranges">
+            <button type="button" class="btn btn-outline-primary active" data-preset="today">Today</button>
+            <button type="button" class="btn btn-outline-primary" data-preset="7d">7d</button>
+            <button type="button" class="btn btn-outline-primary" data-preset="30d">30d</button>
+            <button type="button" class="btn btn-outline-primary" data-preset="mtd">MTD</button>
+            <button type="button" class="btn btn-outline-primary" data-preset="qtd">QTD</button>
+            <button type="button" class="btn btn-outline-primary" data-preset="ytd">YTD</button>
+          </div>
+          <input type="date" id="sp-start" class="form-control form-control-sm" style="width:auto" title="start date">
+          <span class="text-muted">&rarr;</span>
+          <input type="date" id="sp-end" class="form-control form-control-sm" style="width:auto" title="end date">
+        </div>
+      </div>
+      <div id="sp-body" class="collapse show">
+      <div class="card-body">
+        <div class="row row-compact g-2">
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-primary"><div class="inner"><h4 id="sp-tokens">&mdash;</h4><p>Tokens</p></div><i class="small-box-icon bi bi-lightning-charge-fill"></i></div></div>
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-secondary"><div class="inner"><h4 id="sp-reads">&mdash;</h4><p>Cache re-reads</p></div><i class="small-box-icon bi bi-arrow-repeat"></i></div></div>
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-success"><div class="inner"><h4 id="sp-cost">&mdash;</h4><p>API-Equiv Cost</p></div><i class="small-box-icon bi bi-currency-dollar"></i></div></div>
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-dark"><div class="inner"><h4 id="sp-turns">&mdash;</h4><p>Turns</p></div><i class="small-box-icon bi bi-chat-left-dots"></i></div></div>
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-dark"><div class="inner"><h4 id="sp-sessions">&mdash;</h4><p>Sessions</p></div><i class="small-box-icon bi bi-window-stack"></i></div></div>
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-info"><div class="inner"><h4 id="sp-local">&mdash;</h4><p>Local Saved</p></div><i class="small-box-icon bi bi-cpu"></i></div></div>
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-warning"><div class="inner"><h4 id="sp-batch">&mdash;</h4><p>Batch Saved</p></div><i class="small-box-icon bi bi-moon-stars"></i></div></div>
+          <div class="col-6 col-md-3 col-lg"><div class="small-box text-bg-success"><div class="inner"><h4 id="sp-combined">&mdash;</h4><p>Combined Saved</p></div><i class="small-box-icon bi bi-stars"></i></div></div>
+        </div>
+        <p class="small text-muted mb-0 mt-1">
+          <i class="bi bi-hand-index me-1"></i>Click any bar in the <strong>Daily Spend</strong> chart below, use a preset, or pick a custom start/end date — every field above recomputes for that exact window.
+        </p>
+      </div>
+      </div>
+    </div>
+
+    <!-- Row 1: actual spend — consumption ladder (collapsible) -->
+    <div class="card mb-2">
+      <div class="card-header py-2 area-toggle d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" data-bs-target="#area-overview" role="button" aria-expanded="true">
+        <h3 class="card-title mb-0"><i class="bi bi-speedometer2 me-2"></i>Token &amp; Cost Overview
+          <span class="text-muted small fw-normal ms-2">Today → Year-to-date</span></h3>
+        <i class="bi bi-chevron-down area-chevron"></i>
+      </div>
+      <div id="area-overview" class="collapse show"><div class="card-body py-2">
     <div class="row row-compact g-2 mb-1">
       <div class="col-6 col-md-2"><div class="small-box text-bg-primary">
         <div class="inner">
@@ -5773,15 +6121,18 @@ def render_usage() -> str:
         <i class="small-box-icon bi bi-calendar-check"></i>
       </div></div>
     </div>
+    </div></div></div>
 
-    <!-- Row 2: Local FREE LLMs (Ollama) -->
+    <!-- Row 2: Local FREE LLMs (Ollama) (collapsible) -->
+    <div class="card mb-2">
+      <div class="card-header py-2 area-toggle d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" data-bs-target="#area-local" role="button" aria-expanded="true">
+        <h3 class="card-title mb-0"><i class="bi bi-cpu me-2"></i>Local FREE LLMs (via Ollama)
+          <span class="text-muted small fw-normal ms-2">Haiku → gemma4 / qwen3:8b · Sonnet → gpt-oss-20b / gemma4:31b · Opus → stays on Claude</span></h3>
+        <i class="bi bi-chevron-down area-chevron"></i>
+      </div>
+      <div id="area-local" class="collapse show"><div class="card-body py-2">
     <div class="row row-compact mb-1">
-      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em">
-        <i class="bi bi-cpu me-1"></i> Local FREE LLMs (via OLLAMA)
-        <span class="text-muted text-lowercase fw-normal ms-2" style="letter-spacing:0">
-          — Haiku → gemma4 / qwen3:8b · Sonnet → gpt-oss-20b / gemma4:31b · Opus → stays on Claude
-        </span>
-      </p></div>
       <div class="col-md-3"><div class="small-box text-bg-info">
         <div class="inner"><h4>{s_today['offloaded_turns']}</h4><p>Offloadable Turns Today</p></div>
         <i class="small-box-icon bi bi-pc-display"></i>
@@ -5799,15 +6150,18 @@ def render_usage() -> str:
         <i class="small-box-icon bi bi-calendar-range"></i>
       </div></div>
     </div>
+    </div></div></div>
 
-    <!-- Row 3: Claude Batch API -->
-    <div class="row row-compact mb-3">
-      <div class="col-12"><p class="mb-1 mt-2 text-secondary small text-uppercase fw-bold" style="letter-spacing:.05em">
-        <i class="bi bi-moon-stars me-1"></i> Claude Batch API (Deferred to 00:00–06:00, 50% OFF)
-        <span class="text-muted text-lowercase fw-normal ms-2" style="letter-spacing:0">
-          — applies to Opus · Sonnet · Haiku · 24h async SLA
-        </span>
-      </p></div>
+    <!-- Row 3: Claude Batch API (collapsible) -->
+    <div class="card mb-3">
+      <div class="card-header py-2 area-toggle d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" data-bs-target="#area-batch" role="button" aria-expanded="true">
+        <h3 class="card-title mb-0"><i class="bi bi-moon-stars me-2"></i>Claude Batch API <span class="badge text-bg-warning ms-1">50% OFF</span>
+          <span class="text-muted small fw-normal ms-2">Deferred to 00:00–06:00 · Opus · Sonnet · Haiku · 24h async SLA</span></h3>
+        <i class="bi bi-chevron-down area-chevron"></i>
+      </div>
+      <div id="area-batch" class="collapse show"><div class="card-body py-2">
+    <div class="row row-compact mb-1">
       <div class="col-md-3"><div class="small-box text-bg-warning">
         <div class="inner"><h4>{s_today['batchable_turns']}</h4><p>Batchable Turns Today</p></div>
         <i class="small-box-icon bi bi-moon-stars"></i>
@@ -5825,6 +6179,7 @@ def render_usage() -> str:
         <i class="small-box-icon bi bi-calendar-range"></i>
       </div></div>
     </div>
+    </div></div></div>
 
     <!-- Combined summary -->
     <div class="row mb-3">
@@ -5843,29 +6198,47 @@ def render_usage() -> str:
       </div>
     </div>
 
-    <!-- Daily chart (3 series: Actual / w-Local / Combined) -->
+    <!-- Why Local saves less than Batch (correct, not a bug) -->
+    <div class="alert alert-warning py-2 small mb-3 d-flex align-items-start">
+      <i class="bi bi-lightbulb-fill me-2 mt-1"></i>
+      <div>
+        <strong>Why does Batch save far more than Local?</strong>
+        <strong>{_opus_share:.0f}%</strong> of the last 30 days' spend is Opus/Fable (deep reasoning), which the model keeps on Claude — so local offload barely lowers cost.
+        The Batch API's 50% discount applies to <em>every</em> model run outside 00:00&ndash;06:00, so it saves much more.
+        That's why in the tables below the <span class="text-info fw-semibold">w/ Local</span> cost stays close to Actual while the <span class="text-warning fw-semibold">w/ Batch</span> cost is roughly halved &mdash; this is correct, not a miscalculation. (Local savings approach zero only because almost nothing routes to free local models.)
+      </div>
+    </div>
+
+    <!-- Daily chart (4 series: Actual / w-Local / w-Batch / Combined) -->
     <div class="card mb-3">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Daily Spend — Last 30 Days</h3>
-        <div class="chart-legend">
-          <span><i class="sw bar-actual"></i>Actual</span>
-          <span class="ms-3"><i class="sw bar-local"></i>w/ Local</span>
-          <span class="ms-3"><i class="sw bar-combined"></i>Combined</span>
+      <div class="card-header d-flex justify-content-between align-items-center area-toggle"
+           data-bs-toggle="collapse" data-bs-target="#area-daily" role="button" aria-expanded="true">
+        <h3 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Daily Spend — Last 30 Days <small class="text-muted fw-normal">(click a bar to drill in)</small></h3>
+        <div class="d-flex align-items-center gap-3">
+          <div class="chart-legend">
+            <span><i class="sw bar-actual"></i>Actual</span>
+            <span class="ms-3"><i class="sw bar-local"></i>w/ Local</span>
+            <span class="ms-3"><i class="sw bar-batch"></i>w/ Batch</span>
+            <span class="ms-3"><i class="sw bar-combined"></i>Combined</span>
+          </div>
+          <i class="bi bi-chevron-down area-chevron"></i>
         </div>
       </div>
-      <div class="card-body">
+      <div id="area-daily" class="collapse show"><div class="card-body">
         <div class="daily-bars">{daily_bars}</div>
-      </div>
+      </div></div>
     </div>
 
     <div class="row">
       <!-- By project -->
       <div class="col-lg-12">
         <div class="card mb-3">
-          <div class="card-header">
-            <h3 class="card-title"><i class="bi bi-folder2-open me-2"></i>By Project (30d) — Claude API vs Local + Batch</h3>
+          <div class="card-header area-toggle d-flex justify-content-between align-items-center"
+               data-bs-toggle="collapse" data-bs-target="#area-project" role="button" aria-expanded="true">
+            <h3 class="card-title mb-0"><i class="bi bi-folder2-open me-2"></i>By Project (30d) — Claude API vs Local + Batch</h3>
+            <i class="bi bi-chevron-down area-chevron"></i>
           </div>
-          <div class="card-body p-0">
+          <div id="area-project" class="collapse show"><div class="card-body p-0">
             <table class="table table-sm table-striped mb-0">
               <thead><tr>
                 <th>Project</th>
@@ -5889,17 +6262,19 @@ def render_usage() -> str:
                 </tr>
               </tfoot>
             </table>
-          </div>
+          </div></div>
         </div>
       </div>
 
       <!-- By model -->
       <div class="col-lg-12">
         <div class="card mb-3">
-          <div class="card-header">
-            <h3 class="card-title"><i class="bi bi-cpu me-2"></i>By Model (30d) — Claude API vs Local + Batch</h3>
+          <div class="card-header area-toggle d-flex justify-content-between align-items-center"
+               data-bs-toggle="collapse" data-bs-target="#area-model" role="button" aria-expanded="true">
+            <h3 class="card-title mb-0"><i class="bi bi-cpu me-2"></i>By Model (30d) — Claude API vs Local + Batch</h3>
+            <i class="bi bi-chevron-down area-chevron"></i>
           </div>
-          <div class="card-body p-0">
+          <div id="area-model" class="collapse show"><div class="card-body p-0">
             <table class="table table-sm table-striped mb-0">
               <thead><tr>
                 <th>Model</th>
@@ -5923,17 +6298,19 @@ def render_usage() -> str:
                 </tr>
               </tfoot>
             </table>
-          </div>
+          </div></div>
         </div>
       </div>
     </div>
 
     <!-- Savings By Model -->
     <div class="card mb-3">
-      <div class="card-header">
-        <h3 class="card-title"><i class="bi bi-stars me-2"></i>Savings by Model (30d) — Claude API vs Local + Batch</h3>
+      <div class="card-header area-toggle d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" data-bs-target="#area-savings-model" role="button" aria-expanded="true">
+        <h3 class="card-title mb-0"><i class="bi bi-stars me-2"></i>Savings by Model (30d) — Claude API vs Local + Batch</h3>
+        <i class="bi bi-chevron-down area-chevron"></i>
       </div>
-      <div class="card-body p-0">
+      <div id="area-savings-model" class="collapse show"><div class="card-body p-0">
         <table class="table table-sm table-striped mb-0">
           <thead><tr>
             <th>Model</th>
@@ -5955,7 +6332,7 @@ def render_usage() -> str:
             </tr>
           </tfoot>
         </table>
-      </div>
+      </div></div>
     </div>
 
     <p class="small text-muted mt-3">
@@ -5969,6 +6346,111 @@ def render_usage() -> str:
       <i class="bi bi-moon-stars me-1"></i>
       <strong>Batch window:</strong> turns outside 00:00–06:00 local time are counted as deferrable via Claude Batch API (50% discount, 24h SLA). Applies to Opus, Sonnet, and Haiku.
     </p>
+
+    <script>
+    (function(){{
+      const $ = id => document.getElementById(id);
+      const startEl = $('sp-start'), endEl = $('sp-end');
+      const fmtTok = n => (Number(n)/1e6).toFixed(Number(n) >= 1e6 ? 1 : 2) + 'M';
+      const fmtUsd = n => '$' + Number(n).toLocaleString(undefined, {{minimumFractionDigits:2, maximumFractionDigits:2}});
+      const isoLocal = dt => dt.getFullYear() + '-' +
+        String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+
+      async function load(start, end, label){{
+        end = end || start;
+        try {{
+          const r = await fetch('/api/usage/range?start=' + start + '&end=' + end);
+          const d = await r.json();
+          if (d.error) {{ $('sp-label').textContent = d.error; return; }}
+          $('sp-tokens').textContent   = fmtTok(d.tokens);
+          $('sp-reads').textContent    = fmtTok(d.cache_reads);
+          $('sp-cost').textContent     = fmtUsd(d.cost_usd);
+          $('sp-turns').textContent    = Number(d.turns).toLocaleString();
+          $('sp-sessions').textContent = Number(d.sessions).toLocaleString();
+          $('sp-local').textContent    = '−' + fmtUsd(d.local_savings_usd);
+          $('sp-batch').textContent    = '−' + fmtUsd(d.batch_savings_usd);
+          $('sp-combined').textContent = '−' + fmtUsd(d.combined_savings_usd);
+          const span = (d.start === d.end) ? d.start : (d.start + ' → ' + d.end + '  (' + d.days + 'd)');
+          $('sp-label').textContent = (label ? label + ' · ' : '') + span;
+          startEl.value = d.start; endEl.value = d.end;
+          document.querySelectorAll('.daily-bar-wrap').forEach(w => {{
+            const dt = w.getAttribute('data-date');
+            w.classList.toggle('selected', dt >= d.start && dt <= d.end);
+          }});
+        }} catch (e) {{ $('sp-label').textContent = 'failed to load range'; }}
+      }}
+
+      function preset(kind){{
+        const now = new Date();
+        const today = isoLocal(now);
+        let s = today;
+        const back = n => {{ const x = new Date(now); x.setDate(x.getDate() - n); return isoLocal(x); }};
+        if      (kind === '7d')  s = back(6);
+        else if (kind === '30d') s = back(29);
+        else if (kind === 'mtd') s = isoLocal(new Date(now.getFullYear(), now.getMonth(), 1));
+        else if (kind === 'qtd') s = isoLocal(new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1));
+        else if (kind === 'ytd') s = isoLocal(new Date(now.getFullYear(), 0, 1));
+        load(s, today, kind.toUpperCase());
+      }}
+
+      function clearPresets(){{ document.querySelectorAll('[data-preset]').forEach(x => x.classList.remove('active')); }}
+
+      document.querySelectorAll('[data-preset]').forEach(b => {{
+        b.addEventListener('click', () => {{ clearPresets(); b.classList.add('active'); preset(b.getAttribute('data-preset')); }});
+      }});
+      function manual(){{
+        if (!startEl.value) return;
+        clearPresets();
+        load(startEl.value, endEl.value || startEl.value, 'Custom');
+      }}
+      startEl.addEventListener('change', manual);
+      endEl.addEventListener('change', manual);
+      document.querySelectorAll('.daily-bar-wrap').forEach(w => {{
+        w.addEventListener('click', () => {{ clearPresets(); const dt = w.getAttribute('data-date'); load(dt, dt, 'Day'); }});
+      }});
+
+      // initial paint: Today
+      preset('today');
+    }})();
+    </script>
+
+    <script>
+    // Collapsible areas: remember open/closed state across page refreshes + expand/collapse all
+    (function(){{
+      const KEY = 'qiUsageCollapsed';
+      const read  = () => {{ try {{ return JSON.parse(localStorage.getItem(KEY)) || {{}}; }} catch(e) {{ return {{}}; }} }};
+      const write = s => {{ try {{ localStorage.setItem(KEY, JSON.stringify(s)); }} catch(e) {{}} }};
+      const toggles = Array.from(document.querySelectorAll('.area-toggle[data-bs-target]'));
+      const state = read();
+
+      toggles.forEach(t => {{
+        const id = t.getAttribute('data-bs-target').slice(1);
+        const panel = document.getElementById(id);
+        if (!panel) return;
+        // restore collapsed state without animation
+        if (state[id] === true) {{
+          panel.classList.remove('show');
+          t.classList.add('collapsed');
+          t.setAttribute('aria-expanded', 'false');
+        }}
+        panel.addEventListener('shown.bs.collapse',  () => {{ const s = read(); s[id] = false; write(s); }});
+        panel.addEventListener('hidden.bs.collapse', () => {{ const s = read(); s[id] = true;  write(s); }});
+      }});
+
+      function setAll(collapse){{
+        toggles.forEach(t => {{
+          const panel = document.getElementById(t.getAttribute('data-bs-target').slice(1));
+          if (!panel || typeof bootstrap === 'undefined') return;
+          const c = bootstrap.Collapse.getOrCreateInstance(panel, {{toggle:false}});
+          collapse ? c.hide() : c.show();
+        }});
+      }}
+      const ea = document.getElementById('area-expand-all');
+      const ca = document.getElementById('area-collapse-all');
+      if (ea) ea.addEventListener('click', () => setAll(false));
+      if (ca) ca.addEventListener('click', () => setAll(true));
+    }})();
+    </script>
     """
 
 
