@@ -1,0 +1,81 @@
+{
+  "sections": [
+    {
+      "name": "Project Overview & Setup",
+      "documents": [
+        {"title": "Project README", "file": "README.md", "location": "C:\\CypherMiner\\", "type": "Markdown", "description": "What CypherMiner is, why it exists, the tech (Vite + TS, no framework, PWA), the registry architecture, dev/build commands, the full tool list per category, and its place in the QI ecosystem (ports 8502/7842)."},
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\CypherMiner\\", "type": "Markdown", "description": "Session-start protocol, what CypherMiner is, paths, ports (do-not-change rule), and the parallel-projects table so structural changes never break siblings."},
+        {"title": "Requirements", "file": "requirements.txt", "location": "C:\\CypherMiner\\", "type": "Text", "description": "Python backend deps: fastapi, uvicorn[standard], gradio, httpx, python-dotenv, python-docx, pydantic. (The frontend has its own package.json.)"},
+        {"title": "Start script", "file": "Start_CypherMiner.bat", "location": "C:\\CypherMiner\\", "type": "Batch", "description": "Dev convenience launcher: runs main.py (API :8502 + placeholder UI). Prints the API/UI URLs."}
+      ]
+    },
+    {
+      "name": "Project Documentation Set",
+      "documents": [
+        {"title": "Business Documentation", "file": "Business Documentation\\", "location": "C:\\CypherMiner\\Quiddity Innovations - CypherMiner Documentation\\", "type": "Folder", "description": "Business-facing documents for CypherMiner (positioning, value)."},
+        {"title": "Technical Documentation", "file": "Technical Documentation\\", "location": "C:\\CypherMiner\\Quiddity Innovations - CypherMiner Documentation\\", "type": "Folder", "description": "Technical reference documents for the suite and its architecture."},
+        {"title": "User Documentation", "file": "User Documentation\\", "location": "C:\\CypherMiner\\Quiddity Innovations - CypherMiner Documentation\\", "type": "Folder", "description": "End-user guides for using the tools."},
+        {"title": "Cheatsheets", "file": "Cheatsheets\\", "location": "C:\\CypherMiner\\Quiddity Innovations - CypherMiner Documentation\\", "type": "Folder", "description": "Quick-reference cheatsheets for the cipher / encoding / math / text tools."},
+        {"title": "Implementation Log", "file": "Implementation Log\\", "location": "C:\\CypherMiner\\Quiddity Innovations - CypherMiner Documentation\\", "type": "Folder", "description": "Chronological build history — what was created, fixed and decided."},
+        {"title": "Meeting Minutes", "file": "Meeting Minutes\\", "location": "C:\\CypherMiner\\Quiddity Innovations - CypherMiner Documentation\\", "type": "Folder", "description": "Session-by-session decisions and next steps."},
+        {"title": "Session Summaries", "file": "Session Summaries\\", "location": "C:\\CypherMiner\\Quiddity Innovations - CypherMiner Documentation\\", "type": "Folder", "description": "Dated session summaries for the project."},
+        {"title": "Summary generator", "file": "make_summary.py", "location": "C:\\CypherMiner\\", "type": "Python", "description": "Generates a Word (.docx) project summary via python-docx."}
+      ]
+    },
+    {
+      "name": "Key Source — Core & Types",
+      "documents": [
+        {"title": "Tool contract (types)", "file": "types.ts", "location": "C:\\CypherMiner\\frontend\\src\\", "type": "TypeScript", "description": "Lang/Loc/CategoryId, the ToolInput union, and the Tool + Category interfaces. The single contract every tool implements."},
+        {"title": "Tool registry", "file": "registry.ts", "location": "C:\\CypherMiner\\frontend\\src\\core\\", "type": "TypeScript", "description": "register / allTools / toolsByCategory / getTool / allCategories — the in-memory registry that self-registering tool modules push into."},
+        {"title": "UI shell", "file": "ui.ts", "location": "C:\\CypherMiner\\frontend\\src\\core\\", "type": "TypeScript", "description": "Framework-free UI shell + hash router: header, sidebar (search/pin/favorites), hero/category/tool views, the live tool runner, and the assistant dock."},
+        {"title": "i18n", "file": "i18n.ts", "location": "C:\\CypherMiner\\frontend\\src\\core\\", "type": "TypeScript", "description": "Bilingual UI strings (Loc pairs) + getLang/setLang/loc/t. Language persisted to localStorage."},
+        {"title": "Theme / Favorites / Config", "file": "theme.ts, favorites.ts, config.ts", "location": "C:\\CypherMiner\\frontend\\src\\core\\", "type": "TypeScript", "description": "Dark/light theming, localStorage favourites, and the runtime config.json loader (assistantMode, cloudEndpoint, lotteryWizUrl, showAllTools)."},
+        {"title": "Content store", "file": "content.ts", "location": "C:\\CypherMiner\\frontend\\src\\core\\", "type": "TypeScript", "description": "ToolDoc shape + setDocs/getDoc — the educational metadata (How it works / history / trivia / source) keyed by tool id."},
+        {"title": "App bootstrap", "file": "main.ts", "location": "C:\\CypherMiner\\frontend\\src\\", "type": "TypeScript", "description": "Imports styles, the UI shell, all tools (self-register) and all content, loads config, then mounts into #app."}
+      ]
+    },
+    {
+      "name": "Key Source — Tools, Content & Assistant",
+      "documents": [
+        {"title": "Tool registration index", "file": "index.ts", "location": "C:\\CypherMiner\\frontend\\src\\tools\\", "type": "TypeScript", "description": "Imports all 59 tool modules so they self-register (19 crypto, 13 encoding, 14 math, 2 lottery, 11 text)."},
+        {"title": "Tool modules", "file": "crypto\\, encoding\\, math\\, lottery\\, text\\", "location": "C:\\CypherMiner\\frontend\\src\\tools\\", "type": "TypeScript (folders)", "description": "One file per tool. e.g. crypto/caesar.ts (+ cipher wheel), crypto/autosolve.ts, math/factor.ts (BigInt factorization), text/slugify.ts, encoding/base64.ts, lottery/odds.ts."},
+        {"title": "Educational content", "file": "crypto.ts, encoding.ts, math.ts, lottery.ts, text.ts, index.ts", "location": "C:\\CypherMiner\\frontend\\src\\content\\", "type": "TypeScript", "description": "Bilingual explanation/history/trivia/source for tools, registered via setDocs(); kept separate from tool logic."},
+        {"title": "Shared visual builders", "file": "visuals.ts", "location": "C:\\CypherMiner\\frontend\\src\\widgets\\", "type": "TypeScript", "description": "mappingStrip / grid5 / railZigzag — reusable HTML/SVG generators used by crypto tool visuals."},
+        {"title": "Assistant", "file": "index.ts, local.ts, cloud.ts, types.ts", "location": "C:\\CypherMiner\\frontend\\src\\assistant\\", "type": "TypeScript", "description": "On-device TF-IDF retrieval (local.ts), the optional hosted provider (cloud.ts), the selector (index.ts) and the shared provider contract (types.ts)."}
+      ]
+    },
+    {
+      "name": "Key Source — Backend & Config",
+      "documents": [
+        {"title": "FastAPI app", "file": "main.py", "location": "C:\\CypherMiner\\api\\", "type": "Python", "description": "CypherMiner API v0.1.0 on :8502 — /health, /version, /info (QI module contract). CORS from the QI registry with a localhost fallback. Reserved for future heavy/data tools."},
+        {"title": "API entry point", "file": "run_api.py", "location": "C:\\CypherMiner\\", "type": "Python", "description": "uvicorn api.main:app on 127.0.0.1:8502 — the entry used by the QI_CypherMinerAPI service."},
+        {"title": "Dual launcher", "file": "main.py", "location": "C:\\CypherMiner\\", "type": "Python", "description": "Dev launcher: API thread + placeholder Gradio UI; UTF-8 stdout; logs to data/logs/cypherminer.log."},
+        {"title": "Config loader", "file": "config.py", "location": "C:\\CypherMiner\\shared\\", "type": "Python", "description": "Caches config/cypherminer.json and loads secrets/cypherminer.env (dotenv). Dotted-path get()."},
+        {"title": "Runtime config", "file": "cypherminer.json", "location": "C:\\CypherMiner\\config\\", "type": "JSON", "description": "App name/version, server ports (api 8502, ui 7842, host 127.0.0.1), logging level + dir."},
+        {"title": "Secrets template", "file": "cypherminer.env.template", "location": "C:\\CypherMiner\\secrets\\", "type": "Env template", "description": "Template for secrets; the real .env is git-ignored."},
+        {"title": "Placeholder UI (unused)", "file": "app.py", "location": "C:\\CypherMiner\\ui\\", "type": "Python", "description": "Legacy Gradio scaffold on :7843 — NOT the real UI; the static Vite build on :7842 is the product."}
+      ]
+    },
+    {
+      "name": "Build, Services & Testing",
+      "documents": [
+        {"title": "Frontend package", "file": "package.json", "location": "C:\\CypherMiner\\frontend\\", "type": "JSON", "description": "Vite scripts (dev/build/preview) + devDeps: typescript 5.6, vite 6, vite-plugin-pwa 0.21. No runtime UI framework."},
+        {"title": "Vite & TS config", "file": "vite.config.ts, tsconfig.json", "location": "C:\\CypherMiner\\frontend\\", "type": "TypeScript / JSON", "description": "Build + PWA config and the TypeScript compiler settings."},
+        {"title": "HTML entry", "file": "index.html", "location": "C:\\CypherMiner\\frontend\\", "type": "HTML", "description": "Minimal shell: <div id=\"app\"> + module script src=/src/main.ts; meta description + icon."},
+        {"title": "API service installer", "file": "install_api_service_admin.bat", "location": "C:\\CypherMiner\\", "type": "Batch", "description": "Installs the QI_CypherMinerAPI NSSM service (run_api.py, :8502, auto-start)."},
+        {"title": "Tunnel installer", "file": "install_tunnel.bat", "location": "C:\\CypherMiner\\", "type": "Batch", "description": "Installs QI_CypherMinerTunnel. On the QI box it runs the static named tunnel qi-cypherminer -> https://cypher.quiddityinnovations.com; on customer boxes a legacy quick tunnel."},
+        {"title": "Service setup script", "file": "setup_services.ps1", "location": "C:\\CypherMiner\\TOOLS\\", "type": "PowerShell", "description": "Idempotent installer (run elevated) for QI_CypherMinerUI (static http.server on :7842) and related services. Plus diag.ps1 / diag2.ps1 diagnostics."},
+        {"title": "Smoke tests", "file": "test_smoke.py", "location": "C:\\CypherMiner\\tests\\", "type": "Python", "description": "pytest checks of /health, /version, /info, /openapi.json; SKIPS (never fails) if the API is down — CI/offline-safe."}
+      ]
+    },
+    {
+      "name": "QI Ecosystem",
+      "documents": [
+        {"title": "QI Ecosystem Registry (cypherminer)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "CypherMiner entry: ports api 8502 (block 8500-8599) / ui 7842 (block 7840-7849), status 'complete', family_tier 'sibling', exposes /health /version /info."},
+        {"title": "QI Service Registry (CypherMiner services)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entries: QI_CypherMinerUI (static :7842), QI_CypherMinerTunnel (named tunnel qi-cypherminer -> cypher.quiddityinnovations.com), and the API service."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Where CypherMiner sits in the QI port/family map and integration contracts."},
+        {"title": "QI Standards", "file": "QI_Standards.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Naming/folder/code conventions CypherMiner follows."}
+      ]
+    }
+  ]
+}

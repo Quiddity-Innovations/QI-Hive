@@ -1,0 +1,61 @@
+{
+  "categories": [
+    {
+      "name": "Voice Dispatch Console (the re-framed mission)",
+      "priority": "high",
+      "items": [
+        {"title": "Conversation vs work-order classifier", "detail": "The brain decides per utterance whether Renne is chatting (answer now) or giving a work order (create a dispatch). Trigger verbs ('dispatch...', 'go do...', 'have the hive...') force a dispatch. This is the front-half of the console — capture + classify."},
+        {"title": "Create dispatches in the QI Hive", "detail": "POST :9011/api/dispatch with source='voice_<pc|line|telegram>' and payload {title, description, project, suggested_agent}, landing in the SAME CoWork queue the dashboard already approves. No parallel queue — reuse the verified Hive contract (DB C:\\QIH\\data\\qi_brain.db)."},
+        {"title": "Approve by voice", "detail": "Say 'approve' / 'go ahead' -> PATCH :9011/api/dispatch/<id> {status:'approved', reviewed_by:'renne'} (or reuse C:\\QIH\\tools\\dispatch_admin.py). Voice becomes the approval surface, keeping inspector findings off the human queue per dispatch-queue-hygiene."},
+        {"title": "Net-new dispatch executor", "detail": "A persistent runner polling Brain for approved, source='voice_*' dispatches, executing general work via headless `claude -p` (fanning out to hive-<role> agents) and writing a report to C:\\QIH\\shared\\reports\\inbox\\. The existing QI_HiveApply pipeline only does allowlisted mechanical fixes — this is the missing general executor."},
+        {"title": "Voice notification path", "detail": "There is no push-back today (dispatch status is dashboard-only). Build a watcher: on report/apply-state change, speak / LINE / Telegram 'Done: <result>.' Closes the loop so a spoken order ends in a spoken confirmation."}
+      ]
+    },
+    {
+      "name": "Natural Voice on LiveKit (Phase 1)",
+      "priority": "high",
+      "items": [
+        {"title": "Stand up the LiveKit spine", "detail": "Install livekit-server (Windows binary, Apache-2.0, free) and pin a port inside 8720-8729 (NOT 7880 = NEXUS) — register it in qi_registry.json first. One Claude agent serves both the 1:1 voice room (Phase 1) and the multi-party room (Phase 2)."},
+        {"title": "LiveKit Agent: STT -> brain -> TTS", "detail": "Python agent = faster-whisper distil-large-v3 on CUDA (via RealtimeSTT, ~150-200ms partials) -> the pluggable brain selector -> Kokoro-82M (male am_adam) or edge-tts Andrew, with silero-VAD + smart-turn-v3 endpointing and barge-in. Target ~370-820ms mic->first word."},
+        {"title": "Cut over from the CPU loop", "detail": "Upgrade today's CPU base.en Whisper and ~20s/turn realtime.py to the LiveKit agent; retire realtime.py's bespoke loop only after the LiveKit 1:1 voice works (no coverage gap)."},
+        {"title": "Low-latency live brain", "detail": "Heavy/agentic work stays on the FREE Hive/claude_cli path; add the Anthropic API (Haiku) as a toggleable, disabled-by-default backend purely for snappy conversational replies in live voice."}
+      ]
+    },
+    {
+      "name": "Zoom-like Interface (Phase 2)",
+      "priority": "medium",
+      "items": [
+        {"title": "LiveKit 'meet' UI", "detail": "Add the simple livekit-examples/meet UI: screen share + chat + recording, with Claude joining as a participant who hears, speaks, and sees shared-screen frames (sampled into Claude's vision)."},
+        {"title": "plugNmeet full toolkit", "detail": "Upgrade to plugNmeet for document share, whiteboard, breakout rooms, polls — 'most Zoom tools' — once the meet UI is proven."},
+        {"title": "Retire the bespoke Meeting Room", "detail": "Replace the hand-rolled WebSocket room (meeting_server.py :8722) with the LiveKit-hosted room once it reaches feature parity, freeing the bespoke STT/TTS/turn-taking code."}
+      ]
+    },
+    {
+      "name": "Configuration Panel (objectives 1, 2, 4)",
+      "priority": "medium",
+      "items": [
+        {"title": "Full backend config panel", "detail": "Extend the :8720 brain UI into the single control surface: backend select + per-backend enable/disable (Ollama + API OFF by default), brain hard-set lock, voice settings — one panel for every surface."},
+        {"title": "Speak-in-Claude-Code toggle", "detail": "Objective 4: wire 'voice on' inside a Claude Code session to speak each reply via speak.py (Andrew), with a panel toggle to enable/disable it."}
+      ]
+    },
+    {
+      "name": "Cleanup & Technical Debt",
+      "priority": "medium",
+      "items": [
+        {"title": "Delete the dead file bridge", "detail": "Remove claude_bridge/ (bus, bridge_answer, bridge_listen, bridge_speak, inbox/outbox, speak.log) and all _bridge_roundtrip / BRAIN_MODE=='bridge' branches now that the claude_cli backend replaces it. The file bridge needed a human to answer (1 of 12 messages ever answered)."},
+        {"title": "Retire legacy switches & superseded files", "detail": "Drop the legacy brain_mode single switch and webcall_server.py (superseded by meeting_server.py; both bind :8722)."},
+        {"title": "Fix the locked live config for realtime", "detail": "Current config is locked->bridge-era with a long bridge_timeout; realtime.py can block per utterance when no session mans the bridge. Cleared by the brain rebuild (now engine=claude_cli) — verify and tidy the timeout."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Portability",
+      "priority": "low",
+      "items": [
+        {"title": "Register the QI_ClaudeVoice* services", "detail": "The four NSSM services (Tunnel/Line/Telegram/Control) + two scheduled tasks are installed but not yet recorded in C:\\QIH\\ecosystem\\QI_Service_Registry.md — add them so service triage has a single source of truth."},
+        {"title": "Promote the voice bridge as a shared QI feature", "detail": "Package speak.py + listen.py + the realtime loop as a reusable component other QI projects (Maia, OpenClaw 'Koe') can adopt, per the registry's exposes_to_ecosystem entry."},
+        {"title": "Boston University replica", "detail": "Keep the dispatch + voice design portable to the BU laptop replica (BU/Implement_Claude_Voice_and_Bridge_at_BU.md): CPU Whisper, loopback-first, secrets in env, no student-data tunneling, same Hive dispatch contract; future SSO/Teams/FERPA hub."},
+        {"title": "QI Brain context logging", "detail": "Optionally log Claude Voice sessions/decisions to the QI Brain (:9011) for cross-project memory, as listed in the registry's integrates_with."}
+      ]
+    }
+  ]
+}

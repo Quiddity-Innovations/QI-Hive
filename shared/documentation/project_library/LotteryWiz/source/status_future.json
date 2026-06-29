@@ -1,0 +1,41 @@
+{
+  "categories": [
+    {
+      "name": "Operations — make it permanent",
+      "priority": "high",
+      "items": [
+        {"title": "Install the service + named tunnel", "detail": "User action: run install_service.bat (UAC) so QI_LotteryWiz runs 24/7 instead of as a dev process, then provision the static named tunnel (migrate_named_tunnels.py --only qi-lotterywiz) so it lives at https://lottery.quiddityinnovations.com instead of a random quick-tunnel URL."},
+        {"title": "Restart Claude Desktop for MCP", "detail": "mcp_server.py is registered with 11 tools but Claude Desktop must be restarted to load it. Until then the no-paid-API path ('Using lottery-wiz, generate a 63-ticket hot wheel and run the brutal ledger') is unavailable."},
+        {"title": "Set the owner key", "detail": "A key was auto-generated into C:\\Lottery Wiz\\.owner_key on first boot. Edit that file (or set LOTTERYWIZ_OWNER_KEY) to a chosen value so the owner-unlock link/password is memorable."}
+      ]
+    },
+    {
+      "name": "Data coverage",
+      "priority": "medium",
+      "items": [
+        {"title": "Find verified sources for the missing games", "detail": "SuperEnalotto (6/90), EuroJackpot, UK Lotto and Lotto 6/49 have presets + correct odds but no wired live source - they currently show an honest note and rely on CSV import. Each needs a verified free archive/feed before auto-loading (the SuperEnalotto SourceForge archive was rejected as mis-dated)."},
+        {"title": "Powerball / EuroMillions jackpot line", "detail": "Powerball.com is Brotli + bot-walled and no reliable free headless source was found; EuroMillions community APIs carry no jackpot field. The Results cards honestly show no jackpot for these - revisit with a state-lottery feed or a keyed API (e.g. magayo)."},
+        {"title": "Real-time auto-refresh on draw nights", "detail": "Optionally poll /api/g/update on a timer on each game's draw night so the Latest Results dashboard updates itself the moment a result posts, rather than only on the 10-minute load refresh."}
+      ]
+    },
+    {
+      "name": "Feature depth",
+      "priority": "medium",
+      "items": [
+        {"title": "Per-game prize tables for the Universal Ledger", "detail": "The Universal ledger currently needs prize amounts passed in per call. Add per-game prize-tier presets so any game's Brutal Ledger has built-in payouts and an odds->EV view, like Fantasy 5 already does."},
+        {"title": "Deeper Super Sete / Scratch AI", "detail": "Give Super Sete an 'Ask Wiz to review' deep analysis, and let the Scratch Wiz pre-fill the add-game form from a pasted official prize table (user-confirmed, never invented)."},
+        {"title": "Unify the Universal dock onto WizDock", "detail": "The Universal app still carries its own inline copy of the AI dock; fold it onto the shared Fantasy5/aidock.js (WizDock) module so all non-F5 apps share one implementation. (Super Sete + Scratch already do.)"},
+        {"title": "Bet-slip print layout", "detail": "Offer a real Georgia Fantasy 5 bet-slip mark style as an alternative to the current 4-up ticket grid, plus a 'copy/reload exact recipe' so a saved set's full parameters can be reproduced."}
+      ]
+    },
+    {
+      "name": "Robustness & QI integration",
+      "priority": "low",
+      "items": [
+        {"title": "Concurrency on SSE endpoints", "detail": "The chat/verdict SSE endpoints are sync generators; many concurrent long Ollama streams can saturate the single-worker dev server. Cosmetic for single-user, but revisit (async generators / worker count) before any multi-user exposure behind the public tunnel."},
+        {"title": "Wire into QI Brain", "detail": "Register significant sessions/decisions via qi.log_session / qi.log_decision so Lottery Wiz appears in cross-project memory; it currently has no integrations_with entries in the registry."},
+        {"title": "Session-end .docx summaries", "detail": "Per QI standing instructions, save dated session summaries to C:\\QIH\\shared\\documentation\\session_summaries\\ (LotteryWiz_Summary_YYYY-MM-DD_HHMM.docx) at the end of each working session."}
+      ]
+    }
+  ]
+}

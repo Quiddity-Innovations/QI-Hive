@@ -1,0 +1,234 @@
+[
+  {
+    "category": "Tasuke — Orchestration & Safety",
+    "features": [
+      {
+        "name": "Single front door",
+        "description": "Renne talks to one agent (Tasuke) over Telegram/LINE; Tasuke delegates everything else.",
+        "status": "live",
+        "notes": "Only agent Renne addresses directly. Telegram @HattoriTasukeBot."
+      },
+      {
+        "name": "Permission firewall (TALK / DO / PRIVATE)",
+        "description": "Anyone in an allowed chat can trigger conversational TALK actions; only Renne can trigger state-changing DO actions; private info is never revealed in group chats.",
+        "status": "live",
+        "notes": "First-match gate evaluation in TOOLS.md; sender.id == Renne for DO."
+      },
+      {
+        "name": "Capabilities wired as text, not code",
+        "description": "New skills are added by editing TOOLS.md and restarting the gateway — no bot or webhook to write.",
+        "status": "live",
+        "notes": "Gateway LLM reads the 1,200-line TOOLS.md playbook every turn."
+      },
+      {
+        "name": "Language-matched replies & refusals",
+        "description": "Tasuke replies (and politely refuses) in the language the requester wrote in (pt / en / es / ja / fr).",
+        "status": "live",
+        "notes": "Refusal templates in TOOLS.md global context rules."
+      }
+    ]
+  },
+  {
+    "category": "Kaze — News & Digest",
+    "features": [
+      {
+        "name": "Twice-daily news briefing",
+        "description": "Curated multi-category news digest delivered to Telegram at 6AM and 6PM.",
+        "status": "live",
+        "notes": "RSS aggregation with de-duplication, clustering, and source-credibility policy."
+      },
+      {
+        "name": "Dedicated AI/ML digest",
+        "description": "Separate twice-daily digest focused on AI and technology news.",
+        "status": "live",
+        "notes": "Four Task Scheduler jobs total (news + AI, 6AM + 6PM)."
+      },
+      {
+        "name": "Public news web page",
+        "description": "News digest published to a web page reachable on the phone at a permanent URL.",
+        "status": "live",
+        "notes": "https://kaze.quiddityinnovations.com (QI_KazeNewsTunnel named tunnel)."
+      },
+      {
+        "name": "Self-service feed configuration",
+        "description": "Add or edit news sources and source policy through a small web UI.",
+        "status": "live",
+        "notes": "Served by QI_KazeConfigAPI at /kaze-config/."
+      },
+      {
+        "name": "Archive to NotebookLM",
+        "description": "Digests are pushed into a NotebookLM notebook as a durable knowledge base.",
+        "status": "live",
+        "notes": "Auth-cookie client; Sentry monitors push success."
+      }
+    ]
+  },
+  {
+    "category": "Yubin — Email Intelligence",
+    "features": [
+      {
+        "name": "Inbox triage & summary",
+        "description": "Fetches Gmail twice daily, classifies, summarises, and delivers a digest with urgent items flagged.",
+        "status": "live",
+        "notes": "maia.quiddam@gmail.com via IMAP; 8AM + 6PM."
+      },
+      {
+        "name": "Spam / newsletter suppression",
+        "description": "Marketing, no-reply, and subscription traffic are suppressed so only what matters surfaces.",
+        "status": "live",
+        "notes": "Containment policy in YUBIN.md."
+      },
+      {
+        "name": "Hard authority guardrails",
+        "description": "Never authorises subscriptions, contracts, purchases, or consent on Renne's behalf — uncertain mail is escalated.",
+        "status": "live",
+        "notes": "Auto-reply only for approved message classes."
+      },
+      {
+        "name": "VIP fast lane",
+        "description": "Mail from named VIPs (e.g. family) is prioritised and called out.",
+        "status": "partial",
+        "notes": "Code ready; needs yubin-vip.json allowlist populated."
+      }
+    ]
+  },
+  {
+    "category": "Asa — Morning Briefing",
+    "features": [
+      {
+        "name": "One-message daily briefing",
+        "description": "A single 7AM Telegram message combining news, inbox, system health, QI Hive health, calendar, and bills due.",
+        "status": "live",
+        "notes": "Each section degrades gracefully if a data source is missing."
+      },
+      {
+        "name": "QI ecosystem health line",
+        "description": "Pulls QI Hive Brain status so Renne sees ecosystem health each morning.",
+        "status": "live",
+        "notes": "Fixed 2026-06-15 to call Brain at :9011 (was dead 9010)."
+      },
+      {
+        "name": "Today's calendar",
+        "description": "Lists the day's events at the top of the briefing.",
+        "status": "partial",
+        "notes": "Code fixed 2026-06-15; needs CALENDAR_ICS_URL secret to activate."
+      }
+    ]
+  },
+  {
+    "category": "Kakei — Household Finance",
+    "features": [
+      {
+        "name": "Automatic bill capture from email",
+        "description": "Bill/statement/invoice emails Yubin classifies are extracted into a ledger (payee, amount, due date).",
+        "status": "live",
+        "notes": "yubin-daily.sh hooks kakei-from-yubin.py after classification."
+      },
+      {
+        "name": "Receipt photo capture",
+        "description": "Send a receipt photo to Tasuke; OCR extracts payee/amount/date into the expenses ledger.",
+        "status": "partial",
+        "notes": "Skill built; depends on Tasuke photo handler + qwen3-vl vision model."
+      },
+      {
+        "name": "Weekly spending summary",
+        "description": "Sunday 7PM Telegram rollup of bills due and the week's spending by category.",
+        "status": "live",
+        "notes": "OC-Kakei-Weekly-Sunday-7PM task; SQLite ledger."
+      },
+      {
+        "name": "Never pays anything",
+        "description": "Kakei only records; Renne marks bills paid manually.",
+        "status": "live",
+        "notes": "Authority guardrail by design."
+      }
+    ]
+  },
+  {
+    "category": "Koe — Voice",
+    "features": [
+      {
+        "name": "Voice-note understanding",
+        "description": "Send Tasuke a Telegram voice note; Koe transcribes it locally and Tasuke acts on the text.",
+        "status": "live",
+        "notes": "whisper.cpp, processed on-machine — nothing leaves the device."
+      },
+      {
+        "name": "Spoken replies",
+        "description": "Tasuke can reply with a natural voice note in the language of the reply.",
+        "status": "live",
+        "notes": "edge-tts neural voices (default); female persona, language-matched preamble."
+      },
+      {
+        "name": "Offline voice fallback",
+        "description": "Falls back to local Piper TTS when the online voice service is unavailable.",
+        "status": "live",
+        "notes": "koe-tts-router.py selects engine via KOE_TTS_ENGINE."
+      },
+      {
+        "name": "GPU voice cloning (dots.tts)",
+        "description": "One reference voice speaks across languages as the same person.",
+        "status": "partial",
+        "notes": "Parked disabled — reliable for EN/ZH only; PT/JA route to edge."
+      }
+    ]
+  },
+  {
+    "category": "Sentry — Health & Security",
+    "features": [
+      {
+        "name": "Daily system health verdict",
+        "description": "Checks gateway, Ollama, disk, memory, config integrity, and ports, producing a green/amber/red verdict.",
+        "status": "live",
+        "notes": "Deterministic bash — no LLM by design. WSL cron 6AM."
+      },
+      {
+        "name": "NotebookLM auth & push monitoring",
+        "description": "Verifies the NotebookLM cookie is valid and that Kaze/Yubin pushes succeeded.",
+        "status": "live",
+        "notes": "Surfaces as warnings in the daily report + dashboard JSON."
+      },
+      {
+        "name": "Weekly compliance drift check",
+        "description": "Reads QI Hive Inspector reports and flags standards drift.",
+        "status": "partial",
+        "notes": "Sunday 8PM; exits silently if Inspector reports are absent."
+      }
+    ]
+  },
+  {
+    "category": "Reach, Bridges & Ecosystem",
+    "features": [
+      {
+        "name": "Multi-channel (Telegram + LINE)",
+        "description": "Agents reachable over both Telegram and LINE accounts.",
+        "status": "live",
+        "notes": "tasuke-line + naya-line + kaze-line accounts added since April."
+      },
+      {
+        "name": "QI Hive Brain integration",
+        "description": "Tasuke can query the QI Hive Brain for ecosystem status, project state, pending features, and semantic answers.",
+        "status": "live",
+        "notes": "tasuke-hive-skill.py against Brain :9011."
+      },
+      {
+        "name": "Cross-bot conversation bridge",
+        "description": "Sibling bots (Maia, Naya, Kaze) can talk across the Telegram bot-to-bot barrier, with a loop guard.",
+        "status": "partial",
+        "notes": "Receiver running; candidate channel for Maia⇄OC delegation."
+      },
+      {
+        "name": "Proactive broadcast",
+        "description": "Push news/briefings proactively into multiple approved group chats.",
+        "status": "partial",
+        "notes": "Built with admin/discover/schedule/send + loop guard; tasks disabled until wanted."
+      },
+      {
+        "name": "Maia ⇄ OpenClaw action routing",
+        "description": "Maia recognises an actionable request in conversation and hands it to OpenClaw to execute.",
+        "status": "planned",
+        "notes": "Marriage candidate; peer-bridge is the candidate transport."
+      }
+    ]
+  }
+]

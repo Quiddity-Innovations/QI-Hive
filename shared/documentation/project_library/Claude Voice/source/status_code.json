@@ -1,0 +1,282 @@
+{
+  "intro": "Excerpts copied from the live Claude Voice source (C:\\CLAUDE\\Claude Voice). Each shows the real code behind a capability and explains how it powers that feature. Nothing about which AI answers, which voice is used, or which channel is on is hardcoded — it all lives in config.json + secrets/claude_voice.env.",
+  "sections": [
+    {
+      "category": "Claude-CLI Bridge — the free real Claude",
+      "snippets": [
+        {
+          "title": "Drive headless `claude -p` on the subscription token",
+          "feature": "Real Claude, for free (claude_cli backend)",
+          "file": "backends.py :: stream_claude_cli()",
+          "language": "python",
+          "code": "claude = cfg.get(\"bin\") or shutil.which(\"claude\")\nif not claude:\n    raise RuntimeError(\"claude CLI not found on PATH\")\nsystem = \"\\n\".join(m[\"content\"] for m in messages if m.get(\"role\") == \"system\")\nconvo = []\nfor m in messages:\n    if m.get(\"role\") == \"system\":\n        continue\n    who = \"Renne\" if m.get(\"role\") == \"user\" else \"Claude\"\n    convo.append(f\"{who}: {m['content']}\")\nprompt = \"\\n\".join(convo) if convo else \"(no message)\"\nargs = [claude, \"-p\", \"--output-format\", \"text\",\n        \"--no-session-persistence\", \"--model\", cfg.get(\"model\", \"sonnet\")]\nif system:\n    args += [\"--append-system-prompt\", system]\n# NOT --bare, because --bare forces ANTHROPIC_API_KEY and would bypass the free subscription token.\nproc = subprocess.run(args, input=prompt, capture_output=True, text=True,\n                      timeout=cfg.get(\"timeout\", 90), cwd=tempfile.gettempdir())",
+          "explanation": "This is the heart of the project. It spawns the local Claude Code CLI as a subprocess, passing the conversation over STDIN and the system prompt via --append-system-prompt. The cwd is a neutral temp dir so no project CLAUDE.md is auto-loaded each turn (speed). It deliberately avoids --bare because --bare would force the metered ANTHROPIC_API_KEY — instead it relies on the CLAUDE_CODE_OAUTH_TOKEN subscription token, which is what makes the real Claude FREE here."
+        },
+        {
+          "title": "Detect a broken/expired login and report honestly",
+          "feature": "Self-diagnosing real-Claude path",
+          "file": "backends.py :: stream_claude_cli()",
+          "language": "python",
+          "code": "blob = (proc.stdout or \"\") + (proc.stderr or \"\")\nif \"Not logged in\" in blob or \"/login\" in blob:\n    raise RuntimeError(\"claude CLI not authenticated for headless use — run `claude setup-token` \"\n                       \"(free, uses your subscription) and set CLAUDE_CODE_OAUTH_TOKEN\")\nout = (proc.stdout or \"\").strip()\nif not out:\n    raise RuntimeError(f\"claude CLI returned nothing (rc={proc.returncode}): {(proc.stderr or '')[:200]}\")\nyield out",
+          "explanation": "Rather than fail silently, the backend inspects the CLI output for the tell-tale 'Not logged in' / '/login' strings and raises a precise, actionable error telling Renne to re-run `claude setup-token`. This is exactly what the hourly health monitor surfaces — a stale subscription token is the single most likely failure of the free real-Claude path, so it gets named explicitly."
+        },
+        {
+          "title": "Synchronous bridge round-trip (legacy file bus)",
+          "feature": "Blocking real-Claude turn for voice loops",
+          "file": "brain.py :: _bridge_roundtrip()",
+          "language": "python",
+          "code": "mid = bridge_bus.submit(channel, chat, user, text)\ndeadline = time.time() + timeout\nwhile time.time() < deadline:\n    lines = open(outbox, encoding=\"utf-8\").read().splitlines() if os.path.exists(outbox) else []\n    while seen < len(lines):\n        ln = lines[seen]; seen += 1\n        if not ln.strip():\n            continue\n        obj = json.loads(ln)\n        if obj.get(\"id\") == mid:\n            return (obj.get(\"text\") or \"\").strip() or None\n    time.sleep(0.5)\nreturn None",
+          "explanation": "The original 'bridge' engine: it drops a message into claude_bridge/inbox.jsonl and polls outbox.jsonl for a reply with the matching id, up to a timeout. The catch — proven in production — is that NO program answers; a human had to type the reply (1 of 12 ever answered). This is why the claude_cli backend replaced it; the round-trip remains for back-compat and is slated for deletion (MASTER_PLAN task B1)."
+        }
+      ]
+    },
+    {
+      "category": "Speech-to-Text (faster-whisper)",
+      "snippets": [
+        {
+          "title": "Local Whisper, CPU int8",
+          "feature": "On-device transcription, free and private",
+          "file": "realtime.py :: load_whisper() / transcribe()",
+          "language": "python",
+          "code": "def load_whisper(cfg):\n    from faster_whisper import WhisperModel\n    model = cfg[\"stt\"][\"model\"]\n    # CPU only: faster-whisper CUDA needs cublas/cuDNN DLLs absent from this Windows Python.\n    m = WhisperModel(model, device=\"cpu\", compute_type=\"int8\")\n    log(f\"[STT] faster-whisper '{model}' on cpu (int8)\")\n    return m\n\ndef transcribe(model, audio, cfg):\n    wav = os.path.join(TMP, \"cv_utt.wav\")\n    sf.write(wav, audio, SR)\n    segs, info = model.transcribe(wav, language=cfg[\"stt\"].get(\"language\"), beam_size=5,\n                                  initial_prompt=brain.stt_hint(cfg))\n    text = \" \".join(s.text for s in segs).strip()\n    return text, getattr(info, \"language\", None)",
+          "explanation": "Transcription runs entirely on-device with faster-whisper, so speech never leaves the machine and costs nothing. It is pinned to CPU int8 because the CUDA DLLs are missing from this Windows Python (the LiveKit rebuild restores GPU). The initial_prompt is brain.stt_hint() — a bias toward the brain names so 'Claude' isn't misheard as 'Cloud'."
+        },
+        {
+          "title": "Energy VAD — hands-free endpointing",
+          "feature": "Auto start/stop without key presses",
+          "file": "realtime.py :: capture_vad()",
+          "language": "python",
+          "code": "with sd.InputStream(samplerate=SR, channels=1, dtype=\"float32\") as st:\n    while True:\n        data, _ = st.read(int(SR * block))\n        data = data.reshape(-1)\n        e = _rms(data)\n        if not started:\n            if e > start:\n                started = True; frames.append(data.copy()); speech = block\n        else:\n            frames.append(data.copy())\n            if e > start:\n                speech += block; silence = 0.0\n            else:\n                silence += block\n            if speech >= min_speech and silence >= sil_need:\n                break\n            if len(frames) * block > max_utt:\n                break",
+          "explanation": "The built-in voice-activity detector needs no extra dependencies: it computes per-block RMS energy, starts capturing when energy crosses start_rms, and ends the turn after enough trailing silence (silence_ms) once a minimum speech length is met. min_speech_ms and max_utterance_s guard against noise blips and runaway recordings. config.listening.mode chooses vad, wake, or push-to-talk."
+        },
+        {
+          "title": "Mishearing-tolerant brain-name bias",
+          "feature": "Whisper hears 'Claude', not 'Cloud'",
+          "file": "brain.py :: stt_hint()",
+          "language": "python",
+          "code": "def stt_hint(cfg=None):\n    \"\"\"initial_prompt for faster-whisper that biases it to transcribe the brain names\n    CORRECTLY (so 'Claude' doesn't come out as 'Cloud').\"\"\"\n    names = \" and \".join(sorted(display_names(cfg)))\n    return f\"Renne is talking to his AI assistants {names}.\"",
+          "explanation": "Whisper frequently hears 'Claude' as 'Cloud'. Passing this sentence as the initial_prompt biases the decoder toward the actual brain names (Claude and Ronald), improving the odds that an address command is transcribed correctly. It is paired with homophone address_terms and a fuzzy fallback in the router for the cases Whisper still gets wrong."
+        }
+      ]
+    },
+    {
+      "category": "Text-to-Speech (Claude's male voice)",
+      "snippets": [
+        {
+          "title": "edge-tts neural voice with offline fallback",
+          "feature": "Claude speaks (MALE) — robust playback",
+          "file": "speak.py :: speak_edge() / main()",
+          "language": "python",
+          "code": "DEFAULT_EDGE = \"en-US-AndrewNeural\"   # Claude's voice is MALE\nPT_EDGE = \"pt-BR-AntonioNeural\"\n\ndef speak_edge(text, voice, rate=\"+0%\"):\n    import edge_tts\n    try:\n        import pronounce\n        text = pronounce.apply(text)  # spoken-only fixes (e.g. Renne -> Renee)\n    except Exception:\n        pass\n    path = os.path.join(tempfile.gettempdir(), \"claude_say.mp3\")\n    asyncio.run(edge_tts.Communicate(text, voice, rate=rate).save(path))\n    _play(path)\n# ... in main(): engine 'auto' -> edge if installed else sapi; on edge failure, fall back to SAPI.",
+          "explanation": "Claude's voice defaults to the warm MALE en-US-AndrewNeural (Antonio for Portuguese). The text is run through pronounce.apply for speech-only fixes, synthesised by Microsoft's free neural edge-tts, and played via ffplay. If edge-tts or the network is unavailable, main() falls back to offline Windows SAPI — so the PC can always talk, online or not."
+        },
+        {
+          "title": "Per-sentence streaming TTS + barge-in",
+          "feature": "Claude starts speaking on the first sentence; can be interrupted",
+          "file": "realtime.py :: speak_stream() / play_interruptible()",
+          "language": "python",
+          "code": "for who, chunk in reply_chunks:\n    if who == \"__provider__\":\n        provider = chunk; continue\n    buf += chunk; full += chunk\n    while True:\n        cut = next((i for i, ch in enumerate(buf) if ch in _SENT_END and i >= 1), -1)\n        if cut == -1 or len(buf) < 2:\n            break\n        sentence = buf[:cut + 1].strip(); buf = buf[cut + 1:]\n        if sentence:\n            synth(sentence, voice, rate, mp3)\n            if play_interruptible(mp3, barge):   # mic hot -> stop playback (barge-in)\n                return full, True, provider",
+          "explanation": "Instead of waiting for the whole answer, speak_stream consumes the brain's token stream, flushes each complete sentence (ending in . ! ? ; or newline) to edge-tts, and plays it as it arrives — so Claude begins talking almost immediately. play_interruptible watches the microphone during playback and terminates ffplay if the user starts speaking (barge-in), which is disabled by default to avoid self-trigger without headphones."
+        },
+        {
+          "title": "Spoken-only pronunciation rewrite",
+          "feature": "Say 'Renee', print 'Renne'",
+          "file": "pronounce.py :: apply()",
+          "language": "python",
+          "code": "def apply(text, cfg=None):\n    \"\"\"Return text rewritten for SPEECH only (printing should use the original).\"\"\"\n    if not text:\n        return text\n    table = dict(DEFAULT)                       # {\"Renne\": \"Renee\", ...}\n    table.update((cfg or {}).get(\"voice\", {}).get(\"pronunciation\", {}) or {})\n    for word, say in table.items():\n        if not word or word.startswith(\"_\") or not isinstance(say, str):\n            continue\n        pattern = re.compile(r\"\\b\" + re.escape(word) + r\"\\b\", re.IGNORECASE)\n        text = pattern.sub(lambda m, s=say: _match_case(m.group(0), s), text)\n    return text",
+          "explanation": "Neural TTS would say 'Renne' wrong, so this whole-word, case-preserving substitution rewrites it to 'Renee' (ruh-NAY) in the audio only — the printed text is untouched. The map is merged from a built-in default plus config.json voice.pronunciation, so Renne can add new spoken fixes without touching code."
+        }
+      ]
+    },
+    {
+      "category": "Dual-Brain Router (Claude vs Ronald)",
+      "snippets": [
+        {
+          "title": "Address a brain by name (mishearing-tolerant)",
+          "feature": "Say 'Claude' to wake the real me",
+          "file": "brain.py :: _match_address()",
+          "language": "python",
+          "code": "raw = _strip_filler((text or \"\").strip())   # drop a leading 'hey'/'ok'/...\nlow = raw.lower()\nbest = None\nfor name, e in reg.items():\n    for term in e.get(\"address_terms\", []):   # incl. homophones: cloud, claud, clawed...\n        t = term.lower().strip()\n        if t and low.startswith(t):\n            after = raw[len(t):]\n            if after[:1] in (\"\", \" \", \",\", \".\", \":\", \";\", \"!\", \"?\", \"-\"):\n                if best is None or len(t) > best[2]:\n                    best = (name, after.lstrip(\" ,.:;!?-\").strip(), len(t))\nif best:\n    return best[0], best[1]\n# fuzzy fallback: first spoken token within edit-distance 1 of any term\n...",
+          "explanation": "Detects when Renne opens by naming a brain. It strips a leading filler word, matches the brain's address_terms (which deliberately include Whisper mishearings like 'cloud'/'claud'/'clawed'), and as a last resort accepts the first token within Levenshtein distance 1 of a name. This is what makes 'Claude, ...' reliably switch to the real Claude even when speech recognition is imperfect."
+        },
+        {
+          "title": "Resolve a turn: route, switch, or take-a-break",
+          "feature": "Name toggle + wake + hand-over, in one place",
+          "file": "brain.py :: resolve()",
+          "language": "python",
+          "code": "if locked or not bcfg.get(\"address_toggle\", True):\n    _fill(result, cfg, reg, active)            # hard-set: ignore name toggles\n    return result\nname, rest = _match_address(text, reg)\nif name is None:\n    _fill(result, cfg, reg, active); return result   # current brain answers\nif rest != \"\" and _is_break(rest, bcfg):\n    other = _other(reg, name); set_active(other, bcfg)\n    result[\"control_reply\"] = (f\"Okay — {reg[name]['display_name']} stepping back. \"\n                               f\"{reg[other]['display_name']} is taking over now.\")\n    result[\"route\"] = False; _fill(result, cfg, reg, other); return result\nset_active(name, bcfg)                          # addressing a brain makes it active\nif rest == \"\":\n    result[\"control_reply\"] = f\"{reg[name]['display_name']} here. Go ahead.\"\n    result[\"route\"] = False",
+          "explanation": "The single decision point shared by every surface. When locked, name toggles are ignored (a true hard-set). Otherwise: '<name>, take a break' hands to the other brain; a bare name wakes-and-greets with no LLM call; and a real message routes to the addressed brain. route=False marks pure control commands so the channel replies with the spoken confirmation directly."
+        },
+        {
+          "title": "Ronald's anti-hallucination identity",
+          "feature": "The local stand-in never pretends to be Claude",
+          "file": "config.json :: brains.registry.ronald.system_prompt",
+          "language": "json",
+          "code": "\"ronald\": {\n  \"display_name\": \"Ronald\",\n  \"engine\": \"ollama\",\n  \"address_terms\": [\"ronald\", \"ronaldo\", \"ronnie\", \"ronold\", \"donald\"],\n  \"voice\": \"en-US-BrianNeural\",\n  \"system_prompt\": \"You are Ronald, Renne's LOCAL stand-in assistant running on his own PC (a small offline model). You are NOT Claude and must never claim to be Claude or 'the real Claude'. If asked who you are, say you are Ronald, the local helper... You have NO access to Renne's calendar, meetings, projects, files, schedule, or any live data... Never fabricate appointments, project status, or facts.\"\n}",
+          "explanation": "The fix for a real incident: a local model impersonating Claude invented a meeting 'at 10 AM' and a wrong project list. Splitting the local brain out as 'Ronald' with this explicit prompt means it admits what it is, refuses to invent Renne's data, and points him to the real Claude — so a small offline model can never masquerade as Claude again."
+        },
+        {
+          "title": "Honest 'not connected' instead of a faked answer",
+          "feature": "No silent hand-off of real-Claude questions",
+          "file": "brain.py :: converse()",
+          "language": "python",
+          "code": "if r[\"engine\"] == \"bridge\":\n    text = _bridge_roundtrip(r[\"clean_text\"], bridge_timeout, channel, chat)\n    if text:\n        history.append({\"role\": \"user\", \"content\": r[\"clean_text\"]})\n        history.append({\"role\": \"assistant\", \"content\": text})\n        out[\"reply\"] = text; return out\n    # no live session answered. If the local fallback is OFF, stay as Claude and say so.\n    if not local_fallback_enabled(bcfg):\n        out[\"reply\"] = (\"I'm not connected through the bridge right now, Renne. \"\n                        \"Please try again in a moment.\")\n        return out",
+          "explanation": "When the real-Claude path can't be reached and fallback_to_local is false (the current config), the assistant says plainly that it isn't connected rather than letting the local model answer in Claude's name. Only if Renne explicitly enables the local fallback does it hand over — and then it states the hand-off honestly via a note."
+        }
+      ]
+    },
+    {
+      "category": "LLM Backend Router",
+      "snippets": [
+        {
+          "title": "Active-first fallback chain",
+          "feature": "Pluggable brains; one failing provider can't crash a turn",
+          "file": "backends.py :: enabled_chain() / stream_reply()",
+          "language": "python",
+          "code": "def stream_reply(messages, config=None):\n    config = config or load_config()\n    chain = enabled_chain(config)\n    if not chain:\n        raise RuntimeError(\"No LLM backend enabled in config.json\")\n    last_err = None\n    for name in chain:\n        try:\n            cfg = config[\"backends\"][\"providers\"][name]\n            first = True\n            for chunk in _STREAMERS[name](messages, cfg):\n                if first:\n                    yield (\"__provider__\", name); first = False\n                yield (name, chunk)\n            if not first:\n                return                       # produced output successfully\n        except Exception as e:\n            last_err = e\n            sys.stderr.write(f\"[backend '{name}' failed: {e}; trying next]\\n\")\n            continue\n    raise RuntimeError(f\"All enabled backends failed. Last error: {last_err}\")",
+          "explanation": "The router yields a sentinel ('__provider__', name) so callers know who answered, then streams the reply chunks. enabled_chain orders the active provider first, then config 'order', among only the enabled ones. If a provider raises, it logs and tries the next — raising only when every enabled backend fails. This is Law 3 (degrade, never crash) and the reason brains are fully config-driven."
+        },
+        {
+          "title": "Local Ollama streaming",
+          "feature": "Free, low-latency local brain (default)",
+          "file": "backends.py :: stream_ollama()",
+          "language": "python",
+          "code": "def stream_ollama(messages, cfg):\n    import requests\n    host = cfg.get(\"host\", \"http://localhost:11434\").rstrip(\"/\")\n    r = requests.post(f\"{host}/api/chat\",\n                      json={\"model\": cfg[\"model\"], \"messages\": messages, \"stream\": True},\n                      stream=True, timeout=120)\n    r.raise_for_status()\n    for line in r.iter_lines():\n        if not line:\n            continue\n        obj = json.loads(line.decode(\"utf-8\"))\n        chunk = obj.get(\"message\", {}).get(\"content\", \"\")\n        if chunk:\n            yield chunk\n        if obj.get(\"done\"):\n            break",
+          "explanation": "The default brain: a streaming POST to the local Ollama server (127.0.0.1:11434, llama3.1:8b on the RTX 5080). It yields content chunks as they arrive so the realtime loop can speak per-sentence. Being local, it is free, private, and the lowest-latency option — which is why it's the safe always-on default while the bridge matures."
+        },
+        {
+          "title": "Force one engine (used by the meeting host)",
+          "feature": "Host runs the active brain's real engine, not the global default",
+          "file": "brain.py :: _cfg_for_engine()",
+          "language": "python",
+          "code": "def _cfg_for_engine(cfg, engine):\n    \"\"\"Return a config copy whose backend chain is forced to `engine`.\"\"\"\n    import copy\n    c = copy.deepcopy(cfg)\n    b = c.setdefault(\"backends\", {})\n    providers = b.setdefault(\"providers\", {})\n    providers.setdefault(engine, {\"enabled\": True})\n    providers[engine][\"enabled\"] = True\n    b[\"active\"] = engine\n    b[\"order\"] = [engine] + [p for p in b.get(\"order\", []) if p != engine]\n    return c",
+          "explanation": "When a specific brain must run a specific engine (e.g. the meeting host running the active brain's engine so it never impersonates Claude with the local model), this clones the config and pins the backend chain to that one engine. run_local() and the meeting room both use it to guarantee the resolved brain — not the global default — actually answers."
+        }
+      ]
+    },
+    {
+      "category": "Control / Health API (:8720)",
+      "snippets": [
+        {
+          "title": "QI module contract endpoints",
+          "feature": "/health, /version, /info with graceful degrade",
+          "file": "server.py :: version() / info()",
+          "language": "python",
+          "code": "@app.get(\"/version\")\ndef version():\n    return {\"project\": PROJECT_ID, \"version\": VERSION, \"status\": \"active_development\"}\n\n@app.get(\"/info\")\ndef info():\n    try:\n        with open(REGISTRY, \"r\", encoding=\"utf-8\") as f:\n            reg = json.load(f)\n        entry = next((p for p in reg[\"projects\"] if p[\"id\"] == PROJECT_ID), None)\n        return JSONResponse(_envelope(data=entry))\n    except Exception as e:  # graceful degrade (Law 3)\n        return JSONResponse(_envelope(error=str(e)), status_code=200)",
+          "explanation": "Every QI project exposes /health, /version, /info (Law 2). /info reads qi_registry.json and returns this project's own entry, wrapped in a uniform envelope. Even on error it returns 200 with an error field rather than throwing — graceful degrade (Law 3). The server binds loopback-only on :8720 and is never tunneled."
+        },
+        {
+          "title": "Brain toggle with hard-set lock",
+          "feature": "Switch / pin the active brain from the web UI",
+          "file": "server.py :: brain_config()",
+          "language": "python",
+          "code": "@app.post(\"/brain/config\")\ndef brain_config(body: BrainSet):\n    patch = {}\n    if body.locked is not None:        patch[\"locked\"] = bool(body.locked)\n    if body.default is not None:       patch[\"default\"] = body.default\n    if body.address_toggle is not None: patch[\"address_toggle\"] = bool(body.address_toggle)\n    if patch:\n        _write_brains_patch(patch)\n    bcfg = brain.brains_cfg()\n    if bcfg.get(\"locked\"):\n        brain.set_active(bcfg.get(\"default\"))   # locking pins active -> default\n    return _envelope(data={\"active\": brain.get_active(), **patch})",
+          "explanation": "Backs the segmented Claude/Ronald toggle UI served at GET /. Setting locked=true pins the active brain to the configured default and makes name toggles in chat ignored — a true hard-set. Because it writes config.json and shares data/brain_state.json with every channel, a change in the web UI takes effect immediately on LINE, Telegram, and the voice loop."
+        }
+      ]
+    },
+    {
+      "category": "Channels — LINE & Telegram",
+      "snippets": [
+        {
+          "title": "Owner vs guest gating",
+          "feature": "Binding owner; sandboxed guests",
+          "file": "line_bot.py :: process_event()",
+          "language": "python",
+          "code": "is_owner = bool(OWNER) and uid == OWNER\n# owner command channel — works in a DM or inside a group. Owner only.\nif is_owner and isinstance(ev.message, TextMessageContent) \\\n        and ev.message.text.strip().startswith(\"/\"):\n    owner_command(ev.message.text, ev.reply_token); return\n# global pause (owner exempt) + guest gating\nif STATE.get(\"paused\") and not is_owner:\n    return\nif not is_owner and not STATE.get(\"guests_allowed\", True):\n    if not is_group:\n        reply(ev.reply_token, [TextMessage(text=\"Claude is taking a break right now.\")])\n    return",
+          "explanation": "LINE identifies the owner by userId. Owner messages get the full dual-brain assistant and binding slash-commands; everyone else is a GUEST who gets the social-only system prompt with no project access. A global pause and a guests-allowed switch (set by owner DM, persisted in data/line_control.json) gate non-owner traffic, with the owner always exempt."
+        },
+        {
+          "title": "Address-gating in group chats",
+          "feature": "Only reply when called by name in a group",
+          "file": "line_bot.py :: addressed() / process_event()",
+          "language": "python",
+          "code": "def addressed(text):\n    low = (text or \"\").lower()\n    terms = set(ADDRESS_TERMS) | set(brain.all_address_terms(CFG))\n    return any(t in low for t in terms)\n\n# ... in process_event():\nif is_group and GROUP_MODE == \"addressed\" and not addressed(text):\n    return",
+          "explanation": "In a group or room the bot stays silent unless the message contains an address term ('claude', plus the brain names' homophones), so it doesn't answer every line of group chatter. The same address vocabulary that drives the dual-brain toggle also decides whether the bot speaks up at all in a group."
+        },
+        {
+          "title": "Fast-return webhook with worker offload",
+          "feature": "Never block the LINE webhook",
+          "file": "line_bot.py :: webhook()",
+          "language": "python",
+          "code": "events = parser.parse(body, signature)   # raises on bad X-Line-Signature\nloop = asyncio.get_running_loop()\nfor ev in events:\n    loop.run_in_executor(None, process_event, ev)  # offload blocking work; return 200 fast\nreturn Response(status_code=200)",
+          "explanation": "The webhook verifies LINE's signature, then offloads each event to a worker thread and returns 200 immediately — LINE requires a quick acknowledgement, but transcription + an ~20s real-Claude turn are slow. Long replies are delivered later via push (the reply token has expired by then), so the webhook itself never blocks."
+        },
+        {
+          "title": "Telegram dual-brain reply + voice note",
+          "feature": "Two-way text + voice on Telegram",
+          "file": "telegram_bot.py :: Bot.reply() / _deliver()",
+          "language": "python",
+          "code": "def reply(self, chat_id, user_text, lang):\n    r = brain.resolve(user_text, self.cfg)\n    if not r[\"route\"]:                       # pure switch/wake command\n        self._deliver(chat_id, user_text, r[\"control_reply\"], lang, voice=r[\"voice\"]); return\n    hist = self.history(chat_id)\n    hist.append({\"role\": \"user\", \"content\": r[\"clean_text\"]})\n    ...\n    text = brain.run_local(hist, r, self.cfg)\n    self._deliver(chat_id, user_text, text, lang, voice=r[\"voice\"])\n\ndef _deliver(self, chat_id, user_text, text, lang, voice=None):\n    if self.reply_text_default:\n        self.tg.send_text(chat_id, text)\n    deci = modality.choose(user_text, text, {\"cfg\": self.cfg.get(\"automation\", {})})\n    if self.voice_enabled(chat_id) and deci[\"voice\"]:\n        ... text_to_ogg(...) ; self.tg.send_voice(chat_id, ogg)",
+          "explanation": "Telegram routes through the same brain.resolve as every other surface, keeps per-chat memory, and delivers text plus (when modality.choose votes for it) an OGG/Opus voice note in the brain's voice. The bot runs on an outbound long-poll, so it needs no inbound port and no tunnel — a deliberate QI safety choice."
+        }
+      ]
+    },
+    {
+      "category": "Meeting Room (:8722)",
+      "snippets": [
+        {
+          "title": "Grounded host system prompt",
+          "feature": "Claude hosts, but never invents people or features",
+          "file": "meeting_server.py :: build_messages()",
+          "language": "python",
+          "code": "sysp = (hb[\"persona\"] +\n        f\" You are HOSTING a live group meeting... Participants currently in the room: {roster}. \"\n        f\"Address people by name, keep replies short...\"\n        f\" CRITICAL — stay grounded in reality: the ONLY people in this room are those listed above \"\n        f\"({roster}). NEVER invent, name, or address anyone who is not on that list. You do NOT have \"\n        f\"screen-sharing, file-sharing, slides, camera, or vision features here — do NOT offer, \"\n        f\"reference, or pretend to use any capability you don't actually have...\")\nmsgs = [{\"role\": \"system\", \"content\": sysp}]\nfor t in transcript[-30:]:\n    if t[\"from\"].lower() in hn:\n        msgs.append({\"role\": \"assistant\", \"content\": t[\"text\"]})\n    else:\n        msgs.append({\"role\": \"user\", \"content\": f'{t[\"from\"]}: {t[\"text\"]}'})",
+          "explanation": "The host prompt injects the live roster and hard rules against hallucination: only address real participants, and never pretend to have screen-share, files, slides, or vision (features the room doesn't actually have). The recent transcript is replayed as alternating assistant/user turns so the host has context — the same honesty discipline as the Ronald prompt, applied to the group setting."
+        },
+        {
+          "title": "Turn-taking — answer, interject, or stay quiet",
+          "feature": "Natural group facilitation without bot loops",
+          "file": "meeting_server.py :: on_user_message()",
+          "language": "python",
+          "code": "addressee = find_addressee(text)\nawait post_message(pid, text, to=addressee)\n...\ngeneral = addressee is None or addressee.lower() in (\"everyone\", \"all\", \"room\")\nto_host = addressee is not None and addressee.lower() in _host_names()\nif to_host or (general and p[\"kind\"] == \"human\"):\n    async with _lock:\n        await broadcast({\"type\": \"typing\", \"who\": host_brain()[\"name\"]})\n        reply, hb = await asyncio.to_thread(host_reply)\n        await claude_say(reply, hb)\nelif p[\"kind\"] == \"human\" and len(text) >= 40 and not text.strip().endswith(\"?\"):\n    await maybe_interject()",
+          "explanation": "The host replies when addressed by name or to a human's open message, but stays quiet when one participant addresses another (e.g. 'Nova, ...') — which is what stops two bots from answering each other forever. On a long human statement (not a question to someone else) it may courteously interject, but only via maybe_interject(), which speaks only on a genuinely strong, respectful disagreement and otherwise replies EXACTLY '[pass]'."
+        },
+        {
+          "title": "Junction box — text becomes voice for everyone",
+          "feature": "Humans hear voices; agents read text",
+          "file": "meeting_server.py :: tts() / claude_say()",
+          "language": "python",
+          "code": "async def tts(text, voice):\n    global _seq; _seq += 1\n    mp3 = os.path.join(MEDIA, f\"m_{_seq}.mp3\")\n    await edge_tts.Communicate(pronounce.apply(text), voice,\n                               rate=CFG[\"voice\"].get(\"rate\", \"+0%\")).save(mp3)\n    return f\"/media/{os.path.basename(mp3)}\"\n\nasync def claude_say(text, hb=None):\n    hb = hb or host_brain()\n    transcript.append({\"from\": hb[\"name\"], \"text\": text})\n    audio = await tts(text, hb[\"voice\"])            # Claude = Andrew, Ronald = Brian\n    await broadcast({\"type\": \"msg\", \"from\": hb[\"name\"], \"host\": True, \"text\": text, \"audio\": audio})",
+          "explanation": "The room is a text<->voice junction box: every participant's text is synthesised in their own distinct voice (from VOICE_POOL; the host uses the active brain's voice), while humans' speech is transcribed by Whisper. So bots 'hear' text and humans hear voice, and the host avatar speaks its reply with Andrew (or Brian when Ronald hosts)."
+        },
+        {
+          "title": "Minutes -> structured .docx",
+          "feature": "One-click meeting minutes",
+          "file": "meeting_server.py :: minutes()",
+          "language": "python",
+          "code": "sysp = \"You write clear, professional meeting minutes. Be factual; NEVER invent anything not in the transcript.\"\nusr = (\"Write meeting minutes from the transcript below. Structure exactly:\\n\"\n       \"## Summary  (one short paragraph)\\n## Discussion ...\\n## Decisions ...\\n## Action Items ...\\n\"\n       \"Use markdown headings (##) and dash bullets. Do not invent attendees or topics.\\n\\nTranscript:\\n\" + convo)\nbody = await asyncio.to_thread(_collect, [{\"role\": \"system\", \"content\": sysp},\n                                          {\"role\": \"user\", \"content\": usr}])\n_render_minutes_docx({\"when\": when, \"present\": present}, body, os.path.join(MINUTES_DIR, fname))",
+          "explanation": "POST /minutes feeds the live transcript to the brain with a strict factual prompt that fixes the section structure and forbids inventing attendees or topics. _render_minutes_docx then turns the returned markdown into a real Word document (python-docx) saved to data/minutes and downloadable — turning a spoken meeting into a shareable record."
+        }
+      ]
+    },
+    {
+      "category": "Persistence & Self-Healing",
+      "snippets": [
+        {
+          "title": "Hourly real-Claude live probe",
+          "feature": "Catch a dead subscription token before Renne does",
+          "file": "bridge_health.py :: check()",
+          "language": "python",
+          "code": "tok = os.environ.get(\"CLAUDE_CODE_OAUTH_TOKEN\", \"\")\nres[\"checks\"][\"token_present\"] = bool(tok)\nres[\"checks\"][\"token_kind\"] = (\"subscription-oauth\" if tok.startswith(\"sk-ant-oat\")\n                               else (\"api-key\" if tok else \"missing\"))\n...\nt0 = time.time()\nout = \"\".join(backends.stream_claude_cli(\n    [{\"role\": \"system\", \"content\": \"You are a health probe. Answer in 3 words.\"},\n     {\"role\": \"user\", \"content\": PROBE_PROMPT}], {\"model\": \"sonnet\", \"timeout\": 75}))\nres[\"latency_s\"] = round(time.time() - t0, 1)\nres[\"checks\"][\"live_probe\"] = bool(out.strip())\nres[\"ok\"] = bool(res[\"checks\"].get(\"token_present\") and res[\"checks\"].get(\"brain_wired\")\n                 and res[\"checks\"].get(\"live_probe\"))",
+          "explanation": "Run hourly by QI_ClaudeVoiceBridgeCheck, this sends a tiny prompt through the real claude_cli backend and confirms a real reply (expecting 'BRIDGE OK') plus latency. It also classifies the token as subscription-oauth vs api-key vs missing. The result is written to data/bridge_health.json (served at :8720/bridge/health); on failure it drops BRIDGE_PENDING_REVIEW.json and notifies Renne via the Tasuke LINE notifier."
+        },
+        {
+          "title": "Service-safe ffmpeg resolution",
+          "feature": "Voice notes work even under a service account",
+          "file": "util.py :: _resolve()",
+          "language": "python",
+          "code": "def _resolve(name):\n    c = _from_config(name)                 # 1) explicit config dir\n    if c: return c\n    p = shutil.which(name) or shutil.which(name + \".exe\")   # 2) PATH\n    if p: return p\n    for d in _COMMON_DIRS:                  # 3) common install dirs\n        cand = os.path.join(d, name + \".exe\")\n        if os.path.exists(cand): return cand\n    la = os.environ.get(\"LOCALAPPDATA\", \"\")  # 4) WinGet packages (any version)\n    if la:\n        hits = glob.glob(os.path.join(la, r\"Microsoft\\WinGet\\Packages\", \"*FFmpeg*\",\n                                      \"**\", name + \".exe\"), recursive=True)\n        if hits: return hits[0]\n    return None",
+          "explanation": "Under a Windows service account PATH is often empty, which silently broke voice notes ('voice reply skipped'). This resolver tries an explicit config dir, then PATH, then common install locations, then a WinGet-packages glob (which survives version bumps) — so edge-tts -> ffmpeg transcode reliably finds the binary whether run interactively or as the QI_ClaudeVoiceLine service."
+        },
+        {
+          "title": "Headless daily meeting-room launch",
+          "feature": "Room starts at 08:00 with no window pop",
+          "file": "ClaudeVoice_Start_MeetingRoom.bat",
+          "language": "batch",
+          "code": "cd /d \"C:\\CLAUDE\\Claude Voice\"\nif not exist \"LOGS\" mkdir \"LOGS\"\n\"C:\\1-AI\\APPS\\PYTHON\\python.exe\" meeting_server.py >> \"C:\\CLAUDE\\Claude Voice\\LOGS\\meeting_scheduled.log\" 2>&1",
+          "explanation": "Invoked daily at 08:00 by the QI_ClaudeVoiceMeeting_8AM task through conhost --headless cmd /c, so no console window pops on Renne's desktop. It runs python.exe directly (NOT pythonw, which crashed on null stdout) and appends all output to a log. The task uses RunLevel Limited (no admin) and StartWhenAvailable — Renne chose a scheduled task over a service for the room specifically."
+        }
+      ]
+    }
+  ]
+}

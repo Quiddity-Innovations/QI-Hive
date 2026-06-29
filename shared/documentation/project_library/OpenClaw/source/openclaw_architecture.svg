@@ -1,0 +1,199 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arr-sky" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="640" fill="#f8fafc" rx="12"/>
+  <text x="450" y="25" text-anchor="middle" font-size="17" font-weight="700" fill="#1e293b">OpenClaw — System Architecture</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active Production · 2026</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="692" y="58" width="200" height="160" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="792" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Legend</text>
+  <rect x="700" y="83" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="720" y="93" font-size="9" fill="#374151">Live / Operational</text>
+  <rect x="700" y="100" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="720" y="110" font-size="9" fill="#374151">Built · Partial / Pending</text>
+  <rect x="700" y="117" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="720" y="127" font-size="9" fill="#374151">Planned</text>
+  <rect x="700" y="134" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1" stroke-dasharray="3,2"/>
+  <text x="720" y="144" font-size="9" fill="#374151">Disabled / Cancelled</text>
+  <line x1="700" y1="159" x2="718" y2="159" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="724" y="163" font-size="9" fill="#374151">Message flow</text>
+  <path d="M 700,176 H 710 V 182 H 718" fill="none" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="724" y="184" font-size="9" fill="#374151">Delegation (elbow)</text>
+  <path d="M 700,198 H 718" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <text x="724" y="202" font-size="9" fill="#374151">Tunnel / external</text>
+  <text x="792" y="214" text-anchor="middle" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+
+  <!-- ══ CHANNELS GROUP ══ -->
+  <rect x="8" y="62" width="430" height="64" rx="9" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="20" y="56" width="74" height="14" rx="3" fill="#f8fafc"/>
+  <text x="57" y="67" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700" letter-spacing="1">CHANNELS</text>
+
+  <rect x="16" y="74" width="120" height="46" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="76" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Telegram</text>
+  <text x="76" y="107" text-anchor="middle" font-size="8" fill="#3b82f6">Bot API · @HattoriTasukeBot</text>
+
+  <rect x="146" y="74" width="120" height="46" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="206" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">LINE</text>
+  <text x="206" y="107" text-anchor="middle" font-size="8" fill="#3b82f6">tasuke · naya · kaze</text>
+
+  <rect x="276" y="74" width="154" height="46" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="353" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Renne (owner)</text>
+  <text x="353" y="107" text-anchor="middle" font-size="8" fill="#3b82f6">sender.id 260811037 · full DO</text>
+
+  <!-- Cloudflare Tunnel (external, right of channels) -->
+  <rect x="568" y="62" width="116" height="64" rx="9" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="626" y="84" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Cloudflare Tunnel</text>
+  <text x="626" y="100" text-anchor="middle" font-size="8" fill="#22c55e">kaze.quiddity</text>
+  <text x="626" y="112" text-anchor="middle" font-size="8" fill="#22c55e">innovations.com</text>
+
+  <!-- arrow: channels -> gateway -->
+  <line x1="223" y1="126" x2="223" y2="160" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <!-- ══ GATEWAY (dark core) ══ -->
+  <rect x="14" y="160" width="650" height="72" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="339" y="182" text-anchor="middle" font-size="13" font-weight="700" fill="white">OpenClaw Gateway</text>
+  <text x="339" y="199" text-anchor="middle" font-size="10" fill="#94a3b8">npm openclaw 2026.4.26 · systemd --user · TCP 0.0.0.0:18789 · token auth · WSL Ubuntu-24.04</text>
+  <text x="339" y="214" text-anchor="middle" font-size="9" fill="#64748b">Polls Telegram · runs active agent (ollama/gemma4:26b) · TALK / DO / PRIVATE firewall · executes flows</text>
+  <text x="339" y="227" text-anchor="middle" font-size="8" fill="#52617a">Dashboard :18800 (Node) · OC-Keepalive-Service (NSSM) · keep-wsl-alive.ps1</text>
+
+  <!-- TOOLS.md capability contract (right of gateway) -->
+  <rect x="682" y="160" width="208" height="72" rx="9" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="786" y="180" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">~/.openclaw/workspace/</text>
+  <text x="786" y="195" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">TOOLS.md</text>
+  <text x="786" y="210" text-anchor="middle" font-size="8" fill="#4f46e5">1,262 lines · flows + firewall</text>
+  <text x="786" y="222" text-anchor="middle" font-size="8" fill="#4f46e5">read every turn (integration pt)</text>
+  <!-- gateway reads TOOLS.md -->
+  <line x1="664" y1="196" x2="682" y2="196" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ══ TASUKE ORCHESTRATOR ══ -->
+  <rect x="300" y="252" width="280" height="48" rx="9" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="440" y="271" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">Tasuke — The Loyal Guard (orchestrator)</text>
+  <text x="440" y="287" text-anchor="middle" font-size="8" fill="#2563eb">Only agent Renne talks to · routes &amp; decides · LIVE</text>
+  <!-- gateway -> tasuke -->
+  <line x1="440" y1="232" x2="440" y2="252" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <!-- ══ SPECIALIST AGENTS ══ -->
+  <text x="18" y="324" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">SPECIALIST AGENTS (subordinate to Tasuke)</text>
+
+  <!-- delegation elbows from Tasuke down to agent band -->
+  <path d="M 440,300 V 320 H 80 V 334" fill="none" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
+  <path d="M 440,300 V 320 H 246 V 334" fill="none" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
+  <path d="M 440,300 V 320 H 412 V 334" fill="none" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
+  <path d="M 440,300 V 320 H 578 V 334" fill="none" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
+  <path d="M 440,300 V 320 H 744 V 334" fill="none" stroke="#6b7280" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- Row 1 of agents -->
+  <rect x="20" y="334" width="120" height="58" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="80" y="353" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Kaze 風</text>
+  <text x="80" y="367" text-anchor="middle" font-size="8" fill="#2e7d32">News &amp; AI digests</text>
+  <text x="80" y="379" text-anchor="middle" font-size="8" fill="#2e7d32">RSS · 6AM/6PM</text>
+  <text x="80" y="389" text-anchor="middle" font-size="7" fill="#16a34a">LIVE</text>
+
+  <rect x="186" y="334" width="120" height="58" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="246" y="353" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Yubin 郵便</text>
+  <text x="246" y="367" text-anchor="middle" font-size="8" fill="#2e7d32">Email triage</text>
+  <text x="246" y="379" text-anchor="middle" font-size="8" fill="#2e7d32">Gmail IMAP · 8AM/6PM</text>
+  <text x="246" y="389" text-anchor="middle" font-size="7" fill="#16a34a">LIVE</text>
+
+  <rect x="352" y="334" width="120" height="58" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="412" y="353" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Asa 朝</text>
+  <text x="412" y="367" text-anchor="middle" font-size="8" fill="#2e7d32">Morning briefing</text>
+  <text x="412" y="379" text-anchor="middle" font-size="8" fill="#2e7d32">7AM aggregate</text>
+  <text x="412" y="389" text-anchor="middle" font-size="7" fill="#16a34a">LIVE</text>
+
+  <rect x="518" y="334" width="120" height="58" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="578" y="353" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Kakei 家計</text>
+  <text x="578" y="367" text-anchor="middle" font-size="8" fill="#2e7d32">Finance ledger</text>
+  <text x="578" y="379" text-anchor="middle" font-size="8" fill="#2e7d32">SQLite · Sun 7PM</text>
+  <text x="578" y="389" text-anchor="middle" font-size="7" fill="#16a34a">LIVE</text>
+
+  <rect x="684" y="334" width="120" height="58" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="744" y="353" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Koe 声</text>
+  <text x="744" y="367" text-anchor="middle" font-size="8" fill="#2e7d32">Voice STT / TTS</text>
+  <text x="744" y="379" text-anchor="middle" font-size="8" fill="#2e7d32">whisper.cpp + edge-tts</text>
+  <text x="744" y="389" text-anchor="middle" font-size="7" fill="#16a34a">LIVE</text>
+
+  <!-- Row 2 -->
+  <rect x="20" y="402" width="120" height="58" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="80" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Sentry</text>
+  <text x="80" y="435" text-anchor="middle" font-size="8" fill="#2e7d32">Health / security</text>
+  <text x="80" y="447" text-anchor="middle" font-size="8" fill="#2e7d32">no LLM · cron 6AM</text>
+  <text x="80" y="457" text-anchor="middle" font-size="7" fill="#16a34a">LIVE</text>
+
+  <rect x="186" y="402" width="120" height="58" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="246" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#713f12">Peer Bridge</text>
+  <text x="246" y="435" text-anchor="middle" font-size="8" fill="#b8860b">Cross-bot HMAC</text>
+  <text x="246" y="447" text-anchor="middle" font-size="8" fill="#b8860b">receiver running</text>
+  <text x="246" y="457" text-anchor="middle" font-size="7" fill="#b8860b">PARTIAL</text>
+
+  <rect x="352" y="402" width="120" height="58" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="412" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#713f12">Broadcast</text>
+  <text x="412" y="435" text-anchor="middle" font-size="8" fill="#b8860b">Multi-group push</text>
+  <text x="412" y="447" text-anchor="middle" font-size="8" fill="#b8860b">built · tasks off</text>
+  <text x="412" y="457" text-anchor="middle" font-size="7" fill="#b8860b">DISABLED</text>
+
+  <rect x="518" y="402" width="120" height="58" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="578" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Hive Bridge</text>
+  <text x="578" y="435" text-anchor="middle" font-size="8" fill="#2e7d32">Query QI Brain</text>
+  <text x="578" y="447" text-anchor="middle" font-size="8" fill="#2e7d32">:9011</text>
+  <text x="578" y="457" text-anchor="middle" font-size="7" fill="#16a34a">LIVE</text>
+
+  <rect x="684" y="402" width="120" height="58" rx="7" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="744" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Seiri 整理</text>
+  <text x="744" y="435" text-anchor="middle" font-size="8" fill="#64748b">File organisation</text>
+  <text x="744" y="447" text-anchor="middle" font-size="8" fill="#64748b">replaced by Naya</text>
+  <text x="744" y="457" text-anchor="middle" font-size="7" fill="#94a3b8">CANCELLED</text>
+
+  <!-- ══ SHARED SERVICES / DATA ══ -->
+  <text x="18" y="484" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">SHARED SERVICES &amp; STATE</text>
+
+  <line x1="120" y1="460" x2="120" y2="498" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+  <line x1="350" y1="460" x2="350" y2="498" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arr-sky)"/>
+  <line x1="580" y1="460" x2="580" y2="498" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+  <rect x="14" y="498" width="210" height="60" rx="7" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="119" y="517" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412">LLM Router (shared)</text>
+  <text x="119" y="532" text-anchor="middle" font-size="8" fill="#c2410c">kaze-llm-provider.py</text>
+  <text x="119" y="544" text-anchor="middle" font-size="8" fill="#c2410c">Cloudflare WAI → Ollama fallback</text>
+  <text x="119" y="554" text-anchor="middle" font-size="8" fill="#ea580c">gemma4:26b · gpt-oss-20b · qwen3-vl</text>
+
+  <rect x="244" y="498" width="210" height="60" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="349" y="517" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">State (files, no central DB)</text>
+  <text x="349" y="532" text-anchor="middle" font-size="8" fill="#0284c7">~/.openclaw/workspace-&lt;agent&gt;/</text>
+  <text x="349" y="544" text-anchor="middle" font-size="8" fill="#0284c7">kakei.db (SQLite) · *.json config</text>
+  <text x="349" y="554" text-anchor="middle" font-size="8" fill="#0284c7">secrets/ (chmod 600)</text>
+
+  <rect x="474" y="498" width="210" height="60" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="579" y="517" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">NotebookLM (knowledge)</text>
+  <text x="579" y="532" text-anchor="middle" font-size="8" fill="#16a34a">cookie-auth + Playwright vision</text>
+  <text x="579" y="544" text-anchor="middle" font-size="8" fill="#16a34a">Kaze + Yubin archive</text>
+  <text x="579" y="554" text-anchor="middle" font-size="8" fill="#16a34a">qwen3-vl UI automation</text>
+
+  <!-- Ecosystem link box -->
+  <rect x="704" y="498" width="186" height="60" rx="7" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="797" y="517" text-anchor="middle" font-size="10" font-weight="700" fill="#581c87">QI Ecosystem</text>
+  <text x="797" y="532" text-anchor="middle" font-size="8" fill="#7e22ce">Brain :9011 · Maia (marriage)</text>
+  <text x="797" y="544" text-anchor="middle" font-size="8" fill="#7e22ce">family tier: cousin</text>
+  <text x="797" y="554" text-anchor="middle" font-size="8" fill="#a855f7">Maia talks · OpenClaw acts</text>
+
+  <text x="450" y="592" text-anchor="middle" font-size="9" fill="#94a3b8">7 live/partial agents · Seiri cancelled · capabilities declared in TOOLS.md, not code</text>
+  <text x="450" y="610" text-anchor="middle" font-size="8" fill="#cbd5e1">Renne → Tasuke → specialists · local-first LLM · everything auditable as files</text>
+</svg>

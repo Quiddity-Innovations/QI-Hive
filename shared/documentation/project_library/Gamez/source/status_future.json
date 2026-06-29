@@ -1,0 +1,47 @@
+{
+  "categories": [
+    {
+      "name": "Live Data Activation (waiting on the tournament)",
+      "priority": "high",
+      "items": [
+        {"title": "Real 2026 player stats via API-Football", "detail": "Switch player_source to apifootball once the 2026 World Cup squads are populated by API-Football (currently 0 players this far out). This replaces the EA FC 26 stand-in ratings with real per-player match stats feeding the percentile PPS engine. A free key + the 12h throttle are already wired; set apifootball_season=2022 to demo the real scoring path now."},
+        {"title": "Kalshi WC markets go live", "detail": "Kalshi has no World Cup markets listed yet — they open closer to/during the tournament. fetch_kalshi() already self-heals by auto-discovering the live series ticker, so the live odds + model-vs-market edge fill in automatically once markets appear. Verify the discovered series and title parsing against the real markets when they list."}
+      ]
+    },
+    {
+      "name": "Model & Analytics",
+      "priority": "medium",
+      "items": [
+        {"title": "Calibrate p-from-combined mapping", "detail": "The per-match win probability uses a fixed linear map p = 0.30 + combined/100·0.45 (clamped 0.05-0.97). Backtest it against historical results (e.g. the 2022 season via API-Football) and calibrate the slope/intercept so p is empirically grounded rather than assumed."},
+        {"title": "Surface squad-score confidence", "detail": "SSS already carries a confidence (conf) from minutes coverage and metric richness, but the betting window doesn't show it. Expose confidence next to the window so a low-data team's number is visibly less trustworthy."},
+        {"title": "Head-to-head / draw modelling", "detail": "The model treats each match as a single win probability for one team. Extend toward an explicit win/draw/loss split (relevant for group-stage points and knockout 'advance' probabilities) so the standings projection and bracket survival are modelled, not just per-match p."}
+      ]
+    },
+    {
+      "name": "QI Ecosystem Integration",
+      "priority": "medium",
+      "items": [
+        {"title": "QI Brain session + decision logging", "detail": "Register Gamez sessions and notable decisions (model tweaks, data-source switches, betting-window readings) in the QI Brain via qi.log_session()/qi.log_decision() for cross-project memory. Not yet wired — Gamez is registered in qi_registry.json but doesn't call the Brain."},
+        {"title": "QI Standards compliance audit", "detail": "Run qi_validator.py --project gamez. Confirm the 7-folder QI layout (engine/config/data/logs/tests/docs/tools), per-project engine/bin/nssm.exe, and that LOGS/docs locations match QI_Standards.md. The proxy currently lives flat under proxy/ rather than the standard layout."},
+        {"title": "Mission Control health tile", "detail": "Expose Gamez's /health (source, fixtures/teams/players counts, next_refresh_s, openrouter/live_stats flags) on the QI Hive Mission Control board so its liveness is visible alongside the other services."}
+      ]
+    },
+    {
+      "name": "Packaging & Distribution",
+      "priority": "low",
+      "items": [
+        {"title": "Publish the GitHub repo", "detail": "qi_registry.json lists github: TBD. Create the repo and wire the existing .github/workflows/build.yml so the cross-OS artifacts publish on tag, giving friends a clean download page instead of hand-shared zips."},
+        {"title": "Code-sign the Windows build", "detail": "The unsigned PyInstaller .exe trips antivirus/EDR (hence the /allowlist-info SHA-256 helper and Defender-exclusion command). Code-signing the binary would remove most of that friction for non-technical friends."},
+        {"title": "macOS / Linux build verification", "detail": "CI produces mac and linux binaries but they're built on runners, not verified end-to-end. Smoke-test the pywebview window + proxy boot on a real mac and linux box before treating those artifacts as release-ready."}
+      ]
+    },
+    {
+      "name": "Hardening & Operations",
+      "priority": "low",
+      "items": [
+        {"title": "Rate-limit the shared AI over the tunnel", "detail": "The shared OpenRouter AI is gated only by an optional access code. Add per-IP rate limiting on /ai/openrouter so a shared link can't exhaust the free-tier quota, complementing the existing password gate and free-model fallback."},
+        {"title": "Cache freshness / staleness signalling", "detail": "The page shows as_of and source, but a long ESPN/Kalshi outage silently serves old cache. Add an explicit staleness badge (e.g. as_of older than 2× refresh_minutes) so users know when they're looking at last-good data."}
+      ]
+    }
+  ]
+}

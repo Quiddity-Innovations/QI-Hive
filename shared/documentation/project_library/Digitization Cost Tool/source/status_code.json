@@ -1,0 +1,134 @@
+{
+  "intro": "Excerpts copied verbatim from the live source (C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS\\index.html). Everything runs client-side in one HTML file: pricing lives in a data table, calc() turns inputs into three scenarios, and the result is rendered and exported as a signed PDF report. No server, no database.",
+  "sections": [
+    {
+      "category": "Rate Table (the configurable cost data)",
+      "snippets": [
+        {
+          "title": "RATE_DEFS — every unit rate is data, not code",
+          "feature": "Editable rate table",
+          "file": "index.html · const RATE_DEFS[]",
+          "language": "javascript",
+          "code": "const RATE_DEFS=[\n {k:\"v_scan_clean\", l:\"Vendor scanning \\u2014 clean documents\", u:\"$/page\", d:0.07, c:\"Vendor Service Rates\", s:\"SecureScan / Record Nations low end ($0.07\\u20130.12)\"},\n {k:\"v_scan_avg\", l:\"Vendor scanning \\u2014 average condition\", u:\"$/page\", d:0.10, c:\"Vendor Service Rates\", s:\"Midpoint of $0.07\\u20130.12 industry cluster\"},\n // ...\n {k:\"w_scan\", l:\"Student wage \\u2014 prep & scanning operator\", u:\"$/hr\", d:15.50, c:\"BU Student Labor\", s:\"BU SEO Job Classification ($15.00\\u201315.50 tiers)\"},\n {k:\"fringe_pct\", l:\"Payroll fringe on student labor\", u:\"%\", d:0, c:\"BU Student Labor\", s:\"Students FICA-exempt while enrolled (IRC \\u00a73121(b)(10)); use 7.65 for summer\"},\n {k:\"h_scanner\", l:\"Production scanner (Ricoh fi-8170, TWAIN/ISIS)\", u:\"$/unit\", d:1050, c:\"Hardware & Software\", s:\"Street price ~$1,050; 70 ppm, 10,000 pages/day duty\"},\n {k:\"rework_pct\", l:\"Two-step rework / inconsistency factor\", u:\"%\", d:15, c:\"Internal Project Effort\", s:\"Adapting Phase-1 output to Phase-2 import & re-QC\", a:1},\n];",
+          "explanation": "The single source of truth for pricing. Each definition carries a key (k), label (l), unit (u), default value (d), category (c), source citation (s), and an optional assumption flag (a). Because rates are data, Document Imaging & Services can re-price the entire tool from the Configuration tab without touching code, and any value with no published market price is tagged as an assumption."
+        },
+        {
+          "title": "loadRates — defaults overlaid with saved edits",
+          "feature": "Rate persistence",
+          "file": "index.html · loadRates()",
+          "language": "javascript",
+          "code": "function loadRates(){\n  const base={}; RATE_DEFS.forEach(d=>base[d.k]=d.d);\n  try{ const saved=JSON.parse(localStorage.getItem(LS_RATES)||\"{}\");\n       Object.keys(saved).forEach(k=>{ if(k in base && isFinite(+saved[k])) base[k]=+saved[k]; });\n  }catch(e){}\n  R=base;\n}",
+          "explanation": "Builds the active rate map R by starting from the built-in defaults and overlaying any values the user saved to localStorage. The guard (key must exist and parse to a finite number) means a corrupt or stale saved file can never inject junk rates — unknown keys and non-numeric values are silently ignored."
+        }
+      ]
+    },
+    {
+      "category": "Input Handling",
+      "snippets": [
+        {
+          "title": "gather — read the form into a typed object",
+          "feature": "Records profile inputs",
+          "file": "index.html · gather()",
+          "language": "javascript",
+          "code": "function gather(){\n  const g=id=>document.getElementById(id);\n  const boxes=+g(\"i_boxes\").value||0, ppb=+g(\"i_ppb\").value||2500;\n  const ovr=+g(\"i_pagesOverride\").value||0;\n  const pages=ovr>0?ovr:boxes*ppb;\n  return {\n    boxes, ppb, pages,\n    idxbasis:g(\"i_idxbasis\").value,\n    ppd:Math.max(1,+g(\"i_ppd\").value||5),\n    ppbundle:Math.max(1,+g(\"i_ppbundle\").value||100),\n    cond:g(\"i_cond\").value, idx:g(\"i_idx\").value,\n    ocr:g(\"i_ocr\").checked, destruct:g(\"i_destruct\").checked,\n    students:Math.max(1,+g(\"i_students\").value||1),\n    hpw:Math.max(1,+g(\"i_hpw\").value||20),\n    hy:{ pickup:g(\"b_pickup\").value, prep:g(\"b_prep\").value, scan:g(\"b_scan\").value,\n         soft:g(\"b_soft\").value, equip:g(\"b_equip\").value, ocr:g(\"b_ocr\").value,\n         index:g(\"b_index\").value, qc:g(\"b_qc\").value, store:g(\"b_store\").value,\n         boxstore:g(\"b_boxstore\").value, destruct:g(\"b_destruct\").value }\n  };\n}",
+          "explanation": "Collects every input field into one typed object the calculator can consume. Volume is computed as the page-count override when given, otherwise boxes x pages-per-box. Numeric fields are clamped with Math.max so a blank or zero can't break the math, and the eleven hybrid 'who does what' selects are bundled into inp.hy for Scenario B."
+        },
+        {
+          "title": "Volume and index-unit derivation",
+          "feature": "Per-document vs per-bundle indexing",
+          "file": "index.html · calc() head",
+          "language": "javascript",
+          "code": "function calc(inp){\n  const p=inp.pages;\n  const bundleMode=inp.idxbasis===\"bundle\";\n  const docs=bundleMode?Math.max(1,Math.ceil(p/inp.ppbundle)):Math.ceil(p/inp.ppd);\n  const unitLabel=bundleMode?\"bundles\":\"documents\";\n  const fringe=1+R.fringe_pct/100;\n  const cap=inp.students*inp.hpw; // student hours/week\n  const highVol=p>=100000;\n  const scanRate=highVol?R.v_scan_highvol:{clean:R.v_scan_clean,avg:R.v_scan_avg,complex:R.v_scan_complex}[cond];\n  const prepRate={clean:R.v_prep_clean,avg:R.v_prep_avg,complex:R.v_prep_complex}[cond];\n  const idxRate={basic:R.v_index_basic,std:R.v_index_std,deep:R.v_index_deep}[idx];\n  const trips=Math.max(1,Math.ceil(inp.boxes/40));",
+          "explanation": "Turns the raw profile into the quantities the scenarios need. Index units are pages/pages-per-bundle in bundle mode, else pages/avg-pages-per-document. A fringe multiplier wraps all student wages, available weekly student hours (cap) drives the timelines, and condition/depth pick the right per-page rates. Volume >= 100,000 pages flips scanning to the high-volume vendor tier."
+        }
+      ]
+    },
+    {
+      "category": "Scenario Cost Calculation",
+      "snippets": [
+        {
+          "title": "Scenario A — vendor full service with a minimum-fee floor",
+          "feature": "Vendor full-service costing",
+          "file": "index.html · calc() A block",
+          "language": "javascript",
+          "code": "const A={name:\"Scenario A \\u2014 3rd-Party Vendor Full Service\",items:[],cls:\"A\"};\nA.items.push(li(\"Vendor: scanning\"+(highVol?\" (high-volume tier)\":\"\"),p,\"pages\",scanRate,p*scanRate));\nA.items.push(li(\"Vendor: document prep\",p,\"pages\",prepRate,p*prepRate));\nif(inp.ocr) A.items.push(li(\"Vendor: OCR searchable layer\",p,\"pages\",R.v_ocr,p*R.v_ocr));\nA.items.push(li(\"Vendor: indexing (\"+idx+\")\",p,\"pages\",idxRate,p*idxRate));\nlet svc=A.items.reduce((s,i)=>s+i.amt,0);\nif(svc<R.v_min){A.items.push(li(\"Vendor: minimum project fee adjustment\",1,\"flat\",R.v_min-svc,R.v_min-svc));svc=R.v_min;}\nA.items.push(li(\"BU: vendor procurement / RFP / contract\",R.e_proc_vendor,\"hrs\",R.e_staff,R.e_proc_vendor*R.e_staff));\nA.total=A.items.reduce((s,i)=>s+i.amt,0);\nA.weeks=R.d_vendor_lead+R.d_vendor_turn;",
+          "explanation": "Each scenario is an array of line items (label, qty, unit, rate, amount) summed to a total. Scenario A is pure vendor work — scanning, prep, optional OCR, and indexing all priced per page — plus a minimum-fee adjustment if the service subtotal falls below the vendor's floor, then BU's own procurement, PM, and import effort. Its timeline is procurement lead time plus vendor turnaround."
+        },
+        {
+          "title": "Scenario B — hybrid per-service: vendor rate OR student hours",
+          "feature": "Hybrid 'who performs what' matrix",
+          "file": "index.html · calc() B block",
+          "language": "javascript",
+          "code": "let buHrs=0; let vendorUsed=false;\n// prep\nif(hy.prep===\"vendor\"){ B.items.push(li(\"Vendor: document prep\",p,\"pages\",prepRate,p*prepRate)); vendorUsed=true; }\nelse { B.items.push(li(\"BU Students: document prep\",Math.ceil(prepHrs),\"hrs\",R.w_scan*fringe,prepHrs*R.w_scan*fringe)); buHrs+=prepHrs; }\n// scanning\nlet buScans=(hy.scan===\"bu\");\nif(!buScans){ B.items.push(li(\"Vendor: scanning\",p,\"pages\",scanRate,p*scanRate)); vendorUsed=true; }\nelse { B.items.push(li(\"BU Students: scanning to PDF\",Math.ceil(scanHrs),\"hrs\",R.w_scan*fringe,scanHrs*R.w_scan*fringe)); buHrs+=scanHrs; }",
+          "explanation": "The core of the hybrid model. For each service the user assigned, the code pushes EITHER a vendor line priced as rate x pages, OR a BU-student line priced as hours x wage x fringe (accumulating buHrs). vendorUsed records whether any 3rd-party service was chosen, which later decides whether contract-procurement effort is added."
+        },
+        {
+          "title": "Scenario B — the structural cost of the two-step path",
+          "feature": "Two-step overhead modeled honestly",
+          "file": "index.html · calc() B block (tail)",
+          "language": "javascript",
+          "code": "if(vendorUsed) B.items.push(li(\"BU: vendor/software contract procurement\",R.e_proc_pv,\"hrs\",R.e_staff,R.e_proc_pv*R.e_staff));\nB.items.push(li(\"BU: project management \\u2014 Phase 1 (scanning project)\",R.e_pm,\"hrs\",R.e_staff,R.e_pm*R.e_staff));\nB.items.push(li(\"BU: DRIP/import configuration into OnBase\",R.e_drip,\"hrs\",R.e_staff,R.e_drip*R.e_staff));\nB.items.push(li(\"BU: project management \\u2014 Phase 2 (OnBase project)\",R.e_pm,\"hrs\",R.e_staff,R.e_pm*R.e_staff));\nconst reworkHrs=buHrs*R.rework_pct/100;\nif(reworkHrs>0) B.items.push(li(`Rework / inconsistency between phases (${R.rework_pct}% of student hrs)`,Math.ceil(reworkHrs),\"hrs\",R.w_index*fringe,reworkHrs*R.w_index*fringe));",
+          "explanation": "Why hybrid quietly costs more. Because files land outside OnBase, Scenario B always carries two project-management efforts, a DRIP import configuration, and a rework factor (default 15% of student hours) for adapting Phase-1 output to Phase-2 — the hidden overhead of the current two-tier PaperVision practice, made explicit on every estimate."
+        },
+        {
+          "title": "Scenario C — in-house, single-pass scan + index",
+          "feature": "In-house direct-to-OnBase costing",
+          "file": "index.html · calc() C block",
+          "language": "javascript",
+          "code": "const C={name:\"Scenario C \\u2014 In-House: Students Scan & Index Directly into OnBase\",items:[],cls:\"C\"};\nC.items.push(li(\"BU Students: document prep\",Math.ceil(prepHrs),\"hrs\",R.w_scan*fringe,prepHrs*R.w_scan*fringe));\nC.items.push(li(\"BU Students: scan + index into OnBase scan queue (one pass)\",Math.ceil(siHrs),\"hrs\",R.w_index*fringe,siHrs*R.w_index*fringe));\nif(hw>0) C.items.push(li(\"BU: scanning workstation(s) \\u2014 Ricoh fi-8170 class\",inp.scanners,\"unit(s)\",R.h_scanner,hw));\nC.items.push(li(\"BU: OnBase scan queue setup (Document Imaging & Services)\",R.e_queue,\"hrs\",R.e_staff,R.e_queue*R.e_staff));\nconst stuHrsC=prepHrs+siHrs;\nconst cwks=stuHrsC/cap;\nC.weeks=R.d_queue_lead+cwks;",
+          "explanation": "The scenario the tool is built to favor. Students prep and then scan-and-index in a single pass directly into an OnBase scan queue (siHrs uses the direct scan+index throughput), so there is no share folder, no DRIP import, no second indexing project, and no rework. Its timeline is just queue-setup lead time plus the work divided by available student hours."
+        },
+        {
+          "title": "Shared in-house labor & hardware sub-calc",
+          "feature": "Hours from volume / throughput",
+          "file": "index.html · calc() shared block",
+          "language": "javascript",
+          "code": "const prepTp={clean:R.t_prep_clean,avg:R.t_prep_avg,complex:R.t_prep_complex}[cond];\nconst prepHrs=p/prepTp;\nconst scanHrs=p/R.t_scan;\nconst idxTp={basic:R.t_index_basic,std:R.t_index_std,deep:R.t_index_deep}[idx];\nconst idxHrs=docs/idxTp;\nconst siTp={basic:R.t_si_basic,std:R.t_si_std,deep:R.t_si_deep}[idx];\nconst siHrs=p/siTp;\nconst hw=inp.ownScanner?0:inp.scanners*R.h_scanner;",
+          "explanation": "Converts page volume into student hours via throughput planning factors, shared by Scenarios B and C. Prep and scanning are paced per page; post-scan indexing (Scenario B) is paced per document; the direct scan+index pass (Scenario C) has its own combined throughput. Hardware drops to $0 when the department already owns a compatible scanner."
+        }
+      ]
+    },
+    {
+      "category": "Comparison, Savings & Budget Logic",
+      "snippets": [
+        {
+          "title": "Pick the cheapest and compute savings",
+          "feature": "Lowest-cost recommendation banner",
+          "file": "index.html · calcAndShow()",
+          "language": "javascript",
+          "code": "const svA=A.total-C.total, svB=B.total-C.total;\nconst cheapest=[A,B,C].reduce((m,s)=>s.total<m.total?s:m);\nif(cheapest===C){\n  h+=`<div class=\"savings\">\\u2705 <b>In-house direct-to-OnBase (Scenario C) is the lowest-cost option...</b><br>\n    Savings vs. vendor full service: <b>${fmt$(svA)}</b> (${(svA/A.total*100).toFixed(0)}%) ...\n    Time saved vs. hybrid: <b>${fmt1(B.weeks-C.weeks)} weeks</b> ...</div>`;\n}else{\n  h+=`<div class=\"savings\" style=\"background:#fff7ec;...\">\\u26a0\\ufe0f For this volume/profile, <b>${cheapest.name.split(\"\\u2014\")[0].trim()}</b> is the lowest-cost option ...</div>`;\n}",
+          "explanation": "Computes savings of in-house versus each alternative and finds the cheapest scenario with a reduce. When Scenario C wins (the common case) it shows a green banner with dollar/percent savings and weeks saved; when it does not, an honest amber banner names whatever is actually cheapest for that volume rather than overstating the in-house case."
+        },
+        {
+          "title": "Budget check — which scenarios fit, best value first",
+          "feature": "Budget check + best-value recommendation",
+          "file": "index.html · calcAndShow()",
+          "language": "javascript",
+          "code": "if(inp.budget>0){\n  const order=[{s:A,...},{s:B,...},{s:C,...}].sort((x,y)=>x.s.total-y.s.total);\n  const fit=order.filter(o=>o.s.total<=inp.budget);\n  let verdict;\n  if(fit.length){\n    const pick=fit[0]; // lowest-cost scenario that fits = best value within budget\n    verdict=`\\u2705 <b>Recommended within budget: ${pick.n.split(\"\\u00b7\")[1].trim()}</b> at <b>${fmt$(pick.s.total)}</b> ...`;\n  }else{\n    const closest=order[0];\n    verdict=`\\u26a0\\ufe0f <b>No scenario fits the ${fmt$(inp.budget)} budget.</b> The lowest-cost option is ... ${fmt$(closest.s.total-inp.budget)} over ...`;\n  }\n}",
+          "explanation": "When a budget is entered, the three scenarios are sorted ascending and filtered to those that fit. The lowest-cost fitting scenario is recommended as the best value within budget; if none fit, the closest option and the shortfall are reported with guidance to raise the budget or reduce scope — so the tool never just fails silently."
+        }
+      ]
+    },
+    {
+      "category": "Report Rendering & Persistence",
+      "snippets": [
+        {
+          "title": "paginateReport — split into letter-size pages",
+          "feature": "Signed, paginated PDF report",
+          "file": "index.html · paginateReport()",
+          "language": "javascript",
+          "code": "const PAGE_MAX=1040;  // px of content before flowing to the next page (~11in)\nconst isHeading=el=>el&&el.nodeType===1&&/^H[1-6]$/.test(el.tagName);\nlet page=mk();\nblocks.forEach(b=>{\n  page.appendChild(b);\n  if(page.scrollHeight>PAGE_MAX && page.children.length>1){\n    page.removeChild(b);\n    const carry=[];\n    while(page.lastChild && isHeading(page.lastChild) && page.children.length>1){\n      carry.unshift(page.removeChild(page.lastChild)); // keep-with-next\n    }\n    page=mk(); carry.forEach(c=>page.appendChild(c)); page.appendChild(b);\n  }\n});",
+          "explanation": "Builds the on-screen 'paper' preview by appending report blocks to a page div until it exceeds ~11 inches, then starting a new page. The keep-with-next loop carries any trailing heading(s) onto the next page so a section title never strands at the bottom. The actual PDF uses the browser's own print pagination."
+        },
+        {
+          "title": "Storage safety shim — never let a blocked store crash the tool",
+          "feature": "localStorage with in-memory fallback",
+          "file": "index.html · boot IIFE",
+          "language": "javascript",
+          "code": "function memStore(){\n  const m={};\n  return { getItem:k=>(k in m?m[k]:null), setItem:(k,v)=>{m[k]=String(v);},\n           removeItem:k=>{delete m[k];}, clear:()=>{for(const k in m) delete m[k];} };\n}\nfunction safe(read){\n  try{ const s=read(); const t=\"__budct_probe\"; s.setItem(t,\"1\"); s.removeItem(t); return s; }\n  catch(e){ return memStore(); }\n}\ntry{ Object.defineProperty(window,\"localStorage\",{value:safe(()=>window.localStorage),configurable:true}); }catch(e){}",
+          "explanation": "Runs before anything else. It probes localStorage and sessionStorage by writing and removing a test key; if a host blocks storage (sandboxed iframe, private browsing, SharePoint embed) the access throws and the shim swaps in an in-memory store. The tool then works fully for the session and just won't persist between visits in that locked context."
+        }
+      ]
+    }
+  ]
+}

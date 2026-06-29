@@ -3,9 +3,9 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-06-15",
+    "last_updated": "2026-06-20",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
-    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check."
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled."
   },
   "module_interface_contract": {
     "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -75,7 +75,9 @@
       "8600-8649": "QI Launcher family",
       "9000-9099": "QI Hive family (Brain at 9011, Dashboard at 8600 migrating)",
       "8700-8709": "AutoPDF family (desktop tool, port 6969 pre-registry)",
-      "8650-8659": "MapSnap family (mapsnap, cognibase)"
+      "8650-8659": "MapSnap family (mapsnap, cognibase)",
+      "8710-8719": "Gamez family (WC2026 dashboard proxy)",
+      "8720-8729": "Claude Voice family (realtime two-way voice assistant)"
     },
     "ui_blocks": {
       "7800-7809": "Maia UI family",
@@ -188,13 +190,13 @@
     {
       "id": "naya",
       "name": "Naya",
-      "description": "Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanning",
+      "description": "Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanning. Work in progress: the service runs daily (sends Renne updates) but active development is paused and needs to resume to evolve into its intended scope.",
       "path": "C:\\NAYA",
       "paths": {
         "logs": "C:\\NAYA\\LOGS"
       },
       "github": "https://github.com/Quiddity-Innovations/NAYA",
-      "status": "paused",
+      "status": "running_dev_paused",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -309,7 +311,7 @@
     {
       "id": "openclaw",
       "name": "OpenClaw",
-      "description": "Autonomous AI agent platform — 6 custom agents (Tasuke, Kaze, Sentry, Seiri, Yubin, Koe)",
+      "description": "Autonomous AI agent platform — Tasuke-orchestrated (Renne talks only to Tasuke). Five core agents: Tasuke, Kaze, Sentry, Yubin, Koe. Helper agents Asa, Kakei and NotebookLM are paused in development; Seiri lives in a separate worktree.",
       "path": "C:\\OC",
       "paths": {
         "logs": "C:\\OC\\LOGS"
@@ -618,7 +620,7 @@
         }
       },
       "family_tier": "standalone_tool",
-      "family_notes": "Sibling of MapSnap (Jenzabar schema browser). Renamed from 'mapsnap_onbase' to 'cognibase' on 2026-05-06 to reflect the broader mission: not just an OnBase mirror but a platform that exceeds OnBase. Status corrected 2026-05-13: pre_poc (was phase_b_core_complete_pilot_ready; renaming reflects actual maturity stage).",
+      "family_notes": "Sibling of MapSnap (engine-agnostic schema-intelligence tool for any enterprise database). Renamed from 'mapsnap_onbase' to 'cognibase' on 2026-05-06 to reflect the broader mission: not just an OnBase mirror but a platform that exceeds OnBase. Status corrected 2026-05-13: pre_poc (was phase_b_core_complete_pilot_ready; renaming reflects actual maturity stage).",
       "integrates_with": [],
       "exposes_to_ecosystem": [
         "OnBase schema as JSON",
@@ -640,7 +642,7 @@
     {
       "id": "mapsnap",
       "name": "MapSnap",
-      "description": "Standalone local schema browser for Jenzabar EX (university ERP). Reads schema.json built from CSV/SQL exports and renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings. Original product; sibling of mapsnap_onbase.",
+      "description": "Local-first schema-intelligence tool for ANY enterprise database set up as a profile (SQL Server, Oracle, PostgreSQL, MySQL, SQLite — e.g. Jenzabar EX, Hyland OnBase, SAP/BUworks). Live extract or CSV/DDL import builds schema.json; renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings, layered with a local AI that explains the schema and does NL→SQL. Egress guardrail keeps regulated data on-box. At BU it is the onboarding tool for the systems-of-record federation, proposing canonical-key mappings that become candidate Normalizers CogniBase governs. Original product; design ancestor of cognibase.",
       "path": "C:\\MapSnap",
       "github": "https://github.com/rennesan/mapsnap",
       "status": "active_stable",
@@ -653,11 +655,12 @@
         }
       },
       "family_tier": "standalone_tool",
-      "family_notes": "Sibling of cognibase (same DNA, different scope). MapSnap = passive Jenzabar schema map. cognibase = live OnBase integration. Kept separate intentionally to insulate the stable browser from the integration product's churn.",
+      "family_notes": "Sibling of cognibase (same DNA, different scope). MapSnap = engine-agnostic schema intelligence over any structured system of record (proposes canonical-key mappings for the BU federation); cognibase = live OnBase + cross-source correlation/governance. Kept separate intentionally to insulate the stable discovery tool from the integration product's churn.",
       "integrates_with": [],
       "exposes_to_ecosystem": [
-        "Jenzabar schema as JSON",
-        "Schema browser HTML"
+        "Schema as JSON (any engine: SQL Server/Oracle/Postgres/MySQL/SQLite)",
+        "Schema browser HTML",
+        "Canonical-key mapping proposals (candidate Normalizers for CogniBase)"
       ],
       "consumes_from_ecosystem": [],
       "paths": {
@@ -957,6 +960,142 @@
         "qi_brain",
         "qi_hive"
       ]
+    },
+    {
+      "id": "gamez",
+      "name": "Gamez",
+      "description": "World Cup 2026 betting-window dashboard. Single-file HTML app (WC2026.html) + FastAPI proxy (live ESPN fixtures/standings/bracket, Kalshi odds, heuristic player->team scoring married into a betting-window engine, multi-provider AI analyst).",
+      "path": "C:\\Gamez",
+      "original_path": "C:\\Gamez",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python+HTML",
+      "ports": {
+        "api": {
+          "current": 8710,
+          "block": "8710-8719",
+          "notes": "Gamez block; proxy serves the HTML at / so the app runs same-origin."
+        },
+        "quant": {
+          "current": 8712,
+          "block": "8710-8719",
+          "notes": "Mr. Hyde side-service (QI_GamezQuantProxy, manual start, off by default). Localhost-only; serves the private 'Quant' AI persona that the public proxy relays via /persona only while it runs. No tunnel (public stays on worldcup:8710); 8711 is the dev preview."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Standalone betting/analytics tool. Shares the OpenRouter key from C:\\QI\\maia.db (like MapSnap). Packaged as a portable .exe for sharing.",
+      "integrates_with": [
+        "maia"
+      ],
+      "exposes_to_ecosystem": [
+        "GET / (app)",
+        "GET /health",
+        "GET /snapshot",
+        "GET /kalshi",
+        "GET /apifootball/check",
+        "POST /ai/openrouter"
+      ],
+      "consumes_from_ecosystem": [
+        "maia (shared OpenRouter key via maia.db)"
+      ]
+    },
+    {
+      "id": "claude_voice",
+      "name": "Claude Voice",
+      "description": "Voice-driven assistant + (in progress) VOICE DISPATCH console. Real Claude answers FREE via the claude_cli backend (headless claude -p on Renne subscription, CLAUDE_CODE_OAUTH_TOKEN) on PC voice/LINE/Telegram — the file bridge is replaced. Hourly self-health via QI_ClaudeVoiceBridgeCheck. Roadmap: LiveKit spine (natural voice + Zoom-like screen/doc share) + voice->QI Hive dispatch. Claude voice is MALE; name always Claude.",
+      "path": "C:\\CLAUDE\\Claude Voice",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8720,
+          "block": "8720-8729",
+          "notes": "Control/health API + BRAIN CONFIG UI for the realtime assistant (Mode B): GET / (dual-brain toggle UI: Claude=bridge / Ronald=local Ollama, with hard-set lock), /brain, /brain/active, /brain/config, /health, /version, /info. Served by server.py (NSSM QI_ClaudeVoiceControl). Loopback-only, never tunneled."
+        },
+        "line": {
+          "current": 8721,
+          "block": "8720-8729",
+          "notes": "LINE Messaging API webhook server (line_bot.py): POST /line/webhook + GET /audio/* for voice notes. THIS port is exposed publicly via the static named tunnel qi-claudevoice (claudevoice.quiddityinnovations.com) — webhook only. Telegram bridge uses outbound long-poll (no port)."
+        },
+        "webcall": {
+          "current": 8722,
+          "block": "8720-8729",
+          "notes": "Claude's Meeting Room (meeting_server.py): multi-participant Zoom-style room HOSTED by Claude. People (browser) and other AGENTS (WebSocket /ws) join; live roster + shared transcript; Claude greets/facilitates/speaks. Browser mic -> Whisper STT (CPU) -> brain -> edge-tts -> audio-reactive host avatar. Loopback-only today (bind 0.0.0.0 or tunnel to admit remote participants). Brain shared with :8720 via data/brain_state.json. Supersedes the 1:1 webcall_server.py."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Standalone realtime voice assistant spun out of Gamez on 2026-06-20. The STT+VAD+TTS bridge is a reusable ecosystem feature other QI projects can adopt (e.g. Maia/OpenClaw Koe). Male voice (Andrew EN / Antonio pt-BR); identity is always 'Claude', never 'Andrew'.",
+      "integrates_with": [
+        "qi_brain",
+        "nexus",
+        "maia"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "Reusable voice bridge: speak.py (TTS edge-tts, male) + listen.py (STT faster-whisper)",
+        "Realtime full-duplex voice loop (VAD -> STT -> LLM -> TTS, streaming + barge-in)"
+      ],
+      "consumes_from_ecosystem": [
+        "Claude subscription via headless claude CLI (claude_cli backend = primary real-Claude path, FREE)",
+        "Local Ollama (default brain; optional/toggleable)",
+        "Anthropic API (optional/toggleable brain)",
+        "OpenRouter free tier via shared C:\\QI\\maia.db key (optional/toggleable brain)",
+        "qi_brain (optional context logging)"
+      ],
+      "voice_rules": {
+        "gender": "MALE always",
+        "voices": {
+          "en": "en-US-AndrewNeural",
+          "pt-BR": "pt-BR-AntonioNeural"
+        },
+        "identity": "When asked his name, answers 'Claude' (never 'Andrew'). Andrew is timbre, not identity."
+      },
+      "loopback_only": false,
+      "internet_exposed": true,
+      "exposure_note": "Only :8721 (LINE webhook + /audio) is public via tunnel qi-claudevoice. Control API :8720 and the realtime audio loop stay loopback-only. Telegram bridge is outbound long-poll (no inbound).",
+      "added_to_registry": "2026-06-20",
+      "paths": {
+        "logs": "C:\\CLAUDE\\Claude Voice\\LOGS"
+      },
+      "scheduled_tasks": [
+        "QI_ClaudeVoiceMeeting_8AM (meeting room :8722, daily 08:00)",
+        "QI_ClaudeVoiceBridgeCheck (bridge health, hourly)"
+      ]
+    },
+    {
+      "id": "akiyascout",
+      "name": "AkiyaScout",
+      "description": "English-first Japanese real estate (Akiya/Kominka/rural) aggregation platform with a personalized background Scout Engine: multi-source JP scraping, translation pipeline, profile wizard, and scheduled match notifications.",
+      "path": "C:\\AkiyaScout",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8505,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7845,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Personal single-user, LOCAL-only property scout (no commercial/public use). v1 POC scope: Honshu, Kansai->Chubu->Kanto corridor, region-driven for future expansion. Bilingual storage (JA raw + EN translation, UI toggle).",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET /stats",
+        "GET /listings",
+        "GET /profiles",
+        "POST /ingest"
+      ],
+      "consumes_from_ecosystem": []
     }
   ],
   "family_taxonomy": {
@@ -1052,7 +1191,7 @@
     "llm_chain": "Maia owns primary chain. NEXUS owns evaluation. All projects should query NEXUS for LLM recommendations.",
     "auth": "None today — all local/internal. Future: shared auth token when unified app is built.",
     "messaging": "No internal message bus today. Future: lightweight event bus (Redis Pub/Sub or simple SQLite queue).",
-    "cloudflare_tunnel": "Maia ONLY uses Cloudflare Tunnel — required for LINE/Telegram/Messenger webhook callbacks. NEXUS, Naya, and all other projects are LAN-only and must NOT be given Cloudflare tunnels without explicit design review.",
+    "cloudflare_tunnel": "Cloudflare Tunnel via STATIC NAMED tunnels on domain quiddityinnovations.com (purchased 2026-06-20). Hybrid design: one named tunnel PER PRODUCT for fault isolation (Maia bot+demo share qi-maia). Master map + tooling: C:\\QIH\\engine\tunnels\\ (tunnels.json, migrate_named_tunnels.py). Quick (*.trycloudflare.com) tunnels are DEPRECATED — do not create new ones.",
     "nssm_services": {
       "note": "NSSM binary standardized 2026-04-22 to C:\\QIH\\engine\\bin\\nssm.exe — all services use this. Service names use the QI_ prefix. Registry below reflects live audit on 2026-05-13.",
       "registered": [
@@ -1181,6 +1320,16 @@
           "start_type": "auto",
           "registered": "2026-06-18",
           "notes": "AppStdout/AppStderr set to C:\\TUBESCOUT\\data\\logs\\tunnel.log so the Hive dashboard can scrape the ephemeral public URL."
+        },
+        {
+          "name": "QI_Caddy",
+          "project": "qi_hive",
+          "port": "80/443",
+          "script": "C:\\QIH\\engine\\bin\\caddy.exe run --config C:\\QIH\\engine\\proxy\\Caddyfile",
+          "internet_exposed": false,
+          "start_type": "auto",
+          "registered": "2026-06-23",
+          "notes": "Local reverse proxy. One qi.local front door for all QI apps (subdomain routing, local HTTPS via Caddy internal CA). LAN-only — public exposure still handled by Cloudflare named tunnels. AppDirectory C:\\QIH\\engine\\proxy, log C:\\QIH\\logs\\qi_caddy.log. Config: C:\\QIH\\engine\\proxy\\Caddyfile."
         }
       ],
       "naming_rule": "New services: QI_<Project><Role> — e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
@@ -1194,6 +1343,36 @@
         "Before any port change: check ALL services in this registry, not just the current project"
       ]
     },
-    "qi_brain": "C:\\QIH\\data\\qi_brain.db — shared knowledge DB (backbone tier, :9011)"
+    "qi_brain": "C:\\QIH\\data\\qi_brain.db — shared knowledge DB (backbone tier, :9011)",
+    "static_tunnels": {
+      "domain": "quiddityinnovations.com (primary), quiddam.com (Maia Quiddam)",
+      "registrar_dns": "Cloudflare",
+      "design": "hybrid: one named tunnel per product, fault-isolated",
+      "tooling": "C:\\QIH\\engine\tunnels\\",
+      "source_of_truth": "C:\\QIH\\engine\tunnels\tunnels.json",
+      "map": {
+        "maia.quiddityinnovations.com": "qi-maia → :8001 (QI_MaiaTunnel)",
+        "maia-demo.quiddityinnovations.com": "qi-maia → :7860",
+        "naya.quiddityinnovations.com": "qi-naya → :7861 (QI_NayaTunnel)",
+        "nexus.quiddityinnovations.com": "qi-nexus → :7880 (QI_NEXUSTunnel)",
+        "hive.quiddityinnovations.com": "qi-hive → :8600 (QI_DashboardTunnel)",
+        "autopdf.quiddityinnovations.com": "qi-autopdf → :6969 (QI_AutoPDFTunnel)",
+        "cognibase.quiddityinnovations.com": "qi-cognibase → :8650 (QI_CogniBaseTunnel)",
+        "mapsnap.quiddityinnovations.com": "qi-mapsnap → :9876 (QI_MapSnapTunnel)",
+        "lottery.quiddityinnovations.com": "qi-lotterywiz → :8777 (QI_LotteryWizTunnel)",
+        "cypher.quiddityinnovations.com": "qi-cypherminer → :7842 (QI_CypherMinerTunnel)",
+        "kaze.quiddityinnovations.com": "qi-kaze → :18800 (QI_KazeNewsTunnel)",
+        "tubescout.quiddityinnovations.com": "qi-tubescout → :8503 (QI_TubeScoutTunnel)",
+        "worldcup.quiddityinnovations.com": "qi-gamez → :8710 (QI_GamezTunnel) — WC2026 tool; renamed from gamez 2026-06-26, gamez hostname reserved for future hub",
+        "quiddam.com": "qi-mq → :7840 (QI_MQTunnel) — apex public site / combined feed",
+        "api.quiddam.com": "qi-mq → :8500 — Meta FB/IG/WhatsApp webhooks",
+        "dev.quiddam.com": "qi-mq → :7849 — RESERVED placeholder (Maia Quiddam dev)",
+        "maia.quiddam.com": "qi-mq → :8599 — RESERVED placeholder (Maia-on-Quiddam future)"
+      },
+      "domains": [
+        "quiddityinnovations.com",
+        "quiddam.com"
+      ]
+    }
   }
 }

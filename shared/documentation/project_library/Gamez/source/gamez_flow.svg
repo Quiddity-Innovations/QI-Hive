@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="560" fill="#f8fafc" rx="12"/>
+  <text x="450" y="25" text-anchor="middle" font-size="17" font-weight="700" fill="#1e293b">Gamez (WC2026) — Data Flow</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active · 2026</text>
+
+  <!-- ══ LEGEND ══ -->
+  <rect x="700" y="58" width="192" height="132" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="796" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Legend</text>
+  <line x1="708" y1="90" x2="726" y2="90" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="732" y="94" font-size="9" fill="#374151">Browser ⇄ proxy (poll/AI)</text>
+  <line x1="708" y1="108" x2="726" y2="108" stroke="#f97316" stroke-width="2" marker-end="url(#arr-orange)"/>
+  <text x="732" y="112" font-size="9" fill="#374151">Proxy → upstream fetch</text>
+  <line x1="708" y1="126" x2="726" y2="126" stroke="#22c55e" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="732" y="130" font-size="9" fill="#374151">Compute / cache write</text>
+  <rect x="708" y="138" width="14" height="10" rx="2" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="728" y="147" font-size="9" fill="#374151">Live / no key</text>
+  <rect x="708" y="155" width="14" height="10" rx="2" fill="#fef9c3" stroke="#ca8a04"/>
+  <text x="728" y="164" font-size="9" fill="#374151">Optional / waiting</text>
+  <text x="796" y="183" text-anchor="middle" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+
+  <!-- ══ BROWSER APP ══ -->
+  <rect x="20" y="70" width="200" height="150" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="120" y="92" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Browser App</text>
+  <text x="120" y="106" text-anchor="middle" font-size="9" fill="#3b82f6">WC2026.html</text>
+  <line x1="32" y1="114" x2="208" y2="114" stroke="#93c5fd" stroke-width="1"/>
+  <text x="120" y="129" text-anchor="middle" font-size="8" fill="#1e40af">pollProxy() every 60s</text>
+  <text x="120" y="142" text-anchor="middle" font-size="8" fill="#1e40af">buildBoard() · render()</text>
+  <text x="120" y="155" text-anchor="middle" font-size="8" fill="#1e40af">phaseMetrics() betting window</text>
+  <text x="120" y="168" text-anchor="middle" font-size="8" fill="#1e40af">teamScores() SSS × form → p</text>
+  <text x="120" y="181" text-anchor="middle" font-size="8" fill="#1e40af">callAI() → snapshot in prompt</text>
+  <rect x="32" y="188" width="176" height="24" rx="5" fill="#eff6ff" stroke="#60a5fa"/>
+  <text x="120" y="204" text-anchor="middle" font-size="8" fill="#1d4ed8">localStorage: keys · scores · bet · layout</text>
+
+  <!-- ══ FASTAPI PROXY (core, dark) ══ -->
+  <rect x="330" y="70" width="220" height="150" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="440" y="92" text-anchor="middle" font-size="12" font-weight="700" fill="white">FastAPI Proxy</text>
+  <text x="440" y="106" text-anchor="middle" font-size="9" fill="#94a3b8">server.py · :8710</text>
+  <line x1="342" y1="114" x2="538" y2="114" stroke="#475569" stroke-width="1"/>
+  <text x="440" y="129" text-anchor="middle" font-size="8" fill="#cbd5e1">GET / → serves the app (same-origin)</text>
+  <text x="440" y="142" text-anchor="middle" font-size="8" fill="#cbd5e1">GET /snapshot → cached bundle</text>
+  <text x="440" y="155" text-anchor="middle" font-size="8" fill="#cbd5e1">POST /ai/openrouter · /ai/ollama/*</text>
+  <text x="440" y="168" text-anchor="middle" font-size="8" fill="#cbd5e1">APScheduler refresh() every 15 min</text>
+  <rect x="342" y="176" width="196" height="36" rx="5" fill="#0f172a" stroke="#334155"/>
+  <text x="440" y="190" text-anchor="middle" font-size="8" fill="#7dd3fc">CACHE (in-memory, locked)</text>
+  <text x="440" y="203" text-anchor="middle" font-size="8" fill="#7dd3fc">⇄ data/cache.json (warm start)</text>
+
+  <!-- Browser ⇄ Proxy arrows -->
+  <path d="M 220,118 H 330" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="275" y="111" text-anchor="middle" font-size="8" fill="#3b82f6">poll /snapshot · /ai/*</text>
+  <path d="M 330,150 H 220" fill="none" stroke="#22c55e" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="275" y="165" text-anchor="middle" font-size="8" fill="#16a34a">JSON: fixtures · teams · odds · AI</text>
+
+  <!-- ══ UPSTREAM DATA SOURCES ══ -->
+  <text x="690" y="232" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">UPSTREAM DATA &amp; AI SOURCES</text>
+
+  <rect x="640" y="244" width="240" height="40" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="760" y="262" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">ESPN — fixtures · scores · standings</text>
+  <text x="760" y="276" text-anchor="middle" font-size="8" fill="#16a34a">no key · phase + real-team flags</text>
+
+  <rect x="640" y="290" width="240" height="40" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="760" y="308" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">EA FC 26 ratings CSV</text>
+  <text x="760" y="322" text-anchor="middle" font-size="8" fill="#16a34a">free · weekly disk cache · → squads</text>
+
+  <rect x="640" y="336" width="240" height="40" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="760" y="354" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">API-Football (optional key)</text>
+  <text x="760" y="368" text-anchor="middle" font-size="8" fill="#ca8a04">deep stats · 2026 squads not published</text>
+
+  <rect x="640" y="382" width="240" height="40" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="760" y="400" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">Kalshi public API</text>
+  <text x="760" y="414" text-anchor="middle" font-size="8" fill="#ca8a04">odds · self-heal discovery · none listed yet</text>
+
+  <rect x="640" y="428" width="240" height="40" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="760" y="446" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">OpenRouter (:free) · Ollama (local)</text>
+  <text x="760" y="460" text-anchor="middle" font-size="8" fill="#16a34a">server-side key · free-model fallback</text>
+
+  <!-- Proxy → upstream arrows -->
+  <path d="M 550,120 H 600 V 264 H 640" fill="none" stroke="#f97316" stroke-width="1.6" marker-end="url(#arr-orange)"/>
+  <path d="M 600,264 V 310 H 640" fill="none" stroke="#f97316" stroke-width="1.4" marker-end="url(#arr-orange)"/>
+  <path d="M 600,310 V 356 H 640" fill="none" stroke="#f97316" stroke-width="1.4" marker-end="url(#arr-orange)"/>
+  <path d="M 600,356 V 402 H 640" fill="none" stroke="#f97316" stroke-width="1.4" marker-end="url(#arr-orange)"/>
+  <path d="M 600,402 V 448 H 640" fill="none" stroke="#f97316" stroke-width="1.4" marker-end="url(#arr-orange)"/>
+  <text x="612" y="240" text-anchor="middle" font-size="8" fill="#ea580c">fetch (server-side · no CORS)</text>
+
+  <!-- ══ COMPUTE PIPELINE BAND ══ -->
+  <rect x="20" y="250" width="530" height="120" rx="9" fill="none" stroke="#f97316" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <rect x="32" y="244" width="180" height="14" rx="3" fill="#f8fafc"/>
+  <text x="122" y="255" text-anchor="middle" font-size="10" fill="#f97316" font-weight="700" letter-spacing="1">refresh() PIPELINE (sources.py + scoring.py)</text>
+
+  <rect x="34" y="270" width="150" height="86" rx="7" fill="#fff7ed" stroke="#f97316" stroke-width="1.3"/>
+  <text x="109" y="289" text-anchor="middle" font-size="9" font-weight="700" fill="#9a3412">1 · Fetch</text>
+  <text x="109" y="305" text-anchor="middle" font-size="8" fill="#c2410c">ESPN fixtures/standings</text>
+  <text x="109" y="318" text-anchor="middle" font-size="8" fill="#c2410c">players (fifa default)</text>
+  <text x="109" y="331" text-anchor="middle" font-size="8" fill="#c2410c">Kalshi odds</text>
+  <text x="109" y="346" text-anchor="middle" font-size="8" fill="#ea580c">errors collected, not raised</text>
+
+  <rect x="194" y="270" width="150" height="86" rx="7" fill="#fff7ed" stroke="#f97316" stroke-width="1.3"/>
+  <text x="269" y="289" text-anchor="middle" font-size="9" font-weight="700" fill="#9a3412">2 · Score</text>
+  <text x="269" y="305" text-anchor="middle" font-size="8" fill="#c2410c">rated → score_all_rated</text>
+  <text x="269" y="318" text-anchor="middle" font-size="8" fill="#c2410c">stats → score_all (pctile)</text>
+  <text x="269" y="331" text-anchor="middle" font-size="8" fill="#c2410c">PPS → projected XI → SSS</text>
+  <text x="269" y="346" text-anchor="middle" font-size="8" fill="#ea580c">heuristic · confidence</text>
+
+  <rect x="354" y="270" width="180" height="86" rx="7" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.3"/>
+  <text x="444" y="289" text-anchor="middle" font-size="9" font-weight="700" fill="#14532d">3 · Cache &amp; serve</text>
+  <text x="444" y="305" text-anchor="middle" font-size="8" fill="#16a34a">write CACHE under lock</text>
+  <text x="444" y="318" text-anchor="middle" font-size="8" fill="#16a34a">mirror data/cache.json</text>
+  <text x="444" y="331" text-anchor="middle" font-size="8" fill="#16a34a">keep last-good on failure</text>
+  <text x="444" y="346" text-anchor="middle" font-size="8" fill="#16a34a">→ /snapshot</text>
+
+  <!-- pipeline internal arrows -->
+  <path d="M 184,313 H 194" fill="none" stroke="#f97316" stroke-width="1.4" marker-end="url(#arr-orange)"/>
+  <path d="M 344,313 H 354" fill="none" stroke="#22c55e" stroke-width="1.4" marker-end="url(#arr-green)"/>
+  <!-- proxy down into pipeline -->
+  <path d="M 440,220 V 250" fill="none" stroke="#f97316" stroke-width="1.6" marker-end="url(#arr-orange)"/>
+  <text x="440" y="240" text-anchor="middle" font-size="8" fill="#ea580c">scheduler / POST /refresh</text>
+  <!-- pipeline cache back up into proxy CACHE -->
+  <path d="M 444,356 V 366 H 600 V 232 H 510 V 220" fill="none" stroke="#22c55e" stroke-width="1.3" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+
+  <!-- ══ EXPLAINER STRIP ══ -->
+  <rect x="20" y="392" width="600" height="148" rx="9" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="36" y="412" font-size="11" font-weight="700" fill="#1e293b">How the betting window is produced</text>
+  <text x="36" y="431" font-size="9" fill="#475569">• Proxy fetches ESPN + players + Kalshi server-side and computes PPS → SSS per team (sources.py + scoring.py).</text>
+  <text x="36" y="448" font-size="9" fill="#475569">• Browser polls /snapshot; teamScores() marries SSS with tournament form (TFS): w = gp/(gp+3), combined = w·TFS + (1−w)·SSS.</text>
+  <text x="36" y="465" font-size="9" fill="#475569">• combined → per-match win probability p (clamped 0.05–0.97).</text>
+  <text x="36" y="482" font-size="9" fill="#475569">• phaseMetrics(): winProb = p^rounds · payout = 1/(winProb+fee) · value = info × min(1, (1/winProb − 1)/5).</text>
+  <text x="36" y="499" font-size="9" fill="#475569">• AI analyst ("The Quant") receives a JSON snapshot of the panels and answers only from on-screen data.</text>
+  <rect x="36" y="510" width="568" height="22" rx="5" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="320" y="525" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">⚠ Heuristic — single-event betting is high variance and NOT guaranteed profitable. Scores assist judgement; they do not predict outcomes.</text>
+
+  <!-- AI flow note -->
+  <path d="M 220,200 H 300 V 110 H 330" fill="none" stroke="#3b82f6" stroke-width="1.3" stroke-dasharray="4,2" marker-end="url(#arr-blue)"/>
+  <text x="690" y="500" text-anchor="middle" font-size="9" fill="#475569">AI calls (/ai/openrouter, /ai/ollama) are proxied so the</text>
+  <text x="690" y="514" text-anchor="middle" font-size="9" fill="#475569">browser never sees the server-side key; tunnel traffic is</text>
+  <text x="690" y="528" text-anchor="middle" font-size="9" fill="#475569">gated by an X-AI-Access code, local/exe use is not.</text>
+</svg>

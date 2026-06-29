@@ -1,0 +1,171 @@
+{
+  "intro": "Excerpts copied from the live Gamez source (C:\\Gamez). Each shows the real code behind a capability and explains what it does. Keys live server-side (config.json / maia.db) or in the browser's localStorage — never hardcoded in WC2026.html. The betting math has a fixed, documented shape and the scoring is an openly-explained heuristic, not a prediction.",
+  "sections": [
+    {
+      "category": "Proxy — App Hosting & Endpoints (FastAPI :8710)",
+      "snippets": [
+        {
+          "title": "Serve the whole app same-origin",
+          "feature": "Runs from file:// or served by the proxy at /",
+          "file": "proxy/server.py :: index()",
+          "language": "python",
+          "code": "@app.get(\"/\", response_class=HTMLResponse)\ndef index():\n    \"\"\"Serve the WC2026 app itself so the whole thing runs same-origin from the\n    proxy (no file:// CORS). This is what makes the portable .exe self-contained.\"\"\"\n    try:\n        with open(HTML_PATH, encoding=\"utf-8\") as f:\n            return HTMLResponse(f.read())\n    except Exception as e:\n        return PlainTextResponse(\n            \"WC2026.html not found next to the proxy. (\" + str(e) + \")\\n\"\n            \"Open WC2026.html directly, or rebuild the bundle.\", status_code=404)",
+          "explanation": "The proxy serves the single-file front end at GET /. Because the page is delivered by the same server it then calls for data and AI, everything is same-origin and CORS never bites. This one route is also what lets the PyInstaller .exe be self-contained: the proxy and the HTML ship together and the app loads from the proxy, not from disk."
+        },
+        {
+          "title": "The /snapshot bundle the page polls",
+          "feature": "One call returns fixtures, standings, teams, players, odds",
+          "file": "proxy/server.py :: snapshot()",
+          "language": "python",
+          "code": "@app.get(\"/snapshot\")\ndef snapshot():\n    return JSONResponse({\n        \"as_of\": CACHE.get(\"as_of\"), \"source\": CACHE.get(\"source\"),\n        \"next_refresh_s\": _next_refresh_s(),\n        \"openrouter\": bool(OR_KEY),\n        \"fixtures\": CACHE.get(\"fixtures\", []),\n        \"standings\": CACHE.get(\"standings\", []),\n        \"teams\": CACHE.get(\"teams\", {}),\n        \"players\": sorted(CACHE.get(\"players\", []), key=lambda x: x.get(\"pps\", 0), reverse=True),\n        \"kalshi\": CACHE.get(\"kalshi\", []),\n        \"errors\": CACHE.get(\"errors\", []),\n        \"disclaimer\": DISCLAIMER,\n    })",
+          "explanation": "The single endpoint the front end polls. It returns the entire current state from the in-memory cache in one payload — live fixtures, the 12-group standings, scored teams + players (sorted by PPS), Kalshi odds, the data source, a freshness timestamp, and the ever-present disclaimer — so the page can render everything from one fetch."
+        },
+        {
+          "title": "Boot: warm cache, first fetch, scheduler",
+          "feature": "Auto-refresh + instant warm start",
+          "file": "proxy/server.py :: boot()",
+          "language": "python",
+          "code": "def boot():\n    \"\"\"Warm the cache, kick an initial fetch, and start the refresh scheduler.\n    Shared by the console launcher and the GUI (pywebview) launcher.\"\"\"\n    _load_cache()\n    # initial fetch in the background so the server binds the port immediately\n    threading.Thread(target=refresh, kwargs={\"force\": True}, daemon=True).start()\n    sched = BackgroundScheduler(daemon=True)\n    sched.add_job(refresh, \"interval\", minutes=CFG.get(\"refresh_minutes\", 15),\n                  id=\"refresh\", max_instances=1, coalesce=True)\n    sched.start()",
+          "explanation": "On startup the proxy warm-starts from data/cache.json (so the app shows last-good data instantly), kicks the first live fetch on a daemon thread so the port binds immediately, and registers an APScheduler interval job to re-fetch and re-score every refresh_minutes (15). Shared by both the console and the windowed GUI launcher."
+        }
+      ]
+    },
+    {
+      "category": "Proxy — Fetch / Score / Cache Pipeline",
+      "snippets": [
+        {
+          "title": "refresh() — never-raising data pipeline",
+          "feature": "Fetch everything, score it, cache it, survive failures",
+          "file": "proxy/server.py :: refresh()",
+          "language": "python",
+          "code": "def refresh(force=False):\n    \"\"\"Fetch everything, score it, update the cache. Never raises.\"\"\"\n    ...\n    # 4) score. Rated inputs (EA FC 'overall') use score_all_rated; raw match-stat\n    #    inputs (API-Football / SAMPLE) use the percentile stat engine.\n    players, teams = ([], {})\n    src_players = raw_players or CACHE.get(\"players_raw\") or []\n    rated = bool(src_players) and ((\"overall\" in src_players[0]) or src_players[0].get(\"source\") == \"EA FC 26\")\n    try:\n        scorer = scoring.score_all_rated if rated else scoring.score_all\n        players, teams = scorer([dict(p) for p in src_players])\n    except Exception as e:\n        errors.append(f\"scoring: {e}\\n{traceback.format_exc()[:400]}\")\n\n    with _LOCK:\n        if fixtures:  CACHE[\"fixtures\"] = fixtures\n        if standings: CACHE[\"standings\"] = standings\n        if kalshi:    CACHE[\"kalshi\"] = kalshi\n        if players:\n            CACHE[\"players\"] = players; CACHE[\"players_raw\"] = src_players; CACHE[\"teams\"] = teams\n        CACHE[\"source\"] = source; CACHE[\"errors\"] = errors\n        CACHE[\"as_of\"] = time.strftime(\"%Y-%m-%dT%H:%M:%S\")\n        _save_cache()",
+          "explanation": "The heart of the proxy. Each source (ESPN, players, Kalshi) is fetched in its own try/except and any error is collected rather than thrown, so one dead source never blanks the app. It then chooses the right scorer — score_all_rated for EA FC 'overall' ratings, the percentile score_all for raw match stats — and atomically updates the locked in-memory CACHE, keeping the previous good values for anything that failed this cycle."
+        },
+        {
+          "title": "ESPN fixtures → phase + real-team flags",
+          "feature": "Live board + real bracket vs TBD placeholders",
+          "file": "proxy/sources.py :: fetch_fixtures()",
+          "language": "python",
+          "code": "data = _get(f\"{ESPN_BASE}/scoreboard\", params={\"dates\": \"20260611-20260719\", \"limit\": 400})\nfor ev in data.get(\"events\", []):\n    ...\n    na, nb = nm(home), nm(away)\n    ph = _classify(dt, ev.get(\"name\", \"\"))\n    grp = (groups.get(na) or groups.get(nb) or \"\") if ph == \"Group\" else \"\"\n    out.append({\n        \"ph\": ph, \"grp\": grp, \"dt\": dt, \"date\": dt[:10],\n        \"a\": na, \"b\": nb,\n        \"aReal\": _is_real_team(na, groups), \"bReal\": _is_real_team(nb, groups),\n        \"sa\": sc(home) if status in (\"in\", \"post\") else None,\n        \"sb\": sc(away) if status in (\"in\", \"post\") else None,\n        \"status\": status,\n    })",
+          "explanation": "Pulls the real World Cup schedule from ESPN (no API key), normalises each match to the page's shape, buckets it into a phase via _classify() (the real 2026 schedule windows), tags the group letter, and crucially flags aReal/bReal — whether each side is a confirmed team or a 'Winner of…' placeholder — which is what lets the front end draw a real bracket that fills in as teams qualify."
+        },
+        {
+          "title": "EA FC 26 ratings → national squads",
+          "feature": "Default squad-strength source (free, no key, no quota)",
+          "file": "proxy/sources.py :: fetch_players_fifa()",
+          "language": "python",
+          "code": "for row in csv.DictReader(io.StringIO(text)):\n    ovr = _toint(row.get(\"overall\")) or 0\n    if ovr <= 0: continue\n    nat = (row.get(\"nationality_name\") or \"\").strip()\n    if not nat: continue\n    team = FIFA_TEAM_ALIAS.get(nat, nat)\n    primary = (row.get(\"player_positions\") or \"\").split(\",\")[0].strip().upper()\n    by_team.setdefault(team, []).append({\n        \"name\": (row.get(\"short_name\") or row.get(\"long_name\") or \"\").strip(),\n        \"team\": team, \"pps\": float(ovr), \"overall\": ovr,\n        \"position\": primary, \"group\": FIFA_POS.get(primary, \"MID\"),\n        \"national\": bool((row.get(\"nation_team_id\") or \"\").strip()),\n        \"minutes\": 900, \"pps_conf\": 0.85, \"source\": \"EA FC 26\"})",
+          "explanation": "The realistic squad-strength source NOW: the 2026 squads aren't published, so this maps real EA FC 26 player ratings to national teams. Each player's club-derived 'overall' becomes their PPS, FIFA_TEAM_ALIAS reconciles EA's spellings (Korea Republic → South Korea) to ESPN's, and players with a national_team_id are preferred. The ~11 MB CSV is cached weekly on disk so it downloads rarely."
+        },
+        {
+          "title": "Kalshi odds with self-healing discovery",
+          "feature": "Live market odds, server-side (no CORS)",
+          "file": "proxy/sources.py :: fetch_kalshi()",
+          "language": "python",
+          "code": "# Self-heal: if the known series gave nothing, discover live WC series and retry.\nif not out and discover:\n    extra = [s for s in discover_kalshi_series() if s not in series_list]\n    if extra:\n        out = fetch_kalshi(series=extra, max_pages=max_pages, discover=False)\nout.sort(key=lambda x: x.get(\"prob\", 0), reverse=True)\nreturn out",
+          "explanation": "Kalshi renames/derives its World Cup series ticker per tournament and hasn't listed the markets yet (they open near the event). Rather than hard-code a ticker that may not exist, fetch_kalshi() tries the known series first and, if they yield nothing, scans open Kalshi events by keyword to discover the live series and retries — so the odds feed self-heals the moment Kalshi lists the markets. All fetched server-side to dodge browser CORS."
+        }
+      ]
+    },
+    {
+      "category": "Scoring Engine (PPS → SSS)",
+      "snippets": [
+        {
+          "title": "Squad Strength from a projected XI",
+          "feature": "Player scores → team score with star + depth",
+          "file": "proxy/scoring.py :: score_team()",
+          "language": "python",
+          "code": "# spine-weighted mean of XI\nnum = sum(p.get(\"pps\", 0) * SPINE.get(p.get(\"group\", \"MID\"), 1.0) for p in xi)\nden = sum(SPINE.get(p.get(\"group\", \"MID\"), 1.0) for p in xi)\nbase = num / den if den else 0.0\n\n# star non-linearity\ntop = max((p.get(\"pps\", 0) for p in xi), default=0)\nstar = 0.12 * max(0.0, top - 70.0)            # up to ~3.6 for a 100 PPS star\n\n# bench depth (next best 5)\nbench = leftovers[:5]\ndepth = (mean([p.get(\"pps\", 0) for p in bench]) / 100.0 * 5.0) if bench else 0.0\n\nsss = max(0.0, min(100.0, base + star + depth))",
+          "explanation": "Turns a roster of player scores into a single 0-100 Squad Strength Score. It builds a projected best XI (1 GK / 4 DEF / 3 MID / 3 ATT), takes a spine-weighted mean (a strong GK/spine counts more), adds a star bonus so one elite player can swing a knockout tie, and a bench-depth term because 7 games in 4 weeks rewards rotation. Transparent and bounded — a heuristic, openly defined."
+        },
+        {
+          "title": "Position-aware percentile PPS",
+          "feature": "Player score from per-90, percentile-normalised stats",
+          "file": "proxy/scoring.py :: score_players()",
+          "language": "python",
+          "code": "pps = raw * 100.0\n# small-sample shrinkage toward neutral 50\nmins = p.get(\"minutes\") or 0\nw_mins = min(1.0, mins / 450.0)          # ~5 full matches = full trust\npps_adj = 50.0 * (1 - w_mins) + pps * w_mins\n# confidence: minutes coverage * metric richness\npresent_metrics = sum(1 for m in all_metrics if p.get(m) is not None)\nrichness = min(1.0, present_metrics / 8.0)\np[\"pps\"] = round(max(0.0, min(100.0, pps_adj)), 1)\np[\"pps_conf\"] = round(max(0.0, min(1.0, w_mins * 0.6 + richness * 0.4)), 2)",
+          "explanation": "The stat-based path (used for API-Football / SAMPLE inputs, not pre-rated EA FC data). Counting stats are converted per-90 and percentile-ranked within the player's position group, weighted by category. Crucially it shrinks a low-minutes player's score toward a neutral 50 (small-sample protection) and attaches a confidence from minutes coverage and how many metrics were actually present — so thin data is visibly less trusted."
+        }
+      ]
+    },
+    {
+      "category": "Betting-Window Engine (front end)",
+      "snippets": [
+        {
+          "title": "The locked betting math",
+          "feature": "Per-phase win prob, payout, value",
+          "file": "WC2026.html :: phaseMetrics()",
+          "language": "javascript",
+          "code": "const ROUNDS={Group:6,R32:5,R16:4,QF:3,SF:2,Final:1};\nconst INFO  ={Group:.15,R32:.35,R16:.6,QF:.85,SF:.95,Final:1};\nfunction phaseMetrics(){\n  const p=effectiveP();\n  return PHASEORDER.map(ph=>{\n    const rounds=ROUNDS[ph], info=INFO[ph];\n    const winProb=Math.pow(p,rounds);\n    const payout=1/(winProb+BET.fee);\n    const value=info*Math.min(1,(1/winProb-1)/5);\n    return {ph,rounds,info,winProb,payout,value};\n  });\n}",
+          "explanation": "The fixed, documented betting-window math. A single per-match win probability p is raised to the number of rounds a team must survive to win a bet placed at that phase (winProb = p^rounds), payout is the inverse plus a fee, and value blends payout potential with an information-quality weight INFO that grows from Group (0.15) to the Final (1.0). The result is a structural lens showing R16/QF as the sweet spot — explicitly not a prediction."
+        },
+        {
+          "title": "Marry squad strength with real form",
+          "feature": "Model-driven per-match win probability",
+          "file": "WC2026.html :: teamScores()",
+          "language": "javascript",
+          "code": "const ff=formFactor(team);                       // 0.7..1.4\nconst tfs=Math.max(0,Math.min(100,(ff-0.7)/0.7*100));\nlet combined,w=null;\nif(sss!=null){w=gp/(gp+3);combined=w*tfs+(1-w)*sss;}\nelse combined=tfs;\nconst p=Math.max(0.05,Math.min(0.97,0.30+combined/100*0.45));\nreturn {sss,tfs:+tfs.toFixed(1),gp,w:w==null?null:+w.toFixed(2),combined:+combined.toFixed(1),p:+p.toFixed(3),hasModel:sss!=null};",
+          "explanation": "Combines the proxy's squad strength (SSS) with the team's actual tournament form (TFS, derived from goal-difference per game in the entered/live standings). The weight w = gp/(gp+3) shifts toward real results as more games are played, then the combined 0-100 score maps to a per-match win probability p (clamped 0.05-0.97). It falls back to form-only when no squad model exists — and that p is exactly what feeds phaseMetrics()."
+        },
+        {
+          "title": "Live board assembly from /snapshot",
+          "feature": "Real ESPN schedule becomes the board; manual fills gaps",
+          "file": "WC2026.html :: buildBoard()",
+          "language": "javascript",
+          "code": "function buildBoard(){\n  let base = liveOn()\n    ? PROX.fixtures.filter(f=>PHASEORDER.indexOf(f.ph)>=0).map(mapLive)\n    : SEED.map(m=>Object.assign({},m,{dt:m.dt||\"\"}));\n  base.forEach(m=>{const o=OVER[sigOf(m)];if(!o)return;        // source score wins; manual fills gaps\n    if(m.sa==null&&o.sa!=null)m.sa=o.sa;\n    if(m.sb==null&&o.sb!=null)m.sb=o.sb;});\n  base.sort((a,b)=>PHASEORDER.indexOf(a.ph)-PHASEORDER.indexOf(b.ph)||String(a.dt).localeCompare(String(b.dt)));\n  FIX=base;\n}",
+          "explanation": "Decides what the board shows. When the proxy is connected (liveOn()), the real ESPN fixtures ARE the board; otherwise built-in SEED fixtures are used. A live source score always wins — manually-entered scores (persisted in localStorage as OVER, keyed by a match signature) only fill matches no source has yet — and the board is sorted by phase then kickoff."
+        }
+      ]
+    },
+    {
+      "category": "AI Analyst — Proxy & Front End",
+      "snippets": [
+        {
+          "title": "OpenRouter proxy with server-side key + free fallback",
+          "feature": "Shared AI works with no browser key",
+          "file": "proxy/server.py :: ai_openrouter()",
+          "language": "python",
+          "code": "requested = body.get(\"model\", \"\")\ncandidates = [requested]\nif requested.endswith(\":free\"):\n    for f in FREE_FALLBACKS:\n        if f != requested:\n            candidates.append(f)\nlast = None\nasync with httpx.AsyncClient(timeout=90) as cx:\n    for mdl in candidates:\n        body[\"model\"] = mdl\n        r = await cx.post(OR_BASE + \"/chat/completions\", headers=headers, json=body)\n        if r.status_code == 200:\n            return JSONResponse(r.json(), status_code=200)\n        last = r\n        if r.status_code not in (404, 429, 502, 503):\n            break   # a real error (auth/credits/bad request) — stop, don't mask it",
+          "explanation": "Relays a chat completion to OpenRouter using the SERVER-SIDE key (config.json or the shared key from maia.db) so the browser never sees it. Because the free tier is intermittently rate-limited, a :free model that returns 404/429/502/503 walks the FREE_FALLBACKS chain so the chat still answers — but a genuine error (auth/credits/bad request) stops the loop instead of being masked."
+        },
+        {
+          "title": "Tunnel-only AI access gate",
+          "feature": "Gate the shared AI; instant lockout on code change",
+          "file": "proxy/server.py :: ai_openrouter() (gate) + _via_tunnel()",
+          "language": "python",
+          "code": "def _via_tunnel(req):\n    \"\"\"True if the request arrived through the Cloudflare tunnel (vs. direct localhost).\"\"\"\n    h = req.headers\n    return bool(h.get(\"cf-ray\") or h.get(\"cf-connecting-ip\") or h.get(\"cf-worker\"))\n\n# inside ai_openrouter():\npw = _live_ai_password()\nif pw and _via_tunnel(req):\n    if (req.headers.get(\"x-ai-access\") or \"\").strip() != pw:\n        return JSONResponse({\"error\": AI_LOCKED_MSG, \"ai_locked\": True}, status_code=403)",
+          "explanation": "Lets the owner share the AI over the public tunnel without giving away unlimited free-tier usage. _via_tunnel() detects Cloudflare's injected headers, so only tunnel traffic is checked — the owner's own local/exe use is never gated. When an access password is set, a tunnel request must carry a matching X-AI-Access header or it gets the friendly AI_LOCKED_MSG. The password is re-read from config.json on every call, so changing it locks out stale users instantly."
+        },
+        {
+          "title": "One AI call path, many providers",
+          "feature": "Ollama / OpenRouter / Anthropic / Google / OpenAI-compatible",
+          "file": "WC2026.html :: callAI()",
+          "language": "javascript",
+          "code": "}else if(p===\"openrouter\"&&!c.key&&proxyBase()&&PROX.openrouter){\n    // No browser key: route through the local proxy, which holds the key server-side\n    url=proxyBase()+\"/ai/openrouter\";\n    const code=localStorage.getItem(\"wc26_aicode\")||\"\";\n    if(code)headers[\"X-AI-Access\"]=code;           // gate for the shared tunnel AI\n    body={model:c.model,messages:[{role:\"system\",content:sys},...history],temperature:0.4,max_tokens:1024};\n}else{ // openai-compatible: openrouter (own key) / openai / xai / custom / azure\n    url=base+\"/chat/completions\";\n    if(c.key)headers[\"authorization\"]=\"Bearer \"+c.key;\n}",
+          "explanation": "A single front-end function branches by chosen provider: Ollama and keyless OpenRouter go through the proxy (no CORS, server-side key, optional access code), while Anthropic/Google/Azure/OpenAI-compatible providers are called directly with a key the user pasted into localStorage. The keyless-OpenRouter branch is what makes the shared AI work out of the box, and systemPrompt() embeds a JSON snapshot of the live panels so the analyst answers only from on-screen data."
+        }
+      ]
+    },
+    {
+      "category": "Config & Secrets",
+      "snippets": [
+        {
+          "title": "Shared OpenRouter key from maia.db",
+          "feature": "Reuse the ecosystem's one key, never hardcoded",
+          "file": "proxy/server.py :: load_openrouter_key()",
+          "language": "python",
+          "code": "def load_openrouter_key():\n    \"\"\"OpenRouter key, server-side only. config.json wins; else read the same\n    source MapSnap uses (Maia's DB) so WC2026 shares the one key.\"\"\"\n    k = (CFG.get(\"openrouter_api_key\") or \"\").strip()\n    if k:\n        return k\n    for db in [r\"C:\\QI\\maia.db\"]:\n        try:\n            row = sqlite3.connect(db).execute(\n                \"SELECT value FROM config WHERE key='system.openrouter_api_key'\").fetchone()\n            if row and row[0]:\n                return row[0].strip()\n        except Exception:\n            pass\n    return \"\"",
+          "explanation": "Gamez doesn't manage its own AI key. config.json wins if set (used for portable builds given to a friend), but on the owner's machine it's left blank and the proxy reads the shared system.openrouter_api_key straight out of Maia's maia.db — the same pattern MapSnap uses — so the whole ecosystem shares one free-tier key with nothing duplicated."
+        },
+        {
+          "title": "Local-only config write with hot reload",
+          "feature": "Edit settings without exposing secrets over the tunnel",
+          "file": "proxy/server.py :: post_config()",
+          "language": "python",
+          "code": "@app.post(\"/config\")\nasync def post_config(request: Request):\n    \"\"\"Write config.json — LOCAL ONLY. Reloads settings live (the port still needs a restart).\"\"\"\n    if _via_tunnel(request):\n        return JSONResponse({\"error\": \"Config editing is local-only.\"}, status_code=403)\n    data = await request.json()\n    json.dump(data, open(CFG_PATH, \"w\", encoding=\"utf-8\"), indent=2, ensure_ascii=False)\n    global CFG          # apply most settings live (refresh reads CFG.get(...) on each cycle)\n    CFG = load_cfg()\n    return {\"ok\": True, \"saved\": CFG_PATH}",
+          "explanation": "The config holds secrets, so both reading and writing it are refused over the public tunnel (_via_tunnel guard) — only direct localhost/exe access can touch it. A successful write reloads CFG in place so most settings (refresh interval, player source, access password) take effect on the next refresh cycle without a restart; only the listen port still needs one."
+        }
+      ]
+    }
+  ]
+}

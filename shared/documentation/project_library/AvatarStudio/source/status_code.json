@@ -1,0 +1,223 @@
+{
+  "intro": "Excerpts copied from the live Avatar Studio source (C:\\1-AI\\APPS\\AvatarStudio). Each shows the real code behind a capability and explains how it powers that feature. The studio is a Windows Gradio process that orchestrates GPU-heavy render engines inside WSL2; config and language routing are data-driven, and cloud keys live only in secrets.",
+  "sections": [
+    {
+      "category": "Gradio App & Launch (:7862)",
+      "snippets": [
+        {
+          "title": "Studio launch on port 7862",
+          "feature": "Gradio studio UI",
+          "file": "avatar_studio.py · __main__",
+          "language": "python",
+          "code": "if __name__ == \"__main__\":\n    OUTPUTS_DIR.mkdir(exist_ok=True)\n    print(\"Starting QI Avatar Studio on http://localhost:7862\")\n    demo.queue(max_size=2).launch(\n        server_name=\"0.0.0.0\",\n        server_port=7862,\n        share=False,\n        show_error=True,\n        allowed_paths=[str(OUTPUTS_DIR)],\n        theme=gr.themes.Soft(font=[gr.themes.GoogleFont(\"Inter\")]),\n    )",
+          "explanation": "The entry point: it ensures outputs/ exists, then launches the gr.Blocks app on 0.0.0.0:7862 with a small request queue (max_size=2, because each render is heavy). allowed_paths is scoped to outputs/ so the served video files are reachable from the browser without exposing the rest of the disk. There are deliberately no QI /health,/version,/info endpoints — it's a pure Gradio UI."
+        },
+        {
+          "title": "In-UI Kill & Restart",
+          "feature": "Restart the studio without the terminal",
+          "file": "avatar_studio.py · restart_studio()",
+          "language": "python",
+          "code": "pid = os.getpid()\nhelper = (\n    f\"import time, subprocess; \"\n    f\"time.sleep(1.5); \"\n    f\"subprocess.run(['taskkill', '/PID', '{pid}', '/F']); \"\n    f\"subprocess.Popen([r'{python}', r'{script}'], \"\n    f\"    creationflags=0x00000008)\"   # DETACHED_PROCESS\n)\nsubprocess.Popen(\n    [python, \"-c\", helper],\n    creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,\n)\nreturn \"\\U0001f504 Restarting in ~2 seconds — refresh this page.\"",
+          "explanation": "Backs the red 'Kill & Restart Studio' button. Because a process can't cleanly kill and relaunch itself, it spawns a detached helper that waits 1.5s, taskkills the current PID, then re-launches avatar_studio.py as a new detached process. The page just needs a refresh once it's back up."
+        }
+      ]
+    },
+    {
+      "category": "Config, Secrets & Engine Registry",
+      "snippets": [
+        {
+          "title": "Cloud keys injected from secrets, never persisted",
+          "feature": "Secrets kept out of config",
+          "file": "avatar_studio.py · _read_secrets() / save_studio_config()",
+          "language": "python",
+          "code": "_SECRET_MAP = {\"did\": \"DID_API_KEY\", \"heygen\": \"HEYGEN_API_KEY\"}\n\ndef _apply_secret_overlay(cfg):\n    sec = _read_secrets()\n    for prov, envk in _SECRET_MAP.items():\n        if prov in cfg.get(\"cloud_apis\", {}) and sec.get(envk):\n            cfg[\"cloud_apis\"][prov][\"api_key\"] = sec[envk]\n    return cfg\n\ndef save_studio_config(cfg):\n    out = copy.deepcopy(cfg)\n    # Strip cloud API keys before persisting — they belong in secrets/env only.\n    for prov in _SECRET_MAP:\n        if prov in out.get(\"cloud_apis\", {}):\n            out[\"cloud_apis\"][prov][\"api_key\"] = \"\"\n    with open(STUDIO_CONFIG_FILE, \"w\", encoding=\"utf-8\") as f:\n        json.dump(out, f, indent=2, ensure_ascii=False)",
+          "explanation": "Cloud API keys live in secrets/avatarstudio.env (gitignored) or environment variables, never in studio_config.json. _apply_secret_overlay() injects them into the in-memory config at load time; save_studio_config() deep-copies and blanks every key field before writing the file back, so a real key can never be accidentally committed. Env vars override the file."
+        },
+        {
+          "title": "Engine list depends on what's configured",
+          "feature": "Dynamic render-engine choices",
+          "file": "avatar_studio.py · get_engine_choices()",
+          "language": "python",
+          "code": "def get_engine_choices():\n    choices = [\"LivePortrait\", \"Hallo2\"]\n    cfg = load_studio_config()\n    if cfg[\"cloud_apis\"][\"heygen\"].get(\"api_key\") and cfg[\"cloud_apis\"][\"heygen\"].get(\"enabled\"):\n        choices.append(\"HeyGen (Cloud)\")\n    if cfg[\"cloud_apis\"][\"did\"].get(\"api_key\") and cfg[\"cloud_apis\"][\"did\"].get(\"enabled\"):\n        choices.append(\"D-ID (Cloud)\")\n    if cfg[\"open_source\"][\"musetalk\"].get(\"enabled\"):\n        choices.append(\"MuseTalk (Real-time)\")\n    if cfg[\"open_source\"][\"sadtalker\"].get(\"enabled\"):\n        choices.append(\"SadTalker\")\n    if cfg[\"open_source\"][\"wav2lip\"].get(\"enabled\"):\n        choices.append(\"Wav2Lip\")\n    return choices",
+          "explanation": "LivePortrait and Hallo2 are always offered. Cloud engines (HeyGen, D-ID) appear only when BOTH a key and the enabled flag are set — which is why D-ID, enabled in config but lacking a key, doesn't show today. The extra WSL2 engines appear only when enabled in studio_config.json. This is the single gate that controls the engine dropdown."
+        },
+        {
+          "title": "Language routing config (data-driven TTS)",
+          "feature": "10-language engine routing",
+          "file": "languages.json",
+          "language": "json",
+          "code": "\"\\ud83c\\uddfa\\ud83c\\uddf8 American English\": {\n  \"lang_code\": \"a\", \"engine\": \"kokoro\",\n  \"voices\": { \"male\": \"am_adam\", \"female\": \"af_sarah\" },\n  \"status\": \"supported\"\n},\n\"\\ud83c\\uddef\\ud83c\\uddf5 Japanese\": {\n  \"lang_code\": \"ja\", \"engine\": \"edge-tts\",\n  \"voices\": { \"male\": \"ja-JP-KeitaNeural\", \"female\": \"ja-JP-NanamiNeural\" },\n  \"status\": \"supported\"\n},\n\"\\ud83c\\uddeb\\ud83c\\uddf7 French\": {\n  \"lang_code\": \"fr\", \"engine\": \"edge-tts\",\n  \"voices\": { \"male\": \"fr-FR-HenriNeural\", \"female\": \"fr-FR-DeniseNeural\" }\n}",
+          "explanation": "languages.json is the routing table that makes TTS data-driven, not hardcoded. Each language carries a lang_code, the engine it routes to, and gender voice IDs. English/Portuguese/Spanish/Italian/Mandarin use local Kokoro; Japanese, French, Russian, German route to Microsoft Edge Neural because Kokoro-82M lacks usable voices there (no male French voice; broken Windows pyopenjtalk for Japanese)."
+        }
+      ]
+    },
+    {
+      "category": "TTS Stage (Kokoro + edge-tts)",
+      "snippets": [
+        {
+          "title": "Voice resolution priority",
+          "feature": "Voice override -> agent override -> language default",
+          "file": "avatar_studio.py · get_voice_for_language()",
+          "language": "python",
+          "code": "engine = langs[lang_label].get(\"engine\", \"kokoro\")\noverrides = agent.get(\"language_voice_overrides\", {})\n\nif voice_override:\n    voice = voice_override\nelif engine == \"kokoro\" and lang_label in overrides:\n    voice = overrides[lang_label]\nelse:\n    voice = langs[lang_label][\"voices\"][gender]\n\nlang_code = langs[lang_label][\"lang_code\"]\nreturn voice, lang_code",
+          "explanation": "Decides which voice ID is used for an agent + language. Priority is explicit (UI voice override wins), then per-agent kokoro overrides from agents.json, then the language's gender default. edge-tts voices always come from languages.json unless explicitly overridden in the UI — which keeps the override behaviour predictable across the two engines."
+        },
+        {
+          "title": "Dual-engine voice generation",
+          "feature": "Kokoro (local) or edge-tts (cloud) per language",
+          "file": "avatar_studio.py · generate_voice()",
+          "language": "python",
+          "code": "if engine == \"edge-tts\":\n    import asyncio, edge_tts\n    rate_str  = f\"{int(round((speed - 1.0) * 100)):+d}%\"   # 0.95 -> -5%\n    pitch_str = f\"{pitch:+.0f}st\"\n    async def _run_edge_tts():\n        comm = edge_tts.Communicate(script_text, voice, rate=rate_str, pitch=pitch_str)\n        await comm.save(str(wav_path))\n    asyncio.run(_run_edge_tts())\nelse:\n    from kokoro import KPipeline\n    pipeline = KPipeline(lang_code=lang_code)\n    samples = []\n    for _, _, audio in pipeline(script_text, voice=voice, speed=speed, split_pattern=r\"\\n+\"):\n        samples.append(audio)\n    combined = np.concatenate(samples)\n    if pitch != 0:\n        combined = shift_pitch(combined, 24000, pitch)\n    sf.write(str(wav_path), combined, 24000)",
+          "explanation": "The TTS core. For edge-tts it runs an async Communicate with speed expressed as a rate percentage and pitch as SSML semitones, saved straight to WAV. For Kokoro it builds a KPipeline for the language code, iterates the generated audio chunks, concatenates them, optionally shifts pitch via SciPy, and writes a 24 kHz WAV. Either way the caller gets a (wav_path, duration) it can hand to a render engine."
+        },
+        {
+          "title": "Kokoro model loading (CLI path)",
+          "feature": "Local Kokoro-82M TTS",
+          "file": "avatar_pipeline.py · step_tts()",
+          "language": "python",
+          "code": "import numpy as np\nimport soundfile as sf\nfrom kokoro import KPipeline\n\nkokoro_cfg = cfg[\"kokoro\"]\npipeline = KPipeline(lang_code=kokoro_cfg[\"lang_code\"])\nsamples = []\nfor _, _, audio in pipeline(text, voice=agent[\"voice\"], speed=agent[\"voice_speed\"], split_pattern=r\"\\n+\"):\n    samples.append(audio)\nif not samples:\n    raise RuntimeError(\"Kokoro produced no audio output.\")\ncombined = np.concatenate(samples)\nwav_path = OUTPUTS_DIR / f\"{agent['id']}_voice.wav\"\nsf.write(str(wav_path), combined, kokoro_cfg[\"sample_rate\"])",
+          "explanation": "The headless CLI's voice step loads Kokoro-82M via KPipeline (a PyTorch model, served locally — no internet, no API cost) using the agent's voice and speed from agents.json, then concatenates the streamed audio chunks into one WAV at the configured 24 kHz sample rate. This is the same model the Gradio app uses; the CLI just exercises it directly."
+        },
+        {
+          "title": "Duration-preserving pitch shift",
+          "feature": "Pitch control for Kokoro voices",
+          "file": "avatar_studio.py · shift_pitch()",
+          "language": "python",
+          "code": "factor = 2.0 ** (semitones / 12.0)\nstretched_len = max(1, int(round(len(audio) / factor)))\npitched  = signal.resample(audio, stretched_len)\nrestored = signal.resample(pitched, len(audio))\nreturn restored.astype(np.float32)",
+          "explanation": "Kokoro has no native pitch control, so pitch is a post-process: resample the audio by 2**(semitones/12) to change its pitch, then resample back to the original length to preserve the duration. edge-tts gets pitch for free via its SSML pitch attribute, so this path is Kokoro-only."
+        }
+      ]
+    },
+    {
+      "category": "Background Replacement",
+      "snippets": [
+        {
+          "title": "rembg cutout + composite",
+          "feature": "Solid-color / image background replacement",
+          "file": "avatar_studio.py · apply_background()",
+          "language": "python",
+          "code": "if not REMBG_AVAILABLE:\n    return source_image_path\nwith open(source_image_path, \"rb\") as f:\n    raw = f.read()\nfg_bytes = rembg_remove(raw)\nfg = PILImage.open(_io.BytesIO(fg_bytes)).convert(\"RGBA\")\nw, h = fg.size\nif bg_mode == \"Solid color\":\n    color = bg_color.lstrip(\"#\")\n    r, g, b = int(color[0:2],16), int(color[2:4],16), int(color[4:6],16)\n    bg = PILImage.new(\"RGBA\", (w, h), (r, g, b, 255))\nelif bg_mode == \"Upload background image\":\n    bg = PILImage.open(bg_image_path).convert(\"RGBA\").resize((w, h))\ncomposite = PILImage.alpha_composite(bg, fg).convert(\"RGB\")\ntmp = tempfile.NamedTemporaryFile(suffix=\".jpg\", delete=False, dir=str(OUTPUTS_DIR))\ncomposite.save(tmp.name, \"JPEG\", quality=95)",
+          "explanation": "Before rendering, the portrait's background can be replaced. rembg cuts the subject out to an RGBA foreground, then a new background (a solid hex color or a resized uploaded image) is alpha-composited behind it and saved as a temp JPEG. If rembg isn't installed (REMBG_AVAILABLE is False) it safely returns the original photo unchanged, so a missing dependency degrades gracefully rather than crashing the render."
+        }
+      ]
+    },
+    {
+      "category": "Face Animation — LivePortrait (WSL2)",
+      "snippets": [
+        {
+          "title": "LivePortrait inference in WSL2",
+          "feature": "Driving-video motion transfer",
+          "file": "avatar_studio.py · run_liveportrait()",
+          "language": "python",
+          "code": "cmd = (\n    f\"cd {LP_DIR} && \"\n    f\"{LP_PYTHON} inference.py \"\n    f\"-s {wsl_source} \"\n    f\"-d {wsl_driving} \"\n    f\"--output-dir {wsl_out_dir} \"\n    f\"--animation_region {animation_region} \"\n    f\"--driving_option {driving_option!r} \"\n    f\"--driving_multiplier {driving_multiplier:.2f} \"\n    f\"--scale {crop_scale:.2f} \"\n    f\"{bool_flag('flag_relative_motion', flag_relative)} \"\n    f\"{bool_flag('flag_pasteback', flag_pasteback)} \"\n    f\"{bool_flag('flag_stitching', flag_stitching)}\"\n)\nresult = subprocess.run(\n    [\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", cmd],\n    capture_output=True, text=True, encoding='utf-8', errors='replace'\n)",
+          "explanation": "LivePortrait runs inside WSL2 via its own conda-env python (LP_PYTHON). The Windows app builds a bash command with the portrait, a curated driving video, and all the motion knobs (animation region, driving multiplier, crop scale, relative/pasteback/stitching flags), then shells into the 'liveportrait' env. It's the fast path (~30s) but the mouth follows the driving clip, not the audio — so it needs the retalking pass for true lip sync."
+        },
+        {
+          "title": "Find the render, mux the audio",
+          "feature": "Video assembly for LivePortrait",
+          "file": "avatar_studio.py · run_liveportrait() (ffmpeg)",
+          "language": "python",
+          "code": "find_cmd = f\"find {wsl_out_dir} -name '*.mp4' ! -name '*concat*' | head -1\"\n# ... copy the found mp4 to a Windows path ...\nmerge_cmd = (\n    f\"ffmpeg -y \"\n    f\"-i {wsl_out_win} \"\n    f\"-i {wsl_wav} \"\n    f\"-c:v copy -c:a aac -shortest \"\n    f\"{wsl_final}\"\n)\nsubprocess.run([\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", merge_cmd], capture_output=True)\nsubprocess.run([\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", f\"rm -rf {wsl_out_dir}\"], capture_output=True)",
+          "explanation": "LivePortrait produces a silent video, so the studio finds the output mp4 (excluding any concat artifact), copies it to a Windows path, and uses ffmpeg in WSL2 to mux the generated WAV onto it (-c:v copy keeps the video, -c:a aac encodes the audio, -shortest trims to the shorter stream). The temp WSL output dir is then cleaned up."
+        }
+      ]
+    },
+    {
+      "category": "Face Animation — Hallo2 (WSL2)",
+      "snippets": [
+        {
+          "title": "Audio-driven Hallo2 inference",
+          "feature": "Lips driven by the waveform",
+          "file": "avatar_studio.py · run_hallo2()",
+          "language": "python",
+          "code": "if inference_steps != 40 or abs(cfg_scale_f - 3.5) > 0.01:\n    custom_cfg = \"/tmp/hallo2_qi_custom.yaml\"\n    patch_cmd = (\n        f\"sed 's/^inference_steps:.*/inference_steps: {inference_steps}/' {base_cfg} \"\n        f\"| sed 's/^cfg_scale:.*/cfg_scale: {cfg_scale_f}/' > {custom_cfg}\")\n    subprocess.run([\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", patch_cmd], capture_output=True)\n    config_arg = custom_cfg\nelse:\n    config_arg = base_cfg\n\ncmd = (\n    f\"cd {HALLO_DIR} && {HALLO_PYTHON} scripts/inference_long.py \"\n    f\"--config {config_arg} --source_image {wsl_source} --driving_audio {wsl_audio} \"\n    f\"--pose_weight {pose_weight:.2f} --face_weight {face_weight:.2f} \"\n    f\"--lip_weight {lip_weight:.2f} --face_expand_ratio {face_expand_ratio:.2f}\")\nresult = subprocess.run([\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", cmd],\n    capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=3600)",
+          "explanation": "Hallo2 is the audio-driven engine: the mouth is generated from the WAV, so lip sync is native. The CLI only accepts the weight flags, so when the UI changes inference_steps or cfg_scale (the diffusion quality/guidance knobs) the studio sed-patches a temp YAML in WSL and points --config at it. A 3600s timeout guards the long render (~15-30 min per minute of audio)."
+        },
+        {
+          "title": "Guarantee the right audio is heard",
+          "feature": "Re-mux our WAV over Hallo2's output",
+          "file": "avatar_studio.py · run_hallo2() (ffmpeg)",
+          "language": "python",
+          "code": "wsl_raw_mp4 = f\"{HALLO_DEBUG_BASE}/{stem}/merge_video.mp4\"\nverify_result = subprocess.run(\n    [\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", f\"test -f '{wsl_raw_mp4}' && echo YES || echo NO\"],\n    capture_output=True, text=True, encoding='utf-8', errors='replace')\nif \"YES\" not in verify_result.stdout:\n    raise RuntimeError(f\"Hallo2 produced no merge_video.mp4 at {wsl_raw_mp4}.\")\n# Replace Hallo2's embedded audio with the WAV we generated.\nmerge_cmd = (\n    f\"ffmpeg -y -i {wsl_raw_mp4} -i {wsl_audio} \"\n    f\"-c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest {wsl_final}\")",
+          "explanation": "Hallo2 writes to a deterministic path (output_long/debug/<image-stem>/merge_video.mp4), so the studio tests for that exact file rather than parsing find output (which had leaked timestamps). It then ffmpeg-muxes our generated WAV over the video, explicitly mapping video stream 0 and audio stream 1, so the final clip is guaranteed to speak the exact script we synthesized regardless of what Hallo2 embedded internally."
+        },
+        {
+          "title": "video-retalking lip-sync pass",
+          "feature": "Post-process lip-sync correction",
+          "file": "avatar_studio.py · run_retalking()",
+          "language": "python",
+          "code": "cmd = (\n    f\"export PATH=/home/hyosuke/miniconda3/envs/retalking/bin:$PATH && \"\n    f\"export CUDA_HOME=/home/hyosuke/miniconda3/envs/retalking && \"\n    f\"cd ~/qi_avatar/video-retalking && \"\n    f\"/home/hyosuke/miniconda3/envs/retalking/bin/python inference.py \"\n    f\"--face {wsl_face} --audio {wsl_audio} --outfile {wsl_out}\")\nresult = subprocess.run([\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", cmd],\n    capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=3600)",
+          "explanation": "An optional pass (the apply_retalking checkbox) that takes any rendered video plus the WAV and re-syncs the lips. It runs in its own 'retalking' conda env in WSL2, with PATH and CUDA_HOME exported so the env's CUDA toolchain is used. This is the main lever for fixing LivePortrait's non-audio-driven mouth — and the focus of the project's #1 open quality issue."
+        }
+      ]
+    },
+    {
+      "category": "Cloud Render (D-ID)",
+      "snippets": [
+        {
+          "title": "D-ID talk: upload, create, poll, download",
+          "feature": "Cloud talking-photo rendering",
+          "file": "avatar_studio.py · run_did()",
+          "language": "python",
+          "code": "payload = {\n    \"source_url\": image_url,\n    \"script\": {\"type\": \"audio\", \"audio_url\": audio_url},\n    \"config\": {\"fluent\": True, \"pad_audio\": 0.0},\n}\ncreate_resp = requests.post(\"https://api.d-id.com/talks\", headers=json_headers, json=payload, timeout=60)\ntalk_id = create_resp.json()[\"id\"]\nfor _ in range(120):\n    time.sleep(5)\n    tdata = requests.get(f\"https://api.d-id.com/talks/{talk_id}\", headers=json_headers, timeout=30).json()\n    if tdata[\"status\"] == \"done\":\n        result_url = tdata[\"result_url\"]; break\n    if tdata[\"status\"] == \"error\":\n        raise RuntimeError(f\"D-ID render failed: {tdata.get('description')}\")",
+          "explanation": "The cloud path for when local engines aren't enough. After uploading the portrait and the WAV to D-ID, it creates a 'talk' that drives the face from the uploaded audio, then polls the talk status every 5s for up to 10 minutes until it's done (or errors out), and finally streams the result MP4 to outputs/. run_did is fully implemented; it just needs a D-ID key in secrets to become selectable."
+        }
+      ]
+    },
+    {
+      "category": "Pipeline Orchestration",
+      "snippets": [
+        {
+          "title": "Per-language pipeline loop",
+          "feature": "One-click multi-language render",
+          "file": "avatar_studio.py · pipeline_generate()",
+          "language": "python",
+          "code": "for lang_idx, (lang_label, script_text) in enumerate(scripts_to_run.items(), start=1):\n    lang_slug = lang_label_to_slug(lang_label)\n    file_stem = f\"{agent_id}_{lang_slug}_{timestamp}\"\n    # Step: TTS\n    wav_path, duration = generate_voice(\n        agent_id, script_text, voice_speed, lang_label=lang_label,\n        output_suffix=f\"{lang_slug}_{timestamp}\",\n        voice_override=_voice_override, pitch_semitones=float(voice_pitch or 0))\n    # Step: Render — dispatch to the chosen engine\n    if render_engine == \"Hallo2\":\n        mp4_path = run_hallo2(source_image, wav_path, agent_id, ...)\n    elif render_engine == \"D-ID (Cloud)\":\n        mp4_path = run_did(source_image, wav_path, agent_id, output_stem=file_stem)\n    else:\n        mp4_path = run_liveportrait(source_image, wsl_driving, wav_path, agent_id, ...)\n    if apply_retalking and mp4_path:\n        mp4_path = run_retalking(mp4_path, wav_path, agent_id, ...)",
+          "explanation": "The orchestrator that ties everything together. It's a generator (yields status after each step so the UI shows live progress) that loops the selected languages: synthesize the voice, dispatch to whichever render engine was chosen, then optionally run the retalking pass. Each language gets a unique slug+timestamp file stem so a multi-language batch never overwrites itself. The engine dispatch ladder is the one place new engines plug in."
+        },
+        {
+          "title": "Windows-to-WSL path translation",
+          "feature": "Cross-boundary file handoff",
+          "file": "avatar_studio.py · to_wsl_path()",
+          "language": "python",
+          "code": "def to_wsl_path(p, quote=False):\n    p = str(p).replace(\"\\\\\", \"/\")\n    if len(p) > 1 and p[1] == \":\":\n        drive = p[0].lower()\n        p = f\"/mnt/{drive}/{p[3:]}\"\n    return f\"'{p}'\" if quote else p",
+          "explanation": "Every portrait, WAV, and video handed to a WSL2 command must be expressed as a Linux path. This helper rewrites C:\\Users\\... to /mnt/c/Users/... (drive-letter aware) and optionally shell-quotes it for paths containing spaces — the small but essential glue that lets a Windows Gradio app drive Linux render engines and ffmpeg."
+        }
+      ]
+    },
+    {
+      "category": "Portrait Helpers & I/O (OpenCV / ffmpeg)",
+      "snippets": [
+        {
+          "title": "Best-portrait-frame scoring",
+          "feature": "Auto-pick the best frame from a video",
+          "file": "avatar_studio.py · find_best_portrait_frame()",
+          "language": "python",
+          "code": "faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(80,80))\nif len(faces) == 0:\n    continue\nx, y, w, h = max(faces, key=lambda f: f[2] * f[3])     # largest face\narea_score = (w * h) / (img.shape[0] * img.shape[1])\nroi = gray[y:y+h, x:x+w]\neyes = eye_cascade.detectMultiScale(roi, scaleFactor=1.1, minNeighbors=3)\neye_score = 1.0 if len(eyes) >= 2 else 0.3              # frontal proxy\nsharpness = min(cv2.Laplacian(roi, cv2.CV_64F).var() / 1000.0, 2.0)\nscore = area_score * 2.0 + eye_score * 1.5 + sharpness\nif score > best_score:\n    best_score, best_path, best_ts = score, fp, ts",
+          "explanation": "Given a video, this samples frames evenly (skipping the first/last 5%), and scores each with OpenCV Haar cascades: a bigger face is better (area_score), two visible eyes is a frontality proxy (eye_score), and Laplacian variance rewards sharp, non-blurry frames. The highest-scoring frame becomes the source portrait. If OpenCV isn't available it falls back to the middle frame."
+        },
+        {
+          "title": "Frame extraction + duration probe",
+          "feature": "ffmpeg/ffprobe I/O in WSL2",
+          "file": "avatar_studio.py · extract_frame_at() / get_video_duration()",
+          "language": "python",
+          "code": "# duration via ffprobe\ncmd = (f\"ffprobe -v quiet -show_entries format=duration \"\n       f\"-of default=noprint_wrappers=1:nokey=1 '{wsl_path}' 2>/dev/null\")\nr = subprocess.run([\"wsl\", \"-d\", WSL_DISTRO, \"bash\", \"-c\", cmd], capture_output=True, text=True)\nreturn float(r.stdout.strip())\n\n# single frame via ffmpeg\ncmd = (f\"ffmpeg -y -ss {ts:.3f} -i '{wsl_in}' -vframes 1 -q:v 2 '{wsl_out}' 2>/dev/null\")",
+          "explanation": "The low-level media I/O, both running ffmpeg/ffprobe inside WSL2. get_video_duration uses ffprobe to read the container duration; extract_frame_at seeks to a timestamp and writes one high-quality JPEG. These feed the best-portrait finder and the manual frame-grab UI, and they're the same ffmpeg toolchain the render engines mux audio with."
+        }
+      ]
+    },
+    {
+      "category": "Scene Pipeline (multi-character)",
+      "snippets": [
+        {
+          "title": "Three ways to split a script into scenes",
+          "feature": "Manual / AI / hybrid scene splitting",
+          "file": "scene_pipeline.py · split_script()",
+          "language": "python",
+          "code": "def split_script(full_script, mode, max_minutes, default_char_slug,\n                 default_char_name, all_chars, default_language):\n    if mode == \"manual\":\n        return parse_manual_script(full_script, default_char_slug,\n                                   default_char_name, all_chars, default_language)\n    if mode in (\"ai\", \"hybrid\"):\n        scenes = split_with_ai(full_script, max_minutes, default_char_slug,\n                               default_char_name, all_chars, default_language)\n        if scenes:\n            return scenes\n    return _rule_split(full_script, max_minutes, default_char_slug,\n                       default_char_name, default_language)",
+          "explanation": "The Scene pipeline turns one long script into a multi-character movie. Manual mode honours '---' scene breaks and [Name] / [Name:photo] tags; ai/hybrid modes ask NEXUS to split intelligently; and if the AI split returns nothing (e.g. NEXUS offline), it falls back to a deterministic rule-based splitter. Each resulting scene is then rendered through the same TTS->render->retalking path and concatenated into the final movie with ffmpeg."
+        }
+      ]
+    }
+  ]
+}

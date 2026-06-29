@@ -1,0 +1,58 @@
+[
+  {
+    "category": "Talk to Claude (the core promise)",
+    "features": [
+      {"name": "Real Claude, for free", "description": "Speak or type and get answers from the genuine Claude — not a local imitation — at no per-message cost.", "status": "live", "notes": "claude_cli backend drives headless `claude -p` on Renne's subscription token (CLAUDE_CODE_OAUTH_TOKEN), not the metered API"},
+      {"name": "Claude speaks in a male voice", "description": "Every reply is spoken aloud in a warm male voice; printed text stays unchanged.", "status": "live", "notes": "edge-tts en-US-AndrewNeural; Windows SAPI 'David' offline fallback; pt-BR-AntonioNeural ready but deferred"},
+      {"name": "Talk instead of type", "description": "Renne speaks into his microphone; his speech is transcribed locally and answered out loud.", "status": "live", "notes": "faster-whisper STT runs on-device; push-to-talk, clipboard paste, or hands-free loop"},
+      {"name": "Keeps his name straight", "description": "Asked who he is, the assistant always answers 'Claude' — never 'Andrew' (the voice timbre).", "status": "live", "notes": "Identity rule enforced in the system prompt and project rules"}
+    ]
+  },
+  {
+    "category": "Two Brains, One Toggle",
+    "features": [
+      {"name": "Claude vs Ronald", "description": "Switch between the real Claude and a local stand-in named Ronald, by config or just by saying a name in chat.", "status": "live", "notes": "brain.py dual-brain router; 'Claude ...' wakes the real me, 'Ronald, take a break' brings me back"},
+      {"name": "Ronald never pretends to be Claude", "description": "The local helper is told to admit he is Ronald, has no access to Renne's data, and must never invent meetings or project facts.", "status": "live", "notes": "Anti-hallucination system prompt — the fix for a 2026-06-21 incident where the local model impersonated Claude"},
+      {"name": "Hard-set lock", "description": "Pin the active brain so name-switching is ignored — keeps the real Claude locked in until Renne unlocks it.", "status": "live", "notes": "config brains.locked=true (current state); web toggle UI on :8720"},
+      {"name": "Honest 'not connected' fallback", "description": "If the real Claude can't be reached and Ronald is disabled, the assistant says so plainly instead of faking an answer.", "status": "live", "notes": "fallback_to_local=false; never silently hands a real-Claude question to the local model"}
+    ]
+  },
+  {
+    "category": "Reach Him Anywhere (Channels)",
+    "features": [
+      {"name": "Claude on LINE", "description": "Chat with Claude on LINE by text or voice note; he replies with both text and a spoken voice note.", "status": "live", "notes": "line_bot.py on :8721, public via Cloudflare tunnel claudevoice.quiddityinnovations.com; 24/7 service"},
+      {"name": "Claude on Telegram", "description": "Same two-way text-and-voice conversation on Telegram, with per-chat memory.", "status": "live", "notes": "telegram_bot.py outbound long-poll (no open port); 24/7 service"},
+      {"name": "Owner controls", "description": "Renne's direct messages are binding; he can pause the bot, allow/block guests, set a standing directive, or clear memory.", "status": "live", "notes": "/stop /resume /guests /directive /reset /whoami /video — owner LINE DM only"},
+      {"name": "Guest guardrails", "description": "Friends chatting with the bot get warm small talk only — no project access, no work tasks, pointed to their own Claude account.", "status": "live", "notes": "Separate guest system prompt; ignores attempts to override the rules"},
+      {"name": "Talking-avatar video", "description": "Claude can reply with a short video message — his avatar image plus his voice.", "status": "partial", "notes": "/video command works (still avatar + voice); HD lip-sync is opt-in/heavy; auto-video stays off until async push is verified"},
+      {"name": "Smart reply modality", "description": "The system decides per reply whether to send text, voice, or video — short conversational answers get voice, long/code answers stay text.", "status": "live", "notes": "modality.py rules engine, shared design for future bots"}
+    ]
+  },
+  {
+    "category": "Claude's Meeting Room",
+    "features": [
+      {"name": "A room Claude hosts", "description": "A Zoom-style room where Claude greets people, sees who's present, facilitates, and speaks — open it in a browser.", "status": "partial", "notes": "meeting_server.py on :8722; starts daily 08:00 via scheduled task; loopback-only today"},
+      {"name": "Humans and AI agents together", "description": "People join from a browser and other AI agents join over a connection; everyone shares one live transcript and each gets a distinct voice.", "status": "partial", "notes": "WebSocket room; humans' speech transcribed, everyone's text spoken — a text/voice junction box; agent_join.py template"},
+      {"name": "Polite turn-taking", "description": "Claude answers when addressed and may courteously interject on a strong point, but stays quiet when one participant addresses another.", "status": "live", "notes": "find_addressee + maybe_interject; agents answer only when named, to stop bot-to-bot loops"},
+      {"name": "Meeting minutes on demand", "description": "Turn the live transcript into structured minutes (summary, discussion, decisions, action items) and download them as a Word document.", "status": "live", "notes": "POST /minutes -> .docx in data/minutes; factual, never invents attendees"}
+    ]
+  },
+  {
+    "category": "Always On & Self-Checking",
+    "features": [
+      {"name": "24/7 across reboots", "description": "The channels and public tunnel run as Windows services, so Claude stays reachable even when no one is logged in or working.", "status": "live", "notes": "QI_ClaudeVoiceLine, QI_ClaudeVoiceTelegram, QI_ClaudeVoiceTunnel, QI_ClaudeVoiceControl via NSSM"},
+      {"name": "Hourly self-health check", "description": "Every hour the system probes the real-Claude path end to end and alerts Renne if it goes degraded.", "status": "live", "notes": "bridge_health.py + QI_ClaudeVoiceBridgeCheck task; Tasuke LINE alert + PENDING_REVIEW flag on failure; last probe 'BRIDGE OK' ~20s"},
+      {"name": "Brain control web page", "description": "A simple local web page to switch the active brain and lock it, with live status.", "status": "live", "notes": "server.py serves GET / on :8720 (loopback only, never tunneled)"}
+    ]
+  },
+  {
+    "category": "QI Ecosystem & Roadmap",
+    "features": [
+      {"name": "Registered QI project", "description": "Listed in the QI ecosystem registry with its own port block, services, tunnel, and integration contracts.", "status": "live", "notes": "id claude_voice, block 8720-8729, family_tier cousin, integrates_with qi_brain/nexus/maia"},
+      {"name": "Reusable voice bridge", "description": "The speak/listen/realtime stack is offered to other QI projects (Maia, OpenClaw) as a shared voice feature.", "status": "partial", "notes": "speak.py + listen.py + the realtime loop exposed to the ecosystem; not yet adopted elsewhere"},
+      {"name": "Voice Dispatch to the QI Hive", "description": "Speak a work order and have the QI Hive execute it, then report back by voice — turning the assistant into a dispatch console.", "status": "planned", "notes": "POST :9011/api/dispatch source=voice_*; needs a net-new executor + notification path"},
+      {"name": "Natural low-latency voice (LiveKit)", "description": "Rebuild the voice loop on LiveKit for near-real-time, interruptible conversation.", "status": "planned", "notes": "Phase 1; faster-whisper CUDA + Kokoro/Andrew + smart-turn endpointing"},
+      {"name": "Zoom-like meetings with screen share", "description": "A real meeting interface where Claude is a participant who hears, speaks, and sees the shared screen.", "status": "planned", "notes": "Phase 2; LiveKit meet UI then plugNmeet (screen/doc share, whiteboard, recording)"}
+    ]
+  }
+]

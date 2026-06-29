@@ -1,0 +1,52 @@
+{
+  "table": [
+    {"layer": "Extension Runtime", "technology": "Chrome / Edge Extension (Manifest V3)", "role": "Primary in-browser runtime — side panel, content script, background service worker; ships as Chrome and Edge builds", "license": "Open standard (Google)", "version": "manifest v1.2.1"},
+    {"layer": "Extension Runtime", "technology": "JavaScript (ES Modules)", "role": "All extension code: service worker (type:module), side panel, content script, options, onboarding, shared modules", "license": "Open standard", "version": "ES2022+"},
+    {"layer": "Extension Runtime", "technology": "Chrome Extension APIs", "role": "identity (OAuth), storage.local (state + keys + logs), alarms (scheduled classification), sidePanel, tabs, downloads, notifications, activeTab", "license": "Chrome extension APIs", "version": "MV3"},
+    {"layer": "Automation", "technology": "Google Apps Script (V8)", "role": "Server-side classifier generated from config: classifyNewEmails (15-min), triageStaleInbox (daily 1 AM), TIER_RULES engine — runs on Google's servers, no PC required", "license": "Free (Google quotas apply)", "version": "V8 runtime"},
+    {"layer": "Dashboard Backend", "technology": "Python + Flask", "role": "Local config dashboard on port 8550 — tier designer, Apps Script generator, filter/label/migration tools, OAuth flows. Desktop tool, not a server (no NSSM)", "license": "Open source (BSD)", "version": "Python 3.x"},
+    {"layer": "Dashboard Frontend", "technology": "Jinja2 + HTML/CSS/JS", "role": "11 templates (base, dashboard, configure, configure_tier, designer, deploy, cleanup, migrate, settings, welcome, manual) served by Flask", "license": "BSD / open standard", "version": "Flask templating"},
+    {"layer": "Gmail Integration", "technology": "Gmail API", "role": "Labels CRUD, messages.modify + batchModify, settings.filters CRUD, label visibility. Used by both the extension (REST via gmailFetch) and the Python tools (google-api-python-client)", "license": "Free (Google quotas apply)", "version": "v1"},
+    {"layer": "Contacts Integration", "technology": "Google People API", "role": "Contact-aware routing — sender contact lookup (contacts OAuth scope, people.googleapis.com)", "license": "Free (Google quotas apply)", "version": "v1"},
+    {"layer": "Deploy Integration", "technology": "Google Apps Script API", "role": "projects.updateContent — push the generated classifier into the user's Apps Script project (script.projects scope, token_apps_script.json)", "license": "Free (Google quotas apply)", "version": "v1"},
+    {"layer": "Auth", "technology": "Google OAuth2 (+ PKCE)", "role": "Extension: chrome.identity.getAuthToken (Chrome) + launchWebAuthFlow (Edge). Tools: google-auth-oauthlib Flow with PKCE over localhost", "license": "Open standard", "version": "OAuth 2.0"},
+    {"layer": "Python Google Libs", "technology": "google-api-python-client + google-auth + google-auth-oauthlib", "role": "Authenticated Gmail / Apps Script API access from the dashboard and the create_*/migrate_* scripts", "license": "Apache 2.0", "version": "current"},
+    {"layer": "AI — Cloud (BYOK)", "technology": "Google Gemini", "role": "Default classifier + chat assistant (gemini-2.0-flash generateContent). User supplies key", "license": "Free tier / Paid", "version": "gemini-2.0-flash"},
+    {"layer": "AI — Cloud (BYOK)", "technology": "OpenAI (and OpenAI-compatible)", "role": "Alternative classifier/chat via /chat/completions; custom baseUrl supported", "license": "Paid API", "version": "user-chosen model"},
+    {"layer": "AI — Cloud (BYOK)", "technology": "Anthropic Claude", "role": "Alternative classifier/chat via /messages endpoint", "license": "Paid API", "version": "user-chosen model"},
+    {"layer": "AI — Local (BYOK)", "technology": "Ollama", "role": "Local, free, private classifier/chat via /api/chat — no data leaves the machine", "license": "MIT", "version": "user-hosted model"},
+    {"layer": "Localization", "technology": "Chrome i18n + custom i18n modules", "role": "10-locale UI (en, zh_CN, fr, de, ja, ko, pt_BR, es, hi, ru); _locales/ message catalogs + shared/i18n + command-i18n + guide-i18n", "license": "Open standard", "version": "10 locales"},
+    {"layer": "Distribution", "technology": "Chrome Web Store + Microsoft Edge Add-ons", "role": "Public listings (in review). CASA verification is the gating step for restricted Gmail scopes", "license": "Store programs", "version": "submitted"},
+    {"layer": "Build / Docs", "technology": "Python build scripts + python-docx", "role": "build_zips_v117 / bump_version_117 package the Chrome+Edge zips; create_*/md_to_docx generate the .docx documentation set", "license": "MIT", "version": "v1.2.1 builds"}
+  ],
+  "descriptions": [
+    {
+      "title": "Config-first: one file, sorted everywhere",
+      "body": "EasyFlow's design centre is a single configuration file, Tools/config.json — six tiers, their colors, 31 sub-labels, and ~185 sender/subject rules. Nothing downstream is hand-maintained: create_gmail_labels.py builds the colored Gmail label tree from it, create_filters.py compiles it into native Gmail filters, generate_apps_script() serializes it into the TIER_RULES object of a deployable Google Apps Script, and the browser extension loads the same shape to drive its rules engine and AI triage. Change the config once and every surface re-derives. save_config() always writes a .bak first, so an edit is never destructive."
+    },
+    {
+      "title": "Three deployment surfaces, one engine",
+      "body": "The same tier model is delivered three ways so the user can pick their comfort level. (1) The browser extension is the hands-on path: open the Gmail side panel and classify on demand, with optional AI for the grey-area mail. (2) The Google Apps Script is the set-and-forget path: it runs on Google's servers every 15 minutes and triages stale mail nightly — the PC and browser can be off. (3) Native Gmail filters are the zero-software path: Gmail itself labels and files mail with nothing of EasyFlow's running at all. Most users combine the Apps Script for steady-state sorting with the extension for cleanup and review."
+    },
+    {
+      "title": "Cross-browser OAuth (Chrome and Edge)",
+      "body": "Chrome exposes chrome.identity.getAuthToken backed by a 'Chrome app' OAuth client declared in the manifest — but Microsoft Edge does not support that API. getAuthToken() in the service worker probes the Chrome path once, and on an 'unsupported'/'Microsoft Edge' error transparently falls back to chrome.identity.launchWebAuthFlow against a separate 'Web application' OAuth client, caching the resulting token in storage (the web flow has no built-in cache). It remembers which method worked (_authMethod) so it never re-probes an unsupported API. This is what lets one codebase ship to both stores. OAuth scopes and client IDs are deliberately frozen — changing them would void the in-progress CASA verification."
+    },
+    {
+      "title": "Resilient Gmail access (gmailFetch)",
+      "body": "MV3 service workers have no default fetch timeout, so a dropped Gmail response would hang forever with no error. gmailFetch wraps every call with an AbortController hard timeout (10s for GETs, 60s for destructive DELETE/batchModify), refreshes the token and retries once on 401, backs off exponentially on 429 (2/4/8s) and on network errors (2/4s, two retries), and treats Gmail's cascade-404 — returned when a parent label's children are deleted along with it — as a benign success rather than an error. This hardening is what makes bulk label and migration operations safe on large mailboxes."
+    },
+    {
+      "title": "AI triage: bring-your-own-key, metadata-only",
+      "body": "AI is opt-in and never the default cost. The user picks one provider — Gemini, OpenAI, Anthropic, or a local Ollama model — and supplies their own key, stored in chrome.storage.local. aiTriageBatch() sends only the From header, Subject, and Gmail snippet (never the full body) to the model, asks for a {label, confidence} JSON, and then accepts the suggestion only if the returned label actually exists in the user's tier tree — a guard against the model inventing categories. A NO_TIERS pre-flight check and a tolerant response parser (which logs the raw text when it can't parse) keep the feature debuggable for non-technical users."
+    },
+    {
+      "title": "Local desktop tool, not a server",
+      "body": "Unlike most QI projects, EasyFlow has no NSSM Windows service and no always-on backend. The Flask dashboard on port 8550 (within the project's 8550-8559 block) is a desktop convenience the owner runs only when designing tiers or generating artifacts; the registry classifies EasyFlow as a standalone_tool with family_tier standalone_tool. Once the Apps Script and filters are deployed, EasyFlow keeps sorting mail with nothing of its own running locally — the work has been pushed entirely to Google's infrastructure."
+    },
+    {
+      "title": "Ten languages, by hand",
+      "body": "The UI ships in ten locales (EN default, plus ZH-CN, FR, DE, JA, KO, PT-BR, ES, HI, RU), maintained as Chrome _locales/ message catalogs plus three custom modules: i18n.js for UI strings, command-i18n.js for the side-panel commands, and guide-i18n.js for the onboarding walkthrough. Translation policy is manual-only — no machine/AI translation — and ~30 Tools/add_*_i18n.py helpers plus check_locales scripts keep every key present and in sync across all ten files. Arabic and other RTL languages are deferred to a future dedicated RTL edition to avoid layout rework mid-cycle."
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+[
+  {
+    "category": "Control / Health API (server.py :8720)",
+    "features": [
+      {"name": "FastAPI control app", "file": "server.py :: app / health() / version() / info()", "status": "live", "detail": "QI module contract (Law 2): GET /health -> {status:ok}, /version -> {claude_voice, 0.1.0, active_development}, /info reads qi_registry.json and returns this project's entry. Loopback-only on 127.0.0.1:8720, never tunneled."},
+      {"name": "Config + bridge-health endpoints", "file": "server.py :: get_config() / bridge_health()", "status": "live", "detail": "GET /config returns config.json (graceful-degrade envelope, Law 3); GET /bridge/health serves data/bridge_health.json written by the hourly probe."},
+      {"name": "Brain control + toggle UI", "file": "server.py :: brain_state() / brain_active() / brain_config() / brain_ui()", "status": "live", "detail": "GET /brain (active/default/locked/registry), POST /brain/active, POST /brain/config (locked/default/address_toggle, pins active->default when locking). GET / serves BRAIN_HTML — a segmented Claude/Ronald toggle with a hard-set lock, polling /brain every 3s."},
+      {"name": "Quick TTS smoke test", "file": "server.py :: say()", "status": "live", "detail": "POST /say {text, lang} speaks a line in Claude's male voice via edge_tts + realtime.play_interruptible."}
+    ]
+  },
+  {
+    "category": "LLM Backends & Router (backends.py)",
+    "features": [
+      {"name": "Free real-Claude via headless CLI", "file": "backends.py :: stream_claude_cli()", "status": "live", "detail": "Spawns `claude -p --output-format text --no-session-persistence --model sonnet` via subprocess, prompt over STDIN, neutral cwd (tempdir) so no project CLAUDE.md auto-loads. Uses CLAUDE_CODE_OAUTH_TOKEN (subscription) — deliberately NOT --bare (which would force the metered API key). One-shot yield; ~20s/turn."},
+      {"name": "Ollama / Anthropic / OpenRouter adapters", "file": "backends.py :: stream_ollama() / stream_anthropic() / stream_openrouter()", "status": "live", "detail": "stream_ollama POSTs /api/chat (local, default, llama3.1:8b). stream_anthropic uses the messages.stream API (disabled). stream_openrouter via OpenAI-compatible client; key from env or shared C:\\QI\\maia.db. Each is independently enable/disable + toggleable in config."},
+      {"name": "Fallback router", "file": "backends.py :: enabled_chain() / stream_reply()", "status": "live", "detail": "enabled_chain orders active-first then config 'order' among enabled providers. stream_reply yields ('__provider__', name) then (name, chunk); on any provider exception it logs and tries the next (Law 3 — degrade, never crash). Raises only if every enabled backend fails."},
+      {"name": "Secret + key loading", "file": "backends.py :: _load_env() / _openrouter_key()", "status": "live", "detail": "_load_env parses secrets/claude_voice.env into os.environ (no dependency). _openrouter_key falls back to keys stored in C:\\QI\\maia.db (config/settings tables) like Gamez."}
+    ]
+  },
+  {
+    "category": "Dual-Brain Router (brain.py)",
+    "features": [
+      {"name": "Named-brain registry + merge", "file": "brain.py :: _DEFAULT_BRAINS / brains_cfg()", "status": "live", "detail": "Two brains: 'claude' (engine claude_cli, voice Andrew) and 'ronald' (engine ollama, voice Brian, anti-hallucination system prompt). brains_cfg shallow-merges config top level and deep-merges registry entries over the defaults."},
+      {"name": "Persisted active state + lock", "file": "brain.py :: load_state() / set_active() / effective_active()", "status": "live", "detail": "Active brain persists in data/brain_state.json (shared by chat toggles and the :8720 UI). effective_active returns the configured default when locked (a true hard-set), else the last-toggled active."},
+      {"name": "Address matching (mishearing-tolerant)", "file": "brain.py :: _match_address() / _levenshtein() / _strip_filler()", "status": "live", "detail": "Matches a leading brain name with homophone address_terms (cloud/claud/clawed...) + an edit-distance-1 fuzzy fallback + a single leading filler word ('hey claude'). stt_hint() biases Whisper toward the brain names."},
+      {"name": "Turn resolution + take-a-break", "file": "brain.py :: resolve()", "status": "live", "detail": "Returns target/engine/voice/system_prompt/route/control_reply/clean_text/switched_to. '<name>, take a break' hands to the other brain; a bare name wakes+greets (no LLM); a real message routes to the addressed brain."},
+      {"name": "Synchronous converse + bridge round-trip", "file": "brain.py :: converse() / _bridge_roundtrip() / run_local()", "status": "live", "detail": "converse() runs one full voice turn, mutating history. Legacy bridge engine drops into claude_bridge/inbox.jsonl and polls outbox.jsonl up to timeout; honest fallback to the other brain only if fallback_to_local. run_local forces the resolved engine via _cfg_for_engine."}
+    ]
+  },
+  {
+    "category": "Realtime Voice Loop (realtime.py)",
+    "features": [
+      {"name": "Whisper STT (local, CPU int8)", "file": "realtime.py :: load_whisper() / transcribe()", "status": "live", "detail": "faster-whisper on device=cpu, compute_type=int8 (CUDA libs absent in this Windows Python). Uses brain.stt_hint() initial_prompt; respects stt.language (English-forced)."},
+      {"name": "Energy VAD / PTT capture", "file": "realtime.py :: capture_vad() / capture_ptt()", "status": "live", "detail": "capture_vad: sounddevice InputStream, RMS energy gate (start_rms 0.015), trailing-silence end (silence_ms 700), min_speech + max_utterance guards. capture_ptt: Enter to start/stop. Mode = vad | wake | ptt from config.listening."},
+      {"name": "Per-sentence streaming TTS + barge-in", "file": "realtime.py :: speak_stream() / synth() / play_interruptible()", "status": "live", "detail": "Buffers the reply, flushes complete sentences (_SENT_END) to edge-tts and plays via ffplay as they arrive. play_interruptible watches mic RMS during playback and terminates ffplay on sustained speech (barge-in disabled by default to avoid self-trigger without headphones)."},
+      {"name": "Main loop + dual-brain greet", "file": "realtime.py :: main()", "status": "partial", "detail": "IDLE->LISTENING->THINKING->SPEAKING loop; greets as the active brain, routes each utterance via brain.converse() (40s bridge timeout). Speaks any honest hand-off note. Works but ~20s/turn on the free CLI path; LiveKit rebuild is the planned fix."}
+    ]
+  },
+  {
+    "category": "LINE Channel (line_bot.py :8721)",
+    "features": [
+      {"name": "Signed webhook + async offload", "file": "line_bot.py :: webhook() / process_event()", "status": "live", "detail": "POST /line/webhook verifies X-Line-Signature via WebhookParser, returns 200 fast and offloads each event to a worker thread (run_in_executor). linebot.v3 messaging SDK; reply + push paths."},
+      {"name": "Owner vs guest routing", "file": "line_bot.py :: process_event() / owner_command() / system_prompt()", "status": "live", "detail": "Owner identified by LINE userId -> full assistant + dual-brain routing + binding /commands (/stop /resume /guests /directive /cleardirective /reset /video /whoami). Everyone else -> GUEST_PROMPT social-only face. Global pause + guest gating honoured."},
+      {"name": "Voice in / voice out", "file": "line_bot.py :: transcribe() / make_m4a() / build_messages()", "status": "live", "detail": "Inbound audio -> ffmpeg 16k mono -> faster-whisper (with stt_hint). Outbound replies -> edge-tts (pronunciation-fixed) -> ffmpeg AAC .m4a served from /audio/{fname}; AudioMessage attached when public_base_url set."},
+      {"name": "Bridge-push delivery path", "file": "line_bot.py :: _on_bridge_line() / PENDING", "status": "partial", "detail": "Legacy BRAIN_MODE=bridge watches the bus outbox and PUSHes the real Claude's reply (reply token expired). Superseded by the claude_cli backend but retained for back-compat."}
+    ]
+  },
+  {
+    "category": "Telegram Channel (telegram_bot.py)",
+    "features": [
+      {"name": "Long-poll bot loop", "file": "telegram_bot.py :: TG / Bot.handle()", "status": "live", "detail": "Outbound getUpdates long-poll (no inbound port, no tunnel). Commands /start /reset /whoami /voice /video. allowed_chat_ids locks the bot to specific chats; per-chat history + voice-on override."},
+      {"name": "Dual-brain reply + delivery", "file": "telegram_bot.py :: Bot.reply() / _deliver()", "status": "live", "detail": "Routes through brain.resolve(); control commands answered directly; bridge engine submits to the bus; local engine runs brain.run_local. _deliver sends text + (modality-gated) OGG/Opus voice note."},
+      {"name": "Voice note transcode", "file": "telegram_bot.py :: oga_to_wav() / text_to_ogg()", "status": "live", "detail": "Inbound .oga -> ffmpeg 16k mono wav -> Whisper. Outbound edge-tts mp3 -> ffmpeg libopus 48k mono OGG voice note (Telegram-native)."}
+    ]
+  },
+  {
+    "category": "Meeting Room (meeting_server.py :8722)",
+    "features": [
+      {"name": "WebSocket room + roster", "file": "meeting_server.py :: ws_endpoint() / broadcast() / roster_list()", "status": "partial", "detail": "ws://:8722/ws?name=&kind= joins humans/agents; each participant gets a distinct VOICE_POOL voice; shared transcript broadcast to all; Claude greets each joiner; transcript clears when the room empties."},
+      {"name": "Active-brain host", "file": "meeting_server.py :: host_brain() / host_reply() / build_messages()", "status": "partial", "detail": "Host follows the global active brain (shared via brain_state.json). build_messages injects a grounded system prompt (only real participants, no fake screen/file/vision features). claude_cli/ollama run synchronously; legacy bridge path falls back honestly."},
+      {"name": "Turn-taking + interjection", "file": "meeting_server.py :: on_user_message() / find_addressee() / maybe_interject()", "status": "live", "detail": "Host replies when addressed by name or to an open human message; stays silent when a human addresses another participant; may interject only on a strong, respectful disagreement (else replies EXACTLY [pass])."},
+      {"name": "STT endpoint + minutes export", "file": "meeting_server.py :: stt() / minutes() / _render_minutes_docx()", "status": "live", "detail": "POST /stt transcribes browser mic audio (Whisper). POST /minutes synthesises structured markdown minutes and renders a .docx (python-docx) to data/minutes, downloadable at /minutes/file/{name}."},
+      {"name": "Junction-box TTS", "file": "meeting_server.py :: tts() / claude_say() / post_message()", "status": "live", "detail": "Every participant's text is synthesised in their own voice (edge-tts, pronunciation-fixed) and served from /media; humans' speech is transcribed — text<->voice<->text for the whole room."},
+      {"name": "Agent participant template", "file": "agent_join.py", "status": "live", "detail": "Demo agent joins over WebSocket as kind=agent, answers only when addressed by name (stops bot-to-bot loops), thinks with a local Ollama persona, never invents participants/features."}
+    ]
+  },
+  {
+    "category": "Persistence, Ops & Tooling",
+    "features": [
+      {"name": "Always-on service installer", "file": "ClaudeVoice_Install.bat", "status": "live", "detail": "Self-elevating NSSM installer (nssm at C:\\QIH\\engine\\bin) for QI_ClaudeVoiceTunnel, QI_ClaudeVoiceLine (:8721), QI_ClaudeVoiceTelegram, QI_ClaudeVoiceControl (:8720). Sets AppDirectory + Description per QI service rule; SERVICE_AUTO_START."},
+      {"name": "Meeting-room daily task", "file": "ClaudeVoice_Start_MeetingRoom.bat / setup_meeting_schedule.ps1", "status": "live", "detail": "QI_ClaudeVoiceMeeting_8AM runs the room at 08:00 via conhost --headless cmd /c (a .bat, not pythonw -> avoids the stdout-null crash). RunLevel Limited (no admin), Interactive, StartWhenAvailable, Hidden."},
+      {"name": "Bridge health monitor", "file": "bridge_health.py", "status": "live", "detail": "Hourly QI_ClaudeVoiceBridgeCheck: verifies token present + kind (subscription-oauth vs api-key), claude CLI resolvable, brain wired to claude_cli, a LIVE probe ('BRIDGE OK') with latency, and the three /health endpoints. Writes data/bridge_health.json; alerts via Tasuke + BRIDGE_PENDING_REVIEW.json on failure."},
+      {"name": "ffmpeg resolver (service-safe)", "file": "util.py :: ffmpeg() / ffprobe()", "status": "live", "detail": "Resolves ffmpeg/ffprobe via config dir -> PATH -> common install dirs -> WinGet packages glob, fixing the empty-PATH service account that silently dropped voice notes."},
+      {"name": "Spoken-only pronunciation + modality", "file": "pronounce.py :: apply() / modality.py :: choose()", "status": "live", "detail": "pronounce.apply rewrites speech only ('Renne'->'Renee', whole-word, case-preserving). modality.choose picks text/voice/video per turn from length + moment detection; cooldown-gated video."}
+    ]
+  }
+]

@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {
+      "name": "Supervision & Drift",
+      "priority": "high",
+      "items": [
+        {"title": "Continuous drift watchdog service", "detail": "Promote supervisor.py from a run-on-demand script to an always-on QI_ scheduled task or NSSM service that scans on an interval and alerts (via Tasuke) the moment a project goes red. Today the scan only reflects the last manual run — DASHBOARD.md was last generated 2026-05-13."},
+        {"title": "Severity-gated escalation", "detail": "Wire red findings (service down, >5 dirty files, keepalive failures >=3) directly into a Tasuke notification + a calendar event, so a stopped production service (Maia/Naya/OpenClaw) pages Renne instead of waiting for the next session."},
+        {"title": "Auto-remediation for safe drift", "detail": "Extend the supervisor with optional safe auto-fixes mirroring the self-audit (commit-and-note for trivial untracked docs, restart a stopped QI_ service after confirming the port is actually dead) behind an --apply-safe flag and the decision gate."}
+      ]
+    },
+    {
+      "name": "Brain Integration",
+      "priority": "high",
+      "items": [
+        {"title": "Fix the stale Brain port in the SessionStart hook", "detail": "session_context.py probes http://localhost:9010/api/status, but QI_BrainAPI moved to 9011 on 2026-05-14 (Logitech G HUB squats 9010). The hook therefore reports a DEGRADED session even when Brain is healthy. Repoint to :9011."},
+        {"title": "First-class session logging from hooks", "detail": "The SessionEnd stub is a best-effort inbox drop ingested by QI_HiveIngest. Add a direct qi.log_session() call (when Brain is reachable) so the structured fields — decisions, features, files_changed, next_steps — are captured at the source instead of inferred from a transcript summary."},
+        {"title": "Standing reconciliation cadence", "detail": "Generalise brain_reconcile_2026_06_10.py from a dated one-off into a parameterised, idempotent reconcile that runs on a schedule and diffs project_state vs git/service reality, rather than being re-authored each pass."}
+      ]
+    },
+    {
+      "name": "Orchestration Maturity",
+      "priority": "medium",
+      "items": [
+        {"title": "Dispatch telemetry", "detail": "Aggregate SubagentStop stubs into a per-session dispatch report (which roles ran, how often the main thread did work an agent should have) so the dispatch discipline can be measured, not just asserted."},
+        {"title": "Worktree isolation for builders", "detail": "Standardise running hive-builder in an isolated git worktree so concurrent agent work never collides on the working tree; the self-audit already prunes clean worktrees, so the lifecycle is half-built."},
+        {"title": "Librarian-driven compliance sweeps", "detail": "Schedule a periodic hive-librarian pass to flag stale/duplicate docs and missing standard logs across all active projects, feeding fixes to hive-scribe."}
+      ]
+    },
+    {
+      "name": "Environment & Reliability",
+      "priority": "medium",
+      "items": [
+        {"title": "Per-product NSSM naming standardization", "detail": "18 control-bat + per-product NSSM copies are staged and armed for a Friday midnight window (QI_NamingStandardize_Friday) so each service's UAC popup names its product. Currently staged/not-yet-applied — confirm the task is registered and apply."},
+        {"title": "Deeper lock inspection", "detail": "claude_restart_guard.ps1 -Locks only finds loaded-module handles; integrate Sysinternals handle64.exe to catch data-file handles for the rare lock that survives -Clean."},
+        {"title": "Backup retention policy", "detail": "Automate trimming of accumulating .claude.json.bak-* and config backups (the self-audit reports >5 today but only suggests, never trims)."}
+      ]
+    },
+    {
+      "name": "Visibility & Documentation",
+      "priority": "low",
+      "items": [
+        {"title": "This Project Status page kept fresh", "detail": "Re-run the INTRO doc pass when the agent set, hooks, or Tools scripts change so the Hive dashboard reflects the real workspace, not a snapshot."},
+        {"title": "GitHub remote for claude_manager", "detail": "Registry github field is 'TBD'. Decide whether the management workspace gets its own remote and nightly sync, or stays local-only by design."},
+        {"title": "Consolidate legacy tooling", "detail": "health_check.py, grant_claude_service_rights.ps1, patch_mcp_config.py and the dated gen_meeting0*.{py,js} scripts predate the current fabric — audit, document, or archive to keep the workspace lean."}
+      ]
+    }
+  ]
+}

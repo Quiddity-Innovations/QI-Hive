@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arr-sky" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="600" fill="#f8fafc" rx="12"/>
+  <text x="450" y="25" text-anchor="middle" font-size="17" font-weight="700" fill="#1e293b">Gamez (WC2026) — System Architecture</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active · 2026</text>
+
+  <!-- ══ LEGEND (top right corner) ══ -->
+  <rect x="692" y="58" width="200" height="160" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="792" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Legend</text>
+  <rect x="700" y="83" width="14" height="10" rx="2" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="720" y="93" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="700" y="100" width="14" height="10" rx="2" fill="#fef9c3" stroke="#ca8a04"/>
+  <text x="720" y="110" font-size="9" fill="#374151">Built · Partial / waiting</text>
+  <rect x="700" y="117" width="14" height="10" rx="2" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="720" y="127" font-size="9" fill="#374151">Planned</text>
+  <rect x="700" y="134" width="14" height="10" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,2"/>
+  <text x="720" y="144" font-size="9" fill="#374151">Caution / Gated</text>
+  <line x1="700" y1="159" x2="718" y2="159" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="724" y="163" font-size="9" fill="#374151">Browser → proxy</text>
+  <path d="M 700,176 H 718" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <text x="724" y="180" font-size="9" fill="#374151">Tunnel / secure path</text>
+  <path d="M 700,193 H 718" fill="none" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+  <text x="724" y="197" font-size="9" fill="#374151">Upstream fetch</text>
+  <text x="792" y="213" text-anchor="middle" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+
+  <!-- ══ CLIENTS GROUP WRAPPER ══ -->
+  <rect x="8" y="62" width="500" height="92" rx="9" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="20" y="56" width="62" height="14" rx="3" fill="#f8fafc"/>
+  <text x="51" y="67" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700" letter-spacing="1">CLIENTS</text>
+
+  <rect x="16" y="74" width="150" height="72" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="91" y="93" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">WC2026.html (app)</text>
+  <text x="91" y="108" text-anchor="middle" font-size="8" fill="#3b82f6">Single-file HTML/JS UI</text>
+  <text x="91" y="120" text-anchor="middle" font-size="8" fill="#3b82f6">Board · bracket · betting</text>
+  <text x="91" y="132" text-anchor="middle" font-size="8" fill="#3b82f6">window · AI chat</text>
+  <text x="91" y="143" text-anchor="middle" font-size="8" fill="#93c5fd">localStorage: keys · layout</text>
+
+  <rect x="176" y="74" width="150" height="72" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="251" y="93" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Owner (local)</text>
+  <text x="251" y="108" text-anchor="middle" font-size="8" fill="#3b82f6">localhost:8710</text>
+  <text x="251" y="120" text-anchor="middle" font-size="8" fill="#3b82f6">Full data · config editor</text>
+  <text x="251" y="132" text-anchor="middle" font-size="8" fill="#3b82f6">Shared AI ungated</text>
+  <text x="251" y="143" text-anchor="middle" font-size="8" fill="#93c5fd">or portable .exe window</text>
+
+  <rect x="336" y="74" width="164" height="72" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="418" y="93" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Friends (tunnel)</text>
+  <text x="418" y="108" text-anchor="middle" font-size="8" fill="#3b82f6">gamez.quiddityinnovations.com</text>
+  <text x="418" y="120" text-anchor="middle" font-size="8" fill="#3b82f6">Shared AI behind access code</text>
+  <text x="418" y="132" text-anchor="middle" font-size="8" fill="#3b82f6">or own key / local Ollama</text>
+  <text x="418" y="143" text-anchor="middle" font-size="8" fill="#93c5fd">config endpoints blocked</text>
+
+  <!-- ══ CLOUDFLARE TUNNEL ══ -->
+  <rect x="540" y="74" width="138" height="72" rx="9" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="609" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Cloudflare Tunnel</text>
+  <text x="609" y="112" text-anchor="middle" font-size="8" fill="#22c55e">QI_GamezTunnel · qi-gamez</text>
+  <text x="609" y="126" text-anchor="middle" font-size="8" fill="#22c55e">HTTPS · no open port</text>
+  <text x="609" y="140" text-anchor="middle" font-size="8" fill="#22c55e">→ localhost:8710</text>
+
+  <!-- ① Friends → Tunnel -->
+  <path d="M 500,110 H 540" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-green)"/>
+  <!-- ② Clients wrapper → Proxy (vertical) -->
+  <line x1="251" y1="154" x2="251" y2="206" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <!-- ③ Tunnel → Proxy (vertical) -->
+  <line x1="609" y1="146" x2="609" y2="206" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+  <!-- ══ CORE: FastAPI Proxy ══ -->
+  <rect x="14" y="206" width="872" height="72" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="450" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="white">Gamez FastAPI Proxy — server.py</text>
+  <text x="450" y="245" text-anchor="middle" font-size="10" fill="#94a3b8">Uvicorn · Port 8710 · QI_GamezProxy (NSSM) · serves WC2026.html at / (same-origin) · APScheduler refresh 15 min</text>
+  <text x="450" y="262" text-anchor="middle" font-size="9" fill="#64748b">GET /snapshot /health /fixtures /players /teams /kalshi · POST /refresh · /ai/openrouter · /ai/ollama/* · /config* (local-only) · /allowlist-info · /setup</text>
+
+  <!-- arrows Core → engine layer -->
+  <text x="18" y="296" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">ENGINE LAYER (Python)</text>
+  <line x1="120" y1="278" x2="120" y2="304" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+  <line x1="340" y1="278" x2="340" y2="304" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+  <line x1="560" y1="278" x2="560" y2="304" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+  <line x1="780" y1="278" x2="780" y2="304" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arr-sky)"/>
+
+  <!-- sources.py -->
+  <rect x="14" y="304" width="212" height="92" rx="9" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="120" y="323" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">sources.py — fetchers</text>
+  <text x="120" y="340" text-anchor="middle" font-size="9" fill="#c2410c">ESPN fixtures/standings/bracket</text>
+  <text x="120" y="354" text-anchor="middle" font-size="9" fill="#c2410c">EA FC 26 ratings → squads</text>
+  <text x="120" y="368" text-anchor="middle" font-size="9" fill="#854d0e">API-Football (optional key)</text>
+  <text x="120" y="382" text-anchor="middle" font-size="9" fill="#c2410c">Kalshi odds · SAMPLE fallback</text>
+
+  <!-- scoring.py -->
+  <rect x="234" y="304" width="212" height="92" rx="9" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="340" y="323" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">scoring.py — heuristic</text>
+  <text x="340" y="340" text-anchor="middle" font-size="9" fill="#c2410c">PPS: percentile per-90 / rated</text>
+  <text x="340" y="354" text-anchor="middle" font-size="9" fill="#c2410c">SSS: projected XI + star + depth</text>
+  <text x="340" y="368" text-anchor="middle" font-size="9" fill="#c2410c">spine-weighted · confidence</text>
+  <text x="340" y="382" text-anchor="middle" font-size="8" fill="#ea580c">transparent — not a prediction</text>
+
+  <!-- AI relays -->
+  <rect x="454" y="304" width="212" height="92" rx="9" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="560" y="323" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">AI relays (server-side keys)</text>
+  <text x="560" y="340" text-anchor="middle" font-size="9" fill="#16a34a">/ai/openrouter + free fallback</text>
+  <text x="560" y="354" text-anchor="middle" font-size="9" fill="#16a34a">/ai/ollama/* (local)</text>
+  <rect x="468" y="362" width="184" height="16" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,2"/>
+  <text x="560" y="374" text-anchor="middle" font-size="8" font-weight="600" fill="#92400e">⚠ tunnel AI gated by X-AI-Access</text>
+  <text x="560" y="390" text-anchor="middle" font-size="8" fill="#16a34a">key never reaches the browser</text>
+
+  <!-- cache / config -->
+  <rect x="674" y="304" width="212" height="92" rx="9" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="780" y="323" text-anchor="middle" font-size="11" font-weight="700" fill="#0c4a6e">State — no DB</text>
+  <text x="780" y="340" text-anchor="middle" font-size="9" fill="#0284c7">in-memory CACHE (locked)</text>
+  <text x="780" y="354" text-anchor="middle" font-size="9" fill="#0284c7">data/cache.json (warm start)</text>
+  <text x="780" y="368" text-anchor="middle" font-size="9" fill="#0284c7">config.json (settings + secrets)</text>
+  <text x="780" y="382" text-anchor="middle" font-size="9" fill="#0284c7">data/fifa_players.csv (weekly)</text>
+
+  <!-- ══ UPSTREAM / EXTERNAL LAYER ══ -->
+  <text x="18" y="420" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">UPSTREAM SOURCES (server-side — no browser CORS)</text>
+
+  <!-- arrows engine → upstream -->
+  <path d="M 70,396 V 432" fill="none" stroke="#f97316" stroke-width="1.2" marker-end="url(#arr-orange)"/>
+  <path d="M 230,396 V 432" fill="none" stroke="#f97316" stroke-width="1.2" marker-end="url(#arr-orange)"/>
+  <path d="M 390,396 V 432" fill="none" stroke="#f97316" stroke-width="1.2" marker-end="url(#arr-orange)"/>
+  <path d="M 530,396 V 432" fill="none" stroke="#22c55e" stroke-width="1.2" marker-end="url(#arr-green)"/>
+  <path d="M 700,396 V 432" fill="none" stroke="#0284c7" stroke-width="1.2" marker-end="url(#arr-sky)"/>
+
+  <rect x="14" y="432" width="130" height="58" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="79" y="451" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">ESPN</text>
+  <text x="79" y="466" text-anchor="middle" font-size="8" fill="#16a34a">Fixtures · scores</text>
+  <text x="79" y="478" text-anchor="middle" font-size="8" fill="#16a34a">standings (no key)</text>
+
+  <rect x="154" y="432" width="130" height="58" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="219" y="451" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">EA FC 26 CSV</text>
+  <text x="219" y="466" text-anchor="middle" font-size="8" fill="#16a34a">Player ratings</text>
+  <text x="219" y="478" text-anchor="middle" font-size="8" fill="#16a34a">free · no key</text>
+
+  <rect x="294" y="432" width="130" height="58" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="359" y="451" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">API-Football</text>
+  <text x="359" y="466" text-anchor="middle" font-size="8" fill="#ca8a04">Deep stats (key)</text>
+  <text x="359" y="478" text-anchor="middle" font-size="8" fill="#ca8a04">2026 empty yet</text>
+
+  <rect x="464" y="432" width="130" height="58" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="529" y="451" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">Kalshi</text>
+  <text x="529" y="466" text-anchor="middle" font-size="8" fill="#ca8a04">Market odds</text>
+  <text x="529" y="478" text-anchor="middle" font-size="8" fill="#ca8a04">no WC markets yet</text>
+
+  <rect x="634" y="432" width="130" height="58" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="699" y="451" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">OpenRouter</text>
+  <text x="699" y="466" text-anchor="middle" font-size="8" fill="#16a34a">Cloud AI (:free)</text>
+  <text x="699" y="478" text-anchor="middle" font-size="8" fill="#16a34a">+ free fallback</text>
+
+  <rect x="774" y="432" width="112" height="58" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="830" y="451" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Ollama</text>
+  <text x="830" y="466" text-anchor="middle" font-size="8" fill="#16a34a">Local AI</text>
+  <text x="830" y="478" text-anchor="middle" font-size="8" fill="#16a34a">free · private</text>
+
+  <!-- ══ ECOSYSTEM LAYER ══ -->
+  <text x="18" y="514" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">QI ECOSYSTEM</text>
+  <path d="M 700,396 V 505 H 230 V 530" fill="none" stroke="#a855f7" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+
+  <rect x="14" y="530" width="300" height="56" rx="7" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="164" y="549" text-anchor="middle" font-size="10" font-weight="700" fill="#581c87">Maia — maia.db (shared key, read-only)</text>
+  <text x="164" y="564" text-anchor="middle" font-size="8" fill="#7e22ce">system.openrouter_api_key reused (like MapSnap)</text>
+  <text x="164" y="576" text-anchor="middle" font-size="8" fill="#7e22ce">registry integrates_with: maia · family_tier cousin</text>
+
+  <rect x="324" y="530" width="300" height="56" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="474" y="549" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">qi_registry.json (id gamez)</text>
+  <text x="474" y="564" text-anchor="middle" font-size="8" fill="#0284c7">port block 8710-8719 · status active</text>
+  <text x="474" y="576" text-anchor="middle" font-size="8" fill="#0284c7">exposes / /health /snapshot /kalshi /ai/openrouter</text>
+
+  <rect x="634" y="530" width="252" height="56" rx="7" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="760" y="549" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">Packaging</text>
+  <text x="760" y="564" text-anchor="middle" font-size="8" fill="#64748b">PyInstaller + pywebview · win/mac/linux CI</text>
+  <text x="760" y="576" text-anchor="middle" font-size="8" fill="#64748b">portable .exe — proxy bundled, config sanitized</text>
+</svg>

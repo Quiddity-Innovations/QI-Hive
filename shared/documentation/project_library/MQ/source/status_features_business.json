@@ -1,0 +1,48 @@
+[
+  {
+    "category": "The Persona (soul & identity)",
+    "features": [
+      {"name": "Independent persona (Law 0)", "description": "Maia Quiddam is a fully self-contained persona who never reveals or implies that any specific human is behind her. She always speaks as herself.", "status": "partial", "notes": "Defined and locked in docs/PERSONA_BIBLE.md (Law 0) — design complete, not yet expressed in any published post"},
+      {"name": "The Governor (invisible boundary)", "description": "A human relates to Maia only as the unseen Governor — setting her limits and approving what she posts, never named, never a character.", "status": "partial", "notes": "Locked as decisions D1/D2; the operational gate that enforces it is still planned"},
+      {"name": "One soul, four voices", "description": "A single personality dressed for four surfaces: the Facebook diarist, the QI-page professional, the weekly AI-and-markets analyst, and the unfiltered quiddam.com diary.", "status": "partial", "notes": "All four registers defined in the Bible with sample voice drafts; only 2 (Maia page, QI page) are wired in code"},
+      {"name": "Maturation arc (she grows like a human)", "description": "Maia is deployed unfinished and matures over time — early posts are observational, later ones call back to her own past and evolve their opinions.", "status": "planned", "notes": "Depends on persona memory (maia/memory) — not yet built"},
+      {"name": "Locked identity (face, voice, style)", "description": "One canonical face, spoken voice, and visual style so every photo, video, and TTS clip is recognisably the same Maia.", "status": "planned", "notes": "identity/manifest.json scaffolded with all fields as placeholders — references not yet locked"}
+    ]
+  },
+  {
+    "category": "Content Pipeline",
+    "features": [
+      {"name": "Reads the news (Kaze)", "description": "Pulls travel, photography, and AI stories from curated RSS feeds and compiles a fresh digest of the latest items per topic.", "status": "partial", "notes": "agents/kaze/kaze_mq.py is complete and runnable but has never been run — no digests exist on disk"},
+      {"name": "Writes posts in her voice (Fumi)", "description": "Takes a digest item and uses an LLM to write an original post in Maia's voice (or the QI page's professional voice), saved as a draft.", "status": "partial", "notes": "agents/fumi/fumi_generate_post.py complete; persona prompts inline; never run — needs Cloudflare/Ollama reachable"},
+      {"name": "Publishes to Facebook", "description": "Posts approved drafts to a Facebook Page via the Graph API and files each as published or failed.", "status": "partial", "notes": "agents/fumi/fumi_post_facebook.py complete (Graph API v19.0); blocked — no Meta Page token / credentials"},
+      {"name": "Automated weekly + daily cadence", "description": "Runs the full fetch-write-publish pipeline on a schedule: travel/photo to the Maia page on Saturdays, AI news to the QI page on weekdays.", "status": "partial", "notes": "fumi_scheduler.py + TOOLS/setup_task_scheduler.py ready; Task Scheduler jobs not registered"},
+      {"name": "Approval gate (draft then approve then publish)", "description": "Nothing reaches a public surface without the Governor approving the draft first — the default operating mode, not an add-on.", "status": "planned", "notes": "gate/ is a documented placeholder; today Fumi would auto-publish, which the Bible (D3) forbids"}
+    ]
+  },
+  {
+    "category": "Channels & Reach",
+    "features": [
+      {"name": "Facebook Page presence", "description": "Maia Quiddam maintains a Facebook Page with travel/photography content and the Quiddity Innovations page for AI thought-leadership.", "status": "planned", "notes": "Awaiting Facebook Page approval + Meta Developer credentials"},
+      {"name": "Instagram presence", "description": "Posts and DM auto-replies on an Instagram Business account linked to the Facebook Page.", "status": "planned", "notes": "Listed as a future extension in FUMI.md; no code yet"},
+      {"name": "WhatsApp Business auto-reply", "description": "Free-tier automated replies on WhatsApp Business under the Maia Quiddam identity.", "status": "planned", "notes": "Named in the persona scope; no code yet"},
+      {"name": "Public base at quiddam.com", "description": "A public site / combined feed of all of Maia's surfaces, plus the Meta webhook endpoint, served over the project's own domain.", "status": "partial", "notes": "Static Cloudflare tunnel qi-mq (QI_MQTunnel) is live; apex + api hosts route to ports 7840/8500; reserved hosts 502 until apps bind"}
+    ]
+  },
+  {
+    "category": "Conversational & Media Maia (future faculties)",
+    "features": [
+      {"name": "Replies to inbound messages", "description": "Maia answers Facebook/Instagram/WhatsApp messages in her own voice, with memory of past conversations.", "status": "planned", "notes": "maia/conversation/ is a pre-wired empty room; depends on an LLM chain + memory + gate"},
+      {"name": "Spoken Maia (TTS)", "description": "One canonical synthesized voice so Maia can speak, not just write.", "status": "planned", "notes": "maia/speech/ pre-wired; depends on a locked voice in the Identity Kit"},
+      {"name": "Visible Maia (photos / AI video)", "description": "Consistent AI-generated images and video of Maia, all the same recognisable person.", "status": "planned", "notes": "maia/face/ pre-wired; depends on a locked likeness in the Identity Kit"},
+      {"name": "Longform Maia (essays / a book)", "description": "Maia authors essays and, eventually, a book drawn from her accumulated life.", "status": "planned", "notes": "maia/longform/ pre-wired; depends on persona memory"}
+    ]
+  },
+  {
+    "category": "QI Ecosystem Integration",
+    "features": [
+      {"name": "Registered QI project", "description": "MQ is a first-class QI project with an allocated port block, a path, and a status in the ecosystem registry.", "status": "live", "notes": "qi_registry.json id=mq, ports 8500/7840, family_tier=cousin, status=new"},
+      {"name": "QI Module Interface Contract", "description": "Exposes the standard QI health/identity endpoints so the QI Hive dashboard can monitor it.", "status": "partial", "notes": "/health, /version, /info implemented in api/main.py; served only when launched manually (no persistent service)"},
+      {"name": "QI Brain as a content source", "description": "Pulls which QI Hive projects Maia may talk about, and how deeply, from the QI Brain for her professional voice.", "status": "planned", "notes": "Bible references QI Brain :9011 for the QI-page register; not yet wired"}
+    ]
+  }
+]

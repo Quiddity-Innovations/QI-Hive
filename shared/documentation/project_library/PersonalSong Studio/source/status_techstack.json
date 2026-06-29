@@ -1,0 +1,58 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the API, engines, and integrations", "license": "PSF (open source)", "version": "3.x (isolated .venv)"},
+    {"layer": "Web / API", "technology": "FastAPI", "role": "REST API on port 8088 — lyrics, audio, source, media, library, config, voices, batch, extras, ytmusic (12 routers)", "license": "MIT", "version": ">=0.104"},
+    {"layer": "Web / API", "technology": "Uvicorn", "role": "ASGI server run IN-PROCESS via serve.py (so the server uses the venv that has acestep)", "license": "BSD", "version": ">=0.24 [standard]"},
+    {"layer": "Web / API", "technology": "Pydantic", "role": "Request/response models (LyricsRequest, AudioRequest, BasedRequest, CoverRequest, etc.)", "license": "MIT", "version": "2.x"},
+    {"layer": "Web / API", "technology": "python-multipart + aiofiles", "role": "File uploads (source songs, dedication audio) and async file I/O", "license": "Apache 2.0 / Apache 2.0", "version": ">=0.0.6 / >=23.2"},
+    {"layer": "Singing Model", "technology": "ACE-Step", "role": "Local diffusion singing model — full songs with SUNG vocals from lyrics + style tags; bf16 on the local GPU; audio2audio for remix", "license": "Apache 2.0 (model/code)", "version": "0.2.0 (per song metadata)"},
+    {"layer": "Lyrics LLM", "technology": "Ollama", "role": "Local LLM runtime writing personalized lyrics (think=False, keep_alive=0 to free VRAM for ACE-Step)", "license": "MIT", "version": "default model qwen3:8b"},
+    {"layer": "Stem Separation", "technology": "Demucs (htdemucs)", "role": "Two-stem (vocals / instrumental) split — backing tracks, karaoke, voice-clone reference, gender detection", "license": "MIT", "version": "htdemucs, two-stems mode"},
+    {"layer": "Voice Conversion", "technology": "Seed-VC", "role": "Zero-shot voice conversion — re-sing/re-voice in a target timbre; runs in its OWN isolated venv as a subprocess", "license": "GPL-3.0 (upstream)", "version": "f0-conditioned (sing) / non-f0 (speech)"},
+    {"layer": "Speech (TTS)", "technology": "edge-tts", "role": "Microsoft neural voices for native-language spoken dedications (8 languages, male/female, tone/style prosody)", "license": "GPL-3.0", "version": "Communicate API"},
+    {"layer": "ASR", "technology": "OpenAI Whisper (local)", "role": "Transcribe a spoken name (teach pronunciation) and transcribe source-song lyrics for low-lyrics-change remixes", "license": "MIT", "version": "base model"},
+    {"layer": "Cover Art", "technology": "Pillow (PIL)", "role": "Procedural gradient cover art — genre palette, glow, music note, name/occasion. Always available, instant", "license": "HPND/MIT-CMU", "version": "bundled"},
+    {"layer": "Cover Art", "technology": "diffusers (SDXL-Turbo)", "role": "Optional AI-painted cover via StableDiffusionXLPipeline in a subprocess (own VRAM); PIL fallback on any error", "license": "Apache 2.0 / model card", "version": "sdxl-turbo"},
+    {"layer": "Deep Learning", "technology": "PyTorch (CUDA)", "role": "Tensor runtime for ACE-Step / Demucs / Seed-VC / Whisper / SDXL on the local GPU", "license": "BSD-3", "version": ">=2.0 (torch 2.11 / cu128 build)"},
+    {"layer": "Audio I/O", "technology": "soundfile + pydub + scipy/numpy + librosa", "role": "WAV write (bypasses TorchCodec), audio mixing/overlay/export, signal math, pitch (f0) for gender detection", "license": "BSD / MIT / BSD / ISC", "version": "soundfile (libsndfile) · pydub · scipy>=1.11 · numpy>=1.24 · librosa"},
+    {"layer": "Media Tooling", "technology": "FFmpeg (shared + gyan builds)", "role": "Shared DLLs for torchcodec (FFmpeg 7.1, vendored) + a gyan libcdio build for CD ripping; transcode WAV->MP3, extract audio from video", "license": "LGPL/GPL", "version": "n7.1 shared + gyan winget"},
+    {"layer": "Source Fetch", "technology": "yt-dlp", "role": "Download bestaudio from a YouTube/other URL as WAV for voice-clone sources", "license": "Unlicense", "version": "module -m yt_dlp"},
+    {"layer": "HTTP", "technology": "httpx", "role": "Async client to Ollama (lyrics, VRAM unload) and to the local API in batch/queue runs", "license": "BSD", "version": ">=0.25"},
+    {"layer": "Metadata / Tags", "technology": "mutagen", "role": "ID3 tagging of finished MP3s for Plex playback", "license": "GPL-2.0", "version": ">=1.47"},
+    {"layer": "Integration", "technology": "ytmusicapi", "role": "YouTube Music browser-header auth + upload/playlist management", "license": "MIT", "version": ">=1.10"},
+    {"layer": "Integration", "technology": "Plex (plex_module)", "role": "ID3 tag + copy to a Plex-watched folder + section scan; connection/section probes", "license": "in-repo module", "version": "local Plex Media Server :32400"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads .env (OLLAMA_*, HF_TOKEN, MUSIC_LIBRARY_PATH, PLEX_LIBRARY_PATH); app_config.json layered over DEFAULTS", "license": "BSD", "version": ">=1.0"},
+    {"layer": "QR / Cards", "technology": "qrcode", "role": "Printable greeting card with a scannable QR linking to the song's play page (tunnel/LAN-aware)", "license": "BSD", "version": "bundled"},
+    {"layer": "Operations", "technology": "NSSM (QI standard binary)", "role": "QI_PersonalSong Windows service (AppDirectory C:\\PersonalSong, serve.py, rotating logs)", "license": "Public domain", "version": "C:\\QIH\\engine\\bin\\nssm.exe"}
+  ],
+  "descriptions": [
+    {
+      "title": "Why ACE-Step replaced MusicGen",
+      "body": "PersonalSong began on HuggingFace MusicGen, which only produced ~30-second INSTRUMENTAL tracks — it could not sing the recipient's name, which is the entire point of a personalized song. The pipeline was rebuilt around ACE-Step, a local diffusion singing model that performs a full song (verse/chorus/bridge) with sung vocals directly from lyrics + style tags, on the local GPU in bfloat16 at zero marginal cost. ace_engine.py loads the pipeline once as a thread-locked singleton and keeps it resident in VRAM. The README still describes the old MusicGen/Suno route; the live engine is ACE-Step (model_used 'ACE-Step 0.2.0' in song metadata)."
+    },
+    {
+      "title": "think:false + name-injection — making the LLM cooperate",
+      "body": "Two hard-won fixes make local lyric generation reliable. First, qwen3-style models spend their token budget on internal <think> reasoning and return an EMPTY lyric body; the Ollama call sets think=False so the model emits lyrics directly, and any <think> blocks that slip through are stripped (lyrics.py + ace_engine.normalize_lyrics). Second, LLMs writing in non-English languages frequently address the recipient without ever using their literal name — defeating the gift. ensure_name_in_lyrics() guarantees the name is actually sung by injecting it as a vocative ('Name, ...') into the chorus and first verse if it's absent, with a sung-hook fallback if the lyrics have no usable line. The prompt also demands the exact name appear at least twice including the chorus."
+    },
+    {
+      "title": "Sing the name correctly — pronunciation without corrupting the lyrics",
+      "body": "Names are often mis-sung, especially across languages. PersonalSong keeps a per-language pronunciation dictionary (config/pronunciations.json) of phonetic respellings. At generation time apply_pronunciation() swaps the name for its respelling ONLY in the text fed to the singing model, while the displayed and saved lyrics keep the real spelling. Users can teach a respelling by recording the name (Whisper transcribes it and suggests a syllable-hyphenated respelling), preview how it will sound spoken in the target language (edge-tts), edit it, and reuse it across future songs."
+    },
+    {
+      "title": "GPU contention — one model at a time",
+      "body": "ACE-Step, Demucs, Seed-VC, Whisper and SDXL all want the GPU, and the box has one card. The design serializes and isolates them: ACE-Step generation runs in a single-worker ThreadPoolExecutor so two requests never fight the GPU; before each run the app asks Ollama to unload its model (keep_alive=0) to free VRAM; Demucs gender-detection is forced onto the CPU so it doesn't thrash the resident ACE-Step; Seed-VC runs in its own venv as a subprocess (incompatible deps + its own VRAM lifecycle); and SDXL-Turbo cover art runs in a subprocess that frees VRAM on exit. This avoids the OOM/timeout thrashing that GPU contention caused."
+    },
+    {
+      "title": "The FFmpeg / TorchCodec / cu128 gotcha",
+      "body": "On torch 2.11, torchaudio.load/save routes through TorchCodec, which needs FFmpeg *shared* DLLs that aren't on a stock Windows box. PersonalSong vendors an FFmpeg 7.1 shared build under ffmpeg_shared/ and env_setup.ensure_ffmpeg_on_path() prepends it to PATH on import (subprocesses inherit it), so Demucs and Seed-VC don't fail with 'libtorchcodec_core7.dll could not be loaded'. As a belt-and-braces measure, ace_engine monkey-patches torchaudio.save to write via soundfile (libsndfile, no external FFmpeg). A second, separate gyan FFmpeg build (with libcdio) is resolved on demand only for audio-CD ripping."
+    },
+    {
+      "title": "Seed-VC voice cloning — two modes, isolated venv",
+      "body": "Voice conversion has two distinct uses. For a full cover, cover.py isolates the target singer's vocal (Demucs), isolates the ACE-Step song's vocal (Demucs again), then runs Seed-VC with --f0-condition True (pitch-aware, required for singing) to re-sing the ACE vocal in the target voice, and mixes it over the chosen instrumental. For a spoken dedication, voice_clone.py re-voices the edge-tts speech with --f0-condition False (speech, not sung). In both cases Seed-VC lives in seed-vc/.venv and is driven as a subprocess because its dependencies collide with ACE-Step's, and it manages its own GPU memory."
+    },
+    {
+      "title": "Resilient by design — optional steps never fail the song",
+      "body": "The creative core is offline and must always succeed; everything else is best-effort. Plex sync, YouTube Music upload, the spoken dedication, MP3 transcode, and cover art are each wrapped so a failure is swallowed and logged rather than aborting the request — a missing Plex token or an offline YT Music account never costs the user their song. ACE-Step output is normalized whether it writes .wav or .flac, and the WAV is kept if transcode fails. The whole studio runs as the QI_PersonalSong NSSM service (loopback-only, port 8088) so it's always available without exposing anything to the internet."
+    }
+  ]
+}

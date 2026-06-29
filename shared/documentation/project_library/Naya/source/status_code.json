@@ -1,0 +1,202 @@
+{
+  "intro": "Excerpts copied from the live Naya source (C:\\NAYA). Each shows the real code behind a capability and explains what it does. Naya reuses Maia's engine via a DB-redirect shim, runs an 8-model failover chain from the database, routes by LLM-extracted intent, and gates every filesystem action behind explicit approval.",
+  "sections": [
+    {
+      "category": "Shared Engine (DB redirect shim)",
+      "snippets": [
+        {
+          "title": "Repoint Maia's engine at Naya's database",
+          "feature": "Sibling-of-Maia: reuse Maia's code, keep separate data",
+          "file": "naya_db.py",
+          "language": "python",
+          "code": "import maia_db as _mdb\n\n# ── Redirect ALL database operations to Naya's own file ──\n_mdb.DB_FILE = os.path.join(r\"C:\\NAYA\", \"naya.db\")\n\n# Re-export every public symbol so callers can use `import naya_db as db`\n# and get identical function signatures — all backed by C:\\NAYA\\naya.db\nfrom maia_db import *          # noqa: F401, F403\nfrom maia_db import _conn      # re-export private connection helper too",
+          "explanation": "This three-line trick is what makes Naya a sibling of Maia rather than a fork. It imports Maia's maia_db module, overwrites its DB_FILE attribute to point at C:\\NAYA\\naya.db, then re-exports every function. Every downstream module (maia_context, maia_lang, naya_server) that does `import naya_db as db` now runs Maia's proven code against Naya's own data — no duplication, no cross-contamination with maia.db."
+        },
+        {
+          "title": "Import order matters — patch before maia_* loads",
+          "feature": "Guaranteed DB isolation",
+          "file": "naya_server.py · path setup",
+          "language": "python",
+          "code": "NAYA_HOME = r\"C:\\NAYA\"\nQI_PATH   = r\"C:\\QI\"\nsys.path.insert(0, QI_PATH)\nsys.path.insert(0, NAYA_HOME)\n\n# naya_db MUST be imported first — it patches maia_db.DB_FILE to C:\\NAYA\\naya.db\n# so all subsequent maia_* imports (rag, lang, context) transparently use naya.db\nimport naya_db as db\n\nimport maia_lang as _maia_lang\nimport maia_context as ctx_builder",
+          "explanation": "The patch only works if it lands before any other module imports maia_db. naya_server puts both C:\\NAYA and C:\\QI on the path, imports naya_db first to apply the DB redirect, and only then imports maia_lang and maia_context — which now resolve to Naya's database. Get the order wrong and Maia's modules would silently read maia.db."
+        }
+      ]
+    },
+    {
+      "category": "Chat API (Flask :8002)",
+      "snippets": [
+        {
+          "title": "The /ask endpoint",
+          "feature": "Primary chat entry point",
+          "file": "naya_server.py · ask()",
+          "language": "python",
+          "code": "@app.route(\"/ask\", methods=[\"POST\"])\ndef ask():\n    \"\"\"Main chat endpoint — accepts a message and returns Naya's response.\"\"\"\n    data     = request.get_json(force=True) or {}\n    message  = (data.get(\"message\") or \"\").strip()\n    conv_key = data.get(\"conv_key\") or f\"naya_{datetime.now().strftime('%Y%m%d')}\"\n    user_id  = data.get(\"user_id\", \"owner\")\n    if not message:\n        return jsonify({\"error\": \"message is required\"}), 400\n    response = ask_naya(message, conv_key=conv_key, user_id=user_id)\n    # Save to history\n    try:\n        db.save_message(conv_key, \"user\",      message,  bot_key=BOT_KEY)\n        db.save_message(conv_key, \"assistant\", response, bot_key=BOT_KEY)\n    except Exception:\n        pass\n    return jsonify({\"response\": response, \"conv_key\": conv_key, \"bot\": BOT_NAME})",
+          "explanation": "Every conversation — from the Gradio console and from Telegram — funnels through this one Flask route. It defaults the conversation key to a per-day bucket, delegates all the real work to ask_naya(), then persists both the user message and Naya's reply to the conversations table (via the patched db.save_message). Telegram and the File Manager reuse the same ask_naya()/dispatch path so behaviour is identical across surfaces."
+        },
+        {
+          "title": "Telegram long-poll (no inbound port)",
+          "feature": "LAN-only chat channel, owner-restricted",
+          "file": "naya_server.py · _telegram_polling()",
+          "language": "python",
+          "code": "base_url     = f\"https://api.telegram.org/bot{token}\"\noffset       = 0\npoll_timeout = 30          # Telegram long-poll seconds\n\nwhile True:\n    try:\n        resp = _req_global.get(\n            f\"{base_url}/getUpdates\",\n            params={\"timeout\": poll_timeout, \"offset\": offset},\n            timeout=poll_timeout + 10,\n        )\n        updates = resp.json().get(\"result\", [])\n        for upd in updates:\n            offset = upd[\"update_id\"] + 1\n            msg     = upd.get(\"message\") or upd.get(\"edited_message\") or {}\n            chat_id = msg.get(\"chat\", {}).get(\"id\")\n            text    = (msg.get(\"text\") or \"\").strip()\n            if not chat_id or not text:\n                continue",
+          "explanation": "Naya's only chat channel is Telegram, and it works by OUTBOUND long-polling: a daemon thread repeatedly calls getUpdates with a 30-second hold and tracks the update offset. Because Naya reaches out to Telegram rather than receiving a webhook, no inbound port is ever opened — which is exactly why the registry can keep Naya strictly LAN-only. Replies are further restricted to authorised chat IDs (naya.telegram_allowed_chat_ids)."
+        }
+      ]
+    },
+    {
+      "category": "LLM Chain & Failover",
+      "snippets": [
+        {
+          "title": "Walk the chain, fall over on failure",
+          "feature": "8-model priority chain with automatic failover",
+          "file": "naya_server.py · _llm_call()",
+          "language": "python",
+          "code": "chain = db.get_bot_llm_chain(BOT_KEY)\n\n# For fast intent extraction: put local/small models first\nif force_fast:\n    chain = sorted(chain, key=lambda e: (\n        0 if e.get(\"provider\", \"\").lower() == \"ollama\" else\n        1 if e.get(\"provider\", \"\").lower() == \"anthropic\" else 2))\n\nant_mode = (db.get_config(\"personal.anthropic_mode\") or \"fallback\").lower()\nif force_sonnet and ant_mode == \"fallback\" and ANTHROPIC_API_KEY:\n    chain = sorted(chain, key=lambda e: (0 if e[\"provider\"] == \"anthropic\" else 1))\n\nfor entry in chain:\n    if not entry.get(\"active\", 1):\n        continue\n    provider = entry.get(\"provider\", \"\").lower()\n    model    = entry[\"model\"]\n    try:\n        ...  # call this provider, return on success",
+          "explanation": "Naya's intelligence is config-driven: get_bot_llm_chain reads the llm_chain rows from naya.db in priority order, and the loop tries each active model until one returns. force_fast reorders to cheap local models for intent extraction; force_sonnet promotes Claude for hard questions when anthropic_mode is 'fallback'. The live chain is DeepSeek-R1 8B (primary, local) -> Cloudflare Qwen -> GPT-OSS 20B local -> Gemma3:27b -> Qwen3:4b -> MiniMax M2.5 -> GPT-OSS 120B -> Claude Sonnet."
+        },
+        {
+          "title": "Per-provider call branches",
+          "feature": "One chain, three transport styles (Anthropic / Ollama / OpenAI-compatible)",
+          "file": "naya_server.py · _llm_call()",
+          "language": "python",
+          "code": "if provider == \"anthropic\":\n    client = _ant_lib.Anthropic(api_key=ANTHROPIC_API_KEY)\n    ...\n    resp = client.messages.create(**kwargs)\n    return resp.content[0].text.strip()\n\nelif provider == \"ollama\":\n    base = entry.get(\"api_url\") or \"http://127.0.0.1:11434/v1\"\n    resp = _req.post(f\"{base}/chat/completions\",\n                     json={\"model\": model, \"messages\": messages}, timeout=120)\n    return resp.json()[\"choices\"][0][\"message\"][\"content\"].strip()\n\nelse:  # openrouter / cloudflare / openai-compatible\n    api_key = entry.get(\"api_key\") or db.get_config(\"system.openrouter_api_key\") or \"\"\n    base    = entry.get(\"api_url\") or \"https://openrouter.ai/api/v1\"\n    headers = {\"Authorization\": f\"Bearer {api_key}\", \"X-Title\": \"Naya Personal AI\"}\n    resp = _req.post(f\"{base}/chat/completions\", headers=headers,\n                     json={\"model\": model, \"messages\": messages}, timeout=60)",
+          "explanation": "Each chain entry names a provider, and _llm_call dispatches to the matching transport: the Anthropic SDK for Claude, Ollama's local OpenAI-compatible endpoint at 127.0.0.1:11434 for free local models, and a generic OpenAI-compatible POST (with a bearer key) for OpenRouter and Cloudflare. Because they all share the same messages shape, adding or reordering a model is a database edit, not a code change."
+        },
+        {
+          "title": "Optional escalation to NEXUS multi-AI synthesis",
+          "feature": "Route hard questions to many AIs at once",
+          "file": "naya_server.py · _try_nexus_synthesize()",
+          "language": "python",
+          "code": "if (db.get_config(_NEXUS_ENABLED_KEY) or \"false\").lower() != \"true\":\n    return None\n\nimport requests as _req\npayload = {\"question\": message}\nif context:\n    payload[\"context\"] = context\nresp = _req.post(f\"http://127.0.0.1:{NEXUS_PORT}/synthesize\", json=payload, timeout=90)\nresp.raise_for_status()\ndata = resp.json()\nif not data.get(\"ok\"):\n    return None\nsynthesis = data.get(\"synthesis\") or data.get(\"response\") or \"\"\nmodels = data.get(\"models_used\") or []\nreturn synthesis + (f\"\\n\\n*[NEXUS — {len(models)} models]*\" if models else \"\")",
+          "explanation": "For complex questions Naya can defer to the sibling NEXUS project, which fans the prompt out to many AIs and merges the best answer. It is opt-in (personal.nexus_enabled must be 'true') and fails closed — any error or ok=false returns None so ask_naya simply falls through to Naya's own local chain. The appended note tells the owner how many models contributed."
+        }
+      ]
+    },
+    {
+      "category": "Intent Routing",
+      "snippets": [
+        {
+          "title": "LLM-first intent schema",
+          "feature": "Classify every message into a structured action",
+          "file": "naya_llm_intent.py · _SYSTEM_PROMPT / ACTIONS",
+          "language": "python",
+          "code": "ACTIONS = {\n    \"scan_index\":      \"Scan and index ALL files in a directory or drive\",\n    \"scan_duplicates\": \"Find exact duplicate files (same content, SHA256 hash)\",\n    \"scan_similar\":    \"Find similar files (fuzzy filename matching, near-duplicates)\",\n    \"show_results\":    \"Show results of the most recent scan\",\n    \"find_largest\":    \"Find the largest files consuming the most disk space\",\n    \"delete_dupes\":    \"Delete duplicate files — keeps one copy (requires approval)\",\n    \"generate_report\": \"Generate a storage or duplicate report as PDF/Word/Markdown/text\",\n    \"schedule_task\":   \"Schedule an action to run at a future or recurring time\",\n    \"undo\":            \"Undo the last file operation (restore deleted/moved files)\",\n    \"drive_usage\":     \"Show disk drive usage statistics and free space\",\n    \"general\":         \"General conversation or anything NOT file-management\",\n    # ... ~25 actions total\n}",
+          "explanation": "Instead of brittle keyword matching, Naya sends every message to the LLM with this action vocabulary and asks for a single JSON intent object. The model returns {action, target, destination, format, schedule_time, chain_action, confidence}. 'general' is the escape hatch — it means 'this is just a question, answer it normally'. This is the PRIMARY router; the old keyword matcher is now only a fallback."
+        },
+        {
+          "title": "Dispatch an intent to its handler (with chaining)",
+          "feature": "Action dispatcher shared by chat, Telegram and the UI",
+          "file": "naya_action_router.py · dispatch()",
+          "language": "python",
+          "code": "action = intent.get(\"action\", \"general\")\nif action == \"general\":\n    return None  # Let LLM handle it\n\nhandler = _HANDLERS.get(action)\nif not handler:\n    return None\n\nintent[\"conv_key\"] = conv_key\nresult = handler(intent, conv_key)\n\n# Compound chaining — if LLM detected two actions in one message\nchain_action = intent.get(\"chain_action\", \"\").strip()\nif chain_action and chain_action != action:\n    chain_handler = _HANDLERS.get(chain_action)\n    if chain_handler:\n        chain_intent = dict(intent)\n        chain_intent[\"action\"] = chain_action\n        chain_intent[\"target\"] = intent.get(\"chain_target\", \"\")\n        chain_result = chain_handler(chain_intent, conv_key)\n        if chain_result:\n            result = result + \"\\n\\n---\\n\\n\" + chain_result\nreturn result",
+          "explanation": "dispatch() turns a parsed intent into action. 'general' returns None so the caller falls through to the free-form LLM. Otherwise it looks the action up in _HANDLERS and runs it. If the model split a request like 'reset the dashboard and scan F:' into action + chain_action, both handlers run and their outputs are concatenated. The same _HANDLERS table backs chat, Telegram, and the Gradio File Manager (via dispatch_action)."
+        }
+      ]
+    },
+    {
+      "category": "File Scanner (SHA-256)",
+      "snippets": [
+        {
+          "title": "Streaming SHA-256 that never crashes a scan",
+          "feature": "Exact-duplicate hashing",
+          "file": "naya_scanner.py · _sha256()",
+          "language": "python",
+          "code": "def _sha256(path: str, chunk: int = 65536) -> Optional[str]:\n    \"\"\"Compute SHA256 of a file. Returns None on any read error.\"\"\"\n    try:\n        h = hashlib.sha256()\n        with open(path, \"rb\") as f:\n            while True:\n                buf = f.read(chunk)\n                if not buf:\n                    break\n                h.update(buf)\n        return h.hexdigest()\n    except Exception:\n        return None",
+          "explanation": "Hashing is how Naya proves two files are byte-for-byte identical. It reads in 64KB chunks so even multi-gigabyte files don't blow up memory, and it swallows every read error to return None — a locked or permission-denied file is skipped, never fatal. Over many scans this has populated ~2.7M similarity-group rows in naya_brain.db."
+        },
+        {
+          "title": "Four-phase duplicate detection",
+          "feature": "Hash only what could possibly collide",
+          "file": "naya_scanner.py · _exact_scan_worker",
+          "language": "python",
+          "code": "# Phase 2: group by size — only same-size files can be duplicates\nsize_groups = {}\nfor path, size in all_files:\n    size_groups.setdefault(size, []).append(path)\ncandidates = [(s, p) for s, p in size_groups.items() if len(p) >= 2]\n\n# Phase 3: hash each candidate group\nhash_groups = {}\nfor size, paths in candidates:\n    for path in paths:\n        if _is_scan_cancelled(scan_id):\n            ... ; return\n        h = _sha256(path)\n        if h:\n            hash_groups.setdefault(h, []).append((path, size))\n\n# Phase 4: only groups with 2+ files are actual duplicates\ndup_groups = {h: files for h, files in hash_groups.items() if len(files) >= 2}",
+          "explanation": "The clever part of the scanner: hashing is expensive, so Naya never hashes a file that can't have a twin. Phase 1 walks the drive (skipping system dirs and tiny files), Phase 2 buckets by exact byte size, and only files that share a size with another get hashed in Phase 3. Phase 4 keeps groups of 2+. The loop checks _is_scan_cancelled between files so a long scan can be stopped from chat ('kill scan')."
+        },
+        {
+          "title": "Persist groups with reclaimable bytes",
+          "feature": "Record duplicates and how much space they waste",
+          "file": "naya_scanner.py · _exact_scan_worker",
+          "language": "python",
+          "code": "for h, files in dup_groups.items():\n    paths = [f[0] for f in files]\n    sizes = [f[1] for f in files]\n    wasted = sum(sizes) - min(sizes)  # bytes freed if keeping 1 copy\n    total_wasted += wasted\n    conn.execute(\n        \"\"\"INSERT INTO naya_similarity_groups\n           (scan_id, group_type, file_hash, file_count, wasted_bytes,\n            file_paths, file_sizes, status, created_at)\n           VALUES (?, 'exact', ?, ?, ?, ?, ?, 'open', ?)\"\"\",\n        (scan_id, h, len(paths), wasted,\n         json.dumps(paths), json.dumps(sizes), datetime.now().isoformat()))",
+          "explanation": "Each duplicate group is stored as one row in naya_similarity_groups, with the member paths/sizes serialised as JSON and wasted_bytes computed as 'total size minus one copy' — the space you'd reclaim by keeping a single file. The scan summary later orders open groups by wasted_bytes so chat answers and the Naya Brain tab lead with the biggest wins."
+        }
+      ]
+    },
+    {
+      "category": "Cleanup Advisor & Memory",
+      "snippets": [
+        {
+          "title": "Whole-system storage analysis",
+          "feature": "Answer 'where did my space go?'",
+          "file": "naya_advisor.py · analyze_storage()",
+          "language": "python",
+          "code": "drives = get_drive_status()\ncandidates = []\n\n# Phase 1: Quick scans (Windows temp, browser caches, app caches, recycle bin)\ncandidates.extend(scan_temp_locations())\ncandidates.extend(scan_browser_caches())\ncandidates.extend(scan_app_caches())\ncandidates.extend(scan_recycle_bin())\n\n# Phase 2: FileHQ index queries (no filesystem walk needed)\nif (dupes := get_filehq_dupes_summary()):\n    candidates.append(dupes)\nif (old_large := get_filehq_old_large_files()):\n    candidates.append(old_large)\n\ncandidates.sort(key=lambda c: c[\"size_bytes\"], reverse=True)\ntotal_savings_mb = sum(c[\"size_mb\"] for c in candidates)",
+          "explanation": "The advisor combines two data sources: fast filesystem scans of the usual junk locations (temp, caches, recycle bin) and zero-walk queries against the FileHQ index for duplicates and old-large files. Everything is normalised into ranked cleanup 'candidates' sorted biggest-first, with a running total of potential savings — the basis for the plan it then proposes and (on approval) executes."
+        },
+        {
+          "title": "Read-only folder insight, cached",
+          "feature": "Summarise any folder from the FileHQ index",
+          "file": "naya_memory.py · folder_insight()",
+          "language": "python",
+          "code": "# Check cache first (unless refresh requested)\nif not refresh:\n    row = conn.execute(\"SELECT * FROM naya_folder_insights WHERE folder_path=?\",\n                       (path,)).fetchone()\n    if row:\n        generated = datetime.fromisoformat(row[\"generated_at\"])\n        if datetime.now() - generated < timedelta(hours=24):\n            return dict(row)\n\n# Query FileHQ for files under this path (read-only)\nfhq = _filehq_conn()\nrows = fhq.execute(\"\"\"\n    SELECT path, filename, extension, size_bytes, modified_date, category, archive_era\n    FROM files\n    WHERE (path LIKE ? OR path = ?) AND status = 'indexed'\n\"\"\", (path + \"\\\\%\", path)).fetchall()",
+          "explanation": "When asked 'what's in folder X?', memory first checks naya_folder_insights for a result less than 24 hours old, and only otherwise queries the FileHQ index — opened read-only (file:...?mode=ro) so insight gathering can never modify the file catalogue. The aggregated counts, sizes, dominant types and age range are then cached back for next time."
+        }
+      ]
+    },
+    {
+      "category": "Safe Action & Permission Gate",
+      "snippets": [
+        {
+          "title": "Approval gate on every destructive action",
+          "feature": "Nothing dangerous happens without consent",
+          "file": "naya_action_router.py · _is_approved() / _perm_denied()",
+          "language": "python",
+          "code": "def _is_approved(perm_key: str) -> bool:\n    \"\"\"Check if a permission flag is set to 'true' in naya.db config.\"\"\"\n    try:\n        import naya_db as db\n        return (db.get_config(perm_key) or \"false\").lower() == \"true\"\n    except Exception:\n        return False\n\ndef _perm_denied(action_label: str, approve_phrase: str) -> str:\n    return (\n        f\"\\u26d4 **{action_label}** requires your approval.\\n\"\n        f\"Say **\\\"{approve_phrase}\\\"** to enable it, then retry.\")",
+          "explanation": "Every handler that could move or delete files calls _is_approved() against a boolean flag in naya.db (e.g. personal.file_modify_approved, which defaults to false). If it isn't set, the handler returns _perm_denied(), which tells the owner the exact phrase to say to grant permission. Approval is a deliberate, spoken act — Naya never flips these flags on its own."
+        },
+        {
+          "title": "Permission and folder-access commands run first",
+          "feature": "Owner can grant/revoke before any action is attempted",
+          "file": "naya_server.py · ask_naya()",
+          "language": "python",
+          "code": "# ─── File Permission Approvals — MUST run before intent router ───\n# \"approve run commands\", \"approve delete\", \"revoke all\", \"show permissions\"\n# The router would intercept \"approve run commands\" as verb=run and fail the gate.\n_perm_resp = _try_permission_command(message)\nif _perm_resp:\n    return _perm_resp\n\n# ─── Folder Access Control — \"add X as exception\" / \"protect X\" ───\n_access_resp = _try_folder_access_command(message)\nif _access_resp:\n    return _access_resp",
+          "explanation": "Order is a safety feature. Approval and folder-protection phrases are intercepted at the very top of the turn pipeline, before the intent router runs — otherwise 'approve run commands' would be misread as a run action and bounce off the very gate the owner is trying to open. Protected folders and exceptions are tracked per-path in naya_folder_access."
+        }
+      ]
+    },
+    {
+      "category": "Cross-Bot Peer Bridge",
+      "snippets": [
+        {
+          "title": "Carry messages between sibling bots Telegram won't connect",
+          "feature": "Tasuke / Maia / Naya conversation over HTTP",
+          "file": "naya_server.py · peer-bridge",
+          "language": "python",
+          "code": "NAYA_BOT_ID = 8667837858  # @Naya_qi_bot\n_PEER_BRIDGE_PATHS = {\n    \"shared_chats\": (\n        r\"C:\\QI\\shared-chats.json\",\n        r\"\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\workspace-bridge\\shared-chats.json\",\n    ),\n    \"secret\": (\n        r\"C:\\QI\\secrets\\peer-bridge.env\",\n        r\"\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\secrets\\peer-bridge.env\",\n    ),\n}",
+          "explanation": "Telegram refuses to deliver messages from one bot to another, so sibling QI bots that share a chat talk over an HMAC-signed HTTP bridge instead. Naya loads the shared-chat roster and the signing secret from either the Windows path or the WSL/OpenClaw mirror, so the bridge works whether the peer lives on Windows or inside WSL. The /webhook/peer-bridge route verifies the signature before accepting a relayed message."
+        }
+      ]
+    },
+    {
+      "category": "Persistence (naya_brain.db)",
+      "snippets": [
+        {
+          "title": "Scan + similarity-group schema",
+          "feature": "Where every duplicate group is stored",
+          "file": "naya_scanner.py · schema",
+          "language": "sql",
+          "code": "CREATE TABLE IF NOT EXISTS naya_similarity_groups (\n    id           INTEGER PRIMARY KEY AUTOINCREMENT,\n    scan_id      TEXT NOT NULL,\n    group_type   TEXT NOT NULL,          -- 'exact' | 'fuzzy_name'\n    file_hash    TEXT,\n    file_count   INTEGER NOT NULL DEFAULT 0,\n    wasted_bytes INTEGER DEFAULT 0,\n    file_paths   TEXT NOT NULL,          -- JSON array\n    file_sizes   TEXT,                   -- JSON array\n    status       TEXT DEFAULT 'open',    -- open | resolved\n    created_at   TEXT NOT NULL,\n    FOREIGN KEY (scan_id) REFERENCES naya_scans(id) ON DELETE CASCADE\n);\nCREATE INDEX IF NOT EXISTS idx_sim_type ON naya_similarity_groups(group_type, status);",
+          "explanation": "The file-intelligence brain lives in naya_brain.db, separate from the conversational naya.db so a giant scan history never bloats chat. naya_similarity_groups is its biggest table (~2.7M rows): each row is one duplicate or near-duplicate group, with member paths/sizes as JSON, the reclaimable wasted_bytes, and a status the executor flips to 'resolved'. The FK to naya_scans with ON DELETE CASCADE means clearing a scan removes its groups too."
+        },
+        {
+          "title": "Mark groups resolved after cleanup",
+          "feature": "Close out duplicates once acted on",
+          "file": "naya_scanner.py · resolve groups",
+          "language": "python",
+          "code": "placeholders = \",\".join(\"?\" for _ in group_ids)\nconn.execute(\n    f\"UPDATE naya_similarity_groups SET status='resolved' WHERE id IN ({placeholders})\",\n    group_ids)",
+          "explanation": "After the executor has deleted or kept a duplicate group, the scanner flips its status from 'open' to 'resolved' so it stops showing up in summaries and dashboards. Combined with the 'reset_dashboard' action (which sweeps completed/cancelled scans), this is how the 2.3 GB brain store is meant to be kept manageable over time."
+        }
+      ]
+    }
+  ]
+}

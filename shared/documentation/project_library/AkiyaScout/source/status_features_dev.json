@@ -1,0 +1,84 @@
+[
+  {
+    "category": "Entry Point & Service",
+    "features": [
+      {"name": "main.py — process launcher", "file": "main.py :: bootstrap_if_empty / start_api / start_scheduler / start_ui", "status": "live", "detail": "UTF-8 reconfigures stdout. init_db(), seeds demo data on first empty run, starts the APScheduler background scheduler, runs the FastAPI API (8505) on a daemon thread, then serves the Gradio UI (7845) on the main thread. Logs to data/logs/akiyascout.log."},
+      {"name": "Start_AkiyaScout.bat", "file": "Start_AkiyaScout.bat", "status": "live", "detail": "Console launcher: cd C:\\AkiyaScout && python main.py. No NSSM service registered yet (QI_AkiyaScout is planned)."},
+      {"name": "Config loader", "file": "shared/config.py + config/akiyascout.json", "status": "live", "detail": "App name/version, server ports (api 8505 / ui 7845 / host 127.0.0.1), logging level + dir. Runtime settings (rates, intervals, flags) live in the DB settings table, not here."}
+    ]
+  },
+  {
+    "category": "API — FastAPI (:8505)",
+    "features": [
+      {"name": "QI contract endpoints", "file": "api/main.py :: health() / version() / info()", "status": "live", "detail": "GET /health -> {status:ok}; /version -> project/version/status; /info reads qi_registry.json via QI.project('akiyascout'). CORS origins from qi_registry with localhost fallback. init_db() on startup."},
+      {"name": "Listings API", "file": "api/main.py :: get_listings() / get_one_listing()", "status": "live", "detail": "GET /listings with type/q/pref/region/price_usd_max/price_jpy_max/akiya_bank/limit (le=2000); delegates to queries.search_listings. GET /listings/{id} returns one enriched row or 404."},
+      {"name": "Profiles CRUD + matches", "file": "api/main.py :: get/create/update/delete_profile / profile_matches()", "status": "live", "detail": "Full CRUD on /profiles with Pydantic ProfileIn/ProfilePatch (name, criteria dict, cadence, active). GET /profiles/{id}/matches returns scored matches."},
+      {"name": "Ingest + notifications + digest", "file": "api/main.py :: trigger_ingest() / get_notifications() / read_notification() / run_digest()", "status": "live", "detail": "POST /ingest?sources=comma,list runs pipeline.ingest. GET /notifications(+unread_only), POST /notifications/{id}/read, POST /digest?profile_ids=1,2 build an on-demand digest."},
+      {"name": "Reference endpoints", "file": "api/main.py :: get_stats() / get_regions() / get_sources()", "status": "live", "detail": "GET /stats (listing/profile/match counts), /regions (47 prefectures), /sources (7 sources ordered by type)."}
+    ]
+  },
+  {
+    "category": "Ingestion Pipeline",
+    "features": [
+      {"name": "Ingest orchestrator", "file": "scout/pipeline.py :: ingest()", "status": "live", "detail": "For each enabled source adapter: fetch_raw -> _store_raw -> normalize -> _upsert_listing, accumulating stats {fetched,new,updated,duplicate,unchanged}. Stamps sources.last_run, then match_for_listings() over touched ids."},
+      {"name": "Raw immutable capture", "file": "scout/pipeline.py :: _store_raw()", "status": "live", "detail": "Stores the raw adapter dict + content_hash in raw_listings (UNIQUE source_id,source_listing_id) so listings can be re-parsed without re-scraping; updates only on hash change. 1,915 raw rows."},
+      {"name": "Upsert + cross-source dedup", "file": "scout/pipeline.py :: _upsert_listing() / _write_listing()", "status": "live", "detail": "New vs updated vs duplicate vs unchanged. Same raw_id => update on hash change; otherwise a matching active dedup_key from ANY source collapses to duplicate. 32-column listing write."},
+      {"name": "On-demand profile pull", "file": "scout/pipeline.py :: pull_for_profile() / refresh() / clear_listings()", "status": "live", "detail": "Expands a profile's prefectures/regions to target codes, routes akiya-bank vs SUUMO sources by property type, sets live_target_prefectures override, ingests, geocodes, re-matches. refresh() wipes-then-pulls; clear_listings() resets listings/raw/matches/notifications."}
+    ]
+  },
+  {
+    "category": "Source Adapters",
+    "features": [
+      {"name": "Adapter base contract", "file": "scout/adapters/base.py :: BaseAdapter", "status": "live", "detail": "fetch_raw() returns live data when use_live_scraping=1 else loads JSON fixtures. Polite _get(): rate-limited (rate_limit_sec), courteous UA, follow_redirects, 20s timeout. fetch_live() raises NotImplementedError by default; one bad source never aborts ingest."},
+      {"name": "at-home Akiya Bank live scraper", "file": "scout/adapters/portals.py :: AtHomeAkiyaAdapter.fetch_live + scout/adapters/athome_live.py", "status": "live", "detail": "Crawls https://www.akiya-athome.jp/buy/<JIS>/ per in_poc prefecture (JIS-code map for all 47), selectolax parses section.propety cards for price/area/layout/type/photo. parse_detail() adds spec table + photos. 926 listings."},
+      {"name": "SUUMO live scraper", "file": "scout/adapters/portals.py :: SuumoAdapter.fetch_live + scout/adapters/suumo_live.py", "status": "live", "detail": "Used detached houses (中古一戸建て). Pulls prefecture page + drills into up to 3 city result-pages (populous prefs gate behind a city picker), parses div.property_unit. Profile-driven target prefectures. 939 listings."},
+      {"name": "Fixture / placeholder portals", "file": "scout/adapters/portals.py :: Lifull/AtHome/Homes/Rakumachi/MunicipalNagano + registry.py", "status": "partial", "detail": "LIFULL, at-home commercial, HOME'S, Rakumachi and Municipal-Nagano adapters document their live selectors but inherit fixture-only loading; fetch_live() not yet implemented. 7 adapters registered."}
+    ]
+  },
+  {
+    "category": "Normalization & Translation",
+    "features": [
+      {"name": "Normalizer", "file": "scout/normalize.py :: normalize() / derive_era() / derive_seismic() / dedup_key()", "status": "live", "detail": "Maps raw -> uniform listing fields; derives build_era (Showa/Heisei/Reiwa) and seismic class (1981 boundary), estimates renovation cost, infers bedrooms from LDK layout, and builds a SHA1 dedup_key bucketed by prefecture + 5sqm area + 100k-yen price + address head."},
+      {"name": "Translation engine (cached, fallback chain)", "file": "scout/translate.py :: translate() / _deepl_translate / _ollama_translate / _stub_translate", "status": "live", "detail": "JA->EN with persistent translations cache (SHA1 src_hash). auto order DeepL -> local Ollama -> offline glossary stub; first available wins. 187 cached, all via ollama. Empty input safe; reuses an open conn to avoid write-locks."},
+      {"name": "Lazy field translation", "file": "scout/pipeline.py :: _translate_fields()", "status": "live", "detail": "Titles translated at ingest (or supplied by the adapter); descriptions translated lazily on listing open to keep bulk ingest fast; addresses/municipalities mirrored JA->EN verbatim (no slow romaji)."}
+    ]
+  },
+  {
+    "category": "Matching Engine",
+    "features": [
+      {"name": "Profile match + score", "file": "scout/matching.py :: match()", "status": "live", "detail": "AND of all specified hard constraints (type, price JPY/USD-converted, prefecture, region, land/building area, bedrooms, build_year, seismic, akiya_bank); unspecified = no constraint. NULL-price akiya are not dropped. Returns (is_match, score 0..1)."},
+      {"name": "Match-on-ingest + re-match", "file": "scout/matching.py :: match_for_listings() / rematch_profile()", "status": "live", "detail": "match_for_listings scores touched listings against all active profiles (INSERT OR IGNORE into matches). rematch_profile clears + re-scores one profile against all active listings on create/edit."}
+    ]
+  },
+  {
+    "category": "Geocoding & Map",
+    "features": [
+      {"name": "Municipality geocoder", "file": "scout/geocode.py :: geocode_municipality() / jitter()", "status": "live", "detail": "OSM Nominatim, max ~1 req/sec, cached in geocache (265 rows) keyed by pref+municipality. Deterministic ~+/-1.5km jitter spreads co-located pins. 1,171 listings carry lat/lng."},
+      {"name": "Japan choropleth map", "file": "scout/mapview.py :: build_map() / cities_for()", "status": "live", "detail": "folium map: 47-prefecture GeoJson choropleth colored by listing count, focus-corridor styling, Esri/CartoDB/GSI base layers, 4 MLIT hazard overlays, clustered price/photo pins, legend. cities_for() lists municipalities present per prefecture."},
+      {"name": "Detail enrichment pass", "file": "scout/enrich.py :: enrich() / geocode_only()", "status": "live", "detail": "geocode_only() is the fast lat/lng pass (no detail fetch). enrich() fetches at-home detail pages for listings missing photos/specs, adding photo gallery, spec table, listed_date, station, and a translated description; 1s polite delay."}
+    ]
+  },
+  {
+    "category": "Profiles, Notifications & Scheduling",
+    "features": [
+      {"name": "Profile CRUD", "file": "scout/profiles.py :: create/list/get/update/delete_profile / set_cadence()", "status": "live", "detail": "criteria_json stored as JSON; creating/editing auto-rematches. Creating a profile auto-inserts a schedules row. set_cadence upserts daily/weekly/monthly/custom_cron."},
+      {"name": "Digest builder + email", "file": "scout/notify.py :: build_digest() / build_daily_digest() / _send_email()", "status": "live", "detail": "build_digest bundles new (notified=0) matches per profile into an on-site notification, marks matches notified, stamps schedule last_run. build_daily_digest covers 24h new houses. SMTP email gated by email_enabled setting + SMTP_PASSWORD env."},
+      {"name": "Background scheduler", "file": "scout/scheduler.py :: start_scheduler() / reload_profile_jobs() / _cadence_trigger()", "status": "live", "detail": "APScheduler BackgroundScheduler (Asia/Tokyo). Interval ingest job (ingest_interval_hours, default 12) + enrich, daily 08:00 digest, and one CronTrigger digest job per enabled profile schedule. POC-grade — no Redis/Celery."}
+    ]
+  },
+  {
+    "category": "Persistence (SQLite)",
+    "features": [
+      {"name": "DB layer + schema", "file": "scout/db.py :: connect() / init_db(); scout/schema.sql", "status": "live", "detail": "WAL, foreign_keys ON, busy_timeout. init_db applies schema.sql, additive ALTERs (specs_json/listed_date/station_ja), seeds 47 prefectures + 7 sources + default settings. data/akiyascout.db."},
+      {"name": "Reference & inventory tables", "file": "scout/schema.sql", "status": "live", "detail": "prefectures(47), sources(7), raw_listings(1,915), listings(1,865, 4 indexes), translations(187), profiles(3), matches(203), schedules(3), notifications(3), geocache(265), settings(11)."},
+      {"name": "Read/search queries", "file": "scout/queries.py :: search_listings() / get_listing() / matches_for_profile() / stats()", "status": "live", "detail": "Dynamic WHERE builder over all filter keys, JOINs prefectures + sources, adds computed price_usd, cheapest-first ordering. stats() powers /stats and the first-run seed check."}
+    ]
+  },
+  {
+    "category": "Gradio Dashboard (:7845)",
+    "features": [
+      {"name": "Six-tab UI", "file": "ui/app.py :: build_ui()", "status": "live", "detail": "gr.Blocks with Map / Discover / Profiles / Matches / Notifications / Settings tabs. Dark slate palette (single PAL source of truth), Inter font. EN / 日本語 / Both language toggle on listings."},
+      {"name": "Safe handler wrapper + logging", "file": "ui/app.py :: safe_html() decorator", "status": "live", "detail": "Wraps single-HTML-output handlers to log tracebacks to data/logs/ui.log and render the error in-page instead of a bare toast — so a failing handler is debuggable, not silent."}
+    ]
+  }
+]

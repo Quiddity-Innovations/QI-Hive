@@ -1,0 +1,43 @@
+{
+  "categories": [
+    {
+      "name": "QI Ecosystem Integration",
+      "priority": "high",
+      "items": [
+        {"title": "QI Brain — session + decision logging", "detail": "Register each Naya session in the Brain via qi.log_session() (prompt domains, file actions taken, models used) and log significant cleanup decisions via qi.log_decision(). Naya currently has no cross-project memory in the Brain."},
+        {"title": "Enable NEXUS routing by default for hard questions", "detail": "_try_nexus_synthesize() is built but gated off (personal.nexus_enabled=false). Decide a complexity threshold and turn it on so genuinely hard queries get multi-AI synthesis instead of a single local model."},
+        {"title": "QI Standards compliance pass", "detail": "Run qi_validator.py --project naya. Reconcile the legacy C:\\UNIVERSAL\\ECOSYSTEM references in CLAUDE.md with the migrated C:\\QIH\\ecosystem paths, and confirm the 7-folder QI layout (engine/config/data/logs/tests/docs/tools) — Naya is still flat at the repo root."},
+        {"title": "Wire Maia -> Naya file-intelligence API", "detail": "The registry advertises Naya exposing 'personal knowledge base queries' and 'file scout' to the ecosystem, but no stable contract is published. Define + document the endpoints Maia would call for space usage / recommendations."}
+      ]
+    },
+    {
+      "name": "File Intelligence Depth",
+      "priority": "medium",
+      "items": [
+        {"title": "Similarity-group housekeeping", "detail": "naya_brain.db has grown to ~2.3 GB with 2.7M naya_similarity_groups rows from accumulated scans. Add a retention/VACUUM policy and a 'reset dashboard' sweep for completed/cancelled scans (the reset_dashboard action exists) so the brain store stays lean."},
+        {"title": "Fuzzy-threshold tuning from real scans", "detail": "Review accumulated fuzzy_name groups to calibrate the near-duplicate matcher against real false-positive/negative rates rather than the current heuristic."},
+        {"title": "Reviewable cleanup workbook", "detail": "Before any bulk move/delete, emit a reviewable spreadsheet (xlsx) of candidate groups with a decision-override column, so the owner can edit decisions out-of-band and feed them back to the executor."},
+        {"title": "Surface FileHQ index richness", "detail": "folder_insight already reads the FileHQ index read-only; expand it to category/era breakdowns and scattered-duplicate warnings across folders (naya_memory relationship detection is stubbed)."}
+      ]
+    },
+    {
+      "name": "Channels & Interaction",
+      "priority": "medium",
+      "items": [
+        {"title": "Finish the LINE channel", "detail": "naya_line.py is present but no-ops without credentials. Decide whether the Naya OA is wanted at all (registry says Telegram is the only chat interface) — either wire creds + handlers or remove the module to reduce surface area."},
+        {"title": "Harden the peer bridge", "detail": "POST /webhook/peer-bridge carries HMAC-signed cross-bot messages. Add replay protection (timestamp/nonce), document the shared-chats contract, and add tests for the janitor that deletes sibling-bot status leaks."},
+        {"title": "Telegram webhook option", "detail": "A /webhook/telegram route exists alongside long-poll. If Naya ever moves off pure polling, finish + secure the webhook path — but only if the LAN-only / no-inbound-port constraint is relaxed (it should not be without reason)."}
+      ]
+    },
+    {
+      "name": "Architecture & Resume-from-Pause",
+      "priority": "low",
+      "items": [
+        {"title": "Resume decision", "detail": "Naya is registry status 'paused' while its two services run. Make an explicit call: keep it as a maintained personal tool, fold its file-engine capabilities into another QI project, or formally retire it — so the running services aren't orphaned."},
+        {"title": "Flask -> FastAPI alignment", "detail": "naya_server.py is Flask while the rest of the ecosystem (Maia, NEXUS, FileHQ) is FastAPI. A migration would unify middleware, CORS-from-registry, and /version /info shapes — large effort, low urgency while paused."},
+        {"title": "Folder-strategy migration", "detail": "Per the QI folder strategy, personal projects may move under C:\\QIP. Moving C:\\NAYA would require repointing NSSM AppDirectories, naya_db paths, and the nightly sync — defer until the resume decision is made."},
+        {"title": "Service account review", "detail": "Decide whether QI_NayaBot / QI_NayaGradio should run under LOCAL SYSTEM or a dedicated account — it affects which drives the scanner can see and what the executor can delete."}
+      ]
+    }
+  ]
+}

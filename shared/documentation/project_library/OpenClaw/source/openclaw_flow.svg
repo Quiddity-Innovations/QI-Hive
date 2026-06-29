@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="f-arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="f-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="f-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+    </marker>
+    <marker id="f-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="f-red" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="600" fill="#f8fafc" rx="12"/>
+  <text x="450" y="25" text-anchor="middle" font-size="17" font-weight="700" fill="#1e293b">OpenClaw — Message Lifecycle &amp; Agent Data Flow</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active Production · 2026</text>
+
+  <!-- ══ LEGEND ══ -->
+  <rect x="700" y="58" width="192" height="132" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="796" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Legend</text>
+  <line x1="708" y1="90" x2="726" y2="90" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-blue)"/>
+  <text x="732" y="94" font-size="9" fill="#374151">Inbound message</text>
+  <line x1="708" y1="106" x2="726" y2="106" stroke="#22c55e" stroke-width="2" marker-end="url(#f-green)"/>
+  <text x="732" y="110" font-size="9" fill="#374151">Reply / delivery</text>
+  <line x1="708" y1="122" x2="726" y2="122" stroke="#f97316" stroke-width="2" marker-end="url(#f-orange)"/>
+  <text x="732" y="126" font-size="9" fill="#374151">LLM call</text>
+  <line x1="708" y1="138" x2="726" y2="138" stroke="#ef4444" stroke-width="2" marker-end="url(#f-red)"/>
+  <text x="732" y="142" font-size="9" fill="#374151">Refused / silently dropped</text>
+  <rect x="708" y="152" width="14" height="10" rx="2" fill="#1f2d3d"/>
+  <text x="728" y="161" font-size="9" fill="#374151">Decision gate</text>
+  <text x="796" y="180" text-anchor="middle" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+
+  <!-- 1. Inbound -->
+  <rect x="20" y="72" width="150" height="58" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="95" y="94" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Inbound message</text>
+  <text x="95" y="109" text-anchor="middle" font-size="8" fill="#3b82f6">Telegram / LINE</text>
+  <text x="95" y="121" text-anchor="middle" font-size="8" fill="#3b82f6">text · voice · photo</text>
+
+  <!-- 2. Gateway poll -->
+  <rect x="20" y="170" width="150" height="56" rx="8" fill="#1f2d3d" stroke="#334155" stroke-width="1.5"/>
+  <text x="95" y="192" text-anchor="middle" font-size="10" font-weight="700" fill="white">Gateway getUpdates</text>
+  <text x="95" y="206" text-anchor="middle" font-size="8" fill="#94a3b8">:18789 · long-poll</text>
+  <text x="95" y="218" text-anchor="middle" font-size="8" fill="#64748b">forward to active agent</text>
+  <line x1="95" y1="130" x2="95" y2="170" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-blue)"/>
+
+  <!-- 3. Permission gate (decision diamond as dark box) -->
+  <rect x="20" y="266" width="150" height="64" rx="8" fill="#1f2d3d" stroke="#334155" stroke-width="1.5"/>
+  <text x="95" y="288" text-anchor="middle" font-size="10" font-weight="700" fill="white">Permission Firewall</text>
+  <text x="95" y="302" text-anchor="middle" font-size="8" fill="#94a3b8">TALK / DO / PRIVATE</text>
+  <text x="95" y="314" text-anchor="middle" font-size="8" fill="#64748b">first-match gates</text>
+  <text x="95" y="325" text-anchor="middle" font-size="7" fill="#52617a">sender.id == Renne ? DO</text>
+  <line x1="95" y1="226" x2="95" y2="266" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-blue)"/>
+
+  <!-- refused branch -->
+  <rect x="20" y="372" width="150" height="46" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="95" y="391" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">Refuse / drop</text>
+  <text x="95" y="405" text-anchor="middle" font-size="8" fill="#ef4444">DO by non-Renne · PRIVATE in group</text>
+  <path d="M 60,330 V 372" fill="none" stroke="#ef4444" stroke-width="1.5" marker-end="url(#f-red)"/>
+
+  <!-- 4. TOOLS.md flow match -->
+  <rect x="225" y="266" width="170" height="64" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="310" y="288" text-anchor="middle" font-size="10" font-weight="700" fill="#3730a3">TOOLS.md flow match</text>
+  <text x="310" y="302" text-anchor="middle" font-size="8" fill="#4f46e5">LLM maps message → flow</text>
+  <text x="310" y="314" text-anchor="middle" font-size="8" fill="#4f46e5">flow → shell command</text>
+  <text x="310" y="325" text-anchor="middle" font-size="7" fill="#6366f1">exec-approvals.json</text>
+  <path d="M 170,298 H 225" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-blue)"/>
+  <text x="197" y="291" text-anchor="middle" font-size="7" fill="#22c55e">allowed</text>
+
+  <!-- 5. Specialist agents fan -->
+  <rect x="450" y="150" width="180" height="48" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="540" y="169" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Kaze · Yubin · Asa</text>
+  <text x="540" y="185" text-anchor="middle" font-size="8" fill="#2e7d32">news · email · briefing</text>
+
+  <rect x="450" y="208" width="180" height="48" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="540" y="227" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Kakei · Sentry</text>
+  <text x="540" y="243" text-anchor="middle" font-size="8" fill="#2e7d32">ledger · health checks</text>
+
+  <rect x="450" y="266" width="180" height="48" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="540" y="285" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Koe (voice)</text>
+  <text x="540" y="301" text-anchor="middle" font-size="8" fill="#2e7d32">whisper.cpp · edge-tts</text>
+
+  <rect x="450" y="324" width="180" height="48" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="540" y="343" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Hive Bridge</text>
+  <text x="540" y="359" text-anchor="middle" font-size="8" fill="#2e7d32">query QI Brain :9011</text>
+
+  <path d="M 395,290 H 420 V 174 H 450" fill="none" stroke="#6b7280" stroke-width="1.2" marker-end="url(#f-arr)"/>
+  <path d="M 395,294 H 420 V 232 H 450" fill="none" stroke="#6b7280" stroke-width="1.2" marker-end="url(#f-arr)"/>
+  <path d="M 395,298 H 450" fill="none" stroke="#6b7280" stroke-width="1.2" marker-end="url(#f-arr)"/>
+  <path d="M 395,306 H 420 V 348 H 450" fill="none" stroke="#6b7280" stroke-width="1.2" marker-end="url(#f-arr)"/>
+  <text x="424" y="262" text-anchor="middle" font-size="7" fill="#6b7280">delegate</text>
+
+  <!-- 6. LLM router -->
+  <rect x="680" y="222" width="190" height="64" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="775" y="244" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412">Shared LLM Router</text>
+  <text x="775" y="258" text-anchor="middle" font-size="8" fill="#c2410c">kaze-llm-provider.py</text>
+  <text x="775" y="270" text-anchor="middle" font-size="8" fill="#c2410c">Cloudflare WAI (free)</text>
+  <text x="775" y="281" text-anchor="middle" font-size="8" fill="#ea580c">→ Ollama fallback (local)</text>
+  <path d="M 630,200 H 660 V 244 H 680" fill="none" stroke="#f97316" stroke-width="1.5" marker-end="url(#f-orange)"/>
+  <path d="M 630,290 H 660 V 268 H 680" fill="none" stroke="#f97316" stroke-width="1.5" marker-end="url(#f-orange)"/>
+  <text x="655" y="222" text-anchor="middle" font-size="7" fill="#f97316">LLM</text>
+
+  <!-- 7. Stores -->
+  <rect x="450" y="408" width="130" height="56" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="515" y="428" text-anchor="middle" font-size="9" font-weight="700" fill="#0c4a6e">kakei.db</text>
+  <text x="515" y="442" text-anchor="middle" font-size="8" fill="#0284c7">SQLite ledger</text>
+  <text x="515" y="454" text-anchor="middle" font-size="8" fill="#0284c7">bills · expenses</text>
+
+  <rect x="600" y="408" width="130" height="56" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="665" y="428" text-anchor="middle" font-size="9" font-weight="700" fill="#14532d">NotebookLM</text>
+  <text x="665" y="442" text-anchor="middle" font-size="8" fill="#16a34a">digest archive</text>
+  <text x="665" y="454" text-anchor="middle" font-size="8" fill="#16a34a">cookie auth</text>
+
+  <rect x="750" y="408" width="120" height="56" rx="7" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="810" y="428" text-anchor="middle" font-size="9" font-weight="700" fill="#581c87">runtime/logs</text>
+  <text x="810" y="442" text-anchor="middle" font-size="8" fill="#7e22ce">per-agent logs</text>
+  <text x="810" y="454" text-anchor="middle" font-size="8" fill="#7e22ce">dashboard JSON</text>
+
+  <path d="M 540,372 V 408" fill="none" stroke="#0284c7" stroke-width="1.2" marker-end="url(#f-arr)"/>
+  <path d="M 580,256 V 390 H 660 V 408" fill="none" stroke="#16a34a" stroke-width="1.2" marker-end="url(#f-green)"/>
+
+  <!-- 8. Reply back to user -->
+  <rect x="20" y="460" width="170" height="56" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="105" y="482" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Reply to user</text>
+  <text x="105" y="496" text-anchor="middle" font-size="8" fill="#16a34a">text + voice (Koe)</text>
+  <text x="105" y="508" text-anchor="middle" font-size="8" fill="#16a34a">language-matched</text>
+  <path d="M 540,314 V 488 H 190" fill="none" stroke="#22c55e" stroke-width="2" marker-end="url(#f-green)"/>
+
+  <!-- Scheduled triggers band -->
+  <rect x="20" y="450" width="0" height="0"/>
+  <rect x="225" y="372" width="170" height="92" rx="8" fill="#fffbeb" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="310" y="392" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">Scheduled triggers</text>
+  <text x="310" y="408" text-anchor="middle" font-size="8" fill="#a16207">Task Scheduler: Kaze x4,</text>
+  <text x="310" y="420" text-anchor="middle" font-size="8" fill="#a16207">Yubin x2, Asa 7AM,</text>
+  <text x="310" y="432" text-anchor="middle" font-size="8" fill="#a16207">Kakei Sun 7PM, drift</text>
+  <text x="310" y="446" text-anchor="middle" font-size="8" fill="#a16207">WSL cron: Sentry 6AM,</text>
+  <text x="310" y="458" text-anchor="middle" font-size="8" fill="#a16207">NotebookLM cookie 30 min</text>
+  <path d="M 310,372 V 340 H 420 V 250 H 450" fill="none" stroke="#ca8a04" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#f-arr)"/>
+  <text x="362" y="336" text-anchor="middle" font-size="7" fill="#ca8a04">cron / timer → agents</text>
+
+  <text x="450" y="548" text-anchor="middle" font-size="9" fill="#94a3b8">Two entry points: inbound chat (firewall → flow → agent) and scheduled jobs (Task Scheduler / WSL cron → agent)</text>
+  <text x="450" y="566" text-anchor="middle" font-size="8" fill="#cbd5e1">Every agent shares one LLM router · state lives in files + one SQLite ledger · nothing leaves the machine for voice STT</text>
+</svg>

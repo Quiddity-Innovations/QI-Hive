@@ -1,0 +1,94 @@
+{
+  "categories": [
+    {
+      "name": "Maia ⇄ OpenClaw Marriage",
+      "priority": "high",
+      "items": [
+        {
+          "title": "Action routing from Maia",
+          "detail": "Maia recognises an actionable request in conversation and hands it to OpenClaw to execute. Where Maia talks, OpenClaw acts. The peer bridge (peer-bridge.py, HMAC-signed Telegram-shaped updates) is the candidate transport."
+        },
+        {
+          "title": "Promote the peer bridge to a first-class channel",
+          "detail": "tasuke-bridge-receiver.py is running; harden it into the supported Maia<->OC delegation channel with auth, retries, and an audit trail rather than a candidate prototype."
+        },
+        {
+          "title": "Shared identity across siblings",
+          "detail": "friendly-bots.json + bot-voices.json already model siblings; formalise a registry so Maia/Naya/Kaze/Tasuke share identity, voice, and capability discovery."
+        }
+      ]
+    },
+    {
+      "name": "Activate the built-but-dormant capabilities",
+      "priority": "high",
+      "items": [
+        {
+          "title": "Yubin VIP lane",
+          "detail": "Populate ~/.openclaw/workspace-email/yubin-vip.json with Mari + Urcil + family domains. Code is in-pipeline; activation is 5 minutes of config."
+        },
+        {
+          "title": "Kakei receipt photos",
+          "detail": "Wire a photo handler into the live gateway (TOOLS.md flow) and confirm qwen3-vl is pulled, so a snapped receipt becomes a ledger row end-to-end."
+        },
+        {
+          "title": "Asa calendar section",
+          "detail": "Set CALENDAR_ICS_URL in asa-calendar.env so the 7AM briefing leads with today's events."
+        },
+        {
+          "title": "Sentry compliance drift",
+          "detail": "Depends on QI Hive Inspector dropping compliance-YYYY-MM-DD.json reports; the Sunday 8PM job already reads them and exits silently until they exist."
+        }
+      ]
+    },
+    {
+      "name": "Voice & Multimodal",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "Multilingual STT",
+          "detail": "Swap whisper.cpp small.en for large-v3 to accept pt-BR voice commands, not just English."
+        },
+        {
+          "title": "Resolve dots.tts language limits",
+          "detail": "dots.tts clones a voice across languages but is only reliable in EN/ZH (its backbone renders kanji as Chinese; PT/ES/FR high WER). Keep parked until a true cross-lingual clone is viable; until then route ja/non-en to edge."
+        },
+        {
+          "title": "Koe gateway endpoints",
+          "detail": "Add POST /koe/transcribe and POST /koe/synthesise to the gateway so voice is a clean service rather than shelling out per message."
+        }
+      ]
+    },
+    {
+      "name": "Reach & Proactivity",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "Enable Broadcast",
+          "detail": "Re-enable OC-Broadcast-News + OC-Broadcast-Tick when proactive multi-group push is wanted; admin/discover/schedule/send + loop guard are already built and tested."
+        },
+        {
+          "title": "Deepen LINE parity",
+          "detail": "Bring LINE to full feature parity with Telegram across tasuke-line / naya-line / kaze-line accounts."
+        }
+      ]
+    },
+    {
+      "name": "QI Standards Alignment",
+      "priority": "low",
+      "items": [
+        {
+          "title": "QI_ service-name prefix",
+          "detail": "Migrate OC NSSM services to the QI_ prefix convention. QI_KazeConfigAPI and QI_KazeNewsTunnel already comply; OC-Keepalive-Service and the OC-* scheduled tasks remain on the legacy OC- prefix."
+        },
+        {
+          "title": "Standardise the port story",
+          "detail": "OC uses 18789 (gateway) + 18800 (dashboard), outside its allocated 8400-8499 block; document the exception or migrate when convenient."
+        },
+        {
+          "title": "Repoint stale ecosystem paths",
+          "detail": "CLAUDE.md still references the old C:\\UNIVERSAL\\ECOSYSTEM paths; repoint to C:\\QIH\\ecosystem."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+[
+  {
+    "category": "Tier Engine & Config (single source of truth)",
+    "features": [
+      {"name": "Tier configuration store", "file": "Tools/config.json", "status": "live", "detail": "The canonical config: {tiers, special_rules, settings}. 6 tiers, 31 sub-labels, ~104 sender rules, ~81 subject keywords. settings = {classify_interval_minutes:15, triage_after_days:30, triage_time:'01:00', apps_script_id}. Everything else (labels, filters, Apps Script) is derived from this file."},
+      {"name": "Stats aggregator", "file": "Tools/app.py :: get_stats()", "status": "live", "detail": "Rolls up config.json into total_labels / total_senders / total_subjects / total_rules + per-tier counts and color metadata for the dashboard cards."},
+      {"name": "Backed-up config save", "file": "Tools/app.py :: save_config()", "status": "live", "detail": "Writes config.json.bak (shutil.copy2) before every overwrite, then dumps JSON with ensure_ascii=False. Read/write exposed via GET/POST /api/config and /api/designer/save."},
+      {"name": "Rules-engine classifier (Apps Script side)", "file": "EasyFlow_AppsScript.js :: classifyMessage_()", "status": "live", "detail": "Lowercases From + Subject, runs classifyRokid_() special rule first, then iterates TIER_RULES matching sender substrings then subject keywords; returns the full 'Tier/Sub-label' name or null. labelCache_ memoizes GmailApp label lookups."}
+    ]
+  },
+  {
+    "category": "Google Apps Script Automation",
+    "features": [
+      {"name": "classifyNewEmails — 15-min sweep", "file": "EasyFlow_AppsScript.js :: classifyNewEmails()", "status": "live", "detail": "GmailApp.search('in:inbox is:unread', 0, 50). For each thread, classify the latest message, add the sub-label + parent tier label, then moveToArchive(). 5-minute hard runtime guard. Logs classified/unclassified counts."},
+      {"name": "triageStaleInbox — nightly", "file": "EasyFlow_AppsScript.js :: triageStaleInbox()", "status": "live", "detail": "Searches 'in:inbox before:<today-30d>'; any thread without a '[1-6] -' label gets the _Triage label and is archived. Runs daily at 1 AM."},
+      {"name": "classifyAllInbox — full backfill", "file": "EasyFlow_AppsScript.js :: classifyAllInbox()", "status": "live", "detail": "Like classifyNewEmails but scans up to 100 inbox threads and skips any already carrying a tier label (regex /^[1-6] -/)."},
+      {"name": "setupTriggers / dryRun / listTierLabels", "file": "EasyFlow_AppsScript.js", "status": "live", "detail": "setupTriggers() clears existing triggers and registers the 15-min + daily jobs. dryRun() previews classification on 30 threads with a hit-rate. listTierLabels() prints the tier label set."}
+    ]
+  },
+  {
+    "category": "Flask Dashboard (port 8550)",
+    "features": [
+      {"name": "Apps Script generator", "file": "Tools/app.py :: generate_apps_script() / get_engine_code()", "status": "live", "detail": "Serializes config.tiers into the TIER_RULES JS object, then appends the static engine (classifyMessage_, getLabel_, classify*, triage*, setupTriggers). Written to EasyFlow_AppsScript.js via POST /api/generate-script."},
+      {"name": "Page routes", "file": "Tools/app.py :: index/dashboard/configure/designer/deploy/cleanup/migrate/settings/welcome", "status": "live", "detail": "Jinja2 templates in Tools/templates/ (base, dashboard, configure, configure_tier, designer, deploy, cleanup, migrate, settings, welcome, manual). welcome doubles as the first-run setup wizard."},
+      {"name": "Tier/label CRUD API", "file": "Tools/app.py :: /api/tier* and /api/tier/<t>/label*", "status": "live", "detail": "POST /api/tier (add tier), POST/PUT/DELETE /api/tier/<tier>/label/<label> with 400/404/409 status codes. /api/designer/save replaces the whole tier tree."},
+      {"name": "Manual screenshot sync", "file": "Tools/app.py :: sync_manual_screenshots()", "status": "live", "detail": "On startup copies Manual/*.png|jpg|gif into static/manual/ with URL-safe names, only when newer — serves the in-app setup manual."}
+    ]
+  },
+  {
+    "category": "Gmail API — Labels, Filters, Cleanup (Python)",
+    "features": [
+      {"name": "Colored label-tree creation", "file": "create_gmail_labels.py :: create_label() / main()", "status": "live", "detail": "Defines the full LABELS list with one of 9 Gmail palette colors (red/orange/yellow/blue/purple/gray/black/teal/green). Skips existing labels; nests via '/'. Idempotent."},
+      {"name": "Config-to-filter compiler", "file": "create_filters.py :: config_to_filters()", "status": "live", "detail": "Turns each tier rule into Gmail filter defs: senders batched 5-per OR query (from:a OR from:b...), subjects batched 5-per (subject:(kw)...). Each filter adds the label and removes INBOX. CLI: --dry-run / --list / --clear."},
+      {"name": "Filter create/list/clear API", "file": "Tools/app.py :: /api/filters/preview, /existing, /create, /clear", "status": "live", "detail": "Imports create_filters at runtime. /create needs the separate gmail.settings.basic token (token_gmail_filters.json). /clear removes only filters targeting EasyFlow tier labels."},
+      {"name": "Label cleanup (retire / delete)", "file": "Tools/app.py :: /api/gmail/cleanup", "status": "live", "detail": "Either renames a label to _Retired/<name> (reversible) or permanently deletes it. Counts removed/errors. Also /api/gmail/label-visibility + /api/gmail/categories-toggle for system-label visibility."},
+      {"name": "Legacy-label migration", "file": "Tools/app.py :: /api/migrate/scan + /api/migrate/execute", "status": "live", "detail": "scan finds _Retired/ Z_Legacy T0-T5 labels with message/thread counts; execute batch-moves messages (batchModify, 1000/batch, up to 5000 per source) into the chosen tier + parent label, optional after:<cutoff>."}
+    ]
+  },
+  {
+    "category": "Extension Runtime (Manifest V3)",
+    "features": [
+      {"name": "Manifest V3 + permissions", "file": "Extension/manifest.json", "status": "live", "detail": "v1.2.1. permissions: identity, storage, alarms, sidePanel, activeTab, tabs, downloads, notifications. oauth2 scopes: gmail.labels, gmail.modify, gmail.settings.basic, contacts. host_permissions for googleapis, generativelanguage, people, openai, anthropic, localhost. content script on mail.google.com."},
+      {"name": "Service worker (ES module)", "file": "Extension/background/service-worker.js", "status": "live", "detail": "type:module MV3 worker. Owns OAuth, gmailFetch, AI providers, classification, alarms, and the diagnostic logger. Cannot import classic scripts, so it replicates the logger inline (shared _LOG_KEY)."},
+      {"name": "chrome.alarms classification job", "file": "Extension/background/service-worker.js (classification alarm)", "status": "live", "detail": "alarms-driven periodic classification, immune to service-worker termination. v1.2.1 distinguishes network vs auth errors in the alarm handler (commit 505dd6e)."},
+      {"name": "chrome.storage.local state", "file": "Extension/background/service-worker.js + sidepanel/sidepanel.js", "status": "live", "detail": "Holds config, API keys, debug log (easyflow.debuglog, 1000-entry cap), cached web-flow token, stuck-label state. No external server needed for the in-browser path."}
+    ]
+  },
+  {
+    "category": "Cross-Browser OAuth & Gmail Access",
+    "features": [
+      {"name": "Dual-path auth (Chrome + Edge)", "file": "Extension/background/service-worker.js :: getAuthToken()", "status": "live", "detail": "Probes chrome.identity.getAuthToken (Chrome app client); on 'not supported'/'Microsoft Edge' falls back to chrome.identity.launchWebAuthFlow with a separate Web OAuth client, caching the result in storage. Remembers which path worked (_authMethod)."},
+      {"name": "Resilient gmailFetch", "file": "Extension/background/service-worker.js :: gmailFetch()", "status": "live", "detail": "Wraps fetch with Bearer auth, AbortController hard timeout (10s GET / 60s destructive), 401 token-refresh-and-retry-once, 429 exponential backoff (2/4/8s), and network-error backoff (2/4s, 2 retries). Treats Gmail cascade-404 as benign."},
+      {"name": "Token management", "file": "Extension/background/service-worker.js :: removeCachedToken() / revokeToken()", "status": "live", "detail": "removeCachedToken() clears Chrome's cache or the stored web-flow token; revokeToken() hits Google's revoke endpoint. Per-verb timeout picker _pickTimeout()."},
+      {"name": "Flask-side OAuth flow", "file": "Tools/app.py :: /connect, /oauth/callback, /connect-script", "status": "live", "detail": "google-auth-oauthlib Flow with PKCE (code_verifier in session), OAUTHLIB_INSECURE_TRANSPORT for localhost. Tokens: token_gmail.json (labels+modify), token_gmail_filters.json (settings.basic), token_apps_script.json (script.projects)."}
+    ]
+  },
+  {
+    "category": "AI Classification (Extension)",
+    "features": [
+      {"name": "AI triage batch", "file": "Extension/background/service-worker.js :: aiTriageBatch()", "status": "live", "detail": "Pre-flight NO_TIERS guard; builds a valid-target set from the tier tree; queries inbox/Triage messages; for each, sends From/Subject/snippet to the chosen LLM and parses a {label, confidence} JSON. Rejects any label not in the tree. Up to 200 msgs."},
+      {"name": "Provider router", "file": "Extension/background/service-worker.js :: callProvider() / callLLMForClassification()", "status": "live", "detail": "Single-provider model. Conversational chat → callProvider; classification → callLLMForClassification. Both pick from the four adapters by the user's configured provider."},
+      {"name": "Provider adapters", "file": "Extension/background/service-worker.js :: callGeminiAPI / callOllamaAPI / callOpenAICompatAPI / callAnthropicAPI", "status": "live", "detail": "Gemini (gemini-2.0-flash generateContent), Ollama (/api/chat, local), OpenAI-compatible (/chat/completions, custom baseUrl), Anthropic (/messages). Keys from chrome.storage.local; only metadata + snippet leave the browser."},
+      {"name": "Triage prompt builders", "file": "Extension/background/service-worker.js :: _buildTriageSystemPrompt / _buildTriageUserPrompt / _parseTriageResponse", "status": "live", "detail": "System prompt enumerates valid tiers + sub-labels and instructs label='' confidence=0 when unsure. User prompt carries From/Subject/Snippet. Response parser tolerates non-JSON and logs the raw text for debugging."}
+    ]
+  },
+  {
+    "category": "Side Panel & Localization",
+    "features": [
+      {"name": "Chat-style side panel", "file": "Extension/sidepanel/sidepanel.js + sidepanel.html", "status": "live", "detail": "sendMessage() promisifies chrome.runtime.sendMessage. addChatBubble/HTML render the conversation. init() wires login/app states, theme, welcome guide. Theme via applyThemeSP()/loadTheme()."},
+      {"name": "Stuck-label retry machine", "file": "Extension/sidepanel/sidepanel.js :: retryStuckLabels() / guideManualCleanup()", "status": "live", "detail": "_stuckState tracks failed label IDs + attempt number. Attempt 1 retries via the worker; if still stuck, escalates to attempt 2; final fallback shows explicit manual-cleanup guidance (no infinite retry)."},
+      {"name": "i18n system", "file": "Extension/shared/i18n.js + command-i18n.js + guide-i18n.js", "status": "live", "detail": "Works in both worker and page contexts. 10 locales under _locales/ (en, zh_CN, fr, de, ja, ko, pt_BR, es, hi, ru). command-i18n covers commands, guide-i18n covers onboarding, i18n covers UI strings."},
+      {"name": "Content script (Gmail enhance)", "file": "Extension/content/gmail-enhance.js + gmail-enhance.css", "status": "live", "detail": "Injected at document_idle on https://mail.google.com/*. Enhances the Gmail surface; CSS loaded alongside."}
+    ]
+  },
+  {
+    "category": "Tooling & Tests",
+    "features": [
+      {"name": "Build & version tooling", "file": "Tools/build_zips_v117.py, bump_version_117.py, build_tester_package.py", "status": "live", "detail": "Versioned build scripts package the Chrome + Edge zips and bump version strings across manifest, locales, and tests. Current build v1.2.1 (EasyFlow_Chrome.zip / EasyFlow_Edge.zip)."},
+      {"name": "i18n maintenance scripts", "file": "Tools/add_*_i18n.py, scaffold_locale.py, check_locales_v117.py", "status": "live", "detail": "~30 Python helpers that add/verify translation keys across the 10 locale files — the i18n upkeep toolchain."},
+      {"name": "Extension test suites", "file": "Extension/tests/regression_test.js, dry_run.js, node_test.js, v12_feature_test.js", "status": "live", "detail": "dry_run.js validates label ops without live API calls; regression + v12 feature tests cover extension logic. Run manually (no CI wiring yet)."},
+      {"name": "Python smoke test", "file": "tests/test_smoke.py", "status": "partial", "detail": "Project smoke test scaffold under tests/. Not yet wired into an automated runner."},
+      {"name": "Brain reporting hooks", "file": "Tools/brain_log_session.py, brain_update_state.py", "status": "partial", "detail": "Helper scripts to report sessions/state to QI Brain. Hive reporting block is present in .claude/CLAUDE.md; full qi.* integration still pending."}
+    ]
+  }
+]

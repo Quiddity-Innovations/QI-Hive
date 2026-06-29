@@ -1,0 +1,60 @@
+[
+  {
+    "category": "Personal AI Chat",
+    "features": [
+      {"name": "Direct technical conversation", "description": "Naya answers questions across technical domains without dumbing down or padding answers with filler.", "status": "live", "notes": "Domains: AI/ML, physics, programming, networking, VMs, Docker, languages, sysadmin"},
+      {"name": "Telegram is the chat surface", "description": "Renne talks to Naya through the @Naya_qi_bot Telegram bot. Long-poll only, so no public URL is ever exposed; only authorised chat IDs are answered.", "status": "live", "notes": "naya.telegram_allowed_chat_ids gate; runs as a daemon polling thread inside the server"},
+      {"name": "8-model LLM chain with failover", "description": "If one model is down or slow, Naya automatically tries the next in priority order until it gets a usable answer.", "status": "live", "notes": "llm_chain table in naya.db: DeepSeek-R1 8B -> Cloudflare Qwen -> GPT-OSS 20B local -> Gemma3:27b -> Qwen3:4b -> MiniMax M2.5 -> GPT-OSS 120B -> Claude Sonnet"},
+      {"name": "Local-first, free-first models", "description": "Local Ollama models answer first (free, private, offline). Free cloud tiers next. Claude Sonnet is reserved as the high-quality last resort.", "status": "live", "notes": "personal.anthropic_mode = fallback | always | never"},
+      {"name": "Multi-AI synthesis via NEXUS", "description": "For genuinely hard questions Naya can ask the sibling NEXUS project to fan one prompt out to many AIs and merge the best answer.", "status": "partial", "notes": "_try_nexus_synthesize() calls NEXUS :8010 /synthesize; gated by personal.nexus_enabled (off by default)"},
+      {"name": "Conversation memory", "description": "Naya remembers earlier turns in a conversation and builds on them.", "status": "live", "notes": "conversations table (690 rows); sliding window per conv_key, personal.history_limit = 30"},
+      {"name": "Multi-language", "description": "Naya detects the owner's language and responds in it, reusing Maia's language engine.", "status": "live", "notes": "maia_lang.detect_input_language + build_language_instruction"}
+    ]
+  },
+  {
+    "category": "File Intelligence (Hands)",
+    "features": [
+      {"name": "Find exact duplicates", "description": "Naya scans drives and finds files that are byte-for-byte identical, grouping them and reporting how much space you would reclaim by keeping one copy.", "status": "live", "notes": "naya_scanner.start_exact_scan — size pre-filter then SHA-256; results in naya_brain.db (2.7M similarity-group rows recorded)"},
+      {"name": "Find near-duplicates by name", "description": "Catches files that are not identical but clearly related — same name, slightly different content — so scattered versions can be reconciled.", "status": "live", "notes": "naya_scanner.start_fuzzy_scan — difflib fuzzy name matching"},
+      {"name": "Disk space analysis", "description": "Ask 'where did my space go?' and Naya reports drive usage plus ranked cleanup candidates: temp, browser/app caches, recycle bin, duplicates, old large files.", "status": "live", "notes": "naya_advisor.analyze_storage — combines its own scanners with FileHQ index queries"},
+      {"name": "Find largest / oldest files", "description": "Surface the biggest disk hogs or the files you have not touched in years.", "status": "live", "notes": "find_largest / find_oldest action handlers"},
+      {"name": "Folder insights", "description": "Ask 'what's in folder X?' and Naya summarises counts, total size, dominant file types, age range, and the top files.", "status": "live", "notes": "naya_memory.folder_insight — reads the FileHQ index, caches in naya_brain.db for 24h"},
+      {"name": "USB cross-reference", "description": "Plug in a USB drive and Naya can compare its contents against your main drive to flag what is already a duplicate.", "status": "live", "notes": "naya_scanner.detect_usb_belongings"},
+      {"name": "Configurable scan target", "description": "The drive Naya scans is a config value, not hardcoded — point it anywhere.", "status": "live", "notes": "personal.default_scan_drive (default C:\\1-AI); personal.file_scan_root"}
+    ]
+  },
+  {
+    "category": "Safe Action & Cleanup",
+    "features": [
+      {"name": "Cleanup advisor workflow", "description": "The 'running out of space' flow: Naya analyses, proposes a plan, remembers it, and executes only on your approval.", "status": "live", "notes": "naya_advisor.create_plan / handle_chat; plans stored in naya_brain.db"},
+      {"name": "Permission gate", "description": "Every file-modifying action requires explicit approval. A blocked action tells you the exact phrase to say to enable it, then retry.", "status": "live", "notes": "_is_approved() checks naya.db flags; personal.file_modify_approved=false, file_scan_approved=true"},
+      {"name": "Recycle-bin-first deletes", "description": "Deletions go to the Windows recycle bin by default. Permanent deletion happens only on explicit consent.", "status": "live", "notes": "send2trash; permanent delete is opt-in"},
+      {"name": "Undo", "description": "Naya moves files to a TRASH folder and logs every batch, so the last operation can be fully reversed.", "status": "live", "notes": "naya_executor.undo_last() / undo_batch(); operations logged in naya_brain.db"},
+      {"name": "Never deletes the keep copy", "description": "When clearing duplicates, Naya always preserves one copy of each group (the oldest).", "status": "live", "notes": "naya_executor never removes is_oldest member"},
+      {"name": "Reports in any format", "description": "Generate a space, duplicates, actions, deferred, or full report as PDF, Word, Markdown, or plain text.", "status": "live", "notes": "naya_reporter.generate_report; saved to C:\\NAYA\\REPORTS\\"}
+    ]
+  },
+  {
+    "category": "Automation & Background Watchers",
+    "features": [
+      {"name": "Chat-driven deferral", "description": "Say 'not now' or 'do it tonight' and Naya saves the pending action and runs it later, off-hours.", "status": "live", "notes": "naya_deferral; stored as naya_intents (status=deferred) in naya_brain.db"},
+      {"name": "Natural-language scheduling", "description": "Say 'run daily at 2am' and Naya creates a real Windows Task Scheduler task to run the job on schedule.", "status": "live", "notes": "naya_deferral creates tasks under the Naya\\ prefix via schtasks"},
+      {"name": "Disk-space monitor", "description": "Naya watches every drive and alerts you on Telegram when free space drops below your threshold.", "status": "live", "notes": "naya_watcher.disk_monitor_tick; low_space_threshold_pct / _gb settings"},
+      {"name": "USB watcher", "description": "Naya notices when a new external drive appears and can queue it for an overnight scan.", "status": "live", "notes": "naya_watcher.usb_watcher_tick — polls drive letters every ~60s"},
+      {"name": "Off-hours scheduler", "description": "Heavy queued jobs run during configured quiet hours, with idle detection, so scans never compete with your work.", "status": "live", "notes": "naya_watcher off-hours scheduler tick; quiet_hours_start/end settings"},
+      {"name": "Proactive reminders", "description": "If you once said 'I should clean folder X', Naya can resurface that intent later: 'You mentioned X a few weeks ago — want to do it now?'", "status": "live", "notes": "naya_memory.capture_intent + reminder_message injected at start of a turn"}
+    ]
+  },
+  {
+    "category": "Operations & Ecosystem",
+    "features": [
+      {"name": "Gradio operator console", "description": "A local web console with Chat, File Manager, Naya Brain, Settings, and Logs tabs for managing Naya from the browser.", "status": "live", "notes": "naya_gradio.py on port 7861, QI_NayaGradio service"},
+      {"name": "24/7 Windows services", "description": "Naya runs as managed NSSM services so it is always available without a terminal open.", "status": "live", "notes": "QI_NayaBot (8002) + QI_NayaGradio (7861), both SERVICE_RUNNING"},
+      {"name": "LAN-only by design", "description": "Naya is deliberately not exposed to the internet. Telegram works via outbound polling, so no inbound port is opened.", "status": "live", "notes": "Registry: never expose via Cloudflare. One demo tunnel (QI_NayaTunnel) exposes only the UI for occasional remote demos"},
+      {"name": "FileHQ file engine (merged)", "description": "FileHQ was absorbed as Naya's file engine — a FastAPI service Naya can call for deep file content and indexing.", "status": "partial", "notes": "filehq/ package, auto-started on internal port 8200 via filehq_bridge.py when first needed"},
+      {"name": "Cross-bot peer bridge", "description": "Because Telegram refuses bot-to-bot delivery, Naya carries HMAC-signed messages to and from sibling bots (Tasuke, Maia) over an HTTP bridge in a shared chat.", "status": "partial", "notes": "POST /webhook/peer-bridge; also janitors sibling-bot status-leak messages"},
+      {"name": "LINE channel (Naya OA)", "description": "An optional LINE Official Account interface, off unless credentials are present.", "status": "partial", "notes": "naya_line.py — no-ops gracefully without the LINE SDK or creds"},
+      {"name": "QI Brain logging", "description": "Register Naya sessions and decisions in the QI Brain for cross-project memory.", "status": "planned", "notes": "Not yet wired"}
+    ]
+  }
+]

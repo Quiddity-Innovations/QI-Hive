@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+    <marker id="arr-sky" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="640" fill="#f8fafc" rx="12"/>
+  <text x="450" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2d3d">FileHQ — System Architecture</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · File Intelligence Engine · merged into Naya · 2026</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="688" y="58" width="204" height="190" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="790" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="696" y="83" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="716" y="92" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="696" y="100" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="716" y="109" font-size="9" fill="#374151">Built · Partial / Pending</text>
+  <rect x="696" y="117" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="716" y="126" font-size="9" fill="#374151">Planned</text>
+  <rect x="696" y="134" width="14" height="10" rx="2" fill="#fef3c7" stroke="#b8860b" stroke-dasharray="3,2"/>
+  <text x="716" y="143" font-size="9" fill="#374151">Caution / Destructive (gated)</text>
+  <rect x="696" y="151" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="716" y="160" font-size="9" fill="#374151">Core engine (dark box)</text>
+  <line x1="696" y1="176" x2="714" y2="176" stroke="#0284c7" stroke-width="2" marker-end="url(#arr-sky)"/>
+  <text x="720" y="180" font-size="9" fill="#374151">Read (DB / index)</text>
+  <line x1="696" y1="193" x2="714" y2="193" stroke="#b8860b" stroke-width="2" marker-end="url(#arr-orange)"/>
+  <text x="720" y="197" font-size="9" fill="#374151">Write (disk, on approval)</text>
+  <line x1="696" y1="210" x2="714" y2="210" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="720" y="214" font-size="9" fill="#374151">Naya consumes (read-only)</text>
+  <text x="790" y="234" text-anchor="middle" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+
+  <!-- ══ NAYA WRAPPER (parent / consumer) ══ -->
+  <rect x="8" y="62" width="500" height="92" rx="9" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="20" y="56" width="200" height="14" rx="3" fill="#f8fafc"/>
+  <text x="120" y="67" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700" letter-spacing="1">NAYA (PARENT · CONSUMER)</text>
+
+  <rect x="16" y="74" width="150" height="72" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="91" y="94" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Naya Bot</text>
+  <text x="91" y="110" text-anchor="middle" font-size="8" fill="#3b82f6">LINE · Telegram · Web</text>
+  <text x="91" y="123" text-anchor="middle" font-size="8" fill="#3b82f6">Asks file questions</text>
+  <text x="91" y="136" text-anchor="middle" font-size="8" fill="#3b82f6">in plain language</text>
+
+  <rect x="176" y="74" width="160" height="72" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="256" y="93" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">filehq_bridge.py</text>
+  <text x="256" y="108" text-anchor="middle" font-size="8" fill="#3b82f6">Intent + action detect</text>
+  <text x="256" y="120" text-anchor="middle" font-size="8" fill="#3b82f6">REST + direct-DB (ro)</text>
+  <text x="256" y="132" text-anchor="middle" font-size="8" fill="#3b82f6">Injects live context</text>
+  <text x="256" y="143" text-anchor="middle" font-size="8" fill="#1e40af">Approval gate on writes</text>
+
+  <rect x="346" y="74" width="156" height="72" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="424" y="93" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">naya.db</text>
+  <text x="424" y="109" text-anchor="middle" font-size="8" fill="#3b82f6">personal.default_scan_drive</text>
+  <text x="424" y="122" text-anchor="middle" font-size="8" fill="#3b82f6">overrides FileHQ's</text>
+  <text x="424" y="134" text-anchor="middle" font-size="8" fill="#3b82f6">primary_drive setting</text>
+
+  <!-- bridge -> FileHQ API (REST) -->
+  <line x1="256" y1="154" x2="256" y2="196" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="262" y="180" font-size="8" fill="#3b82f6">HTTP /api/* · 127.0.0.1</text>
+
+  <!-- ══ FILEHQ FASTAPI ENGINE (dark core) ══ -->
+  <rect x="14" y="196" width="660" height="58" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="344" y="218" text-anchor="middle" font-size="13" font-weight="700" fill="white">FileHQ Engine — FastAPI + Uvicorn (main.py · port 8000)</text>
+  <text x="344" y="236" text-anchor="middle" font-size="9" fill="#94a3b8">50+ /api/* routes · Jinja2 dashboard (11 templates) · threaded jobs (_job_lock) · APScheduler · launched by Naya</text>
+  <text x="344" y="249" text-anchor="middle" font-size="8" fill="#64748b">Python 3.11 · v0.1.0 · C:\NAYA\filehq\</text>
+
+  <!-- API -> pipeline arrows -->
+  <line x1="110" y1="254" x2="110" y2="282" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="265" y1="254" x2="265" y2="282" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="420" y1="254" x2="420" y2="282" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="575" y1="254" x2="575" y2="282" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ══ PIPELINE LAYER ══ -->
+  <text x="18" y="274" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">PROCESSING PIPELINE (read-first)</text>
+
+  <rect x="14" y="282" width="192" height="96" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="110" y="300" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">1 · Scanner</text>
+  <text x="110" y="316" text-anchor="middle" font-size="8" fill="#2e7d32">scanner.py · os.walk</text>
+  <text x="110" y="329" text-anchor="middle" font-size="8" fill="#2e7d32">Incremental index</text>
+  <text x="110" y="342" text-anchor="middle" font-size="8" fill="#2e7d32">Skip system/junk dirs</text>
+  <text x="110" y="357" text-anchor="middle" font-size="8" fill="#2e7d32">2 · Categorizer</text>
+  <text x="110" y="370" text-anchor="middle" font-size="8" fill="#5f8a66">categorizer.py · ext + era</text>
+
+  <rect x="218" y="282" width="192" height="96" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="314" y="300" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">3 · Hasher</text>
+  <text x="314" y="316" text-anchor="middle" font-size="8" fill="#2e7d32">hasher.py · xxhash64</text>
+  <text x="314" y="329" text-anchor="middle" font-size="8" fill="#2e7d32">size → partial → full</text>
+  <text x="314" y="344" text-anchor="middle" font-size="8" fill="#1b4d22">4 · Duplicate finder</text>
+  <text x="314" y="357" text-anchor="middle" font-size="8" fill="#2e7d32">dedup.py · group by hash</text>
+  <text x="314" y="370" text-anchor="middle" font-size="8" fill="#5f8a66">keep oldest (is_oldest)</text>
+
+  <rect x="422" y="282" width="192" height="96" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="518" y="300" text-anchor="middle" font-size="11" font-weight="700" fill="#7a5b06">5 · Organizer</text>
+  <text x="518" y="316" text-anchor="middle" font-size="8" fill="#9a7a2e">structure · planner</text>
+  <text x="518" y="329" text-anchor="middle" font-size="8" fill="#9a7a2e">executor · undo</text>
+  <text x="518" y="342" text-anchor="middle" font-size="8" fill="#9a7a2e">ARCHIVE tree plan</text>
+  <rect x="436" y="350" width="164" height="20" rx="5" fill="#fef3c7" stroke="#b8860b" stroke-dasharray="3,2"/>
+  <text x="518" y="364" text-anchor="middle" font-size="8" font-weight="600" fill="#7a5b06">⚠ Destructive — needs approval</text>
+
+  <rect x="626" y="282" width="48" height="96" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="650" y="320" text-anchor="middle" font-size="9" font-weight="700" fill="#1b4d22" transform="rotate(90 650 330)">6 · Maintenance (VACUUM)</text>
+
+  <!-- pipeline -> DB reads/writes -->
+  <line x1="110" y1="378" x2="110" y2="430" stroke="#0284c7" stroke-width="1.6" marker-end="url(#arr-sky)"/>
+  <line x1="314" y1="378" x2="314" y2="430" stroke="#0284c7" stroke-width="1.6" marker-end="url(#arr-sky)"/>
+  <line x1="518" y1="378" x2="518" y2="404" stroke="#b8860b" stroke-width="1.6" marker-end="url(#arr-orange)"/>
+  <text x="524" y="396" font-size="8" fill="#b8860b">moves files →</text>
+
+  <!-- ══ DATA / TARGET LAYER ══ -->
+  <text x="18" y="424" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">DATA &amp; TARGETS</text>
+
+  <!-- filehq.db -->
+  <rect x="14" y="430" width="400" height="86" rx="9" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="214" y="450" text-anchor="middle" font-size="12" font-weight="700" fill="#0c4a6e">filehq.db (SQLite · WAL · FK on)</text>
+  <text x="214" y="468" text-anchor="middle" font-size="9" fill="#0369a1">8 app tables · schema_version 1 · C:\NAYA\filehq\db\</text>
+  <text x="214" y="484" text-anchor="middle" font-size="9" fill="#0284c7">~2,858,834 files · 694 dup groups · 1,618 members</text>
+  <text x="214" y="499" text-anchor="middle" font-size="9" fill="#0284c7">26 scans · 1 exception · operations log (+ undo)</text>
+  <text x="214" y="511" text-anchor="middle" font-size="8" fill="#0369a1">see filehq_schema.svg for full table map</text>
+
+  <!-- scanned drive -->
+  <rect x="426" y="430" width="188" height="86" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="520" y="450" text-anchor="middle" font-size="11" font-weight="700" fill="#7a5b06">Scanned Drive</text>
+  <text x="520" y="467" text-anchor="middle" font-size="8" fill="#9a7a2e">primary_drive (from naya.db)</text>
+  <text x="520" y="480" text-anchor="middle" font-size="8" fill="#9a7a2e">read on scan/hash</text>
+  <text x="520" y="493" text-anchor="middle" font-size="8" fill="#9a7a2e">written only on approved</text>
+  <text x="520" y="505" text-anchor="middle" font-size="8" fill="#9a7a2e">organize / dedup execute</text>
+
+  <!-- Naya reads DB read-only (long arrow back up) -->
+  <path d="M 14 460 H 6 V 110 H 16" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="5,3" marker-end="url(#arr-blue)"/>
+  <text x="30" y="300" font-size="8" fill="#3b82f6" transform="rotate(90 30 300)">Naya reads filehq.db read-only (mode=ro)</text>
+
+  <!-- ══ ECOSYSTEM (NEXUS) ══ -->
+  <rect x="626" y="430" width="48" height="86" rx="9" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="650" y="473" text-anchor="middle" font-size="9" font-weight="700" fill="#475569" transform="rotate(90 650 473)">NEXUS (planned)</text>
+
+  <!-- footer note -->
+  <rect x="14" y="530" width="660" height="96" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <text x="28" y="550" font-size="9.5" fill="#6b7280" font-weight="700">Merged-status notes</text>
+  <text x="28" y="567" font-size="9" fill="#6b7280">• Registry status = merged_into_naya. No standalone QI_* service — Naya launches the engine.</text>
+  <text x="28" y="582" font-size="9" fill="#6b7280">• Engine code, config.yaml and qi_registry bind port 8000; filehq_bridge.py calls 8200 — a known discrepancy to reconcile.</text>
+  <text x="28" y="597" font-size="9" fill="#6b7280">• Read-first by design: only the dedup + organize executors mutate disk, and only with explicit owner approval.</text>
+  <text x="28" y="612" font-size="9" fill="#6b7280">• Near-duplicate similarity + document content extraction are planned, not yet built.</text>
+</svg>

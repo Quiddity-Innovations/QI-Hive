@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+    <marker id="arr-sky" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- Background + title -->
+  <rect width="960" height="640" fill="#f8fafc" rx="12"/>
+  <text x="480" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2d3d">M2V — System Architecture</text>
+  <text x="480" y="49" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · Music to Video · status: new · 2026</text>
+  <text x="480" y="65" text-anchor="middle" font-size="10" fill="#9aa5b1">Local-only generative pipeline · FastAPI :8501 + Gradio :7841 · no cloud generation API · in-memory jobs</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="744" y="78" width="206" height="150" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="847" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="754" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="774" y="113" font-size="9" fill="#374151">Live / verified running</text>
+  <rect x="754" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="774" y="130" font-size="9" fill="#374151">Built · Partial (lightly run)</text>
+  <rect x="754" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="774" y="147" font-size="9" fill="#374151">Planned</text>
+  <rect x="754" y="155" width="14" height="10" rx="2" fill="#fde8e8" stroke="#c0392b" stroke-dasharray="3,2"/>
+  <text x="774" y="164" font-size="9" fill="#374151">Caution / stale (config drift)</text>
+  <rect x="754" y="172" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="774" y="181" font-size="9" fill="#374151">Core box (dark = engine)</text>
+  <line x1="754" y1="197" x2="772" y2="197" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="778" y="201" font-size="9" fill="#374151">Data / control flow</text>
+  <text x="847" y="220" text-anchor="middle" font-size="8" fill="#9aa5b1">Quiddity Innovations © 2026</text>
+
+  <!-- ══ USERS ══ -->
+  <rect x="20" y="84" width="430" height="78" rx="9" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="32" y="78" width="56" height="14" rx="3" fill="#f8fafc"/>
+  <text x="60" y="89" text-anchor="middle" font-size="10" fill="#a855f7" font-weight="700" letter-spacing="1">USERS</text>
+
+  <rect x="30" y="96" width="130" height="56" rx="7" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="95" y="116" text-anchor="middle" font-size="11" font-weight="700" fill="#581c87">Creator / Musician</text>
+  <text x="95" y="131" text-anchor="middle" font-size="8" fill="#7e22ce">Uploads track + lyrics</text>
+  <text x="95" y="143" text-anchor="middle" font-size="8" fill="#7e22ce">picks style + ref photo</text>
+
+  <rect x="170" y="96" width="130" height="56" rx="7" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="235" y="116" text-anchor="middle" font-size="11" font-weight="700" fill="#581c87">Operator (Renne)</text>
+  <text x="235" y="131" text-anchor="middle" font-size="8" fill="#7e22ce">Runs service · GPU cache</text>
+  <text x="235" y="143" text-anchor="middle" font-size="8" fill="#7e22ce">monitors render jobs</text>
+
+  <rect x="310" y="96" width="130" height="56" rx="7" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <text x="375" y="116" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">QI Ecosystem</text>
+  <text x="375" y="131" text-anchor="middle" font-size="8" fill="#94a3b8">Calls /health /version</text>
+  <text x="375" y="143" text-anchor="middle" font-size="8" fill="#94a3b8">/info contract</text>
+
+  <!-- arrow Users -> Access -->
+  <line x1="235" y1="162" x2="235" y2="186" stroke="#a855f7" stroke-width="2" marker-end="url(#arr-purple)"/>
+
+  <!-- ══ ACCESS LAYER ══ -->
+  <text x="22" y="180" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">ACCESS</text>
+  <rect x="30" y="186" width="200" height="52" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="130" y="206" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">Gradio UI</text>
+  <text x="130" y="221" text-anchor="middle" font-size="8.5" fill="#5f8a66">ui/app.py · :7841 · live log</text>
+  <text x="130" y="233" text-anchor="middle" font-size="8.5" fill="#5f8a66">upload · style · progress · player</text>
+
+  <rect x="240" y="186" width="200" height="52" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="340" y="206" text-anchor="middle" font-size="11" font-weight="700" fill="#7a5b06">QI_M2V service + tunnel</text>
+  <text x="340" y="221" text-anchor="middle" font-size="8.5" fill="#9a7a2e">NSSM · named tunnel qi-m2v</text>
+  <text x="340" y="233" text-anchor="middle" font-size="8.5" fill="#9a7a2e">m2v.quiddityinnovations.com</text>
+
+  <!-- arrow Access -> API -->
+  <line x1="235" y1="238" x2="235" y2="262" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ══ API CORE (dark) ══ -->
+  <rect x="30" y="262" width="700" height="62" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="380" y="283" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">M2V API — FastAPI + Uvicorn · Port 8501</text>
+  <text x="380" y="300" text-anchor="middle" font-size="9.5" fill="#94a3b8">api/main.py · POST /api/generate · GET /api/status/{id}(/events) · /api/download/{id} · /api/extract-lyrics · /api/jobs</text>
+  <text x="380" y="315" text-anchor="middle" font-size="9" fill="#64748b">In-memory JOBS dict · per-job daemon thread · CORS allow_origins=['*'] (to tighten) · /health /version /info</text>
+
+  <!-- arrow API -> pipeline -->
+  <line x1="380" y1="324" x2="380" y2="348" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ══ PIPELINE ENGINE (dark) ══ -->
+  <text x="22" y="344" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">PIPELINE ENGINE — engine/pipeline.py :: run()  (yields a progress event per stage)</text>
+  <rect x="30" y="350" width="700" height="120" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+
+  <!-- stage boxes -->
+  <rect x="44" y="366" width="124" height="88" rx="7" fill="#ffffff" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="106" y="385" text-anchor="middle" font-size="10" font-weight="700" fill="#7a5b06">1 · Direct</text>
+  <text x="106" y="400" text-anchor="middle" font-size="8" fill="#9a7a2e">lyric_analyzer.py</text>
+  <text x="106" y="413" text-anchor="middle" font-size="8" fill="#9a7a2e">Ollama qwen3:8b</text>
+  <text x="106" y="426" text-anchor="middle" font-size="8" fill="#9a7a2e">→ scene prompts</text>
+  <text x="106" y="444" text-anchor="middle" font-size="8" fill="#9a7a2e">+ split / fallback</text>
+
+  <rect x="178" y="366" width="124" height="88" rx="7" fill="#ffffff" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="240" y="385" text-anchor="middle" font-size="10" font-weight="700" fill="#7a5b06">2 · Segment</text>
+  <text x="240" y="400" text-anchor="middle" font-size="8" fill="#9a7a2e">audio_analyzer.py</text>
+  <text x="240" y="413" text-anchor="middle" font-size="8" fill="#9a7a2e">librosa MFCC</text>
+  <text x="240" y="426" text-anchor="middle" font-size="8" fill="#9a7a2e">→ scene windows</text>
+  <text x="240" y="444" text-anchor="middle" font-size="8" fill="#9a7a2e">even-split fallback</text>
+
+  <rect x="312" y="366" width="124" height="88" rx="7" fill="#fffaf0" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="374" y="385" text-anchor="middle" font-size="10" font-weight="700" fill="#7a5b06">3 · Image</text>
+  <text x="374" y="400" text-anchor="middle" font-size="8" fill="#9a7a2e">video_generator.py</text>
+  <text x="374" y="413" text-anchor="middle" font-size="8" fill="#9a7a2e">SDXL Base 1.0</text>
+  <text x="374" y="426" text-anchor="middle" font-size="8" fill="#9a7a2e">+ IP-Adapter (faces)</text>
+  <text x="374" y="444" text-anchor="middle" font-size="8" fill="#c0392b">partial · GPU weights</text>
+
+  <rect x="446" y="366" width="124" height="88" rx="7" fill="#fffaf0" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="508" y="385" text-anchor="middle" font-size="10" font-weight="700" fill="#7a5b06">4 · Animate</text>
+  <text x="508" y="400" text-anchor="middle" font-size="8" fill="#9a7a2e">video_generator.py</text>
+  <text x="508" y="413" text-anchor="middle" font-size="8" fill="#9a7a2e">Stable Video Diff.</text>
+  <text x="508" y="426" text-anchor="middle" font-size="8" fill="#9a7a2e">25f → clip; loop fill</text>
+  <text x="508" y="444" text-anchor="middle" font-size="8" fill="#c0392b">partial · VRAM-tight</text>
+
+  <rect x="580" y="366" width="136" height="88" rx="7" fill="#ffffff" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="648" y="385" text-anchor="middle" font-size="10" font-weight="700" fill="#7a5b06">5 · Assemble</text>
+  <text x="648" y="400" text-anchor="middle" font-size="8" fill="#9a7a2e">assembler.py · FFmpeg</text>
+  <text x="648" y="413" text-anchor="middle" font-size="8" fill="#9a7a2e">concat · audio mux</text>
+  <text x="648" y="426" text-anchor="middle" font-size="8" fill="#9a7a2e">burn SRT subtitles</text>
+  <text x="648" y="444" text-anchor="middle" font-size="8" fill="#5f8a66">→ final MP4</text>
+
+  <!-- inter-stage arrows -->
+  <line x1="168" y1="410" x2="178" y2="410" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="302" y1="410" x2="312" y2="410" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="436" y1="410" x2="446" y2="410" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="570" y1="410" x2="580" y2="410" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- ══ LOCAL MODELS sidebar ══ -->
+  <rect x="744" y="262" width="206" height="208" rx="9" fill="#f0fdf4" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="847" y="282" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">Local AI Models</text>
+  <text x="847" y="296" text-anchor="middle" font-size="8" fill="#5f8a66">(GPU — RTX 5080, 16GB)</text>
+  <text x="756" y="316" font-size="9" fill="#166534">• Ollama qwen3:8b — director</text>
+  <text x="756" y="333" font-size="9" fill="#166534">• SDXL Base 1.0 — stills</text>
+  <text x="756" y="350" font-size="9" fill="#166534">• IP-Adapter — face match</text>
+  <text x="756" y="367" font-size="9" fill="#166534">• Stable Video Diffusion</text>
+  <text x="756" y="384" font-size="9" fill="#166534">• Whisper — lyric transcribe</text>
+  <text x="756" y="401" font-size="9" fill="#166534">• FFmpeg — assembly</text>
+  <rect x="756" y="412" width="182" height="46" rx="6" fill="#eafaf0" stroke="#2e7d32" stroke-dasharray="none"/>
+  <text x="847" y="429" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b4d22">SDXL + SVD load/unload</text>
+  <text x="847" y="442" text-anchor="middle" font-size="8" fill="#5f8a66">alternately to fit 16GB VRAM</text>
+  <text x="847" y="453" text-anchor="middle" font-size="8" fill="#5f8a66">~20-30 min for 10 scenes</text>
+
+  <!-- engine -> models -->
+  <line x1="730" y1="408" x2="744" y2="370" stroke="#2e7d32" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- ══ OUTPUT / STORAGE ══ -->
+  <text x="22" y="492" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">FILE STORAGE  (no database — in-memory jobs)</text>
+  <line x1="380" y1="470" x2="380" y2="500" stroke="#0284c7" stroke-width="1.4" marker-end="url(#arr-sky)"/>
+
+  <rect x="30" y="500" width="168" height="56" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="114" y="520" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">data/uploads/</text>
+  <text x="114" y="535" text-anchor="middle" font-size="8" fill="#0284c7">incoming audio +</text>
+  <text x="114" y="547" text-anchor="middle" font-size="8" fill="#0284c7">reference photos</text>
+
+  <rect x="208" y="500" width="168" height="56" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="292" y="520" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">data/scenes/&lt;job&gt;/</text>
+  <text x="292" y="535" text-anchor="middle" font-size="8" fill="#0284c7">per-scene clips</text>
+  <text x="292" y="547" text-anchor="middle" font-size="8" fill="#0284c7">clip_000.mp4 …</text>
+
+  <rect x="386" y="500" width="168" height="56" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="470" y="520" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">data/output/</text>
+  <text x="470" y="535" text-anchor="middle" font-size="8" fill="#0284c7">final &lt;job&gt;.mp4 + .srt</text>
+  <text x="470" y="547" text-anchor="middle" font-size="8" fill="#0284c7">3 renders to date</text>
+
+  <rect x="564" y="500" width="166" height="56" rx="7" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="647" y="520" text-anchor="middle" font-size="10" font-weight="700" fill="#581c87">data/logs/m2v.log</text>
+  <text x="647" y="535" text-anchor="middle" font-size="8" fill="#7e22ce">service launch log</text>
+  <text x="647" y="547" text-anchor="middle" font-size="8" fill="#7e22ce">/health OK confirmed</text>
+
+  <!-- ══ STANDALONE POC band ══ -->
+  <rect x="30" y="572" width="700" height="50" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="44" y="590" font-size="9.5" fill="#475569" font-weight="700">STANDALONE PROOF-OF-CONCEPT (parallel track — to consolidate):</text>
+  <text x="44" y="605" font-size="9" fill="#6b7280">make_forro_video.py (MoviePy: Ken Burns + crossfades + captions) ← scenes.json → generate_frames.py (drives external ComfyUI :8188)</text>
+  <text x="44" y="617" font-size="9" fill="#6b7280">Rendered forro_anime_mv.mp4 (1920×1080, 160s) using placeholder frames — first full M2V video. ComfyUI frame gen not yet run.</text>
+
+  <!-- models sidebar lower note (stale config) -->
+  <rect x="744" y="572" width="206" height="50" rx="8" fill="#fde8e8" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <text x="847" y="589" text-anchor="middle" font-size="9" font-weight="700" fill="#922b21">Config drift</text>
+  <text x="847" y="603" text-anchor="middle" font-size="8" fill="#a04134">config/m2v.json names sdxl-turbo</text>
+  <text x="847" y="615" text-anchor="middle" font-size="8" fill="#a04134">+ CogVideoX — engine uses neither</text>
+</svg>

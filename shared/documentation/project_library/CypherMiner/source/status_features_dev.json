@@ -1,0 +1,85 @@
+[
+  {
+    "category": "Core — Registry & Type System",
+    "features": [
+      {"name": "Tool contract", "file": "frontend/src/types.ts", "status": "live", "detail": "Defines Lang ('en'|'pt'), Loc (Record<Lang,string>), CategoryId (crypto|encoding|math|lottery|text), the ToolInput union (text/textarea/number/range/select), and the Tool interface: id, category, icon, name, blurb, inputs, run(values,ctx) -> string|Promise<string>, optional visual(values,container,ctx)."},
+      {"name": "Tool registry", "file": "frontend/src/core/registry.ts :: register / allTools / toolsByCategory / getTool / allCategories", "status": "live", "detail": "In-memory array of tools + a fixed 5-category list. register() de-dupes by id (warns + ignores duplicates). Importing a tool module calls register() as a side effect — self-registration."},
+      {"name": "Registration index", "file": "frontend/src/tools/index.ts", "status": "live", "detail": "Single import list that pulls in all 59 tool modules (19 crypto, 13 encoding, 14 math, 2 lottery, 11 text). Imported once by main.ts so every tool self-registers. Adding a tool = one file + one import line here."},
+      {"name": "App bootstrap", "file": "frontend/src/main.ts", "status": "live", "detail": "Imports styles, the UI shell, ./tools (self-register) and ./content (educational metadata), loads config.json, then mounts the UI into #app. Config load is awaited (finally) so defaults apply even offline."}
+    ]
+  },
+  {
+    "category": "Core — UI Shell (framework-free)",
+    "features": [
+      {"name": "UI shell & router", "file": "frontend/src/core/ui.ts :: mount / renderMain / renderToolView", "status": "live", "detail": "~600-line vanilla-TS shell: el() DOM helper, hash router (#/tool/:id, #/cat/:id, #/about, #/), header (theme/lang/assistant/about chips), collapsible+pinnable sidebar with search, hero/category/tool views. No UI framework."},
+      {"name": "Live tool runner", "file": "frontend/src/core/ui.ts :: renderToolView() update()", "status": "live", "detail": "Builds the input form from tool.inputs, recomputes tool.run() on every input event, supports async tools via a runToken guard against out-of-order Promise results, renders errors with a leading warning glyph, and calls tool.visual() when present."},
+      {"name": "i18n layer", "file": "frontend/src/core/i18n.ts :: getLang / setLang / loc / t", "status": "live", "detail": "UI strings as Loc {en,pt}; loc(s) returns the active language with EN fallback; t(key) resolves a UI string. Current lang persisted to localStorage ('cm-lang'); default 'en'."},
+      {"name": "Theme & favorites", "file": "frontend/src/core/theme.ts, frontend/src/core/favorites.ts", "status": "live", "detail": "theme.ts toggles data-theme (dark/light, CSS variables) persisted as 'cm-theme'. favorites.ts is a localStorage-backed Set ('cm-favs') with isFav/toggleFav/favIds; favourites pin to the sidebar top."},
+      {"name": "Runtime config loader", "file": "frontend/src/core/config.ts :: loadConfig / getConfig", "status": "live", "detail": "Fetches ./config.json (cache:'no-store') at startup and merges over DEFAULTS (assistantMode, cloudEndpoint, lotteryWizUrl, showAllTools). Falls back to defaults if the file is missing/offline — so a published site is reconfigurable without a rebuild."}
+    ]
+  },
+  {
+    "category": "Tools — Cryptography (19)",
+    "features": [
+      {"name": "Caesar cipher + wheel visual", "file": "frontend/src/tools/crypto/caesar.ts", "status": "live", "detail": "shiftText() does modular alphabet shift; renderWheel() builds an SVG cipher wheel from the current shift. encrypt/decrypt via mode select."},
+      {"name": "Vigenere / Beaufort / Affine / Atbash / ROT13 / ROT47", "file": "frontend/src/tools/crypto/{vigenere,beaufort,affine,atbash,rot13,rot47}.ts", "status": "live", "detail": "Keyword-driven and fixed-rotation substitution ciphers. Vigenere repeats a sanitised key across letter positions; ROT47 spans the 94 printable ASCII chars."},
+      {"name": "Bacon / Polybius / A1Z26 / Substitution / Rail Fence / Scytale", "file": "frontend/src/tools/crypto/{bacon,polybius,a1z26,substitution,railfence,scytale}.ts", "status": "live", "detail": "Encoding-style and transposition ciphers; Polybius and rail fence render grid/zigzag visuals via widgets/visuals.ts."},
+      {"name": "XOR / MD5 / SHA", "file": "frontend/src/tools/crypto/{xor,md5,sha}.ts", "status": "live", "detail": "xor.ts byte-XORs against a key; md5.ts is a from-scratch MD5; sha.ts calls crypto.subtle.digest for SHA-1/256/384/512 and hex-encodes the buffer."},
+      {"name": "Frequency / IoC / Cipher Auto-Solver", "file": "frontend/src/tools/crypto/{frequency,ioc,autosolve}.ts", "status": "live", "detail": "autosolve.ts computes Index of Coincidence, scores all 26 Caesar shifts by chi-squared against English letter frequencies, applies BINARY/HEX/MORSE/BASE64 format heuristics, and returns the top-3 Caesar candidates."}
+    ]
+  },
+  {
+    "category": "Tools — Encoding (13) & Text (11)",
+    "features": [
+      {"name": "Base64 / URL-safe / Base32 / Base58 / ASCII85", "file": "frontend/src/tools/encoding/{base64,base64url,base32,base58,ascii85}.ts", "status": "live", "detail": "base64.ts encodes via TextEncoder -> btoa and decodes atob -> TextDecoder, throwing a clear error on invalid input. Others implement their alphabets directly."},
+      {"name": "Hex / Binary / Unicode / URL / HTML / NATO / Tap / Morse", "file": "frontend/src/tools/encoding/{hex,binary,unicode,url,htmlentities,nato,tapcode,morse}.ts", "status": "live", "detail": "morse.ts holds a full MAP (letters, digits, punctuation), derives the reverse map, and joins words with ' / '. All bidirectional via a mode select."},
+      {"name": "Text transform / analyse / list / generate", "file": "frontend/src/tools/text/*.ts (11 modules)", "status": "live", "detail": "caseconvert, reverse, count, wordfreq, leet, sortlines, dedupe, findreplace, whitespace, slugify, lorem. slugify.ts uses NFD normalise + \\p{M} strip to remove accents before slugging."}
+    ]
+  },
+  {
+    "category": "Tools — Mathematics (14) & Lottery (2)",
+    "features": [
+      {"name": "Integer factorization (BigInt)", "file": "frontend/src/tools/math/factor.ts", "status": "live", "detail": "Heavy-tier number theory: mulmod/powmod, Miller-Rabin isPrime over a fixed witness set, Pollard's rho (pollardRho) and recursive factorize(); groups prime factors as p^e. All BigInt."},
+      {"name": "Prime / GCD-LCM / Modular Inverse / Base / Roman / Num-to-Words", "file": "frontend/src/tools/math/{prime,gcdlcm,modinverse,baseconvert,roman,numwords}.ts", "status": "live", "detail": "Number-theory and representation tools; numwords.ts spells numbers bilingually using ctx.lang."},
+      {"name": "Factorial / Fibonacci / Combinatorics / Quadratic / Stats / Percentage / Temperature", "file": "frontend/src/tools/math/{factorial,fibonacci,combinatorics,quadratic,stats,percentage,temperature}.ts", "status": "live", "detail": "Sequences, combinatorics and everyday calculators; BigInt used where values overflow doubles."},
+      {"name": "Lottery odds & covering wheel", "file": "frontend/src/tools/lottery/{odds,wheel,util}.ts", "status": "live", "detail": "odds.ts uses nCrBig (from util.ts) to compute per-tier 'pick k from n' odds with exact BigInt combination counts; wheel.ts generates a covering play-set. Links out to the QI LotteryWiz app via config.lotteryWizUrl."}
+    ]
+  },
+  {
+    "category": "Educational Content & Visuals",
+    "features": [
+      {"name": "Content store", "file": "frontend/src/core/content.ts :: setDocs / getDoc", "status": "live", "detail": "ToolDoc = {explanation, history, trivia (all Loc), source URL, optional link}. A by-id map populated via setDocs(); getDoc(id) feeds the tool view's 'How it works' + 'History & trivia' panels."},
+      {"name": "Per-category content", "file": "frontend/src/content/{crypto,encoding,math,lottery,text}.ts + index.ts", "status": "live", "detail": "Bilingual explanation/history/trivia/source for tools, kept separate from tool logic so content grows without touching tool modules. index.ts imports all five."},
+      {"name": "Shared visual builders", "file": "frontend/src/widgets/visuals.ts :: mappingStrip / grid5 / railZigzag", "status": "live", "detail": "Reusable HTML/SVG generators: a two-row mapping strip with 'on' highlighting, a 5x5 Polybius grid with row/col headers, and a rail-fence zigzag grid. Consumed by several crypto tools' visual()."}
+    ]
+  },
+  {
+    "category": "Assistant (on-device + cloud)",
+    "features": [
+      {"name": "Assistant selector", "file": "frontend/src/assistant/index.ts :: getAssistant", "status": "live", "detail": "Returns the cloud provider when config.assistantMode === 'cloud', else the local provider. No rebuild needed to switch."},
+      {"name": "Local TF-IDF engine", "file": "frontend/src/assistant/local.ts :: localProvider.ask", "status": "live", "detail": "Builds a weighted token index over each tool's bilingual name/blurb/category/explanation/history/trivia, with a STOP list (EN+PT), synonym expansion (SYN), accent-normalisation and de-pluralisation. Scores tools with squared-IDF weighting, is context-aware (boosts the tool you're viewing), and returns up to 3 matches above a 40% cutoff."},
+      {"name": "Cloud provider", "file": "frontend/src/assistant/cloud.ts :: cloudProvider.ask", "status": "partial", "detail": "POSTs {query,lang,context} to config.cloudEndpoint and expects {text,tools}. Implemented and wired but cloudEndpoint is empty by default, so local mode is what ships. API keys kept server-side, never in config.json."},
+      {"name": "Assistant types", "file": "frontend/src/assistant/types.ts", "status": "live", "detail": "AssistantProvider / AssistantAnswer / AssistantContext / AssistantToolRef — the shared contract both providers honour so the UI dock is provider-agnostic."}
+    ]
+  },
+  {
+    "category": "Backend API & Config",
+    "features": [
+      {"name": "FastAPI app + QI contract", "file": "api/main.py :: app, /health, /version, /info", "status": "live", "detail": "FastAPI 'CypherMiner API' v0.1.0 on port 8502. CORS origins from QI.cors_origins() with a localhost fallback. /health -> {status:ok}, /version -> {project:cypherminer,...}, /info -> registry self-description. Reserved for future heavy/data tools."},
+      {"name": "API entry point", "file": "run_api.py", "status": "live", "detail": "uvicorn api.main:app on 127.0.0.1:8502, log_level warning. Separate from main.py to avoid the dual-bind conflict (UI is served separately by QI_CypherMinerUI)."},
+      {"name": "Dual launcher (dev)", "file": "main.py :: start_api / start_ui", "status": "live", "detail": "Dev convenience: starts the API in a daemon thread (uvicorn :8502) and the Gradio placeholder UI on the main thread. UTF-8 reconfigures stdout; logs to data/logs/cypherminer.log."},
+      {"name": "Config loader", "file": "shared/config.py :: load_config / get", "status": "live", "detail": "Caches config/cypherminer.json (app name/version, server ports, logging) and loads secrets/cypherminer.env via dotenv if present. get('a.b.c', default) is a dotted-path accessor."},
+      {"name": "Gradio placeholder (unused)", "file": "ui/app.py", "status": "disabled", "detail": "Legacy QI scaffold; the real UI is the static Vite build on :7842 (QI_CypherMinerUI). Moved to port 7843 so it can never collide with the real UI. Safe to ignore."}
+    ]
+  },
+  {
+    "category": "Build, Services & Ops",
+    "features": [
+      {"name": "Vite + TS + PWA build", "file": "frontend/package.json, frontend/vite.config.ts, frontend/index.html", "status": "live", "detail": "Scripts: dev (vite), build (tsc && vite build -> frontend/dist), preview. devDeps: typescript 5.6, vite 6, vite-plugin-pwa 0.21 (offline service worker). No runtime framework dependency."},
+      {"name": "QI_CypherMinerUI service", "file": "TOOLS/setup_services.ps1 / QI_Service_Registry.md", "status": "live", "detail": "Serves frontend/dist on 7842 via 'python -m http.server 7842 --bind 127.0.0.1 --directory C:\\CypherMiner\\frontend\\dist'. Logs ui_service.log."},
+      {"name": "QI_CypherMinerAPI service", "file": "install_api_service_admin.bat", "status": "live", "detail": "NSSM service running run_api.py (port 8502), AppDirectory C:\\CypherMiner, auto-start, logs LOGS/api_out.log + api_err.log."},
+      {"name": "QI_CypherMinerTunnel (static named)", "file": "install_tunnel.bat / C:\\QIH\\engine\\tunnels\\configs\\qi-cypherminer.yml", "status": "live", "detail": "Static named Cloudflare tunnel qi-cypherminer exposing :7842 at https://cypher.quiddityinnovations.com. Legacy quick-tunnel path retained for shipped/customer boxes."},
+      {"name": "Smoke tests", "file": "tests/test_smoke.py", "status": "live", "detail": "pytest checks /health, /version, /info and /openapi.json against the running API; every test SKIPS (never fails) if the service is down, so it is CI/offline-safe."}
+    ]
+  }
+]

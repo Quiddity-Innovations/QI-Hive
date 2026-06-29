@@ -1,0 +1,57 @@
+[
+  {
+    "category": "Cost Model (core math)",
+    "features": [
+      {"name": "calc() — scenario cost engine", "file": "index.html :: calc(inp)", "status": "live", "detail": "The heart of the tool. Computes page count, index units (per-doc or per-bundle), then builds Scenario A/B/C as arrays of line items via the li() helper. Returns {A,B,C,docs,unitLabel,highVol,cap,...} with totals, weeks, studentHrs, and stuCost per scenario."},
+      {"name": "gather() — read inputs", "file": "index.html :: gather()", "status": "live", "detail": "Collects every input field by id into a typed object; computes pages = override or boxes*ppb; clamps students/hpw/scanners to sane minimums; bundles the 11 hybrid select values into inp.hy."},
+      {"name": "Volume & index-unit derivation", "file": "index.html :: calc() head", "status": "live", "detail": "bundleMode = idxbasis==='bundle'; docs = ceil(pages/ppbundle) in bundle mode else ceil(pages/ppd). Drives indexing line quantities for vendor and in-house paths."},
+      {"name": "Condition / depth rate selection", "file": "index.html :: calc()", "status": "live", "detail": "Maps condition->{clean,avg,complex} scan/prep rates and depth->{basic,std,deep} index rates; pages>=100000 switches to v_scan_highvol. trips = max(1, ceil(boxes/40))."}
+    ]
+  },
+  {
+    "category": "Scenario Calculators",
+    "features": [
+      {"name": "Scenario A — vendor full service", "file": "index.html :: calc() A block", "status": "live", "detail": "Sums vendor scanning+prep(+OCR)+indexing(+large-format); applies v_min minimum-fee adjustment; adds pickup, setup, optional hosted storage, optional destruction, plus BU procurement/PM/DRIP staff hours and the $0 OnBase license line. weeks = d_vendor_lead + d_vendor_turn."},
+      {"name": "Scenario B — hybrid per-service", "file": "index.html :: calc() B block", "status": "live", "detail": "For each hy.* choice, pushes a vendor line (rate*qty) or a BU-student line (hours*wage*fringe), accumulating buHrs. Always adds the two-step overhead: contract procurement, PM x2, DRIP config, rework (rework_pct of student hrs), and lead supervision. Monthly items priced by phase months."},
+      {"name": "Scenario C — in-house direct-to-OnBase", "file": "index.html :: calc() C block", "status": "live", "detail": "Student prep + single-pass scan+index (siTp throughput by depth) + optional hardware + OnBase scan-queue setup + single PM + optional destruction + lead supervision + $0 OnBase/OCR lines. weeks = d_queue_lead + studentHrs/cap."},
+      {"name": "In-house labor & hardware sub-calc", "file": "index.html :: calc() shared block", "status": "live", "detail": "prepHrs=pages/prepTp, scanHrs=pages/t_scan, idxHrs=docs/idxTp, siHrs=pages/siTp; hw = ownScanner?0:scanners*h_scanner. fringe = 1 + fringe_pct/100. Shared by B and C."}
+    ]
+  },
+  {
+    "category": "Rate Table & Configuration",
+    "features": [
+      {"name": "RATE_DEFS — rate catalog", "file": "index.html :: const RATE_DEFS[]", "status": "live", "detail": "~50 rate definitions {k,l,u,d,c,s,a?}: vendor service rates, BU student labor, throughput assumptions, hardware/software, internal effort, timeline. 'a:1' flags an assumption (no published market price). Source citations stored in s."},
+      {"name": "loadRates / saveRates / resetRates", "file": "index.html :: loadRates() etc.", "status": "live", "detail": "Active rates R start from RATE_DEFS defaults, overlaid with localStorage budct_rates_v2. Save reads #ratesBody inputs back into R and persists; reset clears storage and reloads defaults. Re-runs calcAndShow() if a result exists."},
+      {"name": "Password gate (hashed)", "file": "index.html :: hashPass() / openConfig() / changePass()", "status": "live", "detail": "cyrb53-style 53-bit hash; CFG_HASH is the built-in default, overridable per-browser via LS_PASSHASH. Gate is a convenience lock, not security — explicitly documented as such. Session unlock cached in sessionStorage."},
+      {"name": "Export / import rates & config", "file": "index.html :: exportRates() / importRates()", "status": "live", "detail": "Export JSON ({_tool,_exported,rates,preparers}) or CSV (key,label,value,unit). Import parses JSON or CSV, merging only known keys with finite numeric values; JSON also restores the preparer roster."}
+    ]
+  },
+  {
+    "category": "Inputs, Persistence & Preparers",
+    "features": [
+      {"name": "Inputs persistence", "file": "index.html :: saveInputs() / loadInputs() / INPUT_IDS / CHECK_IDS", "status": "live", "detail": "Serializes ~28 text/select inputs + 4 checkboxes to localStorage budct_inputs_v2; restores on load and re-opens the last-selected scenario. A clear-on-load flag (LS_CLEAR) starts a shared machine blank while keeping rates/preparers."},
+      {"name": "Storage safety shim", "file": "index.html :: IIFE memStore()/safe()", "status": "live", "detail": "Probes localStorage/sessionStorage on boot; if a host (sandboxed iframe, private mode, SharePoint embed) throws SecurityError, transparently swaps in an in-memory store so the tool still runs for the session."},
+      {"name": "Preparer roster CRUD", "file": "index.html :: loadPreparers()/savePreparers()/buildPrepDropdown()/syncPreparer()", "status": "live", "detail": "[{name,title,email,def}] persisted to budct_preparers_v1. Default-flagged preparers populate the report's Prepared By dropdown; manual-entry option also available."}
+    ]
+  },
+  {
+    "category": "Results & Report Rendering",
+    "features": [
+      {"name": "calcAndShow — results view", "file": "index.html :: calcAndShow()", "status": "live", "detail": "Validates volume>0, warns if hpw>20 (term cap), saves inputs, runs calc(), renders summary, three big cost cards, savings/amber banner, optional budget-check card, comparison + duration bar charts, and the three scenario tables; then builds the report."},
+      {"name": "scenarioTable / staffingSweepTable", "file": "index.html :: scenarioTable() / staffingSweepTable()", "status": "live", "detail": "Per-scenario line-item table with effective $/page total row and a student-labor note. staffingSweepTable re-runs calc() at 1-5 students (plus the current value) to show total vs per-student cost/hours/duration."},
+      {"name": "buildReport — signed PDF report", "file": "index.html :: buildReport()", "status": "live", "detail": "Generates the full BU-letterhead report HTML: exec summary, comparison table, hybrid assignment matrix (WHO_TXT), why-two-step-costs-more, per-scenario line items, assumptions, sources, signature block, and the reference-estimate disclaimer."},
+      {"name": "paginateReport / printReport", "file": "index.html :: paginateReport() / printReport()", "status": "live", "detail": "Splits the report into stacked 8.5x11 'pages' with keep-with-next heading logic (PAGE_MAX=1040px). printReport temporarily swaps document.title to buildPdfName() so the browser's Save-as-PDF gets a descriptive default name."}
+    ]
+  },
+  {
+    "category": "Embedded Docs & Build Tooling",
+    "features": [
+      {"name": "Embedded User Guide + Technical Reference", "file": "index.html :: USER_GUIDE_HTML / TECH_DOC_HTML", "status": "live", "detail": "Two large HTML template strings injected into the Help and Configuration tabs at boot, kept in sync with the .docx deliverables. Cover methodology, default rates, a worked example, hosting, and limitations."},
+      {"name": "BU-internal vs public build toggle", "file": "index.html :: const BU_INTERNAL_ONLY / applyAccessMode()", "status": "live", "detail": "Single boolean toggles a red 'BU Internal' banner and a body class. Documented as presentation/policy only, NOT authentication — real access control is enforced by where the file is hosted."},
+      {"name": "build_package.py — distributable builder", "file": "build_package.py :: (script)", "status": "live", "detail": "Generates web-server-ready index.html from the canonical source, builds the Deployment & Hosting Guide .docx, and zips index.html + User Guide + Deployment Guide into dist/BU_Digitization_Cost_Tool_v3.1_internal.zip."},
+      {"name": "make_docs.py — Word documentation", "file": "make_docs.py :: (script)", "status": "live", "detail": "Produces the User Guide, Technical Documentation, and Deployment Guide .docx files via python-docx, matching the embedded in-app guides."},
+      {"name": "register_qi.py — ecosystem registration", "file": "register_qi.py :: (script)", "status": "live", "detail": "Registers the 'digitization' project in C:\\QIH\\ecosystem\\qi_registry.json (path, status, family_tier, github)."},
+      {"name": "test_smoke.py — smoke checks", "file": "tests/test_smoke.py", "status": "partial", "detail": "Lightweight smoke test of the build/static artifacts; not a full calculation regression suite over the cost model."}
+    ]
+  }
+]

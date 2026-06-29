@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 600" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="f-arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="f-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="f-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+    <marker id="f-grey" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="940" height="600" fill="#ffffff" rx="12"/>
+  <text x="470" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2d3d">Claude Manager — Session &amp; Orchestration Flow</text>
+  <text x="470" y="50" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · Management / Backbone Workspace · 2026</text>
+  <text x="470" y="66" text-anchor="middle" font-size="10" fill="#9aa5b1">SessionStart → context → dispatch → work → reconcile → SessionEnd</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="724" y="78" width="200" height="132" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="824" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="734" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="754" y="113" font-size="9" fill="#374151">Hook (auto, harness-fired)</text>
+  <rect x="734" y="121" width="14" height="10" rx="2" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="754" y="130" font-size="9" fill="#374151">Dispatch / decision</text>
+  <rect x="734" y="138" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="754" y="147" font-size="9" fill="#374151">Automation / reconcile</text>
+  <rect x="734" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="754" y="164" font-size="9" fill="#374151">Ecosystem store</text>
+  <line x1="734" y1="182" x2="752" y2="182" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-arr)"/>
+  <text x="758" y="186" font-size="9" fill="#374151">main flow</text>
+  <line x1="734" y1="198" x2="752" y2="198" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#f-orange)"/>
+  <text x="758" y="202" font-size="9" fill="#374151">write to Brain / Hive</text>
+
+  <!-- 1. SessionStart -->
+  <rect x="24" y="92" width="160" height="92" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.7"/>
+  <text x="104" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b4d22">1 · SessionStart</text>
+  <text x="104" y="130" text-anchor="middle" font-size="8.5" fill="#3f6b45">session_context.py</text>
+  <text x="104" y="145" text-anchor="middle" font-size="8" fill="#5f8a66">briefing + Brain probe</text>
+  <text x="104" y="158" text-anchor="middle" font-size="8" fill="#5f8a66">(fail-LOUD if down)</text>
+  <text x="104" y="173" text-anchor="middle" font-size="8" fill="#5f8a66">+ dispatch reminder + gate</text>
+
+  <line x1="184" y1="138" x2="224" y2="138" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-arr)"/>
+
+  <!-- 2. Context injected -->
+  <rect x="224" y="92" width="160" height="92" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="304" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e40af">2 · Context loaded</text>
+  <text x="304" y="130" text-anchor="middle" font-size="8.5" fill="#1d4ed8">additionalContext injected</text>
+  <text x="304" y="145" text-anchor="middle" font-size="8" fill="#3b82f6">MEMORY.md + rules +</text>
+  <text x="304" y="158" text-anchor="middle" font-size="8" fill="#3b82f6">live Brain snapshot</text>
+  <text x="304" y="173" text-anchor="middle" font-size="8" fill="#3b82f6">Claude wakes "QI-aware"</text>
+
+  <line x1="384" y1="138" x2="424" y2="138" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-arr)"/>
+
+  <!-- 3. Pending audit gate (decision) -->
+  <rect x="424" y="92" width="170" height="92" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="509" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e40af">3 · Audit gate?</text>
+  <text x="509" y="130" text-anchor="middle" font-size="8.5" fill="#1d4ed8">PENDING_REVIEW.json</text>
+  <text x="509" y="145" text-anchor="middle" font-size="8" fill="#3b82f6">if unreviewed → present</text>
+  <text x="509" y="158" text-anchor="middle" font-size="8" fill="#3b82f6">auto-fixed + decisions</text>
+  <text x="509" y="173" text-anchor="middle" font-size="8" fill="#3b82f6">before any new work</text>
+
+  <line x1="594" y1="138" x2="634" y2="138" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-arr)"/>
+
+  <!-- 4. Main thread = dispatcher -->
+  <rect x="634" y="92" width="170" height="92" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="719" y="113" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e40af">4 · Dispatcher</text>
+  <text x="719" y="130" text-anchor="middle" font-size="8.5" fill="#1d4ed8">main-thread Claude</text>
+  <text x="719" y="145" text-anchor="middle" font-size="8" fill="#3b82f6">multi-step? route to a</text>
+  <text x="719" y="158" text-anchor="middle" font-size="8" fill="#3b82f6">hive-&lt;role&gt; via Agent tool</text>
+  <text x="719" y="173" text-anchor="middle" font-size="8" fill="#3b82f6">trivial? do inline</text>
+
+  <!-- dispatcher down to fabric -->
+  <line x1="719" y1="184" x2="719" y2="224" stroke="#3b82f6" stroke-width="2" marker-end="url(#f-arr)"/>
+
+  <!-- 5. Agent fabric band -->
+  <rect x="300" y="224" width="600" height="70" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="600" y="244" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b4d22">5 · Hive sub-agents do the work</text>
+  <text x="600" y="262" text-anchor="middle" font-size="8.5" fill="#3f6b45">architect (Opus) → builder (Sonnet) → inspector (Sonnet) → scribe (Haiku)</text>
+  <text x="600" y="278" text-anchor="middle" font-size="8.5" fill="#5f8a66">ops · scout · tester · librarian — each on its own model tier · delegation one level deep</text>
+
+  <!-- 6. Supervisor (parallel, ON ecosystem) -->
+  <rect x="24" y="224" width="250" height="70" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.6"/>
+  <text x="149" y="244" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7a5b06">6 · Supervisor scan (on-demand)</text>
+  <text x="149" y="262" text-anchor="middle" font-size="8.5" fill="#7a5b06">walk registry → git/svc/task/keepalive</text>
+  <text x="149" y="278" text-anchor="middle" font-size="8" fill="#9a7a2e">→ DASHBOARD.md · status.json (R/Y/G)</text>
+
+  <!-- 7. SubagentStop hook -->
+  <rect x="300" y="324" width="290" height="64" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.6"/>
+  <text x="445" y="344" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b4d22">7 · SubagentStop hook</text>
+  <text x="445" y="361" text-anchor="middle" font-size="8.5" fill="#3f6b45">subagent_stop.py — normalise to hive_&lt;role&gt;</text>
+  <text x="445" y="376" text-anchor="middle" font-size="8" fill="#5f8a66">write attributed stub to Hive inbox</text>
+
+  <!-- 8. SessionEnd hook -->
+  <rect x="610" y="324" width="290" height="64" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.6"/>
+  <text x="755" y="344" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b4d22">8 · SessionEnd hook</text>
+  <text x="755" y="361" text-anchor="middle" font-size="8.5" fill="#3f6b45">session_end.py — infer project from cwd</text>
+  <text x="755" y="376" text-anchor="middle" font-size="8" fill="#5f8a66">auto-stub session → Hive inbox</text>
+
+  <line x1="500" y1="294" x2="460" y2="322" stroke="#2e7d32" stroke-width="1.6" marker-end="url(#f-green)"/>
+  <line x1="700" y1="294" x2="740" y2="322" stroke="#2e7d32" stroke-width="1.6" marker-end="url(#f-green)"/>
+
+  <!-- 9. Automation band (monthly) -->
+  <rect x="24" y="324" width="250" height="64" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.6"/>
+  <text x="149" y="344" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7a5b06">9 · Monthly self-audit</text>
+  <text x="149" y="361" text-anchor="middle" font-size="8.5" fill="#7a5b06">QI_ClaudeSelfAudit (last Fri)</text>
+  <text x="149" y="376" text-anchor="middle" font-size="8" fill="#9a7a2e">safe-fix → Tasuke → open Claude → gate (3)</text>
+
+  <!-- self-audit loops back to gate -->
+  <path d="M 149 324 V 210 H 470 V 184" fill="none" stroke="#b8860b" stroke-width="1.4" stroke-dasharray="4,2" marker-end="url(#f-orange)"/>
+
+  <!-- ══ ECOSYSTEM STORES (bottom) ══ -->
+  <text x="28" y="424" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">ECOSYSTEM STORES — written by hooks, supervisor, reconcile scripts</text>
+
+  <rect x="24" y="434" width="220" height="96" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="1.7"/>
+  <text x="134" y="456" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">QI Registry</text>
+  <text x="134" y="474" text-anchor="middle" font-size="8.5" fill="#cbd5e1">qi_registry.json</text>
+  <text x="134" y="490" text-anchor="middle" font-size="8" fill="#94a3b8">read by hooks + supervisor</text>
+  <text x="134" y="505" text-anchor="middle" font-size="8" fill="#94a3b8">paths · ports · status</text>
+  <text x="134" y="520" text-anchor="middle" font-size="8" fill="#94a3b8">single source of truth</text>
+
+  <rect x="262" y="434" width="220" height="96" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="1.7"/>
+  <text x="372" y="456" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">QI Hive inbox</text>
+  <text x="372" y="474" text-anchor="middle" font-size="8.5" fill="#cbd5e1">shared\reports\inbox</text>
+  <text x="372" y="490" text-anchor="middle" font-size="8" fill="#94a3b8">QI_HiveIngest auto-ingests</text>
+  <text x="372" y="505" text-anchor="middle" font-size="8" fill="#94a3b8">session + subagent stubs</text>
+  <text x="372" y="520" text-anchor="middle" font-size="8" fill="#94a3b8">→ qi_brain.db</text>
+
+  <rect x="500" y="434" width="220" height="96" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="1.7"/>
+  <text x="610" y="456" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">QI Brain</text>
+  <text x="610" y="474" text-anchor="middle" font-size="8.5" fill="#cbd5e1">qi_brain.db (:9011)</text>
+  <text x="610" y="490" text-anchor="middle" font-size="8" fill="#94a3b8">sessions · decisions</text>
+  <text x="610" y="505" text-anchor="middle" font-size="8" fill="#94a3b8">project_state · docs graph</text>
+  <text x="610" y="520" text-anchor="middle" font-size="8" fill="#94a3b8">reconciled by Tools scripts</text>
+
+  <rect x="738" y="434" width="178" height="96" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="1.7"/>
+  <text x="827" y="456" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">Hive Dashboard</text>
+  <text x="827" y="474" text-anchor="middle" font-size="8.5" fill="#cbd5e1">:8600 · status.json</text>
+  <text x="827" y="490" text-anchor="middle" font-size="8" fill="#94a3b8">Mission Control panels</text>
+  <text x="827" y="505" text-anchor="middle" font-size="8" fill="#94a3b8">fed by supervisor</text>
+  <text x="827" y="520" text-anchor="middle" font-size="8" fill="#94a3b8">R/Y/G per project</text>
+
+  <!-- hook + supervisor write arrows down to stores -->
+  <path d="M 445 388 V 410 H 372 V 432" fill="none" stroke="#b8860b" stroke-width="1.4" stroke-dasharray="4,2" marker-end="url(#f-orange)"/>
+  <path d="M 755 388 V 410 H 372 V 432" fill="none" stroke="#b8860b" stroke-width="1.4" stroke-dasharray="4,2" marker-end="url(#f-orange)"/>
+  <path d="M 372 530 V 545 H 610 V 530" fill="none" stroke="#b8860b" stroke-width="1.4" stroke-dasharray="4,2" marker-end="url(#f-orange)"/>
+  <path d="M 149 388 V 408 H 827 V 432" fill="none" stroke="#b8860b" stroke-width="1.2" stroke-dasharray="2,2" marker-end="url(#f-orange)"/>
+</svg>

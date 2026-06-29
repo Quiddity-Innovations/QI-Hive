@@ -1,0 +1,56 @@
+[
+  {
+    "category": "Song Creation",
+    "features": [
+      {"name": "Personalized lyrics from a story", "description": "Fill a warm form (recipient, occasion, relationship, memories, traits, inside jokes, a closing 'message from the heart') and a local AI writes a complete, original song around it.", "status": "live", "notes": "Ollama via /api/lyrics/generate; structure scales to target length (verse/chorus/bridge/outro)"},
+      {"name": "Real sung vocals (not instrumental)", "description": "The recipient's name is actually sung in a full performed song — verse, chorus, bridge — on the local GPU at no cost.", "status": "live", "notes": "ACE-Step singing model; replaced the original instrumental-only MusicGen approach"},
+      {"name": "The name is always sung — correctly", "description": "If the lyric model forgets to use the name, it is auto-injected as a sung vocative; a per-language phonetic respelling fixes how it's pronounced when sung.", "status": "live", "notes": "ensure_name_in_lyrics + pronunciation dictionary; display lyrics keep the real name"},
+      {"name": "Sing in 8 languages (+ blend)", "description": "Generate songs in English, Portuguese, Japanese, French, Spanish, Italian, German, or Korean, with native-accent conditioning — or blend two languages in one song (verses one language, chorus another).", "status": "live", "notes": "lang_mode = single | blend; native LANG tags prevent an English accent"},
+      {"name": "Genre, mood & decade styles", "description": "Pick from pop, R&B, country, rock, jazz, hip-hop, worship, gospel and culturally specific styles (Brazilian samba/forró/bossa nova, Japanese enka & 60s/70s/80s J-pop, French chanson), with a mood/tempo control.", "status": "live", "notes": "_GENRE_TAGS / _MOOD_TAGS in ace_engine; genres can be blended"},
+      {"name": "Choose the singer", "description": "Pick from 10 curated native-language singer presets (each a timbre + a stable seed for a consistent voice), or just male / female / instrumental.", "status": "live", "notes": "config/singers.json; per-language defaults; gender is verified by pitch and re-rolled if wrong"}
+    ]
+  },
+  {
+    "category": "Voice & Dedication",
+    "features": [
+      {"name": "Spoken radio / concert dedication", "description": "Prepend a short spoken intro in a native voice — radio-DJ style or live-concert style (with a subtle crowd/applause bed) — so the name is pronounced perfectly even if the melody isn't.", "status": "live", "notes": "edge-tts neural voices; heartfelt/warm/festive tones with native wording per language"},
+      {"name": "Dedication in the artist's voice", "description": "Re-voice the spoken dedication so it sounds like the singer of an uploaded song — same words, the artist's timbre.", "status": "live", "notes": "Demucs isolates the artist's vocal -> Seed-VC zero-shot conversion; falls back to the neural voice if unavailable"},
+      {"name": "Full voice-clone cover", "description": "Generate the song, then re-sing it in a target voice extracted from any source song (YouTube link, upload, or CD), mixed over ACE-Step's or the original's instrumental.", "status": "live", "notes": "ACE-Step -> Demucs x2 -> Seed-VC (f0-conditioned for singing) -> mix"},
+      {"name": "Pronounce-by-ear teaching", "description": "Record someone saying a tricky name; the app transcribes it and suggests a phonetic respelling you can hear previewed and edit, then reuse across songs.", "status": "live", "notes": "Whisper transcribe + suggest_respelling; saved per-language in pronunciations.json"}
+    ]
+  },
+  {
+    "category": "Remix & Source",
+    "features": [
+      {"name": "Base it on an existing song", "description": "Steer a new song toward one you love with three sliders — how much to keep the melody, the lyrics, and the overall feel.", "status": "live", "notes": "ACE-Step audio2audio; levers map to ref_audio_strength; low lyrics-change re-uses the source's transcribed words"},
+      {"name": "Bring your own audio", "description": "Import a source song to clone or remix from a YouTube/other URL, a local audio/video file (audio auto-extracted, optional trim), or by ripping an audio CD.", "status": "live", "notes": "yt-dlp, ffmpeg extract/transcode, libcdio CD rip; saved to a sources library"},
+      {"name": "Karaoke stems", "description": "Split any finished song into vocals + instrumental and download both as a zip — instant karaoke backing track.", "status": "live", "notes": "Demucs two-stem; /api/library/stems/{song_id}"}
+    ]
+  },
+  {
+    "category": "Library, Sharing & Playback",
+    "features": [
+      {"name": "Local song library", "description": "Every song is saved with its lyrics, metadata, and cover, browsable and streamable in the app; delete what you don't want.", "status": "live", "notes": "music_library/<Occasion>/ with a .json sidecar per song"},
+      {"name": "Cover art", "description": "Each song gets a tasteful auto-generated gradient cover (genre-tuned, with the name + occasion); optionally an AI-painted cover.", "status": "live", "notes": "PIL procedural always works; SDXL-Turbo AI cover optional in a subprocess with PIL fallback"},
+      {"name": "Share bundle & QR card", "description": "Download a zip (audio + lyrics + cover), or a printable greeting card with a QR code the recipient scans to play the song from their own phone.", "status": "live", "notes": "QR uses the public tunnel/LAN host so it works off-device; /api/library/bundle, /api/library/card"},
+      {"name": "Play on Plex / Google Home / Alexa", "description": "Finished songs are organized and tagged so they appear in Plex and can be played by voice on smart speakers.", "status": "partial", "notes": "Sync built (ID3 tag + copy + scan); needs a Plex token + music section configured in Settings"},
+      {"name": "Auto-publish to YouTube Music", "description": "Optionally upload every finished song to your personal YouTube Music library.", "status": "partial", "notes": "ytmusicapi browser-header auth; off until you paste headers once and enable auto-upload"}
+    ]
+  },
+  {
+    "category": "Productivity",
+    "features": [
+      {"name": "Album / batch mode", "description": "Generate several songs in one job (e.g. a song each for a whole family), with per-song success/failure reporting.", "status": "live", "notes": "/api/batch/generate; auto-writes lyrics first if not supplied"},
+      {"name": "Overnight generation queue", "description": "Queue songs to generate later and run the whole queue unattended; failures stay queued for retry.", "status": "live", "notes": "config/queue.json; run_queue.py / POST /api/queue/run"},
+      {"name": "Runs as an always-on app", "description": "Installs as a background Windows service so the studio is always available on the machine.", "status": "live", "notes": "QI_PersonalSong NSSM service on :8088 via serve.py"}
+    ]
+  },
+  {
+    "category": "QI Ecosystem",
+    "features": [
+      {"name": "Registered QI project", "description": "Listed in the QI ecosystem registry with its port, path, family tier, and integration contracts.", "status": "live", "notes": "qi_registry.json; family_tier=cousin; loopback-only / not internet-exposed"},
+      {"name": "Exposes song & voice generation", "description": "Advertised to the ecosystem as a provider of song generation (ACE-Step) and voice cloning (Demucs/Seed-VC).", "status": "live", "notes": "exposes_to_ecosystem in the registry"},
+      {"name": "M2V integration (song -> music video)", "description": "Feed generated songs into the M2V project to produce music videos.", "status": "planned", "notes": "integrates_with: m2v declared in the registry; no wiring yet"}
+    ]
+  }
+]

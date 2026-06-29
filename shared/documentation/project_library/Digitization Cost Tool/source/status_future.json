@@ -1,0 +1,39 @@
+{
+  "categories": [
+    {
+      "name": "QI Standards & Ecosystem",
+      "priority": "high",
+      "items": [
+        {"title": "Migrate to a C:\\ QI project root", "detail": "The project still lives under C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS. Move it to a proper C:\\ root with the QI standard 7-folder layout (engine/config/data/logs/tests/docs/tools) and update the registry path. Flagged in qi_registry.json family_notes as 'migration pending'."},
+        {"title": "Run qi_validator against the project", "detail": "Once migrated, run python C:\\QIH\\ecosystem\\qi_validator.py --project digitization to confirm folder layout and naming compliance. The github remote (Quiddity-Innovations/DigitizationCostTool) is already registered."}
+      ]
+    },
+    {
+      "name": "Rate Accuracy & Calibration",
+      "priority": "medium",
+      "items": [
+        {"title": "Replace the PaperVision assumption with BU's real contract", "detail": "s_pv_month defaults to $240/mo, an assumption — capture-software licensing is quote-only. Substitute BU's actual PaperVision (or equivalent capture) contract cost so hybrid Scenario B is precise."},
+        {"title": "Calibrate planning factors against real projects", "detail": "Throughput rates, internal-effort hours, the 15% rework factor, and the timeline assumptions are Document Imaging & Services estimates. Tune them against completed digitization projects so the durations and labor totals reflect observed performance."},
+        {"title": "Annual rate re-verification", "detail": "Re-verify vendor rates each year against SecureScan / Record Nations / Emerald and refresh BU student wages when the SEO Job Classification Guide or the Massachusetts minimum wage changes."}
+      ]
+    },
+    {
+      "name": "Hosting & Access Control",
+      "priority": "medium",
+      "items": [
+        {"title": "Host behind real BU authentication", "detail": "The BU_INTERNAL_ONLY flag is a presentation label, not security. For a genuinely internal build, host the file on a BU-login-gated web page or a permissioned SharePoint site rather than relying on the banner."},
+        {"title": "Document the SharePoint embed path", "detail": "A raw .html in a SharePoint library opens but its buttons do nothing (SharePoint blocks page JavaScript). Provide and document the web-server-hosted URL to embed instead, so departments don't hit a dead tool."}
+      ]
+    },
+    {
+      "name": "Feature Enhancements",
+      "priority": "low",
+      "items": [
+        {"title": "Save / load named project estimates", "detail": "Today only the last-used inputs persist. Let staff save multiple named estimates (per department/project) and reload them for comparison or revision."},
+        {"title": "Export results to spreadsheet", "detail": "Add an Export-to-CSV/XLSX of the computed line items and comparison so the numbers can drop straight into a budget workbook, complementing the existing PDF report."},
+        {"title": "On-site vendor crew scenario", "detail": "Vendors also offer on-site scanning crews (premium, quote-based). The tech notes say to model this by assigning scanning to the vendor and raising the rate — promote it to a first-class scenario option with its own line."},
+        {"title": "Regression tests over the cost model", "detail": "test_smoke.py only checks build artifacts. Add tests that pin calc() outputs for known input profiles (e.g. the 15-box worked example) so a future edit can't silently change the math."}
+      ]
+    }
+  ]
+}

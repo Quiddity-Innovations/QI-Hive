@@ -1,0 +1,63 @@
+[
+  {
+    "category": "Entry Point & Service",
+    "features": [
+      {"name": "main.py — launcher", "file": "main.py :: start_api() / start_ui()", "status": "partial", "detail": "UTF-8 reconfigures stdout. Starts the FastAPI API (uvicorn) on 127.0.0.1:8500 in a daemon thread, then the Gradio UI on 7840 in the main thread. Logs to data/logs/mq.log. Booted manually once (2026-06-10) per mq.log; no persistent NSSM service registered."},
+      {"name": "Start_MQ.bat", "file": "Start_MQ.bat", "status": "live", "detail": "Convenience launcher: cd /d C:\\MQ then python main.py. Prints API :8500 / UI :7840. The only supported way to run MQ today (manual, foreground)."},
+      {"name": "Config loader", "file": "shared/config.py :: load_config() / get()", "status": "live", "detail": "Loads secrets/mq.env (python-dotenv) then config/mq.json into a module-level cache. get('dotted.path', default) accessor. Single source of runtime config for every agent."},
+      {"name": "Runtime config", "file": "config/mq.json", "status": "live", "detail": "app/server/persona/content_streams/llm/kaze/fumi sections. Ports 8500/7840, LLM primary=@cf/qwen/qwen2.5-7b-instruct-fast with ollama qwen3:8b fallback, RSS source lists, posts/digests dir layout."}
+    ]
+  },
+  {
+    "category": "API (FastAPI :8500)",
+    "features": [
+      {"name": "QI Module Interface Contract", "file": "api/main.py :: health() / version() / info()", "status": "partial", "detail": "GET /health -> {status:ok}; GET /version -> {project:mq, version:0.1.0, status:development}; GET /info -> QI.project('mq') from the registry, with a static fallback. CORS origins from qi_registry (fallback to localhost). No business endpoints yet — '# Add your endpoints below this line'."},
+      {"name": "Gradio UI shell", "file": "ui/app.py :: build_ui() / check_status()", "status": "partial", "detail": "Minimal 2-tab Blocks app (Status, About). Status tab pings the API /health and reports Online/Offline/Error. Placeholder — no persona, content, or admin controls yet."}
+    ]
+  },
+  {
+    "category": "Kaze — Perception (RSS senses)",
+    "features": [
+      {"name": "RSS digest scraper", "file": "agents/kaze/kaze_mq.py :: run_digest() / fetch_feed()", "status": "partial", "detail": "Per-stream (travel/photo/ai/all). feedparser parses each source's RSS, strips HTML from summaries (capped 500 chars), dedupes by md5(url)[:12], sorts newest-first, writes data/digests/kaze-<stream>-digest.json. Complete and runnable; never executed (no digests on disk)."},
+      {"name": "Stable item id", "file": "agents/kaze/kaze_mq.py :: item_id()", "status": "live", "detail": "hashlib.md5(url).hexdigest()[:12] — gives each fetched item a deterministic id used for in-run dedup and later draft naming."}
+    ]
+  },
+  {
+    "category": "Fumi — Composer (writing half)",
+    "features": [
+      {"name": "Post generator", "file": "agents/fumi/fumi_generate_post.py :: generate_draft() / build_prompt()", "status": "partial", "detail": "Reads a Kaze digest, picks top N items, builds a persona+instruction+context prompt, calls the LLM, writes a draft JSON to data/posts/drafts/. Per-stream instructions (travel/photo/ai) and per-page persona. Never run."},
+      {"name": "Persona prompts", "file": "agents/fumi/fumi_generate_post.py :: PERSONA_MAIA / PERSONA_QI", "status": "partial", "detail": "Two inline system prompts: Maia (warm/curious/witty, first person, 80-150 words, 1-2 emojis, occasional Portuguese) and QI (thought-leader, 100-180 words). To migrate into maia/voice per the architecture (D11)."},
+      {"name": "LLM client + failover", "file": "agents/fumi/fumi_generate_post.py :: generate_with_llm() / call_cloudflare_ai() / call_ollama()", "status": "partial", "detail": "Tries Cloudflare Workers AI (urllib POST to /accounts/{id}/ai/run/{model}, needs CF_ACCOUNT_ID + CF_AI_TOKEN), falls back to local Ollama (/api/generate). Raises if both fail. No keys configured."}
+    ]
+  },
+  {
+    "category": "Fumi — Publisher (hands)",
+    "features": [
+      {"name": "Facebook Graph publisher", "file": "agents/fumi/fumi_post_facebook.py :: post_to_facebook() / publish_draft()", "status": "partial", "detail": "POSTs message (+ optional link) to graph.facebook.com/v19.0/{page_id}/feed. On success records fb_post_id + published_at and moves the draft to published/; on HTTPError/exception records the error and moves to failed/. Blocked — no page token."},
+      {"name": "Page token resolver", "file": "agents/fumi/fumi_post_facebook.py :: get_page_token()", "status": "partial", "detail": "page='maia' -> FB_PAGE_ID/FB_PAGE_ACCESS_TOKEN; page='qi' -> QI_PAGE_ID/QI_PAGE_ACCESS_TOKEN, from secrets/mq.env. Raises a clear error when credentials are missing (current state)."},
+      {"name": "Draft lifecycle / CLI", "file": "agents/fumi/fumi_post_facebook.py :: load_all_drafts() / move_draft() / main()", "status": "partial", "detail": "drafts/ -> published/ or failed/ file moves. CLI: --list, --draft <id>, --all-drafts, --dry-run (preview, no API call). Dry-run is the only path exercisable without credentials."}
+    ]
+  },
+  {
+    "category": "Scheduler — Heartbeat",
+    "features": [
+      {"name": "Pipeline orchestrator", "file": "agents/fumi/fumi_scheduler.py :: SCHEDULES / run_step()", "status": "partial", "detail": "Two named pipelines: maia_weekly (Kaze travel+photo -> Fumi generate -> publish) and qi_daily (Kaze ai -> Fumi generate -> publish). Runs each step via subprocess, continues on failure, injects --dry-run for the publish step. Designed for Task Scheduler."},
+      {"name": "Task Scheduler setup", "file": "TOOLS/setup_task_scheduler.py :: TASKS / create_task()", "status": "partial", "detail": "schtasks registers FumiMaiaWeekly (Sat 10:00) and FumiQIDaily (Mon-Fri 09:00) at /RL HIGHEST. --remove / --list helpers. Script ready; tasks not registered. Note: task names lack the QI_ prefix the standards expect."}
+    ]
+  },
+  {
+    "category": "Persona Layers (maia/ · gate/ · identity/)",
+    "features": [
+      {"name": "maia/ expression layer", "file": "maia/{voice,memory,speech,face,conversation,longform}/__init__.py", "status": "planned", "detail": "Pre-wired empty packages (each just an __init__.py + README). voice = migrate Fumi's writing half; memory = the diary (to build); speech/face/conversation/longform = empty rooms for the evolved Maia. No logic yet."},
+      {"name": "gate/ Governor", "file": "gate/__init__.py + gate/README.md", "status": "planned", "detail": "Documented placeholder for the approval queue (draft -> Renne approves -> publish). To build in the first dev phase alongside the Fumi split. No code."},
+      {"name": "identity/ Kit", "file": "identity/manifest.json", "status": "partial", "detail": "Machine-readable identity manifest pointing to the soul (PERSONA_BIBLE.md) with face/voice_spoken/style all status='placeholder' (empty references, null seed/embedding). Created, not populated."}
+    ]
+  },
+  {
+    "category": "Tests & Tooling",
+    "features": [
+      {"name": "Live smoke test", "file": "tests/test_smoke.py", "status": "live", "detail": "pytest module that hits the live API on :8500 for /health, /version, /info, and /openapi.json. Cleanly skips the whole module when the service is offline, so CI stays green without a running service."},
+      {"name": "Session summary tool", "file": "TOOLS/create_session_summary.py", "status": "live", "detail": "Project tooling for generating session summary documents (QI documentation discipline)."}
+    ]
+  }
+]

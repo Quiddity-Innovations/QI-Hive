@@ -1,0 +1,64 @@
+[
+  {
+    "category": "Multi-AI Orchestration",
+    "features": [
+      {"name": "Ask every AI at once", "description": "A single prompt is dispatched to all enabled AI providers simultaneously. Responses are collected as each one finishes.", "status": "live", "notes": "asyncio fan-out; per-provider timeout; one failing provider can't abort the run"},
+      {"name": "Unified synthesis", "description": "All successful responses are merged into one superior answer that preserves every table and code block from the source answers.", "status": "live", "notes": "Synthesised by local Gemma 4 26B, with ChatGPT as fallback"},
+      {"name": "Chain mode (progressive refinement)", "description": "Each AI improves on the previous AI's answer in sequence, building a steadily better response.", "status": "live", "notes": "routing_mode = chain"},
+      {"name": "Iterative mode (multi-round)", "description": "NEXUS loops the dispatch-and-synthesise cycle up to 3 times, refining the answer each round for hard questions.", "status": "live", "notes": "routing_mode = iterative; capped at 3 rounds"},
+      {"name": "Live streaming answers", "description": "Watch each provider's answer arrive in real time, then the final synthesis, rather than waiting for everything at once.", "status": "live", "notes": "Server-Sent Events at /synthesize/stream with thinking badges + heartbeats"},
+      {"name": "Reasoning depth control", "description": "Pick how hard the models think per request: Fast, Balanced, Thinking, or Deep Reasoning. Applied globally or per provider.", "status": "live", "notes": "Mode capability auto-detected per model; deep mode raises timeouts up to 10x"},
+      {"name": "Pick which AIs answer", "description": "Run against all providers, or hand-pick a subset for a given question.", "status": "live", "notes": "provider_ids selector in the Orchestrator"}
+    ]
+  },
+  {
+    "category": "Expert Panel (Personas)",
+    "features": [
+      {"name": "26 expert personas", "description": "Pose a question to AIs role-playing famous domain experts (e.g. a physicist, an economist, a legal scholar), each with its own reasoning style and vocabulary.", "status": "live", "notes": "config/personas.json — 26 built-in, locked; modelled on real experts with inspiration credit"},
+      {"name": "Multi-persona panels", "description": "Assign different personas to different providers for the same query, then synthesise their contrasting perspectives.", "status": "live", "notes": "persona_map: provider_id -> system prompt"},
+      {"name": "Create your own experts", "description": "Define custom personas through the Panel Designer (identity, mental models, skepticism lens, vocabulary) — the system prompt is auto-generated.", "status": "live", "notes": "Saved to config/user_personas.json via POST /personas"},
+      {"name": "Panel presets", "description": "Save and reuse favourite combinations of experts as named panels.", "status": "live", "notes": "Expert Panel -> Presets tab"}
+    ]
+  },
+  {
+    "category": "Quality Evaluation (Judge & Bench)",
+    "features": [
+      {"name": "Score each AI's answer", "description": "An impartial judge AI rates every response 1-10 on Clarity, Accuracy, and Depth, and names the best answer.", "status": "live", "notes": "enable_judge; default judge = Groq"},
+      {"name": "Rigorous DeepEval scoring", "description": "Structured G-Eval scoring runs three metrics per response with written reasons, for defensible, repeatable evaluation.", "status": "live", "notes": "scorer.mode = deepeval (default); falls back to simple if the judge fails"},
+      {"name": "Benchmark suites", "description": "Run a fixed battery of test prompts against any set of providers and compare their scores side by side.", "status": "live", "notes": "Bench tab; starter suite seeded; 5 cases x 4 provider runs recorded"},
+      {"name": "Catch model regressions", "description": "Scores are tracked over time so a swapped or upgraded model that quietly got worse is caught.", "status": "live", "notes": "bench_provider_runs history"},
+      {"name": "Best-model recommendation", "description": "Ask NEXUS which provider is best for a use case; it answers from accumulated benchmark history.", "status": "live", "notes": "GET /bench/recommend — returns ranked providers by mean score"}
+    ]
+  },
+  {
+    "category": "Scout — AI Research Digest",
+    "features": [
+      {"name": "Autonomous news monitoring", "description": "Scout crawls configured topics (AI news and more) on a schedule with no human intervention, day and night.", "status": "live", "notes": "APScheduler; default 6h, per-topic override; 13,000+ items collected"},
+      {"name": "Multi-source crawling", "description": "Pulls from RSS feeds, Reddit, and Hacker News in one cycle.", "status": "live", "notes": "8,500 RSS + 4,708 Reddit + 36 HN items to date"},
+      {"name": "Duplicate suppression", "description": "Near-identical stories from different sources are collapsed so the digest doesn't repeat itself.", "status": "live", "notes": "rapidfuzz fuzzy matching at 85% threshold"},
+      {"name": "AI-written daily digest", "description": "Each cycle produces a concise, readable digest synthesised by the AI chain, saved to the DB and as a Word document.", "status": "live", "notes": "99 digests stored; .docx auto-generated per topic per day"},
+      {"name": "Custom topics + OPML import", "description": "Add and manage your own research topics; bulk-import feeds from any RSS reader's OPML export.", "status": "live", "notes": "Scout -> Manage Topics; POST /scout/import/opml"},
+      {"name": "Powers TubeScout", "description": "Scout's topic engine also backs the TubeScout project's YouTube channel tracking.", "status": "live", "notes": "tubescout_youtube topics: 726 + 1,365 items"}
+    ]
+  },
+  {
+    "category": "Batch, Schedule & Knowledge",
+    "features": [
+      {"name": "Batch prompt runs", "description": "Submit a list of prompts and have NEXUS run them all through the synthesis pipeline in one job, with per-prompt logs.", "status": "live", "notes": "Batch & Schedule tab; per_prompt / per_model log modes"},
+      {"name": "Scheduled jobs", "description": "Register recurring prompt batches to run automatically (once, interval, daily, or cron).", "status": "live", "notes": "POST /schedule/jobs; APScheduler-backed"},
+      {"name": "Curate & export", "description": "Save the best answers, evaluations, or raw responses to a knowledge library, or download them as a file.", "status": "live", "notes": "Curate & Export tab; appends to knowledge JSONL + auto-ingests to RAG"},
+      {"name": "RAG knowledge augmentation", "description": "Optionally enrich answers with context retrieved from NEXUS's own knowledge base.", "status": "live", "notes": "ChromaDB vector store; 'Augment with Knowledge Base (RAG)' toggle"},
+      {"name": "Session history", "description": "Every synthesis is saved with its prompt, answer, providers used, and timing, and can be reloaded.", "status": "live", "notes": "5,000+ sessions stored; GET /history, GET /sessions"}
+    ]
+  },
+  {
+    "category": "QI Ecosystem Integration",
+    "features": [
+      {"name": "Shared intelligence API", "description": "Any QI project can call NEXUS for multi-AI synthesis, the daily digest, or a model recommendation, over a stable REST contract.", "status": "live", "notes": "Integrates with Maia, Naya, FileHQ, OpenClaw"},
+      {"name": "Registry-driven CORS", "description": "Allowed origins are read from the QI ecosystem registry, never hardcoded — new QI projects are trusted automatically.", "status": "live", "notes": "qi_registry.cors_origins(); safe fallback to known QI ports"},
+      {"name": "24/7 service + public tunnel", "description": "Runs as the QI_NEXUS Windows service and is reachable remotely via a Cloudflare tunnel.", "status": "live", "notes": "NSSM QI_NEXUS + QI_NEXUSTunnel"},
+      {"name": "QI Brain logging", "description": "Register NEXUS sessions and decisions in the QI Brain for cross-project memory.", "status": "planned", "notes": "Not yet wired"},
+      {"name": "Multi-user release hardening", "description": "API authentication, rate limiting, and per-user session isolation for use beyond the local machine.", "status": "planned", "notes": "Currently single-user / local-only"}
+    ]
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "category": "Proxy Service & App Hosting",
+    "features": [
+      {"name": "FastAPI app + CORS + scheduler boot", "file": "proxy/server.py :: app / boot() / main()", "status": "live", "detail": "FastAPI 'WC2026 Proxy' with CORSMiddleware (allow_origins from config). boot() warms the disk cache, kicks a forced refresh in a daemon thread, and starts an APScheduler IntervalTrigger every refresh_minutes (15). main() runs uvicorn on 127.0.0.1:8710."},
+      {"name": "Serve the app same-origin", "file": "proxy/server.py :: index()", "status": "live", "detail": "GET / reads WC2026.html via _resource() and returns it as HTML, so the whole app runs same-origin off the proxy (no file:// CORS) — this is what makes the portable .exe self-contained."},
+      {"name": "PyInstaller resource resolution", "file": "proxy/server.py :: _resource() / APP_DIR / CFG_PATH", "status": "live", "detail": "Locates bundled assets in sys._MEIPASS, the proxy dir, or its parent. When frozen, prefers a config.json sitting beside the .exe (editable without rebuild) and writes data/cache.json next to the .exe."},
+      {"name": "QI_GamezProxy service + control bats", "file": "proxy/install_service.bat / uninstall_service.bat / restart_service.bat / run_proxy.bat", "status": "live", "detail": "NSSM service QI_GamezProxy, AppDirectory C:\\Gamez\\proxy, runs python server.py, logs to C:\\Gamez\\proxy\\LOGS\\gamez_proxy_service.log. install_service.bat self-elevates via UAC. Registered in QI_Service_Registry.md."}
+    ]
+  },
+  {
+    "category": "Data Endpoints",
+    "features": [
+      {"name": "GET /health · /snapshot · /fixtures · /players · /teams · /kalshi", "file": "proxy/server.py :: health/snapshot/fixtures/players/teams/kalshi", "status": "live", "detail": "/snapshot is what the page polls — bundles fixtures, standings, teams, players (sorted by PPS), kalshi, source, as_of, openrouter flag, errors, disclaimer. /health reports counts + next_refresh_s + live_stats/openrouter booleans."},
+      {"name": "POST /refresh — force a fetch", "file": "proxy/server.py :: force_refresh()", "status": "live", "detail": "Runs refresh(force=True) immediately (forces an API-Football player pull regardless of the 12h throttle) and returns health()."},
+      {"name": "refresh() — fetch + score + cache pipeline", "file": "proxy/server.py :: refresh()", "status": "live", "detail": "Never raises. Fetches fixtures+standings (ESPN), players (fifa default / apifootball / sample), and Kalshi; picks score_all_rated for rated inputs vs score_all for stat inputs; writes the in-memory CACHE under a lock and persists cache.json. Each step's errors are collected, not fatal."},
+      {"name": "Warm/cold cache", "file": "proxy/server.py :: _load_cache() / _save_cache() / CACHE", "status": "live", "detail": "In-memory CACHE dict guarded by a threading.Lock, mirrored to data/cache.json. Warm-starts from disk on boot so the app shows last-good data instantly; SAMPLE fallback guarantees a usable payload on a cold offline start."}
+    ]
+  },
+  {
+    "category": "Data Sources (server-side)",
+    "features": [
+      {"name": "ESPN fixtures / standings / bracket flags", "file": "proxy/sources.py :: fetch_fixtures() / fetch_standings() / fetch_team_groups()", "status": "live", "detail": "Unofficial ESPN JSON (no key). _classify() buckets each match into Group/R32/R16/QF/SF/Final by the real 2026 schedule windows; _local_date() shifts UTC -8h; _is_real_team() flags real teams vs 'Winner of…' placeholders for the bracket."},
+      {"name": "EA FC 26 ratings → national squads", "file": "proxy/sources.py :: fetch_players_fifa()", "status": "live", "detail": "Downloads the EA FC 26 players CSV (free, no key), caches it weekly in data/fifa_players.csv, maps EA nationality names to canonical ESPN team names (FIFA_TEAM_ALIAS), prefers actual national-team members, and emits top-N per team with pps=overall. Default player_source."},
+      {"name": "API-Football deep stats (optional)", "file": "proxy/sources.py :: fetch_players_apifootball() / check_apifootball()", "status": "partial", "detail": "Paginated WC player season stats with x-apisports-key; throttled to ~twice a day (free ~100 req/day). check_apifootball() verifies a key against /status (also exposed at GET /apifootball/check and proxy/test_apifootball.py). 2026 season is empty this far out."},
+      {"name": "Kalshi live odds + self-heal discovery", "file": "proxy/sources.py :: fetch_kalshi() / discover_kalshi_series() / _kalshi_price() / _kalshi_title()", "status": "partial", "detail": "Public Kalshi API (no key). Tries known WC series (KXMENWORLDCUP…); if empty, scans open events by keyword to discover the live series ticker. _kalshi_price() handles both new *_dollars strings and old integer cents. No WC markets listed yet."},
+      {"name": "SAMPLE fallback players", "file": "proxy/sources.py :: sample_players()", "status": "live", "detail": "Synthetic, clearly-labelled (source='SAMPLE') 8-team roster with position-appropriate stat shapes so the scoring engine and the rest of the app always have data on a cold/offline start."}
+    ]
+  },
+  {
+    "category": "Scoring Engine",
+    "features": [
+      {"name": "Player Power Score (percentile, per-90)", "file": "proxy/scoring.py :: score_players() / _per90() / _percentiles()", "status": "live", "detail": "Position-aware (GK/DEF/MID/ATT). Counting stats are per-90, percentile-normalised within the player's position group, weighted by GROUP_WEIGHTS, shrunk toward 50 for low minutes, and carry a confidence from minutes coverage × metric richness."},
+      {"name": "Rated-input scoring (EA FC overall)", "file": "proxy/scoring.py :: score_all_rated()", "status": "live", "detail": "For inputs that already carry a 0-100 quality score (EA FC 'overall'): skips the per-90/percentile path, sets group from position, defaults pps_conf 0.85, and aggregates straight to SSS. server.refresh() picks this vs score_all based on whether the source is rated."},
+      {"name": "Squad Strength Score (projected XI)", "file": "proxy/scoring.py :: score_team() / score_all()", "status": "live", "detail": "Builds a projected best XI (XI_SHAPE 1/4/3/3, filled from leftovers if short), spine-weights it (SPINE: GK 1.20 … ATT 1.15), adds a star non-linearity (0.12·(top−70)) and a 5-man bench-depth term, returns sss + projected xi + breakdown."}
+    ]
+  },
+  {
+    "category": "AI Proxy (server-side keys)",
+    "features": [
+      {"name": "OpenRouter proxy + free-model fallback", "file": "proxy/server.py :: ai_openrouter() / load_openrouter_key() / FREE_FALLBACKS", "status": "live", "detail": "POST /ai/openrouter relays a chat completion using the SERVER-SIDE key (config.json, else system.openrouter_api_key from C:\\QI\\maia.db). Caps max_tokens; on 404/429/502/503 for a :free model, walks the FREE_FALLBACKS chain so chat still answers. Key never reaches the browser."},
+      {"name": "Tunnel-only AI access gate", "file": "proxy/server.py :: _via_tunnel() / _live_ai_password()", "status": "live", "detail": "_via_tunnel() detects Cloudflare headers (cf-ray/cf-connecting-ip). When ai_access_password is set, tunnel requests must send a matching X-AI-Access header or get the friendly AI_LOCKED_MSG; local/exe traffic is never gated. Password re-read from config.json each call → instant lockout."},
+      {"name": "Ollama proxy (tags + chat)", "file": "proxy/server.py :: ollama_tags() / ollama_chat()", "status": "live", "detail": "GET /ai/ollama/tags and POST /ai/ollama/chat relay to the local Ollama server (default 127.0.0.1:11434, overridable per request). Because the proxy (not the browser) calls Ollama, no OLLAMA_ORIGINS / CORS setup is needed."},
+      {"name": "Grounding audit harness", "file": "proxy/audit_ai.py", "status": "live", "detail": "Sends the same persona system prompt + controlled JSON snapshot the page sends, through the live /ai/openrouter, and checks the answers stay grounded in the panels and refuse outside info."}
+    ]
+  },
+  {
+    "category": "Local-Only Config & Setup",
+    "features": [
+      {"name": "Config editor (local-only)", "file": "proxy/server.py :: get_config() / post_config() / config_editor() · proxy/config_editor.html", "status": "live", "detail": "GET/POST /config and GET /config/editor are blocked over the tunnel (config holds secrets). post_config() writes config.json and hot-reloads CFG (port still needs a restart). config_editor.html is the one-page editor UI."},
+      {"name": "config.json + defaults", "file": "proxy/config.json :: load_cfg() / DEFAULT_CFG", "status": "live", "detail": "port, refresh_minutes, player_source (fifa), apifootball_season, player_refresh_hours, api_football_key, openrouter_api_key, ai_access_password, use_espn_basic_roster, allow_origins. Self-documents every key in a _notes block. Bad JSON falls back to defaults."},
+      {"name": "EDR allowlist helper + setup page", "file": "proxy/server.py :: allowlist_info() / setup_page() · proxy/SETUP.txt", "status": "live", "detail": "GET /allowlist-info (local-only) returns the .exe path, its SHA-256, and the exact Windows Defender exclusion command for users hitting antivirus blocks. GET /setup serves SETUP.txt — the friend-facing 'install your own Ollama' guide."}
+    ]
+  },
+  {
+    "category": "Front-End (single-file HTML)",
+    "features": [
+      {"name": "Proxy polling + board assembly", "file": "WC2026.html :: pollProxy() / startProxyPolling() / buildBoard() / liveOn()", "status": "live", "detail": "Polls GET /snapshot (manual + every PROXCFG.every seconds), stores it in PROX, and buildBoard() makes the live ESPN schedule the board when connected (manual OVER scores only fill gaps), else uses SEED fixtures. resolveBaseFromMode() switches local/tunnel/custom/auto for every call at once."},
+      {"name": "Betting-window math", "file": "WC2026.html :: phaseMetrics() / teamScores() / effectiveP() / formFactor()", "status": "live", "detail": "ROUNDS + INFO constants per phase. teamScores() marries SSS (proxy) with TFS (formFactor over computeStandings()) via w=gp/(gp+3). phaseMetrics() computes winProb=p^rounds, payout=1/(winProb+fee), value=info×min(1,(1/winProb−1)/5)."},
+      {"name": "Unified multi-provider AI call", "file": "WC2026.html :: callAI() / askAI() / systemPrompt() / snapshot()", "status": "live", "detail": "One call path branches by provider: ollama (via proxy /ai/ollama/chat), anthropic, google, openrouter-via-proxy (X-AI-Access code), or generic OpenAI-compatible. systemPrompt() embeds a JSON snapshot of the panels; surfaces the friendly ai_locked + low-memory messages."},
+      {"name": "Kalshi list + market edge", "file": "WC2026.html :: fetchKalshiLive() / parseKalshi() / renderKalshiList() / marketEdges() / teamsMatch()", "status": "live", "detail": "fetchKalshiLive() pulls GET /kalshi; parseKalshi() accepts a manual JSON paste; renderKalshiList() shows implied prob + payout; marketEdges() compares model vs market with token-set team-name matching across FIFA/ESPN/Kalshi spellings."},
+      {"name": "Persistent dynamic workspace", "file": "WC2026.html :: WS_BRIDGE / popOutPane / dockPane / localStorage state", "status": "live", "detail": "Resizable/hideable/drag-reorder/pop-out panes; layout + OVER scores + BET + CFG + KALSHI + PROXCFG all persisted in localStorage. WS_BRIDGE re-exposes handlers into popped-out windows."}
+    ]
+  },
+  {
+    "category": "Packaging & CI",
+    "features": [
+      {"name": "Windowed PyInstaller build", "file": "build_exe.py / proxy/launcher_gui.py / WC2026.spec", "status": "live", "detail": "Default build is windowed via launcher_gui.py (pywebview → native OS webview), bundling server.py + WC2026.html + a key-sanitized config. OS-aware output WC2026-{win,mac,linux}. --console builds the old browser-launch variant via launcher.py."},
+      {"name": "One-dir portable build", "file": "build_exe_onedir.py / build_onedir/", "status": "live", "detail": "Alternative one-directory PyInstaller build (faster start, antivirus-friendlier) producing the WC2026_portable-win-onedir.zip in release/."},
+      {"name": "Cross-OS CI", "file": ".github/workflows/build.yml", "status": "live", "detail": "Builds the windowed app on Windows + macOS + Linux runners (a .exe can't run cross-OS) and uploads all three as artifacts."},
+      {"name": "Release bundle + tour", "file": "release/ (WC2026-win.exe, *_portable*.zip, README.txt, HOW TO SET THIS UP (README FIRST!).txt, WC2026_Tour.mp4, produce_tour.py)", "status": "live", "detail": "Ready-to-share artifacts plus friend-facing setup docs and a screen-recorded tour produced by produce_tour.py."}
+    ]
+  }
+]

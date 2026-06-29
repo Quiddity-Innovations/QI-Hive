@@ -1,0 +1,45 @@
+{
+  "table": [
+    {"layer": "Host / Runtime", "technology": "Claude Code (Anthropic CLI / Agent SDK)", "role": "The session host. Main-thread Claude is the orchestrator; sub-agents run via the Agent tool. This workspace is its management cockpit.", "license": "Commercial (Anthropic)", "version": "Claude Code / Desktop (MSIX)"},
+    {"layer": "Models", "technology": "Opus / Sonnet / Haiku", "role": "Per-agent model tiers: Opus (architect, deep design), Sonnet (builder, inspector, librarian), Haiku (ops, scout, scribe, tester).", "license": "Commercial (Anthropic)", "version": "current generation"},
+    {"layer": "Language", "technology": "Python", "role": "All hooks, the supervisor, the self-audit, reconciliation + migration scripts, and the docx generators.", "license": "PSF (open source)", "version": "3.11 (C:\\1-AI\\APPS\\PYTHON\\python.exe)"},
+    {"layer": "Scripting / Ops", "technology": "PowerShell", "role": "Restart guard, monthly-audit orchestrator, service-rights grant, and the supervisor's service/scheduled-task probes.", "license": "MIT (PowerShell Core) / Windows", "version": "Windows PowerShell 5.1+"},
+    {"layer": "Scripting / Ops", "technology": "Windows Batch (.bat)", "role": "Explorer-launched Clean-Restart wrapper (run outside a Claude session for a true clean restart).", "license": "Windows", "version": "cmd.exe"},
+    {"layer": "Agent config", "technology": "Markdown front-matter agents", "role": "Each hive-* agent is a .md file with name/description/model/tools front-matter + a role prompt; loaded from .claude/agents/.", "license": "n/a (project files)", "version": "8 agents"},
+    {"layer": "Harness config", "technology": "Claude Code settings.json + hooks", "role": "permissions (bypassPermissions) + SessionEnd/SubagentStop hook wiring; SessionStart/UserPromptSubmit hooks wired in the global ~/.claude config.", "license": "n/a", "version": "settings.json"},
+    {"layer": "Process control", "technology": "Win32_Process / CIM + Stop-Process", "role": "The restart guard maps the full process tree, walks ancestors/descendants, and kills orphaned MCP trees while protecting QI_ services and its own chain.", "license": "Windows", "version": "CIM"},
+    {"layer": "Services / Scheduling", "technology": "NSSM + Windows Task Scheduler", "role": "QI_ NSSM services are supervised (not owned) here; QI_ClaudeSelfAudit and QI_ClaudeVoiceMeeting_8AM scheduled tasks drive monthly + daily automation.", "license": "Public domain (nssm) / Windows", "version": "nssm 2.24 at C:\\QIH\\engine\\bin\\nssm.exe"},
+    {"layer": "Memory store", "technology": "QI Brain (SQLite + ChromaDB)", "role": "qi_brain.db is the reconciliation + session target; the librarian queries its docs/doc_relationships catalog and the qi_docs Chroma collection.", "license": "Public domain / Apache 2.0", "version": "schema per Brain project"},
+    {"layer": "Brain access", "technology": "QI Brain API + qi-brain MCP", "role": "Live snapshot at session start (HTTP) and qi.* MCP tools (get_context, log_session, log_decision, search_memory).", "license": "n/a (QI internal)", "version": "API on port 9011"},
+    {"layer": "Source of truth", "technology": "qi_registry.json (QI ecosystem registry)", "role": "Single source for every project's path, ports, status, and relationships — read by the supervisor and both hooks for project inference.", "license": "n/a (QI internal)", "version": "C:\\QIH\\ecosystem\\"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Generates the self-audit .docx, the QI Hive overview docs, and session summaries (Heading 1/2, tables, colored runs).", "license": "MIT", "version": ">=1.1"},
+    {"layer": "Notifications", "technology": "LINE Messaging API (Tasuke OA)", "role": "Outbound alerting to Renne via broadcast — no stored userId; token from C:\\OC\\secrets\\tasuke-line.env.", "license": "Commercial (LINE)", "version": "v2 broadcast"},
+    {"layer": "Version control", "technology": "Git", "role": "The supervisor reads git status/log per project for drift; the self-audit prunes ephemeral .claude/worktrees across 8 repos.", "license": "GPLv2", "version": "C:\\Program Files\\Git\\cmd\\git.exe"}
+  ],
+  "descriptions": [
+    {
+      "title": "A management workspace, not a served app",
+      "body": "Claude Manager (claude_manager, C:\\CLAUDE) is registered family_tier=backbone with no served ports — its own registry note reads 'Management/meta workspace that operates ON the ecosystem rather than being a deployed app.' Everything here acts on other projects: it scans them, reconciles their Brain records, ingests their sessions, and dispatches work into them. The 'tech stack' is therefore deliberately glue: the Claude Code harness, Python/PowerShell automation, the registry, the Brain, and Windows process/service control. It is the difference between the engine room (C:\\QIH) and the bridge from which the engine room is commanded."
+    },
+    {
+      "title": "Why eight agents and a dispatch rule",
+      "body": "Claude Code does not auto-route work to sub-agents — DISPATCH_PROTOCOL.md is explicit that 'if I don't dispatch, no one does.' So the fabric is a discipline encoded in two places: the eight .md agent definitions (each pinning a role, a model tier, and an allowed tool set) and the protocol that maps task triggers to agents and chains them into workflows (design->build->review->document). The model tiers are the cost lever: Opus only for architecture, Sonnet for code and review, Haiku for the high-frequency ops/scout/scribe/tester work. The main thread stays the orchestrator, delegation is kept one level deep, and attribution is honest — a sub-agent's work is logged as that agent, not as the main thread."
+    },
+    {
+      "title": "The supervisor: registry in, three artifacts out",
+      "body": "supervisor.py is the drift engine. It reads qi_registry.json, then for every project checks five things — does the path exist, is git clean (untracked vs modified counts, last-commit age), are there keepalive *failure-state*.json files, are its QI_ NSSM services running, and did its scheduled tasks exit non-zero. Each finding is severity-tagged and rolled up to red/yellow/green. It emits three artifacts: a human DASHBOARD.md, a machine report.json, and an update into C:\\QIH\\data\\status.json that lights up the QI Hive dashboard panels. The service/task probes shell out to PowerShell over nssm.exe and Get-ScheduledTask, matched by AppDirectory/action path so only services genuinely rooted under the project count."
+    },
+    {
+      "title": "Hooks: guaranteeing the session is never silent",
+      "body": "Three hook scripts make memory automatic. SessionStart (session_context.py, wired globally) injects the ecosystem briefing, a live Brain probe that fails LOUD if Brain is down, the dispatch reminder, and the monthly-audit review gate. SessionEnd (session_end.py, wired in this project's settings.json) writes a session stub to the Hive inbox so QI_HiveIngest records it in qi_brain.db even when Claude forgot to log explicitly — inferring the project from cwd via longest-prefix match against the registry (with C:\\CLAUDE falling through to claude_manager). SubagentStop (subagent_stop.py) does the same for each sub-agent, normalising its name to hive_<role> so cross-project memory is attributed correctly. All three are best-effort and never block the session."
+    },
+    {
+      "title": "Safe-by-design automation",
+      "body": "The self-audit and the restart guard share a philosophy: only ever auto-do what is provably reversible or provably orphaned. qi_self_audit.py --apply-safe is limited to killing orphaned MCP processes, removing git worktrees with a clean working tree, and pruning dead .claude.json entries (with a timestamped backup); everything else — large folders, temp files, backup accumulation — is reported into PENDING_REVIEW.json for the in-session decision gate. The restart guard's kill-set is built from claude.exe descendant trees plus MCP-signature orphans, but Is-UnderService explicitly excludes anything parented by services.exe/nssm/svchost so the QI_ tunnels and Brain API are never collateral, and it removes its own ancestor chain so running it from inside a session can't kill the host."
+    },
+    {
+      "title": "One source of truth, read everywhere",
+      "body": "Nothing in this workspace hardcodes a path or a port. The supervisor, both inbox hooks, and the reconciliation scripts all read C:\\QIH\\ecosystem\\qi_registry.json to learn where projects live and which ports they own. This is what lets a project move (FileHQ absorbed into Naya, UNIVERSAL into QIH) or a port change (Brain 9010->9011) propagate without editing the tooling — the one known exception being the SessionStart hook's still-hardcoded :9010 Brain probe, which is on the roadmap to repoint."
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+{
+  "sections": [
+    {
+      "name": "Top-Level Project Docs",
+      "documents": [
+        {
+          "title": "README — OC Orchestrator",
+          "type": "Reference",
+          "location": "C:\\OC\\",
+          "file": "README.md",
+          "description": "Repository purpose and deliberate boundaries (curated, non-secret assets only — no live tokens, OAuth, or runtime DBs)."
+        },
+        {
+          "title": "CHANGELOG",
+          "type": "Reference",
+          "location": "C:\\OC\\",
+          "file": "CHANGELOG.md",
+          "description": "Repository changelog (initialised 2026-04-02)."
+        },
+        {
+          "title": "Claude Project Instructions",
+          "type": "Operations",
+          "location": "C:\\OC\\",
+          "file": "CLAUDE.md",
+          "description": "Session-start protocol, QI standards pointers, paths, and ports for the OpenClaw project (note: still references legacy C:\\UNIVERSAL paths)."
+        }
+      ]
+    },
+    {
+      "name": "Authoritative State & Reference",
+      "documents": [
+        {
+          "title": "STATUS — Current State Snapshot",
+          "type": "Reference",
+          "location": "C:\\OC\\docs\\reference\\",
+          "file": "STATUS.md",
+          "description": "Authoritative live-runtime snapshot (2026-06-15 audit): gateway, LLM stack, channels, per-agent status, scheduling, secrets, key config. Supersedes older memory."
+        },
+        {
+          "title": "Agent Index",
+          "type": "Reference",
+          "location": "C:\\OC\\docs\\user\\",
+          "file": "AGENT_INDEX.md",
+          "description": "Index of the agent roster and what each one does."
+        },
+        {
+          "title": "Setup Guide",
+          "type": "User Guide",
+          "location": "C:\\OC\\docs\\user\\",
+          "file": "SETUP_GUIDE.md",
+          "description": "How to stand up and operate the OpenClaw stack."
+        }
+      ]
+    },
+    {
+      "name": "Architecture & Technical",
+      "documents": [
+        {
+          "title": "Architecture",
+          "type": "Technical",
+          "location": "C:\\OC\\docs\\technical\\",
+          "file": "ARCHITECTURE.md",
+          "description": "System architecture of the gateway, orchestrator, and specialist agents."
+        },
+        {
+          "title": "Technical Blueprint",
+          "type": "Technical",
+          "location": "C:\\OC\\docs\\technical\\",
+          "file": "TECHNICAL_BLUEPRINT.md",
+          "description": "Detailed technical design and build blueprint."
+        },
+        {
+          "title": "Development Blueprint",
+          "type": "Technical",
+          "location": "C:\\OC\\docs\\development\\",
+          "file": "DEVELOPMENT_BLUEPRINT.md",
+          "description": "Development plan and engineering blueprint."
+        },
+        {
+          "title": "Roadmap",
+          "type": "Planning",
+          "location": "C:\\OC\\docs\\development\\",
+          "file": "ROADMAP.md",
+          "description": "Forward plan for agents, channels, and the Maia marriage."
+        },
+        {
+          "title": "Document Governance",
+          "type": "Process",
+          "location": "C:\\OC\\docs\\development\\",
+          "file": "DOCUMENT_GOVERNANCE.md",
+          "description": "Rules for which documents are canonical and how they are maintained."
+        }
+      ]
+    },
+    {
+      "name": "Business & Decisions",
+      "documents": [
+        {
+          "title": "Product Vision",
+          "type": "Business",
+          "location": "C:\\OC\\docs\\business\\",
+          "file": "PRODUCT_VISION.md",
+          "description": "Why OpenClaw exists and where it fits as the action layer of the QI ecosystem."
+        },
+        {
+          "title": "Decision Records",
+          "type": "Decisions",
+          "location": "C:\\OC\\docs\\decisions\\",
+          "file": "DECISIONS.md",
+          "description": "Recorded architectural and product decisions (e.g. Seiri cancellation, TOOLS.md model)."
+        }
+      ]
+    },
+    {
+      "name": "Agent Profiles",
+      "documents": [
+        {
+          "title": "Tasuke — The Loyal Guard (orchestrator)",
+          "type": "Agent Profile",
+          "location": "C:\\OC\\agents\\",
+          "file": "TASUKE.md",
+          "description": "Orchestrator identity, role, authority model, and development protocol. The only agent Renne talks to directly."
+        },
+        {
+          "title": "Kaze — News & Digest",
+          "type": "Agent Profile",
+          "location": "C:\\OC\\agents\\",
+          "file": "KAZE.md",
+          "description": "Twice-daily news/AI digest agent; LLM router and delivery setup."
+        },
+        {
+          "title": "Yubin — Email Intelligence",
+          "type": "Agent Profile",
+          "location": "C:\\OC\\agents\\",
+          "file": "YUBIN.md",
+          "description": "Gmail triage agent, containment rules, hard authority constraints."
+        },
+        {
+          "title": "Asa — Morning Briefing",
+          "type": "Agent Profile",
+          "location": "C:\\OC\\agents\\",
+          "file": "ASA.md",
+          "description": "Read-only 7AM briefing aggregator (added Phase 2, 2026-05-13)."
+        },
+        {
+          "title": "Kakei — Household Finance",
+          "type": "Agent Profile",
+          "location": "C:\\OC\\agents\\",
+          "file": "KAKEI.md",
+          "description": "SQLite bill/expense ledger fed by Yubin + receipt photos (added Phase 2)."
+        },
+        {
+          "title": "Koe — Voice",
+          "type": "Agent Profile",
+          "location": "C:\\OC\\agents\\",
+          "file": "KOE.md",
+          "description": "STT/TTS converter, female persona, language-matched preambles, engine options."
+        },
+        {
+          "title": "Sentry — Health & Security",
+          "type": "Agent Profile",
+          "location": "C:\\OC\\agents\\",
+          "file": "SENTRY.md",
+          "description": "Deterministic health/security monitor — no LLM by design."
+        },
+        {
+          "title": "New Agents & Skills Switchboard",
+          "type": "Operations",
+          "location": "C:\\OC\\agents\\",
+          "file": "OC_NEW_AGENTS_INDEX.md",
+          "description": "Phase 2 activation guide for Asa, Koe, Kakei, Yubin VIP, Hive bridge, Receipts, Sentry drift — with dependency order and produced-files list."
+        }
+      ]
+    },
+    {
+      "name": "Gateway Capability Contract",
+      "documents": [
+        {
+          "title": "TOOLS.md additions (canonical copy)",
+          "type": "Technical",
+          "location": "C:\\OC\\repo\\scripts\\tasuke\\",
+          "file": "TOOLS_ADDITIONS.md",
+          "description": "Version-controlled copy of the seven TOOLS.md sections, plus the architecture clarification: capabilities = TOOLS.md sections, not bots. Re-apply after an openclaw upgrade."
+        },
+        {
+          "title": "Global Context Rules (permission firewall)",
+          "type": "Technical",
+          "location": "C:\\OC\\repo\\scripts\\tasuke\\",
+          "file": "tools_global_context.md",
+          "description": "TALK/DO/PRIVATE permission tiers and ordered gate evaluation appended into the live TOOLS.md."
+        },
+        {
+          "title": "Live TOOLS.md (WSL runtime)",
+          "type": "Runtime",
+          "location": "~/.openclaw/workspace/",
+          "file": "TOOLS.md",
+          "description": "The 1,262-line file the gateway LLM actually reads every turn. Not in the Windows repo; restored from the canonical copy after upgrades."
+        }
+      ]
+    },
+    {
+      "name": "Long-Form Project History",
+      "documents": [
+        {
+          "title": "OpenClaw Master Status Report",
+          "type": "Reference",
+          "location": "C:\\OC\\Quiddity Innovations - OpenClaw Documentation\\",
+          "file": "OpenClaw_Master_Status_Report.md",
+          "description": "Consolidated master status report for the project."
+        },
+        {
+          "title": "Implementation Log",
+          "type": "Log",
+          "location": "C:\\OC\\Quiddity Innovations - OpenClaw Documentation\\",
+          "file": "OpenClaw_Implementation_Log.md",
+          "description": "Running log of what was built, fixed, and decided across sessions."
+        },
+        {
+          "title": "Meeting Minutes",
+          "type": "Log",
+          "location": "C:\\OC\\Quiddity Innovations - OpenClaw Documentation\\",
+          "file": "OpenClaw_Meeting_Minutes.md",
+          "description": "Session decisions and next steps."
+        },
+        {
+          "title": "Version History",
+          "type": "Log",
+          "location": "C:\\OC\\Quiddity Innovations - OpenClaw Documentation\\",
+          "file": "OpenClaw_Version_History.md",
+          "description": "Code change history."
+        }
+      ]
+    },
+    {
+      "name": "Ecosystem & Operations",
+      "documents": [
+        {
+          "title": "QI Ecosystem Map",
+          "type": "Reference",
+          "location": "C:\\QIH\\ecosystem\\",
+          "file": "QI_Ecosystem_Map.md",
+          "description": "OpenClaw's place in the QI port/family map and integration contracts (family tier: cousin / marriage candidate with Maia)."
+        },
+        {
+          "title": "QI Service Registry",
+          "type": "Operations",
+          "location": "C:\\QIH\\ecosystem\\",
+          "file": "QI_Service_Registry.md",
+          "description": "Windows service catalogue — includes QI_KazeConfigAPI and QI_KazeNewsTunnel (kaze.quiddityinnovations.com)."
+        },
+        {
+          "title": "QI Registry (machine-readable)",
+          "type": "Reference",
+          "location": "C:\\QIH\\ecosystem\\",
+          "file": "qi_registry.json",
+          "description": "OpenClaw registry entry: id openclaw, status active_production, gateway port 18789, WSL runtime, agent exposure list."
+        },
+        {
+          "title": "OC Control Panel v6",
+          "type": "Operations",
+          "location": "C:\\OC\\",
+          "file": "OC_Control_Panel_v6.bat",
+          "description": "Operator menu — gateway/dashboard/keepalive/Task-Scheduler/WSL status checks and quick-open links."
+        }
+      ]
+    }
+  ]
+}

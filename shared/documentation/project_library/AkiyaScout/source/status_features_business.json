@@ -1,0 +1,56 @@
+[
+  {
+    "category": "Discovery & Search (English-first)",
+    "features": [
+      {"name": "Browse Japanese homes in English", "description": "Every listing is presented in English — title, description, address layer, property type — while the original Japanese is kept underneath for use with local agents.", "status": "live", "notes": "Bilingual *_ja/*_en storage; UI offers EN / 日本語 / Both toggle. 1,865 live listings."},
+      {"name": "Filter & slice inventory", "description": "Narrow listings by property type, price (JPY or USD), prefecture, region, build year, floor area, bedrooms, seismic code, akiya-bank-only, and free-text keyword.", "status": "live", "notes": "queries.search_listings + GET /listings; cheapest-first ordering, price-on-request listings kept."},
+      {"name": "Akiya / Kominka / rural focus", "description": "Property types tuned for foreign buyers: vacant house (akiya), traditional kominka, modern house, apartment, commercial, farmhouse, and land.", "status": "live", "notes": "modern 909, akiya 647, land 133, kominka 65, farmhouse 64, commercial 46, apartment 1."},
+      {"name": "USD <-> JPY price view", "description": "Prices shown and filtered in either Japanese yen or US dollars, converted at a configurable rate.", "status": "live", "notes": "usd_jpy_rate setting (default 155); applied in queries, matching, notifications."}
+    ]
+  },
+  {
+    "category": "Interactive Map of Japan",
+    "features": [
+      {"name": "Prefecture choropleth", "description": "A full 47-prefecture map of Japan shaded by how many live listings each prefecture has, so hotspots are obvious at a glance.", "status": "live", "notes": "folium GeoJson choropleth; 46 prefectures currently carry listings."},
+      {"name": "Clustered price pins", "description": "Each geocoded home drops a pin showing price, photo, type, size and a link straight to the original listing; nearby pins cluster so towns stay readable.", "status": "live", "notes": "MarkerCluster; 1,171 listings geocoded; deterministic jitter separates co-located homes."},
+      {"name": "English / Japanese / satellite / hazard layers", "description": "Switch between English labels, Japanese labels, GSI satellite and topographic maps, and overlay MLIT flood, landslide, tsunami and storm-surge hazard layers.", "status": "live", "notes": "Esri + CartoDB + GSI tiles; 4 disaster-portal hazard overlays toggleable."},
+      {"name": "Region to prefecture to city drill-down", "description": "Pick a region, then a prefecture, then a city to zoom and filter the map and listing grid together.", "status": "live", "notes": "mapview.build_map(region, pref_slug) + cities_for(); city-level GeoJSON is a future add."}
+    ]
+  },
+  {
+    "category": "Personalized Scout (Profiles & Matching)",
+    "features": [
+      {"name": "Saved search Profiles", "description": "Describe what you want once — type, budget, area, size, era, seismic, keywords — and save it as a named Profile instead of re-searching every day.", "status": "live", "notes": "Multi-profile; 3 active profiles in the DB. criteria_json holds optional ranges/sets."},
+      {"name": "Automatic match-on-ingest", "description": "As new listings arrive, each is scored against every active Profile and recorded as a match — the engine watches the market for you.", "status": "live", "notes": "203 matches recorded; runs inside the ingest transaction."},
+      {"name": "Relevance scoring", "description": "Matches are ranked by fit: cheaper-vs-ceiling listings and those hitting soft preferences (climate, keywords) score higher.", "status": "live", "notes": "score 0..1 = 0.5*price-headroom + 0.5*soft-pref hit-rate."},
+      {"name": "On-demand profile pull", "description": "Force a live scrape of just one Profile's target prefectures right now, then re-match — rather than waiting for the next scheduled cycle.", "status": "live", "notes": "pipeline.pull_for_profile() routes akiya-bank vs SUUMO sources by property type."}
+    ]
+  },
+  {
+    "category": "Notifications & Scheduling",
+    "features": [
+      {"name": "Scheduled digests per Profile", "description": "Map each Profile to a Daily, Weekly, Monthly or custom-cron cadence; the engine bundles new matches into a digest on that schedule.", "status": "live", "notes": "APScheduler CronTrigger, Asia/Tokyo timezone; per-profile schedules table."},
+      {"name": "Daily new-house update", "description": "A daily summary of every house newly added in the last 24 hours, regardless of profile.", "status": "live", "notes": "build_daily_digest(window_hours=24) at 08:00 JST."},
+      {"name": "On-site notification inbox", "description": "Digests land in an in-app notifications panel with read/unread tracking — no email account required.", "status": "live", "notes": "notifications table; 3 recorded; GET /notifications + mark-read."},
+      {"name": "Email digests", "description": "Optionally send the same digests to your inbox via local SMTP.", "status": "partial", "notes": "Built; email_enabled=0 by default — needs SMTP user + SMTP_PASSWORD env to activate."}
+    ]
+  },
+  {
+    "category": "Buyer Decision Support",
+    "features": [
+      {"name": "Seismic & era flags", "description": "Each home is tagged with its building era (Showa/Heisei/Reiwa) and seismic code class (pre-1981 Kyu-Taishin vs post-1981 Shin-Taishin) — a critical risk signal for old Japanese houses.", "status": "live", "notes": "Derived from build_year in normalize.py."},
+      {"name": "Renovation cost estimate", "description": "A rough renovation budget is auto-estimated from building area and property type, so a cheap akiya's true cost is visible up front.", "status": "live", "notes": "estimate_reno(): ~90k yen/sqm for akiya/kominka/farmhouse, 50k otherwise."},
+      {"name": "Listing detail enrichment", "description": "Opening a listing pulls extra detail from the source page: photo gallery, full spec table (price/tsubo, coverage ratio, utilities, land category), days-on-market, and nearest station.", "status": "live", "notes": "enrich.py parses at-home detail pages; 915 listings carry photos."},
+      {"name": "Hazard exposure (map overlays)", "description": "Cross-reference any area against official MLIT flood, landslide, tsunami and storm-surge maps before buying.", "status": "partial", "notes": "Map overlays live; per-listing hazard_json column reserved but not yet populated."}
+    ]
+  },
+  {
+    "category": "QI Ecosystem Fit",
+    "features": [
+      {"name": "Registered QI project", "description": "AkiyaScout is a registered QI ecosystem project with allocated ports and a documented interface contract.", "status": "live", "notes": "qi_registry.json: api 8505, ui 7845, family_tier cousin."},
+      {"name": "Standard QI API contract", "description": "Exposes the standard /health, /version, /info endpoints every QI service implements, plus its own listings/profiles/ingest surface.", "status": "live", "notes": "api/main.py; CORS from qi_registry with safe fallback."},
+      {"name": "Always-on Windows service + public tunnel", "description": "Run AkiyaScout 24/7 as a QI_ NSSM service and reach it remotely via a tunnel.", "status": "planned", "notes": "Currently launched via Start_AkiyaScout.bat; no QI_AkiyaScout service registered yet."},
+      {"name": "QI Brain cross-project memory", "description": "Log Scout sessions and decisions to the QI Brain for ecosystem-wide visibility.", "status": "planned", "notes": "Not yet wired; integrates_with is empty in the registry."}
+    ]
+  }
+]

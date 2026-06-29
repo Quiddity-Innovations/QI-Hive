@@ -1,0 +1,197 @@
+{
+  "intro": "Excerpts from the live EasyFlow source (C:\\EasyFlow). EasyFlow has three surfaces driven by one config: the browser extension (Extension/), the Apps Script classifier (EasyFlow_AppsScript.js), and the Python dashboard + Gmail tools (Tools/app.py, create_*.py). Each snippet shows the real code behind a capability and how config.json flows into it.",
+  "sections": [
+    {
+      "category": "Config — the single source of truth",
+      "snippets": [
+        {
+          "title": "The tier configuration",
+          "feature": "Six-tier classification model",
+          "file": "Tools/config.json",
+          "language": "json",
+          "code": "{\n  \"tiers\": {\n    \"1 - ME\": {\n      \"color\": \"#ac2b16\", \"color_name\": \"Red\",\n      \"description\": \"You, your health, your security\",\n      \"labels\": {\n        \"Health & Medical\": {\n          \"from\": [\"bcbsma.com\", \"myuhc.com\", \"mychart.com\", \"cvs.com\"],\n          \"subject\": [\"appointment\", \"prescription\", \"lab results\"]\n        },\n        \"Security Alerts\": {\n          \"from\": [\"accountprotection.microsoft.com\", \"no-reply@accounts.google.com\"],\n          \"subject\": [\"security alert\", \"suspicious sign-in\", \"password reset\"]\n        }\n      }\n    }\n    /* 2 - Inner Circle ... 6 - Low Priority */\n  },\n  \"settings\": {\n    \"classify_interval_minutes\": 15,\n    \"triage_after_days\": 30,\n    \"triage_time\": \"01:00\"\n  }\n}",
+          "explanation": "This one file defines everything: six tiers, their Gmail palette colors, the nested sub-labels, and the sender/subject rules for each. The Apps Script classifier, the Gmail filters, the label tree, and the extension's rules engine are all derived from it — change a rule here and every surface re-derives. settings holds the cadence (classify every 15 min, triage stale mail after 30 days)."
+        },
+        {
+          "title": "Backed-up config save",
+          "feature": "Safe, non-destructive editing",
+          "file": "Tools/app.py · save_config()",
+          "language": "python",
+          "code": "def save_config(config):\n    # Backup before saving\n    backup_path = CONFIG_FILE + '.bak'\n    if os.path.exists(CONFIG_FILE):\n        import shutil\n        shutil.copy2(CONFIG_FILE, backup_path)\n\n    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:\n        json.dump(config, f, indent=2, ensure_ascii=False)",
+          "explanation": "Because config.json is the source of truth for every surface, a bad edit could mis-sort an entire inbox. save_config() copies the current file to config.json.bak before overwriting, so the previous good configuration is always one file away. ensure_ascii=False preserves non-Latin sender names and keywords."
+        }
+      ]
+    },
+    {
+      "category": "Gmail API auth — Flask (OAuth + token store)",
+      "snippets": [
+        {
+          "title": "OAuth flow with PKCE over localhost",
+          "feature": "Connect your Gmail account from the dashboard",
+          "file": "Tools/app.py · connect_gmail() / oauth_callback()",
+          "language": "python",
+          "code": "os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # allow OAuth over http://localhost\n\n@app.route('/connect')\ndef connect_gmail():\n    flow = Flow.from_client_secrets_file(\n        find_client_secret(), scopes=GMAIL_SCOPES,\n        redirect_uri='http://localhost:8550/oauth/callback')\n    authorization_url, state = flow.authorization_url(\n        access_type='offline', include_granted_scopes='true', prompt='consent')\n    session['oauth_state'] = state\n    session['code_verifier'] = flow.code_verifier   # store PKCE verifier for the callback\n    return redirect(authorization_url)\n\n@app.route('/oauth/callback')\ndef oauth_callback():\n    flow = Flow.from_client_secrets_file(find_client_secret(), scopes=GMAIL_SCOPES,\n        redirect_uri='http://localhost:8550/oauth/callback')\n    flow.code_verifier = session.get('code_verifier')\n    flow.fetch_token(authorization_response=request.url)\n    with open(TOKEN_FILE, 'w', encoding='utf-8') as f:\n        f.write(flow.credentials.to_json())",
+          "explanation": "The dashboard never needs a terminal to authenticate. It runs a standard Google OAuth2 Authorization-Code-with-PKCE flow entirely in the browser: /connect redirects to Google, and /oauth/callback exchanges the code for credentials, restoring the PKCE code_verifier from the Flask session. OAUTHLIB_INSECURE_TRANSPORT lets the loopback redirect work over plain http on localhost. The token is persisted to token_gmail.json."
+        },
+        {
+          "title": "Token refresh helper",
+          "feature": "Authenticated Gmail service with auto-refresh",
+          "file": "Tools/app.py · get_gmail_service()",
+          "language": "python",
+          "code": "def get_gmail_service():\n    if not os.path.exists(TOKEN_FILE):\n        return None, \"Not connected. Please connect your Gmail account first.\"\n    try:\n        creds = Credentials.from_authorized_user_file(TOKEN_FILE, GMAIL_SCOPES)\n        if creds and creds.expired and creds.refresh_token:\n            creds.refresh(Request())\n            with open(TOKEN_FILE, 'w', encoding='utf-8') as f:\n                f.write(creds.to_json())\n        if not creds or not creds.valid:\n            return None, \"Session expired. Please reconnect your Gmail account.\"\n        return build('gmail', 'v1', credentials=creds), None\n    except Exception as e:\n        return None, f\"Authentication error: {str(e)}\"",
+          "explanation": "Every Gmail operation in the dashboard goes through this helper. It loads the saved credentials, silently refreshes them with the refresh token when expired (writing the new token back), and returns a (service, error) tuple so each route can surface a clean message instead of crashing. EasyFlow keeps three separate tokens by scope: token_gmail.json (labels+modify), token_gmail_filters.json (settings.basic), token_apps_script.json (script.projects)."
+        }
+      ]
+    },
+    {
+      "category": "Gmail API auth — Extension (cross-browser)",
+      "snippets": [
+        {
+          "title": "Chrome getAuthToken with Edge fallback",
+          "feature": "Sign-in that works in both Chrome and Edge",
+          "file": "Extension/background/service-worker.js · getAuthToken()",
+          "language": "javascript",
+          "code": "let _authMethod = null; // 'chrome' | 'web' | null\n\nasync function getAuthToken(interactive = false) {\n  if (_authMethod === 'web')    return _getTokenViaWebFlow(interactive);\n  if (_authMethod === 'chrome') return _getTokenViaChrome(interactive);\n  // First call this session — probe Chrome API, fall back to Web flow if unsupported.\n  try {\n    const token = await _getTokenViaChrome(interactive);\n    _authMethod = 'chrome';\n    return token;\n  } catch (e) {\n    const msg = (e && e.message) || '';\n    if (msg.includes('not supported') || msg.includes('Microsoft Edge') || msg.includes('getAuthToken')) {\n      _authMethod = 'web';\n      return _getTokenViaWebFlow(interactive);   // Edge: launchWebAuthFlow + Web OAuth client\n    }\n    throw e;\n  }\n}",
+          "explanation": "Chrome's chrome.identity.getAuthToken is fast but Edge doesn't implement it. getAuthToken() probes the Chrome path once; if it fails with an 'unsupported'/'Microsoft Edge' error it switches to chrome.identity.launchWebAuthFlow against a separate Web OAuth client and caches the token itself (the web flow has no built-in cache). _authMethod remembers which path worked so it never re-probes an unsupported API. This single function is what lets one codebase ship to both the Chrome and Edge stores."
+        },
+        {
+          "title": "Resilient gmailFetch (timeout + retry)",
+          "feature": "Hardened Gmail REST access for bulk ops",
+          "file": "Extension/background/service-worker.js · gmailFetch()",
+          "language": "javascript",
+          "code": "async function gmailFetch(endpoint, options = {}, _retry = 0, _netRetry = 0) {\n  const token = await getAuthToken(false);\n  const url = endpoint.startsWith('http') ? endpoint : `${GMAIL_API}${endpoint}`;\n  const timeoutMs = _pickTimeout(options, endpoint);  // 10s GET / 60s DELETE+batchModify\n  const ctrl = new AbortController();\n  const timeoutId = setTimeout(() => ctrl.abort(), timeoutMs);\n  let resp;\n  try {\n    resp = await fetch(url, { ...options, signal: ctrl.signal,\n      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers||{}) } });\n  } catch (e) {\n    clearTimeout(timeoutId);\n    if (!options.noRetry && _netRetry < GMAIL_FETCH_MAX_NETWORK_RETRIES) {\n      await sleep(2000 * Math.pow(2, _netRetry));        // network backoff 2s, 4s\n      return gmailFetch(endpoint, options, _retry, _netRetry + 1);\n    }\n    throw new Error(`Gmail API ${/* abort */ 'timeout'} : ${endpoint}`);\n  }\n  clearTimeout(timeoutId);\n  if (resp.status === 401 && _retry === 0) {              // token expired → refresh + retry once\n    await removeCachedToken();\n    return gmailFetch(endpoint, options, 1, _netRetry);\n  }\n  if (resp.status === 429 && _retry < 3) {                // rate limited → backoff 2/4/8s\n    await sleep(Math.pow(2, _retry + 1) * 1000);\n    return gmailFetch(endpoint, options, _retry + 1, _netRetry);\n  }\n  if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error?.message || `Gmail API ${resp.status}`); }\n  const text = await resp.text();\n  return text && text.trim() ? JSON.parse(text) : {};\n}",
+          "explanation": "MV3 service workers have no default fetch timeout, so a dropped Gmail response would hang forever. gmailFetch adds an AbortController hard timeout (10s for reads, 60s for destructive DELETE/batchModify), refreshes the token and retries once on 401, backs off exponentially on 429, and retries network errors twice with 2s/4s backoff. This is the foundation every label, message, and filter call in the extension is built on — it's what makes bulk cleanup and migration safe."
+        },
+        {
+          "title": "Gmail's cascade-404 is not an error",
+          "feature": "Safe parent-label deletion",
+          "file": "Extension/background/service-worker.js · isGmailCascade404()",
+          "language": "javascript",
+          "code": "// Gmail cascade-deletes sub-labels when a parent label is removed. When iterating\n// over children afterwards, Gmail returns 404 (\"Requested entity was not found\").\n// These are NOT real errors.\nfunction isGmailCascade404(err) {\n  if (!err) return false;\n  const msg = String(err.message || err);\n  return /Requested entity was not found|HTTP\\s*404|\\b404\\b/i.test(msg);\n}",
+          "explanation": "Deleting a parent label like '6 - Low Priority' makes Gmail silently delete all of its children too. Code that then tries to delete each child individually hits a 404. This helper recognises that specific case so the cleanup loop treats it as success-already-done rather than surfacing a scary error to the user."
+        }
+      ]
+    },
+    {
+      "category": "Tier / rules engine (Apps Script)",
+      "snippets": [
+        {
+          "title": "The classifier core",
+          "feature": "Sender + subject rule matching",
+          "file": "EasyFlow_AppsScript.js · classifyMessage_()",
+          "language": "javascript",
+          "code": "function classifyMessage_(message) {\n  const from = message.getFrom().toLowerCase();\n  const subject = message.getSubject().toLowerCase();\n  const rokidResult = classifyRokid_(message);   // special rule runs first\n  if (rokidResult) return rokidResult;\n  for (const [labelName, rules] of Object.entries(TIER_RULES)) {\n    if (labelName.includes(\"Rokid\")) continue;\n    for (const domain of rules.from) {\n      if (from.includes(domain.toLowerCase())) return labelName;\n    }\n    for (const keyword of rules.subject) {\n      if (subject.includes(keyword.toLowerCase())) return labelName;\n    }\n  }\n  return null;   // → falls through to Triage\n}",
+          "explanation": "The deterministic heart of EasyFlow. It lowercases the sender and subject, runs any special rule first (e.g. routing Rokid order mail to a different tier than Rokid news), then walks TIER_RULES in order: the first sender-domain or subject-keyword match wins and returns the full 'Tier/Sub-label' name. A null means nothing matched, so the message goes to Triage. TIER_RULES is generated verbatim from config.json."
+        },
+        {
+          "title": "The 15-minute sweep",
+          "feature": "Auto-classify new mail and archive it",
+          "file": "EasyFlow_AppsScript.js · classifyNewEmails()",
+          "language": "javascript",
+          "code": "function classifyNewEmails() {\n  const startTime = new Date();\n  const MAX_RUNTIME_MS = 5 * 60 * 1000;\n  const threads = GmailApp.search(\"in:inbox is:unread\", 0, 50);\n  let classified = 0, unclassified = 0;\n  for (const thread of threads) {\n    if (new Date() - startTime > MAX_RUNTIME_MS) break;   // GAS 6-min quota guard\n    const messages = thread.getMessages();\n    const labelName = classifyMessage_(messages[messages.length - 1]);\n    if (labelName) {\n      const label = getLabel_(labelName);\n      const parentName = labelName.split(\"/\")[0];\n      if (parentName !== labelName) thread.addLabel(getLabel_(parentName));\n      thread.addLabel(label);\n      thread.moveToArchive();\n      classified++;\n    } else { unclassified++; }\n  }\n  Logger.log(\"Classified: \" + classified + \" | Unclassified: \" + unclassified);\n}",
+          "explanation": "Registered to run every 15 minutes on Google's servers. For each unread inbox thread it classifies the latest message, applies both the sub-label and its parent tier label (so '3 - Life Admin/Bills/Internet' also gets '3 - Life Admin'), then archives the thread out of the inbox. A 5-minute runtime guard keeps it safely inside the Apps Script 6-minute execution quota. getLabel_() memoizes label lookups so each label is fetched/created once per run."
+        },
+        {
+          "title": "Trigger registration",
+          "feature": "Set-and-forget scheduling",
+          "file": "EasyFlow_AppsScript.js · setupTriggers()",
+          "language": "javascript",
+          "code": "function setupTriggers() {\n  ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));\n  ScriptApp.newTrigger(\"classifyNewEmails\").timeBased().everyMinutes(15).create();\n  ScriptApp.newTrigger(\"triageStaleInbox\").timeBased().atHour(1).everyDays(1).create();\n  Logger.log(\"Triggers created: classifyNewEmails (15min), triageStaleInbox (daily 1AM)\");\n}",
+          "explanation": "Run once by the user after pasting/deploying the script. It clears any existing triggers (so re-running is idempotent) and registers the two time-based jobs: the 15-minute classifier and the nightly stale-inbox triage at 1 AM. After this, EasyFlow keeps sorting mail with nothing of its own running on the user's machine."
+        }
+      ]
+    },
+    {
+      "category": "Artifact generation (config → automation)",
+      "snippets": [
+        {
+          "title": "Generating the Apps Script from config",
+          "feature": "Compile TIER_RULES from the tier tree",
+          "file": "Tools/app.py · generate_apps_script()",
+          "language": "python",
+          "code": "lines.append('const TIER_RULES = {')\nfor tier_name, tier_data in config['tiers'].items():\n    for label_name, rules in tier_data.get('labels', {}).items():\n        full_label = f\"{tier_name}/{label_name}\"\n        from_list = json.dumps(rules.get('from', []))\n        subject_list = json.dumps(rules.get('subject', []))\n        lines.append(f'  \"{full_label}\": {{')\n        lines.append(f'    from: {from_list},')\n        lines.append(f'    subject: {subject_list}')\n        lines.append('  },')\nlines.append('};')\n# Append the static engine (classifyMessage_, classifyNewEmails, triage, setupTriggers)\nlines.append(get_engine_code())\nreturn '\\n'.join(lines)",
+          "explanation": "This is the bridge from the JSON config to runnable automation. It serializes every tier's sub-labels and rules into the TIER_RULES JS object — keyed by the full 'Tier/Sub-label' name — then appends the static engine code. The result is written to EasyFlow_AppsScript.js (POST /api/generate-script) or pushed straight to the user's Apps Script project. The generated file carries a 'do not edit directly' header pointing back to the dashboard."
+        },
+        {
+          "title": "Compiling tier rules into Gmail filters",
+          "feature": "Native server-side Gmail filters",
+          "file": "create_filters.py · config_to_filters()",
+          "language": "python",
+          "code": "def config_to_filters(config):\n    filters = []\n    for tier_name, tier_data in config['tiers'].items():\n        for label_name, rules in tier_data.get('labels', {}).items():\n            full_label = f\"{tier_name}/{label_name}\"\n            # Senders: batch into groups of 5 for OR queries\n            for i in range(0, len(rules.get('from', [])), 5):\n                batch = rules['from'][i:i + 5]\n                filters.append({'query': ' OR '.join(f'from:{d}' for d in batch),\n                                'label': full_label})\n            # Subjects: batch into groups of 5\n            for i in range(0, len(rules.get('subject', [])), 5):\n                batch = rules['subject'][i:i + 5]\n                filters.append({'query': ' OR '.join(f'subject:({kw})' for kw in batch),\n                                'label': full_label})\n    return filters",
+          "explanation": "The alternative to the Apps Script: native Gmail filters that need zero software running. Each tier rule becomes one or more filter definitions, with senders and subject keywords batched five-per-query (Gmail filter queries get unwieldy beyond that). When created (via /api/filters/create), each filter adds its tier label and removes INBOX — so matching mail is auto-filed and skips the inbox the moment it arrives."
+        },
+        {
+          "title": "Pushing the script via the Apps Script API",
+          "feature": "One-click auto-deploy",
+          "file": "Tools/app.py · api_auto_deploy()",
+          "language": "python",
+          "code": "service = build('script', 'v1', credentials=creds)\nrequest_body = {'files': [\n    {'name': 'Code', 'type': 'SERVER_JS', 'source': script_code},\n    {'name': 'appsscript', 'type': 'JSON', 'source': json.dumps({\n        \"timeZone\": \"America/New_York\",\n        \"oauthScopes\": [\n            \"https://www.googleapis.com/auth/gmail.modify\",\n            \"https://www.googleapis.com/auth/gmail.labels\",\n            \"https://www.googleapis.com/auth/script.scriptapp\"],\n        \"runtimeVersion\": \"V8\"})}]}\nservice.projects().updateContent(scriptId=script_id, body=request_body).execute()",
+          "explanation": "Instead of copy-pasting the generated code into the Apps Script editor, the dashboard can push it directly with the Apps Script API. projects().updateContent() replaces the project's files with the freshly generated classifier plus an appsscript manifest declaring the V8 runtime and Gmail scopes. This needs a saved script ID and the script.projects token (token_apps_script.json); 403/404 errors are translated into plain-language guidance. Status: partial — manual copy-paste remains the fallback."
+        }
+      ]
+    },
+    {
+      "category": "AI classification (Extension)",
+      "snippets": [
+        {
+          "title": "AI triage batch with tier guard",
+          "feature": "AI classifies the grey-area mail",
+          "file": "Extension/background/service-worker.js · aiTriageBatch()",
+          "language": "javascript",
+          "code": "async function aiTriageBatch(maxCount = 25) {\n  const config = await getConfig();\n  const tierNames = Object.keys(config.tiers || {});\n  if (tierNames.length === 0)\n    throw new Error('NO_TIERS_CONFIGURED: AI Triage needs at least one tier with sublabels...');\n  // Build the set of labels the LLM is allowed to return\n  const validTargets = new Set();\n  for (const tn of tierNames) {\n    validTargets.add(tn);\n    for (const s of Object.keys(config.tiers[tn].labels || {})) validTargets.add(`${tn}/${s}`);\n  }\n  const msgs = await listMessages(query, [], Math.max(1, Math.min(200, maxCount)));\n  const systemPrompt = _buildTriageSystemPrompt(config);\n  for (const m of msgs) {\n    const full = await getMessage(m.id, 'metadata');\n    const userPrompt = _buildTriageUserPrompt(getHeader(full,'From'), getHeader(full,'Subject'), full.snippet || '');\n    const parsed = _parseTriageResponse(await callLLMForClassification(systemPrompt, userPrompt, 300));\n    const label = validTargets.has(parsed.label) ? parsed.label : '';   // reject invented labels\n    results.push({ messageId: m.id, suggestion: label, confidence: parsed.confidence });\n  }\n}",
+          "explanation": "When the deterministic rules can't place an email, the AI is asked. A pre-flight guard refuses to run with no tiers (the model would have no targets). It builds validTargets from the actual tier tree, sends only the From/Subject/snippet — never the body — to the chosen LLM, and crucially only accepts a suggestion if the returned label already exists in the user's tree. That guard is what stops the model inventing categories. Capped at 200 messages per run."
+        },
+        {
+          "title": "The Gemini provider adapter",
+          "feature": "Bring-your-own-key AI provider",
+          "file": "Extension/background/service-worker.js · callGeminiAPI()",
+          "language": "javascript",
+          "code": "async function callGeminiAPI(userMessage, config, locale) {\n  const apiKey = config.settings?.gemini_api_key;\n  if (!apiKey) throw new Error('NO_API_KEY');\n  const systemPrompt = buildSystemPrompt(config, locale);\n  const resp = await fetch(\n    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,\n    { method: 'POST', headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        contents: [{ role: 'user', parts: [{ text: systemPrompt + '\\n\\nUser: ' + userMessage }] }],\n        generationConfig: { maxOutputTokens: 200, temperature: 0.7 } }) });\n  if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error?.message || `Gemini API ${resp.status}`); }\n  const data = await resp.json();\n  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';\n}",
+          "explanation": "One of four interchangeable provider adapters (Gemini, Ollama, OpenAI-compatible, Anthropic). The key comes from the user's own settings in chrome.storage.local — EasyFlow pays nothing per email. The locale-aware system prompt makes the assistant answer in the user's chosen language. callProvider() picks the right adapter for chat; callLLMForClassification() picks it for triage. Only metadata and snippets ever leave the browser."
+        }
+      ]
+    },
+    {
+      "category": "Server & routing (Flask dashboard)",
+      "snippets": [
+        {
+          "title": "Auth-gated entry + dashboard stats",
+          "feature": "Local dashboard on port 8550",
+          "file": "Tools/app.py · index() / dashboard()",
+          "language": "python",
+          "code": "@app.route('/')\ndef index():\n    if not is_authenticated():\n        return redirect(url_for('welcome'))   # first-run setup wizard\n    return redirect(url_for('dashboard'))\n\n@app.route('/dashboard')\ndef dashboard():\n    config = load_config()\n    stats = get_stats(config)\n    return render_template('dashboard.html', config=config, stats=stats)\n\nif __name__ == '__main__':\n    port = 8550\n    webbrowser.open(f'http://localhost:{port}')\n    app.run(host='127.0.0.1', port=port, debug=True)",
+          "explanation": "The dashboard is a desktop convenience, not a server — it binds to 127.0.0.1:8550 (within EasyFlow's 8550-8559 registry block) and auto-opens the browser on launch. The root route gates on Gmail authentication, sending first-time users to the welcome wizard and everyone else to the dashboard, where get_stats() summarises the config (total labels, senders, subjects, rules) into the overview cards."
+        },
+        {
+          "title": "Tier CRUD with proper status codes",
+          "feature": "Edit the tier tree via the designer",
+          "file": "Tools/app.py · api_add_label()",
+          "language": "python",
+          "code": "@app.route('/api/tier/<tier_name>/label', methods=['POST'])\ndef api_add_label(tier_name):\n    config = load_config()\n    data = request.get_json()\n    label_name = data.get('name', '').strip()\n    if not label_name:\n        return jsonify({'status': 'error', 'message': 'Label name required'}), 400\n    if tier_name not in config['tiers']:\n        return jsonify({'status': 'error', 'message': f'Tier {tier_name} not found'}), 404\n    if label_name in config['tiers'][tier_name]['labels']:\n        return jsonify({'status': 'error', 'message': f'Label \"{label_name}\" already exists'}), 409\n    config['tiers'][tier_name]['labels'][label_name] = {\n        'from': data.get('from', []), 'subject': data.get('subject', []) }\n    save_config(config)\n    return jsonify({'status': 'ok', 'message': f'Label \"{label_name}\" added to {tier_name}'})",
+          "explanation": "The designer and configure pages call a small REST API to mutate the tier tree: POST adds a sub-label, PUT updates its rules, DELETE removes it, and /api/designer/save replaces the whole tree at once. Each handler returns honest HTTP status codes — 400 for missing input, 404 for an unknown tier, 409 for a duplicate label — and every successful mutation runs through the backed-up save_config()."
+        }
+      ]
+    },
+    {
+      "category": "Side panel & label management (Extension)",
+      "snippets": [
+        {
+          "title": "Promise-wrapped messaging",
+          "feature": "Side panel ↔ service worker",
+          "file": "Extension/sidepanel/sidepanel.js · sendMessage()",
+          "language": "javascript",
+          "code": "function sendMessage(action, data = {}) {\n  return new Promise((resolve) => {\n    chrome.runtime.sendMessage({ action, ...data }, (response) => {\n      resolve(response);\n    });\n  });\n}\n\nasync function resolveWildcardLabels(pattern) {\n  // '2*' or 'Upd*' → ask the worker to match against the live label list\n  const result = await sendMessage('resolveWildcard', { pattern });\n  return result?.labels || [];\n}",
+          "explanation": "The side panel is a thin UI; all Gmail work happens in the service worker. sendMessage() wraps the callback-style chrome.runtime.sendMessage in a Promise so the panel can `await` worker actions. resolveWildcardLabels() is a good example: typing a pattern like '2*' sends a resolveWildcard request and the worker returns every matching label name, so one command can operate on a whole group of labels."
+        },
+        {
+          "title": "Stuck-label retry state machine",
+          "feature": "Two-attempt fallback to manual guidance",
+          "file": "Extension/sidepanel/sidepanel.js · retryStuckLabels()",
+          "language": "javascript",
+          "code": "let _stuckState = null;  // { labels: [...], attempt: n }\n\nasync function retryStuckLabels() {\n  if (!_stuckState || !_stuckState.labels?.length) return;\n  const ids = _stuckState.labels.map(l => l.id).filter(Boolean);\n  const attempt = _stuckState.attempt || 1;\n  const result = await sendMessage('retryStuckLabels', { ids });\n  const stillStuck = result?.stuck || [];\n  if (stillStuck.length === 0) {\n    _stuckState = null;                              // success\n  } else if (attempt === 1) {\n    _stuckState = { labels: stillStuck, attempt: 2 }; // escalate to attempt 2\n  } else {\n    guideManualCleanup();                            // give up → show manual steps\n  }\n}",
+          "explanation": "Gmail occasionally fails to delete a label under load. Rather than retry forever, EasyFlow uses a bounded state machine: attempt 1 retries the failed label IDs, attempt 2 retries once more, and if labels are still stuck after that it stops and shows the user explicit manual-cleanup instructions (guideManualCleanup) instead of spinning. This keeps the UI honest about what it could and couldn't do."
+        }
+      ]
+    }
+  ]
+}

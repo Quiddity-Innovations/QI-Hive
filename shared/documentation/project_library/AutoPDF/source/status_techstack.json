@@ -1,0 +1,201 @@
+{
+  "table": [
+    {
+      "layer": "Server",
+      "technology": "Windows PowerShell",
+      "role": "HTTP server (HttpListener) on 127.0.0.1:6969 + the entire processing engine; hosts static UI and ~80 /api/* routes.",
+      "license": "MIT (PowerShell) / proprietary (Windows PowerShell 5.1)",
+      "version": "5.1 target, 7+ compatible"
+    },
+    {
+      "layer": "Server",
+      "technology": "AutoPDF-Server.ps1",
+      "role": "Single-file engine: convert, split, extract, index, OnBase XML, AI proxy, config import/export, scheduler.",
+      "license": "Proprietary (Quiddity Innovations)",
+      "version": "app version 2026.06.15"
+    },
+    {
+      "layer": "Front-end",
+      "technology": "Vanilla JavaScript",
+      "role": "All UI logic in app.js (~5,600 lines); no framework, no bundler, no jQuery.",
+      "license": "Proprietary (Quiddity Innovations)",
+      "version": "asset token v=20260624a"
+    },
+    {
+      "layer": "Front-end",
+      "technology": "HTML5 + CSS3",
+      "role": "AutoPDFTool.html single-page shell (7 tabs) + hand-written styles.css; zone-mapper.html separate mapper tool.",
+      "license": "Proprietary (Quiddity Innovations)",
+      "version": "n/a"
+    },
+    {
+      "layer": "Launcher",
+      "technology": "C# (.NET / csc.exe)",
+      "role": "AutoPDF.exe idempotent launcher (Launcher.cs) compiled with Windows built-in csc.exe; embedded .ico, splash.",
+      "license": "Proprietary (Quiddity Innovations)",
+      "version": "n/a"
+    },
+    {
+      "layer": "PDF engine",
+      "technology": "Ghostscript",
+      "role": "Core PDF rendering / conversion; bundled and called as a separate process (gswin64c.exe).",
+      "license": "AGPL-3.0-or-later",
+      "version": "10.07.0"
+    },
+    {
+      "layer": "PDF engine",
+      "technology": "Poppler (pdftotext, pdfinfo)",
+      "role": "Text + word-bbox extraction for zones, regex, anchors and tagged mapping.",
+      "license": "GPL-2.0-or-later",
+      "version": "bundled"
+    },
+    {
+      "layer": "PDF engine",
+      "technology": "PDFtk (pdftk-java)",
+      "role": "PDF page operations / manipulation used by the splitter.",
+      "license": "GPL-2.0-only",
+      "version": "bundled"
+    },
+    {
+      "layer": "OCR",
+      "technology": "Tesseract OCR",
+      "role": "Default OCR engine; produces a searchable text layer for scanned / image-only PDFs; multi-language.",
+      "license": "Apache-2.0",
+      "version": "bundled"
+    },
+    {
+      "layer": "Tables",
+      "technology": "Tabula (tabula-java)",
+      "role": "True PDF -> Excel table extraction.",
+      "license": "MIT",
+      "version": "bundled (optional)"
+    },
+    {
+      "layer": "Scanning",
+      "technology": "NAPS2 (NAPS2.Console.exe)",
+      "role": "TWAIN / ESCL scanner bridge behind Invoke-ScanCapture; native WIA used otherwise.",
+      "license": "GPL-2.0-or-later",
+      "version": "8.2.1"
+    },
+    {
+      "layer": "Java runtime",
+      "technology": "OpenJDK / Liberica JRE",
+      "role": "Bundled JRE that runs the Java engines (Tabula, pdftk-java).",
+      "license": "GPL-2.0-with-classpath-exception",
+      "version": "bundled"
+    },
+    {
+      "layer": "Local AI",
+      "technology": "Ollama",
+      "role": "Optional local LLM host (127.0.0.1:11434) for Smart Mapping chat, AI field proposal, and ai_extract fields.",
+      "license": "MIT",
+      "version": "http API; num_ctx 32768"
+    },
+    {
+      "layer": "Local AI",
+      "technology": "AutoPDF Mapper model",
+      "role": "Specialized Ollama variant built from AutoPDFMapper.Modelfile; knows the 3 field kinds + library convention.",
+      "license": "Derived from base model (e.g. Qwen2.5)",
+      "version": "autopdf-mapper:latest"
+    },
+    {
+      "layer": "Office",
+      "technology": "Microsoft Office (COM)",
+      "role": "Optional: Word/Excel/PowerPoint and styled Markdown conversion via COM automation.",
+      "license": "Commercial (Microsoft)",
+      "version": "Office 2013+"
+    },
+    {
+      "layer": "Index export",
+      "technology": "Excel COM (XLSX)",
+      "role": "Optional XLSX mirror of the CSV index.",
+      "license": "Commercial (Microsoft)",
+      "version": "Office 2013+"
+    },
+    {
+      "layer": "Index export",
+      "technology": "OnBase XML Index DIP",
+      "role": "Hyland-schema XML index output (Write-IndexXml); ConvertTo-XmlName for safe element names.",
+      "license": "n/a (output format)",
+      "version": "Foundation 24.1"
+    },
+    {
+      "layer": "Persistence",
+      "technology": "JSON config files",
+      "role": "autopdf-settings.json, recipes/*.json, templates/*.json, regex_library.json, scheduler-jobs.json; no database.",
+      "license": "n/a",
+      "version": "n/a"
+    },
+    {
+      "layer": "Networking / ops",
+      "technology": "Cloudflare Tunnel + NSSM",
+      "role": "QI_AutoPDFTunnel (auto-start) exposes PIN-gated public access; QI_AutoPDF manual placeholder; tunnel_manager.py + nssm.exe.",
+      "license": "Cloudflare ToS / NSSM public domain",
+      "version": "tunnel_manager.py"
+    },
+    {
+      "layer": "Testing",
+      "technology": "Pester-style PS tests + Playwright",
+      "role": "Tier 1/2 PowerShell API/AI tests (~27) and Tier 3 pytest + Playwright UI regression.",
+      "license": "Apache-2.0 (Playwright) / MIT (pytest)",
+      "version": "Tests/ tree"
+    },
+    {
+      "layer": "OCR roadmap",
+      "technology": "RapidOcrNet (ONNX Runtime)",
+      "role": "Planned second OCR engine (PP-OCRv5/v6) via .NET ONNX binding; no Python; CPU/CUDA selectable.",
+      "license": "Apache-2.0 (planned)",
+      "version": "not started (plan 2026-06-22)"
+    }
+  ],
+  "descriptions": [
+    {
+      "title": "Why PowerShell, not Python",
+      "technology": "Why PowerShell, not Python",
+      "body": "AutoPDF is deliberately Python-free. The server is a single ~7,400-line PowerShell script (AutoPDF-Server.ps1) targeting PS 5.1 syntax so it runs on a vanilla Windows box with nothing installed, and on PS 7+ too. This is what gives AutoPDF its copy-a-folder portability for Windows admins. Constraints follow from PS 5.1: no ternary, no null-coalescing outside PS7, ASCII hyphens only in .ps1 strings (em-dashes corrupt the parser), and Send-Json forces -Depth 10 because the default depth-2 silently truncated nested arrays.",
+      "text": "AutoPDF is deliberately Python-free. The server is a single ~7,400-line PowerShell script (AutoPDF-Server.ps1) targeting PS 5.1 syntax so it runs on a vanilla Windows box with nothing installed, and on PS 7+ too. This is what gives AutoPDF its copy-a-folder portability. Constraints: no ternary, no null-coalescing outside PS7, ASCII hyphens only in .ps1 strings, and Send-Json forces -Depth 10 because default depth-2 truncated nested arrays."
+    },
+    {
+      "title": "Bundled engines as separate executables",
+      "technology": "Bundled engines as separate executables",
+      "body": "Ghostscript, Poppler, Tesseract, Tabula, PDFtk, NAPS2, and a bundled JRE all live under Application/ and are invoked as separate command-line processes (an arm's-length / mere-aggregation relationship). AutoPDF's own code does not link them in-process, which is what keeps AutoPDF's source proprietary even though Ghostscript is AGPL and Poppler/PDFtk/NAPS2 are GPL. The only obligation is on distribution: ship the licenses/ folder and per-engine license files, and do not modify the GPL/AGPL binaries.",
+      "text": "Ghostscript, Poppler, Tesseract, Tabula, PDFtk, NAPS2, and a bundled JRE live under Application/ and are invoked as separate processes (arm's-length aggregation). AutoPDF does not link them in-process, which keeps its source proprietary even though Ghostscript is AGPL and Poppler/PDFtk/NAPS2 are GPL. The only obligation is on distribution: ship the licenses and do not modify the binaries."
+    },
+    {
+      "title": "Local-only AI via Ollama",
+      "technology": "Local-only AI via Ollama",
+      "body": "The single AI path is a local Ollama instance at 127.0.0.1:11434 — there is no OpenAI/Anthropic/Gemini integration, by design, because confidential documents are a core use case. /api/ai-chat is page-range aware and parses <thinking> tags from reasoning models into a separate log; /api/template-propose injects the regex library and returns fully configured field payloads plus proposedLibraryAdditions. A specialized variant (autopdf-mapper, built from AutoPDFMapper.Modelfile) understands the three field kinds. AI is opt-in: a Settings toggle greys out every AI surface when Ollama isn't used.",
+      "text": "The single AI path is a local Ollama instance at 127.0.0.1:11434 — no cloud LLM, by design, because confidential documents are a core use case. /api/ai-chat is page-range aware and parses <thinking> tags; /api/template-propose injects the regex library and returns configured fields plus proposedLibraryAdditions. A specialized autopdf-mapper variant (AutoPDFMapper.Modelfile) understands the three field kinds. AI is opt-in."
+    },
+    {
+      "title": "The template data model — three field kinds",
+      "technology": "The template data model — three field kinds",
+      "body": "Templates are user-defined JSON in Application/templates/. Each field is one of three kinds: zone (a fixed rectangle stored as page fractions), regex_match (a page-text scan with scope all/first/last/N/A-B and strategy first/last/largest/all), or ai_extract (the LLM finds the value at run-time). Invoke-TemplateExtraction runs them in three passes (zones -> regex_match -> ai_extract), each priming the next. A per-field format post-processor normalizes currency/date/number/phone/upper/lower/trim. AI proposes fields but never dictates the schema.",
+      "text": "Templates are user-defined JSON. Each field is zone (fixed rectangle in page fractions), regex_match (page-text scan with scope/strategy), or ai_extract (LLM at run-time). Invoke-TemplateExtraction runs them in three passes, each priming the next. A per-field format post-processor normalizes currency/date/number/phone/upper/lower/trim. AI proposes fields but never dictates the schema."
+    },
+    {
+      "title": "Tagged (anchor-relative) mapping",
+      "technology": "Tagged (anchor-relative) mapping",
+      "body": "Tagged mapping makes a field follow its label across documents instead of being pinned to coordinates. A drawn box becomes the label/anchor (its text is auto-read and the box snaps to it); a value sub-area is positioned relative to that label (right/left/above/below, any size). At run-time Find-AnchorRectFrac + Resolve-TaggedZoneRect re-find the label's text on every document via Poppler word boxes and float the value box to wherever the label appears, falling back to a saved static rectangle if the label isn't found. Get-PdfTextBboxByPage caches word boxes per (path+mtime). It works in both Smart Mapping and the PDF Splitter's Visual Zone Mapper across all four view modes.",
+      "text": "Tagged mapping makes a field follow its label across documents. A drawn box becomes the label/anchor; a value sub-area sits relative to it. At run-time Find-AnchorRectFrac + Resolve-TaggedZoneRect re-find the label via Poppler word boxes and float the value box to it, falling back to a static rect. Get-PdfTextBboxByPage caches word boxes per (path+mtime). Works in Smart Mapping and the Splitter's Visual Zone Mapper."
+    },
+    {
+      "title": "OnBase XML Index DIP output",
+      "technology": "OnBase XML Index DIP output",
+      "body": "The index can be emitted as a Hyland OnBase XML Index Document Import Processor file (Foundation 24.1). Write-IndexXml serializes a config-driven run root with one <NewDocument> per row, an optional <DocTypeName>, one element per metadata column, and a repeatable <FilePath> file reference; ConvertTo-XmlName coerces arbitrary column labels into valid element names. Output is UTF-8 no-BOM, properly XML-escaped, and skips empty keyword elements. It is wired into both emit sites (Index Creator's Invoke-IndexBuild gated on format.alsoXml, and the PDF Splitter gated on indexCsv.xml.enabled) and was verified headless on the 30-file demo set.",
+      "text": "The index can be emitted as a Hyland OnBase XML Index DIP file (Foundation 24.1). Write-IndexXml serializes a config-driven run root with one <NewDocument> per row, optional <DocTypeName>, one element per column, and a repeatable <FilePath>; ConvertTo-XmlName makes valid element names. UTF-8 no-BOM, XML-escaped. Wired into both Index Creator (format.alsoXml) and Splitter (indexCsv.xml.enabled), verified on the 30-file demo set."
+    },
+    {
+      "title": "Deployment: launcher, services, tunnel",
+      "technology": "Deployment: launcher, services, tunnel",
+      "body": "AutoPDF.exe is a native C# stub (compiled with Windows' built-in csc.exe) that pings /api/status and either opens the browser or starts the hidden server. Two NSSM services exist under the QI_ naming standard: QI_AutoPDF is a manual, non-started placeholder (the app intentionally runs interactively at logon because Office COM needs a desktop session), and QI_AutoPDFTunnel is an auto-start Cloudflare quick tunnel (tunnel_manager.py) exposing PIN-gated public access at autopdf.quiddityinnovations.com. nssm lives at C:\\QIH\\engine\\bin\\nssm.exe. /health and /version stay open for monitoring probes; everything else is PIN-gated.",
+      "text": "AutoPDF.exe is a native C# stub (csc.exe) that pings /api/status and either opens the browser or starts the hidden server. Two NSSM QI_ services: QI_AutoPDF is a manual placeholder (app runs interactively at logon for Office COM) and QI_AutoPDFTunnel auto-starts a Cloudflare tunnel (tunnel_manager.py) with PIN-gated public access. /health and /version stay open for probes; everything else is PIN-gated."
+    },
+    {
+      "title": "OCR roadmap — keeping zero-install",
+      "technology": "OCR roadmap — keeping zero-install",
+      "body": "Tesseract is the live, default OCR engine. A planned second engine adds PP-OCRv5 (later v6) via ONNX Runtime through a .NET binding (RapidOcrNet) — bundled, offline, callable from the existing PowerShell/.NET layer with no Python. The toggle is engine = tesseract|paddle-onnx and device = auto|cpu|cuda, with Tesseract staying the default. The Python/paddlepaddle prototype in PP-OCRv6/ (autopdf_ocr.py) is explicitly rejected for production (~1.5-2.5 GB footprint + AVX crash risk) and is NOT referenced by the server; the ONNX route was chosen specifically to preserve copy-folder portability. Plan approved 2026-06-22, implementation not yet started.",
+      "text": "Tesseract is the live default OCR. A planned second engine adds PP-OCRv5/v6 via ONNX Runtime + .NET (RapidOcrNet) — bundled, offline, no Python; toggle engine = tesseract|paddle-onnx, device = auto|cpu|cuda, Tesseract stays default. The Python paddlepaddle prototype (PP-OCRv6/autopdf_ocr.py) is rejected for footprint/AVX risk and is NOT wired into the server. Plan approved 2026-06-22, not started."
+    }
+  ]
+}

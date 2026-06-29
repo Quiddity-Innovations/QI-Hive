@@ -1,0 +1,78 @@
+[
+  {
+    "category": "Server & Entry Point",
+    "features": [
+      {"name": "FastAPI app + no-cache middleware", "file": "server.py :: app / no_cache()", "status": "live", "detail": "Single FastAPI app on port 8777 (LOTTERYWIZ_PORT override). ~45 endpoints. A middleware sends Cache-Control: no-store on .js/.css/.html and the mounted index pages so a single-user dev edit shows on reload."},
+      {"name": "Static mounts (4 apps + results)", "file": "server.py :: app.mount(...)", "status": "live", "detail": "Mounts /general (Universal), /scratch, /supersete, /results (each StaticFiles html=True), and / -> Fantasy5/. GET / serves Fantasy5/index.html."},
+      {"name": "Run launcher", "file": "run.bat", "status": "live", "detail": "Double-click launcher: cd to dir, python server.py, open http://localhost:8777. launch.json also has fantasy5 (:8777) + fantasy5dev (:8778) for iterating without touching the live service."},
+      {"name": "Owner-key loader", "file": "server.py :: _load_owner_key() / OWNER_KEY", "status": "live", "detail": "Reads LOTTERYWIZ_OWNER_KEY env, else gitignored .owner_key, else generates one with secrets.token_urlsafe and writes it. GET /api/owner/check validates constant-time via hmac.compare_digest and never returns the key."}
+    ]
+  },
+  {
+    "category": "Fantasy 5 Engine (pick 5 of 42)",
+    "features": [
+      {"name": "Covering-design wheel", "file": "engine_py.py :: gen_wheel()", "status": "live", "detail": "Greedy set-cover over t-subsets of the pool: enumerate t-subsets needed, repeatedly pick the candidate ticket covering the most still-uncovered t-subsets until all are covered or guard trips."},
+      {"name": "Structured generator", "file": "engine_py.py :: gen_structured()", "status": "live", "detail": "Targets sum range, odd/low balance, max-consec via fits(); samples candidates, scores by pair-overlap (x10) minus optional hot weight, keeps lowest. Relax fallback when constraints can't be met. seed-deterministic."},
+      {"name": "Curated pipeline", "file": "engine_py.py :: build_play_set() / is_edge() / profile_score()", "status": "live", "detail": "combinations(pool,5) -> drop past draws -> drop is_edge() shapes -> sort by profile_score (gaussian sum->107, odd/low near 2-3, zero-consec, spread, novelty) -> coverage-aware greedy top-N minimising pair reuse. Returns funnel + pair/triple coverage + stats. Refuses pools that make >200k combos."},
+      {"name": "Brutal Ledger replay", "file": "engine_py.py :: ledger_run() / _mask()", "status": "live", "detail": "Bitmask each ticket and each draw; per draw sum payouts via popcount (bit_count). Returns spend, recovered, net, roi, per-tier counts, equity curve, best_win, worst_losing_streak."},
+      {"name": "Monte-Carlo control", "file": "engine_py.py :: montecarlo_control() / percentile_of()", "status": "live", "detail": "Random quick-pick has the SAME hypergeometric match distribution by symmetry, so a run's recovered total is one multinomial over n_tickets*n_draws trials. numpy rng.multinomial (pure-python fallback). Returns sorted net P/L list."},
+      {"name": "Probability + backtest", "file": "engine_py.py :: probability_profile() / backtest() / check_set()", "status": "live", "detail": "p_exactly via hypergeometric; p_any_atleast over T tickets. backtest tallies best-ticket match tier per draw. check_set scores a set vs a winning draw (per-ticket hits, tier, payout)."},
+      {"name": "Draws + frequency", "file": "engine_py.py :: load_draws() / frequency() / ranked_numbers() / hot_numbers()", "status": "live", "detail": "Reads Fantasy5/draws_store.json; frequency table over 1..42; ranked hottest-first; hot/cold helpers for the pool picker."}
+    ]
+  },
+  {
+    "category": "Universal Engine (any N/k + bonus)",
+    "features": [
+      {"name": "Odds & prize tiers", "file": "lottery_general.py :: prize_tiers() / jackpot_odds() / total_combinations()", "status": "live", "detail": "Hypergeometric over arbitrary ticket size k vs draw size D (handles Lotomania pick-50/draw-20, Timemania pick-10/draw-7) times bonus pool C(Bn,b). Verified exact vs published odds."},
+      {"name": "Generalized covering wheel", "file": "lottery_general.py :: wheel()", "status": "live", "detail": "dcode-style greedy t-cover for any pool/k/t: enumerates k-subsets when C(v,k)<=60000 else samples. Returns tickets + the plain-English guarantee."},
+      {"name": "Auto-derived profile + curated", "file": "lottery_general.py :: derive_profile() / is_edge_g() / profile_score_g() / build_curated()", "status": "live", "detail": "derive_profile computes each game's sum hotzone (observed percentiles), odd/low targets and low/high split from ITS own draws; the curated funnel generalizes with a relax-fallback for concentrated pools."},
+      {"name": "Generalized ledger + control + backtest", "file": "lottery_general.py :: ledger_run() / montecarlo_control() / backtest()", "status": "live", "detail": "Parameterized by (N,k): cost-aware replay, multinomial random control and best-tier backtest for any game, mirroring the F5 engine."},
+      {"name": "Bonus-ball attach + Super Sete", "file": "lottery_general.py :: attach_bonus() / supersete_pmf() / supersete_odds() + PRESETS", "status": "live", "detail": "attach_bonus adds the independent bonus ball (rotate/fixed/cover). supersete_pmf is a Poisson-binomial over 7 columns with p_i = marks_i/10; PRESETS registry holds every game's N/k/bonus/region."}
+    ]
+  },
+  {
+    "category": "API Endpoints (FastAPI)",
+    "features": [
+      {"name": "Fantasy 5 draws + update", "file": "server.py :: /api/draws*, /api/update-draws", "status": "live", "detail": "List/search/delete/add/import draws. /api/update-draws merges the official Georgia Lottery latest result + lottonumbers.com year archives (full=true rebuilds 2015->now); dedups by date."},
+      {"name": "F5 build / ledger / verdict", "file": "server.py :: /api/build, /api/ledger, /api/ledger/verdict", "status": "live", "detail": "/api/build runs the curated funnel. /api/ledger runs ledger_run + montecarlo_control (default 2000 runs) with persisted prizes/cost and a date window. /api/ledger/verdict SSE-streams a blunt statistician verdict."},
+      {"name": "Universal game endpoints", "file": "server.py :: /api/games, /api/g/draws, /api/g/build, /api/g/backtest, /api/g/ledger, /api/g/import", "status": "live", "detail": "Game registry + per-game draws, curated build, backtest, cost-aware ledger and CSV import - all keyed on the PRESETS config and per-game data/draws/<id>.json stores."},
+      {"name": "Live results endpoints", "file": "server.py :: /api/g/update, /api/g/update-all, /api/g/latest-all", "status": "live", "detail": "/api/g/update merges fresh draws for one game via live_sources; update-all walks every wired game in one request (~8.7s for 13 games) and also stores next-draw jackpots; latest-all returns all games' latest instantly from disk."},
+      {"name": "Chat (SSE) + AI status", "file": "server.py :: /api/chat, /api/ai/status, stream_ollama/anthropic/openai", "status": "live", "detail": "build_messages() picks the per-app system prompt and injects CURRENT APP STATE. /api/chat streams tokens as Server-Sent Events from Ollama (default) or a cloud provider. /api/ai/status lists local Ollama models (embeddings filtered) + keyed cloud models."},
+      {"name": "Settings / sets / plays / scratch / supersete", "file": "server.py :: /api/settings, /api/sets, /api/plays(/analyze), /api/scratch/*, /api/supersete/odds", "status": "live", "detail": "Persisted prize+cost+model settings (settings.json); saved-set library (saved_sets.db); logged plays + analysis (plays.db); scratch EV CRUD (scratch.db); exact Super Sete odds."},
+      {"name": "Export (CSV / Excel)", "file": "server.py :: /api/export", "status": "live", "detail": "Writes a CSV or a styled openpyxl .xlsx play sheet (gold header, borders, strategy/avg-sum/hotzone metadata) with a safe filename."}
+    ]
+  },
+  {
+    "category": "Live Data Sources",
+    "features": [
+      {"name": "US official (data.ny.gov)", "file": "live_sources.py :: _ny()", "status": "live", "detail": "Socrata JSON for Powerball (d6yy-54nr; PB = 6th token), Mega Millions (5xaw-6ayf; mega_ball), Cash4Life (kwxv-fwze; cash_ball), ordered by draw_date desc."},
+      {"name": "Brazil official (Caixa)", "file": "live_sources.py :: _caixa()", "status": "live", "detail": "servicebus2.caixa.gov.br walks back from the latest contest to the last stored date (gap-close). Special bonus parsing: Dia de Sorte month-name -> 1-12, +Milionaria trevosSorteados."},
+      {"name": "Europe feeds", "file": "live_sources.py :: _france() / _euromillions()", "status": "live", "detail": "France Loto from FDJ open data (data.opendatasoft.com); EuroMillions from the pedromealha community API. EuroJackpot/SuperEnalotto/UK/6-49 have no wired source (honest note; CSV still works)."},
+      {"name": "Next-draw jackpot fetch", "file": "live_sources.py :: fetch_jackpot() / has_jackpot()", "status": "live", "detail": "Caixa valorEstimadoProximoConcurso for 8 BR games; Mega Millions official NextPrizePool (regex-extracted from GetLatestDrawData); Cash4Life fixed label. Powerball/EuroMillions deliberately None (no reliable free headless source)."},
+      {"name": "Fantasy 5 sources", "file": "server.py :: fetch_ga_official() / fetch_lottonumbers()", "status": "live", "detail": "Official galottery.com API gives only the latest draw(s); lottonumbers.com (BeautifulSoup, cross-validated) backfills full years. F5 keeps its own deep store, separate from the Universal per-game stores."}
+    ]
+  },
+  {
+    "category": "MCP Server (Claude Desktop)",
+    "features": [
+      {"name": "FastMCP stdio server", "file": "mcp_server.py :: mcp = FastMCP(...)", "status": "live", "detail": "Launched by Claude Desktop over stdio (registered in %APPDATA%\\Claude\\claude_desktop_config.json, qi-brain preserved). Imports engine_py directly so the math is identical to the web app. No paid API - uses the Claude subscription."},
+      {"name": "11 tools", "file": "mcp_server.py :: @mcp.tool() ...", "status": "live", "detail": "draws_info, number_heat, suggest_pool, generate_set, backtest_set, brutal_ledger, probability, update_draws, add_draw, build_play_set, check_winners. brutal_ledger also runs the random control + percentile in one call."}
+    ]
+  },
+  {
+    "category": "Persistence & Static Apps",
+    "features": [
+      {"name": "Draw stores (JSON)", "file": "Fantasy5/draws_store.json + data/draws/<id>.json", "status": "live", "detail": "Fantasy 5: 4,222 draws (2015-01-01 -> 2026-06-15, galottery.com + lottonumbers). 14 per-game Universal stores (Powerball, Mega Millions, Cash4Life, Mega-Sena, Quina, Lotofacil, etc.) keyed {date, n, b?}."},
+      {"name": "SQLite stores", "file": "plays.db, saved_sets.db, scratch.db", "status": "live", "detail": "plays.db = logged real plays for personal analytics; saved_sets.db = the Saved Sets library; scratch.db = sgames/stiers/splays for the scratch EV tracker (schema created on demand)."},
+      {"name": "Browser engine (mirror)", "file": "Fantasy5/engine.js + General/general.js", "status": "live", "detail": "engine.js mirrors engine_py so the F5 page runs offline; general.js is the Universal client engine + UI. Both keep the same generation/backtest/odds math as the Python side."},
+      {"name": "Shared UI modules", "file": "Fantasy5/gamebar.js, Fantasy5/aidock.js (WizDock), app.js", "status": "live", "detail": "gamebar.js renders the shared region game-switcher on every page; aidock.js (WizDock) is the shared AI dock used by Universal/Super Sete/Scratch (FAB + drawer + model select + SSE + action-block parse). Fantasy5/app.js is the deep F5 controller."}
+    ]
+  },
+  {
+    "category": "Operations",
+    "features": [
+      {"name": "QI_LotteryWiz NSSM service", "file": "install_service.bat / restart_service.bat / uninstall_service.bat", "status": "partial", "detail": "Self-elevating NSSM install: service QI_LotteryWiz, AppDirectory C:\\Lottery Wiz, runs server.py, port 8777, auto-start, logs to LOGS\\service.log. Registered in QI_Service_Registry.md. User must run install_service.bat (UAC) to make it permanent; backend edits need restart_service.bat."},
+      {"name": "QI_LotteryWizTunnel", "file": "install_tunnel.bat / tunnel.bat / tunnel_url.bat / uninstall_tunnel.bat", "status": "partial", "detail": "NSSM cloudflared tunnel exposing localhost:8777. Registry targets the static named tunnel at https://lottery.quiddityinnovations.com; quick-tunnel scripts (tunnel.bat / tunnel_url.bat) work without admin in the interim."}
+    ]
+  }
+]

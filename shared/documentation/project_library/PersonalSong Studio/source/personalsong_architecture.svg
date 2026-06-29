@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 640" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="940" height="640" fill="#f8fafc" rx="12"/>
+  <text x="470" y="28" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2d3d">PersonalSong Studio — System Architecture</text>
+  <text x="470" y="47" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active Development · 2026</text>
+  <text x="470" y="63" text-anchor="middle" font-size="10" fill="#9aa5b1">Local · Free · GPU-resident · Loopback-only (:8088)</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="724" y="74" width="206" height="172" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="827" y="92" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="734" y="100" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="754" y="109" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="734" y="117" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="754" y="126" font-size="9" fill="#374151">Built · Partial / needs config</text>
+  <rect x="734" y="134" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="754" y="143" font-size="9" fill="#374151">Planned</text>
+  <rect x="734" y="151" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="754" y="160" font-size="9" fill="#374151">Core server / GPU model</text>
+  <line x1="734" y1="176" x2="752" y2="176" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="758" y="180" font-size="9" fill="#374151">Request flow</text>
+  <line x1="734" y1="193" x2="752" y2="193" stroke="#a855f7" stroke-width="1.6" marker-end="url(#arr-purple)"/>
+  <text x="758" y="197" font-size="9" fill="#374151">Subprocess / isolated venv</text>
+  <rect x="734" y="207" width="14" height="10" rx="2" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="754" y="216" font-size="9" fill="#374151">Group boundary</text>
+  <text x="827" y="238" text-anchor="middle" font-size="8" fill="#9aa5b1">Quiddity Innovations © 2026</text>
+
+  <!-- ══ USER / CLIENT GROUP ══ -->
+  <rect x="14" y="80" width="420" height="80" rx="9" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="26" y="74" width="120" height="14" rx="3" fill="#f8fafc"/>
+  <text x="86" y="85" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700" letter-spacing="1">GIFT-GIVER / RECIPIENT</text>
+
+  <rect x="22" y="92" width="128" height="60" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="86" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Creation Studio</text>
+  <text x="86" y="126" text-anchor="middle" font-size="8" fill="#3b82f6">Web form: story, genre,</text>
+  <text x="86" y="137" text-anchor="middle" font-size="8" fill="#3b82f6">mood, language, singer</text>
+  <text x="86" y="148" text-anchor="middle" font-size="8" fill="#93c5fd">static/index.html</text>
+
+  <rect x="158" y="92" width="128" height="60" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="222" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Library &amp; Share</text>
+  <text x="222" y="126" text-anchor="middle" font-size="8" fill="#3b82f6">Play · download · bundle</text>
+  <text x="222" y="137" text-anchor="middle" font-size="8" fill="#3b82f6">karaoke stems · QR card</text>
+  <text x="222" y="148" text-anchor="middle" font-size="8" fill="#93c5fd">/api/library · /api/extras</text>
+
+  <rect x="294" y="92" width="132" height="60" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="360" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">YT Music page</text>
+  <text x="360" y="126" text-anchor="middle" font-size="8" fill="#3b82f6">Upload / playlists</text>
+  <text x="360" y="137" text-anchor="middle" font-size="8" fill="#3b82f6">browser-header auth</text>
+  <text x="360" y="148" text-anchor="middle" font-size="8" fill="#93c5fd">static/ytmusic.html</text>
+
+  <!-- arrow: client -> core -->
+  <line x1="224" y1="160" x2="224" y2="186" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <!-- ══ CORE SERVER ══ -->
+  <rect x="14" y="186" width="700" height="64" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="364" y="208" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">PersonalSong Core Server</text>
+  <text x="364" y="224" text-anchor="middle" font-size="9.5" fill="#94a3b8">serve.py · FastAPI + Uvicorn (in-process) · Port 8088 · QI_PersonalSong NSSM service · isolated .venv</text>
+  <text x="364" y="239" text-anchor="middle" font-size="8.5" fill="#64748b">12 routers: lyrics · audio · source · media · library · config · voices · batch · extras · ytmusic · prompt</text>
+
+  <!-- arrows core -> engines band -->
+  <line x1="110" y1="250" x2="110" y2="278" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="364" y1="250" x2="364" y2="278" stroke="#b8860b" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+  <line x1="610" y1="250" x2="610" y2="278" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+  <!-- ══ ENGINES BAND ══ -->
+  <text x="18" y="272" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">LOCAL AI ENGINES (GPU, free)</text>
+
+  <!-- Ollama -->
+  <rect x="14" y="278" width="160" height="92" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="94" y="297" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">Ollama (lyrics)</text>
+  <text x="94" y="313" text-anchor="middle" font-size="8.5" fill="#2e7d32">Local LLM · qwen3:8b</text>
+  <text x="94" y="326" text-anchor="middle" font-size="8.5" fill="#2e7d32">think=False · keep_alive=0</text>
+  <text x="94" y="339" text-anchor="middle" font-size="8.5" fill="#2e7d32">name-injection rule</text>
+  <text x="94" y="356" text-anchor="middle" font-size="8" fill="#5f8a66">routers/lyrics.py</text>
+
+  <!-- ACE-Step (core model) -->
+  <rect x="184" y="278" width="180" height="92" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="1.5"/>
+  <text x="274" y="297" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">ACE-Step (singing)</text>
+  <text x="274" y="313" text-anchor="middle" font-size="8.5" fill="#cbd5e1">Diffusion sung vocals · bf16</text>
+  <text x="274" y="326" text-anchor="middle" font-size="8.5" fill="#cbd5e1">resident singleton · serialized</text>
+  <text x="274" y="339" text-anchor="middle" font-size="8.5" fill="#cbd5e1">audio2audio remix levers</text>
+  <text x="274" y="356" text-anchor="middle" font-size="8" fill="#64748b">ace_engine.py</text>
+
+  <!-- Demucs -->
+  <rect x="374" y="278" width="160" height="92" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="454" y="297" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">Demucs (stems)</text>
+  <text x="454" y="313" text-anchor="middle" font-size="8.5" fill="#2e7d32">htdemucs two-stem split</text>
+  <text x="454" y="326" text-anchor="middle" font-size="8.5" fill="#2e7d32">vocals / instrumental</text>
+  <text x="454" y="339" text-anchor="middle" font-size="8.5" fill="#2e7d32">karaoke · gender check</text>
+  <text x="454" y="356" text-anchor="middle" font-size="8" fill="#5f8a66">source_engine.py</text>
+
+  <!-- Seed-VC (subprocess / own venv) -->
+  <rect x="544" y="278" width="170" height="92" rx="9" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="629" y="297" text-anchor="middle" font-size="11" font-weight="700" fill="#581c87">Seed-VC (clone)</text>
+  <text x="629" y="313" text-anchor="middle" font-size="8.5" fill="#7e22ce">Zero-shot voice conversion</text>
+  <text x="629" y="326" text-anchor="middle" font-size="8.5" fill="#7e22ce">own venv · subprocess</text>
+  <text x="629" y="339" text-anchor="middle" font-size="8.5" fill="#7e22ce">f0 (sing) / non-f0 (speech)</text>
+  <text x="629" y="356" text-anchor="middle" font-size="8" fill="#a855f7">cover.py · voice_clone.py</text>
+
+  <!-- subprocess arrow Demucs -> Seed-VC -->
+  <line x1="534" y1="324" x2="544" y2="324" stroke="#a855f7" stroke-width="1.6" marker-end="url(#arr-purple)"/>
+
+  <!-- ══ SUPPORT ENGINES ROW ══ -->
+  <rect x="14" y="384" width="226" height="58" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="127" y="403" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b4d22">edge-tts — Dedication</text>
+  <text x="127" y="417" text-anchor="middle" font-size="8.5" fill="#2e7d32">Native voices, 8 langs · radio/concert</text>
+  <text x="127" y="431" text-anchor="middle" font-size="8" fill="#5f8a66">dedication.py (+ optional Seed-VC clone)</text>
+
+  <rect x="250" y="384" width="220" height="58" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="360" y="403" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b4d22">Whisper ASR · Cover Art</text>
+  <text x="360" y="417" text-anchor="middle" font-size="8.5" fill="#2e7d32">Name capture / source lyrics · PIL cover</text>
+  <text x="360" y="431" text-anchor="middle" font-size="8" fill="#5f8a66">asr.py · art_engine.py (SDXL-Turbo optional)</text>
+
+  <rect x="480" y="384" width="234" height="58" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="597" y="403" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7a5b06">Source Acquisition</text>
+  <text x="597" y="417" text-anchor="middle" font-size="8.5" fill="#9a7a2e">yt-dlp URL · upload · local · CD rip</text>
+  <text x="597" y="431" text-anchor="middle" font-size="8" fill="#9a7a2e">source_engine.py (FFmpeg, the one outbound call)</text>
+
+  <!-- arrows engines -> data/output -->
+  <line x1="274" y1="442" x2="274" y2="470" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ══ DATA / OUTPUT BAND ══ -->
+  <text x="18" y="464" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">DATA &amp; OUTPUT (local disk)</text>
+
+  <rect x="14" y="470" width="172" height="64" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="100" y="490" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">music_library/</text>
+  <text x="100" y="505" text-anchor="middle" font-size="8" fill="#0284c7">&lt;Occasion&gt;/Song.mp3 + .json</text>
+  <text x="100" y="518" text-anchor="middle" font-size="8" fill="#0284c7">cover .png · lyrics in sidecar</text>
+  <text x="100" y="530" text-anchor="middle" font-size="8" fill="#0284c7">sources/ · stems/ · covers/</text>
+
+  <rect x="196" y="470" width="172" height="64" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="282" y="490" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">config/ (JSON)</text>
+  <text x="282" y="505" text-anchor="middle" font-size="8" fill="#0284c7">app_config · singers (10)</text>
+  <text x="282" y="518" text-anchor="middle" font-size="8" fill="#0284c7">pronunciations · voices</text>
+  <text x="282" y="530" text-anchor="middle" font-size="8" fill="#0284c7">queue (overnight jobs)</text>
+
+  <!-- Plex (partial) -->
+  <rect x="378" y="470" width="160" height="64" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="458" y="490" text-anchor="middle" font-size="10" font-weight="700" fill="#7a5b06">Plex Media Server</text>
+  <text x="458" y="505" text-anchor="middle" font-size="8" fill="#9a7a2e">ID3 tag + copy + scan</text>
+  <text x="458" y="518" text-anchor="middle" font-size="8" fill="#9a7a2e">Google Home / Alexa play</text>
+  <text x="458" y="530" text-anchor="middle" font-size="8" fill="#9a7a2e">needs token configured</text>
+
+  <!-- YouTube Music (partial) -->
+  <rect x="548" y="470" width="166" height="64" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="631" y="490" text-anchor="middle" font-size="10" font-weight="700" fill="#7a5b06">YouTube Music</text>
+  <text x="631" y="505" text-anchor="middle" font-size="8" fill="#9a7a2e">Optional auto-upload</text>
+  <text x="631" y="518" text-anchor="middle" font-size="8" fill="#9a7a2e">ytmusicapi (browser auth)</text>
+  <text x="631" y="530" text-anchor="middle" font-size="8" fill="#9a7a2e">off until headers pasted</text>
+
+  <!-- output arrows -->
+  <line x1="100" y1="442" x2="100" y2="470" stroke="#0284c7" stroke-width="1.3" marker-end="url(#arr)"/>
+  <line x1="458" y1="442" x2="458" y2="470" stroke="#b8860b" stroke-width="1.3" marker-end="url(#arr-orange)"/>
+
+  <!-- ══ QI ECOSYSTEM FOOTER ══ -->
+  <rect x="14" y="552" width="700" height="72" rx="9" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="28" y="572" font-size="10" font-weight="700" fill="#475569" letter-spacing="0.5">QI ECOSYSTEM (cousin tier · loopback-only · not internet-exposed)</text>
+  <text x="28" y="590" font-size="8.5" fill="#6b7280">Registry: qi_registry.json — id personalsong · path C:\PersonalSong · UI :8088 (pre-registry; recommended 8500-8599 / 8502)</text>
+  <text x="28" y="605" font-size="8.5" fill="#6b7280">Exposes: Song generation (ACE-Step) · Voice cloning (Demucs/Seed-VC)</text>
+  <text x="28" y="619" font-size="8.5" fill="#6b7280">Integrates with: M2V (song → music video) — declared in registry, wiring planned</text>
+
+  <!-- M2V planned box -->
+  <rect x="724" y="552" width="206" height="72" rx="9" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <text x="827" y="574" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">M2V</text>
+  <text x="827" y="590" text-anchor="middle" font-size="8.5" fill="#6b7280">Music-video generation</text>
+  <text x="827" y="603" text-anchor="middle" font-size="8.5" fill="#6b7280">consumes the finished song</text>
+  <text x="827" y="616" text-anchor="middle" font-size="8" fill="#9aa5b1">Planned integration</text>
+  <line x1="714" y1="588" x2="722" y2="588" stroke="#9aa5b1" stroke-width="1.4" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+</svg>

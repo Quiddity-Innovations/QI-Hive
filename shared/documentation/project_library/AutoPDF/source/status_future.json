@@ -1,0 +1,98 @@
+{
+  "categories": [
+    {
+      "name": "Boston University demo readiness",
+      "priority": "high",
+      "items": [
+        {
+          "title": "Confident manual run-through of the 3 Index Creator scenarios",
+          "detail": "Drive Basic (30x5), Mid (30x9), and Complex (30x17) live; preflight clears prior index_*.csv/xlsx and warms the engine. Live-demo rule: let Preview finish before Run (single-threaded index server can stall)."
+        },
+        {
+          "title": "Templates auto-match demo",
+          "detail": "Show 12 Procurement / 12 Special Collections / 6 Registrar / 0 unmatched against the demo set using the saved BU templates."
+        },
+        {
+          "title": "Build AutoPDF Portable for the BU laptop",
+          "detail": "Run docs\\Make-Portable.ps1 and verify the 3 scenarios run with no Ollama and no internet (they do not use the LLM)."
+        }
+      ]
+    },
+    {
+      "name": "OCR engine expansion",
+      "priority": "high",
+      "items": [
+        {
+          "title": "PP-OCRv5 via ONNX Runtime (RapidOcrNet)",
+          "detail": "Bundled, offline, no-Python second OCR engine callable from the PowerShell/.NET layer like Tesseract. Toggle engine = tesseract|paddle-onnx and device = auto|cpu|cuda; Tesseract stays default. Plan approved 2026-06-22, implementation not started."
+        },
+        {
+          "title": "PP-OCRv6 model swap",
+          "detail": "Drop in PP-OCRv6 ONNX models once they publish (RapidAI/RapidOCR #686, milestone v3.9.0) with no re-architecture."
+        },
+        {
+          "title": "Auto CPU fallback hardening",
+          "detail": "Forced device=cuda on a CPU-only box must log a fallback warning and still complete; verify auto resolves to CPU when no GPU is present."
+        }
+      ]
+    },
+    {
+      "name": "Index Creator & OnBase polish",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "In-UI date-format picker",
+          "detail": "Format currently lives in the recipe JSON (works, demo outputs MM/DD/YYYY) but there is no user-facing format control yet."
+        },
+        {
+          "title": "Per-row OnBase Document Type",
+          "detail": "docTypeColumn is wired in the XML serializer but only the literal docTypeValue is exposed in the UI; add a column dropdown for mixed-type batches."
+        },
+        {
+          "title": "Multi-file to one OnBase document",
+          "detail": "OnBase allows repeated <FilePath> inside one <NewDocument> to combine pages; today AutoPDF emits one <FilePath> per row."
+        },
+        {
+          "title": "Field-accurate validation against a live customer DIP",
+          "detail": "Output matches Hyland's published 24.1 spec; matching a specific deployment's DIP config still requires that customer's import format."
+        }
+      ]
+    },
+    {
+      "name": "Reliability & hardening",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "Make the index server safe to overlap",
+          "detail": "The index server is single-threaded; overlapping a Preview and a Run can stall it. Add run isolation / queueing so overlap is safe."
+        },
+        {
+          "title": "Index Creator template integration",
+          "detail": "Templates already drive Splitter CSV; wiring template fields into the standalone Index Creator is still future work (deferred from Phase 2c)."
+        },
+        {
+          "title": "Multi-sample / multi-doc-stack template authoring",
+          "detail": "Smart Mapping authors against a single PDF today; author from several samples or a stacked document."
+        }
+      ]
+    },
+    {
+      "name": "Ecosystem integration",
+      "priority": "low",
+      "items": [
+        {
+          "title": "Maia / NEXUS / FileHQ batch extraction",
+          "detail": "Let other QI projects call /api/template-apply-batch to extract fields from user-supplied PDFs; NEXUS could orchestrate Smart Mapping proposals across providers."
+        },
+        {
+          "title": "Migrate to allocated 8700-8709 port block",
+          "detail": "Port 6969 predates the registry. Move into the 8700 block when AutoPDF starts consuming other ecosystem integrations."
+        },
+        {
+          "title": "CogniBase handoff",
+          "detail": "AutoPDF-produced indexes and split documents could feed CogniBase's OnBase data lake as a structured ingestion source."
+        }
+      ]
+    }
+  ]
+}

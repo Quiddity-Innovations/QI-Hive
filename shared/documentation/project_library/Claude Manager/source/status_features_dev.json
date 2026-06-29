@@ -1,0 +1,68 @@
+[
+  {
+    "category": "Agent Fabric (.claude/agents/)",
+    "features": [
+      {"name": "hive-architect", "file": ".claude/agents/hive-architect.md", "status": "live", "detail": "model: opus; tools Read/Glob/Grep/Bash/WebFetch/WebSearch. Strategic designer — ADRs, multi-project impact, implementation plans. Explicitly 'do not write production code'. Output template: Goal / Constraints / Options / Recommendation / Implementation plan / Risks & rollback."},
+      {"name": "hive-builder", "file": ".claude/agents/hive-builder.md", "status": "live", "detail": "model: sonnet; tools add Write+Edit. Executes architect plans. Hardcodes QI conventions: ports from registry, raw-string Windows paths, encoding=utf-8, NSSM QI_ prefix, logs to <project>\\LOGS\\. Hands off to hive-inspector after implementing."},
+      {"name": "hive-inspector", "file": ".claude/agents/hive-inspector.md", "status": "live", "detail": "model: sonnet; read-only (Read/Glob/Grep/Bash). 7-point checklist: standards, Five Laws, secrets, match-to-plan, failure modes, backward-compat, tests. Findings tagged [CRITICAL]/[MAJOR]/[MINOR]/[NIT]. Honesty rule from the partnership compact."},
+      {"name": "hive-ops", "file": ".claude/agents/hive-ops.md", "status": "live", "detail": "model: haiku. Service triage: Get-Service QI_*, nssm restart via gsudo, port-owner lookup, orphan kill (confirm parent first). Reads QI_Service_Registry.md / QI_Ecosystem_Map.md first."},
+      {"name": "hive-scout", "file": ".claude/agents/hive-scout.md", "status": "live", "detail": "model: haiku; adds WebFetch/WebSearch. Fast research, <300 words, bullet lists, cite every source, lead with the answer. Surfaces options; does not decide."},
+      {"name": "hive-scribe", "file": ".claude/agents/hive-scribe.md", "status": "live", "detail": "model: haiku; adds Write+Edit. Writes .docx session summaries to C:\\QIH\\shared\\documentation\\session_summaries\\ with <PROJECT>_Summary_YYYY-MM-DD_HHMM.docx; python-docx, Heading 1/2, clickable full-path links."},
+      {"name": "hive-tester", "file": ".claude/agents/hive-tester.md", "status": "live", "detail": "model: haiku; read-only. Runs pytest/playwright, sweeps /health on every registry port, runs qi_validator.py --project <id>. Never edits tests to pass; reports X/Y with failure context."},
+      {"name": "hive-librarian", "file": ".claude/agents/hive-librarian.md", "status": "live", "detail": "model: sonnet; read-only. Sits on the Documentation Brain (docs + doc_relationships in qi_brain.db, qi_docs Chroma collection). Find / flag-stale / dedupe / enforce-compliance over 936+ docs. Semantic search via Brain API :9011 /api/search_memory; doc_harvester.py --stats."}
+    ]
+  },
+  {
+    "category": "Dispatch Protocol",
+    "features": [
+      {"name": "Dispatch table + workflows", "file": ".claude/agents/DISPATCH_PROTOCOL.md", "status": "live", "detail": "Standing rule, every session. Trigger->agent table; Workflow A (architect->builder->inspector->scribe), B (scout->architect->build/review), C (ops->architect->tester). Anti-patterns: no architect-reasoning in main thread, never bypass inspector, never fake attribution, keep delegation one level deep."},
+      {"name": "Session-start verification", "file": ".claude/agents/DISPATCH_PROTOCOL.md :: 'Verification at session start'", "status": "live", "detail": "First action should verify hive agents are loaded by listing sub-agents; agents in both ~/.claude/agents/ and .claude/agents/ should load. If not, flag immediately."}
+    ]
+  },
+  {
+    "category": "Supervisor (cross-project drift scanner)",
+    "features": [
+      {"name": "main() — registry walk", "file": "supervisor/supervisor.py :: main()", "status": "live", "detail": "Reads C:\\QIH\\ecosystem\\qi_registry.json, calls inspect_project() per project, writes report.json + DASHBOARD.md + feeds QIH status.json. Wraps each project in try/except so one inspector exception becomes a red finding, not a crash."},
+      {"name": "inspect_project()", "file": "supervisor/supervisor.py :: inspect_project()", "status": "live", "detail": "Per project: path-exists, git_state, scan_failure_files, list_services_for, scheduled_tasks_for; aggregates findings and computes severity_for() -> red/yellow/green."},
+      {"name": "git_state()", "file": "supervisor/supervisor.py :: git_state()", "status": "live", "detail": "git status --porcelain (untracked vs modified counts) + git log -1 --format=%cI|%s for last-commit age. >14 days = yellow stale_commits; >5 dirty files = red."},
+      {"name": "list_services_for() / scheduled_tasks_for()", "file": "supervisor/supervisor.py", "status": "live", "detail": "PowerShell over nssm.exe AppDirectory/Application to find QI_ services rooted under the project; Get-ScheduledTask matched by action path, flags non-zero LastTaskResult (267009 'running' treated as OK)."},
+      {"name": "render_dashboard() / feed_qih_status()", "file": "supervisor/supervisor.py :: render_dashboard() / feed_qih_status()", "status": "live", "detail": "Renders the red/yellow/green summary + findings table to DASHBOARD.md; merges per-project severity, git state, and findings into C:\\QIH\\data\\status.json under projects[name]."}
+    ]
+  },
+  {
+    "category": "Session Hooks",
+    "features": [
+      {"name": "settings.json — hook + permission wiring", "file": ".claude/settings.json", "status": "live", "detail": "permissions.defaultMode=bypassPermissions, allow Bash/Read/Write/Edit/Glob/Grep/WebFetch/WebSearch/mcp__*. Hooks: SessionEnd -> session_end.py, SubagentStop -> subagent_stop.py (both via C:\\1-AI\\APPS\\PYTHON\\python.exe, 15s timeout)."},
+      {"name": "SessionEnd auto-stub", "file": "~/.claude/session_end.py :: main()", "status": "live", "detail": "Reads hook JSON from stdin, infers project from cwd vs registry (longest-prefix; C:\\CLAUDE -> claude_manager), pulls a coarse transcript summary, dedups by session_id, writes a session stub to C:\\QIH\\shared\\reports\\inbox for QI_HiveIngest. Best-effort, never blocks."},
+      {"name": "SubagentStop role attribution", "file": "~/.claude/subagent_stop.py :: main()", "status": "live", "detail": "Normalises subagent_type to hive_<role> (HIVE_ROLES set), infers project from cwd, writes <agent>_subagent_<ts>_<sid>.json to the Hive inbox so sub-agent work is attributed to the right role in qi_brain.db."},
+      {"name": "SessionStart context injection", "file": "~/.claude/session_context.py", "status": "live", "detail": "Global hook (not in project settings.json). Builds the ecosystem briefing via qi_context_loader, probes QI Brain (fail-LOUD if down), appends the Hive dispatch reminder + the monthly-audit PENDING_REVIEW gate, and emits hookSpecificOutput.additionalContext. Note: probes :9010 in source while Brain now lives on :9011 — known stale-port nit."}
+    ]
+  },
+  {
+    "category": "Environment Hygiene Tools",
+    "features": [
+      {"name": "claude_restart_guard.ps1", "file": "Tools/claude_restart_guard.ps1", "status": "live", "detail": "-Scan/-Clean/-CleanOrphans/-Locks. Builds a kill-set from claude.exe descendant trees + orphaned MCP-signature processes (mcp-server-sqlite, brain/mcp.py, git-mcp, etc.). Is-UnderService excludes services.exe/nssm children so QI_ services are never touched; self-protects its own ancestor chain."},
+      {"name": "Claude-Clean-Restart.bat", "file": "Tools/Claude-Clean-Restart.bat", "status": "live", "detail": "Explorer-launched wrapper: Scan -> choice-gated Clean -> Locks verify -> relaunch Claude via shell:AppsFolder\\Claude_pzs8sxrjxfjjc!Claude. No reboot needed."},
+      {"name": "qi_self_audit.py", "file": "Tools/qi_self_audit.py", "status": "live", "detail": "Monthly read-only audit + optional --apply-safe. Safe fixes: -CleanOrphans, git worktree prune + remove CLEAN worktrees across 8 repos, prune dead .claude.json worktree entries (with .bak). Reports big folders/temp/backups for decision. Writes .md+.docx + PENDING_REVIEW.json flag."},
+      {"name": "Run-Monthly-SelfAudit.ps1", "file": "Tools/Run-Monthly-SelfAudit.ps1", "status": "live", "detail": "QI_ClaudeSelfAudit orchestrator (last Friday). Runs qi_self_audit.py --apply-safe, parses the one-line AUDIT summary, notifies via Tasuke, auto-opens Claude Desktop for the in-session decision gate. Headless via conhost --headless."},
+      {"name": "qi_tasuke_notify.py", "file": "Tools/qi_tasuke_notify.py", "status": "live", "detail": "POSTs a LINE broadcast via api.line.me/v2/bot/message/broadcast; token read from C:\\OC\\secrets\\tasuke-line.env (no stored userId). Message capped at 4900 chars."}
+    ]
+  },
+  {
+    "category": "Reconciliation & Migration Scripts",
+    "features": [
+      {"name": "brain_reconcile_2026_06_10.py", "file": "Tools/brain_reconcile_2026_06_10.py", "status": "live", "detail": "Phase-3 drift fix against C:\\QIH\\data\\qi_brain.db: register new projects (personalsong, m2v) INSERT OR IGNORE, fix stale fields (autopdf path, qi_brain port 9011), refresh project_state for 15 projects, merge bad session IDs (OpenClaw->openclaw), backfill the Naya 05-15 session from git evidence."},
+      {"name": "secrets_migration_round2.py", "file": "Tools/secrets_migration_round2.py", "status": "live", "detail": "Round-2 secrets migration tooling — move hardcoded secrets to env files across the ecosystem."},
+      {"name": "maia_env_migration.py / maia_restart_services.py", "file": "Tools/maia_env_migration.py, Tools/maia_restart_services.py", "status": "live", "detail": "Maia-side environment migration + service restart helpers run from the management workspace."},
+      {"name": "gen_qih_overview.py / gen_qih_projects_append.py", "file": "gen_qih_overview.py, gen_qih_projects_append.py", "status": "live", "detail": "python-docx generators that build the QI Hive overview + per-project appendix Word documents (Heading styles, tables, colored runs, margins)."}
+    ]
+  },
+  {
+    "category": "Legacy / Pre-Hive Tooling",
+    "features": [
+      {"name": "health_check.py", "file": "health_check.py", "status": "partial", "detail": "Standalone ecosystem health-check script predating the supervisor; superseded for drift by supervisor.py but retained."},
+      {"name": "grant_claude_service_rights.ps1", "file": "Tools/grant_claude_service_rights.ps1", "status": "partial", "detail": "One-off: grant the Claude/service account rights to manage QI_ services. Run-once setup helper."},
+      {"name": "patch_mcp_config.py", "file": "Tools/patch_mcp_config.py", "status": "partial", "detail": "One-off MCP config patcher for ~/.claude.json / MCP server entries."}
+    ]
+  }
+]

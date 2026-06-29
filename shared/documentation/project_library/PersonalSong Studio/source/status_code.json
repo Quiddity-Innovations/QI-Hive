@@ -1,0 +1,250 @@
+{
+  "intro": "Excerpts copied from the live PersonalSong source (C:\\PersonalSong). Each shows the real code behind a capability and explains how it powers that feature. The creative core is local + free: Ollama for lyrics, ACE-Step for sung vocals, Demucs + Seed-VC for voice cloning, edge-tts for dedications. No model names or paths are guessed here — they are read straight from the files.",
+  "sections": [
+    {
+      "category": "Server & Startup",
+      "snippets": [
+        {
+          "title": "FFmpeg DLLs on PATH before anything else",
+          "feature": "torchcodec / Demucs / Seed-VC can load on Windows",
+          "file": "env_setup.py",
+          "language": "python",
+          "code": "FFMPEG_BIN = (\n    Path(__file__).resolve().parent\n    / \"ffmpeg_shared\" / \"v71\"\n    / \"ffmpeg-n7.1-latest-win64-gpl-shared-7.1\" / \"bin\"\n)\n\ndef ensure_ffmpeg_on_path() -> str:\n    p = str(FFMPEG_BIN)\n    cur = os.environ.get(\"PATH\", \"\")\n    if p.lower() not in cur.lower():\n        os.environ[\"PATH\"] = p + os.pathsep + cur\n    return p\n\n# Apply on import for convenience.\nensure_ffmpeg_on_path()",
+          "explanation": "On torch 2.11, torchaudio routes through TorchCodec, which needs FFmpeg *shared* DLLs absent from a stock Windows box. This vendored FFmpeg 7.1 build is prepended to PATH on import; subprocesses (Demucs, Seed-VC) inherit it, so they don't fail with 'libtorchcodec_core7.dll could not be loaded'. Every entry point imports env_setup first."
+        },
+        {
+          "title": "App + 12 routers under /api/*",
+          "feature": "FastAPI web app on port 8088",
+          "file": "main.py",
+          "language": "python",
+          "code": "import env_setup  # noqa: F401  -> puts FFmpeg shared DLLs on PATH for torchcodec\nload_dotenv()\nPath(\"music_library\").mkdir(exist_ok=True)\n\nfrom routers import (audio, batch, config_api, extras, library, lyrics,\n                     media, prompt_api, source_api, voices, ytmusic_api)\n\napp = FastAPI(title=\"PersonalSong Studio\", version=\"2.2.0\")\napp.include_router(lyrics.router, prefix=\"/api/lyrics\", tags=[\"Lyrics\"])\napp.include_router(audio.router, prefix=\"/api/audio\", tags=[\"Audio\"])\napp.include_router(source_api.router, prefix=\"/api/source\", tags=[\"Source\"])\n# ... library, config, media, extras, voices, batch, prompt, ytmusic\napp.mount(\"/static\", StaticFiles(directory=\"static\"), name=\"static\")",
+          "explanation": "The single FastAPI app. env_setup is imported FIRST (PATH side-effect), then the routers are mounted under /api/*. The static single-page studio is served at / and /static. One health route returns {status: ok}. Every heavy capability lives behind one of these routers."
+        },
+        {
+          "title": "Run uvicorn IN-PROCESS so acestep resolves",
+          "feature": "Service uses the venv that has the singing model",
+          "file": "serve.py",
+          "language": "python",
+          "code": "if __name__ == \"__main__\":\n    # sanity: make sure THIS interpreter has acestep before serving\n    try:\n        import acestep  # noqa: F401\n    except Exception as exc:\n        print(f\"FATAL: acestep not importable from {sys.executable}: {exc}\")\n        sys.exit(1)\n    # No reload, no workers -> uvicorn runs the server in THIS process (no child spawn).\n    uvicorn.run(\"main:app\", host=\"0.0.0.0\", port=8088,\n                reload=False, log_level=\"info\")",
+          "explanation": "'python -m uvicorn' spawned a child process that resolved to the base Python (no acestep) and broke song generation. serve.py calls uvicorn.run() in-process so the server stays in the venv that has acestep, and asserts the import up front so a misconfigured environment fails loudly instead of at first generation. This is what PersonalSong_Install.bat runs as QI_PersonalSong."
+        }
+      ]
+    },
+    {
+      "category": "Lyric Generation (Ollama)",
+      "snippets": [
+        {
+          "title": "think=False + keep_alive=0",
+          "feature": "Local LLM emits lyrics directly and frees the GPU",
+          "file": "routers/lyrics.py :: generate_lyrics()",
+          "language": "python",
+          "code": "resp = await client.post(\n    f\"{OLLAMA_BASE_URL}/api/generate\",\n    json={\n        \"model\": OLLAMA_MODEL,\n        \"prompt\": prompt,\n        \"stream\": False,\n        # think=False -> qwen3 emits lyrics directly instead of burning the\n        # token budget on internal reasoning (which returns an EMPTY response).\n        \"think\": False,\n        # keep_alive=0 -> Ollama unloads the model from VRAM right after,\n        # freeing the GPU for ACE-Step music generation.\n        \"keep_alive\": 0,\n        \"options\": {\"temperature\": 0.85, \"top_p\": 0.9, \"num_predict\": 900},\n    },\n)",
+          "explanation": "Two of the project's defining gotchas in one call. think=False stops reasoning models like qwen3 from spending their whole budget on a hidden <think> block and returning empty lyrics. keep_alive=0 tells Ollama to unload immediately so the single GPU is free for ACE-Step, which runs right after."
+        },
+        {
+          "title": "Force the name to be sung, at least twice",
+          "feature": "The recipient's name is reliably in the song",
+          "file": "routers/lyrics.py :: _build_prompt()",
+          "language": "python",
+          "code": "lines += [\n    f\"Music genre: {genre_str}\",\n    f\"Mood / tempo: {r.mood}\",\n    f\"Vocal style: {r.vocal_preference}\",\n    f\"Target length: about {int(r.duration or 45)} seconds ...\",\n    \"\",\n    \"Write the full song with these clearly labelled sections ...\",\n] + structure + [\n    \"\",\n    f\"Rules: The name '{r.recipient_name}' MUST appear, written EXACTLY as '{r.recipient_name}' \"\n    f\"(never translated or transliterated), AT LEAST TWICE — including in the chorus — so it is clearly heard when sung.\",\n    \"Keep each line short and singable (6-10 words). ...\",\n    \"Output ONLY the lyrics with section labels. No intro, no commentary, no explanations.\",\n]",
+          "explanation": "The prompt is engineered for a singable, personal result: a duration-scaled section layout, short lines, and a hard rule that the exact name appears at least twice including the chorus. 'Output ONLY the lyrics' keeps the model from wrapping the song in chatty commentary that would otherwise be sung."
+        }
+      ]
+    },
+    {
+      "category": "ACE-Step Singing Engine",
+      "snippets": [
+        {
+          "title": "Lazy singleton pipeline (bf16, auto-download)",
+          "feature": "Sung-vocal model loaded once, kept in VRAM",
+          "file": "ace_engine.py :: get_pipeline()",
+          "language": "python",
+          "code": "def get_pipeline():\n    \"\"\"Lazy-load the ACE-Step pipeline once and keep it resident.\"\"\"\n    global _pipeline\n    if _pipeline is None:\n        with _lock:\n            if _pipeline is None:\n                _patch_torchaudio_save()\n                from acestep.pipeline_ace_step import ACEStepPipeline\n                _pipeline = ACEStepPipeline(\n                    checkpoint_dir=None,        # auto-download to ~/.cache/ace-step\n                    dtype=\"bfloat16\",\n                    torch_compile=False,\n                    cpu_offload=False,\n                    overlapped_decode=False,\n                )\n    return _pipeline",
+          "explanation": "ACE-Step is expensive to load, so it is built once behind a double-checked lock and kept resident in VRAM for every request. Weights auto-download on first use; bfloat16 fits the local GPU. _patch_torchaudio_save() is applied first so the model writes audio via soundfile instead of the missing TorchCodec FFmpeg path."
+        },
+        {
+          "title": "The generate_song call into ACE-Step",
+          "feature": "Full sung song from lyrics + style tags",
+          "file": "ace_engine.py :: generate_song()",
+          "language": "python",
+          "code": "pipe = get_pipeline()\na2a = bool(ref_audio_input) and ref_audio_strength > 0.01\npipe(\n    audio_duration=duration,\n    prompt=tags,\n    lyrics=lyrics,\n    infer_step=infer_step,            # 60\n    guidance_scale=guidance_scale,    # 7.5\n    scheduler_type=\"euler\",\n    cfg_type=\"apg\",\n    omega_scale=10.0,\n    manual_seeds=seed,\n    use_erg_tag=True, use_erg_lyric=True, use_erg_diffusion=True,\n    audio2audio_enable=a2a,\n    ref_audio_strength=float(ref_audio_strength),\n    ref_audio_input=ref_audio_input if a2a else None,\n    save_path=save_path,\n)\nreturn save_path",
+          "explanation": "The single call that performs the song. tags is the style prompt, lyrics carries the [verse]/[chorus] structure with the name. When a reference song and a non-zero strength are supplied, audio2audio is enabled so the new song is steered by an existing one ('base it on a song'); otherwise it generates fresh from the prompt + lyrics."
+        },
+        {
+          "title": "Bypass TorchCodec — write WAV via soundfile",
+          "feature": "Audio saves on Windows without FFmpeg shared DLLs",
+          "file": "ace_engine.py :: _patch_torchaudio_save()",
+          "language": "python",
+          "code": "import soundfile as sf\nimport torchaudio\n\ndef _sf_save(filepath, src, sample_rate, *args, **kwargs):\n    arr = src.detach().cpu().to(torch.float32).numpy() if hasattr(src, \"detach\") else src\n    if arr.ndim == 2:          # torchaudio is (channels, samples) -> sf wants (samples, channels)\n        arr = arr.T\n    sf.write(str(filepath), arr, int(sample_rate))\n\ntorchaudio.save = _sf_save",
+          "explanation": "ACE-Step saves via torchaudio.save(), which on torch 2.11 routes through TorchCodec -> FFmpeg shared DLLs that aren't present. The monkey-patch swaps in a soundfile writer (libsndfile is bundled, no external FFmpeg), transposing the channel layout torchaudio uses to what soundfile expects."
+        },
+        {
+          "title": "Build the ACE style prompt (gender first)",
+          "feature": "Genre/mood/language/singer -> ACE tags",
+          "file": "ace_engine.py :: build_tags()",
+          "language": "python",
+          "code": "parts = [\n    _VOCAL_TAGS.get(vocal, \"\"),             # gender FIRST so it's weighted strongly\n    genre_tag,\n    voice_descriptor,                       # specific singer timbre, if chosen\n    _MOOD_TAGS.get(mood, mood.lower()),\n    lang_tag,\n    \"studio quality, clear vocals\",\n]\nreturn \", \".join(p for p in parts if p)",
+          "explanation": "Composes the prompt ACE-Step conditions on. Vocal gender is placed first so it weighs heavily; then curated genre tags (incl. Brazilian, Japanese and French styles), the chosen singer's timbre descriptor, mood, and native-language conditioning. Genres and languages may be lists, supporting blended-genre and blended-language songs."
+        },
+        {
+          "title": "Inject the name as a sung vocative",
+          "feature": "Guarantee the name is sung even if the LLM omits it",
+          "file": "ace_engine.py :: ensure_name_in_lyrics()",
+          "language": "python",
+          "code": "for line in lines:\n    st = line.strip()\n    if re.match(r\"^\\[.*\\]$\", st):\n        out.append(line)\n        pending_section = st.lower()\n        continue\n    if st and pending_section in target_sections and injected < 2:\n        first = st[0].lower() + st[1:] if len(st) > 1 else st\n        out.append(f\"{name}, {first}\")\n        injected += 1\n        pending_section = None\n        continue\n    out.append(line)\n...\nif injected == 0:\n    out.append(\"[chorus]\")\n    out.append(f\"{name}, {name}, this song is for you\")",
+          "explanation": "LLMs writing in non-English languages often address the person without ever using their literal name, defeating the gift. If the name is absent, it's injected as a vocative ('Name, ...') into the chorus and first verse — natural in every language. If the lyrics have no usable content line at all, a sung hook with the name is appended as a last resort."
+        },
+        {
+          "title": "Respell the name only in the sung text",
+          "feature": "Pronounce the name correctly without changing the lyrics",
+          "file": "ace_engine.py :: apply_pronunciation()",
+          "language": "python",
+          "code": "def apply_pronunciation(lyrics: str, name: str, respelling: str) -> str:\n    \"\"\"Return lyrics with the name swapped for its phonetic respelling so ACE-Step\n    SINGS it correctly. The displayed/saved lyrics keep the real name; only the\n    text fed to the singing model is respelled. Case-insensitive whole-word swap.\"\"\"\n    if not name or not respelling or not respelling.strip():\n        return lyrics\n    pattern = re.compile(re.escape(name.strip()), re.IGNORECASE)\n    return pattern.sub(respelling.strip(), lyrics)",
+          "explanation": "Keeps two versions of the lyrics: the display/saved copy shows the real name, while the copy fed to ACE-Step substitutes the phonetic respelling so the model sings it correctly. The audio router computes display_lyrics first, then applies the respelling only to what the model receives."
+        },
+        {
+          "title": "Verify the sung gender by pitch",
+          "feature": "Gender-locked generation with retry",
+          "file": "ace_engine.py :: detect_gender()",
+          "language": "python",
+          "code": "import source_engine\n# CPU so the gender check never competes with the resident ACE-Step for VRAM\nstems = source_engine.separate_stems(Path(audio_path), device=\"cpu\")\nsrc = str(stems[\"vocals\"])\n...\ny, sr = librosa.load(src, sr=22050, mono=True, duration=30)\nf0, _, _ = librosa.pyin(y, fmin=80, fmax=500, sr=sr)\nf0 = f0[~np.isnan(f0)]\nmed = float(np.median(f0))\nif med >= 178: return \"female\"\nif med <= 168: return \"male\"\nreturn \"female\" if med >= 173 else \"male\"",
+          "explanation": "ACE-Step's gender tag alone is unreliable, so the output is checked: Demucs isolates the vocal (forced to CPU so it doesn't steal VRAM from the resident ACE-Step), librosa estimates median pitch, and the result is classified male/female. The audio router (_generate_sync) uses this to retry once with a fresh random seed when the wrong gender comes out, bounded to two tries."
+        }
+      ]
+    },
+    {
+      "category": "Audio Generation Pipeline (API)",
+      "snippets": [
+        {
+          "title": "Serialize ACE-Step off the event loop; free Ollama first",
+          "feature": "One generation at a time, GPU freed before it runs",
+          "file": "routers/audio.py :: generate_audio()",
+          "language": "python",
+          "code": "# ACE-Step generation is GPU-bound; serialize so two requests never fight the GPU.\n_executor = ThreadPoolExecutor(max_workers=1)\n...\nawait _free_ollama_vram()\nwant_gender = vocal if vocal in (\"Male\", \"Female\") else \"\"\nloop = asyncio.get_event_loop()\nawait loop.run_in_executor(\n    _executor, _generate_sync, tags, lyrics, str(audio_path), req.duration, seed, want_gender\n)",
+          "explanation": "ACE-Step is blocking and GPU-bound, so it runs in a single-worker thread pool — two concurrent requests queue instead of thrashing the one GPU. Just before, _free_ollama_vram() asks Ollama to unload its model so the full card is available. The call is run_in_executor so the async event loop stays responsive."
+        },
+        {
+          "title": "Optional steps never fail the song",
+          "feature": "Resilient Plex / YouTube Music side-effects",
+          "file": "routers/audio.py :: _sync_to_plex() / _auto_upload_to_ytmusic()",
+          "language": "python",
+          "code": "def _sync_to_plex(audio_path: Path, metadata: dict) -> None:\n    try:\n        import appconfig\n        from plex_module import sync_file\n        conf = {\"plex_library_path\": appconfig.get(\"plex_library_path\", \"\"),\n                \"plex_url\": appconfig.get(\"plex_url\", \"http://localhost:32400\"),\n                \"plex_token\": appconfig.get(\"plex_token\", \"\"),\n                \"plex_music_section_id\": appconfig.get(\"plex_music_section_id\", \"\"),\n                \"auto_scan_on_copy\": True}\n        sync_file(audio_path, metadata, conf=conf)\n    except Exception:\n        pass  # Plex sync is optional — never fail the song because of it",
+          "explanation": "Plex sync and YouTube Music upload are best-effort: both are wrapped so any failure (no Plex token, offline account, missing dep) is swallowed. The user always gets their finished song; the publish steps are bonuses, not blockers. The same pattern guards the spoken dedication and MP3 transcode."
+        }
+      ]
+    },
+    {
+      "category": "Source Ingestion & Stems (Demucs / FFmpeg / yt-dlp)",
+      "snippets": [
+        {
+          "title": "Demucs two-stem separation as a subprocess",
+          "feature": "Split vocals from instrumental",
+          "file": "source_engine.py :: separate_stems()",
+          "language": "python",
+          "code": "cmd = [\n    VENV_PY, \"-m\", \"demucs\",\n    \"--two-stems\", \"vocals\",\n    \"-n\", \"htdemucs\",\n    \"-o\", str(out_root),\n    \"-d\", device,\n    str(audio_path),\n]\nsubprocess.run(cmd, check=True, capture_output=True, text=True, env=os.environ.copy())\n# Demucs writes <out_root>/htdemucs/<trackname>/{vocals,no_vocals}.wav\nvocals = track / \"vocals.wav\"\ninstrumental = track / \"no_vocals.wav\"\nreturn {\"vocals\": vocals, \"instrumental\": instrumental}",
+          "explanation": "Demucs (htdemucs, two-stem mode) is driven as a venv subprocess and returns the isolated vocal and the instrumental. This single function powers karaoke stems, the voice-clone reference, the gender detector, and the cover backing track. device='cpu' is passed where it must not compete with a resident GPU model."
+        },
+        {
+          "title": "Extract / trim audio from any media with FFmpeg",
+          "feature": "Bring-your-own audio or video source",
+          "file": "source_engine.py :: extract_audio()",
+          "language": "python",
+          "code": "cmd = [FFMPEG_EXE, \"-y\"]\nif start:\n    cmd += [\"-ss\", str(start)]\ncmd += [\"-i\", str(src)]\nif duration:\n    cmd += [\"-t\", str(duration)]\ncmd += [\"-vn\", \"-codec:a\", \"libmp3lame\", \"-b:a\", bitrate, str(out)]\nsubprocess.run(cmd, check=True, capture_output=True, text=True, env=os.environ.copy())",
+          "explanation": "Pulls the audio track out of any uploaded video or audio file to MP3, with optional start/duration trimming — handy for grabbing just the part of a movie where the voice you want to clone is heard, without uploading the whole file. Uses the vendored FFmpeg resolved via env_setup."
+        }
+      ]
+    },
+    {
+      "category": "Voice Cloning (Seed-VC)",
+      "snippets": [
+        {
+          "title": "Full cover pipeline orchestration",
+          "feature": "Re-sing an ACE song in a source singer's voice",
+          "file": "cover.py :: make_cover()",
+          "language": "python",
+          "code": "# 1. Separate the source song -> reference voice + original instrumental\nsrc_stems = source_engine.separate_stems(source_song)\n# 2. Separate the ACE-Step song -> its vocals + its instrumental\nace_stems = source_engine.separate_stems(ace_song)\n# 3. Convert ACE vocals to the source singer's voice\nconverted = seedvc_convert(ace_stems[\"vocals\"], src_stems[\"vocals\"], work / \"vc\")\n# 4. Mix over the chosen backing\nbacking = src_stems[\"instrumental\"] if use_original_backing else ace_stems[\"instrumental\"]\nfinal = mix_vocal_over_backing(converted, backing, work / f\"{out_name}.wav\")",
+          "explanation": "The four-step cover pipeline: Demucs isolates the target singer's voice and the ACE song's voice, Seed-VC re-sings the ACE vocal in the target timbre, and the converted vocal is mixed over either the original instrumental (a true cover) or ACE-Step's own backing (keeps the new melody)."
+        },
+        {
+          "title": "Seed-VC f0-conditioned conversion (singing)",
+          "feature": "Pitch-aware voice conversion in an isolated venv",
+          "file": "cover.py :: seedvc_convert()",
+          "language": "python",
+          "code": "cmd = [\n    SEEDVC_PY, \"inference.py\",\n    \"--source\", str(source_vocals.resolve()),\n    \"--target\", str(reference_voice.resolve()),\n    \"--output\", str(out_dir.resolve()),\n    \"--diffusion-steps\", str(diffusion_steps),\n    \"--f0-condition\", \"True\",                       # required for singing\n    \"--auto-f0-adjust\", \"True\" if auto_f0_adjust else \"False\",\n    \"--semi-tone-shift\", \"0\",\n    \"--fp16\", \"True\",\n]\nsubprocess.run(cmd, check=True, capture_output=True, text=True,\n               cwd=str(SEEDVC_DIR), env=os.environ.copy())",
+          "explanation": "Seed-VC runs from its OWN venv as a subprocess because its dependencies collide with ACE-Step's. --f0-condition True makes the conversion pitch-aware, which is essential for singing (the spoken-dedication path uses False). Running with cwd set to the seed-vc dir lets its relative configs/modules resolve."
+        },
+        {
+          "title": "Spoken dedication re-voiced as the artist",
+          "feature": "Dedication in the artist's timbre",
+          "file": "voice_clone.py :: clone_dedication() / isolate_reference()",
+          "language": "python",
+          "code": "def isolate_reference(song_path, work_dir, seconds: int = 30) -> Path:\n    \"\"\"Return a path to the isolated artist vocals (the VC reference).\"\"\"\n    import source_engine\n    clip = _slice_for_reference(song_path, work_dir, seconds)\n    try:\n        stems = source_engine.separate_stems(clip, device=\"cuda\")\n    except Exception:\n        stems = source_engine.separate_stems(clip, device=\"cpu\")\n    return stems[\"vocals\"]\n\ndef clone_dedication(song_path, source_speech, work_dir, diffusion_steps: int = 25) -> Path:\n    ref = isolate_reference(song_path, work_dir)\n    return convert(source_speech, ref, work_dir, diffusion_steps=diffusion_steps)",
+          "explanation": "For a spoken dedication, a vocal-rich 30-second slice of the artist's song is isolated (GPU with CPU fallback) and used as the Seed-VC reference. convert() re-voices the edge-tts speech into the artist's timbre with --f0-condition False (speech, not sung), keeping the words and native pronunciation intact."
+        }
+      ]
+    },
+    {
+      "category": "Dedication & TTS (edge-tts)",
+      "snippets": [
+        {
+          "title": "Render native TTS off the FastAPI loop",
+          "feature": "Spoken dedication in a native voice + optional clone",
+          "file": "dedication.py :: render_dedication()",
+          "language": "python",
+          "code": "async def _go():\n    await edge_tts.Communicate(\n        text, voice, rate=pros[\"rate\"], pitch=pros[\"pitch\"]\n    ).save(str(out_path))\n\n# edge-tts is async; this may be called from inside FastAPI's running event\n# loop, where asyncio.run() would raise. Run it in a dedicated thread.\nt = threading.Thread(target=_runner); t.start(); t.join()\n...\nif clone_ref is not None:\n    import voice_clone\n    converted = voice_clone.convert(out_path, clone_ref, out_path.parent)\n    AudioSegment.from_file(converted).export(out_path, format=...)",
+          "explanation": "Renders the dedication with a native edge-tts neural voice at a tone/style-specific rate and pitch. Because edge-tts is async and this is called from inside FastAPI's running loop (where asyncio.run would raise), it runs in a dedicated thread. If a clone reference is supplied, the clean speech is then re-voiced into the artist's timbre before any crowd bed is added."
+        },
+        {
+          "title": "Native wording per style/language/tone",
+          "feature": "Portuguese sounds Portuguese, not translated English",
+          "file": "dedication.py :: draft_text() / _STYLE_LINES",
+          "language": "python",
+          "code": "_STYLE_LINES = {\n  \"radio\": {\n    \"Portuguese\": {\n      \"heartfelt\": \"Você está ouvindo a hora das dedicatórias. A próxima vai com muito carinho para {name}...\",\n      \"warm\": \"E agora, um pedido especial. Esta próxima vai para {name}. Aproveite, é toda sua.\",\n      \"festive\": \"Bora animar! O próximo pedido é para {name}! Sobe o som — essa é pra você!\",\n    },\n  },\n  \"concert\": { ... },\n}",
+          "explanation": "Dedications are authored natively per delivery style (radio DJ vs live concert), language, and tone (heartfelt/warm/festive) — not machine-translated from English — so a Brazilian voice reads genuinely Portuguese phrasing. A matching prosody preset (rate/pitch) makes the delivery fit the words; concert style also layers a synthesized crowd/applause bed."
+        }
+      ]
+    },
+    {
+      "category": "Config & Singers",
+      "snippets": [
+        {
+          "title": "Curated singer presets",
+          "feature": "Pick a consistent native-language voice",
+          "file": "config/singers.json",
+          "language": "json",
+          "code": "{ \"id\": \"sofia\",   \"name\": \"Sofia\",   \"gender\": \"Female\",\n  \"descriptor\": \"soulful expressive female voice, rich warm tone\",\n  \"seed\": \"303\", \"languages\": [\"Portuguese\", \"Spanish\"] },\n{ \"id\": \"hana\",    \"name\": \"Hana\",    \"gender\": \"Female\",\n  \"descriptor\": \"delicate bright airy female voice\",\n  \"seed\": \"505\", \"languages\": [\"Japanese\"] }",
+          "explanation": "Each singer is an ACE-Step voice preset: a timbre descriptor (fed into build_tags as voice_descriptor) plus a stable seed for a consistent character across songs, scoped to the languages it suits. The audio router resolves the chosen singer (or a per-language default) and lets the singer's gender and seed drive the generation."
+        }
+      ]
+    },
+    {
+      "category": "Library, Sharing & Ops",
+      "snippets": [
+        {
+          "title": "Persistent config with safe defaults",
+          "feature": "Settings survive restarts; folders auto-created",
+          "file": "appconfig.py :: save_config()",
+          "language": "python",
+          "code": "def save_config(updates: dict) -> dict:\n    with _lock:\n        cfg = load_config()\n        cfg.update({k: v for k, v in updates.items() if k in DEFAULTS})\n        CONFIG_FILE.write_text(json.dumps(cfg, indent=2, ensure_ascii=True), encoding=\"utf-8\")\n    for key in (\"created_songs_path\", \"source_songs_path\", \"stems_path\"):\n        try:\n            Path(cfg[key]).mkdir(parents=True, exist_ok=True)\n        except Exception:\n            pass\n    return cfg",
+          "explanation": "Config is JSON-backed under config/ with a thread lock so concurrent saves don't corrupt it. Only known DEFAULTS keys are accepted (ignoring stray input), and the song/source/stem folders are (re)created after every save so a path change can't leave the app writing into a missing directory. Singers, pronunciations, voices and the overnight queue are stored the same way."
+        },
+        {
+          "title": "QR greeting card that works off-device",
+          "feature": "Recipient scans to play from their phone",
+          "file": "routers/extras.py :: greeting_card()",
+          "language": "python",
+          "code": "base = str(request.base_url).rstrip(\"/\")\nif \"localhost\" in base or \"127.0.0.1\" in base:\n    base = f\"http://{_lan_ip()}:8088\"\nplay_url = f\"{base}/api/play/{song_id}\"\nqr = qrcode.make(play_url)",
+          "explanation": "Generates a printable card with a QR code linking to the song's mobile play page. It uses whatever host the card was opened on (a public tunnel domain or the LAN IP) and falls back to the machine's LAN IP for localhost, so the QR actually resolves for whoever scans it rather than pointing at an unreachable localhost."
+        },
+        {
+          "title": "Install as the QI_PersonalSong service",
+          "feature": "Always-on background app",
+          "file": "PersonalSong_Install.bat",
+          "language": "bash",
+          "code": "set NSSM=C:\\QIH\\engine\\bin\\nssm.exe\nset APPDIR=C:\\PersonalSong\n\"%NSSM%\" install QI_PersonalSong \"C:\\PersonalSong\\.venv\\Scripts\\python.exe\" serve.py\n\"%NSSM%\" set QI_PersonalSong AppDirectory \"%APPDIR%\"\n\"%NSSM%\" set QI_PersonalSong Description \"PersonalSong Studio - local AI song generator web app :8088 (acestep in .venv).\"\n\"%NSSM%\" set QI_PersonalSong AppStdout \"%APPDIR%\\logs\\service.log\"\n\"%NSSM%\" start QI_PersonalSong",
+          "explanation": "Registers the studio as a QI-standard NSSM Windows service (QI_ prefix, explicit AppDirectory + Description, rotating logs) running serve.py from the venv that has acestep, using the standardized nssm.exe at C:\\QIH\\engine\\bin. This is how the app stays available on the machine without a terminal open."
+        }
+      ]
+    }
+  ]
+}

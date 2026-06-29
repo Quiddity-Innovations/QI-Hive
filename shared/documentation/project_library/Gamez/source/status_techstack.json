@@ -1,0 +1,48 @@
+{
+  "table": [
+    {"layer": "Front End", "technology": "Single-file HTML/CSS/JS", "role": "The entire UI (WC2026.html, ~97 KB) — board, matches, players, standings, bracket, stats, AI chat, dynamic workspace. No framework, no build step.", "license": "Proprietary (QI)", "version": "1 file"},
+    {"layer": "Language", "technology": "Python", "role": "The proxy, scoring engine, data sources, launchers, and build scripts", "license": "PSF (open source)", "version": "3.11"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "WC2026 Proxy on port 8710 — serves the app at / plus data + AI endpoints (/snapshot, /health, /players, /teams, /kalshi, /ai/*, /config*)", "license": "MIT", "version": ">=0.110"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (main thread, or a daemon thread under the GUI launcher)", "license": "BSD", "version": ">=0.27"},
+    {"layer": "Async / HTTP", "technology": "httpx", "role": "Sync fetches of ESPN/API-Football/Kalshi (sources.py) and async relays to OpenRouter/Ollama (server.py)", "license": "BSD", "version": ">=0.27"},
+    {"layer": "Scheduling", "technology": "APScheduler", "role": "BackgroundScheduler re-fetching + re-scoring every refresh_minutes (15)", "license": "MIT", "version": ">=3.10"},
+    {"layer": "Cache / Persistence", "technology": "JSON file (data/cache.json)", "role": "Disk mirror of the in-memory CACHE for warm starts; weekly EA FC 26 CSV cache (data/fifa_players.csv). No database.", "license": "n/a", "version": "stdlib json"},
+    {"layer": "Config", "technology": "config.json", "role": "All settings + secrets server-side (port, refresh, player_source, keys, ai_access_password). Self-documenting _notes block.", "license": "n/a", "version": "stdlib json"},
+    {"layer": "Live Data", "technology": "ESPN (unofficial JSON API)", "role": "Fixtures, scores, 12-group standings, bracket flags — no API key", "license": "Public endpoint (unofficial)", "version": "site.api.espn.com v2/v3"},
+    {"layer": "Player Ratings", "technology": "EA FC 26 ratings CSV", "role": "Default squad-strength source: real player 'overall' mapped to national teams (free, no key, no quota)", "license": "Community dataset", "version": "GitHub EAFC26-DataHub"},
+    {"layer": "Player Stats (optional)", "technology": "API-Football", "role": "Deep per-player WC season stats for richer PPS — optional key, free tier ~100 req/day", "license": "Free tier (paid plans)", "version": "v3 (api-sports.io)"},
+    {"layer": "Market Odds", "technology": "Kalshi public API", "role": "Live World Cup market prices (implied probability + payout), fetched server-side to avoid CORS", "license": "Public API (no key)", "version": "trade-api/v2"},
+    {"layer": "AI — Local", "technology": "Ollama", "role": "Free local AI analyst, proxied server-side so the browser skips CORS / OLLAMA_ORIGINS", "license": "MIT", "version": "/api/tags, /api/chat"},
+    {"layer": "AI — Cloud", "technology": "OpenRouter (+ OpenAI / Anthropic / Google / xAI / Azure / Custom)", "role": "Cloud AI analyst. OpenRouter proxied with a server-side shared key + free-model fallback; other providers called directly with browser-stored keys", "license": "Mixed (mostly paid; OpenRouter :free tier)", "version": "OpenAI-compatible / vendor APIs"},
+    {"layer": "Packaging", "technology": "PyInstaller", "role": "Bundles the proxy + HTML + config into a single self-contained app (windowed + onedir builds)", "license": "GPL w/ exception", "version": "WC2026.spec"},
+    {"layer": "Desktop Window", "technology": "pywebview", "role": "Opens the app in a native OS webview window (Edge WebView2 / WebKit / WebKitGTK) instead of a browser tab", "license": "BSD", "version": "launcher_gui.py"},
+    {"layer": "CI / Build", "technology": "GitHub Actions", "role": "Builds the windowed app on Windows + macOS + Linux runners and uploads all three artifacts", "license": "Proprietary (CI)", "version": ".github/workflows/build.yml"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_GamezProxy Windows service (AppDirectory C:\\Gamez\\proxy) + QI_GamezTunnel exposing gamez.quiddityinnovations.com", "license": "Open source / Cloudflare", "version": "static named tunnel qi-gamez"}
+  ],
+  "descriptions": [
+    {
+      "title": "Why a proxy exists at all",
+      "body": "The whole app is one HTML file that can run straight off disk (file://). But a file:// page is CORS-blocked from calling ESPN, Kalshi, OpenRouter, or Ollama directly. The FastAPI proxy solves this by fetching every external source SERVER-SIDE and serving the HTML itself at GET / — so when you use the app at http://localhost:8710/ everything is same-origin and 'just works'. This is also what makes the portable .exe self-contained: the proxy is bundled inside it and the app loads from the proxy, not from disk. Open the HTML alone and you get a degraded, no-live-data fallback; open it through the proxy and you get the full tool."
+    },
+    {
+      "title": "No database — a cache, not a store",
+      "body": "Gamez deliberately has no SQL database. State that must persist on the server is just the latest fetched-and-scored snapshot, held in an in-memory dict (CACHE) under a threading.Lock and mirrored to data/cache.json so a restart warm-starts with last-good data. The EA FC 26 ratings CSV is cached weekly on disk. Everything user-specific — manual scores, the chosen bet, AI provider + keys, Kalshi paste, workspace layout — lives in the browser's localStorage, never on the server. The one external DB it touches is read-only: it reads the shared OpenRouter key out of Maia's maia.db."
+    },
+    {
+      "title": "EA FC 26 as the squad-strength stand-in",
+      "body": "The realistic problem in mid-2026 is that the actual World Cup squads aren't published until just before the tournament, so API-Football returns 0 players for the 2026 season. Rather than show nothing, the default player_source is 'fifa': it downloads EA FC 26's player ratings (free, no key, no quota), maps each player's club-derived 'overall' to their NATIONAL team, prefers genuine national-team members, and feeds those 0-100 ratings straight into the squad-strength aggregation via score_all_rated(). When the real 2026 squads appear, flipping player_source to 'apifootball' swaps in real match-stat-derived scores through the percentile engine — no other change."
+    },
+    {
+      "title": "The locked betting-window math",
+      "body": "The model has a fixed, documented shape that is intentionally not changed casually. A single per-match win probability p (from squad strength married with form) is raised to the number of rounds a team must survive to win a bet placed at a given phase: winProb = p^rounds (ROUNDS = Group 6 … Final 1). payout = 1/(winProb + fee). An information-quality weight INFO (0.15 at Group rising to 1.0 at the Final) reflects how much is actually known by each phase, and value = info × min(1, (1/winProb − 1)/5) combines payout potential with information. The result is a structural lens — R16/QF is the sweet spot — not a prediction, and a disclaimer to that effect is surfaced in every payload."
+    },
+    {
+      "title": "Server-side keys and the tunnel gate",
+      "body": "No secret is ever hardcoded in the HTML. Cloud-provider keys a user pastes live only in their browser's localStorage and go only to the provider they picked. The shared OpenRouter key lives server-side (config.json or maia.db) and the browser calls /ai/openrouter without ever seeing it. Because the same proxy is exposed publicly via the Cloudflare tunnel, the shared AI can be gated: _via_tunnel() detects Cloudflare request headers, and when ai_access_password is set, only tunnel traffic carrying a matching X-AI-Access header is served — the owner's own local/exe use is never gated. The password is re-read per request, so changing it locks out stale users instantly. The local-only config endpoints refuse to serve config.json over the tunnel at all."
+    },
+    {
+      "title": "One codebase, three ways to run, packaged to share",
+      "body": "The same files run as (1) the raw HTML from disk, (2) the proxy serving the app at localhost for full functionality, or (3) a portable PyInstaller app that bundles the proxy and opens in its own native window via pywebview. The build is OS-aware (WC2026-{win,mac,linux}) because a Windows .exe can't run on mac/linux, and GitHub Actions builds all three. The bundled config is key-sanitized so a shared binary never leaks the owner's keys; a friend either pastes their own key, uses the shared tunnel AI behind an access code, or installs a free local Ollama (guided by the /setup page)."
+    }
+  ]
+}

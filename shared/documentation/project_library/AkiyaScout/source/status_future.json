@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {
+      "name": "Source Coverage",
+      "priority": "high",
+      "items": [
+        {"title": "Implement remaining live adapters", "detail": "Five adapters (LIFULL HOME'S Akiya Bank, at-home commercial, HOME'S, Rakumachi, Nifty My Home) currently document their selectors but inherit fixture-only loading. Implement fetch_live() per portal so coverage extends beyond the two working scrapers (at-home Akiya Bank + SUUMO)."},
+        {"title": "Municipal akiya-bank crawler", "detail": "MunicipalNaganoAdapter is a placeholder. Build a config-driven sub-portal crawler for the 1,000+ fragmented municipal akiya banks, mapped by town — the long-tail source national portals miss. Schema already supports source_type='municipal'."},
+        {"title": "Pagination beyond page 1", "detail": "Both live scrapers currently take page 1 (at-home) / page 1 + up to 3 city pages (SUUMO) per prefecture. Add polite pagination so deep inventory in a target prefecture is fully captured, not just the first page."}
+      ]
+    },
+    {
+      "name": "Data Richness",
+      "priority": "medium",
+      "items": [
+        {"title": "Per-listing hazard exposure", "detail": "The listings.hazard_json column is reserved but unpopulated. Cross-reference each geocoded listing against the MLIT hazard tiles (already on the map) to attach flood/landslide/tsunami risk to the listing itself, then make it a Profile filter."},
+        {"title": "Property tax population", "detail": "property_tax_jpy exists in the schema but is rarely sourced. Estimate or scrape fixed-asset tax so total cost of ownership (price + tax + renovation estimate) is shown per listing."},
+        {"title": "Smarter renovation estimates", "detail": "estimate_reno() is a flat per-sqm heuristic by type. Refine with build year, current_status spec (現況), and structure (wood vs RC) for a more credible budget."},
+        {"title": "City-level map GeoJSON", "detail": "The map zooms to a prefecture on city selection but has no municipal boundaries. Add city-level GeoJSON so the drill-down renders true municipality choropleths."}
+      ]
+    },
+    {
+      "name": "Translation Quality",
+      "priority": "medium",
+      "items": [
+        {"title": "DeepL as primary engine", "detail": "All 187 cached translations currently come from the local Ollama fallback. Wire a DEEPL_API_KEY so the auto chain uses DeepL first for higher-fidelity agent-remark and structural-defect translation."},
+        {"title": "Translate descriptions in bulk", "detail": "Descriptions are translated lazily on listing open to keep ingest fast. Add an optional background pass to pre-translate descriptions for matched listings so digests read fully in English."}
+      ]
+    },
+    {
+      "name": "Operations & QI Integration",
+      "priority": "high",
+      "items": [
+        {"title": "QI_AkiyaScout NSSM service + tunnel", "detail": "Register a QI_AkiyaScout NSSM service (prefix QI_, AppDirectory C:\\AkiyaScout, main.py, set Description) plus a QI_AkiyaScoutTunnel, and add both to C:\\QIH\\ecosystem\\QI_Service_Registry.md so the Scout runs 24/7 instead of via Start_AkiyaScout.bat."},
+        {"title": "QI Brain logging", "detail": "Log Scout cycles, ingest stats, and significant decisions to the QI Brain (qi.log_session / qi.log_decision) for cross-project memory. integrates_with is currently empty in the registry."},
+        {"title": "QI Standards compliance audit", "detail": "Run qi_validator.py --project akiyascout. Reconcile the legacy C:\\QI\\ECOSYSTEM CORS import path in api/main.py with the migrated C:\\QIH\\ecosystem location, and confirm the 7-folder QI layout."}
+      ]
+    },
+    {
+      "name": "Buyer Experience",
+      "priority": "low",
+      "items": [
+        {"title": "Saved-listing favorites & notes", "detail": "Let the user bookmark listings and attach private notes per property, surfaced in a shortlist view alongside matches."},
+        {"title": "Days-on-market & price-drop tracking", "detail": "listed_date is captured; track how long a listing has been live and flag price reductions across re-ingests to spot motivated sellers."},
+        {"title": "Profile wizard UX", "detail": "Replace raw criteria editing with a guided step-by-step onboarding wizard (the original product-spec vision) that captures goals into criteria_json without exposing JSON."}
+      ]
+    }
+  ]
+}

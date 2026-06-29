@@ -1,0 +1,273 @@
+[
+  {
+    "category": "Server & HTTP API",
+    "features": [
+      {
+        "name": "Local HTTP server",
+        "file": "Application/server.py (main, ThreadingHTTPServer 127.0.0.1:9876)",
+        "status": "live",
+        "detail": "Single-file stdlib HTTP server bound to localhost:9876 (--port override). Serves the HTML browser and ~50 /api/* routes; threaded for SSE streaming."
+      },
+      {
+        "name": "REST/JSON endpoints",
+        "file": "Application/server.py (do_GET / do_POST)",
+        "status": "live",
+        "detail": "/api/schema, /api/schemas, /api/folders, /api/settings, /api/extract, /api/re-extract, /api/import, /api/chat, /api/nl2sql, /api/run-sql, /api/table-data, /api/compare-chat, and more."
+      },
+      {
+        "name": "SSE streaming pipe",
+        "file": "Application/server.py (_pipe_ollama_sse, _pipe_openrouter_sse)",
+        "status": "live",
+        "detail": "Streams Ollama /api/chat and /api/generate, plus OpenRouter / direct-API chat completions, to the browser as Server-Sent Events with per-provider delta parsing."
+      },
+      {
+        "name": "Read-only SQL guard",
+        "file": "Application/server.py (_is_readonly_sql, /api/run-sql)",
+        "status": "live",
+        "detail": "Rejects non-SELECT statements and enforces a row cap (<= 1000) before any query executes against a live connection."
+      },
+      {
+        "name": "Driver install allow-list",
+        "file": "Application/server.py (_DRIVER_PYPI_WHITELIST, /api/install-driver)",
+        "status": "live",
+        "detail": "Only the registered DB-driver pip packages may be installed via the UI; arbitrary pip installs are blocked."
+      }
+    ]
+  },
+  {
+    "category": "Authentication & Permissions",
+    "features": [
+      {
+        "name": "Login auth & sessions",
+        "file": "Application/auth.py + Application/mapsnap_users.db",
+        "status": "live",
+        "detail": "users + sessions tables (SQLite); HMAC-hashed passwords, token-based sessions, first-run admin seed (Admin / MapSnap, must_change_pw)."
+      },
+      {
+        "name": "Role & tab permission model",
+        "file": "Application/permissions.json",
+        "status": "live",
+        "detail": "auth_mode=login; roles viewer/contributor/builder/analyst/admin map to tab sets + feature flags; per-user features_override can only narrow."
+      },
+      {
+        "name": "Auth gate on protected routes",
+        "file": "Application/server.py (AUTH_PUBLIC_PATHS, _require_auth, _is_admin)",
+        "status": "live",
+        "detail": "Public paths whitelisted; everything else requires a valid session; admin-only gate for /api/users CRUD and policy raises."
+      }
+    ]
+  },
+  {
+    "category": "Schema Extraction (Layer 1)",
+    "features": [
+      {
+        "name": "Multi-engine extractors",
+        "file": "Application/db_extractors.py",
+        "status": "live",
+        "detail": "SqliteExtractor, PostgresExtractor, MySqlExtractor, OracleExtractor, plus ChromaExtractor / QdrantExtractor for vector stores; shared _wire_fks relationship wiring."
+      },
+      {
+        "name": "SQL Server live extract",
+        "file": "Application/extract_schema.py",
+        "status": "live",
+        "detail": "Reads sys.tables/views/columns/foreign_keys via pyodbc into a schema.json compatible with the whole build pipeline; optional --module-map."
+      },
+      {
+        "name": "CSV schema import",
+        "file": "Application/import_csv_schema.py",
+        "status": "live",
+        "detail": "Auto-detects Objects / Columns / PK / FK CSV roles by header; rebuilds schema.json when direct connection is unavailable."
+      },
+      {
+        "name": "DDL schema import",
+        "file": "Application/import_ddl_schema.py",
+        "status": "live",
+        "detail": "Parses CREATE TABLE / DDL exports into the same schema.json object model."
+      },
+      {
+        "name": "Soft (inferred) FK detection",
+        "file": "Application/infer_soft_fks.py",
+        "status": "live",
+        "detail": "Infers relationships from column-name conventions for schemas that declare no formal FKs (e.g. OnBase); adds soft edges to schema.json."
+      },
+      {
+        "name": "Browser HTML builder",
+        "file": "Application/build_browser.py",
+        "status": "live",
+        "detail": "Generates the single-page schema_browser.html from schema.json + sidecars (columns / FK-in / FK-out / diagram / data / chat / compare tabs)."
+      },
+      {
+        "name": "System fingerprinting",
+        "file": "Application/system_detector.py + Application/system_docs/*.py",
+        "status": "live",
+        "detail": "Matches table-name signatures to identify the source system (onbase, jenzabar, peoplesoft, banner, sap, epic, blackbaud, dynamics365) and load its domain pack."
+      }
+    ]
+  },
+  {
+    "category": "Data-Governance Control Plane (Layer 0)",
+    "features": [
+      {
+        "name": "Egress guardrail",
+        "file": "Application/guardrail.py (resolve_data_policy, cloud_allowed, guard_cloud_egress)",
+        "status": "live",
+        "detail": "Framework-free, portable single chokepoint: blocks cloud egress under local_only, scrubs regulated values, strips LOCAL_ONLY-sentinel spans, logs every decision; fail-safe to local_only."
+      },
+      {
+        "name": "Guardrail wiring at cloud pipes",
+        "file": "Application/server.py (/api/chat, /api/nl2sql)",
+        "status": "live",
+        "detail": "guard_cloud_egress wraps the only cloud egress points; local Ollama, local embeddings, and /api/run-sql are unaffected."
+      },
+      {
+        "name": "Per-profile AI policy meta",
+        "file": "Product/<profile>/mapsnap_meta.json (ai.data_policy, ai.enrichment, ai.locked, ai.column_classes)",
+        "status": "live",
+        "detail": "Read/written via /api/schema-meta with a lock guard; surfaced on /api/schema; global default_data_policy in connection.json."
+      }
+    ]
+  },
+  {
+    "category": "Enrichment Orchestrator",
+    "features": [
+      {
+        "name": "enrich.py chain",
+        "file": "Application/enrich.py",
+        "status": "live",
+        "detail": "Event-driven (extract / doc_import / config_import), db_type dispatch, idempotent via source-hash, best-effort (always exit 0); wired into build_sequences + /api/extract + /api/re-extract + upload flows."
+      },
+      {
+        "name": "Enrichment status sidecar",
+        "file": "Product/<profile>/enrich_status.json",
+        "status": "live",
+        "detail": "Per-profile progress record for inline + background layers; surfaced as a UI badge."
+      }
+    ]
+  },
+  {
+    "category": "Semantic Annotations (Layer 2)",
+    "features": [
+      {
+        "name": "Annotation builder",
+        "file": "Application/build_annotations.py",
+        "status": "live",
+        "detail": "Structural + curated (not an LLM pass) per-table purpose/role/joins; runs inline on extract; built for ONBASE13_POC (2,325 tables)."
+      },
+      {
+        "name": "Annotations injected into prompts",
+        "file": "Application/server.py (_annotations_block, _load_annotations, build_system_prompt)",
+        "status": "live",
+        "detail": "Per-retrieved-table purpose line injected into both chat and NL->SQL prompts, closing the Layer-2 gap; eval-confirmed on live gemma."
+      }
+    ]
+  },
+  {
+    "category": "Value Catalog (Layer 3)",
+    "features": [
+      {
+        "name": "Live OnBase catalog builder",
+        "file": "Application/discovery/build_live_catalog.py",
+        "status": "live",
+        "detail": "Reads hsi.doctype + hsi.keytypetable live over SQL into BU_Catalog.json (120 DocTypes + 106 keyword types for ONBASE13_POC)."
+      },
+      {
+        "name": "Curated config catalog builder",
+        "file": "Application/discovery/build_bu_catalog.py + Application/parse_onbase_config.py",
+        "status": "live",
+        "detail": "Parses OnBase .expk/.spk Studio packages into the same BU_Catalog.json shape; consumed by catalog_loader."
+      },
+      {
+        "name": "Catalog loader + prompt block",
+        "file": "Application/discovery/catalog_loader.py + server.py (catalog_block)",
+        "status": "live",
+        "detail": "Resolves business names (e.g. 'Check Image' id=29) and emits a CATALOG HITS block with join guidance into the chat prompt."
+      }
+    ]
+  },
+  {
+    "category": "Data Profiling (Layer 4)",
+    "features": [
+      {
+        "name": "profile_schema.py",
+        "file": "Application/profile_schema.py",
+        "status": "partial",
+        "detail": "Read-only, capped (TOP-N, blob-skip), engine-agnostic profiler: row_count, lookup/fact kind, per-column distinct/null%/min/max/sample/semantic_type; PII auto-detect writes ai.column_classes + masks samples. Verified on ONBASE13_POC (300 tables / 2,306 cols, 6 PII columns)."
+      },
+      {
+        "name": "Profile block egress safety",
+        "file": "Application/server.py (_profile_block) + guardrail.strip_local_only",
+        "status": "partial",
+        "detail": "Injects masked samples wrapped in a LOCAL_ONLY sentinel reaching only local models; guardrail strips the span before any cloud egress. Needs the elevated QI_MapSnap restart to go live."
+      }
+    ]
+  },
+  {
+    "category": "Semantic Retrieval & Verified Queries (Layers 5 + D)",
+    "features": [
+      {
+        "name": "Semantic index core",
+        "file": "Application/semantic_index.py + Application/build_embeddings.py",
+        "status": "partial",
+        "detail": "One local nomic-embed-text (768-d) embedding per table synthesized from sidecars into a local ChromaDB .index/; idempotent via combined sidecar hash; ONBASE13_POC indexed (2,325 tables). Needs restart for the server-side blend."
+      },
+      {
+        "name": "Hybrid retrieval blend",
+        "file": "Application/server.py (find_relevant_resources, find_relevant_tables, _semantic_objects, _interleave_unique)",
+        "status": "partial",
+        "detail": "Blends keyword scoring with semantic matches round-robin after the OnBase spine, with pure-keyword fallback when no index / Ollama down. Needs restart to activate server-side."
+      },
+      {
+        "name": "Verified-query library",
+        "file": "Application/query_library.py + Product/<profile>/query_examples.json",
+        "status": "partial",
+        "detail": "record(q,sql) on successful /api/run-sql; find_similar() ranks by stemmed Jaccard; closest examples injected into NL->SQL + chat prompts. Self-improving, local. Needs restart for run-sql recording."
+      }
+    ]
+  },
+  {
+    "category": "Content Library & Documents",
+    "features": [
+      {
+        "name": "Per-schema document RAG indexer",
+        "file": "Application/document_indexer.py",
+        "status": "live",
+        "detail": "Extracts + chunks documents from a profile's Documents/ folder into a searchable index.json; supports txt/md/csv/docx/pdf/spk/expk/xml/json with graceful fallbacks."
+      },
+      {
+        "name": "Document & config import endpoints",
+        "file": "Application/server.py (/api/index-documents, /api/upload-doc, /api/parse-config, /api/inject-docs, /api/inject-mrg)",
+        "status": "live",
+        "detail": "Upload / URL / config-package ingestion that also fire enrich.py best-effort to refresh the affected layers."
+      }
+    ]
+  },
+  {
+    "category": "Operations & Packaging",
+    "features": [
+      {
+        "name": "Control-panel launcher",
+        "file": "start.bat",
+        "status": "live",
+        "detail": "Self-elevating menu; auto-detects SERVICE mode (QI_MapSnap + QI_MapSnapTunnel via NSSM) vs MANUAL mode (local Python + Cloudflare quick tunnel)."
+      },
+      {
+        "name": "Named tunnel service installer",
+        "file": "install_tunnel_service.bat",
+        "status": "live",
+        "detail": "Registers QI_MapSnapTunnel; guards against clobbering the centrally-managed named tunnel (mapsnap.quiddityinnovations.com) unless --force."
+      },
+      {
+        "name": "Browser rebuild helper",
+        "file": "refresh.bat + /api/rebuild",
+        "status": "live",
+        "detail": "Regenerates schema_browser.html from the current schema.json without a full re-extract."
+      },
+      {
+        "name": "QI Hive Project Status page",
+        "file": "INTRO/ (status_*.json, status_intro.md, mapsnap_architecture.svg, mapsnap_schema.svg)",
+        "status": "live",
+        "detail": "This documentation set, rendered by C:\\QIH\\engine\\hive\\dashboard\\project_status.py."
+      }
+    ]
+  }
+]

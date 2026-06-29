@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="f-arr" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#475569"/>
+    </marker>
+    <marker id="f-orange" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#f97316"/>
+    </marker>
+    <marker id="f-green" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="640" fill="#f8fafc" rx="12"/>
+  <text x="450" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#1e293b">Lottery Wiz — Covering-Design &amp; Curated Pipeline</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active · 2026</text>
+
+  <!-- ══ LEGEND ══ -->
+  <rect x="690" y="58" width="202" height="132" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="791" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Legend</text>
+  <rect x="700" y="84" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="720" y="93" font-size="9" fill="#374151">Input / your choices</text>
+  <rect x="700" y="101" width="14" height="10" rx="2" fill="#fff7ed" stroke="#f97316"/>
+  <text x="720" y="110" font-size="9" fill="#374151">Solver / filter stage</text>
+  <rect x="700" y="118" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#334155"/>
+  <text x="720" y="127" font-size="9" fill="#374151">Guaranteed output set</text>
+  <rect x="700" y="135" width="14" height="10" rx="2" fill="#e0f2fe" stroke="#0284c7"/>
+  <text x="720" y="144" font-size="9" fill="#374151">Analysis / verdict</text>
+  <rect x="700" y="152" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b" stroke-dasharray="3,2"/>
+  <text x="720" y="161" font-size="9" fill="#374151">Honesty guardrail</text>
+  <line x1="700" y1="177" x2="718" y2="177" stroke="#475569" stroke-width="2" marker-end="url(#f-arr)"/>
+  <text x="724" y="181" font-size="9" fill="#374151">Pipeline flow</text>
+
+  <!-- ① INPUT -->
+  <rect x="24" y="80" width="150" height="78" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="99" y="104" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">① Pick numbers</text>
+  <text x="99" y="122" text-anchor="middle" font-size="8" fill="#2e7d32">Reduced pool (~12–22)</text>
+  <text x="99" y="134" text-anchor="middle" font-size="8" fill="#2e7d32">heat-mapped grid</text>
+  <text x="99" y="148" text-anchor="middle" font-size="8" fill="#66bb6a">+ guarantee t, size</text>
+
+  <line x1="174" y1="119" x2="214" y2="119" stroke="#475569" stroke-width="2" marker-end="url(#f-arr)"/>
+
+  <!-- BRANCH LABEL -->
+  <text x="450" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412" letter-spacing="1">TWO SOLVER PATHS</text>
+
+  <!-- PATH A: COVERING WHEEL -->
+  <rect x="214" y="82" width="300" height="74" rx="9" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="364" y="101" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">②a Covering-design solver (wheel)</text>
+  <text x="364" y="117" text-anchor="middle" font-size="8" fill="#c2410c">Enumerate every t-subset of the pool →</text>
+  <text x="364" y="129" text-anchor="middle" font-size="8" fill="#c2410c">greedily add the ticket covering the most</text>
+  <text x="364" y="141" text-anchor="middle" font-size="8" fill="#c2410c">still-uncovered t-subsets, until all covered</text>
+  <text x="364" y="152" text-anchor="middle" font-size="7.5" fill="#9a3412" font-weight="600">gen_wheel() / wheel(pool,k,t)</text>
+
+  <!-- PATH B: CURATED FUNNEL (5 sub-stages stacked) -->
+  <text x="364" y="182" text-anchor="middle" font-size="9.5" font-weight="700" fill="#9a3412">②b Curated funnel  ·  build_play_set()</text>
+
+  <rect x="214" y="190" width="300" height="34" rx="6" fill="#ffedd5" stroke="#f97316"/>
+  <text x="364" y="205" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a3412">Space C(N,5)  →  reduce to your pool</text>
+  <text x="364" y="217" text-anchor="middle" font-size="7.5" fill="#c2410c">refuse if &gt; 200k combos (the reduced-universe principle)</text>
+
+  <rect x="214" y="230" width="300" height="30" rx="6" fill="#ffedd5" stroke="#f97316"/>
+  <text x="364" y="244" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a3412">Drop past draws</text>
+  <text x="364" y="255" text-anchor="middle" font-size="7.5" fill="#c2410c">remove combos that already occurred in history</text>
+
+  <rect x="214" y="266" width="300" height="30" rx="6" fill="#ffedd5" stroke="#f97316"/>
+  <text x="364" y="280" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a3412">Drop edges  ·  is_edge()</text>
+  <text x="364" y="291" text-anchor="middle" font-size="7.5" fill="#c2410c">all-consec / all-odd / all-low / AP / cluster / extreme sum</text>
+
+  <rect x="214" y="302" width="300" height="30" rx="6" fill="#ffedd5" stroke="#f97316"/>
+  <text x="364" y="316" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a3412">Score by profile  ·  profile_score()</text>
+  <text x="364" y="327" text-anchor="middle" font-size="7.5" fill="#c2410c">sum→107 hotzone · 2-3 odd/low · no consec · spread · novelty</text>
+
+  <rect x="214" y="338" width="300" height="30" rx="6" fill="#ffedd5" stroke="#f97316"/>
+  <text x="364" y="352" text-anchor="middle" font-size="8.5" font-weight="600" fill="#9a3412">Coverage-aware greedy top-N</text>
+  <text x="364" y="363" text-anchor="middle" font-size="7.5" fill="#c2410c">maximise pair/triple coverage while keeping profile high</text>
+
+  <!-- input feeds both paths -->
+  <path d="M 174,110 H 200 V 119 H 214" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#f-arr)"/>
+  <path d="M 99,158 V 207 H 214" fill="none" stroke="#f97316" stroke-width="1.5" marker-end="url(#f-orange)"/>
+
+  <!-- both paths → OUTPUT -->
+  <path d="M 514,119 H 560 V 250 H 596" fill="none" stroke="#f97316" stroke-width="1.5" marker-end="url(#f-orange)"/>
+  <path d="M 514,353 H 560 V 270 H 596" fill="none" stroke="#f97316" stroke-width="1.5" marker-end="url(#f-orange)"/>
+
+  <!-- ③ OUTPUT (guaranteed set) -->
+  <rect x="596" y="216" width="280" height="80" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="736" y="240" text-anchor="middle" font-size="12" font-weight="700" fill="white">③ Guaranteed-coverage play set</text>
+  <text x="736" y="258" text-anchor="middle" font-size="8.5" fill="#9fb3c8">Wheel: if ≥t pool numbers drawn → ≥1 t-match</text>
+  <text x="736" y="271" text-anchor="middle" font-size="8.5" fill="#9fb3c8">Curated: funnel counts + pair/triple coverage %</text>
+  <text x="736" y="285" text-anchor="middle" font-size="8" fill="#64748b">Print · Copy · CSV · Excel · Save · Log as played</text>
+
+  <!-- ③ → ④ analysis -->
+  <line x1="736" y1="296" x2="736" y2="340" stroke="#0284c7" stroke-width="2" marker-end="url(#f-arr)"/>
+
+  <!-- ④ ANALYSIS row -->
+  <text x="450" y="392" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e" letter-spacing="1">④ TEST IT AGAINST REALITY</text>
+
+  <rect x="120" y="404" width="220" height="86" rx="9" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="230" y="426" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0c4a6e">Backtest</text>
+  <text x="230" y="443" text-anchor="middle" font-size="8" fill="#0284c7">Best-ticket match tier per draw,</text>
+  <text x="230" y="455" text-anchor="middle" font-size="8" fill="#0284c7">across all historical draws.</text>
+  <text x="230" y="469" text-anchor="middle" font-size="8" fill="#0284c7">rate ≥2 / ≥3 / ≥4 / =5</text>
+  <text x="230" y="482" text-anchor="middle" font-size="7.5" fill="#0369a1">engine_py.backtest()</text>
+
+  <rect x="360" y="404" width="240" height="86" rx="9" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="480" y="426" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0c4a6e">The Brutal Ledger</text>
+  <text x="480" y="443" text-anchor="middle" font-size="8" fill="#0284c7">Replay with real payout math (bitmask):</text>
+  <text x="480" y="455" text-anchor="middle" font-size="8" fill="#0284c7">spend · recovered · net · ROI · equity</text>
+  <text x="480" y="467" text-anchor="middle" font-size="8" fill="#0284c7">best draw · worst losing streak</text>
+  <text x="480" y="482" text-anchor="middle" font-size="7.5" fill="#0369a1">ledger_run() + montecarlo_control()</text>
+
+  <rect x="620" y="404" width="256" height="86" rx="9" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="748" y="426" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0c4a6e">Random control + verdict</text>
+  <text x="748" y="443" text-anchor="middle" font-size="8" fill="#0284c7">Exact multinomial: net P/L vs thousands</text>
+  <text x="748" y="455" text-anchor="middle" font-size="8" fill="#0284c7">of equal-volume random quick-picks.</text>
+  <text x="748" y="467" text-anchor="middle" font-size="8" fill="#0284c7">percentile · beat_random?</text>
+  <text x="748" y="482" text-anchor="middle" font-size="7.5" fill="#0369a1">blunt AI verdict (SSE)</text>
+
+  <line x1="736" y1="340" x2="736" y2="404" stroke="#0284c7" stroke-width="2" marker-end="url(#f-arr)"/>
+  <path d="M 596,256 H 230 V 404" fill="none" stroke="#0284c7" stroke-width="1.2" marker-end="url(#f-arr)"/>
+  <path d="M 596,256 H 480 V 404" fill="none" stroke="#0284c7" stroke-width="1.2" marker-end="url(#f-arr)"/>
+
+  <!-- ⑤ HONESTY GUARDRAIL -->
+  <rect x="120" y="520" width="756" height="64" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="498" y="542" text-anchor="middle" font-size="11" font-weight="700" fill="#7c5e00">⑤ The honesty guardrail — stated everywhere, including the AI's own prompt</text>
+  <text x="498" y="560" text-anchor="middle" font-size="9" fill="#b8860b">Covering designs restructure HOW your tickets cover combinations. They do NOT change the odds and CANNOT predict draws.</text>
+  <text x="498" y="575" text-anchor="middle" font-size="9" fill="#b8860b">The numbers are equiprobable; the curated builder scores SHAPE, not likelihood. This is a tool for structure and honesty, not an edge.</text>
+
+  <!-- data source feeding backtest/ledger -->
+  <rect x="24" y="404" width="78" height="86" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="63" y="436" text-anchor="middle" font-size="8.5" font-weight="700" fill="#14532d">Draw</text>
+  <text x="63" y="449" text-anchor="middle" font-size="8.5" font-weight="700" fill="#14532d">history</text>
+  <text x="63" y="465" text-anchor="middle" font-size="7" fill="#2e7d32">JSON stores</text>
+  <text x="63" y="476" text-anchor="middle" font-size="7" fill="#66bb6a">live_sources</text>
+  <line x1="102" y1="447" x2="120" y2="447" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#f-green)"/>
+
+  <text x="876" y="604" text-anchor="end" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+</svg>

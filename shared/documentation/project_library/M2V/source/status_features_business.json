@@ -1,0 +1,42 @@
+[
+  {
+    "category": "Make a Music Video from a Song",
+    "features": [
+      {"name": "Upload a track + lyrics", "description": "Drop in an audio file and paste the lyrics; M2V handles the rest. One audio file plus the words is all that's needed to start a render.", "status": "partial", "notes": "POST /api/generate accepts the audio upload + lyrics form field; service launches and accepts jobs, end-to-end render lightly tested"},
+      {"name": "Auto-extract lyrics from the audio", "description": "Don't have the lyrics typed out? M2V can read them straight from the song — first from embedded tags, then by listening to the track and transcribing it.", "status": "partial", "notes": "/api/extract-lyrics: ID3 USLT/SYLT tags first, then OpenAI Whisper transcription; built, light verification"},
+      {"name": "Pick a visual style", "description": "Choose how the video looks — cinematic, anime, watercolour, cyberpunk, fantasy, documentary, abstract, or vintage. The chosen style flavours every generated scene.", "status": "partial", "notes": "8 styles in STYLE_MODIFIERS (engine/lyric_analyzer.py) wired through the UI dropdown"},
+      {"name": "Keep the same faces across scenes", "description": "Upload a reference photo of the person(s) in the video and M2V keeps their appearance consistent from scene to scene, so it feels like one cast rather than ten strangers.", "status": "partial", "notes": "Optional reference image + IP-Adapter on SDXL; strength slider (ip_scale, default 0.6); code complete, needs GPU weights"},
+      {"name": "Lyrics burned in as subtitles", "description": "The song's words appear on screen, timed to each section, so the video is captioned out of the box. Can be toggled off.", "status": "partial", "notes": "SRT generated from scene timings + FFmpeg subtitles filter; 'Burn subtitles' checkbox; real .srt files produced in data/output"},
+      {"name": "Download the finished MP4", "description": "When the render is done you get a single, audio-synced MP4 ready to share.", "status": "partial", "notes": "GET /api/download/{job_id} returns a video/mp4 FileResponse; 3 sample outputs exist in data/output"}
+    ]
+  },
+  {
+    "category": "Local, Private & Free",
+    "features": [
+      {"name": "Runs entirely on local hardware", "description": "Every step — scene writing, image generation, animation, assembly — happens on the owner's own GPU. The song never leaves the machine and there is no per-render cloud bill.", "status": "partial", "notes": "Ollama (local LLM) + SDXL/SVD via diffusers on the local RTX 5080; no external generation API"},
+      {"name": "No subscription or API cost", "description": "Built on open models (Stable Diffusion XL, Stable Video Diffusion, Whisper) so generating a video costs nothing but electricity and time.", "status": "partial", "notes": "All models are open-weight; only cost is local compute"}
+    ]
+  },
+  {
+    "category": "Watch Progress as it Renders",
+    "features": [
+      {"name": "Live progress log", "description": "While a video renders you see each stage as it happens — analysing lyrics, segmenting audio, generating clip 3 of 10, assembling — rather than staring at a blank bar.", "status": "live", "notes": "Pipeline yields per-stage event dicts; UI polls /api/status/{id}/events and updates a Gradio progress bar + log box"},
+      {"name": "Graceful fallbacks", "description": "If the local AI director is offline, M2V still produces simple prompts; if a scene's image is missing, it inserts a labelled placeholder and keeps going rather than failing the whole video.", "status": "partial", "notes": "Ollama-unavailable -> _fallback_prompt; missing frame -> placeholder clip (proven in make_forro_video.py); librosa-unavailable -> even time split"}
+    ]
+  },
+  {
+    "category": "Proof of Concept Delivered",
+    "features": [
+      {"name": "First real music video rendered", "description": "A complete 160-second anime music video ('Churrasco na Geórgia') was assembled from a real song, with timed Portuguese lyric captions and crossfades between ten scenes — proving the assembly path works.", "status": "live", "notes": "forro_anime_mv.mp4 (~3.9 MB) rendered in 706s via make_forro_video.py; scenes used placeholders (real frames pending ComfyUI run)"}
+    ]
+  },
+  {
+    "category": "QI Ecosystem Citizen",
+    "features": [
+      {"name": "Registered in the QI ecosystem", "description": "M2V is listed in the QI registry with its ports, path, and family role, so the QI Hive dashboard and sibling projects know it exists.", "status": "live", "notes": "qi_registry.json id=m2v, status=new, family_tier=cousin, ports 8501/7841"},
+      {"name": "Standard health/identity endpoints", "description": "Exposes the QI module contract endpoints any QI project can call to check it is alive and learn what it does.", "status": "live", "notes": "GET /health, /version, /info; covered by tests/test_smoke.py"},
+      {"name": "Always-on service + public URL", "description": "Can run 24/7 as a Windows service and be reachable at a permanent public web address.", "status": "partial", "notes": "install_service.bat (QI_M2V) + named Cloudflare tunnel qi-m2v -> m2v.quiddityinnovations.com; installers present, not yet in QI_Service_Registry.md"},
+      {"name": "Feeds from sibling creative tools", "description": "Designed to take audio generated by PersonalSong and turn it into a video, with AvatarStudio as a video-side sibling.", "status": "planned", "notes": "No integration wired yet; integrates_with is empty in the registry"}
+    ]
+  }
+]

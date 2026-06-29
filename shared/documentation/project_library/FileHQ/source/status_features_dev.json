@@ -1,0 +1,72 @@
+[
+  {
+    "category": "Entry Point & Web Server",
+    "features": [
+      {"name": "run.py — standalone launcher", "file": "run.py", "status": "partial", "detail": "Boots the FastAPI app via uvicorn on 127.0.0.1:8000 with reload. Standalone entry point from the pre-merge POC; in the merged world FileHQ is started by Naya, not by this script directly."},
+      {"name": "FastAPI app (50+ endpoints)", "file": "main.py :: app = FastAPI(title='FileHQ', version='0.1.0')", "status": "live", "detail": "All REST routes: /api/scan, /api/stats, /api/files/{tree,list,search}, /api/categorize*, /api/hash*, /api/dedup*, /api/organize*, /api/structure*, /api/tasks*, /api/history*, /api/exceptions*, /api/settings*. Jinja2Templates + StaticFiles serve the dashboard. Background jobs run on threads guarded by _job_lock / _active_jobs."},
+      {"name": "filehq package init", "file": "__init__.py", "status": "live", "detail": "Marks C:\\NAYA\\filehq as the importable 'filehq' package so modules import as filehq.scanner, filehq.dedup, etc."}
+    ]
+  },
+  {
+    "category": "Database Layer",
+    "features": [
+      {"name": "Connection + schema", "file": "database.py :: get_connection() / init_db()", "status": "live", "detail": "SQLite at db/filehq.db. PRAGMA journal_mode=WAL, foreign_keys=ON, busy_timeout=5000. executescript creates 8 app tables (files, duplicate_groups, duplicate_members, operations, tasks, task_runs, exceptions, scans) + schema_info. SCHEMA_VERSION=1."},
+      {"name": "Idempotent migrations", "file": "database.py :: _run_migrations()", "status": "live", "detail": "PRAGMA table_info checks then ALTER TABLE: adds duplicate_groups.review_action and operations.batch_id (+ idx_operations_batch_id) if missing. Safe to run on every init."},
+      {"name": "Dashboard stats aggregator", "file": "database.py :: get_db_stats()", "status": "live", "detail": "One call returns total_files, total_size, duplicate_groups/files/size, operations, scans, active_exceptions, per-category and per-extension breakdowns, recent operations + scans. Drives /api/stats and the dashboard."}
+    ]
+  },
+  {
+    "category": "Scanner",
+    "features": [
+      {"name": "Directory walker / indexer", "file": "scanner.py :: scan_directory()", "status": "live", "detail": "os.walk with in-place dirnames[:] pruning of SKIP_DIRS + dot-folders. Per-file os.stat -> size/mtime/ctime/ext. INSERT new files, UPDATE changed files (and null their hashes). Opens a scans row, commits per directory, finalizes counts. ~2.86M rows indexed."},
+      {"name": "File-explorer tree", "file": "scanner.py :: get_file_tree()", "status": "live", "detail": "Recursive directory tree (max_depth default 3) with per-node file_count and permission-denied handling, for the Explorer tab."}
+    ]
+  },
+  {
+    "category": "Categorizer",
+    "features": [
+      {"name": "Extension -> category", "file": "categorizer.py :: get_category() / categorize_files()", "status": "live", "detail": "Maps extension to one of 8 categories from config (else 'Other'). Batched UPDATE (500-row executemany, 10k/50k batch) of category/archive_era/archive_year for rows where category IS NULL. Callable repeatedly until remaining=0."},
+      {"name": "Archive-era classifier", "file": "categorizer.py :: get_archive_era()", "status": "live", "detail": "Parses modified_date; returns (FORWARD, year) for year>=forward_year(2020) else (BACKWARD, year). Falls back to current year on parse error."}
+    ]
+  },
+  {
+    "category": "Hasher",
+    "features": [
+      {"name": "Two-phase fingerprint", "file": "hasher.py :: compute_partial_hash() / compute_full_hash()", "status": "live", "detail": "xxhash.xxh64. Partial = first 64KB + last 64KB (when size > 128KB). Full = streamed 1MB chunks. Both return (hex, None) or (None, 'missing'|'inaccessible') so unreadable files are flagged not retried."},
+      {"name": "Staged hashing pipeline", "file": "hasher.py :: hash_candidates()", "status": "live", "detail": "Phase 1 SELECT size_bytes GROUP BY HAVING cnt>1 (only size-collision candidates). Phase 2 partial-hash candidates. Phase 3 full-hash only partial-hash collisions. Commits every 200 files; marks errors. Singletons never hashed."},
+      {"name": "Hash progress", "file": "hasher.py :: get_hash_progress()", "status": "live", "detail": "Returns total_hashable, partial_hashed, full_hashed and percentages for the UI progress bars."}
+    ]
+  },
+  {
+    "category": "Duplicate Detection",
+    "features": [
+      {"name": "Build duplicate groups", "file": "dedup.py :: find_duplicates()", "status": "live", "detail": "Wipes + rebuilds duplicate_groups/members from files sharing hash_full (GROUP BY HAVING file_count>1). Marks earliest-modified member is_oldest=1 (the keeper). Computes wasted = single_size x (file_count-1). 694 groups / 1,618 members."},
+      {"name": "Group review + actions", "file": "dedup.py :: mark_group_reviewed/resolved(), bulk_mark_groups(), set_group_action()", "status": "live", "detail": "status pending|reviewed|resolved; review_action in {delete,move,rename,None}. bulk_mark_groups does a single IN(...) UPDATE transaction. get_duplicate_groups() paginates with JOIN to file detail."},
+      {"name": "Execute dedup actions", "file": "dedup.py :: execute_dedup_actions()", "status": "partial", "detail": "Dry-run by default. For is_oldest=0 copies: delete (os.remove + status='missing'), move (shutil.move with collision suffix), or rename (_DUPE). Every real op logged to operations(reversible=1); group marked resolved. The original is always kept untouched."}
+    ]
+  },
+  {
+    "category": "Organizer (Structure / Plan / Execute / Undo)",
+    "features": [
+      {"name": "ARCHIVE structure manager", "file": "structure.py :: UNIT_RELATIVE_PATHS, create/validate/preview", "status": "partial", "detail": "Python port of ARCHIVE-ControlPanel.ps1. Canonical tree: ARCHIVE\\2020 - FORWARD|BACKWARD with 00_INBOUND/OUTBOUND/TEMP, 01_CURRENT/{01_MEDIA,02_SOFTWARE,03_DOCUMENTS}, 99_INDEX + DO_NOT_TOUCH folders."},
+      {"name": "Move planner (dry-run)", "file": "planner.py :: compute_target() / build_plan()", "status": "partial", "detail": "Resolves each file's destination under ARCHIVE by category->subfolder map and era (FORWARD vs BACKWARD\\{year}). Reads DB only; produces a plan, moves nothing."},
+      {"name": "Plan executor + undo", "file": "executor.py :: execute_plan(); undo.py :: undo_batch()", "status": "partial", "detail": "Carries out a plan with a batch_id, logging each move to operations with an undo_path; undo_batch() reverses a batch. Destructive — gated by owner approval through the Naya bridge."}
+    ]
+  },
+  {
+    "category": "Config & Maintenance",
+    "features": [
+      {"name": "YAML config + naya.db override", "file": "config.py :: load_config()", "status": "live", "detail": "DEFAULT_CONFIG (app/archive/scanner/categories/scheduler) merged over config/config.yaml. primary_drive is overridden from naya.db key personal.default_scan_drive via naya_db.get_config() so the scan drive is never hardcoded."},
+      {"name": "DB maintenance engine", "file": "maintenance.py :: full_maintenance(), vacuum(), health_report()", "status": "live", "detail": "VACUUM + ANALYZE; purges missing/inaccessible files, resolved duplicate groups+members, old task_runs, stale scans. health_report() returns size + recommendations. Safe-only: never touches pending groups or existing files."},
+      {"name": "Scheduled tasks", "file": "main.py (APScheduler BackgroundScheduler + CronTrigger); tasks/task_runs tables", "status": "partial", "detail": "Task CRUD endpoints + cron scheduling wired; config defaults scan_interval_hours=24, dedup_interval_hours=168. tasks/task_runs tables currently empty (0 rows) — no jobs registered yet."}
+    ]
+  },
+  {
+    "category": "Naya Integration Bridge",
+    "features": [
+      {"name": "REST + direct-DB bridge", "file": "C:\\NAYA\\filehq_bridge.py", "status": "live", "detail": "Wraps all 50+ FileHQ endpoints (_get/_post/_put/_delete to http://127.0.0.1:8200) AND opens a read-only SQLite connection (file:...?mode=ro) for fast lookups (db_file_count, db_largest_files, db_category_breakdown, db_drive_usage, db_search_files). _sanitize_http_error strips internal URLs/IPs from user-facing errors."},
+      {"name": "Intent + action detection", "file": "filehq_bridge.py :: is_filehq_question(), detect_action(), execute_chat_action()", "status": "live", "detail": "Keyword match decides if a message is file-related; detect_action() maps it to scan/dedup_summary/largest_files/categorize/hash/search_files/etc. Destructive execute_dedup/execute_organize require approved=True (explicit 'you may proceed')."},
+      {"name": "Prompt context + Telegram", "file": "filehq_bridge.py :: build_context_for_prompt(), telegram_file_command()", "status": "live", "detail": "Builds a live [FILEHQ CONTEXT] block (stats, dedup summary, top categories, drive usage, active jobs, last scan) injected into Naya's system prompt; offline path tells the user how to start FileHQ. /files Telegram subcommands."}
+    ]
+  }
+]

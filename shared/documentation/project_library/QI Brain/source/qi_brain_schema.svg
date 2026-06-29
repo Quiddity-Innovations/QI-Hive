@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="fk" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#c2185b"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="820" fill="#ffffff" rx="12"/>
+  <text x="500" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2d3d">QI Brain — Database Schema (qi_brain.db)</text>
+  <text x="500" y="50" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · Ecosystem Knowledge Substrate · 2026</text>
+  <text x="500" y="66" text-anchor="middle" font-size="10" fill="#9aa5b1">SQLite · WAL · 25 tables · live row counts · PK = primary key · FK = foreign key · C:\QIH\data\qi_brain.db</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="784" y="78" width="200" height="120" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="884" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="794" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="814" y="113" font-size="9" fill="#374151">Core memory tables</text>
+  <rect x="794" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="814" y="130" font-size="9" fill="#374151">Hive ops / autonomy</text>
+  <rect x="794" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="814" y="147" font-size="9" fill="#374151">Empty / bookkeeping</text>
+  <rect x="794" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="814" y="164" font-size="9" fill="#374151">Title bar (table header)</text>
+  <line x1="794" y1="180" x2="812" y2="180" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <text x="818" y="184" font-size="9" fill="#374151">Foreign-key reference</text>
+
+  <!-- ══ ROW 1: projects · project_state · session_log ══ -->
+  <text x="22" y="86" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">CORE MEMORY</text>
+
+  <!-- projects -->
+  <rect x="20" y="92" width="226" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="92" width="226" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="133" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">projects</text>
+  <text x="32" y="136" font-size="10" fill="#1f2d3d">project_id  (PK, text)</text>
+  <text x="32" y="153" font-size="10" fill="#374151">display_name · tagline · path</text>
+  <text x="32" y="170" font-size="10" fill="#374151">api_port · ui_port</text>
+  <text x="32" y="187" font-size="10" fill="#374151">tier (backbone|project|tool)</text>
+  <text x="32" y="204" font-size="10" fill="#374151">active · created_at</text>
+  <text x="32" y="224" font-size="9" fill="#5f8a66">24 active rows</text>
+  <text x="32" y="238" font-size="8.5" fill="#9aa5b1">seeded from qi_registry.json</text>
+
+  <!-- project_state -->
+  <rect x="266" y="92" width="234" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="266" y="92" width="234" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="383" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">project_state</text>
+  <text x="278" y="136" font-size="10" fill="#1f2d3d">state_id  (PK)</text>
+  <text x="278" y="153" font-size="10" fill="#c2185b">project_id → projects.project_id</text>
+  <text x="278" y="170" font-size="10" fill="#c2185b">agent_id → agents.agent_id</text>
+  <text x="278" y="187" font-size="10" fill="#374151">phase · status · summary</text>
+  <text x="278" y="204" font-size="10" fill="#374151">blockers · next_steps · recorded_at</text>
+  <text x="278" y="224" font-size="9" fill="#5f8a66">239 rows — latest per project = current</text>
+  <text x="278" y="238" font-size="8.5" fill="#9aa5b1">append-only; status active|paused|blocked|complete</text>
+
+  <!-- session_log -->
+  <rect x="520" y="92" width="244" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="520" y="92" width="244" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="642" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">session_log</text>
+  <text x="532" y="136" font-size="10" fill="#1f2d3d">session_id  (PK)</text>
+  <text x="532" y="153" font-size="10" fill="#c2185b">project_id → projects.project_id</text>
+  <text x="532" y="170" font-size="10" fill="#374151">session_title · summary</text>
+  <text x="532" y="187" font-size="10" fill="#374151">decisions_made · features_logged</text>
+  <text x="532" y="204" font-size="10" fill="#374151">files_changed(json) · model_used · ended_at</text>
+  <text x="532" y="224" font-size="9" fill="#5f8a66">565 rows — embedded into qi_sessions</text>
+
+  <!-- FK lines row 1 -->
+  <line x1="266" y1="153" x2="244" y2="153" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <line x1="520" y1="153" x2="498" y2="153" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+
+  <!-- ══ ROW 2: decisions · features · feature_evaluations ══ -->
+  <rect x="20" y="262" width="226" height="166" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="262" width="226" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="133" y="280" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">decisions</text>
+  <text x="32" y="306" font-size="10" fill="#1f2d3d">decision_id  (PK)</text>
+  <text x="32" y="323" font-size="10" fill="#c2185b">project_id → projects.project_id</text>
+  <text x="32" y="340" font-size="10" fill="#374151">decision_code(UQ) · title · rationale</text>
+  <text x="32" y="357" font-size="10" fill="#374151">impact_scope · tags(json)</text>
+  <text x="32" y="374" font-size="10" fill="#c2185b">superseded_by → decisions.decision_id</text>
+  <text x="32" y="391" font-size="10" fill="#374151">superseded_reason · recorded_at</text>
+  <text x="32" y="411" font-size="9" fill="#5f8a66">491 active (superseded_by IS NULL)</text>
+
+  <!-- self-FK on decisions -->
+  <path d="M 246 374 C 262 374 262 306 248 306" fill="none" stroke="#c2185b" stroke-width="1.2" marker-end="url(#fk)"/>
+
+  <!-- features -->
+  <rect x="266" y="262" width="234" height="166" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="266" y="262" width="234" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="383" y="280" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">features</text>
+  <text x="278" y="306" font-size="10" fill="#1f2d3d">feature_id  (PK)</text>
+  <text x="278" y="323" font-size="10" fill="#c2185b">source_project → projects.project_id</text>
+  <text x="278" y="340" font-size="10" fill="#c2185b">logged_by_agent → agents.agent_id</text>
+  <text x="278" y="357" font-size="10" fill="#374151">name · description</text>
+  <text x="278" y="374" font-size="10" fill="#374151">domain · code_ref</text>
+  <text x="278" y="391" font-size="10" fill="#374151">propagated · recorded_at</text>
+  <text x="278" y="411" font-size="9" fill="#5f8a66">394 rows — embedded into qi_features</text>
+
+  <!-- feature_evaluations -->
+  <rect x="520" y="262" width="244" height="166" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="520" y="262" width="244" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="642" y="280" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">feature_evaluations</text>
+  <text x="532" y="306" font-size="10" fill="#1f2d3d">eval_id  (PK)</text>
+  <text x="532" y="323" font-size="10" fill="#c2185b">feature_id → features.feature_id</text>
+  <text x="532" y="340" font-size="10" fill="#c2185b">target_project → projects.project_id</text>
+  <text x="532" y="357" font-size="10" fill="#374151">relevance_score · recommendation</text>
+  <text x="532" y="374" font-size="10" fill="#374151">reasoning · confidence · eval_model</text>
+  <text x="532" y="391" font-size="10" fill="#374151">decided · decided_action · evaluated_at</text>
+  <text x="532" y="411" font-size="9" fill="#5f8a66">44 rows · 44 pending (decided=0)</text>
+
+  <line x1="520" y1="323" x2="500" y2="323" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <line x1="266" y1="323" x2="246" y2="323" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+
+  <!-- evaluation_overrides (small, empty) -->
+  <rect x="772" y="262" width="208" height="80" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.4"/>
+  <text x="876" y="280" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">evaluation_overrides</text>
+  <text x="784" y="300" font-size="10" fill="#1f2d3d">override_id (PK)</text>
+  <text x="784" y="317" font-size="10" fill="#c2185b">evaluation_id → feature_evaluations</text>
+  <text x="784" y="334" font-size="9" fill="#9aa5b1">0 rows — owner override (Law 6)</text>
+  <line x1="772" y1="305" x2="764" y2="350" stroke="#c2185b" stroke-width="1.2" marker-end="url(#fk)"/>
+
+  <!-- ══ ROW 3: agents · llm_providers · brain_config ══ -->
+  <text x="22" y="452" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">REGISTRY &amp; CONFIG</text>
+
+  <rect x="20" y="458" width="226" height="116" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="458" width="226" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="133" y="476" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">agents</text>
+  <text x="32" y="502" font-size="10" fill="#1f2d3d">agent_id  (PK, text)</text>
+  <text x="32" y="519" font-size="10" fill="#374151">display_name · agent_type</text>
+  <text x="32" y="536" font-size="10" fill="#374151">description · active · created_at</text>
+  <text x="32" y="556" font-size="9" fill="#5f8a66">14 rows — claude · 7 hive · maia/naya/nexus · system</text>
+
+  <rect x="266" y="458" width="234" height="116" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="266" y="458" width="234" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="383" y="476" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">llm_providers</text>
+  <text x="278" y="502" font-size="10" fill="#1f2d3d">provider_id  (PK, text)</text>
+  <text x="278" y="519" font-size="10" fill="#374151">provider_type · model_name · base_url</text>
+  <text x="278" y="536" font-size="10" fill="#374151">api_key_env(name only) · role · active</text>
+  <text x="278" y="556" font-size="9" fill="#5f8a66">5 rows — eval | general | heavy | embed</text>
+
+  <rect x="520" y="458" width="244" height="116" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="520" y="458" width="244" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="642" y="476" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">brain_config</text>
+  <text x="532" y="502" font-size="10" fill="#1f2d3d">key  (PK, text)</text>
+  <text x="532" y="519" font-size="10" fill="#374151">value · description · updated_at</text>
+  <text x="532" y="536" font-size="10" fill="#374151">context_days · token_budget · poll_*</text>
+  <text x="532" y="556" font-size="9" fill="#5f8a66">11 rows</text>
+
+  <!-- bootstrap_log -->
+  <rect x="772" y="458" width="208" height="116" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.4"/>
+  <rect x="772" y="458" width="208" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="876" y="476" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">bootstrap_log</text>
+  <text x="784" y="502" font-size="10" fill="#1f2d3d">step_id (PK)</text>
+  <text x="784" y="519" font-size="10" fill="#7a5b06">step_name(UQ) · status · detail</text>
+  <text x="784" y="536" font-size="10" fill="#7a5b06">completed_at</text>
+  <text x="784" y="556" font-size="9" fill="#9a7a2e">9 rows — idempotent init steps</text>
+
+  <!-- ══ ROW 4: HIVE OPS ══ -->
+  <text x="22" y="598" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">HIVE OPS &amp; AUTONOMY</text>
+
+  <rect x="20" y="604" width="180" height="118" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="20" y="604" width="180" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="110" y="622" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">dispatches</text>
+  <text x="32" y="648" font-size="10" fill="#1f2d3d">dispatch_id (PK)</text>
+  <text x="32" y="665" font-size="10" fill="#7a5b06">source · type · priority</text>
+  <text x="32" y="682" font-size="10" fill="#7a5b06">status · apply_state</text>
+  <text x="32" y="699" font-size="10" fill="#7a5b06">project_id · payload</text>
+  <text x="32" y="716" font-size="9" fill="#9a7a2e">2,873 rows</text>
+
+  <rect x="210" y="604" width="180" height="118" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="210" y="604" width="180" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="300" y="622" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">compliance_log</text>
+  <text x="222" y="648" font-size="10" fill="#1f2d3d">log_id (PK)</text>
+  <text x="222" y="665" font-size="10" fill="#7a5b06">run_id · project_id · check_id</text>
+  <text x="222" y="682" font-size="10" fill="#7a5b06">status · severity · auto_fixable</text>
+  <text x="222" y="699" font-size="10" fill="#c2185b">dispatch_id → dispatches</text>
+  <text x="222" y="716" font-size="9" fill="#9a7a2e">46,654 rows</text>
+  <line x1="210" y1="699" x2="202" y2="699" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+
+  <rect x="400" y="604" width="180" height="118" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="400" y="604" width="180" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="490" y="622" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">agent_heartbeats</text>
+  <text x="412" y="648" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="412" y="665" font-size="10" fill="#7a5b06">agent_id · agent_kind</text>
+  <text x="412" y="682" font-size="10" fill="#7a5b06">project_id · event · model</text>
+  <text x="412" y="699" font-size="10" fill="#7a5b06">session_ref · ts</text>
+  <text x="412" y="716" font-size="9" fill="#9a7a2e">1,643 rows</text>
+
+  <rect x="590" y="604" width="180" height="118" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="590" y="604" width="180" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="680" y="622" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">poll_log</text>
+  <text x="602" y="648" font-size="10" fill="#1f2d3d">poll_id (PK)</text>
+  <text x="602" y="665" font-size="10" fill="#7a5b06">started_at · duration_ms</text>
+  <text x="602" y="682" font-size="10" fill="#7a5b06">projects_checked · files_checked</text>
+  <text x="602" y="699" font-size="10" fill="#7a5b06">changes_found · summary</text>
+  <text x="602" y="716" font-size="9" fill="#9a7a2e">18,718 rows</text>
+
+  <!-- docs + doc_relationships -->
+  <rect x="780" y="604" width="200" height="118" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="780" y="604" width="200" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="880" y="622" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">docs · doc_relationships</text>
+  <text x="792" y="648" font-size="10" fill="#1f2d3d">doc_id (PK) · path(UQ)</text>
+  <text x="792" y="665" font-size="10" fill="#7a5b06">title · project_id · doc_type</text>
+  <text x="792" y="682" font-size="10" fill="#7a5b06">content_hash · embedded · stale</text>
+  <text x="792" y="699" font-size="10" fill="#7a5b06">rel: src/dst_type · edge_type · weight</text>
+  <text x="792" y="716" font-size="9" fill="#9a7a2e">921 docs · 2,203 edges</text>
+
+  <!-- ══ FOOTNOTE: stub / empty + remaining tables ══ -->
+  <rect x="20" y="742" width="960" height="56" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="34" y="760" font-size="9.5" fill="#6b7280" font-weight="600">Also live (Hive/autonomy): warroom_messages (11) · dispatch_runs (7) · brain_inbox_log · bootstrap_log</text>
+  <text x="34" y="775" font-size="9.5" fill="#9aa5b1">Empty / staged (0 rows): agent_growth_log · archived_decisions · archived_features · scope_drops · brain_inbox_log</text>
+  <text x="34" y="790" font-size="9.5" fill="#9aa5b1">Bookkeeping: sqlite_sequence (SQLite internal AUTOINCREMENT log) — 25 tables total; SQL is source of truth, ChromaDB qi_memory/ is the rebuildable vector index</text>
+</svg>

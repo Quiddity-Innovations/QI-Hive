@@ -1,0 +1,58 @@
+[
+  {
+    "category": "Tiered Inbox Organization",
+    "features": [
+      {"name": "Six-tier classification", "description": "Every email is filed into one of six priority tiers, from 1 - ME (health, security) down to 6 - Low Priority (promotions, social), each with its own color.", "status": "live", "notes": "Tiers + colors defined in Tools/config.json: 1-ME (red), 2-Inner Circle (orange), 3-Life Admin (yellow), 4-Active Projects (blue), 5-Interests (purple), 6-Low Priority (gray)"},
+      {"name": "Sender & subject rules", "description": "Mail is matched on sender domain and subject keywords, so it routes to the right tier automatically with no AI cost.", "status": "live", "notes": "config.json carries ~104 sender rules + ~81 subject keywords across 31 sub-labels"},
+      {"name": "Triage for the unsorted", "description": "Anything the rules can't confidently place gets a Triage label and is surfaced for review instead of being lost in the inbox.", "status": "live", "notes": "_Triage label (Apps Script) / 0 - Triage (extension); stale unsorted mail auto-triaged after 30 days"},
+      {"name": "Skip-the-inbox auto-archive", "description": "Once an email is tiered it is archived out of the inbox, so the inbox only ever holds the genuinely unsorted.", "status": "live", "notes": "moveToArchive() in Apps Script; removeLabelIds:['INBOX'] in generated Gmail filters"}
+    ]
+  },
+  {
+    "category": "Browser Extension (Gmail Side Panel)",
+    "features": [
+      {"name": "One-click classify", "description": "Open the EasyFlow side panel inside Gmail and sort your inbox into tiers with a single command.", "status": "live", "notes": "sidepanel chat UI; commands like classify / triage / analyze"},
+      {"name": "Works in Chrome and Edge", "description": "The same extension runs in both Chrome and Microsoft Edge, with sign-in handled correctly on each browser.", "status": "live", "notes": "getAuthToken on Chrome, launchWebAuthFlow fallback on Edge — separate OAuth clients"},
+      {"name": "Subscription / unsubscribe manager", "description": "Find noisy newsletter and promotional senders and ban or keep them from a clear two-panel view.", "status": "live", "notes": "v1.2.1 redesigned Gmail Subscriptions: two-panel Ban/Keep, Diagnostics moved out"},
+      {"name": "Label cleanup & migration", "description": "Retire or delete old labels and move their messages into the new tier structure — no manual drag-and-drop.", "status": "live", "notes": "cleanup retires to _Retired/<name> or deletes; migrate batch-moves messages (up to 5,000 per source) to tier labels"},
+      {"name": "Wildcard label operations", "description": "Operate on whole groups of labels at once using patterns like '2*' or 'Upd*'.", "status": "live", "notes": "resolveWildcardLabels() resolves the pattern against the live label list"},
+      {"name": "10-language interface", "description": "The whole UI is available in ten languages so the tool feels native to its user.", "status": "live", "notes": "EN, ZH-CN, FR, DE, JA, KO, PT-BR, ES, HI, RU — manual translations only (no machine translation)"},
+      {"name": "Guided onboarding", "description": "A first-run walkthrough handles sign-in, picks a starter template, and explains the tier model.", "status": "live", "notes": "onboarding/onboarding.js + guide-i18n.js; starter templates e.g. 'Work + Personal'"}
+    ]
+  },
+  {
+    "category": "AI-Assisted Triage (Bring-Your-Own-Key)",
+    "features": [
+      {"name": "AI classifies the grey-area mail", "description": "Emails the plain rules can't place are read by an AI — sender, subject, and snippet only — which suggests the best tier with a confidence score.", "status": "live", "notes": "aiTriageBatch(): up to 200 messages; only accepts a label that exists in the user's tier tree"},
+      {"name": "Pick your own AI provider", "description": "Choose Google Gemini, OpenAI, Anthropic Claude, or a local Ollama model — you supply your own key, so there is no per-email cost to EasyFlow.", "status": "live", "notes": "Single-provider model; keys stored in chrome.storage.local; email bodies never sent — metadata + snippet only"},
+      {"name": "Conversational assistant", "description": "Ask the side-panel assistant about your tiers and what to do next; it answers in your chosen language.", "status": "live", "notes": "callProvider() routes chat to the configured provider; responses localized via LOCALE_TO_LANGUAGE"}
+    ]
+  },
+  {
+    "category": "Set-and-Forget Automation",
+    "features": [
+      {"name": "24/7 Google Apps Script classifier", "description": "EasyFlow generates a Google Apps Script that runs on Google's servers and sorts new mail every 15 minutes — even with your PC and browser switched off.", "status": "live", "notes": "classifyNewEmails (15-min trigger) + triageStaleInbox (daily 1 AM) via setupTriggers()"},
+      {"name": "Server-side Gmail filters", "description": "EasyFlow can write native Gmail filters from your tier rules, so Gmail itself auto-labels and files mail with zero software running.", "status": "live", "notes": "create_filters.py batches senders/subjects into OR queries; add label + skip inbox"},
+      {"name": "Colored label tree, built for you", "description": "The full tier label hierarchy is created in Gmail with the right colors in one pass.", "status": "live", "notes": "create_gmail_labels.py uses Gmail's fixed color palette; nested via '/' separator"},
+      {"name": "One-click Apps Script deploy", "description": "Push the generated classifier straight into your Apps Script project from the dashboard instead of copy-pasting.", "status": "partial", "notes": "/api/deploy/auto via Apps Script API — needs a saved script ID + script.projects token; manual copy-paste always available as fallback"}
+    ]
+  },
+  {
+    "category": "Configuration Dashboard",
+    "features": [
+      {"name": "Visual tier designer", "description": "Design and reorder the whole tier and sub-label tree in a local web dashboard, then save it as your live configuration.", "status": "live", "notes": "Flask dashboard /designer + /configure at http://localhost:8550"},
+      {"name": "Filter & migration preview", "description": "See exactly which filters will be created and which messages will move before anything touches your inbox.", "status": "live", "notes": "/api/filters/preview and /api/migrate/scan return counts before any change"},
+      {"name": "Safe, backed-up config", "description": "Every save backs up the previous configuration first, so a bad edit is never destructive.", "status": "live", "notes": "save_config() writes config.json.bak before overwriting"},
+      {"name": "Diagnostic log export", "description": "When something misbehaves, export a merged diagnostic log to share for support.", "status": "live", "notes": "1000-entry rolling log in chrome.storage.local; merged service-worker + page timeline; level filter info/warn/all/debug"}
+    ]
+  },
+  {
+    "category": "Distribution & Roadmap",
+    "features": [
+      {"name": "Free gift for family & friends", "description": "EasyFlow's core is, and stays, free — it began as a no-cost tool for the people around its author.", "status": "live", "notes": "Registry family_notes: standalone desktop tool, gift for family/friends"},
+      {"name": "Chrome Web Store / Edge listing", "description": "Public listings are prepared and submitted to the Chrome Web Store and Microsoft Edge Add-ons.", "status": "partial", "notes": "Submitted; CASA security verification is the 6-14 week critical path (CWS rejection handled 2026-04-14)"},
+      {"name": "Outlook support", "description": "The same tier engine will sort Outlook / Microsoft 365 mail via a dual-provider design.", "status": "planned", "notes": "Microsoft Graph + MS OAuth2/PKCE; ~80% code reuse; 6-phase plan, after Gmail perfection"},
+      {"name": "Paid tiers (Free / Pro / Premium)", "description": "Optional paid tiers add power features on top of the free core, with a Gmail-anchored 30-day trial.", "status": "planned", "notes": "Monetization v2 LOCKED 2026-04-16: Free / Pro $39 / Premium $79; Cloudflare Workers+KV backend; deferred to v1.3+"}
+    ]
+  }
+]

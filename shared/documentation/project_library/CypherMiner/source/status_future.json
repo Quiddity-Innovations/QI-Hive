@@ -1,0 +1,38 @@
+{
+  "categories": [
+    {
+      "name": "Heavy Data Tier (lazy-loaded)",
+      "priority": "medium",
+      "items": [
+        {"title": "OCR tool (Tesseract.js WASM)", "detail": "Image-to-text OCR running fully offline via Tesseract.js WebAssembly with bundled language data. Blocked on adding a 'file' input type to the Tool contract (src/types.ts) plus on-demand asset bundling so the offline guarantee is preserved."},
+        {"title": "Word-list tools — anagram / crossword / Scrabble", "detail": "Anagram solver, crossword helper and Scrabble scorer backed by bundled Hunspell EN + PT dictionaries. Needs lazy asset loading so the heavy dictionaries don't bloat the core offline bundle."},
+        {"title": "Registry 'file' input type", "detail": "Extend ToolInput in src/types.ts with a 'file' kind so image/text-upload tools fit the same self-registering pattern as every other tool, and the auto-generated form renders an upload control."}
+      ]
+    },
+    {
+      "name": "Public Launch (optional)",
+      "priority": "low",
+      "items": [
+        {"title": "Per-tool SEO pages", "detail": "Turn each of the 59 tools into its own indexable page (title, meta description, canonical URL) so the suite ranks for individual tool searches — the architecture (registry + router) already supports this."},
+        {"title": "Public branding", "detail": "Flip on public-facing branding. The README notes branding is intentionally neutral for local use and the architecture is ready to enable it with no rework."},
+        {"title": "Cloudflare Pages deploy", "detail": "Publish the static frontend/dist build to Cloudflare Pages as a free public site, complementing the existing private named tunnel at cypher.quiddityinnovations.com."}
+      ]
+    },
+    {
+      "name": "Assistant",
+      "priority": "low",
+      "items": [
+        {"title": "Configure the cloud assistant endpoint", "detail": "The cloud assistant provider (src/assistant/cloud.ts) is implemented but cloudEndpoint is empty, so local TF-IDF mode ships. When published, set assistantMode:'cloud' + cloudEndpoint in config.json (keys stay server-side) for richer natural-language answers — no rebuild required."},
+        {"title": "Grow the local synonym map", "detail": "Expand the SYN table and STOP list in src/assistant/local.ts as more everyday phrasings are observed, so vague queries in either language reach the right tool more often."}
+      ]
+    },
+    {
+      "name": "Backend (reserved)",
+      "priority": "low",
+      "items": [
+        {"title": "Wire heavy/data endpoints into the FastAPI app", "detail": "api/main.py currently implements only the QI contract (/health, /version, /info) and is explicitly reserved for future server-side tools (dictionaries, large datasets). Add POST endpoints here only for tools that genuinely cannot run client-side, to preserve the offline-first design."},
+        {"title": "Reconcile legacy ECOSYSTEM CORS path", "detail": "api/main.py imports the registry from C:\\QI\\ECOSYSTEM; align it with the migrated C:\\QIH\\ecosystem location used across the rest of the QI ecosystem (it already falls back safely to localhost origins)."}
+      ]
+    }
+  ]
+}

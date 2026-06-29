@@ -1,0 +1,56 @@
+[
+  {
+    "category": "File Indexing & Catalogue",
+    "features": [
+      {"name": "Index an entire drive", "description": "Point FileHQ at a drive or folder and it records every file — path, size, created/modified dates, extension — into one searchable catalogue.", "status": "live", "notes": "os.walk scanner; ~2,858,834 files currently indexed across 26 scans"},
+      {"name": "Incremental re-scan", "description": "Re-scanning only touches new or changed files instead of re-reading everything, so keeping the index fresh is fast.", "status": "live", "notes": "Compares stored modified_date + size; resets hashes on change"},
+      {"name": "Skip the noise", "description": "System and junk folders (Recycle Bin, System Volume Information, node_modules, .git, __pycache__) and junk files (Thumbs.db, desktop.ini) are skipped automatically.", "status": "live", "notes": "SKIP_DIRS / SKIP_FILES in scanner.py"},
+      {"name": "Drive & size insights", "description": "See usage by drive letter, the largest files, and totals — answers 'what is taking up space?' instantly from the index.", "status": "live", "notes": "db_drive_usage / db_largest_files in the Naya bridge"}
+    ]
+  },
+  {
+    "category": "Categorization",
+    "features": [
+      {"name": "Auto-categorize by type", "description": "Every file is grouped into Photos, Videos, Music, Documents, Software, Archives, Scripts, or Data by its extension — Other for anything unknown.", "status": "live", "notes": "8 categories defined in config.yaml; categorizer.py"},
+      {"name": "Archive era tagging", "description": "Files are tagged FORWARD (2020 onward) or BACKWARD (before 2020) plus their year, so old and current material can be separated when organizing.", "status": "live", "notes": "forward_year=2020 from config; get_archive_era()"},
+      {"name": "Category breakdown report", "description": "A live count and total size per category and era, ready for the dashboard or a chat answer.", "status": "live", "notes": "get_category_summary() / db_category_breakdown()"}
+    ]
+  },
+  {
+    "category": "Duplicate Detection",
+    "features": [
+      {"name": "Find exact duplicates", "description": "FileHQ fingerprints files and groups byte-for-byte identical copies together, so you can see every duplicate of every file.", "status": "live", "notes": "xxhash64 full-hash grouping; 694 groups / 1,618 members currently"},
+      {"name": "Fast staged hashing", "description": "Only files that could possibly be duplicates are hashed — first by matching size, then a cheap partial hash, and only then a full hash. Unique files are never fully read.", "status": "live", "notes": "Three-phase pipeline in hasher.py — size -> partial 64KB -> full"},
+      {"name": "Keep the original", "description": "Within each duplicate group the oldest copy is marked as the keeper, so a clean-up never removes the original.", "status": "live", "notes": "is_oldest flag by earliest modified_date"},
+      {"name": "Wasted-space estimate", "description": "See how much space duplicates are wasting, and which groups waste the most, before deciding what to remove.", "status": "live", "notes": "get_dedup_summary(): (file_count-1) x size per group"},
+      {"name": "Review workflow", "description": "Each duplicate group can be marked pending / reviewed / resolved and assigned an action (delete, move, or rename) before anything happens.", "status": "live", "notes": "duplicate_groups.status + review_action; bulk-mark supported"},
+      {"name": "Near-duplicate / similarity detection", "description": "Detect files that are similar but not byte-identical (e.g. re-encoded video, resized photo) rather than only exact copies.", "status": "planned", "notes": "Only exact-hash matching exists today"}
+    ]
+  },
+  {
+    "category": "Safe Organization & Undo",
+    "features": [
+      {"name": "Plan an archive tidy-up", "description": "FileHQ proposes where each file should live in a canonical ARCHIVE folder tree, as a preview — nothing is moved.", "status": "partial", "notes": "planner.compute_target(); dry-run by default"},
+      {"name": "Execute with one safeguard", "description": "Approved moves are carried out and every operation is logged so it can be undone.", "status": "partial", "notes": "executor.execute_plan(); requires explicit owner approval via bridge"},
+      {"name": "Undo a batch", "description": "Any batch of moves or a single duplicate action can be reversed from the operations log.", "status": "partial", "notes": "undo.undo_batch(); operations.batch_id + undo_path"},
+      {"name": "Exception rules", "description": "Define patterns to skip or re-categorize so personal/company folders are never touched.", "status": "partial", "notes": "exceptions table; 1 rule active"}
+    ]
+  },
+  {
+    "category": "Scheduling & Maintenance",
+    "features": [
+      {"name": "Scheduled scans & dedup", "description": "Recurring scan and duplicate-detection jobs can be scheduled so the index stays current without manual effort.", "status": "partial", "notes": "APScheduler + tasks table; defaults 24h scan / weekly dedup, no tasks defined yet"},
+      {"name": "Database health & cleanup", "description": "Report the database size and reclaim space by VACUUMing, pruning missing files, and purging resolved duplicate groups.", "status": "live", "notes": "maintenance.py — VACUUM/ANALYZE/purge; safe-only criteria"}
+    ]
+  },
+  {
+    "category": "Naya Integration (merged role)",
+    "features": [
+      {"name": "Answer file questions in chat", "description": "Ask Naya about your files in plain language and it answers from live FileHQ data — duplicates, largest files, categories, drive usage, totals.", "status": "live", "notes": "filehq_bridge.build_context_for_prompt() injects live data into Naya's LLM prompt"},
+      {"name": "Chat-driven actions", "description": "Trigger a scan, hashing, or a duplicate summary just by asking; Naya detects the intent and runs the safe action.", "status": "live", "notes": "detect_action() + execute_chat_action(); destructive ops blocked without approval"},
+      {"name": "Telegram file commands", "description": "/files scan | dupes | largest | cats | drives | report | maintain — run FileHQ from Telegram.", "status": "live", "notes": "telegram_file_command() in the bridge"},
+      {"name": "Read-only by default", "description": "Naya reads the FileHQ index freely; moving or deleting files always requires an explicit 'you may proceed'.", "status": "live", "notes": "approved flag gates execute_dedup / execute_organize"},
+      {"name": "File-search API to the ecosystem", "description": "Other QI projects can search the file index over a simple REST endpoint.", "status": "partial", "notes": "GET /api/files/search (filename LIKE); registry advertises content extraction (not yet built)"}
+    ]
+  }
+]

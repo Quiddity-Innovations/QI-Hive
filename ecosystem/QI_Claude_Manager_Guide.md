@@ -196,7 +196,7 @@ This guide. Rendered as HTML from `QI_Claude_Manager_Guide.md`.
 | **AutoPDF** | C:\AutoPDF | Active | PDF toolkit (split, extract, catalog, template matching, Smart Mapping) |
 | **EasyFlow** | C:\EasyFlow | Active | Email organization (Gmail tier-based inbox, Apps Script automation) |
 | **CogniBase** | C:\CogniBase | Pre-POC | OnBase vector integration + ad-hoc SQL reporting UI |
-| **MapSnap** | C:\MapSnap | Stable | Jenzabar schema browser — HTML + HTML FK relationships |
+| **MapSnap** | C:\MapSnap | Stable | Schema-intelligence tool for any enterprise DB profile — HTML browser + FK/ERD + local NL→SQL |
 | **M2V** | C:\M2V | New | Music-to-Video — AI music video generator from lyrics |
 | **PersonalSong** | C:\PersonalSong | Active | Song generator (ACE-Step vocals + Demucs/Seed-VC voice clone) |
 | **TubeScout** | C:\TUBESCOUT | Active | YouTube subscription intelligence (subs→news→Brain implement-scouting) |

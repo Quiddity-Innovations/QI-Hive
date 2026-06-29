@@ -1,0 +1,165 @@
+{
+  "intro": "Excerpts copied from the live FileHQ source (C:\\NAYA\\filehq) and the Naya integration bridge (C:\\NAYA\\filehq_bridge.py). Each snippet is real code that implements a capability. FileHQ is read-first by design: only the dedup/organize executors mutate disk, and the Naya bridge additionally gates those behind explicit owner approval.",
+  "sections": [
+    {
+      "category": "Database Connection (filehq.db)",
+      "snippets": [
+        {
+          "title": "WAL connection with FK enforcement",
+          "feature": "Single SQLite catalogue for the whole engine",
+          "file": "database.py :: get_connection()",
+          "language": "python",
+          "code": "DB_DIR = Path(__file__).parent / \"db\"\nDB_PATH = DB_DIR / \"filehq.db\"\n\ndef get_connection() -> sqlite3.Connection:\n    \"\"\"Get a database connection with WAL mode and foreign keys enabled.\"\"\"\n    DB_DIR.mkdir(parents=True, exist_ok=True)\n    conn = sqlite3.connect(str(DB_PATH), timeout=30)\n    conn.row_factory = sqlite3.Row\n    conn.execute(\"PRAGMA journal_mode=WAL\")\n    conn.execute(\"PRAGMA foreign_keys=ON\")\n    conn.execute(\"PRAGMA busy_timeout=5000\")\n    return conn",
+          "explanation": "Every FileHQ module opens the DB through this one helper. WAL lets the dashboard read while a scan writes; foreign_keys=ON keeps duplicate_members from dangling off a deleted group; busy_timeout=5000 makes concurrent writers wait rather than error. Row factory returns dict-like rows. This single file currently holds ~2.86M file rows."
+        },
+        {
+          "title": "Schema + idempotent migrations",
+          "feature": "8-table schema that self-upgrades in place",
+          "file": "database.py :: _run_migrations()",
+          "language": "python",
+          "code": "def _run_migrations(conn):\n    # Migration: review_action on duplicate_groups\n    cols = [row[1] for row in conn.execute(\"PRAGMA table_info(duplicate_groups)\").fetchall()]\n    if \"review_action\" not in cols:\n        conn.execute(\"ALTER TABLE duplicate_groups ADD COLUMN review_action TEXT DEFAULT NULL\")\n        conn.commit()\n\n    # Migration: batch_id on operations (needed for undo grouping)\n    op_cols = [row[1] for row in conn.execute(\"PRAGMA table_info(operations)\").fetchall()]\n    if \"batch_id\" not in op_cols:\n        conn.execute(\"ALTER TABLE operations ADD COLUMN batch_id TEXT\")\n        conn.execute(\"CREATE INDEX IF NOT EXISTS idx_operations_batch_id ON operations(batch_id)\")\n        conn.commit()",
+          "explanation": "init_db() runs the CREATE TABLE schema then this migrator. It probes PRAGMA table_info before each ALTER so an already-migrated DB is untouched — safe to run on every boot. These two columns (review_action, batch_id) were added after the initial schema to support the dedup action workflow and undo grouping."
+        }
+      ]
+    },
+    {
+      "category": "File Scanning (incremental os.walk)",
+      "snippets": [
+        {
+          "title": "Pruned directory walk",
+          "feature": "Skip system/junk folders without descending into them",
+          "file": "scanner.py :: scan_directory()",
+          "language": "python",
+          "code": "for dirpath, dirnames, filenames in os.walk(root):\n    # Skip excluded directories (modify in-place to prevent descent)\n    dirnames[:] = [\n        d for d in dirnames\n        if d not in SKIP_DIRS and not d.startswith(\".\")\n    ]\n\n    for fname in filenames:\n        if fname in SKIP_FILES:\n            continue\n        filepath = os.path.join(dirpath, fname)\n        files_found += 1\n        stat = os.stat(filepath)\n        size = stat.st_size\n        mtime = datetime.fromtimestamp(stat.st_mtime).isoformat()\n        ext = Path(fname).suffix.lower()",
+          "explanation": "The in-place dirnames[:] = [...] is the key trick: mutating the list os.walk hands back stops it from ever recursing into .git, node_modules, $RECYCLE.BIN, System Volume Information, etc. Each surviving file is stat'd once for size + timestamps + extension. This is the only place FileHQ reads the directory tree."
+        },
+        {
+          "title": "New vs modified detection",
+          "feature": "Incremental re-scan — only touch changed files",
+          "file": "scanner.py :: scan_directory()",
+          "language": "python",
+          "code": "existing = conn.execute(\n    \"SELECT id, modified_date, size_bytes FROM files WHERE path = ?\",\n    (filepath,),\n).fetchone()\n\nif existing is None:\n    conn.execute(\n        \"INSERT INTO files (path, filename, extension, size_bytes, \"\n        \"created_date, modified_date, scan_id, status) \"\n        \"VALUES (?, ?, ?, ?, ?, ?, ?, 'indexed')\",\n        (filepath, fname, ext, size, ctime, mtime, scan_id))\n    new_files += 1\nelif existing[\"modified_date\"] != mtime or existing[\"size_bytes\"] != size:\n    conn.execute(\n        \"UPDATE files SET size_bytes=?, modified_date=?, scan_id=?, \"\n        \"status='indexed', hash_partial=NULL, hash_full=NULL \"\n        \"WHERE id=?\",\n        (size, mtime, scan_id, existing[\"id\"]))\n    modified_files += 1",
+          "explanation": "A re-scan is cheap because unchanged files are left alone. A file is INSERTed only if its path is new; if the path exists but its mtime or size differs, it is UPDATEd and its hashes are NULLed so the hasher re-fingerprints it. Files that are unchanged fall through both branches and cost nothing but a lookup."
+        }
+      ]
+    },
+    {
+      "category": "Hashing (xxhash, two-phase)",
+      "snippets": [
+        {
+          "title": "Partial fingerprint — first + last 64KB",
+          "feature": "Cheap fingerprint that clears most non-duplicates",
+          "file": "hasher.py :: compute_partial_hash()",
+          "language": "python",
+          "code": "PARTIAL_CHUNK = 65_536  # 64 KB\n\ndef compute_partial_hash(filepath):\n    try:\n        size = os.path.getsize(filepath)\n        h = xxhash.xxh64()\n        with open(filepath, \"rb\") as f:\n            h.update(f.read(PARTIAL_CHUNK))\n            if size > PARTIAL_CHUNK * 2:\n                f.seek(-PARTIAL_CHUNK, 2)\n                h.update(f.read(PARTIAL_CHUNK))\n        return h.hexdigest(), None\n    except FileNotFoundError:\n        return None, \"missing\"\n    except (PermissionError, OSError):\n        return None, \"inaccessible\"",
+          "explanation": "Reads only the head and tail of a file (128KB total) rather than the whole thing — enough to distinguish most files that merely share a size. The (hash, None) / (None, error) return shape lets the caller mark unreadable files 'missing'/'inaccessible' once, so they aren't retried on every run. xxh64 is fast and non-cryptographic — equality is all that's needed."
+        },
+        {
+          "title": "Size -> partial -> full candidate funnel",
+          "feature": "Never fully read a file that can't be a duplicate",
+          "file": "hasher.py :: hash_candidates()",
+          "language": "python",
+          "code": "# Phase 1: only sizes shared by 2+ files are worth hashing\nsize_groups = conn.execute(\n    \"\"\"\n    SELECT size_bytes, COUNT(*) AS cnt\n    FROM files\n    WHERE size_bytes > 0 AND hash_partial IS NULL\n      AND status NOT IN ('missing', 'inaccessible')\n    GROUP BY size_bytes HAVING cnt > 1\n    ORDER BY size_bytes DESC LIMIT ?\n    \"\"\", (size_limit,)).fetchall()\n...\n# Phase 3: full-hash only the partial-hash collisions\npartial_dupe_groups = conn.execute(\n    \"\"\"\n    SELECT hash_partial, COUNT(*) AS cnt\n    FROM files\n    WHERE hash_partial IS NOT NULL AND hash_full IS NULL\n    GROUP BY hash_partial HAVING cnt > 1\n    \"\"\").fetchall()",
+          "explanation": "The funnel that makes hashing millions of files affordable. A file with a unique size cannot have a duplicate, so Phase 1 selects only size-collisions. Phase 2 partial-hashes those; a unique partial hash clears a file. Phase 3 reads in full only the files that STILL collide. The overwhelming majority of files are never fully read."
+        }
+      ]
+    },
+    {
+      "category": "Categorization",
+      "snippets": [
+        {
+          "title": "Extension -> category, year -> era",
+          "feature": "Classify files by type and age",
+          "file": "categorizer.py :: get_category() / get_archive_era()",
+          "language": "python",
+          "code": "def get_category(extension, categories):\n    ext_lower = (extension or \"\").lower()\n    for category, extensions in categories.items():\n        if ext_lower in extensions:\n            return category\n    return \"Other\"\n\ndef get_archive_era(modified_date, forward_year=FORWARD_YEAR):\n    try:\n        dt = datetime.fromisoformat(modified_date)\n        year = dt.year\n        if year >= forward_year:\n            return \"FORWARD\", year\n        return \"BACKWARD\", year\n    except (ValueError, TypeError, AttributeError):\n        return \"FORWARD\", datetime.now().year",
+          "explanation": "Two pure functions drive classification. get_category() looks an extension up in the 8 category->extensions maps from config.yaml (Photos, Videos, Music, Documents, Software, Archives, Scripts, Data), defaulting to 'Other'. get_archive_era() splits files at the year 2020 into FORWARD/BACKWARD so current and legacy material can be archived separately. categorize_files() applies both in 500-row batched UPDATEs."
+        }
+      ]
+    },
+    {
+      "category": "Duplicate Detection & Safe Actions",
+      "snippets": [
+        {
+          "title": "Group by full hash, keep the oldest",
+          "feature": "Build duplicate groups; protect the original",
+          "file": "dedup.py :: find_duplicates()",
+          "language": "python",
+          "code": "hash_groups = conn.execute(\n    \"\"\"\n    SELECT hash_full, COUNT(*) AS file_count,\n           SUM(size_bytes) AS total_size, MIN(size_bytes) AS single_size\n    FROM files\n    WHERE hash_full IS NOT NULL\n    GROUP BY hash_full HAVING file_count > 1\n    ORDER BY total_size DESC\n    \"\"\").fetchall()\n...\nmembers = conn.execute(\n    \"SELECT id FROM files WHERE hash_full = ? \"\n    \"ORDER BY modified_date ASC, created_date ASC\", (hg[\"hash_full\"],)).fetchall()\nfor j, member in enumerate(members):\n    is_oldest = 1 if j == 0 else 0\n    conn.execute(\"INSERT INTO duplicate_members \"\n        \"(group_id, file_id, is_oldest, is_kept, dupe_marked) VALUES (?, ?, ?, 1, 0)\",\n        (group_id, member[\"id\"], is_oldest))",
+          "explanation": "Files sharing a full hash are byte-identical. They are grouped (currently 694 groups, 1,618 members), ordered oldest-first by modified_date, and the first — the oldest copy — is flagged is_oldest=1. Wasted space is single_size x (file_count-1). The is_oldest flag is the safety contract: any later clean-up acts only on the non-oldest copies."
+        },
+        {
+          "title": "Dry-run-safe delete / move / rename",
+          "feature": "Execute dedup actions, always keeping the original",
+          "file": "dedup.py :: execute_dedup_actions()",
+          "language": "python",
+          "code": "dupes = conn.execute(\n    \"\"\"\n    SELECT dm.id AS member_id, dm.file_id, f.path, f.filename, f.size_bytes\n    FROM duplicate_members dm\n    JOIN files f ON dm.file_id = f.id\n    WHERE dm.group_id = ? AND dm.is_oldest = 0\n    \"\"\", (group_id,)).fetchall()\n...\nif not dry_run and entry[\"status\"] == \"pending\":\n    if action == \"delete\":\n        if os.path.exists(src):\n            os.remove(src)\n        conn.execute(\"UPDATE files SET status='missing' WHERE id=?\", (dupe[\"file_id\"],))\n    elif action == \"move\":\n        shutil.move(src, entry[\"dest\"])\n    elif action == \"rename\":\n        os.rename(src, entry[\"dest\"])  # file.mp4 -> file_DUPE.mp4",
+          "explanation": "The WHERE dm.is_oldest = 0 clause guarantees the original is never the target. Actions default to dry_run=True (build a plan, touch nothing). Only on a real run are os.remove / shutil.move / os.rename called, each then logged to the operations table with reversible=1. delete is currently a hard os.remove — a noted candidate for routing to the Recycle Bin."
+        },
+        {
+          "title": "Validated review action",
+          "feature": "Restrict per-group actions to a safe set",
+          "file": "dedup.py :: set_group_action()",
+          "language": "python",
+          "code": "def set_group_action(group_id, action):\n    norm = action or None\n    if norm not in (None, \"delete\", \"move\", \"rename\"):\n        return False\n    conn = get_connection()\n    try:\n        conn.execute(\n            \"UPDATE duplicate_groups SET review_action = ? WHERE id = ?\",\n            (norm, group_id))\n        conn.commit()\n        return True\n    ...",
+          "explanation": "Before any execution, a reviewer assigns each group an action. This setter whitelists the action to delete/move/rename (or clears it) and rejects anything else, so an invalid or injected action value can't reach the executor. The action is stored on the group and read back by execute_dedup_actions()."
+        }
+      ]
+    },
+    {
+      "category": "Safe Organization (planner)",
+      "snippets": [
+        {
+          "title": "Compute an ARCHIVE destination (no I/O)",
+          "feature": "Plan where each file should live, dry-run safe",
+          "file": "planner.py :: compute_target() + CATEGORY_SUBFOLDER",
+          "language": "python",
+          "code": "CATEGORY_SUBFOLDER = {\n    \"Photos\":    os.path.join(\"01_MEDIA\", \"Photos\"),\n    \"Videos\":    os.path.join(\"01_MEDIA\", \"Videos\"),\n    \"Documents\": os.path.join(\"03_DOCUMENTS\", \"99_MISC\"),\n    \"Software\":  \"02_SOFTWARE\",\n    \"Scripts\":   os.path.join(\"00_INBOUND\", \"SCRIPTS\"),\n    \"Other\":     os.path.join(\"00_INBOUND\", \"UNSORTED\"),\n}\n\ndef compute_target(filename, category, archive_era, archive_year,\n                   primary_drive, forward_year=2020):\n    drive        = primary_drive.rstrip(\"\\\\\").rstrip(\"/\")\n    archive_root = os.path.join(drive, ARCHIVE_ROOT)\n    subfolder    = CATEGORY_SUBFOLDER.get(category or \"Other\", DEFAULT_SUBFOLDER)\n    # FORWARD -> {drive}\\ARCHIVE\\2020 - FORWARD\\01_CURRENT\\{subfolder}\\{filename}\n    # BACKWARD -> {drive}\\ARCHIVE\\2020 - BACKWARD\\{year}\\01_CURRENT\\{subfolder}\\{filename}",
+          "explanation": "The organizer's brain is a pure path calculator. It reads a file's category and era from the DB and resolves where it WOULD go in the canonical ARCHIVE tree — media under 01_MEDIA, docs under 03_DOCUMENTS, and so on, split by FORWARD/BACKWARD era. It touches no files; the resulting plan is handed to executor.execute_plan() only after approval."
+        }
+      ]
+    },
+    {
+      "category": "Config bound to Naya",
+      "snippets": [
+        {
+          "title": "Scan drive comes from naya.db",
+          "feature": "FileHQ defers its key setting to the parent project",
+          "file": "config.py :: _get_drive_from_naya_db() / load_config()",
+          "language": "python",
+          "code": "def _get_drive_from_naya_db():\n    \"\"\"Read personal.default_scan_drive from naya.db; '' on failure.\"\"\"\n    try:\n        _naya = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n        if _naya not in sys.path:\n            sys.path.insert(0, _naya)\n        import naya_db as _ndb\n        return _ndb.get_config(\"personal.default_scan_drive\") or \"\"\n    except Exception:\n        return \"\"\n\n# in load_config():\ndrive = _get_drive_from_naya_db()\nif drive:\n    config.setdefault(\"archive\", {})[\"primary_drive\"] = drive",
+          "explanation": "This is the merge made concrete. FileHQ keeps config/config.yaml for categories and skip rules, but the single most important value — which drive to scan — is pulled from naya.db (personal.default_scan_drive). FileHQ bends to Naya's stored setting rather than holding a competing source of truth, falling back to the YAML default only if naya.db is unreachable."
+        }
+      ]
+    },
+    {
+      "category": "How Naya Consumes FileHQ",
+      "snippets": [
+        {
+          "title": "Read-only direct DB connection",
+          "feature": "Fast, safe stats for chat answers (no HTTP)",
+          "file": "C:\\NAYA\\filehq_bridge.py :: _db_conn() / db_search_files()",
+          "language": "python",
+          "code": "FILEHQ_DB = os.path.join(os.path.dirname(__file__), \"filehq\", \"db\", \"filehq.db\")\n\ndef _db_conn():\n    if not os.path.exists(FILEHQ_DB):\n        return None\n    conn = sqlite3.connect(f\"file:{FILEHQ_DB}?mode=ro\", uri=True,\n                           check_same_thread=False)\n    conn.row_factory = sqlite3.Row\n    return conn\n\ndef db_search_files(query, limit=20):\n    conn = _db_conn()\n    rows = conn.execute(\n        \"SELECT path, size_bytes, category, extension FROM files \"\n        \"WHERE filename LIKE '%' || ? || '%' ORDER BY size_bytes DESC LIMIT ?\",\n        (query, limit)).fetchall()\n    return [dict(r) for r in rows]",
+          "explanation": "For conversational reporting, Naya skips HTTP and opens the FileHQ database directly in READ-ONLY mode (?mode=ro). This is the literal meaning of 'Naya consumes FileHQ read-only': the bridge can count files, find the largest files, and search by name without any risk of mutating the catalogue. Anything that changes state still goes through the API, where the approval guards live."
+        },
+        {
+          "title": "Inject live FileHQ data into Naya's prompt",
+          "feature": "Plain-language file answers grounded in real data",
+          "file": "C:\\NAYA\\filehq_bridge.py :: build_context_for_prompt()",
+          "language": "python",
+          "code": "def build_context_for_prompt(message):\n    if not is_filehq_question(message):\n        return \"\"\n    if not is_running():\n        return (\"\\n\\n[FILEHQ STATUS]\\nFileHQ is OFFLINE...\\n\"\n                \"INSTRUCTION: Tell the user FileHQ is not running...\")\n    parts = [\"\\n\\n[FILEHQ CONTEXT - live data from FileHQ]\"]\n    stats = get_stats()\n    if \"error\" not in stats:\n        parts.append(f\"Total indexed files: {stats.get('total_files')}\")\n    dedup = get_dedup_summary()\n    cats = db_category_breakdown()\n    drives = db_drive_usage()\n    # ... top categories, drive usage, active jobs, last scan ...\n    return \"\\n\".join(parts)",
+          "explanation": "When a user asks Naya a file question, the bridge first checks is_filehq_question() (keyword match), then is_running(). If live, it assembles a context block — total files, duplicate summary, top categories, drive usage, active jobs, last scan — and injects it into Naya's system prompt so the LLM answers from real numbers, not guesses. If FileHQ is offline it instructs the LLM to tell the user how to start it rather than claim it 'can't access files'."
+        },
+        {
+          "title": "Approval gate on destructive ops",
+          "feature": "File moves/deletes require explicit owner consent",
+          "file": "C:\\NAYA\\filehq_bridge.py :: execute_dedup()",
+          "language": "python",
+          "code": "def execute_dedup(group_id=None, action=None, dry_run=True,\n                  move_to=None, approved=False):\n    if not approved and not dry_run:\n        return {\n            \"error\": \"BLOCKED - execute_dedup requires explicit approval...\",\n            \"hint\": \"You must say 'you may proceed' before duplicates are deleted.\"\n        }\n    body = {\"dry_run\": dry_run}\n    if not dry_run:\n        log.warning(f\"FileHQ dedup/execute triggered (real): group={group_id}\")\n    return _post(\"/api/dedup/execute\", body, timeout=TIMEOUT_LONG)",
+          "explanation": "The safety contract between Naya and FileHQ. Any real (non-dry-run) destructive call is BLOCKED unless approved=True, which the assistant sets only after the owner explicitly says 'you may proceed' in the same message. execute_organize() applies the identical guard. Reads are always allowed; mutations are gated and logged."
+        }
+      ]
+    }
+  ]
+}

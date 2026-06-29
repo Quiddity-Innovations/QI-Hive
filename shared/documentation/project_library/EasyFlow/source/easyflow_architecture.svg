@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 640" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#285bac"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#cf8933"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a479e2"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="920" height="640" fill="#f8fafc" rx="12"/>
+  <text x="460" y="28" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2d3d">EasyFlow — System Architecture</text>
+  <text x="460" y="47" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active Development · 2026</text>
+  <text x="460" y="63" text-anchor="middle" font-size="10" fill="#9aa5b1">Config-first: one tier configuration drives three deployment surfaces</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="700" y="74" width="208" height="150" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="804" y="92" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="710" y="100" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="730" y="109" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="710" y="117" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="730" y="126" font-size="9" fill="#374151">Built · Partial / Pending</text>
+  <rect x="710" y="134" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1" stroke-dasharray="4,2"/>
+  <text x="730" y="143" font-size="9" fill="#374151">Planned</text>
+  <rect x="710" y="151" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="730" y="160" font-size="9" fill="#374151">Core engine (config)</text>
+  <line x1="710" y1="174" x2="728" y2="174" stroke="#285bac" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="734" y="178" font-size="9" fill="#374151">Generates artifact</text>
+  <line x1="710" y1="191" x2="728" y2="191" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="734" y="195" font-size="9" fill="#374151">Acts on Gmail</text>
+  <text x="804" y="216" text-anchor="middle" font-size="8" fill="#9aa5b1">Quiddity Innovations © 2026</text>
+
+  <!-- ══ USERS ══ -->
+  <rect x="14" y="80" width="220" height="74" rx="9" fill="none" stroke="#285bac" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="26" y="74" width="50" height="14" rx="3" fill="#f8fafc"/>
+  <text x="51" y="85" text-anchor="middle" font-size="10" fill="#285bac" font-weight="700" letter-spacing="1">USER</text>
+  <rect x="22" y="92" width="98" height="54" rx="7" fill="#dbe6fb" stroke="#285bac" stroke-width="1.5"/>
+  <text x="71" y="113" text-anchor="middle" font-size="11" font-weight="600" fill="#1e3a6e">Owner</text>
+  <text x="71" y="128" text-anchor="middle" font-size="8" fill="#285bac">Designs tiers · runs</text>
+  <text x="71" y="139" text-anchor="middle" font-size="8" fill="#285bac">classify / cleanup</text>
+  <rect x="128" y="92" width="98" height="54" rx="7" fill="#dbe6fb" stroke="#285bac" stroke-width="1.5"/>
+  <text x="177" y="113" text-anchor="middle" font-size="11" font-weight="600" fill="#1e3a6e">Family</text>
+  <text x="177" y="128" text-anchor="middle" font-size="8" fill="#285bac">Installs extension</text>
+  <text x="177" y="139" text-anchor="middle" font-size="8" fill="#285bac">free gift tool</text>
+
+  <!-- ① Users → Dashboard -->
+  <line x1="124" y1="154" x2="124" y2="188" stroke="#285bac" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <!-- ══ CONFIG CORE (center) ══ -->
+  <rect x="318" y="250" width="284" height="76" rx="10" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="460" y="276" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Tier Configuration (config.json)</text>
+  <text x="460" y="294" text-anchor="middle" font-size="9" fill="#94a3b8">6 tiers · 31 sub-labels · ~104 sender + ~81 subject rules</text>
+  <text x="460" y="308" text-anchor="middle" font-size="9" fill="#94a3b8">Single source of truth · backed-up on save (.bak)</text>
+  <text x="460" y="320" text-anchor="middle" font-size="8" fill="#64748b">C:\EasyFlow\Tools\config.json</text>
+
+  <!-- ══ DASHBOARD (feeds config) ══ -->
+  <rect x="14" y="188" width="220" height="62" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="124" y="208" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">Flask Dashboard</text>
+  <text x="124" y="223" text-anchor="middle" font-size="8.5" fill="#2e7d32">Tier designer · deploy · cleanup</text>
+  <text x="124" y="236" text-anchor="middle" font-size="8" fill="#5f8a66">app.py · localhost:8550 (desktop tool)</text>
+  <!-- ② Dashboard → Config -->
+  <path d="M 124,250 V 288 H 314" fill="none" stroke="#285bac" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <!-- ══ SURFACES BAND LABEL ══ -->
+  <text x="18" y="366" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">THREE DEPLOYMENT SURFACES</text>
+
+  <!-- ③ Config → Extension -->
+  <path d="M 360,326 V 350 H 130 V 374" fill="none" stroke="#285bac" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+  <!-- ④ Config → Apps Script -->
+  <line x1="460" y1="326" x2="460" y2="374" stroke="#285bac" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+  <!-- ⑤ Config → Filters -->
+  <path d="M 560,326 V 350 H 790 V 374" fill="none" stroke="#285bac" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+
+  <!-- Surface 1: Browser Extension -->
+  <rect x="14" y="374" width="232" height="150" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="130" y="394" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">① Browser Extension</text>
+  <text x="130" y="409" text-anchor="middle" font-size="8.5" fill="#2e7d32">Manifest V3 · Chrome + Edge · v1.2.1</text>
+  <rect x="26" y="418" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="130" y="431" text-anchor="middle" font-size="8.5" fill="#1b4d22">Gmail side panel · classify / triage</text>
+  <rect x="26" y="440" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="130" y="453" text-anchor="middle" font-size="8.5" fill="#1b4d22">service-worker.js · gmailFetch</text>
+  <rect x="26" y="462" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="130" y="475" text-anchor="middle" font-size="8.5" fill="#1b4d22">cross-browser OAuth · content script</text>
+  <rect x="26" y="484" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="130" y="497" text-anchor="middle" font-size="8.5" fill="#1b4d22">10-locale UI · subscription manager</text>
+  <text x="130" y="515" text-anchor="middle" font-size="8" fill="#5f8a66">on-demand, hands-on</text>
+
+  <!-- Surface 2: Apps Script -->
+  <rect x="262" y="374" width="232" height="150" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="378" y="394" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">② Google Apps Script</text>
+  <text x="378" y="409" text-anchor="middle" font-size="8.5" fill="#2e7d32">Runs on Google's servers · V8</text>
+  <rect x="274" y="418" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="378" y="431" text-anchor="middle" font-size="8.5" fill="#1b4d22">classifyNewEmails — every 15 min</text>
+  <rect x="274" y="440" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="378" y="453" text-anchor="middle" font-size="8.5" fill="#1b4d22">triageStaleInbox — daily 1 AM</text>
+  <rect x="274" y="462" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="378" y="475" text-anchor="middle" font-size="8.5" fill="#1b4d22">classifyMessage_ · TIER_RULES</text>
+  <rect x="274" y="484" width="208" height="18" rx="4" fill="#fff8e6" stroke="#e3cd8a" stroke-dasharray="4,2"/>
+  <text x="378" y="497" text-anchor="middle" font-size="8.5" fill="#7a5b06">auto-deploy via Apps Script API ⚠</text>
+  <text x="378" y="515" text-anchor="middle" font-size="8" fill="#5f8a66">set-and-forget, PC off</text>
+
+  <!-- Surface 3: Gmail Filters -->
+  <rect x="510" y="374" width="232" height="150" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="626" y="394" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">③ Native Gmail Filters</text>
+  <text x="626" y="409" text-anchor="middle" font-size="8.5" fill="#2e7d32">Zero software running</text>
+  <rect x="522" y="418" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="626" y="431" text-anchor="middle" font-size="8.5" fill="#1b4d22">create_filters.py · OR-batched</text>
+  <rect x="522" y="440" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="626" y="453" text-anchor="middle" font-size="8.5" fill="#1b4d22">add tier label + skip inbox</text>
+  <rect x="522" y="462" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="626" y="475" text-anchor="middle" font-size="8.5" fill="#1b4d22">create_gmail_labels.py (color tree)</text>
+  <rect x="522" y="484" width="208" height="18" rx="4" fill="#ffffff" stroke="#bfe3c9"/>
+  <text x="626" y="497" text-anchor="middle" font-size="8.5" fill="#1b4d22">migrate / cleanup tools</text>
+  <text x="626" y="515" text-anchor="middle" font-size="8" fill="#5f8a66">Gmail does the work</text>
+
+  <!-- ══ AI PROVIDERS (right of extension) ══ -->
+  <rect x="758" y="374" width="150" height="92" rx="9" fill="#faf5ff" stroke="#a479e2" stroke-width="1.5"/>
+  <text x="833" y="393" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b2a91">AI Triage (BYOK)</text>
+  <text x="833" y="409" text-anchor="middle" font-size="8.5" fill="#7e3fc0">Gemini · OpenAI</text>
+  <text x="833" y="421" text-anchor="middle" font-size="8.5" fill="#7e3fc0">Anthropic · Ollama</text>
+  <text x="833" y="436" text-anchor="middle" font-size="8" fill="#a479e2">metadata + snippet only</text>
+  <text x="833" y="449" text-anchor="middle" font-size="8" fill="#a479e2">label must exist in tree</text>
+  <text x="833" y="461" text-anchor="middle" font-size="8" fill="#a479e2">user's own key</text>
+  <!-- ⑥ Extension → AI -->
+  <path d="M 246,440 H 752" fill="none" stroke="#a479e2" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-purple)"/>
+
+  <!-- ══ GMAIL (bottom target) ══ -->
+  <rect x="200" y="556" width="520" height="58" rx="9" fill="#fde9e6" stroke="#ac2b16" stroke-width="1.6"/>
+  <text x="460" y="578" text-anchor="middle" font-size="12" font-weight="700" fill="#7c1d0f">Gmail Inbox  ·  Gmail API (labels · messages.modify · settings.filters)</text>
+  <text x="460" y="596" text-anchor="middle" font-size="9" fill="#ac2b16">1-ME · 2-Inner Circle · 3-Life Admin · 4-Active Projects · 5-Interests · 6-Low Priority · Triage</text>
+  <text x="460" y="608" text-anchor="middle" font-size="8" fill="#c2654f">Mail is tier-labeled, parent-tagged, and archived out of the inbox</text>
+
+  <!-- ⑦ ⑧ ⑨ Surfaces → Gmail -->
+  <line x1="130" y1="524" x2="220" y2="556" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arr-green)"/>
+  <line x1="378" y1="524" x2="378" y2="556" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arr-green)"/>
+  <line x1="626" y1="524" x2="540" y2="556" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arr-green)"/>
+
+  <!-- ══ OUTLOOK (planned, far right bottom) ══ -->
+  <rect x="744" y="556" width="164" height="58" rx="9" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.4" stroke-dasharray="5,3"/>
+  <text x="826" y="578" text-anchor="middle" font-size="10.5" font-weight="700" fill="#566069">Outlook (planned)</text>
+  <text x="826" y="594" text-anchor="middle" font-size="8" fill="#7b8590">Microsoft Graph · dual-provider</text>
+  <text x="826" y="606" text-anchor="middle" font-size="8" fill="#9aa5b1">~80% engine reuse</text>
+</svg>

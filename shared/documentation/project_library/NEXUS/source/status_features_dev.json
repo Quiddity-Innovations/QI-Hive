@@ -1,0 +1,92 @@
+[
+  {
+    "category": "Entry Point & Service",
+    "features": [
+      {"name": "main.py — process launcher", "file": "main.py :: main()", "status": "live", "detail": "argparse CLI: default starts API+UI+Scout; --api-only / --ui-only / --scout / --init-db. UTF-8 reconfigures stdout/stderr. Runs init_database() first, then Scout scheduler, synthesis keep-warm thread + scheduler, API thread (uvicorn), UI in main thread."},
+      {"name": "Synthesis keep-warm", "file": "main.py :: warmup_synthesis() / start_keepwarm_scheduler()", "status": "live", "detail": "Pre-loads + re-pings the local 26B synthesis model every keep_warm_interval_minutes (20) so the first real synthesis isn't a ~25-30s cold start. Config-gated by core.synthesis_keep_warm."},
+      {"name": "QI_NEXUS NSSM service", "file": "NEXUS_Install.bat / NEXUS_Control.bat / install.py", "status": "live", "detail": "Service QI_NEXUS, AppDirectory C:\\NEXUS, runs main.py. Logs to C:\\NEXUS\\LOGS\\nexus_service.log + nexus_service_error.log. Public via QI_NEXUSTunnel (Cloudflare, UI 7880)."}
+    ]
+  },
+  {
+    "category": "API — Core & Synthesis",
+    "features": [
+      {"name": "GET / · /health · /version · /info", "file": "api/main.py :: root/health/version/info", "status": "live", "detail": "Status + ecosystem endpoints. /info reads qi_registry.json and returns the nexus project entry. /version reports project=nexus, version=0.1.0."},
+      {"name": "POST /synthesize", "file": "api/main.py :: synthesize()", "status": "live", "detail": "Primary endpoint. SynthesizeRequest{prompt, provider_ids?, include_raw, routing_mode(parallel|chain|iterative), iterations, enable_judge, judge_provider, judge_mode, persona_map, inference_mode, mode_map, synthesis_instruction}. Persists session row."},
+      {"name": "POST /synthesize/stream", "file": "api/main.py :: synthesize_stream()", "status": "live", "detail": "SSE variant. Emits provider_pending -> provider_result (as_completed) -> heartbeat (every 5s) -> synthesis -> [DONE]. Parallel and chain stream per-step; iterative falls through."},
+      {"name": "POST /judge", "file": "api/main.py :: judge_responses()", "status": "live", "detail": "Scores pre-collected responses. mode=simple (1 LLM call, markdown table) or deepeval (G-Eval). Effective mode: request > nexus.json scorer.mode > simple."}
+    ]
+  },
+  {
+    "category": "Core Engine",
+    "features": [
+      {"name": "Dispatcher — parallel asyncio", "file": "core/dispatcher.py :: Dispatcher.dispatch()", "status": "live", "detail": "Lazy-loads providers (double-checked lock). asyncio.gather(return_exceptions=True) so one raising adapter can't lose the others. Returns DispatchResult with .successful/.failed. Resolves per-provider mode (mode_map > inference_mode)."},
+      {"name": "Dispatcher — chain & stream", "file": "core/dispatcher.py :: chain_dispatch() / dispatch_stream()", "status": "live", "detail": "chain_dispatch feeds each provider the previous successful answer to improve. dispatch_stream is an async generator yielding ProviderResponse via asyncio.as_completed."},
+      {"name": "Synthesizer", "file": "core/synthesizer.py :: Synthesizer.synthesize()", "status": "live", "detail": "Primary/fallback providers from nexus.json (core.synthesis_provider=ollama/gemma4:26b, fallback=chatgpt). PROVIDER_REGISTRY maps config name -> class. FALLBACK_SYNTHESIS_PROMPT preserves tables/code; single OK response returned verbatim; last resort concatenates."},
+      {"name": "Inference-mode registry", "file": "core/inference_modes.py :: lookup_capability() / resolve_provider_capability() / timeout_for_mode()", "status": "live", "detail": "Single source of truth for Fast/Balanced/Thinking/Deep. CAPABILITY_RULES matches (adapter, model_substring) -> supported modes + default. MODE_TIMEOUT_MULTIPLIER (fast 0.6 .. deep 10x), MAX_TIMEOUT_SECONDS=1800."},
+      {"name": "Scheduler", "file": "core/scheduler.py + api/main.py :: _register_scout_schedules()", "status": "live", "detail": "APScheduler wrapper started at API startup. Registers one IntervalTrigger job per enabled Scout topic (id scout_<topic>), plus scheduled prompt jobs. Per-topic run_interval_hours overrides the global default."},
+      {"name": "Batch runner", "file": "core/batch_runner.py", "status": "live", "detail": "Runs a batch of prompts through dispatch+synthesis; per-prompt logs; per_prompt / per_model log modes. Backed by batch_jobs + batch_results tables."}
+    ]
+  },
+  {
+    "category": "Providers (core/providers/)",
+    "features": [
+      {"name": "NexusProvider ABC + ProviderResponse", "file": "core/providers/base.py", "status": "live", "detail": "Abstract base every adapter implements: async generate(prompt, system_prompt?, inference_mode?) -> ProviderResponse{provider_id, provider_name, text, status, latency_ms, error_message, .ok}. load_providers(role_filter) in __init__.py reads providers.json."},
+      {"name": "ChatGPT (openai_codex)", "file": "core/providers/openai_codex.py", "status": "live", "detail": "gpt-4o-mini via OpenAI API. role=[dispatch, synthesis]. Used as synthesis fallback."},
+      {"name": "Groq", "file": "core/providers/groq_provider.py", "status": "live", "detail": "llama-3.3-70b-versatile. Default judge provider. timeout 30s."},
+      {"name": "Mistral", "file": "core/providers/mistral_provider.py", "status": "live", "detail": "mistral-small-latest. Magistral models advertise thinking modes."},
+      {"name": "Ollama (local) x2", "file": "core/providers/ollama.py", "status": "live", "detail": "Two registered: ollama (qwen3:4b, fast local + scout_synthesis) and gemma4 (gemma4:26b, primary synthesiser). base_url 127.0.0.1:11434, no key. ollama_keep_alive=30m."},
+      {"name": "Cloudflare Workers AI", "file": "core/providers/cloudflare.py", "status": "live", "detail": "@cf/meta/llama-3.3-70b-instruct-fp8-fast. Free tier; authed via OC credentials. role includes scout_synthesis."},
+      {"name": "Gemini", "file": "core/providers/gemini.py", "status": "disabled", "detail": "gemini-2.0-flash. Disabled 2026-06-12 — free-tier quota 0 (429 RESOURCE_EXHAUSTED); replaced by local gemma4:26b. Re-enable on key renewal."},
+      {"name": "Grok", "file": "core/providers/grok_provider.py", "status": "disabled", "detail": "grok-3-mini via xAI. Enable once a free-tier key is configured."},
+      {"name": "Generic OpenAI-compatible", "file": "core/providers/generic_openai.py", "status": "partial", "detail": "Drives OpenRouter, Perplexity, Cohere, Together, Fireworks, NVIDIA NIM via base_url+model+env_key. All registered but disabled pending keys; addable at runtime via POST /config/provider/add."},
+      {"name": "Anthropic / Azure / Bedrock", "file": "core/providers/anthropic_claude.py, azure_openai.py, aws_bedrock.py", "status": "planned", "detail": "Pre-wired adapters, disabled. Need keys (+ pip install anthropic / boto3). Bedrock currently treats inference_mode as no-op (balanced only)."}
+    ]
+  },
+  {
+    "category": "API — Config, Sessions, Personas",
+    "features": [
+      {"name": "Config endpoints (hot-reload)", "file": "api/main.py :: /config/nexus, /config/provider, /config/provider/add, /config/provider/delete, /config/apikey, /config/core, /config/scout, /config/scorer, /config/logging", "status": "live", "detail": "Read + write nexus.json / providers.json / secrets nexus.env. Provider add/delete/update hot-reloads the dispatcher (_loaded=False). Built-in providers can't be deleted, only disabled."},
+      {"name": "Provider capability matrix", "file": "api/main.py :: /providers, /providers/capabilities, /providers/detail", "status": "live", "detail": "capabilities returns supported modes + default per provider for the Orchestrator mode dropdowns; detail returns model/timeout/role/active."},
+      {"name": "Sessions & history", "file": "api/main.py :: /history, /sessions/{id} (GET/DELETE), /sessions (bulk DELETE)", "status": "live", "detail": "Recent sessions, single fetch, single + bulk delete (older_than all|1d|7d|30d|90d) with FK-safe child cleanup."},
+      {"name": "Personas CRUD", "file": "api/main.py :: /personas (GET/POST), /personas/{id} (GET/PUT/DELETE)", "status": "live", "detail": "Merges built-in personas.json (locked) + user_personas.json. _build_system_prompt() auto-generates a prompt from persona fields if none supplied."},
+      {"name": "Logs tail", "file": "api/main.py :: /logs/{subsystem}", "status": "live", "detail": "Tails per-subsystem rotating log (scorer.log, dispatcher.log) or shared nexus.log. Capped 5000 lines."}
+    ]
+  },
+  {
+    "category": "Scout (scout/)",
+    "features": [
+      {"name": "Scout runner", "file": "scout/runner.py :: run_scout_cycle() / _run_topic()", "status": "live", "detail": "Per-topic or all-topics. Cycle: fetch -> deduplicate -> filter_unique -> INSERT OR IGNORE into scout_items -> generate_digest -> save .docx -> INSERT OR REPLACE scout_digests. _migrate_db() adds topic_id columns idempotently at import."},
+      {"name": "Scout fetcher", "file": "scout/fetcher.py :: fetch_for_topic() / load_topics() / get_enabled_topics()", "status": "live", "detail": "Topic-aware. Sources: feedparser RSS, Reddit, Hacker News (Algolia API). Topics persisted in config/scout_topics.json. Default topic ai_news is_default and non-deletable."},
+      {"name": "Deduplicator + digest", "file": "scout/deduplicator.py, scout/digest.py", "status": "live", "detail": "deduplicate(threshold=85) via rapidfuzz; generate_digest() + save_digest_docx() (python-docx) produce the markdown + Word digest."},
+      {"name": "Scout API", "file": "api/main.py :: /scout/topics (CRUD), /scout/digest, /scout/items, /scout/run, /scout/import/opml", "status": "live", "detail": "Topic CRUD re-registers APScheduler jobs on interval/enabled change. /scout/run triggers a cycle (topic_id optional). OPML import parses xmlUrl outlines into a new topic."}
+    ]
+  },
+  {
+    "category": "Bench & Scorer",
+    "features": [
+      {"name": "Bench runner", "file": "bench/runner.py :: run_suite() / recommend() / seed_starter_suite()", "status": "live", "detail": "Runs each case x provider via Dispatcher, optionally scores with core.scorer, persists bench_provider_runs + bench_results, computes mean_score/mean_latency. recommend() ranks providers by AVG(mean_score). Starter suite of 5 cases auto-seeded."},
+      {"name": "Bench API", "file": "api/main.py :: /bench/suites, /bench/cases, /bench/run, /bench/runs, /bench/runs/{id}, /bench/recommend", "status": "live", "detail": "Full suite/case CRUD + run + history + recommendation. 4 provider runs and 20 results currently recorded."},
+      {"name": "DeepEval scorer", "file": "core/scorer.py :: score_responses() / NexusJudge", "status": "live", "detail": "NexusJudge wraps any registered provider as a DeepEvalBaseLLM. Runs Clarity/Accuracy/Depth G-Eval concurrently per response with per-metric timeout (scorer.metric_timeout_seconds=90). Raises to trigger simple-mode fallback if all metrics fail. DEEPEVAL_AVAILABLE guards the optional dep."}
+    ]
+  },
+  {
+    "category": "Knowledge / RAG (shared/)",
+    "features": [
+      {"name": "RAG store", "file": "shared/rag.py :: NexusRAG / get_rag()", "status": "live", "detail": "ChromaDB PersistentClient at data/rag, collection nexus_knowledge, cosine HNSW, DefaultEmbeddingFunction. init()+ingest_jsonl() run in a daemon thread with a 300s deadline at startup so a hung ChromaDB never blocks boot."},
+      {"name": "RAG API + curate", "file": "api/main.py :: /rag/status, /rag/query, /rag/ingest, /rag/ingest_text, /curate/export, /curate/library, /upload/extract", "status": "live", "detail": "Query top-N chunks with min_relevance; curate/export appends to knowledge/nexus_curated.jsonl and auto-ingests; upload/extract pulls text from uploaded files."},
+      {"name": "DB layer + schema", "file": "shared/db.py, shared/schema.sql", "status": "live", "detail": "init_db() applies schema + idempotent migrations. SQLite WAL, foreign_keys ON. schema_version at v4 (bench tables added 2026-06-13). Row factory returns dict-able rows."},
+      {"name": "Config + logging", "file": "shared/config.py, shared/log_setup.py", "status": "live", "detail": "get(key, default) dotted-path accessor over nexus.json; reload_config()/load_config() for hot reload. configure_logging() builds per-subsystem rotating file handlers + levels."}
+    ]
+  },
+  {
+    "category": "Gradio UI (ui/app.py)",
+    "features": [
+      {"name": "Orchestrator tab", "file": "ui/app.py :: build_ui()", "status": "live", "detail": "Dispatch sub-tab: prompt templates, provider subset, routing mode, iterations, global+per-provider inference mode, judge toggle + scoring method/AI, expert personas, RAG augment toggle, synthesis presets, export. Plus Session History sub-tab."},
+      {"name": "Scout tab", "file": "ui/app.py", "status": "live", "detail": "Topic selector; Daily Digest, Raw Feed (source filter), Manage Topics (CRUD + OPML import) sub-tabs."},
+      {"name": "Batch & Schedule tab", "file": "ui/app.py", "status": "live", "detail": "Build & Run, Batch History, Scheduled Jobs, Results Viewer sub-tabs."},
+      {"name": "Expert Panel tab", "file": "ui/app.py", "status": "live", "detail": "Panel Designer, Presets, Persona Library, Manage Experts, Evaluate My Work, Write from Research sub-tabs."},
+      {"name": "Curate & Export + Bench tabs", "file": "ui/app.py", "status": "live", "detail": "Curate & Export saves answers to the knowledge library; Bench tab builds/runs suites and shows the recommendation matrix."},
+      {"name": "Settings + Help tabs", "file": "ui/app.py", "status": "live", "detail": "Settings: Providers, API Keys, Core Engine, Scout, Logging, Add Provider. Dynamic scorer tab label reflects mode/enabled. Help & About: Getting Started, per-feature guides, API Reference, About."}
+    ]
+  }
+]

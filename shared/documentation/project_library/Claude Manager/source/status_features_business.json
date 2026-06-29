@@ -1,0 +1,47 @@
+[
+  {
+    "category": "Agent Orchestration (the Hive fabric)",
+    "features": [
+      {"name": "8-agent Hive fabric", "description": "A team of specialised AI sub-agents Claude can hand work to: an architect, a builder, an inspector, an ops engineer, a scout, a scribe, a tester, and a librarian — each with its own role, model, and tool set.", "status": "live", "notes": "Definitions in .claude/agents/*.md; invoked via the Agent tool with subagent_type=hive-<role>"},
+      {"name": "Dispatch discipline", "description": "A standing rule that turns the main Claude thread into a dispatcher rather than a do-everything worker — every multi-step task is routed to the right specialist.", "status": "live", "notes": "DISPATCH_PROTOCOL.md; main thread = orchestrator, one level of delegation deep"},
+      {"name": "Model-tiered cost control", "description": "Cheap tasks go to cheap models (Haiku ops/scout/scribe/tester), design goes to the premium model (Opus architect), code and review to the workhorse (Sonnet). Premium reasoning is never burned on trivia.", "status": "live", "notes": "model pinned per agent in the front-matter (opus / sonnet / haiku)"},
+      {"name": "Honest attribution", "description": "Work is tagged to the agent that actually did it; the main thread never claims credit for a sub-agent it didn't dispatch.", "status": "live", "notes": "Anti-fake-attribution rule in the protocol; SubagentStop hook records the real agent"}
+    ]
+  },
+  {
+    "category": "Ecosystem Supervision",
+    "features": [
+      {"name": "Cross-project health scan", "description": "One command walks every registered QI project and reports a red / yellow / green status for each, so the whole ecosystem's health is visible at a glance.", "status": "live", "notes": "supervisor.py reads qi_registry.json and inspects each project"},
+      {"name": "Drift detection", "description": "Flags the small problems that compound: uncommitted git changes, stale commits, stopped services, scheduled tasks that failed, and keepalive failure files.", "status": "live", "notes": "git status + NSSM service state + scheduled-task results + *failure-state*.json scan"},
+      {"name": "Human dashboard", "description": "Produces a plain-language DASHBOARD.md with a summary line and a per-project findings table that Renne can read top to bottom.", "status": "live", "notes": "C:\\CLAUDE\\DASHBOARD.md, regenerated each run"},
+      {"name": "Feeds the Hive Mission Control", "description": "The same scan updates the QI Hive dashboard's live status panels, so supervision shows up on the operational console too.", "status": "live", "notes": "writes C:\\QIH\\data\\status.json consumed by the Hive dashboard"}
+    ]
+  },
+  {
+    "category": "Session Memory & Continuity",
+    "features": [
+      {"name": "Every session leaves a trace", "description": "When a session ends, a summary stub is automatically dropped into the Hive inbox and ingested into the Brain — even if Claude forgot to log it explicitly.", "status": "live", "notes": "SessionEnd hook -> QI Hive inbox -> QI_HiveIngest -> qi_brain.db"},
+      {"name": "Session-start ecosystem briefing", "description": "Every session opens with the full QI landscape pre-loaded: memory index, standing rules, a live Brain snapshot, and the dispatch reminder.", "status": "live", "notes": "SessionStart hook (global) injects additionalContext; fails LOUD if Brain is unreachable"},
+      {"name": "Sub-agent work logged by role", "description": "When a sub-agent finishes, its work is recorded against the correct Hive role for accurate cross-project memory.", "status": "live", "notes": "SubagentStop hook normalises the agent name to hive_<role>"},
+      {"name": "Pending-audit gate at session start", "description": "If a monthly self-audit is awaiting review, the session opens by presenting the findings and a decision gate before any new work.", "status": "live", "notes": "reads PENDING_REVIEW.json; surfaced in the SessionStart context"}
+    ]
+  },
+  {
+    "category": "Environment Hygiene & Reliability",
+    "features": [
+      {"name": "Clean-restart of Claude Desktop", "description": "Fixes the 'file in use' failure that used to force a full reboot — diagnoses and clears the orphaned MCP processes that lock the Claude install.", "status": "live", "notes": "claude_restart_guard.ps1 + Claude-Clean-Restart.bat; never touches QI_ services"},
+      {"name": "Monthly self-audit", "description": "On the last Friday of the month it automatically tidies the working environment (kills orphans, prunes stale worktrees, trims config bloat) and reports anything that needs a human decision.", "status": "live", "notes": "QI_ClaudeSelfAudit scheduled task; --apply-safe auto-fixes; rest goes to the decision gate"},
+      {"name": "LINE notification", "description": "Pushes a short heads-up to Renne over the Tasuke LINE account when the audit runs or something needs attention.", "status": "live", "notes": "qi_tasuke_notify.py — LINE broadcast, no stored userId needed"},
+      {"name": "Safe-by-design automation", "description": "Auto-fixes are restricted to provably safe actions (orphan kill, clean-worktree removal, dead config entries). Anything risky is only reported for a human to decide.", "status": "live", "notes": "self-audit splits auto_fixed vs needs_decision; QI_ services explicitly protected"}
+    ]
+  },
+  {
+    "category": "Brain & Registry Reconciliation",
+    "features": [
+      {"name": "Keep the Brain in sync with reality", "description": "Scripts register new projects, refresh each project's recorded state, merge mislabelled session IDs, and backfill sessions that were never logged — so the Brain's memory matches what actually happened.", "status": "live", "notes": "brain_reconcile_2026_06_10.py; run-on-demand reconciliation passes"},
+      {"name": "Registry-driven everywhere", "description": "Every tool reads the single ecosystem registry for paths and ports rather than hardcoding them, so a project move or port change propagates automatically.", "status": "live", "notes": "all tooling reads C:\\QIH\\ecosystem\\qi_registry.json"},
+      {"name": "Secrets & environment migration", "description": "One-off tooling to move secrets out of code and migrate environment configuration safely across the ecosystem.", "status": "live", "notes": "secrets_migration_round2.py, maia_env_migration.py"},
+      {"name": "Continuous drift watchdog", "description": "Promote the on-demand supervisor scan into an always-on watchdog that alerts on drift the moment it appears.", "status": "planned", "notes": "supervisor currently run-on-demand; watchdog service not yet stood up"}
+    ]
+  }
+]

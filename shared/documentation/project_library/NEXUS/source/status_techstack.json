@@ -1,0 +1,59 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for API, UI, core engine, Scout, Bench, and shared modules", "license": "PSF (open source)", "version": "3.10+"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API on port 8010 — synthesis, dispatch, judge, scout, bench, rag, config (60+ endpoints)", "license": "MIT", "version": ">=0.115"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (started from main.py in a daemon thread)", "license": "BSD", "version": ">=0.30 [standard]"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Request/response models and validation (SynthesizeRequest, BenchRunRequest, etc.)", "license": "MIT", "version": ">=2.7"},
+    {"layer": "UI", "technology": "Gradio", "role": "Operator console on port 7880 — 8 top-level tabs (Orchestrator, Scout, Batch & Schedule, Expert Panel, Curate & Export, Bench, Settings, Help)", "license": "Apache 2.0", "version": ">=5.0"},
+    {"layer": "Async / HTTP", "technology": "asyncio", "role": "Concurrent fan-out: all providers dispatched simultaneously via asyncio.gather / as_completed", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Async / HTTP", "technology": "httpx", "role": "Async HTTP client used by provider adapters and the UI to call the API", "license": "BSD", "version": ">=0.27"},
+    {"layer": "Scheduling", "technology": "APScheduler", "role": "BackgroundScheduler running per-topic Scout cycles, scheduled prompt jobs, and synthesis keep-warm", "license": "MIT", "version": ">=3.10"},
+    {"layer": "Database", "technology": "SQLite (nexus.db)", "role": "Single-file store: providers, sessions, responses, scout_items/digests, bench_*, batch_*, scheduled_jobs, llm_scores", "license": "Public domain", "version": "3.x (WAL mode)"},
+    {"layer": "Knowledge / RAG", "technology": "ChromaDB", "role": "Persistent vector store (collection nexus_knowledge, cosine HNSW) for RAG augmentation of answers", "license": "Apache 2.0", "version": ">=0.5"},
+    {"layer": "Evaluation", "technology": "DeepEval (G-Eval)", "role": "Structured Clarity/Accuracy/Depth scoring via the NexusJudge bridge; default scorer mode", "license": "Apache 2.0", "version": "optional dep"},
+    {"layer": "Text Processing", "technology": "rapidfuzz", "role": "Fast fuzzy matching for Scout deduplication (85% similarity threshold)", "license": "MIT", "version": ">=3.9"},
+    {"layer": "News Fetching", "technology": "feedparser", "role": "RSS/Atom parsing for Scout RSS sources (8,500+ items collected)", "license": "BSD", "version": ">=6.0.11"},
+    {"layer": "News Fetching", "technology": "praw", "role": "Reddit API client for Scout's Reddit source (4,700+ items collected)", "license": "BSD", "version": ">=7.8"},
+    {"layer": "News Fetching", "technology": "youtube-transcript-api + google-api-python-client", "role": "YouTube transcript + Data API v3 access for Scout/TubeScout YouTube topics", "license": "MIT / Apache 2.0", "version": ">=0.6.3 / >=2.130"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Generates Scout digest .docx files and project documentation", "license": "MIT", "version": ">=1.1"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads API keys from secrets/nexus.env; config layered over config/nexus.json", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Files", "technology": "aiofiles", "role": "Async file I/O for uploads and exports", "license": "Apache 2.0", "version": ">=23.2"},
+    {"layer": "AI — Cloud (active)", "technology": "ChatGPT (OpenAI)", "role": "gpt-4o-mini via openai_codex adapter — dispatch + synthesis fallback", "license": "Paid API", "version": "gpt-4o-mini"},
+    {"layer": "AI — Cloud (active)", "technology": "Groq", "role": "llama-3.3-70b-versatile — fast inference + default judge provider", "license": "Free tier", "version": "llama-3.3-70b"},
+    {"layer": "AI — Cloud (active)", "technology": "Mistral", "role": "mistral-small-latest dispatch provider", "license": "Free tier", "version": "mistral-small-latest"},
+    {"layer": "AI — Cloud (active)", "technology": "Cloudflare Workers AI", "role": "llama-3.3-70b-fp8-fast dispatch + scout synthesis (free tier)", "license": "Free tier", "version": "llama-3.3-70b-fp8"},
+    {"layer": "AI — Local (active)", "technology": "Ollama", "role": "Local runtime hosting gemma4:26b (primary synthesiser, kept warm) and qwen3:4b (fast local / Scout)", "license": "MIT", "version": "gemma4:26b / qwen3:4b"},
+    {"layer": "AI — Disabled / pre-wired", "technology": "Gemini · Grok · Anthropic · Azure · Bedrock · OpenRouter · Perplexity · Cohere · Together · Fireworks · NVIDIA NIM", "role": "Registered adapters, off by default — enable by adding a key (generic_openai covers OpenAI-compatible vendors)", "license": "Mixed (mostly paid)", "version": "see providers.json"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_NEXUS Windows service (AppDirectory C:\\NEXUS) + QI_NEXUSTunnel exposing the UI publicly", "license": "Open source / Cloudflare", "version": "nssm 2.24"}
+  ],
+  "descriptions": [
+    {
+      "title": "Why parallel dispatch (not a failover chain)",
+      "body": "The Dispatcher is the heart of NEXUS and is deliberately the opposite of Maia/Naya. Maia and Naya run a sequential failover chain — try model 1, fall back to model 2 — optimising for getting a usable answer cheaply. NEXUS fans the prompt out to every enabled provider at once with asyncio.gather, collects all responses (return_exceptions=True so one raising adapter can't discard the rest), and synthesises them. It optimises for answer quality and breadth of perspective, not latency or cost. If six providers are enabled, all six think simultaneously and the Synthesizer merges the best of all six."
+    },
+    {
+      "title": "Routing modes",
+      "body": "Parallel (default) collects every provider's answer and synthesises in one call. Chain sends the prompt to provider 1, then hands provider 1's answer plus the original question to provider 2 to improve, and so on — a relay of refinements where the last successful answer wins. Iterative runs the whole dispatch-and-synthesise cycle up to 3 times, each round critiquing and improving the prior synthesis. Parallel is for breadth, chain for progressive improvement, iterative for maximum quality on genuinely hard problems. All three are also streamable over Server-Sent Events."
+    },
+    {
+      "title": "Local-first synthesis with keep-warm",
+      "body": "Nothing about the model is hardcoded — core.synthesis_provider in nexus.json picks it. NEXUS currently synthesises with a LOCAL Gemma 4 26B served by Ollama, with cloud ChatGPT as fallback. A 26B model on local hardware has a painful cold start (~25-30s on first call), so main.py warms it on boot in a background thread and re-pings it every 20 minutes (ollama_keep_alive=30m) to keep it resident. This is why Gemini was retired (its free quota hit zero) without losing synthesis capability — the local model took over at zero marginal cost."
+    },
+    {
+      "title": "Inference modes (Fast / Balanced / Thinking / Deep)",
+      "body": "core/inference_modes.py is the single source of truth for reasoning depth, exposed to the UI via /providers/capabilities. A capability table matches (adapter, model substring) to the modes a model actually supports — e.g. Claude 3.7+/o-series/DeepSeek-R1/qwen3 get thinking and deep, while plain chat models advertise balanced-only, so the UI never offers a mode a model can't honour. Each mode carries a timeout multiplier (fast 0.6x up to deep 10x) capped at a 30-minute hard ceiling, so a deep-reasoning call gets the time it needs while a misconfiguration can't hang forever."
+    },
+    {
+      "title": "Judge vs Scorer (simple vs DeepEval)",
+      "body": "Evaluation has two interchangeable implementations behind one return shape. Simple mode is a single LLM-as-judge call returning a 1-10 markdown table on Clarity/Accuracy/Depth. DeepEval mode (the configured default) runs three G-Eval metrics per response concurrently, each producing a structured float plus a written reason, via the NexusJudge bridge that wraps any registered provider as a DeepEvalBaseLLM. Each metric is bounded by a per-metric timeout; if every metric fails or times out, the scorer raises and the API falls back to simple mode automatically. The judge provider is user-selectable (default Groq)."
+    },
+    {
+      "title": "Scout — autonomous research at scale",
+      "body": "Scout is NEXUS on autopilot. Topics in config/scout_topics.json each carry their own RSS/Reddit/Hacker News source list and optional schedule. APScheduler runs a fetch -> rapidfuzz dedup -> AI-synthesised digest -> store cycle per topic (default every 6h). The store already holds 13,000+ items (8,500 RSS, 4,700 Reddit, 36 HN) and 99 daily digests, and the same engine backs the TubeScout project's two YouTube topics. New topics can be created in the UI or bulk-imported from any RSS reader's OPML export."
+    },
+    {
+      "title": "Bench — measurable model selection",
+      "body": "Bench turns 'which model is best?' from opinion into data. A suite is a fixed battery of prompts; run_suite() dispatches each case against each selected provider, optionally scores the response with the DeepEval scorer, and persists a bench_provider_run plus per-case bench_results with score and latency. Because runs are timestamped and kept, a model that quietly regresses after an upgrade is caught. GET /bench/recommend aggregates historical mean scores to recommend the best provider for a use case. A 5-case Starter Regression suite is auto-seeded so the tab is never empty."
+    }
+  ]
+}

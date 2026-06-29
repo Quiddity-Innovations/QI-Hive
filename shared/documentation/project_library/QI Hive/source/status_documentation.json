@@ -1,0 +1,71 @@
+{
+  "sections": [
+    {
+      "name": "Ecosystem Governance (the constitution)",
+      "documents": [
+        {"title": "QI Architecture Principles — The Six Laws", "file": "QI_Architecture_Principles.md", "location": "C:\\QIH\\ecosystem\\", "type": "governance", "description": "The architectural constitution for every QI project: registry truth, module contract, independence, contract-first APIs, current registry, owner override + best-practice surfacing."},
+        {"title": "QI Standards (QI DNA)", "file": "QI_Standards.md", "location": "C:\\QIH\\ecosystem\\", "type": "governance", "description": "Naming, folder layout, documentation, and code conventions every QI project inherits — no exceptions."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "reference", "description": "Human-readable port table, project family map, and integration contracts across the ecosystem."},
+        {"title": "QI Registry (machine source of truth)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "config", "description": "Authoritative ports, paths, statuses, module_interface_contract, port_strategy, and family_taxonomy for 25 projects."},
+        {"title": "QI Service Registry", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "reference", "description": "Single source of truth for every QI_ Windows service — params, old->new name map, and symptom->service->log lookup table."},
+        {"title": "QI Scheduled Tasks Registry", "file": "QI_Scheduled_Tasks_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "reference", "description": "Companion to the service registry for Task Scheduler entries (window policy, naming-standardize task, self-audit)."},
+        {"title": "QI Validator", "file": "qi_validator.py", "location": "C:\\QIH\\ecosystem\\", "type": "tool", "description": "Compliance checker: python qi_validator.py --project <id> — verifies port block, /health, naming, secrets gitignore."},
+        {"title": "QI New Project wizard", "file": "qi_new_project.py", "location": "C:\\QIH\\ecosystem\\", "type": "tool", "description": "Registers a project then scaffolds the compliant QI layout + FastAPI /health/version/info skeleton in one command."}
+      ]
+    },
+    {
+      "name": "Project Overview & Status",
+      "documents": [
+        {"title": "QI Hive README", "file": "README.md", "location": "C:\\QIH\\", "type": "readme", "description": "Top-level orientation: the Brain, the Dashboard, shared helpers, folder standard, services, quick start, repo link."},
+        {"title": "LATEST (nightly ecosystem snapshot)", "file": "LATEST.md", "location": "C:\\QIH\\", "type": "status", "description": "Auto-generated per-project phase/status/session table refreshed nightly by the reconciler."},
+        {"title": "Project status state file", "file": "status.json", "location": "C:\\QIH\\", "type": "data", "description": "Per-project phase, status, summary, next_steps, session counts — written by nightly_reconcile.py; dashboard fallback."},
+        {"title": "CoWork README (the 60-second answer)", "file": "COWORK_README.md", "location": "C:\\QIH\\", "type": "guide", "description": "How CoWork reports to QI Brain/Hive — HTTP /api/inbox, file inbox, or .docx fallback."},
+        {"title": "Status page intro (this page)", "file": "status_intro.md", "location": "C:\\QIH\\INTRO\\", "type": "doc", "description": "The Overview tab source for the Hive's own Project Status page; editable + refreshable."}
+      ]
+    },
+    {
+      "name": "Engine — Source (Brain & Hive)",
+      "documents": [
+        {"title": "QI Brain API", "file": "api.py", "location": "C:\\QIH\\engine\\brain\\", "type": "source", "description": "FastAPI app on :9011 — 12 MCP-backed endpoints, headlines feed, heartbeats, War Room, dispatch channel, agent growth."},
+        {"title": "Brain SQL schema", "file": "schema.sql", "location": "C:\\QIH\\engine\\brain\\core\\", "type": "schema", "description": "24-table SQLite schema (projects, decisions, features, sessions, docs, dispatches, compliance_log, agents...)."},
+        {"title": "Brain MCP stdio server", "file": "mcp.py", "location": "C:\\QIH\\engine\\brain\\", "type": "source", "description": "Thin JSON-RPC stdio bridge forwarding the 12 qi.* tools to the FastAPI app; registered globally as qi-brain."},
+        {"title": "Documentation harvester", "file": "doc_harvester.py", "location": "C:\\QIH\\engine\\brain\\", "type": "source", "description": "Builds the 921-doc index + doc_relationships graph and embeds into the qi_docs Chroma collection (federated, idempotent)."},
+        {"title": "Brain poller", "file": "poller.py", "location": "C:\\QIH\\engine\\brain\\", "type": "source", "description": "Background thread pulling each project's state files + git log; watches engine/brain/inbox/ for dropped messages."},
+        {"title": "Dashboard server", "file": "server.py", "location": "C:\\QIH\\engine\\hive\\dashboard\\", "type": "source", "description": "FastAPI dashboard on :8600 — all pages (Mission Control, Compliance, Library, Usage, War Room, Dispatch) + REST API."},
+        {"title": "Project Status renderer", "file": "project_status.py", "location": "C:\\QIH\\engine\\hive\\dashboard\\", "type": "source", "description": "Renders the Maia-style 7-tab status page for any project from its INTRO folder (this page's renderer)."},
+        {"title": "Ecosystem health check", "file": "health_check.py", "location": "C:\\QIH\\engine\\hive\\", "type": "source", "description": "Registry-driven liveness probe (sc/netstat/git) with a 30s TTL cache; imported by the dashboard."},
+        {"title": "Standards Inspector", "file": "inspector.py", "location": "C:\\QIH\\engine\\hive\\inspector\\", "type": "source", "description": "fast/deep compliance scanner — auto-fixes safe drift, files dispatches, writes compliance_log."},
+        {"title": "Auto-apply pipeline", "file": "main.py", "location": "C:\\QIH\\engine\\hive\\apply\\", "type": "source", "description": "QI_HiveApply — polls dispatch_runs, drives the builder runner + mechanical_inspector (Phase 1)."}
+      ]
+    },
+    {
+      "name": "Engine — Service & Elevation Layer",
+      "documents": [
+        {"title": "Elevation broker", "file": "qi_elevate.py", "location": "C:\\QIH\\engine\\common\\", "type": "source", "description": "QI_Elevate LocalSystem daemon — runs whitelisted admin commands from commands/pending/*.json."},
+        {"title": "Service helper", "file": "qi_service.py", "location": "C:\\QIH\\engine\\common\\", "type": "source", "description": "from engine.common.qi_service import restart/stop/start/status — autonomous service control via the broker."},
+        {"title": "Usage stats parser", "file": "usage_stats.py", "location": "C:\\QIH\\engine\\common\\", "type": "source", "description": "Parses ~/.claude JSONL into per-day/project/model cost + local-LLM savings; no API key required."},
+        {"title": "Static tunnel toolchain", "file": "migrate_named_tunnels.py", "location": "C:\\QIH\\engine\\tunnels\\", "type": "source", "description": "Provisions one Cloudflare named tunnel per product on quiddityinnovations.com; config in tunnels.json."}
+      ]
+    },
+    {
+      "name": "Agent Fabric",
+      "documents": [
+        {"title": "Dispatch Protocol", "file": "DISPATCH_PROTOCOL.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "protocol", "description": "Standing rule mapping each task type to a hive-* agent, the design->build->inspect->scribe workflows, and anti-patterns."},
+        {"title": "hive-architect", "file": "hive-architect.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Strategic system designer (Opus) — ADRs, cross-project design, breaking-change analysis. Design only, no code."},
+        {"title": "hive-builder", "file": "hive-builder.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Implementation specialist (Sonnet) — writes code from an architect's plan."},
+        {"title": "hive-inspector", "file": "hive-inspector.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Read-only code review + standards/compliance gate (Sonnet)."},
+        {"title": "hive-ops / scout / scribe / tester", "file": "hive-ops.md, hive-scout.md, hive-scribe.md, hive-tester.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Service triage, fast research, documentation, and cross-project testing roles (Haiku)."},
+        {"title": "hive-librarian", "file": "hive-librarian.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Documentation Brain retrieval + curation — finds docs, traverses the graph, flags stale/duplicate docs."}
+      ]
+    },
+    {
+      "name": "Memory & Cross-session Context",
+      "documents": [
+        {"title": "Claude Manager memory index", "file": "MEMORY.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "memory", "description": "Index of QI Hive / Claude Manager memory notes — Documentation Brain, dispatch hygiene, agentic operating mode, etc."},
+        {"title": "Global standing instructions", "file": "CLAUDE.md", "location": "C:\\Users\\renne\\.claude\\", "type": "memory", "description": "User-wide SOP: ecosystem registry safety rules, service naming, session protocols, model/delegation policy."},
+        {"title": "QI Hive agentic operating mode", "file": "project_hive_agentic_system.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "memory", "description": "How the 7+1 sub-agents are wired and dispatched (subagent_type=hive-<role>)."},
+        {"title": "Documentation Brain note", "file": "project_documentation_brain.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "memory", "description": "Ecosystem doc index + knowledge graph design, ChromaDB multi-process caveat, reload_memory fix."}
+      ]
+    }
+  ]
+}

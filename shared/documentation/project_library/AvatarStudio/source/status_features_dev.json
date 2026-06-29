@@ -1,0 +1,74 @@
+[
+  {
+    "category": "Entry Point & Service",
+    "features": [
+      {"name": "Gradio app launch", "file": "avatar_studio.py :: __main__ (demo.queue().launch)", "status": "live", "detail": "gr.Blocks app on server_name 0.0.0.0 port 7862, queue max_size=2, show_error=True, allowed_paths=[outputs/], Soft theme (Inter font). UTF-8 stdout reconfigured at import. No QI /health,/version,/info endpoints — pure Gradio UI."},
+      {"name": "Detached launcher", "file": "start_studio.py", "status": "live", "detail": "Kills any listener on 7862 (Get-NetTCPConnection -> Stop-Process), then Popen avatar_studio.py DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP, logs to logs/studio.log, verifies the port is listening, tails the log on failure."},
+      {"name": "In-UI Kill & Restart", "file": "avatar_studio.py :: restart_studio()", "status": "live", "detail": "Spawns a detached python -c helper that sleeps 1.5s, taskkills the current PID, then relaunches avatar_studio.py with DETACHED_PROCESS. Returns a status string to the red Step-4 button."},
+      {"name": "QI_AvatarStudio NSSM service", "file": "install_service.bat", "status": "partial", "detail": "Self-elevating .bat installs NSSM service QI_AvatarStudio via C:\\QIH\\engine\\bin\\nssm.exe; AppDirectory C:\\1-AI\\APPS\\AvatarStudio, runs .venv python avatar_studio.py, Start=SERVICE_DEMAND_START, rotating log logs/service.log. Not registered in QI_Service_Registry.md."},
+      {"name": "CLI pipeline launcher", "file": "avatar_pipeline.py :: main()", "status": "live", "detail": "argparse CLI: agent + text|@script.txt, --no-tts. Kokoro TTS (step_tts) -> Hallo2 via WSL2 (step_hallo2) -> MP4. Standalone path independent of the Gradio app, driven by run_avatar.bat."}
+    ]
+  },
+  {
+    "category": "Config, Secrets & Engine Registry",
+    "features": [
+      {"name": "Studio config load/save", "file": "avatar_studio.py :: load_studio_config() / save_studio_config()", "status": "live", "detail": "Merges studio_config.json over _DEFAULT_CONFIG (cloud_apis heygen/did, open_source musetalk/sadtalker/wav2lip) + preserves ui_prefs. save_studio_config deep-copies and blanks cloud api_key fields before writing JSON (indent=2, ensure_ascii=False)."},
+      {"name": "Secret overlay (keys out of repo)", "file": "avatar_studio.py :: _read_secrets() / _apply_secret_overlay()", "status": "live", "detail": "Reads secrets/avatarstudio.env (KEY=VALUE lines), env vars override the file. _SECRET_MAP {did:DID_API_KEY, heygen:HEYGEN_API_KEY} injects keys into cfg['cloud_apis'][prov]['api_key'] at runtime only; never persisted."},
+      {"name": "Dynamic engine choices", "file": "avatar_studio.py :: get_engine_choices() / get_saved_render_engine() / save_render_engine_pref()", "status": "live", "detail": "Always offers LivePortrait + Hallo2; appends HeyGen/D-ID only when both api_key and enabled are set, and MuseTalk/SadTalker/Wav2Lip when enabled. Last engine saved to ui_prefs.render_engine, validated against current choices."},
+      {"name": "Agents / languages / voice catalog", "file": "avatar_studio.py :: load_agents() / load_languages() / supported_languages() / VOICE_CATALOG / _voices_for_lang()", "status": "live", "detail": "agents.json (4 agents w/ voice, photo, language_voice_overrides); languages.json (10 langs: lang_code, engine, gender voices, status); VOICE_CATALOG ~60 voices x Women/Men/Girls/Boys x language. rembg import guarded by REMBG_AVAILABLE."}
+    ]
+  },
+  {
+    "category": "TTS Stage",
+    "features": [
+      {"name": "Voice resolution", "file": "avatar_studio.py :: get_voice_for_language()", "status": "live", "detail": "Priority: explicit UI voice_override > agent language_voice_overrides (kokoro only) > languages.json gender default. edge-tts voices always taken from languages.json unless overridden. Returns (voice, lang_code)."},
+      {"name": "Voice generation (dual engine)", "file": "avatar_studio.py :: generate_voice()", "status": "live", "detail": "engine from languages.json. edge-tts: async edge_tts.Communicate(rate=+N%, pitch=+Nst).save(wav). Kokoro: KPipeline(lang_code), iterate audio chunks, np.concatenate, sf.write @24000Hz, optional pitch post-shift. Returns (wav_path, duration)."},
+      {"name": "Pitch shift (Kokoro)", "file": "avatar_studio.py :: shift_pitch()", "status": "live", "detail": "scipy.signal.resample by factor 2**(semitones/12) then resample back to original length to preserve duration. Used only for Kokoro (edge-tts applies pitch natively via SSML)."},
+      {"name": "CLI Kokoro TTS step", "file": "avatar_pipeline.py :: step_tts()", "status": "live", "detail": "Standalone Kokoro KPipeline path for the CLI: concatenates samples, writes <agent>_voice.wav at agents.json kokoro.sample_rate (24000), reports duration."}
+    ]
+  },
+  {
+    "category": "Face Animation / Render Engines",
+    "features": [
+      {"name": "LivePortrait (motion transfer)", "file": "avatar_studio.py :: run_liveportrait()", "status": "live", "detail": "WSL2: cd LP_DIR && LP_PYTHON inference.py -s <portrait> -d <driving.mp4> with animation_region, driving_option/multiplier, scale, vx/vy, and relative/pasteback/stitching/crop flags. find first non-concat .mp4, cp to Windows, ffmpeg-mux the WAV, cleanup /tmp."},
+      {"name": "Hallo2 (audio-driven)", "file": "avatar_studio.py :: run_hallo2()", "status": "partial", "detail": "WSL2: HALLO_PYTHON scripts/inference_long.py --config long.yaml --source_image --driving_audio with pose/face/lip weights + face_expand_ratio. Patches inference_steps/cfg_scale into a /tmp yaml via sed when non-default. timeout=3600. Slow (~15-30 min/min audio)."},
+      {"name": "video-retalking (lip-sync)", "file": "avatar_studio.py :: run_retalking()", "status": "partial", "detail": "WSL2 post-process on any rendered mp4: export retalking env PATH+CUDA_HOME, cd video-retalking, inference.py --face <mp4> --audio <wav> --outfile. timeout=3600. Opt-in via apply_retalking checkbox; numpy 2.x / basicsr / dlib patches applied in WSL2."},
+      {"name": "D-ID cloud", "file": "avatar_studio.py :: run_did()", "status": "partial", "detail": "Basic-auth flow: POST /images, POST /audios, POST /talks (audio script, fluent), poll /talks/{id} up to 120x5s until done, stream-download result_url. Enabled in config; no key configured."},
+      {"name": "HeyGen cloud", "file": "avatar_studio.py :: run_heygen()", "status": "partial", "detail": "X-Api-Key flow: upload image + audio assets, POST /v2/video/generate (talking_photo + audio, 720x1280), poll video_status.get, download video_url. Disabled (no key)."},
+      {"name": "MuseTalk / SadTalker / Wav2Lip", "file": "avatar_studio.py :: run_musetalk() / run_sadtalker() / run_wav2lip()", "status": "planned", "detail": "WSL2 conda-env subprocess wrappers reading open_source config; each raises if not enabled. MuseTalk -m scripts.inference; SadTalker inference.py --still --preprocess full; Wav2Lip inference.py --checkpoint wav2lip_gan.pth. All disabled pending WSL2 install."}
+    ]
+  },
+  {
+    "category": "Pipeline Orchestration",
+    "features": [
+      {"name": "Full pipeline generator", "file": "avatar_studio.py :: pipeline_generate()", "status": "live", "detail": "Generator yielding (audio, video, status) after each step. Validates per-language scripts, resolves portrait (custom_photo or agent_photo_path), applies background once, loops selected languages: TTS -> engine dispatch (Hallo2/HeyGen/D-ID/MuseTalk/SadTalker/Wav2Lip/LivePortrait) -> optional retalking. Per-language slug + timestamp file stems."},
+      {"name": "Background prep", "file": "avatar_studio.py :: apply_background()", "status": "live", "detail": "Modes: Original photo (passthrough), Describe (Phase 2 passthrough), Solid color (hex -> RGBA fill), Upload background image (resize composite). rembg cutout -> PIL alpha_composite -> temp JPEG in outputs/. Falls back to source if REMBG unavailable."},
+      {"name": "WSL path translation", "file": "avatar_studio.py :: to_wsl_path()", "status": "live", "detail": "Converts C:\\path -> /mnt/c/path (drive-letter aware), optional shell-quoting. Used for every portrait/audio/video handed to WSL2 ffmpeg and the render engines."},
+      {"name": "Portrait helpers (OpenCV)", "file": "avatar_studio.py :: find_best_portrait_frame() / extract_frame_at() / get_video_duration() / screen_capture_region()", "status": "live", "detail": "ffprobe duration; ffmpeg single-frame extract; OpenCV Haar face/eye cascades + Laplacian sharpness to score sampled frames; PIL ImageGrab region capture. All ffmpeg/ffprobe calls run in WSL2."}
+    ]
+  },
+  {
+    "category": "Video Assembly (ffmpeg / WSL2)",
+    "features": [
+      {"name": "Audio mux into render", "file": "avatar_studio.py :: run_hallo2() / run_liveportrait() (ffmpeg)", "status": "live", "detail": "ffmpeg -i <video> -i <wav> -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest -> final mp4. Hallo2 deliberately replaces its embedded audio with our WAV so the rendered script is heard verbatim."},
+      {"name": "Scene concatenation", "file": "scene_pipeline.py :: concat_scenes()", "status": "partial", "detail": "Concatenates per-scene mp4s into one movie via ffmpeg concat. Part of the Scene movie pipeline (run_pipeline)."},
+      {"name": "ffmpeg runtime", "file": ".venv imageio-ffmpeg + WSL2 system ffmpeg", "status": "live", "detail": "imageio-ffmpeg==0.6.0 available in the Windows venv; the actual mux/probe/extract commands run against ffmpeg/ffprobe inside WSL2 Ubuntu-24.04 via subprocess."}
+    ]
+  },
+  {
+    "category": "Scene Pipeline (multi-character)",
+    "features": [
+      {"name": "Script splitting", "file": "scene_pipeline.py :: split_script() / split_with_ai() / parse_manual_script() / _rule_split()", "status": "partial", "detail": "Three modes: manual (--- breaks, optional [Name] / [Name:photo] tags), ai (NEXUS LLM split), hybrid (LLM split then user-editable). Falls to rule-based splitter when AI unavailable."},
+      {"name": "Character model", "file": "scene_pipeline.py :: load_characters() / add_character() / get_all_characters() / resolve_character_photo()", "status": "partial", "detail": "characters.json roster independent of agents.json; merges agents as a convenience. Resolves a per-scene photo by slug or inline path. SceneData dataclass carries text/char/timing."},
+      {"name": "Scene render + assemble", "file": "scene_pipeline.py :: render_scene() / run_pipeline()", "status": "partial", "detail": "Per-scene TTS -> avatar render -> optional retalking, then concat_scenes into the final movie. run_pipeline is a generator yielding (log, final_mp4, scene_rows) wired to the Scene tab's sp_render_btn."}
+    ]
+  },
+  {
+    "category": "Tests & Diagnostics",
+    "features": [
+      {"name": "Smoke test (liveness)", "file": "tests/test_smoke.py", "status": "live", "detail": "pytest module; skips when :7862 unreachable; asserts the Gradio root serves HTTP 200. Deliberately avoids importing app modules or triggering heavy WSL2 renders."},
+      {"name": "Language / routing tests", "file": "test_all_languages.py / test_routing.py / test_langs.py / test_edge_tts.py / smoke_test.py", "status": "live", "detail": "Validate 10-language voice routing (Kokoro vs edge-tts), engine selection, and edge-tts output. smoke_test.py prints the supported-language table."},
+      {"name": "Diagnostic dump", "file": "diagnose.py / check_syntax.py", "status": "live", "detail": "diagnose.py collects env, WSL2, and config state for paste-back debugging; check_syntax.py syntax-checks avatar_studio.py."}
+    ]
+  }
+]

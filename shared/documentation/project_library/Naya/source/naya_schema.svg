@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="fk" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#c2185b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="760" fill="#ffffff" rx="12"/>
+  <text x="500" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2d3d">Naya — Database Schema</text>
+  <text x="500" y="50" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · Personal AI · 2026</text>
+  <text x="500" y="66" text-anchor="middle" font-size="10" fill="#9aa5b1">Two SQLite files · live row counts · PK = primary key · FK = foreign key</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="784" y="78" width="200" height="124" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="884" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="794" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="814" y="113" font-size="9" fill="#374151">naya.db — control plane (used)</text>
+  <rect x="794" y="121" width="14" height="10" rx="2" fill="#e0f2fe" stroke="#0284c7"/>
+  <text x="814" y="130" font-size="9" fill="#374151">naya_brain.db — file engine</text>
+  <rect x="794" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="814" y="147" font-size="9" fill="#374151">Inherited Maia table — empty</text>
+  <rect x="794" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="814" y="164" font-size="9" fill="#374151">Title bar (table header)</text>
+  <line x1="794" y1="180" x2="812" y2="180" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <text x="818" y="184" font-size="9" fill="#374151">Foreign-key reference</text>
+
+  <!-- ════════ naya.db band ════════ -->
+  <text x="20" y="96" font-size="11" font-weight="700" fill="#2e7d32" letter-spacing="1">naya.db  ·  C:\NAYA\naya.db  ·  Maia schema via naya_db shim  ·  ~900 KB</text>
+
+  <!-- config -->
+  <rect x="20" y="106" width="222" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="106" width="222" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="131" y="124" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">config</text>
+  <text x="32" y="150" font-size="10" fill="#1f2d3d">key  (PK, text)</text>
+  <text x="32" y="167" font-size="10" fill="#374151">value</text>
+  <text x="32" y="184" font-size="9" fill="#5f8a66">93 rows</text>
+  <text x="32" y="200" font-size="8.5" fill="#9aa5b1">personal.* · naya.telegram_* ·</text>
+  <text x="32" y="213" font-size="8.5" fill="#9aa5b1">file_scan_approved · default_scan_drive</text>
+
+  <!-- llm_chain -->
+  <rect x="266" y="106" width="230" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="266" y="106" width="230" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="381" y="124" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">llm_chain</text>
+  <text x="278" y="150" font-size="10" fill="#1f2d3d">id (PK) · bot_key='personal'</text>
+  <text x="278" y="167" font-size="10" fill="#374151">provider · model · label</text>
+  <text x="278" y="184" font-size="10" fill="#374151">priority · active</text>
+  <text x="278" y="201" font-size="9" fill="#5f8a66">8 rows (DeepSeek-R1 → Claude)</text>
+  <text x="278" y="216" font-size="8.5" fill="#9aa5b1">priority-ordered failover chain</text>
+
+  <!-- conversations -->
+  <rect x="520" y="106" width="244" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="520" y="106" width="244" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="642" y="124" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">conversations</text>
+  <text x="532" y="150" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="532" y="167" font-size="10" fill="#374151">conv_key · role · content</text>
+  <text x="532" y="184" font-size="10" fill="#374151">created_at</text>
+  <text x="532" y="201" font-size="9" fill="#5f8a66">690 rows</text>
+  <text x="532" y="216" font-size="8.5" fill="#9aa5b1">sliding window per conv_key (limit 30)</text>
+
+  <!-- subjects (small) -->
+  <rect x="784" y="220" width="200" height="92" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="784" y="220" width="200" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="884" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">subjects</text>
+  <text x="796" y="264" font-size="10" fill="#1f2d3d">id (PK) · name</text>
+  <text x="796" y="281" font-size="9" fill="#5f8a66">67 rows</text>
+  <text x="796" y="296" font-size="8.5" fill="#9aa5b1">domain seed (inherited)</text>
+
+  <!-- inherited empty Maia tables -->
+  <rect x="20" y="240" width="476" height="72" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.3"/>
+  <rect x="20" y="240" width="476" height="24" rx="8" fill="#9aa5b1"/>
+  <text x="258" y="257" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">inherited Maia tables — empty in Naya (0 rows)</text>
+  <text x="32" y="280" font-size="8.5" fill="#64748b">schools · courses · sections · students_* · assignments · class_materials · guardians ·</text>
+  <text x="32" y="294" font-size="8.5" fill="#64748b">households · platform_identities · org_groups · facts · feature_flags · prompt_audit · request_log</text>
+  <text x="32" y="307" font-size="8" fill="#9aa5b1">Naya shares Maia's full schema but only uses config, llm_chain, conversations, subjects</text>
+
+  <!-- divider -->
+  <line x1="20" y1="336" x2="984" y2="336" stroke="#e2e8f0" stroke-width="1.5"/>
+
+  <!-- ════════ naya_brain.db band ════════ -->
+  <text x="20" y="358" font-size="11" font-weight="700" fill="#0284c7" letter-spacing="1">naya_brain.db  ·  C:\NAYA\naya_brain.db  ·  file-intelligence store  ·  ~2.3 GB</text>
+
+  <!-- naya_scans -->
+  <rect x="20" y="372" width="250" height="150" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="20" y="372" width="250" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="145" y="390" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">naya_scans</text>
+  <text x="32" y="416" font-size="10" fill="#1f2d3d">id  (PK, text)</text>
+  <text x="32" y="433" font-size="10" fill="#374151">scan_type · drives · target_path</text>
+  <text x="32" y="450" font-size="10" fill="#374151">status · started_at · finished_at</text>
+  <text x="32" y="467" font-size="10" fill="#374151">files_seen · groups_found</text>
+  <text x="32" y="484" font-size="10" fill="#374151">bytes_reclaimable · error</text>
+  <text x="32" y="503" font-size="9" fill="#0369a1">178 rows — every scan run</text>
+  <text x="32" y="517" font-size="8.5" fill="#9aa5b1">exact | fuzzy_name · cancellable</text>
+
+  <!-- naya_similarity_groups -->
+  <rect x="300" y="372" width="270" height="178" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="300" y="372" width="270" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="435" y="390" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">naya_similarity_groups</text>
+  <text x="312" y="416" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="312" y="433" font-size="10" fill="#c2185b">scan_id → naya_scans.id</text>
+  <text x="312" y="450" font-size="10" fill="#374151">group_type (exact|fuzzy_name)</text>
+  <text x="312" y="467" font-size="10" fill="#374151">file_hash · file_count</text>
+  <text x="312" y="484" font-size="10" fill="#374151">wasted_bytes · status</text>
+  <text x="312" y="501" font-size="10" fill="#374151">file_paths · file_sizes (JSON)</text>
+  <text x="312" y="520" font-size="9" fill="#0369a1">~2,717,939 rows</text>
+  <text x="312" y="535" font-size="8.5" fill="#9aa5b1">ON DELETE CASCADE from scans · idx by type+status</text>
+
+  <!-- FK arrow scans -> similarity_groups -->
+  <line x1="270" y1="447" x2="300" y2="438" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+
+  <!-- naya_folder_insights -->
+  <rect x="600" y="372" width="240" height="120" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="600" y="372" width="240" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="720" y="390" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">naya_folder_insights</text>
+  <text x="612" y="416" font-size="10" fill="#1f2d3d">folder_path (key)</text>
+  <text x="612" y="433" font-size="10" fill="#374151">counts · sizes · types</text>
+  <text x="612" y="450" font-size="10" fill="#374151">age range · generated_at</text>
+  <text x="612" y="469" font-size="9" fill="#0369a1">1 row · 24h cache</text>
+  <text x="612" y="483" font-size="8.5" fill="#9aa5b1">built from FileHQ index (read-only)</text>
+
+  <!-- naya_intents -->
+  <rect x="20" y="540" width="250" height="124" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="20" y="540" width="250" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="145" y="558" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">naya_intents</text>
+  <text x="32" y="584" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="32" y="601" font-size="10" fill="#374151">intent_type · status (deferred)</text>
+  <text x="32" y="618" font-size="10" fill="#374151">message · follow_up_at</text>
+  <text x="32" y="637" font-size="9" fill="#0369a1">0 rows (none pending)</text>
+  <text x="32" y="651" font-size="8.5" fill="#9aa5b1">deferral + reminder capture</text>
+
+  <!-- naya_plans / plan_items -->
+  <rect x="300" y="540" width="200" height="124" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="300" y="540" width="200" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="400" y="558" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">naya_plans</text>
+  <text x="312" y="584" font-size="10" fill="#1f2d3d">id (PK) · conv_key</text>
+  <text x="312" y="601" font-size="10" fill="#374151">trigger_message · status</text>
+  <text x="312" y="618" font-size="9" fill="#0369a1">0 rows</text>
+  <text x="312" y="633" font-size="8.5" fill="#9aa5b1">advisor cleanup plans</text>
+  <text x="312" y="650" font-size="8.5" fill="#9aa5b1">+ naya_plan_items (members)</text>
+
+  <!-- naya_operations -->
+  <rect x="530" y="540" width="200" height="124" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="530" y="540" width="200" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="630" y="558" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">naya_operations</text>
+  <text x="542" y="584" font-size="10" fill="#1f2d3d">id (PK) · batch_id</text>
+  <text x="542" y="601" font-size="10" fill="#374151">op · src · dest · status</text>
+  <text x="542" y="618" font-size="9" fill="#0369a1">0 rows</text>
+  <text x="542" y="633" font-size="8.5" fill="#9aa5b1">executor log → undo_last()</text>
+  <text x="542" y="650" font-size="8.5" fill="#9aa5b1">files moved to NAYA_TRASH</text>
+
+  <!-- naya_drives / access / settings -->
+  <rect x="760" y="540" width="224" height="124" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="760" y="540" width="224" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="872" y="558" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">drives · access · settings</text>
+  <text x="772" y="584" font-size="10" fill="#374151">naya_drives — 6 rows</text>
+  <text x="772" y="601" font-size="10" fill="#374151">naya_folder_access — 16 rows</text>
+  <text x="772" y="618" font-size="10" fill="#374151">naya_settings — 11 rows</text>
+  <text x="772" y="637" font-size="8.5" fill="#9aa5b1">watcher thresholds · quiet hours ·</text>
+  <text x="772" y="650" font-size="8.5" fill="#9aa5b1">protected folders / exceptions</text>
+
+  <!-- filehq.db note -->
+  <rect x="20" y="684" width="964" height="56" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.3"/>
+  <text x="32" y="706" font-size="10.5" font-weight="700" fill="#7c5e0a">filehq.db  ·  C:\NAYA\filehq\db\filehq.db  (read-only from Naya)</text>
+  <text x="32" y="724" font-size="9" fill="#92400e">The merged FileHQ engine keeps its own index (files, duplicate_groups, ...). Naya opens it read-only (mode=ro) for folder insights and</text>
+  <text x="32" y="736" font-size="9" fill="#92400e">advisor dupe/old-large queries — it is never written by Naya. FileHQ is documented as its own QI project, not here.</text>
+</svg>

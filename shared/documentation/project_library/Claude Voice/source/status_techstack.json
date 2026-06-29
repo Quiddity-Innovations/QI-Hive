@@ -1,0 +1,62 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the control API, channels, realtime loop, meeting room, and backends", "license": "PSF (open source)", "version": "3.x (C:\\1-AI\\APPS\\PYTHON)"},
+    {"layer": "Control API", "technology": "FastAPI", "role": "Loopback control/health API + brain config UI on :8720 (/health, /version, /info, /config, /brain*, /bridge/health, /say)", "license": "MIT", "version": "see requirements.txt"},
+    {"layer": "Control API", "technology": "Uvicorn", "role": "ASGI server hosting the FastAPI apps (server.py :8720, line_bot.py :8721, meeting_server.py :8722), log_level=warning", "license": "BSD", "version": "see requirements.txt"},
+    {"layer": "Control API", "technology": "Pydantic", "role": "Request models (BrainSet, SayBody) for the control endpoints", "license": "MIT", "version": "(FastAPI dep)"},
+    {"layer": "STT (speech in)", "technology": "faster-whisper", "role": "Local, free speech-to-text for PC voice, LINE/Telegram voice notes, and the meeting room — device=cpu, compute_type=int8 (CUDA DLLs absent in this Windows Python)", "license": "MIT", "version": "model base.en (PC) / base (multilingual channels)"},
+    {"layer": "TTS (Claude speaks)", "technology": "edge-tts (Microsoft neural)", "role": "Claude's MALE voice — en-US-AndrewNeural (EN) / pt-BR-AntonioNeural (deferred); played via ffplay", "license": "GPL-3.0", "version": "see requirements.txt"},
+    {"layer": "TTS fallback", "technology": "Windows SAPI (System.Speech)", "role": "Offline zero-dependency fallback voice (male 'David') when edge-tts/network is unavailable", "license": "Proprietary (OS)", "version": "OS built-in"},
+    {"layer": "Audio I/O", "technology": "sounddevice + soundfile + numpy", "role": "Microphone capture, WAV write, and RMS energy computation for the VAD / barge-in loop", "license": "BSD / BSD / BSD", "version": "see requirements.txt"},
+    {"layer": "Endpointing (VAD)", "technology": "silero-vad / webrtcvad (+ energy VAD)", "role": "Hands-free turn endpointing in the realtime loop; energy VAD is the built-in default (no extra deps), silero/webrtc optional", "license": "MIT / MIT", "version": "see requirements.txt"},
+    {"layer": "Wake word", "technology": "openWakeWord", "role": "Optional 'Hey Claude' gating as an alternative to always-on VAD (listening.mode=wake)", "license": "Apache-2.0", "version": "see requirements.txt"},
+    {"layer": "Media transcode/playback", "technology": "ffmpeg / ffprobe / ffplay", "role": "mp3->m4a (LINE), mp3->OGG/Opus (Telegram), 16k mono WAV for STT, headless playback; resolved via util.py (PATH/WinGet glob)", "license": "LGPL/GPL", "version": "external (on PATH / WinGet)"},
+    {"layer": "Brain — real Claude (primary, FREE)", "technology": "Claude Code CLI (headless `claude -p`)", "role": "The genuine Claude via Renne's subscription token (CLAUDE_CODE_OAUTH_TOKEN); claude_cli backend, model 'sonnet', ~20s/turn, no metered API", "license": "Subscription (Anthropic)", "version": "model sonnet"},
+    {"layer": "Brain — local (default)", "technology": "Ollama", "role": "Local, free, low-latency stand-in 'Ronald' (llama3.1:8b) on the RTX 5080; the always-on default brain", "license": "MIT", "version": "llama3.1:8b"},
+    {"layer": "Brain — cloud (toggleable, off)", "technology": "Anthropic API · OpenRouter", "role": "Optional brains: Anthropic messages API (claude-opus-4-8, disabled) and OpenRouter :free models (key from env or shared maia.db)", "license": "Paid / Free tier", "version": "disabled by default"},
+    {"layer": "Messaging — LINE", "technology": "line-bot-sdk (linebot.v3)", "role": "Signed webhook parsing + messaging/blob APIs for text, audio, and video replies on :8721", "license": "Apache-2.0", "version": "messaging v3"},
+    {"layer": "Messaging — Telegram", "technology": "Telegram Bot API (via requests)", "role": "Outbound long-poll getUpdates + sendMessage/sendVoice/sendVideo — no inbound port, no tunnel", "license": "Telegram ToS", "version": "Bot API"},
+    {"layer": "Meeting room", "technology": "FastAPI WebSocket + edge-tts", "role": "Multi-participant Zoom-style room (:8722): WebSocket roster + shared transcript, per-participant voices, host turn-taking", "license": "MIT", "version": "meeting_server.py"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Renders meeting minutes (and session summaries) as Word .docx", "license": "MIT", "version": "see requirements.txt"},
+    {"layer": "Language detection", "technology": "langdetect", "role": "Per-message language detection for voice selection (currently English-forced)", "license": "Apache-2.0", "version": "optional"},
+    {"layer": "Clipboard / autotype", "technology": "pyperclip + PowerShell SendKeys", "role": "Mode-A push-to-talk: transcript to clipboard or auto-typed into the focused window", "license": "BSD", "version": "see requirements.txt"},
+    {"layer": "Config & Secrets", "technology": "config.json + secrets/claude_voice.env", "role": "All settings live-editable in config.json; secrets (LINE/Telegram tokens, CLAUDE_CODE_OAUTH_TOKEN) in a gitignored .env loaded by backends._load_env", "license": "n/a", "version": "n/a"},
+    {"layer": "Persistence (state files)", "technology": "JSON state files", "role": "data/brain_state.json (active brain), data/line_control.json (owner controls), data/bridge_health.json — no database", "license": "n/a", "version": "n/a"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel + Task Scheduler", "role": "QI_ClaudeVoice* services (Line/Telegram/Tunnel/Control) + tunnel claudevoice.quiddityinnovations.com + daily meeting task + hourly bridge check", "license": "Open source / Cloudflare", "version": "nssm at C:\\QIH\\engine\\bin"},
+    {"layer": "Roadmap — natural voice", "technology": "LiveKit + Kokoro-82M + smart-turn-v3", "role": "Planned spine for low-latency, interruptible voice and the Zoom-like screen-share UI (Phases 1-2)", "license": "Apache-2.0 / open", "version": "planned"}
+  ],
+  "descriptions": [
+    {
+      "title": "Free real Claude via the headless CLI — the heart of the project",
+      "body": "Claude Voice's defining choice is how it reaches the genuine Claude without a per-message bill. backends.stream_claude_cli spawns `claude -p --output-format text --no-session-persistence --model sonnet`, feeds the conversation over STDIN, and runs in a neutral temp-dir cwd so no project CLAUDE.md is auto-loaded each turn. Crucially it does NOT pass --bare, because --bare would force the metered ANTHROPIC_API_KEY; instead it relies on a subscription OAuth token (CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`, stored gitignored). The trade-off is latency: full agent startup costs ~20s per turn, which is fine for message surfaces but slow for live voice — so the roadmap adds a fast paid Haiku backend for conversation while keeping the free CLI for heavy work."
+    },
+    {
+      "title": "Pluggable, toggleable brains with graceful fallback",
+      "body": "backends.py defines four streamers (ollama, claude_cli, anthropic, openrouter) behind a uniform stream_reply contract that yields ('__provider__', name) then (name, chunk). enabled_chain orders the active provider first, then config 'order', among only the enabled ones. If a provider raises, stream_reply logs it and tries the next — it raises only when every enabled backend fails. This is Law 3 (degrade, never crash) made concrete: nothing about which AI answers is hardcoded; flip an 'enabled' flag in config.json to add or remove a brain."
+    },
+    {
+      "title": "The dual-brain router — Claude vs Ronald, kept honest",
+      "body": "brain.py runs two NAMED brains: 'Claude' (engine claude_cli, the real me, voice Andrew) and 'Ronald' (engine ollama, the local stand-in, voice Brian). Ronald carries an explicit anti-hallucination system prompt — he must admit he is Ronald, has no access to Renne's calendar/projects/files, and must never invent facts. This separation was the fix for a 2026-06-21 incident where a local model impersonating Claude invented a meeting and a wrong project list. The active brain is switchable by config (default + hard-set lock) OR by name in chat ('Claude...' wakes the real me; 'Ronald, take a break' brings me back), persists in data/brain_state.json, and is shared across the PC loop, LINE, Telegram, the meeting room, and the :8720 UI. Address matching tolerates Whisper mishearings (cloud/claud/clawed...) via homophone terms plus an edit-distance-1 fuzzy fallback."
+    },
+    {
+      "title": "Local-first, free by default",
+      "body": "Speech-to-text is always local (faster-whisper on-device), and the default brain is local Ollama on the RTX 5080 — so the assistant runs at zero marginal cost with no cloud dependency. Cloud TTS (edge-tts) degrades to offline Windows SAPI, and the GPU path degrades to CPU int8 Whisper. faster-whisper is pinned to CPU because the CUDA cublas/cuDNN DLLs are absent from this Windows Python; the LiveKit rebuild restores CUDA STT for low latency."
+    },
+    {
+      "title": "Streaming TTS with barge-in",
+      "body": "The realtime loop (realtime.py) doesn't wait for a whole answer before speaking. speak_stream consumes the brain's token stream, flushes each complete sentence to edge-tts, and plays it via ffplay as it arrives — so Claude starts talking after the first sentence. play_interruptible watches microphone RMS during playback and terminates ffplay on sustained user speech (barge-in), cancelling the rest. Barge-in is OFF by default because, without headphones, the mic hears Claude's own voice and would cut him off; it is re-enabled with a raised RMS threshold for headphone use."
+    },
+    {
+      "title": "Channels as adapters over one brain",
+      "body": "LINE (signed FastAPI webhook on :8721, public via Cloudflare tunnel), Telegram (outbound long-poll, no open port), and the meeting room (:8722 WebSocket) are thin adapters over the same backends + brain core. Each converts its own media to and from the common text form: inbound audio is transcoded with ffmpeg and transcribed with Whisper; outbound replies are synthesised with edge-tts (m4a for LINE, OGG/Opus for Telegram) and gated by modality.py, which decides text vs voice vs video per reply. The owner gets the full dual-brain assistant and binding controls; guests get a sandboxed social-only face."
+    },
+    {
+      "title": "Persistence model — services, a task, and self-healing",
+      "body": "After an outage where session-launched bots died, persistence was rebuilt on Windows infrastructure. LINE, Telegram, the Cloudflare tunnel, and the brain-control API run as always-on NSSM services (QI_ClaudeVoice*), surviving reboots. The meeting room runs via a daily 08:00 scheduled task (QI_ClaudeVoiceMeeting_8AM) launched through conhost --headless wrapping a .bat (not pythonw, which crashed on null stdout) so no console window pops. An hourly task (QI_ClaudeVoiceBridgeCheck) probes the real-Claude path end to end, writes data/bridge_health.json, and alerts Renne via the Tasuke LINE notifier on failure. Configuration and small state live in JSON files — there is no database."
+    },
+    {
+      "title": "The road to LiveKit and Voice Dispatch",
+      "body": "Research (MASTER_PLAN.md, approved 2026-06-21) selected LiveKit as the single open-source spine that satisfies natural voice AND a Zoom-like screen-share interface with one Claude agent. The mission was also re-framed: Claude Voice becomes a VOICE DISPATCH console — Renne speaks an instruction, it is classified and filed as a QI Hive dispatch (POST :9011/api/dispatch, reusing the existing CoWork queue rather than building a parallel layer), executed by headless `claude -p` + hive agents (free), and reported back by voice. Two net-new pieces are needed: a persistent dispatch executor and a notification path, since the existing apply pipeline only runs allowlisted mechanical fixes and there is no push-back today."
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+[
+  {
+    "category": "Convert to PDF",
+    "features": [
+      {
+        "name": "Bulk Office conversion",
+        "description": "Turn whole folders of Word, Excel, and PowerPoint files into clean PDFs in one run.",
+        "status": "live",
+        "notes": "Uses installed Microsoft Office (COM) when present."
+      },
+      {
+        "name": "Images and text to PDF",
+        "description": "Convert JPG/PNG/TIFF images and plain text files into PDF.",
+        "status": "live"
+      },
+      {
+        "name": "Markdown to PDF",
+        "description": "Render Markdown into a styled PDF (plain-text fallback if Word is not installed).",
+        "status": "live",
+        "notes": "Styled rendering uses Word; without Word, Markdown converts as plain text."
+      },
+      {
+        "name": "Drop-folder workflow",
+        "description": "Drop files into the input folder, click Run, collect results from the output folder.",
+        "status": "live"
+      },
+      {
+        "name": "Scan paper to PDF",
+        "description": "Capture from a flatbed or document-feed scanner directly into AutoPDF.",
+        "status": "live",
+        "notes": "TWAIN and network (ESCL) scanners via NAPS2; native Windows (WIA) devices supported too."
+      }
+    ]
+  },
+  {
+    "category": "Split a stack into documents",
+    "features": [
+      {
+        "name": "Rule-based splitting",
+        "description": "Cut one big PDF into per-document files using zones, text patterns, bookmarks, or page ranges.",
+        "status": "live"
+      },
+      {
+        "name": "Visual Zone Mapper",
+        "description": "Draw boxes on the page to mark where the cut points and capture areas are; preview live.",
+        "status": "live",
+        "notes": "Four view modes: modal overlay, new tab, popup window, and split view."
+      },
+      {
+        "name": "AI-suggested boundaries",
+        "description": "Ask the local AI to propose where one document ends and the next begins.",
+        "status": "live",
+        "notes": "Optional; requires a local Ollama model."
+      },
+      {
+        "name": "Index built during the split",
+        "description": "While splitting, capture fields from each section straight into a CSV/XLSX index.",
+        "status": "live"
+      }
+    ]
+  },
+  {
+    "category": "Extract fields with templates",
+    "features": [
+      {
+        "name": "Design once, apply to a folder",
+        "description": "Build an extraction template on a sample document, then run it across an entire folder.",
+        "status": "live"
+      },
+      {
+        "name": "Three ways to capture a field",
+        "description": "Fixed zone, find-by-pattern (regex), or let the local AI find the value.",
+        "status": "live"
+      },
+      {
+        "name": "Tagged (label-following) fields",
+        "description": "Mark a label such as 'Invoice No.' and the value is pulled from beside it on every document, even when its position shifts.",
+        "status": "live"
+      },
+      {
+        "name": "AI field proposal",
+        "description": "The local AI suggests a complete set of fields, patterns, and a filename rule from a sample.",
+        "status": "live",
+        "notes": "Optional; Ollama-backed. Also proposes reusable patterns for the library."
+      },
+      {
+        "name": "Auto-rename on extract",
+        "description": "Rename each output file from the values it extracted using a {field} pattern.",
+        "status": "live"
+      },
+      {
+        "name": "Value formatting",
+        "description": "Normalize captured values: currency, dates, numbers, phone, upper/lower/trim.",
+        "status": "live"
+      }
+    ]
+  },
+  {
+    "category": "Catalog and index",
+    "features": [
+      {
+        "name": "Index Creator",
+        "description": "Build a CSV/XLSX catalog of every file in a folder tree, with columns from folders, filename parts, and in-PDF content.",
+        "status": "live"
+      },
+      {
+        "name": "Saved recipes",
+        "description": "Reusable Basic / Mid / Complex index recipes so a run is one click.",
+        "status": "live",
+        "notes": "Ships with the BU demo Basic/Mid/Complex recipes."
+      },
+      {
+        "name": "Config-driven date formatting",
+        "description": "Normalize raw dates to a chosen format (demo presets output MM/DD/YYYY).",
+        "status": "partial",
+        "notes": "Works via the recipe; an in-UI date-format picker is still to come."
+      },
+      {
+        "name": "OnBase XML Index export",
+        "description": "Emit a Hyland OnBase XML Index DIP file alongside CSV/XLSX for direct ingestion.",
+        "status": "live",
+        "notes": "Schema-accurate to OnBase Foundation 24.1; verified on the 30-file demo set."
+      }
+    ]
+  },
+  {
+    "category": "Automate",
+    "features": [
+      {
+        "name": "Workflow chaining",
+        "description": "Chain steps: Split, Convert, AI re-group, Filter, Rename, Remove blanks, JS script.",
+        "status": "partial",
+        "notes": "Functional; the single-threaded engine can stall if a Preview and Run overlap."
+      },
+      {
+        "name": "Scheduler",
+        "description": "Run a saved Workflow on a watch folder on a cron-style schedule.",
+        "status": "partial",
+        "notes": "Built; hardening and run-isolation are ongoing."
+      }
+    ]
+  },
+  {
+    "category": "Privacy, deployment & access",
+    "features": [
+      {
+        "name": "Local-only, no cloud",
+        "description": "All conversion, OCR, splitting, and extraction run on your machine. No telemetry.",
+        "status": "live"
+      },
+      {
+        "name": "One-click portable launcher",
+        "description": "AutoPDF.exe starts the server and opens the browser; nothing is installed or registered.",
+        "status": "live"
+      },
+      {
+        "name": "Opt-in update checks",
+        "description": "Optionally check GitHub/GitLab/Bell-SW for engine version strings only — never document content.",
+        "status": "live",
+        "notes": "Off by default in settings."
+      },
+      {
+        "name": "PIN-gated public sharing",
+        "description": "Optionally reach AutoPDF over a Cloudflare tunnel, protected by an access PIN.",
+        "status": "live",
+        "notes": "Public at autopdf.quiddityinnovations.com; health probes stay open."
+      },
+      {
+        "name": "Turn AI off entirely",
+        "description": "A Settings toggle greys out all AI surfaces for a cleaner UI when Ollama is not used.",
+        "status": "live"
+      }
+    ]
+  }
+]

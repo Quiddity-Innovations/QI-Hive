@@ -1,0 +1,53 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for API, UI, engine pipeline, and the standalone proof-of-concept", "license": "PSF (open source)", "version": "3.11"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API on port 8501 — generation jobs, status polling, download, lyric extraction, QI contract endpoints", "license": "MIT", "version": ">=0.115"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (started from main.py in a daemon thread)", "license": "BSD", "version": ">=0.30 [standard]"},
+    {"layer": "API Server", "technology": "python-multipart", "role": "Parses multipart/form-data for the audio + reference-image uploads on /api/generate", "license": "Apache 2.0", "version": ">=0.0.9"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Request/response model validation under FastAPI", "license": "MIT", "version": ">=2.7"},
+    {"layer": "UI", "technology": "Gradio", "role": "Single-page operator console on port 7841 — upload, style picker, reference photo, live progress log, video player (purple/zinc Base theme)", "license": "Apache 2.0", "version": ">=5.0"},
+    {"layer": "UI / HTTP", "technology": "requests", "role": "UI -> API calls and the event-polling loop; also used by the lyric analyzer to call Ollama", "license": "Apache 2.0", "version": ">=2.31"},
+    {"layer": "AI — Scene Direction", "technology": "Ollama (qwen3:8b)", "role": "Local LLM that turns each lyric section into a visual scene prompt + mood + colour palette (think:false, JSON-array output)", "license": "MIT runtime / Apache 2.0 model", "version": "qwen3:8b"},
+    {"layer": "AI — Image Generation", "technology": "Stable Diffusion XL Base 1.0 (diffusers)", "role": "Generates one still per scene (1024x576, 30 steps, fp16)", "license": "CreativeML OpenRAIL++-M", "version": "sdxl-base-1.0"},
+    {"layer": "AI — Character Consistency", "technology": "IP-Adapter (h94/IP-Adapter)", "role": "Conditions SDXL on a reference photo so the same faces/style persist across every scene (ip-adapter_sdxl.bin, scale configurable)", "license": "Apache 2.0", "version": "ip-adapter_sdxl"},
+    {"layer": "AI — Video Generation", "technology": "Stable Video Diffusion XT (diffusers)", "role": "Animates each still into 25-frame motion video (img2vid-xt, fp16, model CPU offload)", "license": "Stability AI Community", "version": "svd-img2vid-xt"},
+    {"layer": "ML Runtime", "technology": "PyTorch (CUDA cu128)", "role": "GPU tensor backend for SDXL/SVD/Whisper; cu128 build required for the RTX 5080 (installed before other deps)", "license": "BSD", "version": "2.11.0+cu128"},
+    {"layer": "ML Runtime", "technology": "diffusers + transformers + accelerate", "role": "Loads and runs the SDXL/SVD pipelines and IP-Adapter weights", "license": "Apache 2.0", "version": "diffusers>=0.32 / transformers>=4.44 / accelerate>=0.33"},
+    {"layer": "AI — Lyrics Transcription", "technology": "OpenAI Whisper", "role": "Transcribes the audio into lyrics when no embedded tags are found (models base/small/medium/large)", "license": "MIT", "version": ">=20231117"},
+    {"layer": "Audio Analysis", "technology": "librosa", "role": "Duration + MFCC/agglomerative structural segmentation to place scene boundaries", "license": "ISC", "version": ">=0.10"},
+    {"layer": "Audio Analysis", "technology": "soundfile · mutagen", "role": "Audio I/O; mutagen also reads ID3/USLT/SYLT lyric tags and song metadata", "license": "BSD / GPL-2.0", "version": "soundfile>=0.12 / mutagen>=1.47"},
+    {"layer": "Imaging", "technology": "Pillow · imageio · imageio-ffmpeg", "role": "Image handling for SDXL output and frame export; imageio-ffmpeg bundles an FFmpeg binary for diffusers export_to_video", "license": "HPND / BSD", "version": "Pillow>=10 / imageio>=2.34"},
+    {"layer": "Video Assembly", "technology": "FFmpeg (subprocess)", "role": "Concatenates clips, muxes the original audio, scales/loops to duration, and burns SRT subtitles via the subtitles filter", "license": "LGPL/GPL", "version": "system binary"},
+    {"layer": "Video Assembly (PoC)", "technology": "MoviePy", "role": "Standalone proof-of-concept renderer: Ken Burns zoom, crossfades, lower-third captions, placeholder fallback (make_forro_video.py)", "license": "MIT", "version": "v2 API (with_duration/with_effects)"},
+    {"layer": "Image Gen (PoC)", "technology": "ComfyUI (HTTP API)", "role": "External SDXL frame generator the standalone track drives over urllib to produce scene_##.png (not yet run)", "license": "GPL-3.0", "version": "core nodes"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads config/m2v.json and an optional secrets/m2v.env (currently empty — no external keys needed)", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Persistence", "technology": "In-memory dict (no database)", "role": "Jobs live in a process-lifetime JOBS dict; outputs are files under data/output and data/scenes. No DB yet (planned)", "license": "n/a", "version": "n/a"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_M2V Windows service (AppDirectory C:\\M2V) + named tunnel qi-m2v -> m2v.quiddityinnovations.com (installers present; service not yet registered)", "license": "Public domain / Cloudflare", "version": "nssm via C:\\QIH\\engine\\bin"}
+  ],
+  "descriptions": [
+    {
+      "title": "The five-stage local pipeline",
+      "body": "M2V is a linear generator pipeline, not a service mesh. engine/pipeline.py:run() drives five stages and yields a progress dict after each: (1) Ollama writes a scene prompt per lyric section, (2) librosa segments the audio into scene time windows, (3) SDXL renders a still per scene (optionally IP-Adapter-conditioned on a reference photo), (4) Stable Video Diffusion animates each still, (5) FFmpeg concatenates the clips, overlays the original song, and burns the lyrics as subtitles. Everything runs on the local GPU — no cloud generation API is involved. Because run() is a generator, the API can stream live progress to the UI without any extra machinery."
+    },
+    {
+      "title": "Why local-only, and why it is free",
+      "body": "Every model in the chain is open-weight and runs on the owner's machine: Ollama (qwen3:8b) for direction, Stable Diffusion XL for stills, Stable Video Diffusion for motion, Whisper for lyric transcription. There is no per-render cloud bill and the song never leaves the machine — important for unreleased music. The trade-off is hardware: the pipeline is tuned for an RTX 5080 (16 GB) and requires the cu128 PyTorch build (installed before everything else, per requirements.txt and setup_venv.py)."
+    },
+    {
+      "title": "VRAM choreography: SDXL and SVD take turns",
+      "body": "SDXL (~8 GB) and Stable Video Diffusion (~8 GB) cannot both sit in 16 GB of VRAM comfortably, so VideoGenerator loads and unloads them alternately. For each scene it loads SDXL, makes the image, then explicitly unloads SDXL and empties the CUDA cache before loading SVD to animate. SVD also uses enable_model_cpu_offload(). This keeps the peak within budget at the cost of per-scene load time — the dominant reason a 10-scene video takes ~20-30 minutes."
+    },
+    {
+      "title": "Character consistency via IP-Adapter",
+      "body": "A recurring problem with AI music videos is that the cast changes face every shot. M2V's answer is optional IP-Adapter conditioning: upload one reference photo and SDXL is steered toward that face/style on every scene via load_ip_adapter(h94/IP-Adapter, ip-adapter_sdxl.bin) with a user-set scale (ip_scale, default 0.6 — 0 ignores the photo, 1 is strict). Without a reference photo the IP-Adapter path is skipped and SDXL runs plain text-to-image."
+    },
+    {
+      "title": "Graceful degradation everywhere",
+      "body": "For an early tool, M2V is unusually defensive. If Ollama is offline the lyric analyzer falls back to simple prompts built from the lyrics text. If librosa segmentation fails it falls back to an even time split. Duration detection tries librosa, then mutagen, then ffprobe, then assumes 3 minutes. In the standalone track, a missing scene image becomes a labelled placeholder clip and the render continues. The principle: produce *something* watchable rather than crash mid-render."
+    },
+    {
+      "title": "Two tracks, and the drift to clean up",
+      "body": "M2V holds the product pipeline (engine/api/ui, SDXL+SVD+FFmpeg) alongside a standalone proof-of-concept (make_forro_video.py with MoviePy + generate_frames.py driving an external ComfyUI, fed by scenes.json). The PoC is what actually rendered a full video so far (forro_anime_mv.mp4, with placeholder frames). There is also config drift: config/m2v.json still lists sdxl-turbo and CogVideoX backends the live engine no longer uses. Consolidating the tracks and reconciling the config is the top hygiene task for the project."
+    }
+  ]
+}

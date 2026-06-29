@@ -1,0 +1,51 @@
+{
+  "categories": [
+    {
+      "name": "QI Ecosystem Integration",
+      "priority": "high",
+      "items": [
+        {"title": "QI Brain — session logging", "detail": "Register each NEXUS synthesis in the Brain DB via qi.log_session(): prompt, providers used, routing mode, elapsed time, judge verdict. Gives the ecosystem cross-project visibility into what NEXUS is being asked. Not yet wired."},
+        {"title": "QI Brain — decision logging", "detail": "Log significant orchestration decisions (which routing mode won, judge best-pick, provider failures, model swaps) via qi.log_decision() so model-selection learning is shared across projects."},
+        {"title": "Maia synthesis routing", "detail": "Wire Maia's LLM chain to optionally route complex queries to POST /synthesize for multi-AI synthesis. Client stub exists at C:\\QI\\nexus_client.py — make it a selectable routing mode in Maia."},
+        {"title": "QI Standards compliance audit", "detail": "Run qi_validator.py --project nexus. Reconcile the legacy api/main.py CORS import path (C:\\QI\\ECOSYSTEM) with the migrated C:\\QIH\\ecosystem location, confirm folder layout, and refresh QI_Service_Registry.md entries."}
+      ]
+    },
+    {
+      "name": "Intelligence & Cost Awareness",
+      "priority": "medium",
+      "items": [
+        {"title": "Per-session cost & token tracking", "detail": "Record per-provider token usage and estimated cost for each synthesis. Surface in History and feed QI Brain usage stats. No cost tracking exists at the NEXUS level today."},
+        {"title": "Adaptive provider selection", "detail": "Use Bench history (GET /bench/recommend) to auto-route a query to the cheapest competent provider for its task class — mirroring Maia's model-delegation policy and avoiding burning premium models on trivial prompts."},
+        {"title": "Re-enable / rotate cloud providers", "detail": "Gemini is disabled after free-tier quota exhaustion (replaced by local gemma4:26b). Add a quota-aware health check that auto-disables a provider on repeated 429s and re-enables on renewal, instead of manual config edits."},
+        {"title": "Scout relevance & novelty scoring", "detail": "Score digest items by relevance and novelty (the llm_scores / scout_items.score columns already exist but are unused) and surface highest-signal items first rather than reverse-chronological."}
+      ]
+    },
+    {
+      "name": "Bench & Evaluation",
+      "priority": "medium",
+      "items": [
+        {"title": "Scheduled regression runs", "detail": "Register Bench suites as recurring scheduled jobs so every provider is re-benchmarked nightly/weekly and score drift is caught automatically. Build on the existing scheduled_jobs + bench_provider_runs tables."},
+        {"title": "Use-case-tagged recommendations", "detail": "Bench cases carry a category; extend recommend() to rank providers per category (code, reasoning, summarization) so /bench/recommend?use_case=code returns the right model, not just the global best."},
+        {"title": "Expand the starter suite", "detail": "Grow the seeded 5-case Starter Regression suite toward the originally envisioned 200+ cases across chat/code/reasoning/translation/sentiment, tagged by target QI app."}
+      ]
+    },
+    {
+      "name": "Release Hardening",
+      "priority": "high",
+      "items": [
+        {"title": "API authentication", "detail": "Add Bearer-token auth to the FastAPI layer. NEXUS is currently single-user / local-only behind a Cloudflare tunnel — auth is required before any wider exposure."},
+        {"title": "Rate limiting & per-user isolation", "detail": "Throttle requests and isolate sessions per caller so one client can't exhaust provider quotas or read another's history."},
+        {"title": "Regression test coverage", "detail": "Expand regression_test.py / tests/test_smoke.py to cover all routing modes, both judge modes, a full Scout cycle, and provider-failure paths; wire into a nightly run."}
+      ]
+    },
+    {
+      "name": "Operations & Observability",
+      "priority": "low",
+      "items": [
+        {"title": "Session table growth management", "detail": "5,000+ sessions and 13,000+ scout_items are accumulating. Add a retention/archival policy (the bulk-delete endpoint exists) and periodic VACUUM to keep nexus.db (currently ~24 MB) lean."},
+        {"title": "Provider DB seed vs config drift", "detail": "The providers DB table still holds the original seed (e.g. 'ChatGPT Plus', no gemma4) while providers.json is the live source. Reconcile or retire the DB seed to avoid confusion."},
+        {"title": "Health dashboard endpoint", "detail": "Add a richer /status-style endpoint exposing live provider reachability, Scout last-run times, RAG entry count, and scheduler job list for the QI Hive Mission Control board."}
+      ]
+    }
+  ]
+}

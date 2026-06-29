@@ -1,0 +1,144 @@
+{
+  "intro": "Excerpts from the live MQ source (C:\\MQ). This is an early-stage project: the publishing pipeline (Kaze RSS -> Fumi compose -> Fumi publish) is complete in code but has not yet been run, there are no Meta credentials, and there is no database. The snippets below are the real code behind each capability; where a capability is built-but-unrun or planned, the explanation says so.",
+  "sections": [
+    {
+      "category": "Entry Point & API (FastAPI :8500)",
+      "snippets": [
+        {
+          "title": "Launcher — API thread + UI main thread",
+          "feature": "main.py launcher",
+          "file": "main.py",
+          "language": "python",
+          "code": "def start_api():\n    import uvicorn\n    logger.info(\"Starting MQ API on http://127.0.0.1:8500\")\n    uvicorn.run(\"api.main:app\", host=\"127.0.0.1\", port=8500, log_level=\"warning\")\n\ndef start_ui():\n    from ui.app import build_ui\n    logger.info(\"Starting MQ UI on http://127.0.0.1:7840\")\n    build_ui().launch(server_port=7840, server_name=\"127.0.0.1\", quiet=True)\n\nif __name__ == \"__main__\":\n    threading.Thread(target=start_api, daemon=True).start()\n    start_ui()",
+          "explanation": "The whole app boots from here: the FastAPI API runs on 8500 in a daemon thread while the Gradio UI runs on 7840 in the main thread. data/logs/mq.log shows this ran exactly once (2026-06-10) — there is no NSSM service, so MQ only runs while someone keeps Start_MQ.bat open. Making this a persistent QI_MQ* service is a high-priority next step."
+        },
+        {
+          "title": "QI Module Interface Contract",
+          "feature": "QI contract endpoints (/health, /version, /info)",
+          "file": "api/main.py",
+          "language": "python",
+          "code": "@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\"}\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"mq\", \"version\": \"0.1.0\", \"status\": \"development\"}\n\n@app.get(\"/info\")\nasync def info():\n    try:\n        sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n        from qi_registry import QI\n        return QI.project(\"mq\")\n    except Exception:\n        return {\"project\": \"mq\", \"name\": \"MQ\"}\n\n# ── Add your endpoints below this line ───────────────────",
+          "explanation": "These three endpoints are the entire API surface so far — they implement the QI Module Interface Contract so the Hive dashboard can monitor MQ. /info reads the live registry entry. The trailing comment is literal: no business endpoints exist yet. This is the honest shape of a 'new' project — the contract is in, the features are not."
+        },
+        {
+          "title": "Gradio UI shell — health ping",
+          "feature": "Gradio UI shell",
+          "file": "ui/app.py",
+          "language": "python",
+          "code": "def check_status():\n    try:\n        r = httpx.get(f\"{API_BASE}/health\", timeout=3)\n        return \"Online\" if r.status_code == 200 else \"Error\"\n    except Exception:\n        return \"Offline\"\n\ndef build_ui():\n    with gr.Blocks(title=\"MQ — Quiddity Innovations\") as demo:\n        gr.Markdown(\"# MQ\\n*Quiddity Innovations*\")\n        with gr.Tab(\"Status\"):\n            status_btn = gr.Button(\"Check Status\")\n            status_out = gr.Textbox(label=\"API Status\")\n            status_btn.click(fn=check_status, outputs=status_out)",
+          "explanation": "The UI is a placeholder: a Status tab whose only function pings the API's /health endpoint and reports Online/Offline/Error, plus an About tab. There is no persona surface, content editor, or approval queue yet — those arrive with the gate and the Hybrid migration."
+        }
+      ]
+    },
+    {
+      "category": "Config & Secrets",
+      "snippets": [
+        {
+          "title": "Config loader — JSON + .env, cached",
+          "feature": "Config loader",
+          "file": "shared/config.py",
+          "language": "python",
+          "code": "ROOT = Path(__file__).parent.parent\nCONFIG_PATH = ROOT / \"config\" / \"mq.json\"\nSECRETS_PATH = ROOT / \"secrets\" / \"mq.env\"\n_cache = None\n\ndef load_config() -> dict:\n    global _cache\n    if _cache: return _cache\n    if SECRETS_PATH.exists():\n        load_dotenv(SECRETS_PATH)\n    with open(CONFIG_PATH, \"r\", encoding=\"utf-8\") as f:\n        _cache = json.load(f)\n    return _cache",
+          "explanation": "Every agent calls load_config() to get its settings. It loads secrets/mq.env into the environment (if present) and caches config/mq.json. There is no database — config/mq.json IS the configuration store, and secrets live only in the .env, which is currently unpopulated (no Meta or Cloudflare keys)."
+        },
+        {
+          "title": "Config-driven LLM + RSS sources",
+          "feature": "Runtime config (LLM chain, RSS feeds)",
+          "file": "config/mq.json",
+          "language": "json",
+          "code": "\"llm\": {\n  \"primary\": \"cloudflare_workers_ai\",\n  \"primary_model\": \"@cf/qwen/qwen2.5-7b-instruct-fast\",\n  \"fallback\": \"ollama\",\n  \"fallback_model\": \"qwen3:8b\",\n  \"fallback_url\": \"http://localhost:11434\"\n},\n\"kaze\": {\n  \"max_items_per_source\": 5,\n  \"ai_sources\": [\n    {\"name\": \"Anthropic Blog\", \"rss\": \"https://www.anthropic.com/news/rss.xml\"},\n    {\"name\": \"Google DeepMind\", \"rss\": \"https://deepmind.google/blog/rss.xml\"},\n    {\"name\": \"HuggingFace Blog\", \"rss\": \"https://huggingface.co/blog/feed.xml\"}\n  ]\n}",
+          "explanation": "The LLM model names and the RSS source lists are data, not code — Kaze and Fumi read them from here. Swapping the post-generation model or adding a news feed is a config edit, no code change. The same file defines the persona tone, the per-stream posting cadence, and the data/posts directory layout."
+        }
+      ]
+    },
+    {
+      "category": "Kaze — Perception (RSS senses)",
+      "snippets": [
+        {
+          "title": "Fetch + normalise one RSS feed",
+          "feature": "RSS digest scraper",
+          "file": "agents/kaze/kaze_mq.py · fetch_feed()",
+          "language": "python",
+          "code": "feed = feedparser.parse(rss_url)\nitems = []\nfor entry in feed.entries[:max_items]:\n    title = entry.get(\"title\", \"\").strip()\n    link = entry.get(\"link\", \"\").strip()\n    summary = entry.get(\"summary\", entry.get(\"description\", \"\")).strip()\n    summary = re.sub(r\"<[^>]+>\", \"\", summary).strip()[:500]\n    if title and link:\n        items.append({\n            \"id\": item_id(link), \"source\": name,\n            \"title\": title, \"url\": link, \"summary\": summary,\n            \"published\": entry.get(\"published\", entry.get(\"updated\", \"\")),\n            \"fetched_at\": datetime.datetime.utcnow().isoformat() + \"Z\"})",
+          "explanation": "Kaze is Maia's senses. For each source it parses the RSS, strips HTML from the summary and caps it at 500 chars, and normalises every entry into a common dict with a stable id (md5 of the URL). run_digest() runs every source for a stream, dedupes by id, sorts newest-first, and writes data/digests/kaze-<stream>-digest.json. The code is complete but has never run — no digest files exist on disk yet."
+        }
+      ]
+    },
+    {
+      "category": "Fumi — Composer (writing half, will move to maia/voice)",
+      "snippets": [
+        {
+          "title": "Maia's persona prompt",
+          "feature": "Persona prompts",
+          "file": "agents/fumi/fumi_generate_post.py · PERSONA_MAIA",
+          "language": "python",
+          "code": "PERSONA_MAIA = \"\"\"You are Maia Quiddam, a warm and adventurous AI-powered travel and photography enthusiast.\nYour voice is: personal, curious, slightly witty, never corporate.\nYou write in first person as if you personally experienced or discovered this.\nYou end posts with a gentle question or reflection that invites engagement.\nKeep posts between 80-150 words. Use 1-2 emojis max. No hashtags in body (add 3-5 at the end after a line break).\nWrite in English. Occasionally drop a single Portuguese word/phrase naturally.\"\"\"",
+          "explanation": "This inline system prompt is Maia's written voice, distilled from the Persona Bible (warmth, curiosity, first-person, occasional Portuguese). Per the Hybrid architecture (decision D11), composition like this IS Maia, not plumbing, so this prompt + generate_draft() are slated to move out of agents/fumi into maia/voice. The QI-page register (PERSONA_QI) is a second, more professional prompt in the same file."
+        },
+        {
+          "title": "Cloudflare-then-Ollama failover",
+          "feature": "LLM client + failover",
+          "file": "agents/fumi/fumi_generate_post.py · generate_with_llm()",
+          "language": "python",
+          "code": "def generate_with_llm(prompt: str, cfg: dict) -> str:\n    try:\n        logger.info(\"  Trying Cloudflare Workers AI...\")\n        text = call_cloudflare_ai(prompt, cfg)\n        return text\n    except Exception as e:\n        logger.warning(f\"  Cloudflare AI failed: {e} — trying Ollama fallback\")\n    try:\n        text = call_ollama(prompt, cfg)\n        return text\n    except Exception as e:\n        raise RuntimeError(f\"All LLMs failed. Last error: {e}\")",
+          "explanation": "A two-tier, cost-conscious chain: try the free cloud model (Cloudflare Workers AI) first, fall back to a free local Ollama model, and raise only if both fail. Both call_cloudflare_ai and call_ollama are plain urllib POSTs with explicit timeouts. No keys are configured yet, so in the current state the cloud tier would fail immediately and everything depends on a local Ollama being up."
+        },
+        {
+          "title": "Build a draft from a digest item",
+          "feature": "Post generator",
+          "file": "agents/fumi/fumi_generate_post.py · generate_draft()",
+          "language": "python",
+          "code": "persona = PERSONA_MAIA if page == \"maia\" else PERSONA_QI\nprompt = build_prompt(item, persona, stream)\npost_text = generate_with_llm(prompt, cfg)\ndraft_id = f\"{stream}_{page}_{now.strftime('%Y%m%d_%H%M%S')}_{item['id']}\"\nreturn {\n    \"id\": draft_id, \"status\": \"draft\",\n    \"stream\": stream, \"page\": page,\n    \"source_title\": item[\"title\"], \"source_url\": item[\"url\"],\n    \"post_text\": post_text,\n    \"generated_at\": now.isoformat() + \"Z\",\n    \"published_at\": None, \"fb_post_id\": None}",
+          "explanation": "Picks the right persona for the target page, builds the prompt, generates the text, and packages it as a draft dict (status='draft', fb_post_id=None) saved to data/posts/drafts/. The draft carries its source and lifecycle fields so the publisher can fill in published_at + fb_post_id later. Today this writes a file and stops — there is no approval step between this and publishing, which the gate will add."
+        }
+      ]
+    },
+    {
+      "category": "Fumi — Publisher (Facebook Graph API)",
+      "snippets": [
+        {
+          "title": "Post to a Facebook Page feed",
+          "feature": "Facebook Graph publisher",
+          "file": "agents/fumi/fumi_post_facebook.py · post_to_facebook()",
+          "language": "python",
+          "code": "FB_GRAPH_URL = \"https://graph.facebook.com/v19.0\"\n\ndef post_to_facebook(page_id, token, message, link=None):\n    url = f\"{FB_GRAPH_URL}/{page_id}/feed\"\n    params = {\"message\": message, \"access_token\": token}\n    if link:\n        params[\"link\"] = link\n    data = urllib.parse.urlencode(params).encode(\"utf-8\")\n    req = urllib.request.Request(url, data=data, method=\"POST\")\n    req.add_header(\"Content-Type\", \"application/x-www-form-urlencoded\")\n    with urllib.request.urlopen(req, timeout=30) as resp:\n        return json.loads(resp.read().decode(\"utf-8\"))",
+          "explanation": "The one place MQ actually reaches a social network: a POST to the Page /feed edge of the Facebook Graph API (v19.0) with the message, optional link, and the Page access token. get_page_token() resolves the token from secrets/mq.env per target page (maia vs qi). This is the project's launch blocker — there is no Page token, so this code has never been called against the live API."
+        },
+        {
+          "title": "Draft lifecycle — published or failed",
+          "feature": "Draft lifecycle + error capture",
+          "file": "agents/fumi/fumi_post_facebook.py · publish_draft()",
+          "language": "python",
+          "code": "if dry_run:\n    print(f\"[DRY RUN] Would post to '{page}' page:\")\n    print(post_text)\n    return True\ntry:\n    page_id, token = get_page_token(page)\n    result = post_to_facebook(page_id, token, post_text, source_url or None)\n    draft[\"fb_post_id\"] = result.get(\"id\", \"\")\n    draft[\"published_at\"] = datetime.datetime.utcnow().isoformat() + \"Z\"\n    move_draft(fpath, draft, \"published\", cfg)\n    return True\nexcept urllib.error.HTTPError as e:\n    draft[\"error\"] = f\"HTTP {e.code}: {e.read().decode('utf-8','replace')}\"\n    move_draft(fpath, draft, \"failed\", cfg)\n    return False",
+          "explanation": "On success the draft records its fb_post_id + timestamp and is physically moved drafts/ -> published/; on an HTTP or other error the error body is captured and the draft moves to failed/. The --dry-run branch prints the post and returns without ever calling the API — and since the scheduler injects --dry-run for the publish step, dry-run is the only path that can run today without credentials."
+        }
+      ]
+    },
+    {
+      "category": "Scheduler — Heartbeat",
+      "snippets": [
+        {
+          "title": "Named pipelines (weekly / daily)",
+          "feature": "Pipeline orchestrator",
+          "file": "agents/fumi/fumi_scheduler.py · SCHEDULES",
+          "language": "python",
+          "code": "SCHEDULES = {\n    \"maia_weekly\": [\n        {\"label\": \"Kaze travel digest\", \"cmd\": [PYTHON, KAZE, \"--stream\", \"travel\"]},\n        {\"label\": \"Kaze photo digest\",  \"cmd\": [PYTHON, KAZE, \"--stream\", \"photo\"]},\n        {\"label\": \"Fumi travel post\",   \"cmd\": [PYTHON, GENERATE, \"--stream\", \"travel\", \"--page\", \"maia\", \"--count\", \"1\"]},\n        {\"label\": \"Fumi photo post\",    \"cmd\": [PYTHON, GENERATE, \"--stream\", \"photo\",  \"--page\", \"maia\", \"--count\", \"1\"]},\n        {\"label\": \"Fumi publish\",       \"cmd\": [PYTHON, PUBLISH, \"--all-drafts\"]},\n    ],\n    \"qi_daily\": [ ... ],\n}",
+          "explanation": "The heartbeat: each schedule is an ordered list of subprocess steps (fetch -> generate -> publish). maia_weekly runs travel+photo to the Maia page on Saturdays; qi_daily runs AI news to the QI page on weekdays. run_step() runs each and continues even if one fails. setup_task_scheduler.py registers these as schtasks jobs (FumiMaiaWeekly / FumiQIDaily) — but the jobs are not currently registered."
+        }
+      ]
+    },
+    {
+      "category": "Identity & Persona (data, not code)",
+      "snippets": [
+        {
+          "title": "Identity Kit manifest (all placeholders)",
+          "feature": "Locked identity (face / voice / style)",
+          "file": "identity/manifest.json",
+          "language": "json",
+          "code": "{\n  \"identity\": \"Maia Quiddam\",\n  \"soul\": \"docs/PERSONA_BIBLE.md\",\n  \"face\": {\n    \"status\": \"placeholder\",\n    \"reference_images\": [], \"seed\": null, \"embedding\": null,\n    \"notes\": \"Lock canonical references ... fixed seed/embedding so every generated photo AND video is the same Maia.\"\n  },\n  \"voice_spoken\": {\"status\": \"placeholder\", \"provider\": null, \"voice_id\": null},\n  \"voice_written\": \"docs/PERSONA_BIBLE.md\"\n}",
+          "explanation": "The single source of identity truth that keeps every future photo, video, and TTS clip recognisably the same person. Right now every section is status='placeholder' with empty references — the kit exists as a structure but nothing is locked. The architecture insists this be filled BEFORE any media is generated, or each render would be a different Maia and the persona would shatter."
+        }
+      ]
+    }
+  ]
+}

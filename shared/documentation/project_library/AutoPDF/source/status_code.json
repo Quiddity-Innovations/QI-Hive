@@ -1,0 +1,220 @@
+{
+  "intro": "Real excerpts from AutoPDF's PowerShell server, native C# launcher and vanilla-JS front-end — each shows the code that creates a feature.",
+  "sections": [
+    {
+      "category": "Server & Routing",
+      "snippets": [
+        {
+          "title": "HttpListener startup bound to loopback",
+          "feature": "Local-only HTTP server (127.0.0.1:6969)",
+          "file": "Application\\AutoPDF-Server.ps1 · listener bootstrap (~line 5002)",
+          "language": "powershell",
+          "code": "if (-not $RunWorkflow) {\n$listener = New-Object System.Net.HttpListener\n$prefix   = \"http://$($Config.BindAddress):$($AppSettings.port)/\"\n$listener.Prefixes.Add($prefix)\n\ntry {\n    $listener.Start()\n    Write-Host \"\"\n    Write-Host \"AutoPDF server running at $prefix\"\n    ...\n}",
+          "explanation": "A single .NET HttpListener is created with a prefix built from $Config.BindAddress (hard-set to 127.0.0.1) and the configured port (default 6969). Because it binds only to loopback, the whole tool is reachable solely from the local machine — the foundation of AutoPDF's local-first, no-open-port promise. Worker invocations (-RunWorkflow) skip this block so they never fight over the port."
+        },
+        {
+          "title": "Single-threaded request loop + regex route dispatch",
+          "feature": "~80 /api/* route surface",
+          "file": "Application\\AutoPDF-Server.ps1 · main accept loop + switch -Regex $path (~line 5899)",
+          "language": "powershell",
+          "code": "while ($listener.IsListening) {\n    $ctx  = $listener.GetContext()\n    $req  = $ctx.Request\n    $res  = $ctx.Response\n    $path = $req.Url.AbsolutePath\n    ...\n    try {\n        switch -Regex ($path) {\n            '^/health$'  { Send-Json $res @{ status = 'ok'; service = 'autopdf'; port = $AppSettings.port } }\n            '^/version$' { Send-Json $res @{ name = 'AutoPDF'; project_id = 'autopdf'; version = $AutoPdfVersion } }\n            '^/$|^/index\\.html$|^/AutoPDFTool\\.html$' { Send-File $res $indexHtml \"text/html; charset=utf-8\" }\n            '^/app\\.js$'         { Send-File $res $appJs     \"application/javascript\" }\n            ...\n        }\n    }\n}",
+          "explanation": "The server blocks on GetContext(), then dispatches by URL path through one big 'switch -Regex'. Each arm matches a path pattern and calls a helper. This is how every one of the ~80 /api/* endpoints (and the static UI assets) is wired — no web framework, just a regex switch over the request path."
+        },
+        {
+          "title": "JSON response writer",
+          "feature": "Consistent JSON API replies",
+          "file": "Application\\AutoPDF-Server.ps1 · Send-Json() (~line 5860)",
+          "language": "powershell",
+          "code": "function Send-Json {\n    param($Res, $Obj, [int]$Code = 200)\n    # Depth 10 — default of 2 truncates nested arrays-of-objects (e.g. regex_library.patterns)\n    $json  = $Obj | ConvertTo-Json -Compress -Depth 10\n    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)\n    $Res.StatusCode      = $Code\n    $Res.ContentType     = \"application/json\"\n    $Res.ContentLength64 = $bytes.Length\n    $Res.OutputStream.Write($bytes, 0, $bytes.Length)\n    $Res.Close()\n}",
+          "explanation": "Every API endpoint serialises its hashtable result through Send-Json, which converts to UTF-8 JSON at Depth 10 (so deeply nested config like the regex library isn't truncated) and writes it with the correct Content-Type. This one helper guarantees a uniform JSON contract across the whole /api surface."
+        }
+      ]
+    },
+    {
+      "category": "Access Control & Tunnel",
+      "snippets": [
+        {
+          "title": "PIN gate for tunnel traffic only",
+          "feature": "PIN-gated Cloudflare tunnel (local UX untouched)",
+          "file": "Application\\AutoPDF-Server.ps1 · Access gate (PIN) (~line 5905)",
+          "language": "powershell",
+          "code": "# /health and /version stay open for monitoring probes.\nif ($AppSettings.accessPin -and ($path -notmatch '^/health$|^/version$')) {\n    $isTunnel = -not [string]::IsNullOrEmpty($req.Headers['CF-Ray']) `\n             -or -not [string]::IsNullOrEmpty($req.Headers['CF-Connecting-IP']) `\n             -or -not [string]::IsNullOrEmpty($req.Headers['X-Forwarded-For'])\n    if ($isTunnel) {\n        $hasSession = $false\n        $cookieHdr  = $req.Headers['Cookie']\n        if ($cookieHdr -and $cookieHdr -match 'autopdf_sess=([A-Za-z0-9\\-]+)') {\n            if ($global:ValidSessions.Contains($matches[1])) { $hasSession = $true }\n        }\n        ...\n    }\n}",
+          "explanation": "The gate fires only when an access PIN is configured AND the request carries Cloudflare/proxy headers (CF-Ray, CF-Connecting-IP, X-Forwarded-For) — i.e. it arrived through the tunnel. Direct localhost traffic has no such headers and is never challenged, so the local tool experience is unchanged. /health and /version are excluded so external monitors can still probe the service."
+        },
+        {
+          "title": "PIN check → session cookie issue",
+          "feature": "Cookie-based unlock after correct PIN",
+          "file": "Application\\AutoPDF-Server.ps1 · PIN gate cont. (~line 5921)",
+          "language": "powershell",
+          "code": "$qsGate = ConvertFrom-QueryString $req.Url.Query\n$pinTry = $qsGate['pin']\nif ($pinTry -and $pinTry -eq $AppSettings.accessPin) {\n    $tok = [guid]::NewGuid().ToString('N')\n    [void]$global:ValidSessions.Add($tok)\n    $res.Headers.Add('Set-Cookie', \"autopdf_sess=$tok; Path=/; HttpOnly; SameSite=Lax\")\n    $res.StatusCode = 302\n    $res.RedirectLocation = '/'\n    $res.Close()\n    continue\n}\n# otherwise: serve the dark-themed lock screen (HTTP 401) with a PIN form",
+          "explanation": "When the visitor submits the correct PIN, the server mints a random GUID token, stores it in an in-memory HashSet ($global:ValidSessions) and sets it as an HttpOnly, SameSite=Lax cookie, then redirects to '/'. Subsequent tunnel requests carry the cookie and pass the gate. A wrong/empty PIN gets a styled 401 lock screen instead. The session set is cleared on restart, so unlocks don't survive a service bounce."
+        }
+      ]
+    },
+    {
+      "category": "Configuration Loading",
+      "snippets": [
+        {
+          "title": "Settings defaults + JSON overlay",
+          "feature": "Zero-hardcode config via autopdf-settings.json",
+          "file": "Application\\AutoPDF-Server.ps1 · Read-AppSettings() (~line 168)",
+          "language": "powershell",
+          "code": "function Read-AppSettings {\n    $defaults = @{\n        port = 6969; maxDepth = 3; ghostscriptPath = \"\"; logPath = \"\"; chunkSize = 0\n        pdftkPath = \"\"; pdftkLicense = \"free\"\n        ollamaHost = \"http://127.0.0.1:11434\"; ollamaModel = \"\"\n        ollamaNumCtx = 32768; ollamaTimeoutSec = 300\n        accessPin = \"\"\n        ...\n    }\n    if (Test-Path $SettingsPath) {\n        $s = Get-Content -Raw -LiteralPath $SettingsPath | ConvertFrom-Json\n        if ($s.port)      { $defaults.port      = [int]$s.port }\n        if ($s.accessPin) { $defaults.accessPin = \"$($s.accessPin)\" }\n        ...\n    }\n}",
+          "explanation": "All tunable behaviour — port, scan depth, engine paths, Ollama host/model/context, the access PIN, concurrency mode — is read from Application\\autopdf-settings.json over a defaults hashtable. Missing keys fall back to the defaults, so a fresh copy runs with no config file. This is how the tool stays portable and free of hardcoded machine-specific values."
+        }
+      ]
+    },
+    {
+      "category": "PDF Conversion",
+      "snippets": [
+        {
+          "title": "Office → PDF via Word COM",
+          "feature": "PDF Converter (Office → PDF)",
+          "file": "Application\\AutoPDF-Server.ps1 · Word COM SaveAs (~line 3774 / 3830)",
+          "language": "powershell",
+          "code": "$word = New-Object -ComObject Word.Application\n$word.Visible = $false; $word.DisplayAlerts = 0\n...\n$doc = $word.Documents.Open($srcPath, $false, $true)\n# 17 = wdFormatPDF\n$doc.SaveAs([ref]$tmpPdf, [ref]17)\n$doc.Close($false)\n...\n# Excel sheets export the same way:\n$wb.ExportAsFixedFormat(0, $tmpPdf)   # 0 = xlTypePDF",
+          "explanation": "Word and Excel documents are converted by automating the installed Office apps over COM: open invisibly, SaveAs format 17 (wdFormatPDF) for Word, ExportAsFixedFormat(0) for Excel. A single Word/Excel instance is reused across a batch and restarted if it dies. This powers the Office side of the bulk converter without any third-party library."
+        },
+        {
+          "title": "Ghostscript merge to one PDF",
+          "feature": "Combine converted parts into a single PDF",
+          "file": "Application\\AutoPDF-Server.ps1 · Invoke-GhostscriptMerge() (~line 672)",
+          "language": "powershell",
+          "code": "function Invoke-GhostscriptMerge {\n    param([string]$GsExe, [string[]]$InputPdfs, [string]$OutputPdf)\n    $gsArgs = @(\"-dBATCH\",\"-dNOPAUSE\",\"-q\",\"-sDEVICE=pdfwrite\",\n                \"-sOutputFile=`\"$OutputPdf`\"\") + ($InputPdfs | ForEach-Object { \"`\"$_`\"\" })\n    $si = New-Object System.Diagnostics.ProcessStartInfo\n    $si.FileName              = $GsExe\n    $si.Arguments             = $gsArgs -join \" \"\n    $si.UseShellExecute       = $false\n    $si.RedirectStandardError = $true\n    $proc = [System.Diagnostics.Process]::Start($si)\n    $err  = $proc.StandardError.ReadToEnd()\n    $proc.WaitForExit()\n    if ($proc.ExitCode -ne 0) { Write-Log \"  Ghostscript error...\"; return $false }\n    return $true\n}",
+          "explanation": "Bundled Ghostscript (gswin64c.exe under Application\\gs\\) is shelled out with the pdfwrite device to merge multiple input PDFs into one output file. AutoPDF invokes engines as plain command-line child processes (capturing stderr for logging) rather than linking libraries — keeping the install copy-and-run with no DLL dependencies."
+        }
+      ]
+    },
+    {
+      "category": "PDF Splitter",
+      "snippets": [
+        {
+          "title": "Extract a page set (PDFtk, GS fallback)",
+          "feature": "Split a batch PDF into per-document files",
+          "file": "Application\\AutoPDF-Server.ps1 · Split-PdfPages() (~line 2463)",
+          "language": "powershell",
+          "code": "function Split-PdfPages {\n    param([string]$GsExe, [string]$PdftkExe, [string]$Source, [int[]]$Pages, [string]$Output)\n    ...\n    # collapse contiguous pages into ranges -> $segs (e.g. 1,2,3,7 => '1-3','7')\n    if ($PdftkExe) {\n        $catArg = ($segs -join \" \")\n        $r = Invoke-Pdftk -Pdftk $PdftkExe -ArgList @(\"`\"$Source`\"\",\"cat\",$catArg,\"output\",\"`\"$Output`\"\")\n        if ($r.ExitCode -eq 0 -and (Test-Path $Output)) { return $true }\n    }\n    # Ghostscript fallback: PageList accepts comma-separated (GS 9.50+)\n    $pageList = ($segs -join \",\")\n    $gsArgs = @(\"-dBATCH\",\"-dNOPAUSE\",\"-q\",\"-sDEVICE=pdfwrite\",\n        \"-sPageList=$pageList\",\"-sOutputFile=`\"$Output`\"\",\"`\"$Source`\"\")\n    ...\n}",
+          "explanation": "Once the splitter has decided which pages belong to a document, this routine writes them out. It first collapses contiguous page numbers into ranges, prefers PDFtk's clean 'cat' syntax, and falls back to Ghostscript's -sPageList if PDFtk isn't present. This dual-engine approach is why splitting keeps working on machines that only have one of the two engines."
+        },
+        {
+          "title": "Constrain a regex match to a drawn zone",
+          "feature": "Pattern split limited to a page region",
+          "file": "Application\\AutoPDF-Server.ps1 · Test-MatchInZone() (~line 2395)",
+          "language": "powershell",
+          "code": "function Test-MatchInZone {\n    param([string]$MatchValue, [array]$Words, [array]$Zones, [int]$PageNum)\n    if (-not $Zones -or $Zones.Count -eq 0) { return $true }  # no zones = no constraint\n    foreach ($w in $Words) {\n        if ($w.text -like \"*$MatchValue*\" -or $MatchValue -like \"*$($w.text)*\") {\n            $wxFrac = $w.x / $pw; $wyFrac = $w.y / $ph\n            $wwFrac = $w.w / $pw; $whFrac = $w.h / $ph\n            foreach ($z in $Zones) {\n                # AABB intersect of the word box against the zone\n                if ($wxFrac + $wwFrac -ge $z.x -and $wxFrac -le ($z.x + $z.w) -and\n                    $wyFrac + $whFrac -ge $z.y -and $wyFrac -le ($z.y + $z.h)) {\n                    return $true\n                }\n            }\n        }\n    }\n    return $false\n}",
+          "explanation": "When a split rule says 'start a new document where this pattern appears, but only inside this box', this function verifies the match. It locates the word that contains the matched text, converts its bounding box to page fractions, and tests axis-aligned overlap against each configured zone. This is what lets the splitter ignore the same keyword elsewhere on the page and only act when it appears in the region the user drew."
+        }
+      ]
+    },
+    {
+      "category": "Zone Extraction & Tagged Mapping",
+      "snippets": [
+        {
+          "title": "Read text inside a rectangle",
+          "feature": "Zone-based field extraction",
+          "file": "Application\\AutoPDF-Server.ps1 · Get-PdfTextInRegion() (~line 1854)",
+          "language": "powershell",
+          "code": "function Get-PdfTextInRegion {\n    # Extract text within a rectangular region of one page using pdftotext.\n    param([string]$PdftotextExe, [string]$PdfPath, [int]$Page, [int]$X, [int]$Y, [int]$W, [int]$H)\n    if (-not $PdftotextExe) { return \"\" }\n    $tmp = [System.IO.Path]::GetTempFileName() + \".txt\"\n    try {\n        & $PdftotextExe -f $Page -l $Page -x $X -y $Y -W $W -H $H -layout -enc UTF-8 \"$PdfPath\" \"$tmp\" 2>&1 | Out-Null\n        if (Test-Path $tmp) {\n            $text = [System.IO.File]::ReadAllText($tmp, [System.Text.UTF8Encoding]::new($false))\n            return $text.Trim()\n        }\n    } finally { ... }\n    return \"\"\n}",
+          "explanation": "The core of fixed-coordinate zone extraction: Poppler's pdftotext is run with -x/-y/-W/-H flags to pull only the text inside one rectangle on one page. Each drawn zone (converted from page fractions to PDF points) becomes one call, and the captured string becomes a CSV/XLSX column or a piece of the output filename."
+        },
+        {
+          "title": "Re-find an anchor and float the value box",
+          "feature": "Tagged (anchor-relative) mapping",
+          "file": "Application\\AutoPDF-Server.ps1 · Resolve-TaggedZoneRect() (~line 2306)",
+          "language": "powershell",
+          "code": "function Resolve-TaggedZoneRect {\n    # Re-find a tag (anchor) on the document at run-time and compute the value\n    # rectangle relative to it. This makes tagged zones float with their label.\n    param([string]$PdfPath, [int]$Page = 1, [string]$AnchorText,\n          [bool]$AnchorIsRegex = $false, $Rel = $null, [bool]$ScanAllPages = $true)\n    $bboxes = Get-PdfTextBboxByPage -PdftotextExe $pdftotextExe -PdfPath $PdfPath\n    foreach ($pg in $pagesToSearch) {\n        $aRect = Find-AnchorRectFrac -Words $bboxes[$pg] -AnchorText $AnchorText -IsRegex $AnchorIsRegex ...\n        if (-not $aRect) { continue }\n        $vx = [Math]::Max(0.0, [Math]::Min(1.0, $aRect.x + $dx))\n        $vy = [Math]::Max(0.0, [Math]::Min(1.0, $aRect.y + $dy))\n        return @{ x = $vx; y = $vy; w = $w; h = $h; page = $pg }\n    }\n    return $null\n}",
+          "explanation": "Tagged mapping is AutoPDF's killer feature for messy batches: instead of pinning a field to fixed coordinates, the template stores a label (anchor) plus a relative offset. At run-time the server re-finds the label's bounding box on each document (searching all pages if it moved) and recomputes the value rectangle beside it. A field therefore follows its label across documents whose layouts shift."
+        },
+        {
+          "title": "Per-word bounding boxes via pdftotext -bbox-layout",
+          "feature": "Word geometry that powers anchors & zone splits",
+          "file": "Application\\AutoPDF-Server.ps1 · Get-PdfTextBboxByPage() (~line 2352)",
+          "language": "powershell",
+          "code": "function Get-PdfTextBboxByPage {\n    # Returns @{ text; bbox = @{x;y;w;h} } for each word on each page.\n    param([string]$PdftotextExe, [string]$PdfPath)\n    # Cache per (path + mtime): re-resolving many tagged zones would otherwise\n    # re-parse the whole PDF's word boxes every time.\n    if (-not $global:__BboxCache) { $global:__BboxCache = @{} }\n    ...\n    & $PdftotextExe -bbox-layout -enc UTF-8 \"$PdfPath\" \"$tmp\" 2>&1 | Out-Null\n    # parse the XHTML <word xMin yMin xMax yMax>text</word> output ...\n}",
+          "explanation": "Both tagged mapping and zone-constrained pattern splitting need to know where every word sits on the page. This helper runs pdftotext in -bbox-layout mode, parses the per-word XHTML coordinates, and caches the result keyed on file path + modification time so a multi-field, multi-document run parses each PDF's geometry only once."
+        }
+      ]
+    },
+    {
+      "category": "Index Creator & OnBase XML",
+      "snippets": [
+        {
+          "title": "Emit an OnBase XML Index DIP",
+          "feature": "OnBase XML DIP export (Foundation 24.1)",
+          "file": "Application\\AutoPDF-Server.ps1 · Write-IndexXml() (~line 2999)",
+          "language": "powershell",
+          "code": "function Write-IndexXml {\n    # Emit an OnBase XML Index DIP file (Foundation 24.1 schema).\n    param([string]$OutPath, [string[]]$Headers, [System.Collections.IEnumerable]$Rows, [hashtable]$XmlCfg)\n    ...\n    foreach ($r in $Rows) {\n        $vals = @($r)\n        [void]$sb.AppendLine(\"  <$docElem>\")\n        if ($dtv) { [void]$sb.AppendLine(\"    <DocTypeName>$(& $esc $dtv)</DocTypeName>\") }\n        for ($i = 0; $i -lt $Headers.Count; $i++) {\n            if ($i -eq $fileIdx -or $i -eq $dtIdx) { continue }\n            $tag = ConvertTo-XmlName $Headers[$i]\n            [void]$sb.AppendLine(\"    <$tag>$(& $esc $v)</$tag>\")\n        }\n        [void]$sb.AppendLine(\"    <$fileElement>$(& $esc $fv)</$fileElement>\")\n        [void]$sb.AppendLine(\"  </$docElem>\")\n    }\n    [System.IO.File]::WriteAllText($OutPath, $sb.ToString(), [System.Text.UTF8Encoding]::new($false))\n}",
+          "explanation": "Turns the extracted index into a Hyland OnBase XML Index DIP. Each row becomes a <NewDocument> element with a <DocTypeName> for routing, one <Keyword> element per metadata column (XML-escaped, empty values skipped), and a <FilePath> reference. Tag names come from configuration and are case-sensitive to match the OnBase XPath the admin configures. The file is written UTF-8 without BOM — producing the ingestion handoff the BU demo targets."
+        },
+        {
+          "title": "Run extraction over a folder from the UI",
+          "feature": "Index Creator batch run (UI → /api)",
+          "file": "Application\\app.js · template-apply-batch caller (~line 1344)",
+          "language": "javascript",
+          "code": "fetch('/api/template-apply-batch', {\n  method: 'POST', headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ name: name, folder: folder, recurse: false,\n                         autoMatch: modeAuto, applyFilenames: rename, aiModel: aiModel })\n})\n  .then(function (r) { return r.json(); })\n  .then(function (j) {\n    if (!j.ok) { appendSplitLog('[Template] FAILED: ' + (j.error || 'unknown') + '\\n'); return; }\n    if (j.mode === 'auto') {\n      appendSplitLog('[Template] Auto-match: ' + j.pdfCount + ' PDF(s), ' + (j.csvFiles||[]).length + ' CSV(s).\\n');\n    } else {\n      appendSplitLog('[Template] Processed ' + j.pdfCount + ' PDF(s). CSV: ' + j.csv + '\\n');\n    }\n  });",
+          "explanation": "The front-end posts the chosen template name (or auto-match), the target folder and options to /api/template-apply-batch, then streams the result back into the log panel. This is the design-time → run-time bridge: a template authored on one sample is here applied unattended across a whole folder to produce the CSV/XLSX/XML index."
+        }
+      ]
+    },
+    {
+      "category": "Local AI Assist (Ollama)",
+      "snippets": [
+        {
+          "title": "Single-shot prompt to local Ollama",
+          "feature": "Local AI assist (chat / propose / ai_extract)",
+          "file": "Application\\AutoPDF-Server.ps1 · Invoke-OllamaPrompt() (~line 771)",
+          "language": "powershell",
+          "code": "function Invoke-OllamaPrompt {\n    param([string]$Model, [string]$Prompt, [string]$Format = \"\", [int]$NumCtx = 0, [int]$TimeoutSec = 0)\n    $ollamaHost = if ($AppSettings.ollamaHost) { $AppSettings.ollamaHost } else { \"http://127.0.0.1:11434\" }\n    if ($NumCtx -le 0) { $NumCtx = ... 32768 }\n    $body = @{ model = $Model; prompt = $Prompt; stream = $false; options = @{ num_ctx = $NumCtx } }\n    if ($Format) { $body.format = $Format }\n    try {\n        $json = $body | ConvertTo-Json -Compress -Depth 5\n        $resp = Invoke-RestMethod -Uri \"$ollamaHost/api/generate\" -Method Post -Body $json -ContentType \"application/json\" -TimeoutSec $TimeoutSec\n        return $resp.response\n    } catch { Write-Log \"  Ollama error: $($_.Exception.Message)\"; return $null }\n}",
+          "explanation": "All AI features route through this one helper, which POSTs to a LOCAL Ollama instance (default 127.0.0.1:11434) with stream=false and a large num_ctx (32K) so up to ~80 pages of text fit in context. There is no OpenAI/Anthropic/Gemini call anywhere — AI is opt-in, local, and only ever proposes fields or split boundaries; on any failure it returns $null and the deterministic rule path continues."
+        }
+      ]
+    },
+    {
+      "category": "Scanning & OCR",
+      "snippets": [
+        {
+          "title": "Assemble scanned images into one searchable PDF",
+          "feature": "OCR for scanned PDFs (bundled Tesseract)",
+          "file": "Application\\AutoPDF-Server.ps1 · New-SearchablePdfFromImages() (~line 942)",
+          "language": "powershell",
+          "code": "function New-SearchablePdfFromImages {\n    # Combine scanned page images into ONE searchable PDF via bundled Tesseract.\n    param([string[]]$ImagePaths, [string]$OutPdf, [string]$Lang = \"eng\")\n    $tess = Get-TesseractExe\n    if (-not $tess) { return @{ ok = $false; error = \"Tesseract not found ...\" } }\n    $listFile = [System.IO.Path]::GetTempFileName()\n    try {\n        Set-Content -LiteralPath $listFile -Value ($ImagePaths -join \"`n\") -Encoding ascii\n        $outBase = [System.IO.Path]::Combine(..., [System.IO.Path]::GetFileNameWithoutExtension($OutPdf))\n        $tessdata = Join-Path $ScriptDir \"tesseract\\tessdata\"\n        $env:TESSDATA_PREFIX = $tessdata\n        & $tess $listFile $outBase \"-l\" $Lang \"pdf\" 2>&1 | Out-Null\n        if (Test-Path \"$outBase.pdf\") { return @{ ok = $true; pdf = \"$outBase.pdf\" } }\n    } catch { ... } finally { Remove-Item -LiteralPath $listFile -Force ... }\n}",
+          "explanation": "After a scanner (NAPS2/WIA) produces page images, they are written to a Tesseract list file and OCR'd in one pass with the bundled tesseract.exe and local tessdata, producing a single searchable PDF (text layer behind the image). Pointing TESSDATA_PREFIX at the in-app tessdata folder keeps OCR fully offline and zero-install."
+        }
+      ]
+    },
+    {
+      "category": "Native Launcher",
+      "snippets": [
+        {
+          "title": "Idempotent C# launcher",
+          "feature": "Double-click AutoPDF.exe (start-or-open)",
+          "file": "AutoPDF.exe source · Application\\branding\\Launcher.cs",
+          "language": "csharp",
+          "code": "[STAThread]\nstatic void Main()\n{\n    string exeDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\\\');\n    string appDir = Path.Combine(exeDir, \"Application\");\n    string serverPs = Path.Combine(appDir, \"AutoPDF-Server.ps1\");\n    ReadSettings(Path.Combine(appDir, \"autopdf-settings.json\"));\n    string url = \"http://127.0.0.1:\" + Port + \"/\";\n\n    // Already running? Just open it.\n    if (IsUp(url)) { OpenBrowser(url); return; }\n    ...\n    StartServerHidden(serverPs, appDir);\n    for (int i = 0; i < 80 && !ready; i++) {\n        Thread.Sleep(500);\n        if (IsUp(url)) ready = true;\n    }\n    if (ready) OpenBrowser(url);\n}",
+          "explanation": "The native launcher reads the port from settings, pings :PORT/api/status and, if AutoPDF is already up, simply opens the browser. Otherwise it starts AutoPDF-Server.ps1 hidden (preferring pwsh 7, else Windows PowerShell 5.1, with AUTOPDF_NO_BROWSER=1), shows a splash, polls up to ~40s for readiness, then opens the UI. It depends only on built-in .NET (System.Windows.Forms / System.Drawing) — no runtime to install."
+        },
+        {
+          "title": "Start the PowerShell server hidden",
+          "feature": "Headless server start (no console window)",
+          "file": "AutoPDF.exe source · Launcher.cs · StartServerHidden()",
+          "language": "csharp",
+          "code": "static void StartServerHidden(string serverPs, string appDir)\n{\n    // Prefer PowerShell 7 (pwsh) if present, else Windows PowerShell 5.1.\n    string ps = \"powershell.exe\";\n    ... if (pwsh found) ps = \"pwsh.exe\";\n    var psi = new ProcessStartInfo(ps,\n        \"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \\\"\" + serverPs + \"\\\"\")\n    {\n        WorkingDirectory = appDir,\n        UseShellExecute = false,\n        CreateNoWindow = true,\n        WindowStyle = ProcessWindowStyle.Hidden\n    };\n    psi.EnvironmentVariables[\"AUTOPDF_NO_BROWSER\"] = \"1\";\n    Process.Start(psi);\n}",
+          "explanation": "The server is launched with -WindowStyle Hidden / CreateNoWindow so no console window flashes, working directory set to Application\\, and AUTOPDF_NO_BROWSER=1 so the server doesn't open its own browser (the launcher times that with the splash instead). This is what makes the double-click experience feel like a native app rather than a script."
+        }
+      ]
+    },
+    {
+      "category": "Front-end UI",
+      "snippets": [
+        {
+          "title": "Drag to draw a zone on the page canvas",
+          "feature": "Visual Zone Mapper (drag-to-draw)",
+          "file": "Application\\app.js · Visual Zone Mapper mousedown/mouseup (~line 2049)",
+          "language": "javascript",
+          "code": "stageCanvas.addEventListener('mousedown', function (e) {\n  var rect = stageCanvas.getBoundingClientRect();\n  var sx = e.clientX - rect.left, sy = e.clientY - rect.top;\n  var overlay = document.createElement('div');\n  overlay.className = 'zone-rect';\n  overlay.style.left = sx + 'px'; overlay.style.top = sy + 'px';\n  stage.appendChild(overlay);\n  draggingNew = { startX: sx, startY: sy, el: overlay };\n});\n// ... mousemove resizes overlay ...\ndocument.addEventListener('mouseup', function (e) {\n  var nw = stageImg.naturalWidth, nh = stageImg.naturalHeight;\n  var z = { id: 'z'+Date.now()+'_'+..., name: 'Zone'+(zones.length+1),\n            x: x/nw, y: y/nh, w: w/nw, h: h/nh,\n            targetPage: 'first', regex: '', useInCsv: true };\n  zones.push(z);\n});",
+          "explanation": "The Visual Zone Mapper renders a PDF page as an image and lets the user drag a rectangle over it. On mouseup the pixel rectangle is normalised to page fractions (x/nw, y/nh, w/nw, h/nh) and stored as a zone with a name, optional regex and CSV/filename flags. Storing fractions (not pixels) is what lets the same zone apply to documents rendered at any DPI — it's the exact inverse of the server-side Get-PdfTextInRegion extraction."
+        }
+      ]
+    }
+  ]
+}

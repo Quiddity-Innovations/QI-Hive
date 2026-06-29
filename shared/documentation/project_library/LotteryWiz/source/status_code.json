@@ -1,0 +1,189 @@
+{
+  "intro": "Excerpts copied from the live Lottery Wiz source (C:\\Lottery Wiz). Each shows the real code behind a capability and explains how it powers that feature. The math lives in two pure-Python engines (engine_py.py for Fantasy 5, lottery_general.py for any game) shared by the FastAPI server, the browser, and the MCP server. Throughout, covering designs restructure coverage but never change the odds.",
+  "sections": [
+    {
+      "category": "Covering-Design Solver (the core)",
+      "snippets": [
+        {
+          "title": "Fantasy 5 greedy covering wheel",
+          "feature": "Covering-design wheel (guaranteed t-coverage)",
+          "file": "engine_py.py · gen_wheel()",
+          "language": "python",
+          "code": "def gen_wheel(pool, t=3, seed=1):\n    pool = sorted(pool); v = len(pool)\n    if v < PICK:\n        return []\n    tsubs_needed = set(combinations(pool, t))\n    need = len(tsubs_needed)\n    covered = set(); rng = random.Random(seed); tickets = []; guard = 0\n    while len(covered) < need and guard < 6000:\n        guard += 1\n        best = None; best_gain = -1\n        tries = min(400, max(120, v * 8))\n        for _ in range(tries):\n            cand = _combo(pool, rng)\n            gain = sum(1 for c in combinations(cand, t) if c not in covered)\n            if gain > best_gain:\n                best_gain = gain; best = cand\n                if gain == C(PICK, t): break\n        if not best or best_gain <= 0: break\n        for c in combinations(best, t): covered.add(c)\n        tickets.append(best)\n    return tickets",
+          "explanation": "The heart of the tool. It enumerates every t-subset of your pool that must be covered, then greedily adds the 5-number ticket that covers the most still-uncovered t-subsets, repeating until all are covered. That yields the combinatorial guarantee: if at least t of your pool numbers are drawn, at least one ticket shows a t-match. It restructures coverage of the combination space; it does not change the per-ticket odds."
+        },
+        {
+          "title": "Generalized wheel for any N/k/t",
+          "feature": "Universal covering wheel (any lottery)",
+          "file": "lottery_general.py · wheel()",
+          "language": "python",
+          "code": "def wheel(pool, k, t, seed=1, max_tickets=4000):\n    \"\"\"Greedy covering design: from your chosen `pool` numbers, build k-number tickets so that\n    EVERY t-subset of the pool appears on at least one ticket.\n    Guarantee: if at least t of your pool numbers are drawn, >=1 ticket shows a t-match.\"\"\"\n    pool = sorted(set(int(x) for x in pool))\n    v = len(pool)\n    if v < k:\n        return {\"error\": f\"Your pool has {v} numbers but each ticket needs {k}. Pick at least {k}.\"}\n    if t > k:\n        return {\"error\": f\"Guarantee t={t} can't exceed ticket size k={k}.\"}\n    need = C(v, t)\n    nk = C(v, k)\n    enumerate_all = nk <= 60000   # enumerate candidates if feasible, else sample",
+          "explanation": "The same covering-design idea generalized to any game: any ticket size k, any guarantee t, any pool. When the number of candidate k-subsets is small enough it enumerates them all for an optimal-ish cover; otherwise it samples. This single function backs Powerball, Mega Millions, EuroMillions, Mega-Sena and every other Universal game — the bonus ball is handled separately because it is an independent draw and cannot be wheeled."
+        }
+      ]
+    },
+    {
+      "category": "Curated Build & Coverage Guarantee",
+      "snippets": [
+        {
+          "title": "The 6-step curated funnel",
+          "feature": "Curated 'Build My Play Set'",
+          "file": "engine_py.py · build_play_set()",
+          "language": "python",
+          "code": "cand_iter = combinations(pool, PICK)\nn_pool = C(len(pool), PICK)\nif n_pool > 200000:\n    return {\"error\": f\"Pool of {len(pool)} numbers makes {n_pool:,} combinations. \"\n                      f\"Use a reduced universe (<= ~22 numbers) ...\"}\ndraws = load_draws()\npast = set(tuple(d) for d in draws)\nsurvivors = []\nn_past = n_edge = 0\nfor c in cand_iter:\n    if exclude_past and c in past:\n        n_past += 1; continue\n    if drop_edges and is_edge(c):\n        n_edge += 1; continue\n    survivors.append(c)\nscored = sorted(((profile_score(c, recent)[0], c) for c in survivors), key=lambda x: -x[0])",
+          "explanation": "The transparent funnel: from the C(pool,5) space, drop combinations that already occurred in history, drop statistical 'edge' shapes, then rank survivors by profile fit. Every count (in_pool, removed_past, removed_edges, survivors, selected) is returned so the UI can show the funnel. It refuses pools that explode past 200k combinations — that ceiling enforces the research's core 'reduced universe' principle."
+        },
+        {
+          "title": "Coverage-aware greedy selection",
+          "feature": "Maximise pair/triple coverage while keeping profile high",
+          "file": "engine_py.py · build_play_set()",
+          "language": "python",
+          "code": "window = scored[:max(N * 8, 1500)]\npair_used = {}; chosen = []\nwhile len(chosen) < N and window:\n    best_i = -1; best_val = -1e9\n    for i, (sc, c) in enumerate(window):\n        overlap = sum(pair_used.get((c[x], c[y]), 0) for x in range(PICK) for y in range(x + 1, PICK))\n        val = sc - lam * overlap\n        if val > best_val:\n            best_val = val; best_i = i\n    sc, c = window.pop(best_i)\n    for x in range(PICK):\n        for y in range(x + 1, PICK):\n            pair_used[(c[x], c[y])] = pair_used.get((c[x], c[y]), 0) + 1\n    chosen.append(list(c))",
+          "explanation": "After scoring, the set is built greedily from the top-profile window, but each pick is penalised (lam) for reusing number-pairs already covered by chosen tickets. This balances two goals at once: keep the high-profile shapes AND spread coverage across the pool, so the final set's pair/triple coverage is high rather than clustering on the same favourite pairs."
+        },
+        {
+          "title": "What counts as an 'edge' to drop",
+          "feature": "Drop statistically extreme combinations",
+          "file": "engine_py.py · is_edge()",
+          "language": "python",
+          "code": "def is_edge(t):\n    \"\"\"An 'edge' = a statistically extreme combination the research advises against.\"\"\"\n    a = sorted(t)\n    if all(a[i + 1] - a[i] == 1 for i in range(4)):          # all consecutive\n        return True\n    odd = sum(1 for x in a if x % 2)\n    if odd in (0, 5):                                        # all odd / all even\n        return True\n    low = sum(1 for x in a if x <= LOW_MAX)\n    if low in (0, 5):                                        # all low / all high\n        return True\n    d = a[1] - a[0]\n    if d > 0 and all(a[i + 1] - a[i] == d for i in range(4)):  # arithmetic progression\n        return True\n    if a[-1] - a[0] <= 6:                                    # tight cluster (range <= 6)\n        return True\n    if sum(a) < 60 or sum(a) > 150:                          # extreme sum\n        return True\n    return False",
+          "explanation": "The edge filter encodes the research's advice against shapes that, while equally likely, almost never reflect real draws and waste coverage: all-consecutive, all-odd/even, all-low/high, arithmetic progressions, tight range<=6 clusters, and extreme sums. Dropping them concentrates the curated set on draw-realistic shapes — honestly framed as scoring SHAPE, not likelihood."
+        },
+        {
+          "title": "Transparent profile score",
+          "feature": "Rank survivors by documented profile",
+          "file": "engine_py.py · profile_score()",
+          "language": "python",
+          "code": "a = sorted(t); f = ticket_features(t)\nsum_sc = math.exp(-((f[\"sum\"] - 107) / 22.0) ** 2)        # peak at the ~107 hotzone centre\noe_sc = 1.0 if f[\"odd\"] in (2, 3) else (0.5 if f[\"odd\"] in (1, 4) else 0.1)\nlh_sc = 1.0 if f[\"low\"] in (2, 3) else (0.5 if f[\"low\"] in (1, 4) else 0.1)\nconsec_sc = 1.0 if f[\"consec\"] == 0 else (0.5 if f[\"consec\"] == 1 else 0.1)\nspread_sc = min(1.0, (a[-1] - a[0]) / 30.0)               # reward spread, discourage clustering\nscore = 0.34 * sum_sc + 0.18 * oe_sc + 0.18 * lh_sc + 0.15 * consec_sc + 0.08 * spread_sc + 0.07 * nov_sc",
+          "explanation": "Each candidate gets a 0–1 fit to the documented Fantasy 5 profile: a gaussian peak at the ~107 sum hotzone, a 2-3/3-2 odd-even and low-high balance, zero consecutive numbers, good spread, and novelty versus recent draws. The weights are explicit and the function returns its per-component breakdown, so the ranking is fully auditable — not a black box."
+        }
+      ]
+    },
+    {
+      "category": "Probability & Backtest",
+      "snippets": [
+        {
+          "title": "Hypergeometric win-tier probability",
+          "feature": "Exact odds for N tickets (strategy-independent)",
+          "file": "engine_py.py · p_exactly() / p_any_atleast()",
+          "language": "python",
+          "code": "def p_exactly(k):\n    return (C(PICK, k) * C(N - PICK, PICK - k)) / C(N, PICK)\n\ndef p_single_atleast(k):\n    return sum(p_exactly(j) for j in range(k, PICK + 1))\n\ndef p_any_atleast(k, T):\n    return 1 - (1 - p_single_atleast(k)) ** T\n\ndef probability_profile(T):\n    return {\n        \"T\": T,\n        \"ge2\": p_any_atleast(2, T), \"ge3\": p_any_atleast(3, T),\n        \"ge4\": p_any_atleast(4, T), \"eq5\": 1 - (1 - p_exactly(5)) ** T,\n    }",
+          "explanation": "The honest baseline. p_exactly is the hypergeometric probability of exactly k of your 5 numbers matching the 5 drawn; p_any_atleast lifts it to 'at least one of T independent tickets gets >=k'. These are the true odds and they do NOT change with any strategy — the app shows them precisely so a covering wheel is never mistaken for an edge."
+        },
+        {
+          "title": "Best-ticket backtest over history",
+          "feature": "Backtest a set against real draws",
+          "file": "engine_py.py · backtest()",
+          "language": "python",
+          "code": "def backtest(s, draws=None):\n    draws = draws if draws is not None else load_draws()\n    sets = [set(t) for t in s]\n    bucket = [0] * 6\n    for d in draws:\n        ds = set(d); mx = 0\n        for t in sets:\n            m = len(t & ds)\n            if m > mx: mx = m\n            if m == PICK: break\n        bucket[mx] += 1\n    total = len(draws)\n    ge2 = sum(bucket[2:]); ge3 = sum(bucket[3:]); ge4 = sum(bucket[4:])\n    return {\"total\": total, \"ge2\": ge2, \"ge3\": ge3, \"ge4\": ge4, \"eq5\": bucket[5],\n            \"rate2\": ge2 / total, \"rate3\": ge3 / total, \"rate4\": ge4 / total, \"rate5\": bucket[5] / total}",
+          "explanation": "For every historical draw it records the BEST single-ticket match in the set, bucketed 0–5. The ge3/ge4 rates are exactly how the documented research sets are validated (e.g. S1-01 reproducing >=3=1926, >=4=64, jackpots=2). It answers 'how often would this set have done something' across thousands of real draws."
+        }
+      ]
+    },
+    {
+      "category": "The Brutal Ledger",
+      "snippets": [
+        {
+          "title": "Bitmask payout replay",
+          "feature": "Cost-aware replay across every draw",
+          "file": "engine_py.py · ledger_run()",
+          "language": "python",
+          "code": "tmasks = [_mask(t) for t in tickets]\ndmasks = [_mask(d) for d in draws]\noutlay = len(tmasks) * cost\nfor dm in dmasks:\n    draw_payout = 0.0\n    for tm in tmasks:\n        m = (tm & dm).bit_count()\n        tiers[m] += 1\n        draw_payout += pay_tier[m]\n    recovered += draw_payout\n    spend += outlay\n    equity.append(round(recovered - spend, 2))\n    if draw_payout > best_win:\n        best_win = draw_payout\n    if draw_payout < outlay:\n        cur_streak += 1; worst_streak = max(worst_streak, cur_streak)\n    else:\n        cur_streak = 0",
+          "explanation": "The signature feature. Each ticket and each draw is an integer bitmask, so the match count is one popcount (bit_count) — making thousands of draws cheap. It accumulates real spend vs recovered with full payout math, builds an equity curve, and tracks the best single-draw win and the worst losing streak. The output is the blunt financial reality of actually playing this set across history."
+        },
+        {
+          "title": "Exact random-quick-pick control",
+          "feature": "Compare your set against pure luck",
+          "file": "engine_py.py · montecarlo_control()",
+          "language": "python",
+          "code": "probs = [p_exactly(m) for m in range(6)]\nn_trials = n_tickets_per_draw * n_draws\nspend_total = n_tickets_per_draw * cost * n_draws\ntry:\n    import numpy as np\n    rs = np.random.default_rng(seed)\n    counts = rs.multinomial(n_trials, probs, size=runs)        # runs x 6\n    recovered = counts @ np.array(pay_tier)\n    nets = sorted((recovered - spend_total).tolist())\n    return nets",
+          "explanation": "Because a uniformly-random ticket's match count against ANY fixed draw has the same hypergeometric distribution by symmetry, every (ticket, draw) payout is i.i.d. — so a whole random-quick-pick run is ONE multinomial draw over n_tickets*n_draws trials. numpy makes thousands of control runs exact and microsecond-fast (with a pure-Python fallback). percentile_of then reports where your strategy lands versus luck — usually the honest 'didn't beat random'."
+        }
+      ]
+    },
+    {
+      "category": "Universal Game Math (any N/k + bonus)",
+      "snippets": [
+        {
+          "title": "Hypergeometric prize tiers, k != draw size",
+          "feature": "Exact odds for any lottery + bonus ball",
+          "file": "lottery_general.py · prize_tiers()",
+          "language": "python",
+          "code": "rows = []\nD = draw or k\nmain_total = C(N, D)\nhas_bonus = bool(Bn and b)\nbonus_total = C(Bn, b) if has_bonus else 1\nfor j in range(min(k, D), -1, -1):\n    p_main = C(k, j) * C(N - k, D - j) / main_total\n    if not has_bonus:\n        rows.append({\"main\": j, \"bonus\": 0, \"p\": p_main})\n    else:\n        for i in range(b, -1, -1):\n            p_bonus = C(b, i) * C(Bn - b, b - i) / bonus_total\n            rows.append({\"main\": j, \"bonus\": i, \"p\": p_main * p_bonus})",
+          "explanation": "The generalized odds engine. It handles games where the ticket size k differs from the draw size D (Lotomania picks 50 of 100 but only 20 are drawn; Timemania picks 10, draws 7) via the full hypergeometric, and multiplies in the independent bonus pool C(Bn,b). Verified exact against published odds (Powerball 1/292,201,338, EuroMillions 1/139,838,160, 6/49 1/13,983,816)."
+        },
+        {
+          "title": "Super Sete Poisson-binomial odds",
+          "feature": "Exact positional-game odds",
+          "file": "lottery_general.py · supersete_pmf()",
+          "language": "python",
+          "code": "probs = [max(0, min(10, int(c))) / 10.0 for c in counts]\npmf = [1.0]  # DP over columns\nfor p in probs:\n    nxt = [0.0] * (len(pmf) + 1)\n    for j, val in enumerate(pmf):\n        nxt[j]     += val * (1 - p)   # column missed\n        nxt[j + 1] += val * p         # column hit\n    pmf = nxt\nreturn pmf",
+          "explanation": "Super Sete is 7 independent columns; in each you mark 1–3 of the digits 0–9, so the per-column hit probability is marks_i/10. The number of matched columns is a Poisson-binomial, computed exactly by this DP convolution. With one mark per column it reduces to the published 7/7 = 1 in 10,000,000, 6 = 1 in 158,730, etc. — verified against Caixa's table."
+        }
+      ]
+    },
+    {
+      "category": "Live Data Fetchers",
+      "snippets": [
+        {
+          "title": "US official feed (data.ny.gov)",
+          "feature": "Auto-update Powerball / Mega Millions / Cash4Life",
+          "file": "live_sources.py · _ny()",
+          "language": "python",
+          "code": "url = f\"https://data.ny.gov/resource/{resource}.json?$order=draw_date%20DESC&$limit={limit}\"\nfor r in json.loads(_get(url)):\n    date = (r.get(\"draw_date\") or \"\")[:10]\n    toks = [int(x) for x in (r.get(\"winning_numbers\") or \"\").split()]\n    if mode == \"powerball\":            # winning_numbers = 5 main + powerball (6 tokens)\n        out.append({\"date\": date, \"n\": sorted(toks[:5]), \"b\": [toks[5]]})\n    elif mode == \"megamillions\":       # 5 main + separate mega_ball\n        out.append({\"date\": date, \"n\": sorted(toks[:5]), \"b\": [int(r.get(\"mega_ball\", 0))]})\n    elif mode == \"cash4life\":          # 5 main + separate cash_ball\n        out.append({\"date\": date, \"n\": sorted(toks[:5]), \"b\": [int(r.get(\"cash_ball\", 0))]})",
+          "explanation": "One of several fetchers behind 'Get latest results'. It reads the official NY State Socrata API, handling each game's quirk: Powerball packs the bonus as the 6th token of winning_numbers, while Mega Millions and Cash4Life carry it in a separate field. Each draw normalises to {date, n, b} and the server merges it into data/draws/<id>.json, deduping by date. Games with no reliable free source say so honestly and fall back to CSV import."
+        },
+        {
+          "title": "Caixa gap-close walk-back",
+          "feature": "Auto-update 8 Brazilian games",
+          "file": "live_sources.py · _caixa()",
+          "language": "python",
+          "code": "base = f\"https://servicebus2.caixa.gov.br/portaldeloterias/api/{slug}\"\ncur = json.loads(_get(base)); pulled = 0\nwhile cur and pulled <= max_pull:\n    date = _br_date(cur.get(\"dataApuracao\"))\n    dz = cur.get(\"listaDezenas\") or cur.get(\"dezenasSorteadasOrdemSorteio\") or []\n    nums = sorted(int(x) for x in dz)\n    if date and nums:\n        rec = {\"date\": date, \"n\": nums}\n        if game_id == \"diadesorte\":\n            m = PT_MONTH.get((cur.get(\"nomeTimeCoracaoMesSorte\") or \"\").strip().lower())\n            if m: rec[\"b\"] = [m]\n        out.append(rec)\n    if last_date and date and date <= last_date: break\n    prev = cur.get(\"numeroConcursoAnterior\") or ((cur.get(\"numero\") or 0) - 1)\n    cur = json.loads(_get(f\"{base}/{prev}\")); pulled += 1",
+          "explanation": "The Brazilian fetcher walks backward from the latest Caixa contest, contest by contest, until it reaches the last date already stored — closing any gap rather than re-pulling everything. It also parses each game's special bonus: Dia de Sorte's lucky-month name maps to 1–12, and +Milionaria's trevos (clovers) become the bonus pool. Caixa is the official source, so these eight games update reliably."
+        }
+      ]
+    },
+    {
+      "category": "Server, Access & AI",
+      "snippets": [
+        {
+          "title": "Constant-time owner-key check",
+          "feature": "Owner lock on preset game definitions",
+          "file": "server.py · _load_owner_key() / api_owner_check()",
+          "language": "python",
+          "code": "def _load_owner_key():\n    k = os.environ.get(\"LOTTERYWIZ_OWNER_KEY\")\n    if k: return k.strip()\n    if OWNER_KEY_FILE.exists():\n        v = OWNER_KEY_FILE.read_text(encoding=\"utf-8\").strip()\n        if v: return v\n    import secrets\n    gen = secrets.token_urlsafe(12)\n    OWNER_KEY_FILE.write_text(gen, encoding=\"utf-8\")\n    return gen\nOWNER_KEY = _load_owner_key()\n\n@app.get(\"/api/owner/check\")\ndef api_owner_check(key: str = \"\"):\n    import hmac\n    ok = bool(key) and hmac.compare_digest(str(key), OWNER_KEY)\n    return {\"ok\": ok}",
+          "explanation": "Public visitors can use every game and build their own lotteries, but the official preset DEFINITIONS are read-only. The owner key is read from an env var, else a gitignored .owner_key file, else auto-generated on first boot so a key always exists. Validation uses hmac.compare_digest (constant-time, no timing leak) and the endpoint never returns the key — only a boolean."
+        },
+        {
+          "title": "AI drives the app via an action block",
+          "feature": "Ask Wiz builds the same set the buttons do",
+          "file": "General/general.js · applyAiActions()",
+          "language": "javascript",
+          "code": "async function applyAiActions(a) {\n    const did = [];\n    if (a.preset && PRESETS[a.preset]) {\n      $('presetSel').value = a.preset; applyPreset(a.preset);\n      did.push('game'); await loadGameDraws();\n    }\n    // ... set_pool / method / size / wheel_t / bonus_mode / exclude_past / drop_edges ...\n    if (a.generate) generate();   // calls the SAME engine the on-screen buttons call\n    return did;\n  }",
+          "explanation": "When Wiz is asked to build something it replies with one short sentence then a fenced 'lotterywiz' action block. The dock parses it and applyAiActions executes it by driving the REAL controls — switching the game, setting the pool/method/size, then calling the same generate() the buttons call. The AI never invents numbers; its result is byte-identical to a manual build, which is what makes the assistant trustworthy."
+        },
+        {
+          "title": "Streaming chat with per-app prompts",
+          "feature": "Local-first Ask Wiz (SSE)",
+          "file": "server.py · build_messages() / stream_ollama()",
+          "language": "python",
+          "code": "def build_messages(payload):\n    ctx = payload.get(\"context\") or {}\n    app = payload.get(\"app\")\n    sys_msg = {\"universal\": UNIVERSAL_SYSTEM_PROMPT, \"supersete\": SUPERSETE_SYSTEM_PROMPT,\n               \"scratch\": SCRATCH_SYSTEM_PROMPT}.get(app, SYSTEM_PROMPT)\n    if ctx:\n        sys_msg += \"\\n\\nCURRENT APP STATE:\\n\" + json.dumps(ctx, indent=2)\n    msgs = [{\"role\": \"system\", \"content\": sys_msg}]\n    for m in payload.get(\"messages\", []):\n        if m.get(\"role\") in (\"user\", \"assistant\") and m.get(\"content\"):\n            msgs.append({\"role\": m[\"role\"], \"content\": m[\"content\"]})\n    return msgs",
+          "explanation": "Each of the four apps gets its own system prompt — and every prompt insists the AI be honest that the numbers are equiprobable and unpredictable. The live app state (current game N/k, draws loaded) is injected as JSON so Wiz reasons about the actual configuration. /api/chat then streams tokens as Server-Sent Events from local Ollama by default (or a cloud model if a key exists)."
+        }
+      ]
+    },
+    {
+      "category": "MCP Server (Claude Desktop)",
+      "snippets": [
+        {
+          "title": "Brutal Ledger as an MCP tool",
+          "feature": "Drive Lottery Wiz from Claude Desktop (no paid API)",
+          "file": "mcp_server.py · brutal_ledger()",
+          "language": "python",
+          "code": "@mcp.tool()\ndef brutal_ledger(tickets: list[list[int]], jackpot: float = 125000, match4: float = 255,\n                  match3: float = 10, match2: float = 0, cost: float = 1.0) -> str:\n    prizes = {2: match2, 3: match3, 4: match4, 5: jackpot}\n    draws = E.load_draws()\n    lr = E.ledger_run(tickets, draws, prizes=prizes, jackpot=jackpot, cost=cost)\n    ctrl = E.montecarlo_control(len(tickets), draws, prizes=prizes, jackpot=jackpot, cost=cost, runs=150)\n    pct = E.percentile_of(lr[\"net\"], ctrl)\n    lr[\"control\"] = {\"median\": round(ctrl[len(ctrl) // 2], 2), \"percentile\": pct}\n    lr[\"beat_random\"] = pct is not None and pct > 0.5\n    lr.pop(\"equity\", None)  # too long for chat\n    return json.dumps(lr)",
+          "explanation": "One of 11 FastMCP tools. Because it imports engine_py directly, Claude Desktop runs the exact same ledger + random-control math as the web app — over the user's subscription with no per-token billing. It returns the full honest verdict (spend, recovered, net, ROI, tiers, percentile vs random) in one call, dropping the long equity curve to stay chat-friendly."
+        }
+      ]
+    }
+  ]
+}

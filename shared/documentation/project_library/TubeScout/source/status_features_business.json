@@ -1,0 +1,55 @@
+[
+  {
+    "category": "Subscription Intelligence",
+    "features": [
+      {"name": "Sync your YouTube subscriptions", "description": "TubeScout reads your own subscription list directly from YouTube (read-only) so it tracks exactly the channels you chose — not an algorithmic feed.", "status": "live", "notes": "816 channels synced via subscriptions.list; OAuth youtube.readonly, nothing posted or changed on YouTube"},
+      {"name": "Twice-daily upload sweep", "description": "Every channel is checked at 07:00 and 19:00 for new uploads, so you see what's new across all your channels without opening YouTube.", "status": "live", "notes": "Scheduled tasks QI_TubeScout_AM / _PM; 14h overlapping lookback; 4,014 videos discovered to date"},
+      {"name": "Automatic topic sorting", "description": "Channels are sorted into topics (AI, Software Dev, Travel, Retirement, Science, News, …) so you can read one subject at a time.", "status": "live", "notes": "Keyword profile + YouTube's own topicCategories; cut the 'other' pile from ~450 to ~3"},
+      {"name": "Quota-safe by design", "description": "Reads uploads from each channel's playlist rather than search, keeping daily API usage far inside YouTube's free tier — no surprises, no cost.", "status": "live", "notes": "1 unit/channel vs 100 for search; ~600 units/day vs 10,000 free"}
+    ]
+  },
+  {
+    "category": "Read, Don't Watch",
+    "features": [
+      {"name": "Transcript-powered news cards", "description": "Each new video becomes a punchy headline plus a 2–4 sentence brief, written from the actual transcript — read it in seconds instead of watching for minutes.", "status": "live", "notes": "4,014 summaries stored; 2,374 written by NEXUS, the rest description-fallback"},
+      {"name": "The news page", "description": "A clean, fast page of media briefs with topic chips, channel labels and a Watch-on-YouTube link — only the videos worth opening.", "status": "live", "notes": "Public HTML page on :8503; NEXUS tangerine theme (#f97316)"},
+      {"name": "Favorites view", "description": "Star the channels you never want to miss; a dedicated Favorites tab floats their briefs to the top.", "status": "live", "notes": "66 channels favorited; favorites also get transcript-fetch priority"},
+      {"name": "\"Also covered by N channels\"", "description": "When several channels cover the same story, TubeScout shows it once and notes how many others covered it — no repetition.", "status": "live", "notes": "Headline-similarity clustering inside a 72h window; duplicates hidden by default"},
+      {"name": "Mute the noise, mark must-reads", "description": "Mute channels that clutter the feed or flag must-reads; muted channels stop appearing entirely.", "status": "live", "notes": "Per-channel priority must_read | digest | mute; Disable stops ingestion altogether"}
+    ]
+  },
+  {
+    "category": "Personalization & Discovery",
+    "features": [
+      {"name": "Editable interests", "description": "Tell TubeScout what you care about (AI, Travel, Retirement, DOAC). It steers what gets prioritized and what Discover suggests.", "status": "live", "notes": "Settings → Your interests; comma-separated, applied without restart; default AI/Travel/Retirement/DOAC"},
+      {"name": "Private channel discovery", "description": "Get suggestions for new channels you'd love — reasoned from your favorites on your own machine, never from your YouTube watch/ad profile.", "status": "partial", "notes": "Discover tab; local taste profile + NEXUS reasoning; YouTube touched only for a neutral name lookup"},
+      {"name": "Follow without subscribing", "description": "Add a suggested channel into TubeScout without ever subscribing on YouTube — keeps your YouTube account untouched.", "status": "partial", "notes": "recommend.follow(): ingests the channel + its uploads playlist locally"},
+      {"name": "Hide whole topics", "description": "Toggle an entire topic (e.g. lifestyle, sports) off the feed in one click.", "status": "live", "notes": "Settings → Topics on the feed; hidden_topics config list"}
+    ]
+  },
+  {
+    "category": "Builder Intelligence",
+    "features": [
+      {"name": "Implement-worthiness scoring", "description": "AI/dev videos are rated 0–10 on whether they contain something concrete you could actually build or adopt — not just opinion.", "status": "live", "notes": "439 videos scored via NEXUS; rationale + tags stored per video"},
+      {"name": "Worth-building items into QI Brain", "description": "Videos scoring above the threshold are logged to the QI Brain as pending-feature candidates for the whole ecosystem.", "status": "live", "notes": "POST /api/log_feature; default threshold 7.0, editable in Settings"}
+    ]
+  },
+  {
+    "category": "Daily Digest & Ecosystem",
+    "features": [
+      {"name": "Kaze AI Digest", "description": "The daily AI news digest (by Maia Quiddam, via Kaze) is embedded right in TubeScout and viewable from any computer.", "status": "live", "notes": "Reads C:\\OC\\runtime\\dashboard\\ai-digest\\index.html live and re-serves it through TubeScout's own tunnel"},
+      {"name": "Feeds NEXUS Scout / Kaze", "description": "A curated set of your AI/tech channels is pushed to NEXUS Scout so Kaze's digest automatically picks up YouTube items.", "status": "live", "notes": "OPML of native YouTube RSS feeds → /scout/import/opml; AI/tech topics only, not all 816 subs"},
+      {"name": "Public news page over a permanent link", "description": "The news page and digest are reachable from anywhere over a stable public URL, with no open ports on the machine.", "status": "live", "notes": "QI_TubeScoutTunnel → tubescout.quiddityinnovations.com (named Cloudflare tunnel)"},
+      {"name": "Settings as a control panel", "description": "Tune the whole pipeline — interests, thresholds, providers, topic visibility, channel priorities — from one Settings page, no restart.", "status": "live", "notes": "Config-driven; writes back to config/tubescout.json and refreshes the cache"},
+      {"name": "Write-access protection", "description": "Anyone can read the public page, but changing settings or channels can be locked behind a token for safe public exposure.", "status": "partial", "notes": "Central write-guard middleware; open when TUBESCOUT_PAGE_TOKEN unset (local), enforced when set"}
+    ]
+  },
+  {
+    "category": "Resilience",
+    "features": [
+      {"name": "Never goes dark", "description": "If transcripts, NEXUS, or the digest source are unavailable, TubeScout falls back gracefully and the page keeps serving.", "status": "live", "notes": "Per-stage try/safe wrappers in the cycle; description-fallback summaries; cached digest"},
+      {"name": "Polite to YouTube", "description": "The caption fetcher throttles itself and, if YouTube starts blocking, backs off for hours instead of hammering — protecting your access.", "status": "live", "notes": "Randomized throttle + multi-hour IP-block cooldown persisted in the state table"},
+      {"name": "Local-first transcription (opt-in)", "description": "For videos with no captions, TubeScout can transcribe the audio entirely on your machine — off by default since it downloads audio.", "status": "partial", "notes": "faster-whisper + yt-dlp; whisper.enabled flag; live-stream + max-duration guards"}
+    ]
+  }
+]

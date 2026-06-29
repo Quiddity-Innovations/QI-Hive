@@ -1,0 +1,64 @@
+[
+  {
+    "category": "Live Tournament Data",
+    "features": [
+      {"name": "Live fixtures & scores", "description": "The board auto-populates with the real World Cup schedule and live scores, pulled from ESPN, with each match bucketed into its phase (Group, R32, R16, QF, SF, Final).", "status": "live", "notes": "ESPN scoreboard, no API key; UTC kickoffs shifted -8h so games bucket on the real match day"},
+      {"name": "12-group standings", "description": "Real group tables (played, W/D/L, GF/GA/GD, points) straight from ESPN, with a fallback that computes standings from any scores you enter manually.", "status": "live", "notes": "ESPN standings endpoint + local computeStandings() from entered scores"},
+      {"name": "Real bracket as teams qualify", "description": "The knockout bracket fills with real teams as they qualify, showing TBD placeholders until then.", "status": "live", "notes": "aReal/bReal flags distinguish real teams from 'Winner of…' placeholders"},
+      {"name": "Auto-refresh", "description": "Live data refreshes on a schedule in the background and the page re-polls so the board stays current without a manual reload.", "status": "live", "notes": "Proxy scheduler every refresh_minutes (15); page polls /snapshot every 60s"}
+    ]
+  },
+  {
+    "category": "Squad Strength Scoring",
+    "features": [
+      {"name": "Player power scores", "description": "Every player gets a transparent 0-100 Player Power Score. By default this comes from real EA FC 26 player ratings mapped to national teams — a realistic stand-in while the 2026 squads aren't published yet.", "status": "live", "notes": "player_source=fifa (EA FC 26 CSV, free, no key); api-football and SAMPLE are alternatives"},
+      {"name": "Team squad strength", "description": "Player scores roll up into a Squad Strength Score per team using a projected best XI, a star bonus, and a bench-depth term — so one elite player and squad depth both count.", "status": "live", "notes": "Spine-weighted projected XI (1 GK / 4 DEF / 3 MID / 3 ATT) + star non-linearity + bench depth"},
+      {"name": "Honest data labelling", "description": "When real stats aren't available the app clearly labels players as SAMPLE rather than pretending the numbers are live.", "status": "live", "notes": "SAMPLE badge preserved even on warm restart; source string shown in the status line"},
+      {"name": "Deep per-player stats (optional)", "description": "With a free API-Football key the scoring can use real match stats (goals, passes, tackles, etc.) for richer scores.", "status": "partial", "notes": "Built; key optional; 2026 squads return 0 players this far out — set season 2022 to demo"}
+    ]
+  },
+  {
+    "category": "Betting-Window Engine",
+    "features": [
+      {"name": "Per-phase betting window", "description": "For each tournament phase the app shows the survive-to-title probability, the payout multiple, and a value score, highlighting which round is the structural sweet spot (R16/QF).", "status": "live", "notes": "winProb=p^rounds; payout=1/(winProb+fee); value=info×min(1,(1/winProb−1)/5)"},
+      {"name": "Model-driven win probability", "description": "The per-match win probability marries squad strength with the team's actual tournament form, shifting weight toward real results as games are played.", "status": "live", "notes": "w=gp/(gp+3); combined=w·TFS+(1−w)·SSS; falls back to form-only with no squad model"},
+      {"name": "Pick a candidate team", "description": "Choose a real team and the window recomputes around its strength and form, or enter a base probability manually.", "status": "live", "notes": "Team selector from real fixtures; useModel toggle; manual p nudged by form factor"},
+      {"name": "Always-visible disclaimer", "description": "A prominent disclaimer keeps it clear that this is a heuristic, betting is high variance, and nothing is guaranteed profitable.", "status": "live", "notes": "DISCLAIMER surfaced in every proxy payload and on the page"}
+    ]
+  },
+  {
+    "category": "Market Odds (Kalshi)",
+    "features": [
+      {"name": "Live market odds", "description": "Pulls live World Cup market prices from Kalshi's public API and shows implied probabilities and payouts next to the model.", "status": "partial", "notes": "Server-side fetch (no CORS); self-heals by auto-discovering the live series. Kalshi has no WC markets listed yet — they open near the tournament"},
+      {"name": "Manual odds paste", "description": "If a live feed isn't available you can paste Kalshi market JSON by hand and the app parses it into the same table.", "status": "live", "notes": "parseKalshi(); works even from file://"},
+      {"name": "Model-vs-market edge", "description": "Compares the model's probability against the market's implied probability so you can see where the model disagrees with the crowd.", "status": "live", "notes": "marketEdges(); tolerant team-name matching across FIFA/ESPN/Kalshi spellings"}
+    ]
+  },
+  {
+    "category": "AI Analyst",
+    "features": [
+      {"name": "\"The Quant\" chat", "description": "An AI analyst answers questions strictly from your live panels — standings, squad scores, the betting window, Kalshi — in expected-value and edge terms, and refuses to invent outside facts.", "status": "live", "notes": "Grounded system prompt + JSON snapshot of the panels; audited by audit_ai.py"},
+      {"name": "Choose your AI engine", "description": "Use a free local AI (Ollama) or any major cloud provider — OpenRouter, OpenAI, Anthropic, Google, xAI, Azure, or a custom endpoint.", "status": "live", "notes": "Provider chosen in Settings; keys stay in the browser's localStorage"},
+      {"name": "Free shared AI (no setup)", "description": "Out of the box the AI works with no key: the proxy holds a shared OpenRouter key server-side and falls back through free models if one is busy.", "status": "live", "notes": "OpenRouter key shared from C:\\QI\\maia.db; proxied so the browser never sees it; free-model fallback chain"},
+      {"name": "Shared-AI access code", "description": "When shared over the public tunnel, the AI can be gated by an access code; change the code and stale users are instantly locked out with a friendly 'set up your own AI' message.", "status": "live", "notes": "Only tunnel traffic is gated (Cloudflare headers); local/exe use is never gated"}
+    ]
+  },
+  {
+    "category": "Workspace & Packaging",
+    "features": [
+      {"name": "Dynamic workspace", "description": "Panes can be resized, hidden, reordered by drag, and popped out into their own windows; the layout is remembered between sessions.", "status": "live", "notes": "Layout persisted to localStorage; pop-out bridge re-wires handlers"},
+      {"name": "Runs from disk or a server", "description": "Open the HTML directly, or run the proxy and use it at localhost — the proxy serves the page same-origin so AI and live data work without CORS issues.", "status": "live", "notes": "Proxy GET / serves WC2026.html"},
+      {"name": "Portable desktop app", "description": "Packages into a single self-contained app that opens in its own native window and carries the data proxy inside it — share it with a friend, no install needed.", "status": "live", "notes": "PyInstaller windowed (pywebview) + onedir builds; OS-aware output; key-sanitized bundled config"},
+      {"name": "Cross-OS builds", "description": "Continuous integration builds the app for Windows, macOS, and Linux automatically.", "status": "live", "notes": ".github/workflows/build.yml — one binary per OS uploaded as artifacts"}
+    ]
+  },
+  {
+    "category": "QI Ecosystem Integration",
+    "features": [
+      {"name": "Shared OpenRouter key", "description": "Reuses the one OpenRouter key the ecosystem already has (from Maia), so there's no separate key to manage.", "status": "live", "notes": "Reads system.openrouter_api_key from C:\\QI\\maia.db, like MapSnap"},
+      {"name": "Registered service + public tunnel", "description": "Runs as a managed Windows service and is reachable on a stable public web address through the ecosystem's tunnel system.", "status": "live", "notes": "QI_GamezProxy (NSSM) + QI_GamezTunnel → gamez.quiddityinnovations.com"},
+      {"name": "Registry-governed ports", "description": "Uses its allocated port block from the QI ecosystem registry rather than a random port.", "status": "live", "notes": "Block 8710-8719; proxy on 8710"},
+      {"name": "QI Brain logging", "description": "Register Gamez sessions and decisions in the QI Brain for cross-project memory.", "status": "planned", "notes": "Not yet wired"}
+    ]
+  }
+]

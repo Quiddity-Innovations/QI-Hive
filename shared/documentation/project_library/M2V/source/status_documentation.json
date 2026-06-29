@@ -1,0 +1,58 @@
+{
+  "sections": [
+    {
+      "name": "Project Documentation",
+      "documents": [
+        {"title": "M2V User Guide (PDF)", "file": "M2V.pdf", "location": "C:\\M2V\\Quiddity Innovations - M2V Documentation\\User Documentation\\", "type": "PDF", "description": "The only authored document in the project's documentation tree so far — a user-facing overview of M2V."},
+        {"title": "Documentation tree (mostly empty)", "file": "", "location": "C:\\M2V\\Quiddity Innovations - M2V Documentation\\", "type": "Folder", "description": "Standard QI doc folders are scaffolded but empty: Business Documentation\\, Technical Documentation\\, Cheatsheets\\, Implementation Log\\, Meeting Minutes\\, Session Summaries\\. To be populated as the project matures."},
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\M2V\\", "type": "Markdown", "description": "What M2V is, its ports (API 8501 / UI 7841), family tier (cousin), the parallel-projects do-not-break table, and the session-start protocol pointing at the QI ecosystem files. Note: references the legacy C:\\QI\\ECOSYSTEM\\ path; canonical location is C:\\QIH\\ecosystem\\."},
+        {"title": "README.md (not yet written)", "file": "README.md", "location": "C:\\M2V\\", "type": "Planned", "description": "No root README exists yet. A top-level overview + quickstart is a high-priority documentation gap (see Future Enhancements)."}
+      ]
+    },
+    {
+      "name": "Key Source — Service Pipeline",
+      "documents": [
+        {"title": "Main Entry Point", "file": "main.py", "location": "C:\\M2V\\", "type": "Python", "description": "Launches the FastAPI API (uvicorn, daemon thread) + Gradio UI. CLI: --api-only / --ui-only. Logs to data/logs/m2v.log."},
+        {"title": "FastAPI App", "file": "main.py", "location": "C:\\M2V\\api\\", "type": "Python", "description": "Endpoints on 8501: /health, /version, /info, POST /api/generate, /api/status/{id}(/events), /api/download/{id}, POST /api/extract-lyrics, /api/jobs. In-memory JOBS store; per-job daemon thread runs the pipeline."},
+        {"title": "Pipeline Orchestrator", "file": "pipeline.py", "location": "C:\\M2V\\engine\\", "type": "Python", "description": "run() — the five-stage generator (analyze lyrics -> segment audio -> generate clips -> assemble) that yields a progress dict per stage."},
+        {"title": "Lyric Analyzer", "file": "lyric_analyzer.py", "location": "C:\\M2V\\engine\\", "type": "Python", "description": "Splits lyrics into labelled segments (max 10), calls Ollama qwen3:8b for a visual prompt+mood+palette per scene, with a non-LLM fallback. Defines the Scene dataclass and 8 visual styles."},
+        {"title": "Audio Analyzer", "file": "audio_analyzer.py", "location": "C:\\M2V\\engine\\", "type": "Python", "description": "Duration (librosa->mutagen->ffprobe->180s) and section timestamps (librosa MFCC agglomerative segmentation, even-split fallback)."},
+        {"title": "Lyrics Extractor", "file": "lyrics_extractor.py", "location": "C:\\M2V\\engine\\", "type": "Python", "description": "ID3 USLT/SYLT + FLAC/MP4 lyric tags first, then Whisper transcription grouped into verse blocks. get_song_metadata() reads title/artist/album."},
+        {"title": "Video Generator", "file": "video_generator.py", "location": "C:\\M2V\\engine\\", "type": "Python", "description": "SDXL Base 1.0 (+ optional IP-Adapter) -> still, then Stable Video Diffusion -> motion clip, with alternating load/unload to fit 16GB VRAM. FFmpeg loops/scales the SVD output."},
+        {"title": "Assembler", "file": "assembler.py", "location": "C:\\M2V\\engine\\", "type": "Python", "description": "FFmpeg concat of clips, audio mux with the original song, and burned-in SRT subtitles written from scene timings."},
+        {"title": "Gradio UI", "file": "app.py", "location": "C:\\M2V\\ui\\", "type": "Python", "description": "The operator console: audio upload, lyric extraction, style picker, reference photo + strength, subtitle toggle, generate button, live progress log + video player. Polls /api/status/{id}/events."}
+      ]
+    },
+    {
+      "name": "Key Source — Standalone Proof-of-Concept",
+      "documents": [
+        {"title": "Forro MV builder (MoviePy)", "file": "make_forro_video.py", "location": "C:\\M2V\\", "type": "Python", "description": "Self-contained renderer that turned scenes.json + the song MP3 into forro_anime_mv.mp4 (Ken Burns + crossfades + captions + placeholder fallback)."},
+        {"title": "ComfyUI frame generator", "file": "generate_frames.py", "location": "C:\\M2V\\", "type": "Python", "description": "stdlib urllib client that drives a running ComfyUI to produce the 10 anime key frames. Not yet run — the forro video currently uses placeholders."},
+        {"title": "Storyboard", "file": "scenes.json", "location": "C:\\M2V\\", "type": "JSON", "description": "10-scene storyboard for 'Churrasco na Geórgia': resolution/fps, style_prefix, negative_prompt, per-scene start time, label, image, Portuguese caption, and SDXL prompt."},
+        {"title": "Build log", "file": "forro_video_build.log", "location": "C:\\M2V\\", "type": "Log", "description": "Evidence of the proof-of-concept render: 1920x1080 @ 30fps, 160.5s, completed in 706s using placeholder frames for all 10 scenes."}
+      ]
+    },
+    {
+      "name": "Configuration & Operations",
+      "documents": [
+        {"title": "Runtime Config", "file": "m2v.json", "location": "C:\\M2V\\config\\", "type": "JSON", "description": "Ports (api 8501 / ui 7841), pipeline defaults, Ollama settings, and backend defs. NOTE: backends (sdxl-turbo, CogVideoX) are stale vs the live engine (SDXL Base 1.0 + SVD)."},
+        {"title": "Config Loader", "file": "config.py", "location": "C:\\M2V\\shared\\", "type": "Python", "description": "Caches m2v.json, loads secrets/m2v.env if present, dotted-path get()."},
+        {"title": "Secrets Template", "file": "m2v.env.template", "location": "C:\\M2V\\secrets\\", "type": "Template", "description": "Empty placeholder — M2V needs no external API keys (fully local)."},
+        {"title": "Service Installer", "file": "install_service.bat", "location": "C:\\M2V\\", "type": "Batch", "description": "Registers the QI_M2V NSSM Windows service (AppDirectory C:\\M2V, runs main.py, logs to C:\\M2V\\logs\\service.log). Not yet in QI_Service_Registry.md."},
+        {"title": "Tunnel Installer", "file": "install_tunnel.bat", "location": "C:\\M2V\\", "type": "Batch", "description": "Reference-only — carries a deprecation notice; M2V is now served by the static named tunnel qi-m2v (m2v.quiddityinnovations.com) managed at C:\\QIH\\engine\\tunnels\\."},
+        {"title": "Startup / venv", "file": "Start_M2V.bat, setup_venv.py", "location": "C:\\M2V\\", "type": "Batch / Python", "description": "Start_M2V.bat runs main.py from .venv; setup_venv.py installs cu128 torch first then requirements.txt."},
+        {"title": "Model Cache Cleanup", "file": "cleanup_models.py", "location": "C:\\M2V\\tools\\", "type": "Python", "description": "Removes the abandoned sdxl-turbo from the HuggingFace cache; keeps SDXL Base 1.0, IP-Adapter, SVD."},
+        {"title": "Smoke Tests", "file": "test_smoke.py", "location": "C:\\M2V\\tests\\", "type": "Python", "description": "pytest against :8501 (/health, /version, /info, /openapi.json); skips cleanly if the service is offline."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Outputs",
+      "documents": [
+        {"title": "QI Ecosystem Registry (m2v)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "M2V registry entry: id=m2v, status=new, family_tier=cousin, ports api 8501 / ui 7841, exposes /health /version /info, integrates_with empty."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Port table, family map, and integration contracts for the whole QI ecosystem — where M2V sits among its siblings."},
+        {"title": "Rendered Outputs", "file": "", "location": "C:\\M2V\\data\\output\\", "type": "Folder", "description": "Generated videos + subtitles from service-pipeline test runs (3 .mp4 + .srt pairs to date), plus forro_anime_mv.mp4 in the project root from the standalone PoC."},
+        {"title": "Runtime Log", "file": "m2v.log", "location": "C:\\M2V\\data\\logs\\", "type": "Log", "description": "Service launch log — confirms the API and Gradio UI started and answered /health on 2026-06-09 and 2026-06-10."}
+      ]
+    }
+  ]
+}

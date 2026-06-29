@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="f" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="fa" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+    <marker id="fr" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#c2185b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="720" fill="#ffffff" rx="12"/>
+  <text x="500" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2d3d">CogniBase — Data &amp; Capability Pipeline</text>
+  <text x="500" y="49" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · Pre-POC · 2026</text>
+  <text x="500" y="65" text-anchor="middle" font-size="10" fill="#9aa5b1">No relational DB — JSON files + JSONL lake + ChromaDB. Counts are current local fixtures, not live OnBase data.</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="784" y="78" width="200" height="138" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="884" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="794" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="814" y="113" font-size="9" fill="#374151">Live store / step</text>
+  <rect x="794" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="814" y="130" font-size="9" fill="#374151">Fixture / synthetic input</text>
+  <rect x="794" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="814" y="147" font-size="9" fill="#374151">Planned / stub</text>
+  <rect x="794" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="814" y="164" font-size="9" fill="#374151">Title bar / step header</text>
+  <line x1="794" y1="180" x2="812" y2="180" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#f)"/>
+  <text x="818" y="184" font-size="9" fill="#374151">Pipeline flow</text>
+  <line x1="794" y1="198" x2="812" y2="198" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fr)"/>
+  <text x="818" y="202" font-size="9" fill="#374151">Reference (scoped-by)</text>
+
+  <!-- =========================== INGEST PIPELINE =========================== -->
+  <text x="22" y="100" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">A · INGEST &amp; MATERIALIZE</text>
+
+  <!-- Source fixtures -->
+  <rect x="20" y="110" width="200" height="120" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="20" y="110" width="200" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="120" y="127" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">OnBase fixtures</text>
+  <text x="32" y="151" font-size="9" fill="#7a5b06">6 × .expk export packages</text>
+  <text x="32" y="166" font-size="9" fill="#7a5b06">(AP, ISSO, IST, OAD, PRO, TR)</text>
+  <text x="32" y="181" font-size="9" fill="#7a5b06">schema.json · BU_Catalog.json</text>
+  <text x="32" y="196" font-size="9" fill="#7a5b06">*WorkflowDoc*.json</text>
+  <text x="32" y="214" font-size="8.5" fill="#9a7a2e">OnBaseSource (fixture mode)</text>
+
+  <!-- arrow -> anchors -->
+  <line x1="220" y1="170" x2="262" y2="170" stroke="#b8860b" stroke-width="1.6" marker-end="url(#fa)"/>
+
+  <!-- Anchor (extract request) -->
+  <rect x="264" y="110" width="196" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="264" y="110" width="196" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="362" y="127" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">Anchor</text>
+  <text x="276" y="151" font-size="9" fill="#1b4d22">id · kind (doc_type | keyword |</text>
+  <text x="276" y="165" font-size="9" fill="#1b4d22">lifecycle | custom_sql | vector)</text>
+  <text x="276" y="179" font-size="9" fill="#1b4d22">source · selectors · filters</text>
+  <text x="276" y="193" font-size="9" fill="#1b4d22">vectorize (bool)</text>
+  <text x="276" y="214" font-size="8.5" fill="#5f8a66">JSON file = source of truth</text>
+
+  <!-- arrow anchor -> materializer -->
+  <line x1="460" y1="170" x2="502" y2="170" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#f)"/>
+
+  <!-- Materializer -->
+  <rect x="504" y="110" width="200" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="504" y="110" width="200" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="604" y="127" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">materialize()</text>
+  <text x="516" y="151" font-size="9" fill="#1b4d22">source.extract(request)</text>
+  <text x="516" y="165" font-size="9" fill="#1b4d22">→ write raw JSONL to lake</text>
+  <text x="516" y="179" font-size="9" fill="#1b4d22">→ embed → Chroma anchor_&lt;id&gt;</text>
+  <text x="516" y="193" font-size="9" fill="#1b4d22">stamps _provenance per record</text>
+  <text x="516" y="214" font-size="8.5" fill="#5f8a66">3 demo anchors materialized</text>
+
+  <!-- arrows materializer down to stores -->
+  <line x1="560" y1="230" x2="560" y2="276" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#f)"/>
+  <line x1="650" y1="230" x2="760" y2="276" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#f)"/>
+
+  <!-- =========================== STORES =========================== -->
+  <text x="22" y="262" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">B · LOCAL STORE (Product/)</text>
+
+  <!-- JSONL lake -->
+  <rect x="440" y="280" width="244" height="118" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="440" y="280" width="244" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="562" y="297" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">JSONL Data Lake</text>
+  <text x="452" y="321" font-size="9" fill="#0c4a6e">Product/Lake/raw/&lt;source&gt;/&lt;anchor&gt;/</text>
+  <text x="452" y="335" font-size="9" fill="#0c4a6e">&lt;timestamp&gt;.jsonl  (one per run)</text>
+  <text x="452" y="349" font-size="9" fill="#0c4a6e">anchors/ · workspaces/ · bridges/</text>
+  <text x="452" y="366" font-size="8.5" fill="#0369a1">raw anchors: ap_invoices ·</text>
+  <text x="452" y="379" font-size="8.5" fill="#0369a1">isso_students · lc_mat_test</text>
+  <text x="452" y="392" font-size="8" fill="#0284c7">every record carries _provenance{source, method, confidence}</text>
+
+  <!-- ChromaDB -->
+  <rect x="704" y="280" width="276" height="118" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="704" y="280" width="276" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="842" y="297" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">ChromaDB vector store</text>
+  <text x="716" y="321" font-size="9" fill="#1b4d22">Product/ONBASE/RAG_Index/chroma.sqlite3</text>
+  <text x="716" y="335" font-size="9" fill="#1b4d22">collections: cognibase_main + anchor_&lt;id&gt;</text>
+  <text x="716" y="349" font-size="9" fill="#1b4d22">embeddings table ≈ 40 rows (demo)</text>
+  <text x="716" y="366" font-size="8.5" fill="#5f8a66">PersistentClient · embed vendor = router.pick_embed()</text>
+  <text x="716" y="382" font-size="8" fill="#5f8a66">retriever returns id · text · metadata · score (1 − distance)</text>
+
+  <!-- =========================== CAPABILITY PIPELINE =========================== -->
+  <text x="22" y="430" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">C · ADMIN-AUTHORED CAPABILITY PIPELINE</text>
+
+  <!-- Capability -->
+  <rect x="20" y="440" width="210" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="440" width="210" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="125" y="457" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">Capability</text>
+  <text x="32" y="481" font-size="9" fill="#1f2d3d">id · kind (retrieval | report)</text>
+  <text x="32" y="495" font-size="9" fill="#374151">sql_template (:params)</text>
+  <text x="32" y="509" font-size="9" fill="#c2185b">anchors[]  → scoped to anchors</text>
+  <text x="32" y="523" font-size="9" fill="#374151">required_gate · k_anonymity_floor</text>
+  <text x="32" y="537" font-size="9" fill="#374151">status (draft|published|retired)</text>
+  <text x="32" y="551" font-size="9" fill="#374151">version  (snapshot on edit)</text>
+  <text x="32" y="571" font-size="8.5" fill="#5f8a66">3 demo capabilities (AP invoices,</text>
+  <text x="32" y="583" font-size="8.5" fill="#5f8a66">vendor exposure, dept retrieval)</text>
+
+  <!-- scoped-by reference capability -> lake -->
+  <path d="M 230,505 C 330,505 360,420 460,398" fill="none" stroke="#c2185b" stroke-width="1.5" marker-end="url(#fr)"/>
+
+  <!-- arrow capability -> validator -->
+  <line x1="230" y1="515" x2="272" y2="515" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#f)"/>
+
+  <!-- Validator -->
+  <rect x="274" y="440" width="200" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="274" y="440" width="200" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="374" y="457" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">SQL Validator</text>
+  <text x="286" y="481" font-size="9" fill="#1b4d22">sqlglot parse (sqlite)</text>
+  <text x="286" y="495" font-size="9" fill="#1b4d22">✗ multi-statement</text>
+  <text x="286" y="509" font-size="9" fill="#1b4d22">✗ non-SELECT / DDL / PRAGMA</text>
+  <text x="286" y="523" font-size="9" fill="#1b4d22">✗ sqlite_/pragma_ tables</text>
+  <text x="286" y="537" font-size="9" fill="#1b4d22">✗ table not in anchors[]</text>
+  <text x="286" y="551" font-size="9" fill="#1b4d22">✗ undeclared :placeholder</text>
+  <text x="286" y="571" font-size="8.5" fill="#5f8a66">runs at PUBLISH and at RUN</text>
+  <text x="286" y="583" font-size="8.5" fill="#5f8a66">(defense in depth)</text>
+
+  <!-- arrow validator -> lake backend -->
+  <line x1="474" y1="515" x2="516" y2="515" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#f)"/>
+
+  <!-- Lake backend -->
+  <rect x="518" y="440" width="206" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="518" y="440" width="206" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="621" y="457" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">LakeBackend.execute()</text>
+  <text x="530" y="481" font-size="9" fill="#1b4d22">load ONLY declared anchors'</text>
+  <text x="530" y="495" font-size="9" fill="#1b4d22">latest JSONL → in-memory SQLite</text>
+  <text x="530" y="509" font-size="9" fill="#1b4d22">(one TEXT table per anchor)</text>
+  <text x="530" y="523" font-size="9" fill="#1b4d22">run SQL · param binding · row_limit</text>
+  <text x="530" y="537" font-size="9" fill="#1b4d22">SqlResult + snapshot_id</text>
+  <text x="530" y="557" font-size="8.5" fill="#5f8a66">:memory: DB discarded after run</text>
+  <text x="530" y="571" font-size="8.5" fill="#5f8a66">anchor scope enforced 2nd time</text>
+
+  <!-- backend reads lake (reference) -->
+  <path d="M 600,440 C 600,420 580,408 568,400" fill="none" stroke="#c2185b" stroke-width="1.5" marker-end="url(#fr)"/>
+
+  <!-- arrow backend -> audit -->
+  <line x1="724" y1="515" x2="766" y2="515" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#f)"/>
+
+  <!-- Audit -->
+  <rect x="768" y="440" width="212" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="768" y="440" width="212" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="874" y="457" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">audit_summary</text>
+  <text x="780" y="481" font-size="9" fill="#1b4d22">.docx + .json on EVERY run</text>
+  <text x="780" y="495" font-size="9" fill="#1b4d22">pins capability version</text>
+  <text x="780" y="509" font-size="9" fill="#1b4d22">+ bound params + snapshot_id</text>
+  <text x="780" y="523" font-size="9" fill="#1b4d22">+ rows returned</text>
+  <text x="780" y="537" font-size="9" fill="#1b4d22">reproducible byte-for-byte</text>
+  <text x="780" y="557" font-size="8.5" fill="#5f8a66">Product/Lake/capabilities/audit/</text>
+  <text x="780" y="569" font-size="8.5" fill="#5f8a66">&lt;capability_id&gt;/&lt;run_id&gt;.{docx,json}</text>
+
+  <!-- Grant relationship -->
+  <rect x="20" y="612" width="320" height="86" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.4"/>
+  <rect x="20" y="612" width="320" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="180" y="629" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">CapabilityGrant</text>
+  <text x="32" y="653" font-size="9" fill="#c2185b">capability_id → Capability</text>
+  <text x="32" y="667" font-size="9" fill="#475569">cb_group · granted_by · clone_allowed</text>
+  <text x="32" y="683" font-size="8.5" fill="#6b7280">no grant = invisible to users · header RBAC (X-CB-Group) until real RBAC</text>
+  <!-- grant -> capability ref -->
+  <path d="M 180,612 C 180,600 120,598 120,592" fill="none" stroke="#c2185b" stroke-width="1.5" marker-end="url(#fr)"/>
+
+  <!-- RAG chat path note -->
+  <rect x="360" y="612" width="620" height="86" rx="8" fill="#eef6ff" stroke="#2563eb" stroke-width="1.2"/>
+  <rect x="360" y="612" width="620" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="670" y="629" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Parallel path · RAG Chat (POST /chat)</text>
+  <text x="372" y="653" font-size="9" fill="#1e40af">QueryEngine: retriever.search(top_k) over ChromaDB → context block → router.pick_chat() → cited answer</text>
+  <text x="372" y="669" font-size="9" fill="#1e40af">system prompt: "senior OnBase analyst · use ONLY provided context · cite by id · say so if insufficient"</text>
+  <text x="372" y="685" font-size="8.5" fill="#3b82f6">returns answer + citations[] + vendor_used + token counts · 503 if no index or no embed/chat vendor</text>
+</svg>

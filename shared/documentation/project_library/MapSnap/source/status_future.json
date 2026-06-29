@@ -1,0 +1,80 @@
+{
+  "categories": [
+    {
+      "name": "Activate the shipped AI layers in production",
+      "priority": "high",
+      "items": [
+        {
+          "title": "Elevated QI_MapSnap restart",
+          "detail": "Phases 2-4 (data profiling _profile_block, hybrid semantic retrieval, verified-query recording) are coded but read at runtime; an admin (elevated) restart of the QI_MapSnap NSSM service flips them from Partial to Live."
+        },
+        {
+          "title": "Settings UI for data policy + enrichment grid",
+          "detail": "Surface the per-profile data_policy selector and the layer x trigger enrichment grid in build_browser.py. Server enforcement is already authoritative; this is presentation only."
+        },
+        {
+          "title": "Extend the regression eval set",
+          "detail": "Grow the NL->SQL / chat eval suite (model_eval.py) to cover 'what kind of data is in <column>' and 'what values are in <column>' answered from real masked samples."
+        }
+      ]
+    },
+    {
+      "name": "Generic engine coverage",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "Live-data value catalog for non-OnBase engines",
+          "detail": "Generalise Layer 3: a profiling-driven catalog for any lookup-heavy schema, not just OnBase DocTypes/keywords, so business-name resolution works on Jenzabar and others."
+        },
+        {
+          "title": "Per-system domain packs beyond OnBase / Jenzabar",
+          "detail": "Flesh out the existing system_docs stubs (peoplesoft, banner, sap, epic, blackbaud, dynamics365) with real primers and domain rules."
+        },
+        {
+          "title": "Background-job UI for heavy enrichment",
+          "detail": "Show 'Enriching - N/2,325 tables' progress and re-embed-on-completion for the budgeted LLM-heavy layers, keeping Connect & Extract responsive."
+        }
+      ]
+    },
+    {
+      "name": "CogniBase @ BU reuse",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "Point the stack at Boston University's connection",
+          "detail": "The whole pipeline is engine-agnostic by design; reuse it for CogniBase by pointing at BU's OnBase/SQL connection. Only domain packs and catalog are tuned per system."
+        },
+        {
+          "title": "Institutional cloud-tenancy model routing",
+          "detail": "Support running the frontier model via the institution's own AWS Bedrock / Azure OpenAI / Vertex tenancy under their DPA/BAA, in addition to local-only and metadata-only."
+        },
+        {
+          "title": "Federation onboarding: canonical-key mapping proposals",
+          "detail": "Per BU Library v2 Appendix A + Doc 18: point MapSnap at each structured system of record (SAP/BUworks, MyBU/Campus Solutions, CAMMS, StarRez, ...), read the schema, and propose canonical-key mappings (e.g. 'SAP vendor key ≡ canonical PersonTaxID'). Those proposals become candidate Normalizers that CogniBase consumes and a steward ratifies — MapSnap builds the ontology CogniBase governs."
+        },
+        {
+          "title": "Pre-ingestion augmentation (AutoPDF + MapSnap, Phase 0 / optional)",
+          "detail": "Per Appendix A: resolve AutoPDF-extracted document fields to canonical entities/keys using MapSnap value catalogs at capture time, so OnBase content arrives pre-aligned (canonical key + confidence + provenance). Discovery family as one pipeline: capture (AutoPDF) → understand (MapSnap) → align → correlate (CogniBase). Exploratory; not required for the core pilot."
+        }
+      ]
+    },
+    {
+      "name": "Compounding intelligence",
+      "priority": "low",
+      "items": [
+        {
+          "title": "Cross-profile verified-query sharing",
+          "detail": "Optionally promote high-value verified NL->SQL pairs into reusable templates across similar schemas of the same system type."
+        },
+        {
+          "title": "Schema-change watch + auto re-enrich",
+          "detail": "Detect schema.json mtime changes and incrementally re-profile / re-embed only what changed, with a background re-embed tail."
+        },
+        {
+          "title": "Exportable schema confirmation packet",
+          "detail": "One-click export of the schema map, relationships, and annotations as a shareable report for stakeholder sign-off."
+        }
+      ]
+    }
+  ]
+}

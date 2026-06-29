@@ -1,0 +1,45 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the engine, web API, and the Naya integration bridge", "license": "PSF (open source)", "version": "3.11"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API (50+ /api/* endpoints) on port 8000 — scan, categorize, hash, dedup, organize, structure, tasks, history, exceptions, settings", "license": "MIT", "version": "0.115.6"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (run.py: uvicorn.run on 127.0.0.1:8000)", "license": "BSD", "version": "0.34.0 [standard]"},
+    {"layer": "Web UI", "technology": "Jinja2 + StaticFiles", "role": "Server-rendered dashboard — 11 templates (dashboard, duplicates, explorer, organizer, tasks, history, reports, exceptions, settings, structure, base)", "license": "BSD", "version": "3.1.5"},
+    {"layer": "Web UI", "technology": "python-multipart", "role": "Form/file upload parsing for the dashboard POST endpoints", "license": "Apache 2.0", "version": "0.0.20"},
+    {"layer": "Database", "technology": "SQLite (filehq.db)", "role": "Single-file catalogue: files, duplicate_groups, duplicate_members, operations, tasks, task_runs, exceptions, scans, schema_info", "license": "Public domain", "version": "3.x (WAL mode, FK on)"},
+    {"layer": "Hashing", "technology": "xxhash", "role": "Fast non-cryptographic xxh64 fingerprinting — partial (64KB) and full-file hashes for exact-duplicate detection", "license": "BSD-2", "version": "3.5.0"},
+    {"layer": "Filesystem", "technology": "os.walk / os / shutil / pathlib", "role": "Directory traversal, stat-based indexing, and move/rename/delete execution for the organizer", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Async Files", "technology": "aiofiles", "role": "Async file I/O for the FastAPI layer", "license": "Apache 2.0", "version": "24.1.0"},
+    {"layer": "Scheduling", "technology": "APScheduler", "role": "BackgroundScheduler + CronTrigger for recurring scan / dedup tasks (wired; no jobs registered yet)", "license": "MIT", "version": "3.10.4"},
+    {"layer": "Config", "technology": "PyYAML", "role": "Loads/saves config/config.yaml (app, archive, scanner, categories, scheduler); deep-merged over defaults", "license": "MIT", "version": "6.0.2"},
+    {"layer": "Formatting", "technology": "humanize + rich", "role": "Human-readable file sizes/dates in the dashboard (humanize) and console output (rich)", "license": "MIT", "version": "4.11.0 / 13.9.4"},
+    {"layer": "Integration", "technology": "requests (in bridge)", "role": "filehq_bridge.py uses requests to call the FileHQ REST API from inside Naya; plus a read-only sqlite3 connection for fast lookups", "license": "Apache 2.0", "version": "bundled with Naya"},
+    {"layer": "Parent / Identity", "technology": "Naya (naya_db)", "role": "FileHQ reads personal.default_scan_drive from naya.db and is launched + consumed by the Naya bot; FileHQ has no separate identity layer", "license": "QI internal", "version": "merged 2026"},
+    {"layer": "Ecosystem (declared)", "technology": "NEXUS", "role": "Declared consumes_from_ecosystem dependency: LLM recommendations for file analysis (not yet wired in code)", "license": "QI internal", "version": "registry"}
+  ],
+  "descriptions": [
+    {
+      "title": "Why xxhash and not MD5/SHA-256",
+      "body": "Duplicate detection needs to fingerprint potentially millions of files, so the hash must be fast, not cryptographically secure — these files are not being protected against a forging adversary, just compared for equality. FileHQ uses xxhash64, a non-cryptographic hash that is many times faster than MD5 or SHA-256 and more than sufficient to decide 'are these two files byte-identical?'. The cost that matters here is disk I/O, and xxhash keeps the CPU from becoming the bottleneck while a terabyte of data streams past."
+    },
+    {
+      "title": "The three-phase hashing pipeline (why singletons are never read)",
+      "body": "Hashing every file would mean reading every byte on the drive — wasteful, because a file with a unique size cannot have a duplicate. hash_candidates() exploits this in three stages. Phase 1: SELECT size_bytes ... GROUP BY size_bytes HAVING COUNT(*) > 1 finds only sizes shared by two or more files. Phase 2: those candidates get a cheap partial hash (first + last 64KB); a unique partial hash clears a file. Phase 3: only files that still collide on the partial hash are read in full. The result: the vast majority of files are never fully read, turning an O(all bytes) job into one that touches only genuine duplicate suspects."
+    },
+    {
+      "title": "Read-first, write-never (until approved)",
+      "body": "FileHQ's core promise is that indexing is non-destructive. The scanner, categorizer, hasher, and duplicate finder only read the filesystem and write to filehq.db — they never touch a user's files. The only modules that mutate the disk are the dedup executor and the organizer executor, and both default to dry_run=True. When invoked through Naya, the bridge additionally requires approved=True, which is only set after the owner says 'you may proceed' in the same message. Every real mutation is then recorded in the operations table with a batch_id and undo_path so it can be reversed."
+    },
+    {
+      "title": "SQLite as the whole datastore (WAL + busy_timeout)",
+      "body": "There is no server database — the entire index, duplicate map, operation log, task schedule, and exception rules live in one file, db/filehq.db. get_connection() opens it with journal_mode=WAL (so the dashboard can read while a scan writes), foreign_keys=ON (so duplicate_members can't dangle off a deleted group), and busy_timeout=5000 (so concurrent writers wait rather than error). The catalogue currently holds ~2.86 million file rows, which SQLite handles comfortably with the size/hash/category indexes defined in the schema."
+    },
+    {
+      "title": "Config that defers to Naya",
+      "body": "FileHQ keeps its own config/config.yaml (categories, skip rules, archive layout, scheduler intervals) but deliberately does not own the most important runtime value — which drive to scan. load_config() calls into naya_db.get_config('personal.default_scan_drive') and overrides primary_drive with whatever Naya has stored. This is the merge in microcosm: FileHQ provides the capability, Naya provides the identity and the user-facing settings, and the engine bends to the parent rather than holding a competing source of truth."
+    },
+    {
+      "title": "Two ways into the engine: REST and direct DB",
+      "body": "filehq_bridge.py talks to FileHQ two ways. For actions and live job state it makes HTTP calls to the FastAPI app (_get/_post/_put/_delete). For fast, read-only reporting — counts, largest files, category and drive breakdowns, filename search — it skips HTTP entirely and opens the SQLite file directly in read-only mode (sqlite3.connect('file:...?mode=ro', uri=True)). This keeps Naya's conversational answers snappy (no web round-trip) while still routing anything that changes state through the API, which is where the approval guards live."
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the server, vendor layer, RAG, sources, anchors, capabilities, and tests", "license": "PSF (open source)", "version": ">=3.11"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API on port 8650 — /health, /chat, /vendors, /anchors, /capabilities, /visualizer (6 mounted routers)", "license": "MIT", "version": ">=0.110"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server hosting the FastAPI app (run() entry point / cognibase-server script)", "license": "BSD", "version": ">=0.27 [standard]"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Request models for chat, anchors, and capability CRUD/run/grant/draft/validate", "license": "MIT", "version": ">=2.6"},
+    {"layer": "API Server", "technology": "python-multipart", "role": "Multipart form handling for file uploads (.expk discovery, document ingest)", "license": "Apache 2.0", "version": ">=0.0.9"},
+    {"layer": "Knowledge / RAG", "technology": "ChromaDB", "role": "Persistent on-disk vector store at Product/ONBASE/RAG_Index; main collection cognibase_main + per-anchor anchor_<id> collections (~40 demo embeddings)", "license": "Apache 2.0", "version": ">=0.5"},
+    {"layer": "Knowledge / RAG", "technology": "tiktoken", "role": "Token counting / chunk sizing for the RAG pipeline", "license": "MIT", "version": ">=0.7"},
+    {"layer": "Capability Safety", "technology": "sqlglot", "role": "Parses capability SQL into an AST to enforce the safety boundary: single read-only SELECT, anchor-scoped tables only, no DDL/PRAGMA/system tables", "license": "MIT", "version": ">=25.0"},
+    {"layer": "Capability Backend", "technology": "SQLite (in-memory)", "role": "Per-run sandbox: declared anchors' JSONL is loaded into an ephemeral :memory: DB (one table per anchor) and the capability SQL runs there with safe parameter binding", "license": "Public domain", "version": "stdlib (sqlite3)"},
+    {"layer": "Data Store", "technology": "JSON files (file-as-source-of-truth)", "role": "Anchors, workspaces, bridges, and capabilities are each one hand-editable, git-friendly JSON file — no relational DB, no migrations", "license": "N/A", "version": "—"},
+    {"layer": "Data Store", "technology": "JSONL data lake", "role": "Product/Lake/raw/<source>/<anchor>/<ts>.jsonl materializations + capability audit sidecars", "license": "N/A", "version": "—"},
+    {"layer": "OnBase / HTTP", "technology": "httpx", "role": "Sync HTTP client for the OnBase REST client (and Unity REST overlap)", "license": "BSD", "version": ">=0.27"},
+    {"layer": "OnBase / Auth", "technology": "Authlib", "role": "OAuth2 PKCE flow to the institution's IdP for live OnBase access (M2 — config shape present, wiring pending)", "license": "BSD", "version": ">=1.3"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Generates the audit_summary.docx on every capability run and templated reports", "license": "MIT", "version": ">=1.1"},
+    {"layer": "Documents", "technology": "openpyxl", "role": "Spreadsheet (.xlsx) export for report outputs", "license": "MIT", "version": ">=3.1"},
+    {"layer": "Documents", "technology": "PyMuPDF (fitz)", "role": "PDF text/content extraction from OnBase document binaries", "license": "AGPL / commercial", "version": ">=1.24"},
+    {"layer": "Documents", "technology": "lxml", "role": "XML parsing of OnBase Studio .expk export packages in the discovery pipeline", "license": "BSD", "version": ">=5.1"},
+    {"layer": "Reports / Charts", "technology": "matplotlib + pandas", "role": "Chart rendering and tabular shaping for reports and the future Canvas", "license": "PSF / BSD", "version": ">=3.8 / >=2.2"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv + custom env loader", "role": "Settings/.env loading; 'env:NAME' indirection resolves secrets at load time and never writes real keys back to settings.json", "license": "BSD", "version": ">=1.0"},
+    {"layer": "AI — Cloud (active)", "technology": "Anthropic Claude", "role": "Default active chat vendor via the anthropic SDK; ClaudeVendor (default model claude-sonnet-4-6)", "license": "Paid API", "version": "anthropic>=0.40"},
+    {"layer": "AI — Cloud (pre-wired, off)", "technology": "OpenAI · Google Gemini", "role": "Concrete adapters present, active:false pending keys; OpenAI also supplies embeddings (text-embedding-3-*)", "license": "Paid API", "version": "openai>=1.50 / google-generativeai>=0.7"},
+    {"layer": "AI — Local (pre-wired, off)", "technology": "Ollama · LM Studio · llama.cpp", "role": "Local inference + embeddings (nomic-embed-text); openai_compatible adapter covers any OpenAI-compatible local server", "license": "MIT / mixed", "version": "HTTP (no SDK)"},
+    {"layer": "Packaging", "technology": "setuptools + Docker", "role": "pip editable install (cognibase-server / cognibase-rag scripts) and Docker/compose with bind-mounted state for full portability", "license": "MIT / Apache 2.0", "version": "pyproject 0.4.0.dev0"},
+    {"layer": "Testing", "technology": "pytest + pytest-asyncio", "role": "≈95 tests against FakeChatVendor/FakeEmbedVendor — no API keys required to run the suite", "license": "MIT", "version": ">=8"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "Planned QI_CogniBase service (venv python, AppDirectory C:\\CogniBase) + QI_CogniBaseTunnel → cognibase.quiddityinnovations.com (documented, not yet running)", "license": "Open source / Cloudflare", "version": "nssm via C:\\QIH\\engine\\bin\\nssm.exe"}
+  ],
+  "descriptions": [
+    {
+      "title": "Vendor-neutral by construction (no hardcoded model names)",
+      "body": "The whole AI layer is data-driven. settings.json declares a list of vendors, each with a module + class name; VendorRegistry uses importlib to load only the active ones, and VendorRouter resolves a request to a concrete vendor by prefer → configured default → first active-with-capability → RuntimeError. Adding a model means editing JSON, not code. ClaudeVendor is the only adapter active by default; OpenAI, Gemini, Ollama, LM Studio and llama.cpp are pre-wired and off until a key or endpoint is supplied. This is a deliberate anti-lock-in stance: an institution can run entirely on local models (Ollama/LM Studio/llama.cpp) with zero cloud calls and zero data egress."
+    },
+    {
+      "title": "Why fixture mode is the default today (and why status is pre-POC)",
+      "body": "CogniBase has never connected to a live OnBase deployment. OnBaseSource runs in mode=auto, which tries the REST client and falls back to local fixtures the moment it fails — and it always fails, because OnBaseRestClient is an unexercised stub and UnityClient raises NotImplementedError. So every doc-type, lifecycle, and extract you see is read from parsed .expk exports, a sample schema.json, and *WorkflowDoc*.json, with synthetic populated counts. The code paths are real and tested; the data is not live. That gap — fixtures vs a real OnBase connection (M2/M3) — is exactly why the registry status is pre_poc rather than poc."
+    },
+    {
+      "title": "The capability safety boundary (sqlglot validator)",
+      "body": "Admin-Authored Capabilities let a human write SQL that end-users later run, so the SQL is the attack surface. capabilities/validator.py parses it with sqlglot (sqlite dialect) and rejects anything that isn't a single read-only SELECT: multi-statements, any Insert/Update/Delete/Drop/Alter/Create/Pragma/Attach/Merge node anywhere in the tree, sqlite_/pragma_ identifiers, table-valued functions, tables outside the capability's declared anchors, and :placeholders not declared as parameters. It runs at publish time AND again at run time (defense in depth — the JSON could be hand-edited between the two). This is what makes user-authored SQL safe enough to expose."
+    },
+    {
+      "title": "Files as the source of truth — no database, no migrations",
+      "body": "Anchors, workspaces, bridges, and capabilities are each persisted as one JSON file under Product/Lake. The file IS the record: UI editing, agent generation, hand-editing, and git all hit the same artifact, and there is no schema-migration burden. Capability edits write a CapabilityVersion snapshot so history is preserved. The only 'database' anywhere is the per-run, in-memory SQLite the LakeBackend builds from anchor JSONL and then throws away — there is no persistent relational store to corrupt or back up."
+    },
+    {
+      "title": "Anchors + the Lake backend: scoped, sandboxed execution",
+      "body": "An Anchor declares a slice of a source (a doc type, keyword set, or lifecycle). Materializing it writes raw JSONL to Product/Lake/raw/<source>/<anchor>/ and optionally embeds the records into a dedicated Chroma collection anchor_<id>. When a capability runs, LakeBackend loads ONLY the anchors that capability declared into an in-memory SQLite database (one TEXT table per anchor) and executes the validated SQL there. The anchor list is therefore enforced twice: by the validator (no out-of-anchor tables) and by the backend (only declared anchors are even loaded)."
+    },
+    {
+      "title": "Provenance and audit on every run",
+      "body": "Two provenance layers run end to end. Every extracted record carries a _provenance block (source, source_id, retrieved_at, method, confidence) stamped by AbstractSource.annotate(). Every capability run — preview or real — calls generate_audit_summary(), which writes a .docx plus a .json sidecar pinning the capability version, the bound parameters, the backend snapshot id, and the returned rows. Because the version is pinned at run time, the audit reproduces byte-for-byte even after the capability is later edited. This is the feature that differentiates CogniBase from a generic BI tool: the answer ships with its own receipt."
+    }
+  ]
+}

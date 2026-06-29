@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 660" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arr-grey" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9aa5b1"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="940" height="660" fill="#f8fafc" rx="12"/>
+  <text x="470" y="28" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2d3d">Claude Voice — System Architecture</text>
+  <text x="470" y="47" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active Development · 2026</text>
+  <text x="470" y="63" text-anchor="middle" font-size="9.5" fill="#9aa5b1">Voice-driven assistant + (in progress) Voice Dispatch console · ports 8720–8729 · real Claude FREE via headless CLI</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="716" y="74" width="214" height="176" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="823" y="92" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="724" y="99" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="744" y="108" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="724" y="116" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="744" y="125" font-size="9" fill="#374151">Built · Partial / Pending</text>
+  <rect x="724" y="133" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="744" y="142" font-size="9" fill="#374151">Planned</text>
+  <rect x="724" y="150" width="14" height="10" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,2"/>
+  <text x="744" y="159" font-size="9" fill="#374151">Disabled / Caution</text>
+  <rect x="724" y="167" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="744" y="176" font-size="9" fill="#374151">Core service (dark box)</text>
+  <line x1="724" y1="190" x2="742" y2="190" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="748" y="194" font-size="9" fill="#374151">User → Channel flow</text>
+  <path d="M 724,206 H 734 V 212 H 742" fill="none" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="748" y="214" font-size="9" fill="#374151">Connector (elbow)</text>
+  <path d="M 724,228 H 742" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <text x="748" y="232" font-size="9" fill="#374151">Tunnel / secure path</text>
+  <text x="823" y="246" text-anchor="middle" font-size="8" fill="#9aa5b1">Quiddity Innovations © 2026</text>
+
+  <!-- ══ USERS GROUP ══ -->
+  <rect x="14" y="78" width="500" height="84" rx="9" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="26" y="72" width="54" height="14" rx="3" fill="#f8fafc"/>
+  <text x="53" y="83" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700" letter-spacing="1">USERS</text>
+
+  <rect x="22" y="90" width="150" height="64" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="97" y="110" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Owner (Renne)</text>
+  <text x="97" y="125" text-anchor="middle" font-size="8" fill="#3b82f6">Full assistant · binding</text>
+  <text x="97" y="137" text-anchor="middle" font-size="8" fill="#3b82f6">commands · dual-brain</text>
+  <text x="97" y="149" text-anchor="middle" font-size="8" fill="#93c5fd">PC · LINE · TG · Meeting</text>
+
+  <rect x="180" y="90" width="150" height="64" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="255" y="110" text-anchor="middle" font-size="11" font-weight="600" fill="#713f12">Guests</text>
+  <text x="255" y="125" text-anchor="middle" font-size="8" fill="#ca8a04">Social chat only</text>
+  <text x="255" y="137" text-anchor="middle" font-size="8" fill="#ca8a04">no project access</text>
+  <text x="255" y="149" text-anchor="middle" font-size="8" fill="#ca8a04">LINE (guarded)</text>
+
+  <rect x="338" y="90" width="168" height="64" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="422" y="110" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Other AI agents</text>
+  <text x="422" y="125" text-anchor="middle" font-size="8" fill="#3b82f6">Join the meeting room</text>
+  <text x="422" y="137" text-anchor="middle" font-size="8" fill="#3b82f6">answer when named</text>
+  <text x="422" y="149" text-anchor="middle" font-size="8" fill="#93c5fd">WebSocket · agent_join.py</text>
+
+  <!-- arrow Users -> Channels -->
+  <line x1="260" y1="162" x2="260" y2="196" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <!-- ══ CHANNELS GROUP ══ -->
+  <rect x="14" y="196" width="612" height="70" rx="9" fill="none" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="26" y="190" width="74" height="14" rx="3" fill="#f8fafc"/>
+  <text x="63" y="201" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="700" letter-spacing="1">CHANNELS</text>
+
+  <rect x="22" y="208" width="118" height="50" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="81" y="226" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">LINE :8721</text>
+  <text x="81" y="239" text-anchor="middle" font-size="7.5" fill="#16a34a">line_bot.py · text+voice</text>
+  <text x="81" y="250" text-anchor="middle" font-size="7.5" fill="#16a34a">webhook · /video</text>
+
+  <rect x="146" y="208" width="118" height="50" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="205" y="226" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Telegram</text>
+  <text x="205" y="239" text-anchor="middle" font-size="7.5" fill="#16a34a">telegram_bot.py</text>
+  <text x="205" y="250" text-anchor="middle" font-size="7.5" fill="#16a34a">outbound long-poll</text>
+
+  <rect x="270" y="208" width="118" height="50" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="329" y="223" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">PC Voice Loop</text>
+  <text x="329" y="236" text-anchor="middle" font-size="7.5" fill="#16a34a">realtime.py · speak/listen</text>
+  <text x="329" y="247" text-anchor="middle" font-size="7.5" fill="#16a34a">VAD · streaming · barge-in</text>
+
+  <rect x="394" y="208" width="110" height="50" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="449" y="223" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">Meeting :8722</text>
+  <text x="449" y="236" text-anchor="middle" font-size="7.5" fill="#ca8a04">meeting_server.py</text>
+  <text x="449" y="247" text-anchor="middle" font-size="7.5" fill="#ca8a04">daily 08:00 task</text>
+
+  <rect x="510" y="208" width="110" height="50" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="565" y="223" text-anchor="middle" font-size="10" font-weight="700" fill="#4c1d95">Brain UI :8720</text>
+  <text x="565" y="236" text-anchor="middle" font-size="7.5" fill="#7c3aed">server.py · toggle</text>
+  <text x="565" y="247" text-anchor="middle" font-size="7.5" fill="#7c3aed">/health /version /info</text>
+
+  <!-- Cloudflare tunnel (separate) -->
+  <rect x="642" y="196" width="116" height="70" rx="9" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="700" y="218" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Cloudflare</text>
+  <text x="700" y="232" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Tunnel</text>
+  <text x="700" y="248" text-anchor="middle" font-size="7.5" fill="#22c55e">claudevoice.quiddity…</text>
+  <text x="700" y="259" text-anchor="middle" font-size="7.5" fill="#22c55e">LINE :8721 only</text>
+
+  <!-- tunnel <-> LINE -->
+  <line x1="626" y1="231" x2="642" y2="231" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-green)"/>
+
+  <!-- channels -> core -->
+  <line x1="320" y1="266" x2="320" y2="300" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+
+  <!-- ══ CORE: STT / BRAIN ROUTER / TTS ══ -->
+  <rect x="14" y="300" width="744" height="70" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="386" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Claude Voice Core — STT · Dual-Brain Router · TTS</text>
+  <text x="386" y="340" text-anchor="middle" font-size="9.5" fill="#94a3b8">faster-whisper (STT) · brain.py (Claude vs Ronald, name toggle + hard-set lock) · backends.py (router) · edge-tts (MALE Andrew)</text>
+  <text x="386" y="356" text-anchor="middle" font-size="8.5" fill="#64748b">modality.py (text/voice/video) · pronounce.py (spoken-only) · util.py (ffmpeg) · config.json + secrets/claude_voice.env</text>
+
+  <!-- core -> brains -->
+  <line x1="120" y1="370" x2="120" y2="402" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+  <line x1="386" y1="370" x2="386" y2="402" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr-green)"/>
+  <line x1="660" y1="370" x2="660" y2="402" stroke="#9aa5b1" stroke-width="1.5" marker-end="url(#arr-grey)"/>
+
+  <!-- ══ BRAINS LAYER ══ -->
+  <text x="18" y="392" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">BRAINS — pluggable, toggleable (config-driven)</text>
+
+  <!-- Claude (claude_cli) -->
+  <rect x="14" y="402" width="244" height="128" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="136" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">“Claude” — the REAL Claude</text>
+  <text x="26" y="439" font-size="8.5" fill="#15803d">engine: claude_cli  ·  FREE  ·  ACTIVE</text>
+  <text x="26" y="454" font-size="8.5" fill="#374151">headless `claude -p` (subprocess)</text>
+  <text x="26" y="468" font-size="8.5" fill="#374151">CLAUDE_CODE_OAUTH_TOKEN (subscription)</text>
+  <text x="26" y="482" font-size="8.5" fill="#374151">model sonnet · ~20s/turn · no API bill</text>
+  <text x="26" y="496" font-size="8.5" fill="#374151">NOT --bare (would force metered key)</text>
+  <rect x="26" y="504" width="216" height="18" rx="5" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="134" y="517" text-anchor="middle" font-size="8" font-weight="600" fill="#14532d">voice: en-US-AndrewNeural (MALE)</text>
+
+  <!-- Ronald (ollama) -->
+  <rect x="266" y="402" width="240" height="128" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="386" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#713f12">“Ronald” — local stand-in</text>
+  <text x="278" y="439" font-size="8.5" fill="#9a7a2e">engine: ollama  ·  default safe brain</text>
+  <text x="278" y="454" font-size="8.5" fill="#7a5b06">llama3.1:8b (RTX 5080) · instant · free</text>
+  <text x="278" y="468" font-size="8.5" fill="#7a5b06">NOT Claude — anti-hallucination prompt</text>
+  <text x="278" y="482" font-size="8.5" fill="#7a5b06">no access to Renne’s data; never invents</text>
+  <rect x="278" y="490" width="216" height="18" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,2"/>
+  <text x="386" y="503" text-anchor="middle" font-size="8" font-weight="600" fill="#92400e">⚠ fallback_to_local = false (disabled)</text>
+  <text x="386" y="522" text-anchor="middle" font-size="8" fill="#9a7a2e">voice: en-US-BrianNeural</text>
+
+  <!-- Cloud brains (disabled) -->
+  <rect x="514" y="402" width="244" height="128" rx="9" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="636" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Cloud brains (toggleable)</text>
+  <text x="526" y="439" font-size="8.5" fill="#b45309">Anthropic API — claude-opus-4-8</text>
+  <text x="526" y="453" font-size="8.5" fill="#b45309">(disabled; for low-latency live voice)</text>
+  <text x="526" y="470" font-size="8.5" fill="#b45309">OpenRouter — :free models</text>
+  <text x="526" y="484" font-size="8.5" fill="#b45309">key: env or shared C:\QI\maia.db</text>
+  <rect x="526" y="492" width="220" height="18" rx="5" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="636" y="505" text-anchor="middle" font-size="8" font-weight="600" fill="#713f12">enabled: false · graceful fallback chain</text>
+  <text x="636" y="524" text-anchor="middle" font-size="8" fill="#b45309">backends.stream_reply (active-first)</text>
+
+  <!-- ══ STATE & OPS LAYER ══ -->
+  <text x="18" y="552" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">STATE (JSON — no DB) · OPS</text>
+
+  <!-- core -> state elbows -->
+  <path d="M 386,530 V 542 H 110 V 556" fill="none" stroke="#0284c7" stroke-width="1" marker-end="url(#arr)"/>
+  <path d="M 386,530 V 542 H 320 V 556" fill="none" stroke="#0284c7" stroke-width="1" marker-end="url(#arr)"/>
+
+  <rect x="14" y="556" width="220" height="56" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="124" y="574" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0c4a6e">State files (data\)</text>
+  <text x="124" y="588" text-anchor="middle" font-size="7.5" fill="#0284c7">brain_state.json · line_control.json</text>
+  <text x="124" y="600" text-anchor="middle" font-size="7.5" fill="#0284c7">bridge_health.json · shared across surfaces</text>
+
+  <rect x="242" y="556" width="248" height="56" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="366" y="574" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0c4a6e">Always-on services (NSSM QI_*)</text>
+  <text x="366" y="588" text-anchor="middle" font-size="7.5" fill="#0284c7">Line · Telegram · Tunnel · Control (24/7)</text>
+  <text x="366" y="600" text-anchor="middle" font-size="7.5" fill="#0284c7">Meeting = daily 08:00 task · hourly BridgeCheck</text>
+
+  <rect x="498" y="556" width="260" height="56" rx="7" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="628" y="574" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">Voice Dispatch → QI Hive (planned)</text>
+  <text x="628" y="588" text-anchor="middle" font-size="7.5" fill="#64748b">POST :9011/api/dispatch (source=voice_*)</text>
+  <text x="628" y="600" text-anchor="middle" font-size="7.5" fill="#64748b">approve by voice → claude -p + hive agents → report</text>
+
+  <!-- planned flow arrow core->dispatch -->
+  <path d="M 660,530 V 542 H 628 V 556" fill="none" stroke="#9aa5b1" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-grey)"/>
+
+  <text x="470" y="634" text-anchor="middle" font-size="8.5" fill="#9aa5b1">Roadmap: rebuild PC voice + meeting room on LiveKit (natural low-latency voice + Zoom-like screen share) — one Claude agent, one config panel.</text>
+</svg>

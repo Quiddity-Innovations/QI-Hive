@@ -1,0 +1,55 @@
+{
+  "sections": [
+    {
+      "name": "Project Overview & Handoff",
+      "documents": [
+        {"title": "Single-Session Handoff", "file": "HANDOFF.md", "location": "C:\\Lottery Wiz\\", "type": "Markdown", "description": "The single source of truth for project state: dated RESUME-HERE blocks (owner lock, tunnel, Results page, Ask Wiz, live sources, EU expansion, Super Sete), the architecture table, the DONE log, the curated pipeline, and pending next steps. Read this first."},
+        {"title": "Fantasy 5 App README", "file": "README.md", "location": "C:\\Lottery Wiz\\Fantasy5\\", "type": "Markdown", "description": "Readme for the deep Fantasy 5 browser app (the / page)."},
+        {"title": "Scratch Phase Design", "file": "SCRATCH_PHASE.md", "location": "C:\\Lottery Wiz\\", "type": "Markdown", "description": "Design notes for the scratch-off EV module: SQLite model, endpoints, UI, EV math and honest verdicts, and why scratch data is manual entry."},
+        {"title": "Scratch Phase Notes", "file": "SCRATCH_PHASE.md", "location": "C:\\Lottery Wiz\\", "type": "Markdown", "description": "EV-per-ticket tracking from user-entered prize-remaining data; ranked board; spend/won ledger."},
+        {"title": "Research Source", "file": "Source\\", "location": "C:\\Lottery Wiz\\Lottery Wiz Documentation\\", "type": "Folder", "description": "Renne's original Fantasy 5 covering-design research that the engine is built from (the 48 documented sets, backtest of GA F5 draws, Appendix-A probability formulas)."}
+      ]
+    },
+    {
+      "name": "Key Source — Server & Engines",
+      "documents": [
+        {"title": "FastAPI Server", "file": "server.py", "location": "C:\\Lottery Wiz\\", "type": "Python", "description": "~1,300-line backend on port 8777: ~45 endpoints (draws, update, build, ledger, verdict, chat, export, settings, sets, plays, scratch, supersete, Universal /api/g/*), 4 per-app AI system prompts, owner-key loader, no-cache middleware, and 5 static mounts."},
+        {"title": "Fantasy 5 Engine", "file": "engine_py.py", "location": "C:\\Lottery Wiz\\", "type": "Python", "description": "Pure-Python F5 engine (pick 5 of 42): probability (Appendix A), structured/hybrid/wheel generators, the curated build_play_set funnel (is_edge + profile_score), backtest, check_set, and the Brutal Ledger (ledger_run + montecarlo_control). Shared by server.py and mcp_server.py."},
+        {"title": "Universal Engine", "file": "lottery_general.py", "location": "C:\\Lottery Wiz\\", "type": "Python", "description": "Generalized engine for any N/k + bonus ball: prize_tiers/jackpot_odds (verified exact), dcode-style wheel(), derive_profile/build_curated, generalized ledger/control/backtest, Super Sete Poisson-binomial odds, and the PRESETS game registry."},
+        {"title": "Live Sources", "file": "live_sources.py", "location": "C:\\Lottery Wiz\\", "type": "Python", "description": "Per-game 'get latest' fetchers + next-draw jackpot fetch: data.ny.gov (US official), Caixa (8 BR games), FDJ open data (France), EuroMillions community API. SOURCES/SOURCE_LABEL/NO_SOURCE_NOTE registries and has_source/has_jackpot helpers."},
+        {"title": "MCP Server", "file": "mcp_server.py", "location": "C:\\Lottery Wiz\\", "type": "Python", "description": "FastMCP stdio server for Claude Desktop (no paid API). 11 tools: draws_info, number_heat, suggest_pool, generate_set, backtest_set, brutal_ledger, probability, update_draws, add_draw, build_play_set, check_winners. Registered in claude_desktop_config.json."}
+      ]
+    },
+    {
+      "name": "Key Source — Browser Apps",
+      "documents": [
+        {"title": "Fantasy 5 UI", "file": "index.html, app.js, styles.css", "location": "C:\\Lottery Wiz\\Fantasy5\\", "type": "HTML / JS / CSS", "description": "The deep F5 app (/): pool picker, generators, backtest, Brutal Ledger UI, AI dock, plays. app.js (~1,100 lines) is the controller + AI client + action executor."},
+        {"title": "Browser Engine (mirror)", "file": "engine.js", "location": "C:\\Lottery Wiz\\Fantasy5\\", "type": "JavaScript", "description": "JS engine mirroring engine_py - generators/backtest/probability - so the F5 page runs in offline mode without the server."},
+        {"title": "Shared UI Modules", "file": "gamebar.js, aidock.js, data.js", "location": "C:\\Lottery Wiz\\Fantasy5\\", "type": "JavaScript", "description": "gamebar.js = shared region game-switcher on every page; aidock.js = the shared WizDock AI dock (FAB + drawer + SSE + action-block parse) used by the non-F5 apps; data.js = embedded offline fallback draws + reference tables."},
+        {"title": "Universal App", "file": "index.html, general.js", "location": "C:\\Lottery Wiz\\General\\", "type": "HTML / JS", "description": "The any-lottery app (/general/): configure game (preset or custom N/k + bonus), pick a pool, choose wheel guarantee or curated method + bonus strategy, build, backtest, export. general.js is the client engine + UI (~525 lines)."},
+        {"title": "Super Sete & Scratch", "file": "Supersete\\supersete.js, Scratch\\scratch.js", "location": "C:\\Lottery Wiz\\", "type": "HTML / JS", "description": "/supersete = the BR 7-column positional game (board, exact odds, cartesian build). /scratch = the scratch-off EV tracker (enter prize-remaining data -> EV/ticket + honest verdict)."},
+        {"title": "Latest Results page", "file": "index.html, results.js", "location": "C:\\Lottery Wiz\\Results\\", "type": "HTML / JS", "description": "/results dashboard: every game's newest draw by region, auto-updated from official feeds, with next-draw jackpot lines."}
+      ]
+    },
+    {
+      "name": "Data & Configuration",
+      "documents": [
+        {"title": "Fantasy 5 Draw Store", "file": "draws_store.json", "location": "C:\\Lottery Wiz\\Fantasy5\\", "type": "JSON", "description": "Canonical F5 draw history: 4,222 draws, 2015-01-01 -> 2026-06-15 (source: galottery.com + lottonumbers.com)."},
+        {"title": "Per-Game Draw Stores", "file": "<game_id>.json", "location": "C:\\Lottery Wiz\\data\\draws\\", "type": "JSON", "description": "14 Universal game stores (powerball, megamillions, cash4life, megasena, quina, lotofacil, duplasena, diadesorte, timemania, lotomania, maismilionaria, euromillions, eurojackpot, france_loto) keyed {date, n, b?}."},
+        {"title": "Settings", "file": "settings.json", "location": "C:\\Lottery Wiz\\", "type": "JSON", "description": "Persisted prize amounts, ticket cost, default AI model, and rotation family - used by the Ledger and My Plays."},
+        {"title": "AI Keys (optional, gitignored)", "file": ".aikeys.example.json -> .aikeys.json", "location": "C:\\Lottery Wiz\\", "type": "JSON", "description": "Optional cloud API keys (Anthropic/OpenAI). Absent by default; preferred path is local Ollama or MCP."},
+        {"title": "Owner Key (gitignored)", "file": ".owner_key", "location": "C:\\Lottery Wiz\\", "type": "Text", "description": "The owner-unlock key (auto-generated on first boot). Edit to set your own; validated constant-time and never returned by the API."}
+      ]
+    },
+    {
+      "name": "Operations & Ecosystem",
+      "documents": [
+        {"title": "Service Installers", "file": "install_service.bat, restart_service.bat, uninstall_service.bat", "location": "C:\\Lottery Wiz\\", "type": "Batch", "description": "Self-elevating NSSM scripts for the QI_LotteryWiz service (port 8777, AppDirectory C:\\Lottery Wiz, logs LOGS\\service.log). restart_service.bat reloads server.py after backend changes."},
+        {"title": "Tunnel Installers", "file": "install_tunnel.bat, tunnel.bat, tunnel_url.bat, uninstall_tunnel.bat", "location": "C:\\Lottery Wiz\\", "type": "Batch", "description": "QI_LotteryWizTunnel (cloudflared) installers + no-admin quick-tunnel helpers; tunnel_url.bat prints the current public URL."},
+        {"title": "QI Service Registry (QI_LotteryWiz)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entries: QI_LotteryWiz (server.py, :8777) + QI_LotteryWizTunnel (static named tunnel -> https://lottery.quiddityinnovations.com)."},
+        {"title": "QI Ecosystem Registry (lotterywiz)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "Registry entry: id lotterywiz, path C:\\Lottery Wiz, status active, port 8777 (block 8770-8779), family_tier sibling, exposes Fantasy 5 generator + export API."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Full port table, family map and integration contracts - where Lottery Wiz sits in the ecosystem."}
+      ]
+    }
+  ]
+}

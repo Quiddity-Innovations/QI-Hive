@@ -1,0 +1,292 @@
+[
+  {
+    "category": "Server & hosting",
+    "features": [
+      {
+        "name": "HTTP server + processing engine",
+        "file": "Application/AutoPDF-Server.ps1",
+        "status": "live",
+        "detail": "~7,400-line PowerShell HttpListener bound to 127.0.0.1:6969; hosts static UI + ~80 /api/* routes. Version stamp $AutoPdfVersion = 2026.06.15. PS 5.1 + 7 compatible."
+      },
+      {
+        "name": "Native launcher",
+        "file": "AutoPDF.exe (src: Application/branding/Launcher.cs)",
+        "status": "live",
+        "detail": "Idempotent C# stub compiled with built-in csc.exe; pings /api/status, starts server hidden with AUTOPDF_NO_BROWSER=1, shows splash, opens browser. Embedded multi-size .ico."
+      },
+      {
+        "name": "Health / version probes",
+        "file": "AutoPDF-Server.ps1 (/health, /version)",
+        "status": "live",
+        "detail": "/health returns {status:ok, service:autopdf, port}. Both routes bypass the access-PIN gate for monitoring."
+      },
+      {
+        "name": "Access PIN gate",
+        "file": "AutoPDF-Server.ps1 (path -notmatch /health|/version)",
+        "status": "live",
+        "detail": "accessPin in autopdf-settings.json gates all routes except health/version; protects the Cloudflare tunnel exposure."
+      },
+      {
+        "name": "Caching headers / asset versioning",
+        "file": "AutoPDF-Server.ps1 (Send-File)",
+        "status": "live",
+        "detail": "Send-File emits Cache-Control: no-store / Pragma: no-cache / Expires: 0; app.js cache-buster token bumped per change (currently ?v=20260624a) so stale UI cannot recur."
+      },
+      {
+        "name": "JSON serialization depth",
+        "file": "AutoPDF-Server.ps1 (Send-Json -Depth 10)",
+        "status": "live",
+        "detail": "Send-Json forces -Depth 10 globally; default depth-2 silently truncated nested arrays (regression caught by the test suite)."
+      }
+    ]
+  },
+  {
+    "category": "Front-end UI",
+    "features": [
+      {
+        "name": "Single-page UI shell",
+        "file": "AutoPDFTool.html",
+        "status": "live",
+        "detail": "~114 KB single page; 7 tabs (Converter, Splitter, Smart Mapping, Workflow, Scheduler, Index Creator, Settings) plus About/Help. No framework, no build."
+      },
+      {
+        "name": "All front-end logic",
+        "file": "Application/app.js",
+        "status": "live",
+        "detail": "~5,600-line vanilla JS; collectSplitConfig / idxCollectConfig / buildZoneNamePayload drive every panel. State persisted in localStorage."
+      },
+      {
+        "name": "Styles",
+        "file": "Application/styles.css",
+        "status": "live",
+        "detail": "~38 KB hand-written CSS; flex panes with flex-shrink:0 on .zone-canvas-stage so the click canvas stays 1:1 with the rendered page at any zoom."
+      },
+      {
+        "name": "Branding assets route",
+        "file": "AutoPDF-Server.ps1 (/branding/) + Application/branding/",
+        "status": "live",
+        "detail": "Bounded static route serving the blue AutoPDF badge in About/Help; embedded app icon."
+      }
+    ]
+  },
+  {
+    "category": "Convert pipeline",
+    "features": [
+      {
+        "name": "Conversion runner",
+        "file": "AutoPDF-Server.ps1 (/api/run, /api/stop, /api/status)",
+        "status": "live",
+        "detail": "Batch convert input folder; Office via COM, images/text/Markdown to PDF. Progress + log via /api/log, /api/download-log."
+      },
+      {
+        "name": "Scanner capture",
+        "file": "AutoPDF-Server.ps1 (Invoke-ScanCapture, /api/scan, /api/scan-devices)",
+        "status": "live",
+        "detail": "Device id naps2:<driver>|<name> dispatches to bundled NAPS2 (TWAIN/ESCL); otherwise native WIA. Backend isolated for license swap."
+      },
+      {
+        "name": "Bundled-engine OCR",
+        "file": "Application/tesseract/",
+        "status": "live",
+        "detail": "Tesseract produces a searchable text layer for scanned/image PDFs; multi-language select in Settings + Splitter."
+      }
+    ]
+  },
+  {
+    "category": "Split engine",
+    "features": [
+      {
+        "name": "Split runner",
+        "file": "AutoPDF-Server.ps1 (/api/split-run, /api/split-preview, /api/split-status)",
+        "status": "live",
+        "detail": "9-panel rule-based splitter: zones, patterns, bookmarks, page ranges. Renders pages via /api/split-render-page."
+      },
+      {
+        "name": "Per-section CSV writer",
+        "file": "AutoPDF-Server.ps1 (Append-CsvRow ~line 2953, called ~3537)",
+        "status": "live",
+        "detail": "Appends one row per split section; headers from $csvHeaders. Accumulates rows for the XML emit site."
+      },
+      {
+        "name": "Word bbox extraction + cache",
+        "file": "AutoPDF-Server.ps1 (Get-PdfTextBboxByPage)",
+        "status": "live",
+        "detail": "Reads word boxes via Poppler pdftotext -bbox; fixed a PS case-insensitive variable bug (x0/y0/x1/y1) that zeroed all box sizes; per-(path+mtime) bounded cache."
+      },
+      {
+        "name": "Tagged-zone resolution",
+        "file": "AutoPDF-Server.ps1 (Find-AnchorRectFrac, Resolve-TaggedZoneRect)",
+        "status": "live",
+        "detail": "Re-finds the label on each section's pages and pulls the value beside it, falling back to the marked value rect; previewed via /api/tagged-zone-resolve, captured via /api/region-anchor."
+      }
+    ]
+  },
+  {
+    "category": "Templates & extraction",
+    "features": [
+      {
+        "name": "Template CRUD",
+        "file": "AutoPDF-Server.ps1 (/api/templates, /api/template-save, /api/template-load, /api/template-delete)",
+        "status": "live",
+        "detail": "Templates are JSON in Application/templates/*.json; e.g. BU Procurement (zones), BU Registrar (rules), BU Special Collections (rules)."
+      },
+      {
+        "name": "Three-pass extraction runner",
+        "file": "AutoPDF-Server.ps1 (Invoke-TemplateExtraction)",
+        "status": "live",
+        "detail": "Pass order zones -> regex_match -> ai_extract, each pass priming the next. tagged_zone branch re-resolves anchors per document."
+      },
+      {
+        "name": "Batch apply over a folder",
+        "file": "AutoPDF-Server.ps1 (/api/template-apply-batch)",
+        "status": "live",
+        "detail": "Accepts autoMatch, applyFilenames, aiModel; auto-matches by anchor text/regex, writes one CSV per matched template; ecosystem-exposed entry point."
+      },
+      {
+        "name": "Single-PDF verify",
+        "file": "AutoPDF-Server.ps1 (/api/template-test)",
+        "status": "live",
+        "detail": "Runs a template against the loaded sample; accepts aiModel so ai_extract fields are verified; per-field pass/fail."
+      },
+      {
+        "name": "Value post-processing",
+        "file": "AutoPDF-Server.ps1 (Format-FieldValue)",
+        "status": "live",
+        "detail": "currency / date / number / phone / upper / lower / trim normalizers per field."
+      },
+      {
+        "name": "Anchor resolution",
+        "file": "AutoPDF-Server.ps1 (/api/template-resolve-anchors)",
+        "status": "live",
+        "detail": "Resolves anchor phrases to page bboxes via Poppler pdftotext -bbox-layout; returns rectangles as page fractions."
+      }
+    ]
+  },
+  {
+    "category": "Regex pattern library",
+    "features": [
+      {
+        "name": "Centralized library",
+        "file": "Application/regex_library.json",
+        "status": "live",
+        "detail": "~30 builtin patterns (SSN, EIN, phone, dates, currency, etc.), flagged builtin:true and protected from delete; user-extendable."
+      },
+      {
+        "name": "Library API + editor",
+        "file": "AutoPDF-Server.ps1 (/api/regex-library, /api/regex-library-save, /api/regex-library-test)",
+        "status": "live",
+        "detail": "Settings tab search/filter/add/edit/delete with a live Test button; AI-proposed additions can be one-click added."
+      }
+    ]
+  },
+  {
+    "category": "Local AI (Ollama)",
+    "features": [
+      {
+        "name": "Smart Mapping chat",
+        "file": "AutoPDF-Server.ps1 (/api/ai-chat)",
+        "status": "live",
+        "detail": "Page-range-aware (pageFrom/pageTo, auto window from num_ctx); includes extracted zone text in context; parses <thinking> tags into a separate reasoning log."
+      },
+      {
+        "name": "AI field proposal v2",
+        "file": "AutoPDF-Server.ps1 (/api/template-propose)",
+        "status": "live",
+        "detail": "Injects the regex library into the prompt; returns fully-configured fields (kind/regex/scope/strategy/format/anchor + rationale), suggested anchor, filename pattern, and proposedLibraryAdditions."
+      },
+      {
+        "name": "Specialized model recipe",
+        "file": "Application/templates/AutoPDFMapper.Modelfile",
+        "status": "live",
+        "detail": "ollama create autopdf-mapper -f ...; SYSTEM block teaches the 3 field kinds + library convention. Settings default ollamaModel = autopdf-mapper:latest, host 127.0.0.1:11434, num_ctx 32768."
+      },
+      {
+        "name": "AI on/off + graceful degrade",
+        "file": "Application/app.js (autopdf_aiEnabled)",
+        "status": "live",
+        "detail": "Manual Enable Local AI toggle independent of Ollama detection; AI surfaces stay visible-but-greyed when AI is unavailable."
+      }
+    ]
+  },
+  {
+    "category": "Index Creator & OnBase output",
+    "features": [
+      {
+        "name": "Index build runner",
+        "file": "AutoPDF-Server.ps1 (Invoke-IndexBuild, /api/idx-run, /api/idx-preview)",
+        "status": "live",
+        "detail": "Builds $columns + $rows from folder tree / filename parts / in-PDF content; writes CSV and optional XLSX (Excel COM). FILENAME leads every index."
+      },
+      {
+        "name": "Recipe storage",
+        "file": "Application/recipes/*.json (/api/idx-recipes, idx-recipe-save/load/delete)",
+        "status": "live",
+        "detail": "Shared recipe store with the Splitter; ships Basic / Mid / Complex BU demo recipes (30 rows x 5/9/17 cols)."
+      },
+      {
+        "name": "OnBase XML Index DIP serializer",
+        "file": "AutoPDF-Server.ps1 (Write-IndexXml, ConvertTo-XmlName)",
+        "status": "live",
+        "detail": "Foundation 24.1 schema: <runRoot> -> <NewDocument> with optional <DocTypeName>, one element per column, repeatable <FilePath>. UTF-8 no-BOM, XML-escaped, empty-keyword skipped. Wired into both Index Creator (format.alsoXml) and Splitter (indexCsv.xml.enabled)."
+      },
+      {
+        "name": "Config-driven date formatting",
+        "file": "AutoPDF-Server.ps1 (Format-IndexDate)",
+        "status": "partial",
+        "detail": "Normalizes raw filename/content dates (demo presets MM/dd/yyyy); round-trips via row._idxDate in app.js. UI date-format picker still TODO."
+      }
+    ]
+  },
+  {
+    "category": "Automation, config & tests",
+    "features": [
+      {
+        "name": "Workflow + Scheduler",
+        "file": "AutoPDF-Server.ps1 (/api/workflow-run, /api/scheduler-save, scheduler-jobs.json)",
+        "status": "partial",
+        "detail": "Chain Split/Convert/AI re-group/Filter/Rename/Blanks/JS; cron-style scheduling on a watch folder. Single-threaded; overlapping Preview+Run can stall it."
+      },
+      {
+        "name": "Config export / import",
+        "file": "AutoPDF-Server.ps1 (/api/config-export, config-import-preview, config-import-apply)",
+        "status": "live",
+        "detail": "Portable settings + recipes + templates + library bundle for moving a configured AutoPDF between machines."
+      },
+      {
+        "name": "Tier 1/2 PowerShell tests",
+        "file": "Tests/Run-AutoPDFTests.ps1, Tests/Test-AutoPDF-Api.ps1",
+        "status": "partial",
+        "detail": "~27 API + AI-shape tests in seconds; -WithAi -AiModel autopdf-mapper:latest exercises ai_extract. 27/27 pass once the service is restarted."
+      },
+      {
+        "name": "Tier 3 Playwright UI tests",
+        "file": "Tests/BrowserTests/ (pytest + Playwright)",
+        "status": "partial",
+        "detail": "UI regression (pre_flight, regex_library, settings, smart_mapping, splitter, workflow); product-agnostic conftest.py/run.ps1 reusable across QI tools."
+      },
+      {
+        "name": "QI services + tunnel",
+        "file": "Application/_register_services.ps1, Application/tunnel_manager.py",
+        "status": "live",
+        "detail": "QI_AutoPDF = manual NSSM placeholder (app runs interactively for Office COM at logon); QI_AutoPDFTunnel = auto-start Cloudflare tunnel; nssm at C:\\QIH\\engine\\bin\\nssm.exe."
+      }
+    ]
+  },
+  {
+    "category": "OCR engine roadmap",
+    "features": [
+      {
+        "name": "PP-OCRv5 ONNX engine (RapidOcrNet)",
+        "file": "PP-OCRv6/PLAN_PP-OCRv5_ONNX_engine.md",
+        "status": "planned",
+        "detail": "Approved 2026-06-22, not started (resume target 2026-06-28). Second OCR engine via ONNX Runtime + .NET (no Python), engine = tesseract|paddle-onnx, device = auto|cpu|cuda; Tesseract stays default. Preserves zero-install portability."
+      },
+      {
+        "name": "Python PaddleOCR prototype (rejected route)",
+        "file": "PP-OCRv6/autopdf_ocr.py, settings.json, Install-AutoPDF-OCR.ps1",
+        "status": "planned",
+        "detail": "Standalone hybrid extractor prototype; NOT referenced by AutoPDF-Server.ps1/app.js. Python/paddlepaddle route rejected for footprint + AVX risk; superseded by the ONNX plan."
+      }
+    ]
+  }
+]

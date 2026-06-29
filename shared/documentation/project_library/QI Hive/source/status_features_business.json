@@ -1,0 +1,56 @@
+[
+  {
+    "category": "Mission Control & Dashboard",
+    "features": [
+      {"name": "Single pane of glass", "description": "One web console at localhost:8600 covering every QI project — health, tasks, services, usage, docs, agents.", "status": "live", "notes": "FastAPI + AdminLTE, server-rendered, dark mode."},
+      {"name": "Mission Control board", "description": "Live monitoring view of the whole ecosystem — per-project phase, status, and last activity at a glance.", "status": "live", "notes": "Renamed from the old 'Hive' page; route /mission-control."},
+      {"name": "Ecosystem health check", "description": "Registry-driven liveness probe of every project: service state, port, git, doc freshness.", "status": "live", "notes": "30s TTL cache so page loads stay fast."},
+      {"name": "Kanban task board", "description": "Cross-project task board with drag-and-drop between columns and full create/edit/delete.", "status": "live", "notes": "SortableJS; tasks stored in data/tasks.json."},
+      {"name": "Project Status pages", "description": "Maia-style 7-tab Status page per project — including this one — driven by each project's INTRO folder.", "status": "live", "notes": "Renderer: engine/hive/dashboard/project_status.py."},
+      {"name": "QI Launchpad / Panel", "description": "Role-labelled tiles linking to every app's local and public (tunnel) URL; tunnel-aware.", "status": "live", "notes": "Links aggregated by link_collector.py."}
+    ]
+  },
+  {
+    "category": "QI Brain / Knowledge",
+    "features": [
+      {"name": "Durable ecosystem memory", "description": "Every decision, feature, session, and project-state change is recorded across all 24 projects and never lost between sessions.", "status": "live", "notes": "491 decisions, 394 features, 564 sessions, 239 states (data/qi_brain.db)."},
+      {"name": "Semantic search", "description": "Natural-language search across decisions, features, sessions, and documentation.", "status": "live", "notes": "ChromaDB; embeddings from local Ollama nomic-embed-text."},
+      {"name": "Documentation Brain", "description": "Ecosystem-wide doc index with full-text search, a TheBrain-style Plex graph, and split-view reader.", "status": "live", "notes": "921 docs indexed; harvested by doc_harvester.py."},
+      {"name": "Project context recall", "description": "On session start an agent gets the project's current state, recent decisions, and pending features in a token budget.", "status": "live", "notes": "qi.get_context() MCP tool."},
+      {"name": "Cross-project feature propagation", "description": "A pattern built in one project is evaluated for relevance to every other project and surfaced for adopt/adapt/skip.", "status": "partial", "notes": "Engine + 44 evaluations exist; propagation run on demand."},
+      {"name": "Unified activity headlines", "description": "Twitter-style chronological feed merging sessions, decisions, features, dispatches, compliance, and state changes.", "status": "live", "notes": "/api/headlines unions six tables."}
+    ]
+  },
+  {
+    "category": "Agent Fabric",
+    "features": [
+      {"name": "Specialist sub-agent team", "description": "Eight role-specialised agents (architect, builder, inspector, ops, scout, scribe, tester, librarian) the main thread dispatches work to.", "status": "live", "notes": "Defined as Claude Code sub-agents; routed per DISPATCH_PROTOCOL.md."},
+      {"name": "Dispatch Protocol", "description": "A standing operating discipline mapping each task type to the right agent and model, with design->build->inspect->scribe workflows.", "status": "live", "notes": "Keeps Opus reasoning, Sonnet building, Haiku on triage/docs."},
+      {"name": "CoWork dispatch channel", "description": "Bi-directional task/proposal board where CoWork and agents post work and Renne (or Claude) approves, declines, or discusses.", "status": "live", "notes": "Inspector findings kept off the human queue; idempotent."},
+      {"name": "Auto-apply pipeline", "description": "Approved dispatches flow to a builder runner that prepares the change for review.", "status": "partial", "notes": "QI_HiveApply Phase 1 — inbox-fallback mode."},
+      {"name": "Agent growth loop", "description": "Agents log what worked and what to improve after each task, building a profile over time.", "status": "partial", "notes": "Tables + endpoints live; agent_growth_log not yet populated."},
+      {"name": "War Room", "description": "A shared multi-agent text channel where Renne, Claude, CoWork, and hive agents talk in one thread.", "status": "partial", "notes": "Stage 0 text-only; avatars + voice planned."}
+    ]
+  },
+  {
+    "category": "Standards & Compliance",
+    "features": [
+      {"name": "The Six Laws", "description": "An architectural constitution every QI project must honor — registry truth, the module contract, graceful degradation, contract-first APIs, current registry, owner override.", "status": "live", "notes": "QI_Architecture_Principles.md."},
+      {"name": "Compliance enforcement", "description": "The Inspector continuously audits every project against QI standards, auto-fixes safe issues, and files dispatches for the rest.", "status": "live", "notes": "Runs every 4h + nightly deep; 46k+ compliance-log rows."},
+      {"name": "One-command new project", "description": "Scaffolds a fully compliant project — registry entry, folders, CLAUDE.md, /health skeleton — in a single command.", "status": "live", "notes": "qi_new_project.py."},
+      {"name": "Compliance validator", "description": "On-demand checker that confirms a project meets the registry, port-block, naming, and endpoint rules.", "status": "live", "notes": "qi_validator.py --project <id>."},
+      {"name": "Compliance dashboard", "description": "A page summarising pass/fail/warn status across the ecosystem with a manual rescan button.", "status": "live", "notes": "/compliance + /api/compliance/*."}
+    ]
+  },
+  {
+    "category": "Service Operations",
+    "features": [
+      {"name": "Autonomous service control", "description": "Any Claude session can restart, stop, or start any QI service without a UAC prompt blocking the loop.", "status": "live", "notes": "qi_service.py over the QI_Elevate broker."},
+      {"name": "Elevation broker", "description": "A LocalSystem daemon that runs only whitelisted admin commands dropped as JSON, solving UAC-in-the-loop.", "status": "live", "notes": "QI_Elevate; regex-bounded whitelist, no shell."},
+      {"name": "Service & tunnel registry", "description": "Single source of truth for every QI_ Windows service plus a symptom->log lookup table.", "status": "live", "notes": "QI_Service_Registry.md + QI_Scheduled_Tasks_Registry.md."},
+      {"name": "Static public tunnels", "description": "Each public app has a permanent subdomain on quiddityinnovations.com instead of a URL that changes every restart.", "status": "live", "notes": "Cloudflare named tunnels migrated 2026-06-20."},
+      {"name": "LLM usage & cost tracking", "description": "Per-day, per-project, per-model Claude Code cost and token breakdowns, including savings from local-LLM routing.", "status": "live", "notes": "usage_stats.py parses ~/.claude JSONL; no API key."},
+      {"name": "Live runtime config", "description": "Change log levels, theme, and elevation profiles from the dashboard without restarting services.", "status": "live", "notes": "/config page."}
+    ]
+  }
+]

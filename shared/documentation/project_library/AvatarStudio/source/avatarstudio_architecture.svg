@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7"/>
+    </marker>
+    <marker id="arr-sky" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="620" fill="#f8fafc" rx="12"/>
+  <text x="450" y="25" text-anchor="middle" font-size="17" font-weight="700" fill="#1e293b">QI Avatar Studio — System Architecture</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Proof of Concept · 2026</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="686" y="58" width="206" height="172" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="789" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Legend</text>
+  <rect x="694" y="83" width="14" height="10" rx="2" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="714" y="93" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="694" y="100" width="14" height="10" rx="2" fill="#fef9c3" stroke="#ca8a04"/>
+  <text x="714" y="110" font-size="9" fill="#374151">Built · Partial / Pending</text>
+  <rect x="694" y="117" width="14" height="10" rx="2" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="714" y="127" font-size="9" fill="#374151">Planned</text>
+  <rect x="694" y="134" width="14" height="10" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,2"/>
+  <text x="714" y="144" font-size="9" fill="#374151">Caution / Disabled</text>
+  <line x1="694" y1="159" x2="712" y2="159" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="718" y="163" font-size="9" fill="#374151">Pipeline data flow</text>
+  <path d="M 694,176 H 704 V 182 H 712" fill="none" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="718" y="184" font-size="9" fill="#374151">Connector (elbow)</text>
+  <rect x="694" y="194" width="14" height="10" rx="2" fill="#1f2d3d"/>
+  <text x="714" y="203" font-size="9" fill="#374151">WSL2 / core compute</text>
+  <text x="789" y="222" text-anchor="middle" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+
+  <!-- ══ USERS / ENTRY GROUP ══ -->
+  <rect x="8" y="62" width="500" height="84" rx="9" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="20" y="56" width="120" height="14" rx="3" fill="#f8fafc"/>
+  <text x="80" y="67" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700" letter-spacing="1">USERS / ENTRY</text>
+
+  <rect x="16" y="74" width="150" height="64" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="91" y="93" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Operator (Studio)</text>
+  <text x="91" y="108" text-anchor="middle" font-size="8" fill="#3b82f6">Pick agent · script · language</text>
+  <text x="91" y="120" text-anchor="middle" font-size="8" fill="#3b82f6">engine · click Generate</text>
+  <text x="91" y="132" text-anchor="middle" font-size="8" fill="#93c5fd">Gradio UI · localhost:7862</text>
+
+  <rect x="176" y="74" width="150" height="64" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="251" y="93" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">CLI User</text>
+  <text x="251" y="108" text-anchor="middle" font-size="8" fill="#3b82f6">run_avatar.bat &lt;agent&gt; "text"</text>
+  <text x="251" y="120" text-anchor="middle" font-size="8" fill="#3b82f6">headless Kokoro → Hallo2</text>
+  <text x="251" y="132" text-anchor="middle" font-size="8" fill="#93c5fd">avatar_pipeline.py</text>
+
+  <rect x="336" y="74" width="160" height="64" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="416" y="93" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">Scene Author</text>
+  <text x="416" y="108" text-anchor="middle" font-size="8" fill="#3b82f6">Long script → per-character</text>
+  <text x="416" y="120" text-anchor="middle" font-size="8" fill="#3b82f6">scenes → concat movie</text>
+  <text x="416" y="132" text-anchor="middle" font-size="8" fill="#93c5fd">scene_pipeline.py (partial)</text>
+
+  <!-- ARROW: Users → Core App -->
+  <line x1="258" y1="146" x2="258" y2="182" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <!-- ══ CORE APP (Windows) ══ -->
+  <rect x="14" y="182" width="648" height="64" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="338" y="203" text-anchor="middle" font-size="13" font-weight="700" fill="white">Avatar Studio Core (Windows)</text>
+  <text x="338" y="219" text-anchor="middle" font-size="10" fill="#94a3b8">avatar_studio.py · Gradio :7862 · pipeline_generate() orchestrator · own .venv (Python + PyTorch cu128)</text>
+  <text x="338" y="234" text-anchor="middle" font-size="9" fill="#64748b">Config + secret overlay · engine dispatch · background prep · to_wsl_path() · ffmpeg mux · progress streaming</text>
+
+  <!-- ARROW: Core → Config (right) -->
+  <line x1="662" y1="214" x2="682" y2="214" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arr-sky)"/>
+
+  <!-- CONFIG / SECRETS box -->
+  <rect x="682" y="244" width="208" height="92" rx="9" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="786" y="263" text-anchor="middle" font-size="11" font-weight="700" fill="#0c4a6e">Config &amp; Secrets</text>
+  <text x="786" y="279" text-anchor="middle" font-size="8" fill="#0284c7">studio_config.json (engines)</text>
+  <text x="786" y="292" text-anchor="middle" font-size="8" fill="#0284c7">agents.json · languages.json</text>
+  <text x="786" y="305" text-anchor="middle" font-size="8" fill="#0284c7">VOICE_CATALOG (~60 voices)</text>
+  <rect x="700" y="312" width="172" height="18" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,2"/>
+  <text x="786" y="325" text-anchor="middle" font-size="8" font-weight="600" fill="#92400e">secrets/avatarstudio.env (gitignored)</text>
+  <line x1="786" y1="246" x2="786" y2="244" stroke="#0284c7"/>
+
+  <!-- ══ TTS LAYER ══ -->
+  <text x="18" y="262" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">TTS LAYER</text>
+  <!-- ARROW: Core → TTS -->
+  <line x1="160" y1="246" x2="160" y2="270" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+
+  <rect x="14" y="270" width="300" height="78" rx="9" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="164" y="288" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">Text-to-Speech (generate_voice)</text>
+  <rect x="24" y="296" width="138" height="42" rx="6" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="93" y="312" text-anchor="middle" font-size="9" font-weight="700" fill="#14532d">Kokoro-82M (local)</text>
+  <text x="93" y="325" text-anchor="middle" font-size="7.5" fill="#16a34a">en·pt·es·it·zh · offline</text>
+  <text x="93" y="335" text-anchor="middle" font-size="7.5" fill="#16a34a">24 kHz WAV · Apache 2.0</text>
+  <rect x="170" y="296" width="134" height="42" rx="6" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="237" y="312" text-anchor="middle" font-size="9" font-weight="700" fill="#14532d">edge-tts (MS Neural)</text>
+  <text x="237" y="325" text-anchor="middle" font-size="7.5" fill="#16a34a">ja·fr·ru·de · internet</text>
+  <text x="237" y="335" text-anchor="middle" font-size="7.5" fill="#16a34a">SSML rate/pitch · free</text>
+
+  <!-- ══ PORTRAIT PREP ══ -->
+  <text x="338" y="262" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">PORTRAIT PREP</text>
+  <!-- ARROW: Core → Portrait -->
+  <line x1="470" y1="246" x2="470" y2="270" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr-purple)"/>
+
+  <rect x="334" y="270" width="328" height="78" rx="9" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="498" y="288" text-anchor="middle" font-size="11" font-weight="700" fill="#581c87">Portrait &amp; Background</text>
+  <text x="498" y="304" text-anchor="middle" font-size="8.5" fill="#7e22ce">rembg cutout + PIL composite (solid color / image)</text>
+  <text x="498" y="318" text-anchor="middle" font-size="8.5" fill="#7e22ce">OpenCV best-frame finder · ffmpeg frame extract · screen capture</text>
+  <rect x="368" y="326" width="260" height="16" rx="5" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="498" y="338" text-anchor="middle" font-size="8" fill="#475569">Generate-avatar-from-description (Phase 2 · planned)</text>
+
+  <!-- ARROW: TTS → Render (WAV) -->
+  <line x1="164" y1="348" x2="164" y2="372" stroke="#f97316" stroke-width="2" marker-end="url(#arr-orange)"/>
+  <text x="172" y="364" font-size="8" fill="#9a3412">WAV</text>
+  <!-- ARROW: Portrait → Render (image) -->
+  <line x1="498" y1="348" x2="498" y2="372" stroke="#a855f7" stroke-width="2" marker-end="url(#arr-purple)"/>
+  <text x="506" y="364" font-size="8" fill="#581c87">portrait</text>
+
+  <!-- ══ RENDER LAYER (WSL2 + Cloud) ══ -->
+  <text x="18" y="366" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">FACE ANIMATION / RENDER ENGINES</text>
+
+  <rect x="14" y="372" width="648" height="150" rx="9" fill="none" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="26" y="366" width="140" height="14" rx="3" fill="#f8fafc"/>
+  <text x="96" y="377" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="700" letter-spacing="1">WSL2 Ubuntu-24.04</text>
+
+  <!-- LivePortrait -->
+  <rect x="24" y="386" width="150" height="60" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="99" y="404" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">LivePortrait</text>
+  <text x="99" y="418" text-anchor="middle" font-size="7.5" fill="#16a34a">motion transfer · ~30s</text>
+  <text x="99" y="430" text-anchor="middle" font-size="7.5" fill="#16a34a">driving video · not audio-driven</text>
+  <text x="99" y="441" text-anchor="middle" font-size="7.5" fill="#16a34a">conda env: liveportrait</text>
+
+  <!-- Hallo2 -->
+  <rect x="184" y="386" width="150" height="60" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="259" y="404" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">Hallo2</text>
+  <text x="259" y="418" text-anchor="middle" font-size="7.5" fill="#ca8a04">audio-driven · lips match WAV</text>
+  <text x="259" y="430" text-anchor="middle" font-size="7.5" fill="#ca8a04">slow ~15–30 min/min · timeout 1h</text>
+  <text x="259" y="441" text-anchor="middle" font-size="7.5" fill="#ca8a04">conda env: hallo</text>
+
+  <!-- retalking -->
+  <rect x="344" y="386" width="150" height="60" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="419" y="404" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">video-retalking</text>
+  <text x="419" y="418" text-anchor="middle" font-size="7.5" fill="#ca8a04">lip-sync post-process pass</text>
+  <text x="419" y="430" text-anchor="middle" font-size="7.5" fill="#ca8a04">opt-in checkbox · #1 quality lever</text>
+  <text x="419" y="441" text-anchor="middle" font-size="7.5" fill="#ca8a04">conda env: retalking</text>
+
+  <!-- Pre-wired engines -->
+  <rect x="504" y="386" width="148" height="60" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="578" y="404" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">MuseTalk · SadTalker</text>
+  <text x="578" y="417" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400e">Wav2Lip</text>
+  <text x="578" y="431" text-anchor="middle" font-size="7.5" fill="#b45309">wrappers present · disabled</text>
+  <text x="578" y="441" text-anchor="middle" font-size="7.5" fill="#b45309">need WSL2 install</text>
+
+  <!-- Cloud engines -->
+  <rect x="24" y="456" width="320" height="56" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="184" y="474" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">Cloud Render (REST)</text>
+  <text x="184" y="489" text-anchor="middle" font-size="8" fill="#ca8a04">D-ID Talks API — implemented, enabled, no key set</text>
+  <text x="184" y="502" text-anchor="middle" font-size="8" fill="#ca8a04">HeyGen Talking Photo — implemented, disabled (no key)</text>
+
+  <!-- Pipeline flow note -->
+  <rect x="356" y="456" width="296" height="56" rx="7" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="504" y="474" text-anchor="middle" font-size="10" font-weight="700" fill="#3730a3">Render dispatch (per language)</text>
+  <text x="504" y="489" text-anchor="middle" font-size="8" fill="#4f46e5">pipeline_generate selects ONE engine per run</text>
+  <text x="504" y="502" text-anchor="middle" font-size="8" fill="#4f46e5">→ optional retalking → ffmpeg audio mux</text>
+
+  <!-- ARROW: Render group → Output -->
+  <line x1="338" y1="522" x2="338" y2="548" stroke="#22c55e" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="346" y="540" font-size="8" fill="#15803d">MP4</text>
+
+  <!-- ══ OUTPUT LAYER ══ -->
+  <text x="18" y="540" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="1">OUTPUT &amp; STORAGE</text>
+
+  <rect x="14" y="548" width="320" height="58" rx="7" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="174" y="567" text-anchor="middle" font-size="10" font-weight="700" fill="#0c4a6e">outputs/  (WAV + MP4)</text>
+  <text x="174" y="582" text-anchor="middle" font-size="8" fill="#0284c7">Final talking-head videos · gitignored</text>
+  <text x="174" y="595" text-anchor="middle" font-size="8" fill="#0284c7">served via Gradio allowed_paths</text>
+
+  <rect x="344" y="548" width="318" height="58" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="503" y="567" text-anchor="middle" font-size="10" font-weight="700" fill="#713f12">QI Ecosystem (planned)</text>
+  <text x="503" y="582" text-anchor="middle" font-size="8" fill="#ca8a04">QI Hive dashboard :8600 · QI Brain :9011 · NEXUS :8010</text>
+  <text x="503" y="595" text-anchor="middle" font-size="8" fill="#ca8a04">no integrations wired yet · QI_AvatarStudio NSSM (demand-start)</text>
+
+  <!-- ARROW: Output → ecosystem -->
+  <line x1="334" y1="577" x2="344" y2="577" stroke="#ca8a04" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+</svg>

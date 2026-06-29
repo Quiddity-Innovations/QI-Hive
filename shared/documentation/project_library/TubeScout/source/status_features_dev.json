@@ -1,0 +1,74 @@
+[
+  {
+    "category": "Entry Point & Service",
+    "features": [
+      {"name": "Process launcher", "file": "main.py :: start_api() / start_ui()", "status": "live", "detail": "Reconfigures stdout to UTF-8, sets up file+stream logging to data/logs/tubescout.log, starts the FastAPI app (uvicorn :8503) in a daemon thread and the Gradio status UI (:7843) in the main thread."},
+      {"name": "QI_TubeScout NSSM service", "file": "shared/install_service.py :: main()", "status": "live", "detail": "Installs the FastAPI app as the QI_TubeScout Windows service via the QI_Elevate broker (run_elevated). Sets AppDirectory=C:\\TUBESCOUT, Description, AppStdout/Stderr=data/logs/service.log, SERVICE_AUTO_START. AppDirectory was corrected from a wrong path on 2026-06-18."},
+      {"name": "Twice-daily cycle", "file": "shared/cycle.py :: run_cycle()", "status": "live", "detail": "The 07:00/19:00 job (QI_TubeScout_AM/_PM). Runs sweep → reclassify → transcripts → summarize → dedup → score → scout_refresh, each wrapped in _safe() so one stage failing never aborts the cycle."},
+      {"name": "Pipeline drainer", "file": "shared/process.py :: drain_transcripts() / drain_summaries()", "status": "live", "detail": "Batched backfill runner: drains all pending transcripts then all pending summaries in small committed batches so a crash never loses completed work; stops the transcript phase on an IP block."}
+    ]
+  },
+  {
+    "category": "API & News Page (FastAPI :8503)",
+    "features": [
+      {"name": "QI Module Interface Contract", "file": "api/main.py :: health() / version() / info()", "status": "live", "detail": "GET /health → {status:ok}; GET /version → {project,version,status}; GET /info → the project's qi_registry entry (falls back to a minimal dict if the registry import fails)."},
+      {"name": "CORS from the QI registry", "file": "api/main.py :: module scope", "status": "live", "detail": "Pulls allowed origins from qi_registry.QI.cors_origins() with a localhost fallback; CORSMiddleware allows GET/POST only."},
+      {"name": "Central write guard", "file": "api/main.py :: require_token_for_writes()", "status": "partial", "detail": "HTTP middleware: any POST/PUT/PATCH/DELETE must carry TUBESCOUT_PAGE_TOKEN (query ?token= or X-TubeScout-Token header) when that env var is set; reads are always public. Open in local single-user mode."},
+      {"name": "Public news / favorites pages", "file": "api/main.py :: news_page() / favorites_page() / _render_feed() / _fetch_cards()", "status": "live", "detail": "Server-rendered HTML feed of summary cards joined videos↔channels↔summaries; topic chips, favorites-first ordering, duplicates hidden unless ?show=all, muted/disabled channels excluded. JSON twin at /api/news."},
+      {"name": "Channel tuning endpoints", "file": "api/main.py :: set_priority/set_topic/set_favorite/set_enabled + /channels + /stats + /topics", "status": "live", "detail": "POST priority (must_read|digest|mute), topic (locks topic_manual), favorite, enabled; GET channel/video lists, /stats counts and /topics canonical+custom category list."},
+      {"name": "Settings page + config API", "file": "api/main.py :: settings_page() / get_config() / post_config()", "status": "live", "detail": "Renders the Settings control panel and reads/writes a whitelisted set of editable keys (_EDITABLE) with per-key coercion; persists via cfg.set_values(). Shows live NEXUS/Brain health dots."},
+      {"name": "Kaze digest embed", "file": "api/main.py :: digest_page() / digest_raw()", "status": "live", "detail": "digest_raw reads C:\\OC\\runtime\\dashboard\\ai-digest\\index.html live (503 if not generated yet); digest_page embeds it in an iframe so the digest is served through TubeScout's own tunnel."},
+      {"name": "Tunnel-aware NEXUS link", "file": "api/main.py :: _nexus_link() / _nexus_tunnel_url()", "status": "live", "detail": "Resolves the 'pairs with NEXUS' link to local or the NEXUS public tunnel URL (asked from the Hive at :8600/api/tunnels, cached 60s) based on whether TubeScout itself is being viewed via the tunnel (cf-ray header). Modes auto|local|tunnel via env."}
+    ]
+  },
+  {
+    "category": "YouTube Access",
+    "features": [
+      {"name": "OAuth + service builder", "file": "shared/youtube_client.py :: get_credentials() / get_service()", "status": "live", "detail": "Loads/refreshes youtube.readonly OAuth creds from secrets/token.json, runs the InstalledAppFlow login on --login, raises clear errors if libs/creds missing. Builds a Data API v3 service (cache_discovery=False)."},
+      {"name": "List subscriptions", "file": "shared/youtube_client.py :: list_subscriptions()", "status": "live", "detail": "Paginates subscriptions.list (50/page, alphabetical) up to youtube.max_subscriptions (2000); returns channel_id/title/description/thumbnail dicts. 816 channels currently."},
+      {"name": "Quota-friendly upload reads", "file": "shared/youtube_client.py :: get_uploads_playlists() / list_recent_uploads()", "status": "live", "detail": "Maps channels→uploads playlist via channels.list(contentDetails); reads new uploads with playlistItems.list (1 unit) filtered to those published after the lookback cutoff. Never uses search.list (100 units)."},
+      {"name": "Channel category fetch", "file": "shared/reclassify.py :: fetch_topic_categories()", "status": "live", "detail": "channels.list(part=topicDetails) batched 50/call → channel_id → list of Wikipedia-tail topicCategories used by the smart reclassifier."}
+    ]
+  },
+  {
+    "category": "Sweep & Organize",
+    "features": [
+      {"name": "Subscription sync", "file": "shared/sweep.py :: pull_subscriptions()", "status": "live", "detail": "Upserts every subscription (preserving manual topic/priority overrides) and backfills missing uploads playlists."},
+      {"name": "Upload sweep", "file": "shared/sweep.py :: run_sweep()", "status": "live", "detail": "Opens a sweeps run row, iterates active (subscribed, enabled, non-muted) channels, inserts new videos, retires dead playlists ('' so pull-subs won't re-backfill), records new_videos/channels_swept. Last run: #15, 364 new across 811."},
+      {"name": "Keyword organizer", "file": "shared/organizer.py :: classify() / organize()", "status": "live", "detail": "Whole-word (word-boundary regex) keyword scoring over title+description against config 'topics'; only (re)classifies channels still on 'other' unless force=True."},
+      {"name": "Smart reclassifier", "file": "shared/reclassify.py :: reclassify() / best_category_topic()", "status": "live", "detail": "Combines the keyword classifier with YouTube topicCategories, picking the most specific via TOPIC_RANK (ai_ml/software_dev=10 … lifestyle=1). Skips topic_manual=1 channels. Reduced 'other' from ~450 to ~3."}
+    ]
+  },
+  {
+    "category": "Transcripts",
+    "features": [
+      {"name": "Caption fetcher", "file": "shared/transcripts.py :: fetch_transcript()", "status": "live", "detail": "youtube-transcript-api v1 instance .fetch() over configured languages (en/pt/es/ja/fr). 'No captions' reasons return None (skip quietly); rate-limit markers raise IPBlocked."},
+      {"name": "Throttled queue + IP-block backoff", "file": "shared/transcripts.py :: process_pending()", "status": "live", "detail": "Favorites/must-reads first then newest; randomized throttle between fetches; on IPBlocked sets transcripts_blocked_until in the state table and stops (multi-hour cooldown) so it never extends a block. 151 fetched, 38 none, 1 error, 3,824 pending."},
+      {"name": "Whisper fallback (opt-in)", "file": "shared/whisper_fallback.py :: process_pending()", "status": "partial", "detail": "For caption-less videos: yt-dlp downloads bestaudio→mp3 (skipping live/over-long), faster-whisper (cpu/int8) transcribes locally, re-queues summary+score. Gated by whisper.enabled (off by default)."}
+    ]
+  },
+  {
+    "category": "Summarize, Dedup & Score",
+    "features": [
+      {"name": "NEXUS news-card summarizer", "file": "shared/summarize.py :: nexus_synthesize() / summarize_video() / process_pending()", "status": "live", "detail": "POSTs the transcript (or description fallback) to NEXUS /synthesize (parallel, pinned providers), parses HEADLINE/SUMMARY, stores into summaries with engine='nexus'|'fallback'. 4,014 done (2,374 via NEXUS)."},
+      {"name": "Cross-channel dedup", "file": "shared/dedup.py :: run_dedup() / _jaccard()", "status": "live", "detail": "Tokenizes headlines (stopword-filtered), clusters by Jaccard ≥ dedup.threshold within dedup.window_hours, sets videos.dup_of (canonical) + dup_count. Conservative — false-merge avoided over a miss."},
+      {"name": "Implement-worthiness scorer", "file": "shared/score.py :: process_pending() / log_feature_to_brain()", "status": "live", "detail": "Asks NEXUS to rate ai_ml/software_dev videos 0–10 (SCORE/TAGS/RATIONALE); stores into scores; videos ≥ threshold POSTed to QI Brain /api/log_feature. 439 scored. Leaves a video pending if NEXUS fails."}
+    ]
+  },
+  {
+    "category": "Ecosystem Feeds",
+    "features": [
+      {"name": "Kaze / Scout OPML export", "file": "shared/scout_feed.py :: build_opml() / import_to_scout()", "status": "live", "detail": "Builds an OPML of native YouTube RSS feeds (videos.xml?channel_id=…) for the curated scout_export.topics only, then POSTs it to NEXUS /scout/import/opml as topic 'TubeScout-YouTube'. Refreshed each cycle."},
+      {"name": "Private recommender", "file": "shared/recommend.py :: build_profile() / generate() / follow()", "status": "partial", "detail": "Local taste profile (favorites/must-reads/AI channels/top score tags), reasoned by a NEXUS provider (groq default, gemma4 switchable). Neutral YouTube name lookup only; recommendations table; follow() ingests without subscribing."}
+    ]
+  },
+  {
+    "category": "Data & Config",
+    "features": [
+      {"name": "SQLite data layer", "file": "shared/db.py :: connect() / init_db() / _migrate()", "status": "live", "detail": "WAL + foreign_keys ON + busy_timeout; 8 app tables (channels, videos, transcripts, summaries, scores, sweeps, state, schema_version) at schema v1; idempotent ALTER migrations add favorite/topic_manual/disabled/dup_of/dup_count."},
+      {"name": "Channel/video helpers", "file": "shared/db.py :: upsert_channel() / insert_video() / active_channels() / start_sweep()", "status": "live", "detail": "Upserts preserve manual topic/priority; insert_video dedups by PK; active_channels filters subscribed+enabled+non-muted favorites-first; sweep lifecycle + per-channel last_swept."},
+      {"name": "Config loader + writer", "file": "shared/config.py :: load_config() / get() / set_values() / reload()", "status": "live", "detail": "Dotted-path get() over config/tubescout.json, dotenv-loaded secrets, in-memory cache; set_values() writes nested keys back and refreshes — backs the Settings tab."},
+      {"name": "Smoke tests", "file": "tests/test_smoke.py", "status": "live", "detail": "Live HTTP smoke tests against :8503; the whole module skips cleanly if the service is offline; contract + authed endpoints validated conditionally. requests + pytest only."}
+    ]
+  }
+]

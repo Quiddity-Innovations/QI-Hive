@@ -1,0 +1,58 @@
+{
+  "sections": [
+    {
+      "name": "Project Overview & Setup",
+      "documents": [
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Markdown", "description": "The de-facto README: pipeline diagram, start commands, key files, 10-language engine-routing table, WSL2 envs + asset paths, render-engine quick guide, agent roster, known fixes applied, kill/restart, and pending work."},
+        {"title": "Studio Runtime Config", "file": "studio_config.json", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "JSON", "description": "cloud_apis (heygen/did enabled flags, key slots kept blank) + open_source (musetalk/sadtalker/wav2lip conda env, install path, enabled) + ui_prefs. Keys are loaded from secrets at runtime, never stored here."},
+        {"title": "Agent Roster", "file": "agents.json", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "JSON", "description": "4 agents (Tasuke, Maia, Naya, Kaze): voice, voice_speed, photo, avatar_description, per-language voice overrides. Plus kokoro defaults (lang_code, sample_rate 24000) and hallo2 weights/paths for the CLI pipeline."},
+        {"title": "Language Routing", "file": "languages.json", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "JSON", "description": "10 languages: lang_code, engine (kokoro vs edge-tts), male/female voices, sample text, status. _engine_notes explains why each language routes where it does."},
+        {"title": "Cloud Secrets (gitignored)", "file": "avatarstudio.env", "location": "C:\\1-AI\\APPS\\AvatarStudio\\secrets\\", "type": "Env", "description": "DID_API_KEY / HEYGEN_API_KEY for the cloud render engines. Read by _read_secrets(); env vars override. Never committed."}
+      ]
+    },
+    {
+      "name": "Source — Studio App",
+      "documents": [
+        {"title": "Main Gradio App", "file": "avatar_studio.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Python", "description": "The whole studio (~2400 lines): config/secret loading, voice catalog, TTS (Kokoro + edge-tts), background prep, all render-engine wrappers (LivePortrait/Hallo2/retalking/D-ID/HeyGen/MuseTalk/SadTalker/Wav2Lip), the pipeline_generate orchestrator, portrait helpers, and the gr.Blocks UI launching on :7862."},
+        {"title": "CLI Pipeline", "file": "avatar_pipeline.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Python", "description": "Headless Kokoro TTS -> Hallo2 (WSL2) -> MP4 pipeline. Usage: python avatar_pipeline.py <agent> \"text\"|@script.txt [--no-tts]. Independent of the Gradio app."},
+        {"title": "Scene Pipeline", "file": "scene_pipeline.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Python", "description": "Multi-character movie engine: split_script (manual/ai/hybrid), independent character roster (characters.json + inline tags), render_scene, concat_scenes, run_pipeline generator wired to the Scene tab."},
+        {"title": "Detached Launcher", "file": "start_studio.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Python", "description": "Kills any listener on 7862, launches avatar_studio.py detached, logs to logs/studio.log, verifies the port, tails the log on failure."}
+      ]
+    },
+    {
+      "name": "Launchers & Service",
+      "documents": [
+        {"title": "Studio UI Launcher", "file": "run_studio.bat", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Batch", "description": "Starts the Gradio studio via the project .venv and opens http://localhost:7862 in the browser."},
+        {"title": "CLI Pipeline Launcher", "file": "run_avatar.bat", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Batch", "description": "Windows entry point for avatar_pipeline.py: run_avatar.bat <agent> \"text\" | @script.txt [--no-tts]."},
+        {"title": "Service Installer", "file": "install_service.bat", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Batch", "description": "Self-elevating installer for NSSM service QI_AvatarStudio (demand-start, AppDirectory set, rotating log logs/service.log) using C:\\QIH\\engine\\bin\\nssm.exe."},
+        {"title": "WSL Render Helper Scripts", "file": "run_hallo2.sh / run_hallo2_hq.sh / run_retalking.sh / run_tokyo_times.sh / render_lp_batch.sh / install_retalking.sh", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Shell", "description": "WSL2-side helper scripts for Hallo2 (standard + HQ), video-retalking, batch LivePortrait renders, the Tokyo Times demo, and retalking install."}
+      ]
+    },
+    {
+      "name": "Tests & Diagnostics",
+      "documents": [
+        {"title": "Smoke Test (pytest)", "file": "test_smoke.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\tests\\", "type": "Python", "description": "Liveness probe: skips if :7862 is down, otherwise asserts the Gradio root returns 200. Notes the app has no QI /health,/version,/info endpoints."},
+        {"title": "Language & Routing Tests", "file": "test_all_languages.py / test_routing.py / test_langs.py / test_edge_tts.py / smoke_test.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Python", "description": "Validate 10-language TTS routing (Kokoro vs edge-tts), quick routing checks, and edge-tts output. smoke_test.py prints the supported-language table."},
+        {"title": "Diagnostics & Syntax Check", "file": "diagnose.py / check_syntax.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Python", "description": "diagnose.py dumps env / WSL2 / config state for paste-back debugging; check_syntax.py syntax-checks avatar_studio.py."},
+        {"title": "Voice Generation Utilities", "file": "gen_voices_kokoro.py / gen_tokyo_times_tts.py / generate_summary.py", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Python", "description": "One-off Kokoro voice generation, the Tokyo Times demo TTS, and a python-docx session-summary generator."}
+      ]
+    },
+    {
+      "name": "Assets & Outputs",
+      "documents": [
+        {"title": "Agent Portraits", "file": "inputs\\", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Folder", "description": "Source portrait photos per agent (Tasuke Hattori, Naya Patel, Kaze Fujimori). Note: agents.json photo paths don't all match the files present — reconcile pending."},
+        {"title": "Rendered Output", "file": "outputs\\", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Folder", "description": "All generated WAV + MP4 artifacts (gitignored). allowed_paths for the Gradio server is scoped here. Holds dozens of test renders."},
+        {"title": "Studio Logs", "file": "logs\\", "location": "C:\\1-AI\\APPS\\AvatarStudio\\", "type": "Folder", "description": "studio.log / studio_out.log / studio_err.log from the launcher; service.log from the NSSM service."}
+      ]
+    },
+    {
+      "name": "QI Ecosystem",
+      "documents": [
+        {"title": "QI Ecosystem Registry (avatarstudio)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "Registry entry: id avatarstudio, path C:\\1-AI\\APPS\\AvatarStudio, status active, UI port 7862 (block 7840-7869), family_tier sibling, integrates_with empty, exposes talking-head video generation."},
+        {"title": "QI Service Registry", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM service list. QI_AvatarStudio is NOT yet listed here — registration pending (see Future / Operations)."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Port table, family map, and integration contracts for the whole QI ecosystem — where Avatar Studio sits relative to Maia, Naya, NEXUS, and the Hive."},
+        {"title": "QI Standards", "file": "QI_Standards.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Naming, folder, port, and docs conventions all QI projects follow, referenced by this project's CLAUDE.md."}
+      ]
+    }
+  ]
+}

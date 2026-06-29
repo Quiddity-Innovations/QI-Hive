@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-navy" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1f2d3d"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="980" height="760" fill="#ffffff" rx="12"/>
+  <text x="490" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2d3d">NEXUS — System Architecture</text>
+  <text x="490" y="50" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · AI Orchestration Engine · 2026</text>
+  <text x="490" y="66" text-anchor="middle" font-size="10" fill="#9aa5b1">Neural Exchange and Unified Synthesis · API :8010 · Gradio UI :7880</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="752" y="78" width="216" height="172" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="860" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="762" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="782" y="113" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="762" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="782" y="130" font-size="9" fill="#374151">Partial / Built</text>
+  <rect x="762" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="782" y="147" font-size="9" fill="#374151">Planned</text>
+  <rect x="762" y="155" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1" stroke-dasharray="3,2"/>
+  <text x="782" y="164" font-size="9" fill="#374151">Disabled (no key / quota)</text>
+  <rect x="762" y="172" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="782" y="181" font-size="9" fill="#374151">Core orchestration</text>
+  <line x1="762" y1="196" x2="780" y2="196" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+  <text x="786" y="200" font-size="9" fill="#374151">Request flow</text>
+  <line x1="762" y1="212" x2="780" y2="212" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <text x="786" y="216" font-size="9" fill="#374151">Provider dispatch (parallel)</text>
+  <line x1="762" y1="228" x2="780" y2="228" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="786" y="232" font-size="9" fill="#374151">Read / write store</text>
+  <text x="860" y="246" text-anchor="middle" font-size="8" fill="#9aa5b1">Quiddity Innovations © 2026</text>
+
+  <!-- ══ BAND: CALLERS ══ -->
+  <text x="22" y="92" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">CALLERS</text>
+  <rect x="20" y="98" width="200" height="64" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="120" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1b4d22">QI Projects</text>
+  <text x="120" y="137" text-anchor="middle" font-size="9" fill="#2e7d32">Maia · Naya · FileHQ · OpenClaw</text>
+  <text x="120" y="151" text-anchor="middle" font-size="9" fill="#2e7d32">TubeScout · sibling services</text>
+
+  <rect x="232" y="98" width="190" height="64" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="327" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#1b4d22">Operator Console</text>
+  <text x="327" y="137" text-anchor="middle" font-size="9" fill="#2e7d32">Gradio UI · port 7880</text>
+  <text x="327" y="151" text-anchor="middle" font-size="9" fill="#2e7d32">ask · settings · scout · bench</text>
+
+  <rect x="434" y="98" width="190" height="64" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="529" y="120" text-anchor="middle" font-size="12" font-weight="700" fill="#7a5b06">External Clients</text>
+  <text x="529" y="137" text-anchor="middle" font-size="9" fill="#b8860b">via Cloudflare tunnel</text>
+  <text x="529" y="151" text-anchor="middle" font-size="9" fill="#b8860b">HTTPS · CORS from qi_registry</text>
+
+  <!-- arrow callers -> api -->
+  <line x1="322" y1="162" x2="322" y2="186" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+
+  <!-- ══ BAND: FASTAPI ══ -->
+  <text x="22" y="182" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">FASTAPI</text>
+  <rect x="20" y="186" width="604" height="74" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="322" y="208" text-anchor="middle" font-size="13" font-weight="700" fill="#1b4d22">FastAPI / Uvicorn — api/main.py (60+ routes)</text>
+  <text x="322" y="226" text-anchor="middle" font-size="9.5" fill="#2e7d32">POST /synthesize · /synthesize/stream (SSE) · /judge · /history · /sessions</text>
+  <text x="322" y="240" text-anchor="middle" font-size="9.5" fill="#2e7d32">/scout/* · /bench/* · /rag/* · /personas · /config/* · /providers</text>
+  <text x="322" y="253" text-anchor="middle" font-size="8.5" fill="#5f8a66">health · version · info · session persisted to nexus.db</text>
+
+  <!-- arrow api -> dispatcher -->
+  <line x1="180" y1="260" x2="180" y2="288" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+  <text x="92" y="278" font-size="9" fill="#64748b">parallel · chain · iterative</text>
+
+  <!-- ══ BAND: DISPATCHER ══ -->
+  <text x="22" y="284" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">DISPATCHER</text>
+  <rect x="20" y="288" width="320" height="120" rx="9" fill="#1f2d3d" stroke="#0f1825" stroke-width="1.5"/>
+  <text x="180" y="312" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Dispatcher</text>
+  <text x="180" y="330" text-anchor="middle" font-size="10" fill="#cbd5e1">core/dispatcher.py · asyncio fan-out</text>
+  <text x="180" y="347" text-anchor="middle" font-size="9.5" fill="#aebccd">Modes: Parallel · Chain · Iterative</text>
+  <text x="180" y="362" text-anchor="middle" font-size="9.5" fill="#aebccd">Inference: Fast / Balanced / Thinking / Deep</text>
+  <text x="180" y="379" text-anchor="middle" font-size="9" fill="#8a99ab">gather(return_exceptions=True) — one dead</text>
+  <text x="180" y="392" text-anchor="middle" font-size="9" fill="#8a99ab">provider can't abort the run · per-provider timeout</text>
+
+  <!-- dispatch arrow to provider grid -->
+  <line x1="340" y1="318" x2="372" y2="318" stroke="#2e7d32" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <line x1="372" y1="380" x2="340" y2="380" stroke="#6b7280" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- ══ BAND: PROVIDER GRID ══ -->
+  <text x="378" y="284" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">PROVIDER GRID</text>
+  <rect x="376" y="288" width="592" height="120" rx="9" fill="#fbfdff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="672" y="305" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f2d3d">Provider Adapters — core/providers/ · NexusProvider ABC</text>
+
+  <!-- active providers (green) -->
+  <rect x="388" y="314" width="104" height="22" rx="5" fill="#eafaf0" stroke="#2e7d32"/><text x="440" y="329" text-anchor="middle" font-size="9.5" fill="#1b4d22">ChatGPT</text>
+  <rect x="498" y="314" width="104" height="22" rx="5" fill="#eafaf0" stroke="#2e7d32"/><text x="550" y="329" text-anchor="middle" font-size="9.5" fill="#1b4d22">Groq (judge)</text>
+  <rect x="608" y="314" width="104" height="22" rx="5" fill="#eafaf0" stroke="#2e7d32"/><text x="660" y="329" text-anchor="middle" font-size="9.5" fill="#1b4d22">Mistral</text>
+  <rect x="718" y="314" width="104" height="22" rx="5" fill="#eafaf0" stroke="#2e7d32"/><text x="770" y="329" text-anchor="middle" font-size="9.5" fill="#1b4d22">Cloudflare</text>
+  <rect x="828" y="314" width="128" height="22" rx="5" fill="#eafaf0" stroke="#2e7d32"/><text x="892" y="329" text-anchor="middle" font-size="9.5" fill="#1b4d22">Ollama qwen3</text>
+
+  <rect x="388" y="340" width="104" height="22" rx="5" fill="#e3f5e9" stroke="#2e7d32" stroke-width="1.6"/><text x="440" y="355" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1b4d22">Gemma 4 26B *</text>
+  <!-- disabled (dashed gray) -->
+  <rect x="498" y="340" width="104" height="22" rx="5" fill="#f1f3f5" stroke="#9aa5b1" stroke-dasharray="3,2"/><text x="550" y="355" text-anchor="middle" font-size="9.5" fill="#6b7280">Gemini (off)</text>
+  <rect x="608" y="340" width="104" height="22" rx="5" fill="#f1f3f5" stroke="#9aa5b1" stroke-dasharray="3,2"/><text x="660" y="355" text-anchor="middle" font-size="9.5" fill="#6b7280">Grok (off)</text>
+  <!-- pre-wired (planned) -->
+  <rect x="718" y="340" width="238" height="22" rx="5" fill="#f1f3f5" stroke="#9aa5b1"/><text x="837" y="355" text-anchor="middle" font-size="9" fill="#6b7280">Anthropic · Azure · Bedrock (pre-wired)</text>
+
+  <text x="388" y="380" font-size="9" fill="#6b7280">+ OpenRouter · Perplexity · Cohere · Together · Fireworks · NVIDIA NIM — pre-wired, enabled:false (add key in providers.json)</text>
+  <text x="388" y="396" font-size="9" fill="#2e7d32">* local primary synthesiser, kept warm via ollama keep_alive — no API key, free &amp; private</text>
+
+  <!-- arrow dispatcher -> synthesizer -->
+  <line x1="180" y1="408" x2="180" y2="436" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+
+  <!-- ══ BAND: SYNTHESIZER ══ -->
+  <text x="22" y="432" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">SYNTHESIZER</text>
+  <rect x="20" y="436" width="320" height="86" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="180" y="458" text-anchor="middle" font-size="13" font-weight="700" fill="#7a5b06">Synthesizer</text>
+  <text x="180" y="476" text-anchor="middle" font-size="10" fill="#b8860b">core/synthesizer.py</text>
+  <text x="180" y="491" text-anchor="middle" font-size="9.5" fill="#7a5b06">primary: gemma4:26b (local) · fallback: ChatGPT</text>
+  <text x="180" y="507" text-anchor="middle" font-size="9" fill="#9a7a2e">preserves tables &amp; code blocks → one unified answer</text>
+
+  <!-- arrow synth -> judge -->
+  <line x1="340" y1="479" x2="372" y2="479" stroke="#b8860b" stroke-width="1.6" marker-end="url(#arr-amber)"/>
+
+  <!-- ══ BAND: JUDGE / SCORER ══ -->
+  <text x="378" y="432" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">JUDGE / SCORER</text>
+  <rect x="376" y="436" width="290" height="86" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="521" y="458" text-anchor="middle" font-size="13" font-weight="700" fill="#7a5b06">Judge / Scorer (optional)</text>
+  <text x="521" y="476" text-anchor="middle" font-size="9.5" fill="#b8860b">core/scorer.py · DeepEval G-Eval | simple</text>
+  <text x="521" y="491" text-anchor="middle" font-size="9.5" fill="#7a5b06">Clarity · Accuracy · Depth → best response</text>
+  <text x="521" y="507" text-anchor="middle" font-size="9" fill="#9a7a2e">judge provider configurable (default Groq)</text>
+
+  <!-- ══ UNIFIED RESPONSE ══ -->
+  <rect x="700" y="436" width="268" height="86" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="834" y="458" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1b4d22">Unified Response</text>
+  <text x="834" y="475" text-anchor="middle" font-size="9" fill="#2e7d32">synthesis · provider_count · success_count</text>
+  <text x="834" y="489" text-anchor="middle" font-size="9" fill="#2e7d32">elapsed_ms · raw_responses? · judge_results?</text>
+  <text x="834" y="505" text-anchor="middle" font-size="8.5" fill="#5f8a66">streamed via SSE or returned whole → caller</text>
+  <line x1="666" y1="479" x2="696" y2="479" stroke="#2e7d32" stroke-width="1.6" marker-end="url(#arr-green)"/>
+
+  <!-- ══ BACKGROUND ROW: Scout / Bench / RAG / DB ══ -->
+  <text x="22" y="546" font-size="10" fill="#9aa5b1" font-weight="700" letter-spacing="1">BACKGROUND SERVICES &amp; STORES — APScheduler, started at API startup</text>
+  <rect x="20" y="552" width="948" height="190" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <rect x="36" y="572" width="218" height="152" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="145" y="594" text-anchor="middle" font-size="12" font-weight="700" fill="#1b4d22">Scout (daemon)</text>
+  <text x="145" y="613" text-anchor="middle" font-size="9" fill="#2e7d32">scout/runner.py · per topic</text>
+  <text x="145" y="629" text-anchor="middle" font-size="9" fill="#2e7d32">fetch RSS / Reddit / HN / YouTube</text>
+  <text x="145" y="645" text-anchor="middle" font-size="9" fill="#2e7d32">→ rapidfuzz dedup → AI digest</text>
+  <rect x="50" y="656" width="190" height="18" rx="5" fill="#e3f5e9" stroke="#2e7d32"/>
+  <text x="145" y="669" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b4d22">LIVE · default every 6h</text>
+  <text x="145" y="691" text-anchor="middle" font-size="8.5" fill="#5f8a66">13,244 items · 99 digests · .docx out</text>
+  <text x="145" y="706" text-anchor="middle" font-size="8.5" fill="#5f8a66">per-topic interval override</text>
+
+  <rect x="266" y="572" width="218" height="152" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="375" y="594" text-anchor="middle" font-size="12" font-weight="700" fill="#1b4d22">Bench</text>
+  <text x="375" y="613" text-anchor="middle" font-size="9" fill="#2e7d32">bench/runner.py</text>
+  <text x="375" y="629" text-anchor="middle" font-size="9" fill="#2e7d32">suite × providers → score</text>
+  <text x="375" y="645" text-anchor="middle" font-size="9" fill="#2e7d32">track over time → regression</text>
+  <rect x="280" y="656" width="190" height="18" rx="5" fill="#e3f5e9" stroke="#2e7d32"/>
+  <text x="375" y="669" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b4d22">LIVE · reuses dispatch + scorer</text>
+  <text x="375" y="691" text-anchor="middle" font-size="8.5" fill="#5f8a66">/bench/recommend · starter suite seeded</text>
+  <text x="375" y="706" text-anchor="middle" font-size="8.5" fill="#5f8a66">1 suite · 5 cases · 4 runs</text>
+
+  <rect x="496" y="572" width="218" height="152" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.4"/>
+  <text x="605" y="594" text-anchor="middle" font-size="12" font-weight="700" fill="#7a5b06">RAG Knowledge</text>
+  <text x="605" y="613" text-anchor="middle" font-size="9" fill="#b8860b">shared/rag.py · ChromaDB</text>
+  <text x="605" y="629" text-anchor="middle" font-size="9" fill="#b8860b">collection: nexus_knowledge</text>
+  <text x="605" y="645" text-anchor="middle" font-size="9" fill="#b8860b">ingest curated JSONL + exports</text>
+  <rect x="510" y="656" width="190" height="18" rx="5" fill="#fdf3d4" stroke="#b8860b"/>
+  <text x="605" y="669" text-anchor="middle" font-size="8.5" font-weight="600" fill="#7a5b06">PARTIAL · augments synthesis</text>
+  <text x="605" y="691" text-anchor="middle" font-size="8.5" fill="#9a7a2e">cosine search → relevance % context</text>
+  <text x="605" y="706" text-anchor="middle" font-size="8.5" fill="#9a7a2e">background init (300s deadline)</text>
+
+  <rect x="726" y="572" width="226" height="152" rx="8" fill="#1f2d3d" stroke="#0f1825" stroke-width="1.4"/>
+  <text x="839" y="594" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">SQLite — nexus.db</text>
+  <text x="839" y="613" text-anchor="middle" font-size="9" fill="#cbd5e1">shared/db.py · WAL · FK on · schema v4</text>
+  <text x="839" y="629" text-anchor="middle" font-size="9" fill="#aebccd">sessions · responses · providers</text>
+  <text x="839" y="645" text-anchor="middle" font-size="9" fill="#aebccd">scout_items / clusters / digests</text>
+  <text x="839" y="661" text-anchor="middle" font-size="9" fill="#aebccd">bench_* · batch_* · scheduled_jobs</text>
+  <text x="839" y="681" text-anchor="middle" font-size="8.5" fill="#8a99ab">17 app tables · 5,093 sessions</text>
+  <text x="839" y="696" text-anchor="middle" font-size="8.5" fill="#8a99ab">seeded from config/providers.json</text>
+  <text x="839" y="711" text-anchor="middle" font-size="8.5" fill="#8a99ab">+ Gradio personas (config/personas.json)</text>
+
+  <!-- arrows from core down to background -->
+  <line x1="180" y1="522" x2="180" y2="566" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arr)"/>
+</svg>

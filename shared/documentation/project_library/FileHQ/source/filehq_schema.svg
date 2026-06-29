@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="fk" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#c2185b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="760" fill="#ffffff" rx="12"/>
+  <text x="500" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2d3d">FileHQ — Database Schema (filehq.db)</text>
+  <text x="500" y="50" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · File Intelligence Engine (merged into Naya) · 2026</text>
+  <text x="500" y="66" text-anchor="middle" font-size="10" fill="#9aa5b1">SQLite · WAL · schema_version 1 · 8 app tables · live row counts · PK = primary key · FK = foreign key</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="784" y="78" width="200" height="120" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="884" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="794" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="814" y="113" font-size="9" fill="#374151">Core index tables (populated)</text>
+  <rect x="794" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="814" y="130" font-size="9" fill="#374151">Operations / config tables</text>
+  <rect x="794" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="814" y="147" font-size="9" fill="#374151">Empty / not yet used</text>
+  <rect x="794" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="814" y="164" font-size="9" fill="#374151">Title bar (table header)</text>
+  <line x1="794" y1="180" x2="812" y2="180" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <text x="818" y="184" font-size="9" fill="#374151">Foreign-key reference</text>
+
+  <!-- ══ ROW 1: scans · files · duplicate_groups ══ -->
+  <text x="22" y="86" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">INDEXING CORE</text>
+
+  <!-- scans -->
+  <rect x="20" y="92" width="210" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="92" width="210" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="125" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">scans</text>
+  <text x="32" y="136" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="32" y="153" font-size="10" fill="#374151">start_time · end_time</text>
+  <text x="32" y="170" font-size="10" fill="#374151">root_directory · status</text>
+  <text x="32" y="187" font-size="10" fill="#374151">files_found · new_files</text>
+  <text x="32" y="204" font-size="10" fill="#374151">modified_files</text>
+  <text x="32" y="226" font-size="9" fill="#5f8a66">26 rows — one per scan run</text>
+
+  <!-- files (center, big) -->
+  <rect x="262" y="92" width="278" height="226" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.8"/>
+  <rect x="262" y="92" width="278" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="401" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">files</text>
+  <text x="274" y="136" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="274" y="153" font-size="10" fill="#374151">path (UNIQUE) · filename · extension</text>
+  <text x="274" y="170" font-size="10" fill="#374151">size_bytes · created_date · modified_date</text>
+  <text x="274" y="187" font-size="10" fill="#374151">category · subcategory</text>
+  <text x="274" y="204" font-size="10" fill="#374151">archive_era · archive_year</text>
+  <text x="274" y="221" font-size="10" fill="#374151">hash_partial · hash_full</text>
+  <text x="274" y="238" font-size="10" fill="#374151">status (indexed|missing|moved…)</text>
+  <text x="274" y="255" font-size="10" fill="#c2185b">scan_id → scans.id</text>
+  <text x="274" y="278" font-size="11" font-weight="700" fill="#1b4d22">2,858,834 rows</text>
+  <text x="274" y="294" font-size="8.5" fill="#9aa5b1">idx: path, hash_full, hash_partial,</text>
+  <text x="274" y="306" font-size="8.5" fill="#9aa5b1">category, extension, size, scan_id</text>
+
+  <!-- duplicate_groups -->
+  <rect x="572" y="92" width="210" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="572" y="92" width="210" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="677" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">duplicate_groups</text>
+  <text x="584" y="136" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="584" y="153" font-size="10" fill="#374151">hash_full (UNIQUE)</text>
+  <text x="584" y="170" font-size="10" fill="#374151">file_count · total_size</text>
+  <text x="584" y="187" font-size="10" fill="#374151">status (pending|reviewed|resolved)</text>
+  <text x="584" y="204" font-size="10" fill="#374151">review_action (delete|move|rename)</text>
+  <text x="584" y="226" font-size="9" fill="#5f8a66">694 rows · added review_action (migr.)</text>
+
+  <!-- FK files.scan_id -> scans.id -->
+  <line x1="262" y1="255" x2="232" y2="200" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <!-- FK duplicate_groups -> files (via hash_full) -->
+  <path d="M 572 150 C 552 150 552 200 540 200" fill="none" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+  <text x="548" y="142" font-size="8" fill="#c2185b">groups files sharing hash_full</text>
+
+  <!-- ══ ROW 2: duplicate_members · operations ══ -->
+  <text x="22" y="350" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">DUPLICATES &amp; OPERATIONS</text>
+
+  <!-- duplicate_members -->
+  <rect x="20" y="358" width="250" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="358" width="250" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="145" y="376" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">duplicate_members</text>
+  <text x="32" y="402" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="32" y="419" font-size="10" fill="#c2185b">group_id → duplicate_groups.id</text>
+  <text x="32" y="436" font-size="10" fill="#c2185b">file_id  → files.id</text>
+  <text x="32" y="453" font-size="10" fill="#374151">is_oldest  (1 = keeper / original)</text>
+  <text x="32" y="470" font-size="10" fill="#374151">is_kept · dupe_marked</text>
+  <text x="32" y="492" font-size="9" fill="#5f8a66">1,618 rows · idx group_id</text>
+
+  <!-- operations -->
+  <rect x="302" y="358" width="278" height="166" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="302" y="358" width="278" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="441" y="376" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">operations</text>
+  <text x="314" y="402" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="314" y="419" font-size="10" fill="#374151">timestamp · op_type · status</text>
+  <text x="314" y="436" font-size="10" fill="#374151">source_path · dest_path</text>
+  <text x="314" y="453" font-size="10" fill="#374151">reversible · reversed · undo_path</text>
+  <text x="314" y="470" font-size="10" fill="#374151">batch_id (undo grouping · migr.)</text>
+  <text x="314" y="487" font-size="10" fill="#c2185b">file_id → files.id · task_id → tasks.id</text>
+  <text x="314" y="510" font-size="9" fill="#9aa5b1">0 rows — no moves/deletes executed yet</text>
+
+  <!-- FK duplicate_members -> groups -->
+  <path d="M 145 358 C 145 320 600 320 660 246" fill="none" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+  <!-- FK duplicate_members.file_id -> files.id -->
+  <path d="M 270 436 C 300 436 360 330 401 320" fill="none" stroke="#c2185b" stroke-width="1.2" marker-end="url(#fk)"/>
+  <!-- FK operations.file_id -> files.id -->
+  <line x1="441" y1="358" x2="430" y2="320" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+
+  <!-- ══ ROW 3: tasks · task_runs · exceptions · schema_info ══ -->
+  <text x="22" y="556" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">SCHEDULING · RULES · BOOKKEEPING</text>
+
+  <!-- tasks -->
+  <rect x="20" y="564" width="232" height="146" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <rect x="20" y="564" width="232" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="136" y="582" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">tasks</text>
+  <text x="32" y="608" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="32" y="625" font-size="10" fill="#374151">name · task_type · cron_schedule</text>
+  <text x="32" y="642" font-size="10" fill="#374151">enabled · last_run · next_run</text>
+  <text x="32" y="659" font-size="10" fill="#374151">last_status · files_processed</text>
+  <text x="32" y="676" font-size="10" fill="#374151">config_json</text>
+  <text x="32" y="697" font-size="9" fill="#9aa5b1">0 rows — APScheduler wired, none defined</text>
+
+  <!-- task_runs -->
+  <rect x="268" y="564" width="216" height="146" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <rect x="268" y="564" width="216" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="376" y="582" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">task_runs</text>
+  <text x="280" y="608" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="280" y="625" font-size="10" fill="#c2185b">task_id → tasks.id</text>
+  <text x="280" y="642" font-size="10" fill="#374151">started_at · ended_at · status</text>
+  <text x="280" y="659" font-size="10" fill="#374151">files_processed · errors</text>
+  <text x="280" y="676" font-size="10" fill="#374151">log_path · error_message</text>
+  <text x="280" y="697" font-size="9" fill="#9aa5b1">0 rows</text>
+
+  <!-- exceptions -->
+  <rect x="500" y="564" width="216" height="146" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="500" y="564" width="216" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="608" y="582" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">exceptions</text>
+  <text x="512" y="608" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="512" y="625" font-size="10" fill="#374151">path_pattern · rule_type</text>
+  <text x="512" y="642" font-size="10" fill="#374151">description · custom_value</text>
+  <text x="512" y="659" font-size="10" fill="#374151">created_date · active</text>
+  <text x="512" y="688" font-size="9" fill="#9a7a2e">1 row — skip / custom-category rules</text>
+
+  <!-- schema_info -->
+  <rect x="732" y="564" width="248" height="146" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <rect x="732" y="564" width="248" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="856" y="582" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">schema_info</text>
+  <text x="744" y="608" font-size="10" fill="#1f2d3d">key  (PK)</text>
+  <text x="744" y="625" font-size="10" fill="#374151">value</text>
+  <text x="744" y="648" font-size="9" fill="#9aa5b1">2 rows — schema_version = 1</text>
+  <text x="744" y="662" font-size="9" fill="#9aa5b1">created_at = 2026-06-23</text>
+  <text x="744" y="684" font-size="8.5" fill="#9aa5b1">+ sqlite internal: sqlite_sequence,</text>
+  <text x="744" y="696" font-size="8.5" fill="#9aa5b1">sqlite_stat1 (query planner stats)</text>
+
+  <!-- FK task_runs -> tasks -->
+  <line x1="268" y1="619" x2="254" y2="619" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+
+  <!-- ══ FOOTNOTE ══ -->
+  <rect x="20" y="722" width="960" height="30" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <text x="34" y="741" font-size="9.5" fill="#1b4d22">Read-first: scanner/categorizer/hasher/dedup write only to filehq.db; only the organize + dedup executors mutate disk (logged to operations, reversible). Naya reads this DB in mode=ro.</text>
+</svg>

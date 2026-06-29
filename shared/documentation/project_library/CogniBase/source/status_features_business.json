@@ -1,0 +1,57 @@
+[
+  {
+    "category": "OnBase Connectivity",
+    "features": [
+      {"name": "OnBase connector (fixture mode)", "description": "Reads OnBase Studio export packages (.expk), a sample schema.json, and parsed workflow JSON so the whole pipeline works end-to-end without any live OnBase credentials.", "status": "live", "notes": "Application/sources/onbase.py — mode=auto|live|fixture; 6 .expk exports + workflow JSON present as fixtures"},
+      {"name": "Live OnBase REST integration", "description": "Pull document types, keyword types, lifecycles, and document binaries directly from a running OnBase deployment via the Public REST API.", "status": "planned", "notes": "OnBaseRestClient is a stub (M2). Methods exist but are not yet exercised against a live host"},
+      {"name": "Live OnBase Unity integration", "description": "Reach Unity-only capabilities (dashboards, lifecycle definitions) the REST API doesn't expose, via a .NET shim or REST overlap.", "status": "planned", "notes": "UnityClient raises NotImplementedError (M3)"},
+      {"name": "Secure OnBase sign-in (OAuth2 PKCE)", "description": "Authenticate to the institution's identity provider so CogniBase can act as the signed-in user against OnBase.", "status": "planned", "notes": "auth config shape exists in settings.example.json; AuthManager wiring pending (M2)"}
+    ]
+  },
+  {
+    "category": "AI Search & Q&A",
+    "features": [
+      {"name": "Natural-language Q&A over OnBase data", "description": "Ask a question in plain English; CogniBase retrieves the most relevant anchored records and an AI vendor answers, citing the sources it used.", "status": "live", "notes": "POST /chat → QueryEngine (retrieve → synthesize). 503s clearly if no index/embed vendor is configured"},
+      {"name": "Local vector search", "description": "All anchored data is embedded into a private, on-disk vector store so semantic search never leaves the machine.", "status": "live", "notes": "ChromaDB PersistentClient at Product/ONBASE/RAG_Index — ~40 demo embeddings today"},
+      {"name": "Vendor-neutral LLM choice", "description": "Pick which AI answers — Claude, OpenAI, Gemini, or a local model (Ollama / LM Studio / llama.cpp) — with no code change and no lock-in.", "status": "live", "notes": "VendorRouter prefer→default→first-active; Claude active by default, others pre-wired/off"},
+      {"name": "Source-cited answers", "description": "Every answer lists the record ids and metadata it drew from, so a human can verify the AI rather than trust it blindly.", "status": "live", "notes": "QueryEngine returns citations[] with id, metadata, similarity score"}
+    ]
+  },
+  {
+    "category": "Anchors & Cross-Silo Bridges",
+    "features": [
+      {"name": "Anchors — scoped data slices", "description": "Define exactly which slice of OnBase data a question may touch (a doc type, keyword set, or lifecycle); the AI can never read outside it.", "status": "live", "notes": "Anchor model + file-backed registry; materializer writes raw JSONL + per-anchor Chroma collection"},
+      {"name": "Workspaces", "description": "Group several anchors and bridges into a named working set the AI reasons across.", "status": "live", "notes": "Workspace dataclass + WorkspaceRegistry (JSON-backed)"},
+      {"name": "Semantic Bridges (un-silo BU prefixes)", "description": "Automatically suggest where the same field/group lives under different department prefixes (ADM_, HR_, FIN_, IST_…) so a single query can span silos.", "status": "live", "notes": "bridges/suggester.py — prefix-strip + root match + calibrated confidence tiers (0.55–0.95)"},
+      {"name": "Entity resolution across sources", "description": "Recognise that records from different silos refer to the same person/vendor and cluster them.", "status": "partial", "notes": "entities/resolver.py built + tested (deterministic + fuzzy); not yet wired into the materializer pipeline"}
+    ]
+  },
+  {
+    "category": "Admin-Authored Capabilities",
+    "features": [
+      {"name": "Author a capability", "description": "An admin describes the question once; it becomes a reusable, parameterized tile (a retrieval or a report) instead of ad-hoc SQL spread across spreadsheets.", "status": "live", "notes": "POST /capabilities + Capability model; JSON is the source of truth (no DB migrations)"},
+      {"name": "Safe-SQL gate", "description": "Before any capability can be published or run, its SQL is parsed and rejected unless it is a single read-only SELECT that touches only its declared anchors.", "status": "live", "notes": "capabilities/validator.py via sqlglot — blocks writes/DDL/PRAGMA/system tables/out-of-anchor tables; runs at publish AND run time"},
+      {"name": "Publish & grant to groups", "description": "Published tiles are explicitly granted to CogniBase Groups; nothing is visible to a user without a grant.", "status": "live", "notes": "CapabilityGrant; grant/revoke endpoints; clone_allowed off by default"},
+      {"name": "AI capability drafter", "description": "Turn an admin's plain-English intent into a candidate capability (SQL + parameters) to edit and save.", "status": "partial", "notes": "capabilities/drafter.py is a heuristic stub today; LLM-assisted drafting planned"},
+      {"name": "Audit summary on every run", "description": "Each capability run produces a Word document recording who ran what, with which parameters, against which data snapshot, and the rows returned — reproducible byte-for-byte.", "status": "live", "notes": "generate_audit_summary() pins capability version + snapshot; .docx + .json sidecar per run (M48)"}
+    ]
+  },
+  {
+    "category": "Reports & Visualization",
+    "features": [
+      {"name": "Capability tiles in Retrieval & Reports", "description": "End-users see the tiles their group is allowed to run, fill in the parameters, and get results — no SQL knowledge required.", "status": "live", "notes": "GET /capabilities/for-group powers the user-facing tabs (rendered in the React mockup)"},
+      {"name": "Templated .docx reports", "description": "Generate reports from .docx templates and reproduce OnBase Unity Client dashboards.", "status": "planned", "notes": "reports/template_engine.py + dashboard_repro.py scaffolded; live dashboard reproduction needs the Unity client (M11–M13)"},
+      {"name": "Lifecycle visualizer", "description": "Render an OnBase workflow lifecycle as a diagram whose nodes scale with how populated each state is.", "status": "partial", "notes": "GET /visualizer/lifecycle/{file}/{num}.svg — pure-SVG, population-scaled (M25-minimal); full AI-driven canvas planned (M25)"},
+      {"name": "Standalone retrieval UI (OnBase Web Client look-alike)", "description": "A web UI that mimics the OnBase retrieval experience, decoupled from any installed OnBase client.", "status": "planned", "notes": "Today the server serves DESIGN/mockup.html; the real UI is M10"}
+    ]
+  },
+  {
+    "category": "Deployment & QI Ecosystem",
+    "features": [
+      {"name": "Portable install", "description": "Run via Docker, a pip editable install, or a direct clone — all persistent state lives in bind-mounted folders so the whole tool can move machines.", "status": "live", "notes": "Dockerfile + docker-compose.yml + pyproject (cognibase-server entry point)"},
+      {"name": "Registered in the QI ecosystem", "description": "Listed in qi_registry.json with a port block (8650-8659), GitHub repo, and a named Cloudflare tunnel reserved.", "status": "live", "notes": "id=cognibase, status=pre_poc; tunnel cognibase.quiddityinnovations.com reserved"},
+      {"name": "Run 24/7 as a Windows service", "description": "Run CogniBase and its public tunnel as managed Windows services so they survive reboots.", "status": "planned", "notes": "QI_CogniBase + QI_CogniBaseTunnel documented in QI_Service_Registry.md but not yet installed/running"},
+      {"name": "QI module interface contract (/health, /version, /info)", "description": "Expose the standard liveness/identity/self-description endpoints every QI project must implement.", "status": "partial", "notes": "Only GET /health exists today; /version and /info still to be added"}
+    ]
+  }
+]

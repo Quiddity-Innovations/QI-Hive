@@ -1,0 +1,152 @@
+{
+  "table": [
+    {
+      "layer": "Agent Runtime",
+      "technology": "OpenClaw (npm gateway)",
+      "role": "Self-hosted agent runtime: polls Telegram, runs the active LLM agent, executes shell via TOOLS.md flows + exec approvals.",
+      "license": "Open source (npm package)",
+      "version": "2026.4.26 (be8c246)"
+    },
+    {
+      "layer": "Host OS",
+      "technology": "WSL — Ubuntu",
+      "role": "Linux environment hosting the gateway, agents, schedulers, and Ollama under Windows.",
+      "license": "Ubuntu (Canonical) / WSL (MS)",
+      "version": "Ubuntu-24.04"
+    },
+    {
+      "layer": "Service Supervision",
+      "technology": "systemd (user) + NSSM + Task Scheduler",
+      "role": "systemd --user supervises the gateway in WSL; NSSM runs Windows-side keepalive + Kaze services; Task Scheduler fires agent jobs.",
+      "license": "Mixed (GPL / public domain / MS)",
+      "version": "—"
+    },
+    {
+      "layer": "Agent Scripts",
+      "technology": "Python 3.11 / 3.12 (stdlib-first)",
+      "role": "Specialist agent logic — Yubin, Kakei, Asa, Koe, Sentry, bridges. urllib/sqlite3/imap, minimal third-party deps.",
+      "license": "PSF",
+      "version": "3.11+/3.12"
+    },
+    {
+      "layer": "Agent Scripts",
+      "technology": "Bash",
+      "role": "Orchestration shells for digests, briefings, health checks, and Task Scheduler entry points.",
+      "license": "GPL",
+      "version": "5.x"
+    },
+    {
+      "layer": "Dashboard",
+      "technology": "Node.js",
+      "role": "Lightweight static dashboard server (agents, tasks, roadmap, sentry status) on 127.0.0.1:18800.",
+      "license": "MIT-style",
+      "version": "system node"
+    },
+    {
+      "layer": "Local LLM",
+      "technology": "Ollama",
+      "role": "Primary inference: gemma4:26b (agent default), gpt-oss-20b (main agent), qwen3:8b (Kaze fallback), qwen3-vl (vision/OCR).",
+      "license": "MIT (Ollama)",
+      "version": "API :11434"
+    },
+    {
+      "layer": "Cloud LLM",
+      "technology": "Cloudflare Workers AI",
+      "role": "Kaze digest primary provider — @cf/meta/llama-3.1-8b-instruct on the free tier, with automatic Ollama fallback.",
+      "license": "Commercial (free tier)",
+      "version": "—"
+    },
+    {
+      "layer": "Cloud LLM (aux)",
+      "technology": "OpenAI Codex via OAuth",
+      "role": "gpt-5.4 available through an OAuth profile (rennesan@gmail.com) for select agent work.",
+      "license": "Commercial",
+      "version": "gpt-5.4"
+    },
+    {
+      "layer": "News",
+      "technology": "feedparser",
+      "role": "RSS/Atom parsing for Kaze; combined with ThreadPoolExecutor fetch and SequenceMatcher de-dup.",
+      "license": "BSD",
+      "version": "—"
+    },
+    {
+      "layer": "Speech-to-Text",
+      "technology": "whisper.cpp",
+      "role": "Local on-device transcription of Telegram voice notes (small.en default). Nothing leaves the machine.",
+      "license": "MIT",
+      "version": "small.en"
+    },
+    {
+      "layer": "Text-to-Speech",
+      "technology": "edge-tts (default) / Piper / dots.tts",
+      "role": "edge-tts Microsoft neural voices (online, default); Piper local offline fallback; dots.tts GPU clone (parked).",
+      "license": "Mixed (MIT / Apache-2.0)",
+      "version": "dots.tts 2B"
+    },
+    {
+      "layer": "Mail",
+      "technology": "Gmail IMAP/SMTP",
+      "role": "Yubin mailbox access (imap.gmail.com:993 / smtp.gmail.com:587) for maia.quiddam@gmail.com via app password.",
+      "license": "Commercial (free)",
+      "version": "—"
+    },
+    {
+      "layer": "Storage",
+      "technology": "SQLite",
+      "role": "Kakei ledger (bills + expenses tables) at ~/.openclaw/workspace-kakei/kakei.db. No central app DB.",
+      "license": "Public domain",
+      "version": "3.x"
+    },
+    {
+      "layer": "Knowledge Base",
+      "technology": "NotebookLM (cookie-auth + Playwright vision)",
+      "role": "Durable archive for Kaze/Yubin output; UI driven via Chrome session + qwen3-vl vision (no Google API).",
+      "license": "Commercial (free)",
+      "version": "—"
+    },
+    {
+      "layer": "Channels",
+      "technology": "Telegram Bot API + LINE",
+      "role": "Inbound/outbound messaging. Telegram polled by the gateway; LINE accounts for tasuke/naya/kaze.",
+      "license": "Commercial (free)",
+      "version": "—"
+    },
+    {
+      "layer": "Public Exposure",
+      "technology": "Cloudflare Tunnel (cloudflared)",
+      "role": "Permanent named tunnel publishing the Kaze news page at kaze.quiddityinnovations.com.",
+      "license": "Commercial (free)",
+      "version": "named tunnel qi-kaze"
+    },
+    {
+      "layer": "VCS",
+      "technology": "Git",
+      "role": "repo/ holds the curated, non-secret agent scripts + config templates (secrets excluded by design).",
+      "license": "GPL",
+      "version": "—"
+    }
+  ],
+  "descriptions": [
+    {
+      "title": "TOOLS.md is the architecture, not a config file",
+      "body": "The defining design choice of OpenClaw is that capabilities are declared in a Markdown file the LLM reads every turn. ~/.openclaw/workspace/TOOLS.md (1,262 lines) opens with GLOBAL_CONTEXT_RULES_v3 — a TALK/DO/PRIVATE permission firewall evaluated as ordered gates (first match wins) — then lists conversation flows: natural-language patterns mapped to shell commands. Wiring a new capability is 'add a section, restart the gateway' rather than writing a bot or a webhook. The version-controlled copy lives at repo/scripts/tasuke/TOOLS_ADDITIONS.md so it can be diffed and re-applied after an openclaw upgrade rewrites the live file."
+    },
+    {
+      "title": "Local-first LLM with a free cloud edge",
+      "body": "Inference is primarily local via Ollama (gemma4:26b agent default, gpt-oss-20b main agent, qwen3-vl for vision/OCR), keeping data on-machine and cost near zero. Kaze's digests are the exception: they use Cloudflare Workers AI's free tier as primary with automatic Ollama fallback, routed through one place — kaze-llm-provider.py. That router also sets think=false for reasoning models so the response field is populated, and strips residual <think> tags. No script bypasses the router."
+    },
+    {
+      "title": "Voice runs locally, speaks neurally",
+      "body": "Koe transcribes with whisper.cpp on-device (ffmpeg -> 16kHz mono WAV -> whisper), so voice notes never leave the machine. For output, koe-tts-router.py picks an engine: edge-tts (Microsoft Azure neural, free, online, default) detects each paragraph's language and uses a native female voice (pt-BR-FranciscaNeural, en-US-JennyNeural, es/ja/fr); Piper is the offline fallback; dots.tts is a GPU voice-cloning engine that is parked disabled because it reliably speaks only EN/ZH."
+    },
+    {
+      "title": "Supervision spans two worlds",
+      "body": "OpenClaw straddles WSL and Windows. Inside WSL, systemd --user supervises the gateway (hot-reloading on config change) and a cron runs the Sentry health check + the 30-minute NotebookLM cookie copy. On the Windows side, NSSM runs OC-Keepalive-Service (rebuilds the WSL port proxy on boot, watches OAuth token expiry), QI_KazeConfigAPI, and QI_KazeNewsTunnel; Task Scheduler fires the agent jobs (Kaze x4, Yubin x2, Asa 7AM, Kakei Sunday, Sentry drift). keep-wsl-alive.ps1 keeps the distro warm."
+    },
+    {
+      "title": "No central database — everything is files + small stores",
+      "body": "There is no application database. State lives in per-agent workspaces under ~/.openclaw/workspace-<agent>/, JSON config files (kaze-feeds.json, friendly-bots.json, shared-chats.json, bot-voices.json), and a single SQLite ledger for Kakei. Secrets live under ~/.openclaw/secrets/ (chmod 600), with templates committed to repo/ but never the real values. This keeps the system auditable, diffable, and cheap to back up."
+    }
+  ]
+}

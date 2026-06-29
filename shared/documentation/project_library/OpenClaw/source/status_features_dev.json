@@ -1,0 +1,257 @@
+[
+  {
+    "category": "Gateway & Runtime",
+    "features": [
+      {
+        "name": "OpenClaw gateway daemon",
+        "file": "~/.openclaw (npm: openclaw 2026.4.26) — systemd --user openclaw-gateway.service",
+        "status": "live",
+        "detail": "Polls Telegram getUpdates, forwards each message to the active agent. Listens 0.0.0.0:18789 (TCP). gateway.bind=lan, gateway.auth.mode=token. Hot-reloads on config change."
+      },
+      {
+        "name": "Gateway config",
+        "file": "~/.openclaw/openclaw.json",
+        "status": "live",
+        "detail": "Agent list, model defaults (ollama/gemma4:26b, gpt-oss-20b), bind/auth, controlUi.allowInsecureAuth=false (hardened 2026-06-15). Integrity-checked by Sentry."
+      },
+      {
+        "name": "TOOLS.md capability playbook",
+        "file": "~/.openclaw/workspace/TOOLS.md (canonical copy: repo/scripts/tasuke/TOOLS_ADDITIONS.md)",
+        "status": "live",
+        "detail": "1,262-line natural-language flow registry. GLOBAL_CONTEXT_RULES_v3 permission tiers + per-capability flows mapped to shell commands. The integration point — add a section, restart gateway, capability is live."
+      },
+      {
+        "name": "Exec approval list",
+        "file": "~/.openclaw/exec-approvals.json",
+        "status": "live",
+        "detail": "Auto-approved shell commands the gateway may run without prompting."
+      },
+      {
+        "name": "WSL keepalive + port proxy",
+        "file": "keep-wsl-alive.ps1 ; tools/oc-keepalive-daemon.py ; tools/oc-chatgpt-keepalive.py",
+        "status": "live",
+        "detail": "OC-Keepalive-Service (NSSM) runs daemon every 30 min; rebuilds Windows->WSL port proxy on boot; OAuth token expiry watch (48h Telegram alert)."
+      }
+    ]
+  },
+  {
+    "category": "Tasuke — Orchestrator",
+    "features": [
+      {
+        "name": "Permission firewall + flows",
+        "file": "repo/scripts/tasuke/tools_global_context.md",
+        "status": "live",
+        "detail": "TALK/DO/PRIVATE gate evaluation (first match wins); sender.id==260811037 => Renne (DO). Language-matched refusal templates. Appended into TOOLS.md."
+      },
+      {
+        "name": "Slash-command router (fallback CLI)",
+        "file": "repo/scripts/shared/tasuke_commands.py",
+        "status": "partial",
+        "detail": "route_command() maps /status /email /digest /health /briefing /hive /kakei /vip to agent scripts. Live gateway uses natural language, so retained as manual-test/fallback CLI."
+      },
+      {
+        "name": "Telegram poller (deprecated-on-arrival)",
+        "file": "repo/scripts/tasuke/tasuke-bot.py",
+        "status": "disabled",
+        "detail": "Stdlib Telegram long-poller with photo/voice handlers. KEPT, do not auto-start — would 409-Conflict with the live gateway on the same bot token. Manual outage fallback only."
+      }
+    ]
+  },
+  {
+    "category": "Kaze — News & Digest",
+    "features": [
+      {
+        "name": "RSS fetch / score / cluster",
+        "file": "repo/scripts/kaze/kaze-news-fetch.py",
+        "status": "live",
+        "detail": "feedparser + ThreadPoolExecutor (8 workers), fuzzy de-dup via SequenceMatcher, per-category caps, category emojis. Feeds: kaze-feeds.json; policy: kaze-source-policy.json."
+      },
+      {
+        "name": "LLM provider router",
+        "file": "repo/scripts/kaze/kaze-llm-provider.py",
+        "status": "live",
+        "detail": "Central router: Cloudflare Workers AI primary / Ollama fallback (or reverse) via KAZE_LLM_PROVIDER. think=false for reasoning models; strips <think> tags. All digest scripts route through it."
+      },
+      {
+        "name": "Digest delivery scripts",
+        "file": "repo/scripts/kaze/{kaze-daily-digest.sh, kaze-ai-digest.sh, kaze-deliver-telegram.sh, kaze-notebooklm-push.py}",
+        "status": "live",
+        "detail": "4 Task Scheduler jobs at 6AM/6PM (news + AI). Telegram footer 'Prepared via Kaze | By Maia Quiddam'; archive push to NotebookLM."
+      },
+      {
+        "name": "Feed config REST API",
+        "file": "repo/scripts/kaze/kaze-config-api.py",
+        "status": "live",
+        "detail": "Reads/writes kaze-feeds.json + kaze-source-policy.json behind a web UI. Runs as QI_KazeConfigAPI (NSSM) at :18800/kaze-config/."
+      }
+    ]
+  },
+  {
+    "category": "Yubin — Email",
+    "features": [
+      {
+        "name": "Gmail IMAP fetch",
+        "file": "repo/scripts/yubin/yubin-fetch.py",
+        "status": "live",
+        "detail": "IMAP fetch (imap.gmail.com:993) + decode -> JSON. App-password auth from ~/.openclaw/secrets/yubin-mail.env."
+      },
+      {
+        "name": "Classify + digest + deliver",
+        "file": "repo/scripts/yubin/{yubin-digest.sh, yubin-daily.sh}",
+        "status": "live",
+        "detail": "Orchestrator called by OC-Yubin-Daily-8AM/6PM. Classifies, summarises (via kaze-llm-provider), suppresses spam, delivers to Telegram; hooks VIP + Kakei."
+      },
+      {
+        "name": "VIP allowlist check",
+        "file": "repo/scripts/yubin/yubin-vip-check.py (config: yubin-vip.json)",
+        "status": "partial",
+        "detail": "In-pipeline VIP lane; needs ~/.openclaw/workspace-email/yubin-vip.json populated with VIP addresses/domains."
+      }
+    ]
+  },
+  {
+    "category": "Asa — Morning Briefing",
+    "features": [
+      {
+        "name": "Briefing orchestrator",
+        "file": "repo/scripts/briefing/oc-morning-briefing.sh",
+        "status": "live",
+        "detail": "Assembles 7 sections (header, calendar, news, inbox, kakei, sentry, hive). OC-Asa-Briefing-7AM. Each section degrades gracefully."
+      },
+      {
+        "name": "Hive health fetcher",
+        "file": "repo/scripts/briefing/asa-hive.py",
+        "status": "live",
+        "detail": "Calls QI Hive Brain at :9011 for ecosystem summary. Repointed from dead 9010 on 2026-06-15."
+      },
+      {
+        "name": "Calendar fetcher",
+        "file": "repo/scripts/briefing/asa-calendar.py",
+        "status": "partial",
+        "detail": "Code fixed 2026-06-15; requires CALENDAR_ICS_URL in ~/.openclaw/secrets/asa-calendar.env to activate."
+      }
+    ]
+  },
+  {
+    "category": "Kakei — Finance",
+    "features": [
+      {
+        "name": "SQLite ledger CRUD",
+        "file": "repo/scripts/kakei/kakei-ledger.py (schema: kakei-schema.sql)",
+        "status": "live",
+        "detail": "init/add-bill/add-expense/list-bills/mark-paid/summary subcommands. Two tables: bills + expenses. DB at ~/.openclaw/workspace-kakei/kakei.db."
+      },
+      {
+        "name": "Email -> ledger extractor",
+        "file": "repo/scripts/kakei/{kakei-from-yubin.py, kakei-extract.py}",
+        "status": "live",
+        "detail": "Picks bill/statement/invoice-class items from Yubin's classified output and LLM-extracts amount/due-date/payee via kaze-llm-provider."
+      },
+      {
+        "name": "Weekly summary job",
+        "file": "repo/scripts/kakei/kakei-weekly.sh",
+        "status": "live",
+        "detail": "Sunday 7PM Telegram rollup (OC-Kakei-Weekly-Sunday-7PM)."
+      },
+      {
+        "name": "Receipt photo skill",
+        "file": "repo/scripts/receipts/tasuke-receipt-skill.py",
+        "status": "partial",
+        "detail": "OCR via qwen3-vl (nlm_vision) -> kakei add-expense. Needs Tasuke photo handler wired + qwen3-vl pulled."
+      }
+    ]
+  },
+  {
+    "category": "Koe — Voice",
+    "features": [
+      {
+        "name": "Speech-to-text",
+        "file": "repo/scripts/koe/koe-stt.py",
+        "status": "live",
+        "detail": "ffmpeg -> 16kHz mono WAV -> whisper.cpp (small.en default); strips bracketed timestamps; returns JSON. Fully local."
+      },
+      {
+        "name": "Text-to-speech (edge, default)",
+        "file": "repo/scripts/koe/koe-tts-edge.py",
+        "status": "live",
+        "detail": "Per-paragraph language detection -> Microsoft neural voice (pt-BR-FranciscaNeural / en-US-JennyNeural / es / ja / fr); concatenates mixed-language audio into one Ogg/Opus."
+      },
+      {
+        "name": "TTS engine router",
+        "file": "repo/scripts/koe/koe-tts-router.py",
+        "status": "live",
+        "detail": "Honours KOE_TTS_ENGINE (edge|dots|piper); dots auto-falls-back to edge if GPU service down/low-VRAM."
+      },
+      {
+        "name": "dots.tts GPU voice clone",
+        "file": "repo/scripts/koe/{koe-tts-dots.py, koe-dots-service.py, koe-dots.service}",
+        "status": "disabled",
+        "detail": "Resident systemd service on 127.0.0.1:8475 (RTX 5080, torch cu128). PARKED DISABLED — reliable EN/ZH only. Toggle via koe-dots-ctl.sh."
+      }
+    ]
+  },
+  {
+    "category": "Sentry — Health & Security",
+    "features": [
+      {
+        "name": "Daily health check",
+        "file": "repo/scripts/sentry/sentry-health-check.sh",
+        "status": "live",
+        "detail": "Deterministic checks: gateway :18789, Ollama models, disk, memory, config JSON integrity, external ports, apt updates. Writes report + dashboard JSON. WSL cron 6AM."
+      },
+      {
+        "name": "NotebookLM auth/push check",
+        "file": "repo/scripts/sentry/sentry-notebooklm-check.py",
+        "status": "live",
+        "detail": "Verifies NotebookLM cookie + Kaze/Yubin push logs; surfaces WARNING into the daily verdict."
+      },
+      {
+        "name": "Weekly drift check",
+        "file": "repo/scripts/sentry/sentry-weekly-drift.sh",
+        "status": "partial",
+        "detail": "Reads C:/QIH/engine/hive/inspector/reports/compliance-YYYY-MM-DD.json. OC-Sentry-Drift-Sunday-8PM; exits 0 if reports absent."
+      }
+    ]
+  },
+  {
+    "category": "Bridges, Broadcast & NotebookLM",
+    "features": [
+      {
+        "name": "QI Hive bridge skill",
+        "file": "repo/scripts/hive-bridge/tasuke-hive-skill.py",
+        "status": "live",
+        "detail": "status/project/pending/decisions/ask subcommands against QI Brain at :9011 (env QI_BRAIN_URL). Fixed 2026-06-15."
+      },
+      {
+        "name": "Cross-bot peer bridge",
+        "file": "repo/scripts/bridge/{peer-bridge.py, tasuke-bridge-receiver.py}",
+        "status": "partial",
+        "detail": "HMAC-SHA256 signed POSTs of Telegram-shaped synthetic updates between bots (shared-chats.json). Receiver RUNNING; quiet-mode + panic-button + LINE handoff."
+      },
+      {
+        "name": "Bot-to-bot loop guard",
+        "file": "repo/scripts/broadcast/bot-loop-guard.py",
+        "status": "live",
+        "detail": "Per-chat exchange counter + cooldown; any human message resets it. Prevents infinite bot-war loops. Called before replying to friendly bots."
+      },
+      {
+        "name": "Broadcast pusher",
+        "file": "repo/scripts/broadcast/{broadcast-send.py, broadcast-discover.py, broadcast-schedule.py, broadcast-admin.py}",
+        "status": "disabled",
+        "detail": "Proactive multi-group send with group validation + forward-metadata auto-register. Tasks OC-Broadcast-News + OC-Broadcast-Tick DISABLED until wanted."
+      },
+      {
+        "name": "NotebookLM client + vision",
+        "file": "repo/scripts/shared/{notebooklm_client.py, nlm_vision.py, nlm_chrome.py}",
+        "status": "live",
+        "detail": "Cookie-auth notebooklm-py client + Playwright/qwen3-vl vision layer to drive UI-only features (Generate Audio/Summary) with no Google API. Cookie copied to runtime every 30 min (cron)."
+      },
+      {
+        "name": "Dashboard static server",
+        "file": "repo/scripts/dashboard/dashboard-server.js",
+        "status": "live",
+        "detail": "Node http server on 127.0.0.1:18800 serving runtime/dashboard (agents, tasks, roadmap, sentry-latest, seiri panels). Directory-traversal guard."
+      }
+    ]
+  }
+]

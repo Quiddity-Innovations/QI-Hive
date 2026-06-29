@@ -1,0 +1,76 @@
+[
+  {
+    "category": "Server & Routing",
+    "features": [
+      {"name": "FastAPI app + lifespan", "file": "Application/server/app.py :: lifespan() / app", "status": "live", "detail": "FastAPI(title='CogniBase', version='0.1.0-dev'). On startup: ensure_dirs(), load_settings(), build VendorRegistry + VendorRouter, attempt QueryEngine (None if no embed vendor/index). Mounts 6 routers: vendor, settings, chat, anchor, visualizer, capability. run() launches uvicorn on :8650."},
+      {"name": "/health endpoint", "file": "Application/server/app.py :: health()", "status": "live", "detail": "Returns {status:'ok', version:'0.1.0-dev'}. The only QI-contract endpoint implemented; /version and /info are not yet added."},
+      {"name": "/chat (RAG Q&A)", "file": "Application/server/routes/chat_routes.py :: chat()", "status": "live", "detail": "ChatRequest{message, vendor?, top_k=6, use_rag=true}. 503 if query_engine is None (no index / no embed vendor) or RuntimeError (no active chat vendor); else returns QueryEngine.answer()."},
+      {"name": "Vendor routes", "file": "Application/server/routes/vendor_routes.py", "status": "live", "detail": "GET /vendors (sanitized config, no secrets), GET /vendors/active, POST /vendors/{id}/test (ping). Read-only for v1."},
+      {"name": "Index serves mockup", "file": "Application/server/app.py :: index()", "status": "partial", "detail": "GET / returns DESIGN/mockup.html (React single-file mockup) as a placeholder until the real retrieval UI (M10) is built."}
+    ]
+  },
+  {
+    "category": "Vendor Layer (LLM router)",
+    "features": [
+      {"name": "Vendor ABC + dataclasses", "file": "Application/vendors/base.py :: LLMVendor / ChatMessage / ChatResult / EmbedResult", "status": "live", "detail": "Abstract chat() (required) + chat_stream(), embed() (optional, raises NotImplementedError by default), list_chat_models() (required), ping(). capabilities is a set, e.g. {'chat','stream','vision'}."},
+      {"name": "importlib-discovered registry", "file": "Application/vendors/registry.py :: VendorRegistry.reload()", "status": "live", "detail": "Iterates settings['vendors'], skips inactive, importlib.import_module('Application.vendors.<module>') + getattr(class), instantiates with the entry. list_all_configured() returns a secret-free view (key_set bool, never the key)."},
+      {"name": "Router with fallback chain", "file": "Application/vendors/router.py :: VendorRouter.pick_chat() / pick_embed()", "status": "live", "detail": "prefer (if active) → registry.default(capability) → first active_with(capability) → RuntimeError. embed picker additionally requires 'embed' in the vendor's capabilities."},
+      {"name": "Claude adapter", "file": "Application/vendors/claude.py :: ClaudeVendor", "status": "live", "detail": "anthropic.Anthropic client. Splits system vs user/assistant messages, returns ChatResult with token usage. Default model claude-sonnet-4-6. Active vendor by default in settings.example.json."},
+      {"name": "OpenAI / Gemini / Ollama / OpenAI-compatible adapters", "file": "Application/vendors/{openai,gemini,ollama,openai_compatible}.py", "status": "partial", "detail": "Concrete adapters present and importable; inactive by default (active:false) pending keys/endpoints. openai_compatible covers LM Studio, llama.cpp, vLLM, and Ollama's OpenAI mode (incl. embeddings via nomic-embed-text)."}
+    ]
+  },
+  {
+    "category": "RAG / Vector Store",
+    "features": [
+      {"name": "Chroma indexer", "file": "Application/rag/indexer.py :: RagIndexer.index_records()", "status": "live", "detail": "PersistentClient at Product/ONBASE/RAG_Index. upsert(ids, documents, embeddings, metadatas) in batches of 64; embeddings come from router.pick_embed(). count()/clear() helpers."},
+      {"name": "Chroma retriever", "file": "Application/rag/retriever.py :: RagRetriever.search()", "status": "live", "detail": "Embeds the query via pick_embed(), collection.query(n_results=top_k, where=filters). Returns id/text/metadata/score (1 - distance). Empty list if collection is empty."},
+      {"name": "Query engine (retrieve→synthesize)", "file": "Application/rag/query_engine.py :: QueryEngine.answer()", "status": "live", "detail": "Retrieves top_k hits, builds a '[id] text' context block, calls pick_chat() with a senior-OnBase-analyst system prompt that mandates cite-by-id + 'say so if insufficient'. Returns answer + citations + vendor_used + token counts."},
+      {"name": "Character-window chunker", "file": "Application/rag/chunker.py :: chunk()", "status": "live", "detail": "Sliding window (default 1200 chars, 150 overlap). Noted in-source as a placeholder for a future semantic splitter."}
+    ]
+  },
+  {
+    "category": "Sources (pluggable connectors)",
+    "features": [
+      {"name": "AbstractSource interface", "file": "Application/sources/base.py :: AbstractSource / SourceCapability / ExtractRequest / ExtractResult", "status": "live", "detail": "Capability enum (LIST_DOC_TYPES, EXTRACT_BY_TYPE/KW/LC, SCHEMA, CUSTOM_SQL…). annotate() stamps each record with _provenance{source, source_id, retrieved_at, method, confidence}."},
+      {"name": "OnBaseSource (fixture fallback)", "file": "Application/sources/onbase.py :: OnBaseSource", "status": "live", "detail": "mode=auto|live|fixture. _live() lazily inits the REST client and returns False (→ fixtures) on any failure. list_doc_types()/list_lifecycles()/schema()/extract() read schema.json + *WorkflowDoc*.json; doc-type extract emits synthetic FIXTURE- rows with confidence 0.0."},
+      {"name": "FilesystemSource", "file": "Application/sources/filesystem.py :: FilesystemSource", "status": "live", "detail": "Walks a tree, groups files by extension as 'doc types'; EXTRACT_BY_TYPE (by ext) + EXTRACT_BY_KW (path glob); custom _glob_to_re supports ** any-depth excludes. Records carry filesystem_scan provenance."},
+      {"name": "Live OnBase REST / Unity clients", "file": "Application/api_clients/rest_client.py, unity_client.py", "status": "planned", "detail": "OnBaseRestClient methods (list_doc_types/keyword_types, get_document) are written but unexercised (M2). UnityClient methods all raise NotImplementedError (M3)."}
+    ]
+  },
+  {
+    "category": "Anchors, Lake & Bridges",
+    "features": [
+      {"name": "Anchor / Workspace models + registries", "file": "Application/anchors/models.py, registry.py", "status": "live", "detail": "Anchor{kind∈doc_type|keyword|lifecycle|custom_sql|vector|expk, selectors, filters, vectorize}. File-backed registries (one JSON per anchor under Product/Lake/anchors). The JSON file IS the source of truth — no DB."},
+      {"name": "Anchor materializer", "file": "Application/anchors/materializer.py :: materialize()", "status": "live", "detail": "Extract → write raw JSONL to Lake/raw/<source>/<anchor>/<ts>.jsonl → optionally embed records into Chroma collection anchor_<id>. Returns AnchorMaterialization(record_count, raw_path, vector_collection). 3 demo anchors materialized (ap_invoices, isso_students, lc_mat_test)."},
+      {"name": "Bridge suggester", "file": "Application/bridges/suggester.py :: suggest_bridges()", "status": "live", "detail": "Strips 2–4-letter prefixes (KNOWN_PREFIXES = ADM/HR/FIN/IST/…), matches roots across silos, emits group_bridge + field_bridge suggestions with confidence 0.55–0.95 based on data-type match + Jaccard sample-value overlap."},
+      {"name": "Entity resolver", "file": "Application/entities/resolver.py :: EntityResolver", "status": "partial", "detail": "Two-phase clustering: deterministic exact-match on keys (non-overridable) then difflib.SequenceMatcher fuzzy ≥0.88 with first-letter blocking. Appends _entity{id, method}. Built + tested but NOT yet wired into the materializer (M20-wire)."}
+    ]
+  },
+  {
+    "category": "Capabilities (admin-authored queries)",
+    "features": [
+      {"name": "Capability models", "file": "Application/capabilities/models.py :: Capability / CapabilityVersion / CapabilityGrant", "status": "live", "detail": "Capability{kind∈retrieval|report, sql_template with :params, anchors[], required_gate, k_anonymity_floor=5, status∈draft|published|retired, version}. JSON-as-source-of-truth, versioned on every edit."},
+      {"name": "SQL validator (safety boundary)", "file": "Application/capabilities/validator.py :: validate()", "status": "live", "detail": "sqlglot parse(read='sqlite'): rejects multi-statement, non-SELECT, any Insert/Update/Delete/Drop/Alter/Create/Pragma/Attach/Merge node, sqlite_/pragma_ identifiers, table-valued functions, tables outside declared anchors, and undeclared :placeholders. Reports tables_used/placeholders/has_aggregates/has_joins."},
+      {"name": "Capability registry + routes", "file": "Application/capabilities/registry.py, server/routes/capability_routes.py", "status": "live", "detail": "Full CRUD + versions + grants + publish/retire + draft + validate + run + backend health + audit access. publish() and run() both re-validate (defense in depth). RBAC is header-based (X-Admin-User / X-CB-Group) until real RBAC."},
+      {"name": "Lake SQL backend", "file": "Application/capabilities/backends/lake.py :: LakeBackend.execute()", "status": "live", "detail": "Loads only the declared anchors' latest JSONL into an in-memory SQLite (table per anchor, all TEXT in v1), runs the capability SQL with safe parameter binding, row-limits (default 1000), and returns SqlResult with snapshot ids. In-memory DB discarded after each run."},
+      {"name": "Capability drafter", "file": "Application/capabilities/drafter.py :: draft()", "status": "partial", "detail": "Heuristic stub that turns intent + an anchors-column index into a candidate Capability JSON. Returns '-- no SQL generated' when it can't; LLM-assisted drafting is planned."},
+      {"name": "Audit summary generator", "file": "Application/capabilities/audit.py :: generate_audit_summary()", "status": "live", "detail": "On every run (preview or real) writes a .docx + .json sidecar under Product/Lake/capabilities/audit/<id>/, pinning capability version + bound params + backend snapshot + rows so the report reproduces byte-for-byte."}
+    ]
+  },
+  {
+    "category": "Discovery & Visualizer",
+    "features": [
+      {"name": ".expk discovery pipeline", "file": "Application/discovery/expk_parser.py, validate_and_augment.py, build_bu_catalog.py", "status": "live", "detail": "Parses OnBase Studio .expk export packages into per-silo discovery JSON, proposes normalizers/augmentations, and builds BU_Catalog.json. 6 .expk fixtures present (AP, ISSO, IST, OAD, PRO, TR)."},
+      {"name": "Lifecycle visualizer (SVG)", "file": "Application/visualizer/lifecycle.py, server/routes/visualizer_routes.py", "status": "partial", "detail": "GET /visualizer/lifecycle/{file}/{num}.svg renders a workflow lifecycle as pure SVG with population-scaled state nodes (M25-minimal). Full AI-driven canvas (M25) is planned."}
+    ]
+  },
+  {
+    "category": "Config, Utils & Tests",
+    "features": [
+      {"name": "Settings loader with env indirection", "file": "Application/utils/config.py :: load_settings() / save_settings()", "status": "live", "detail": "Reads Settings/settings.json; resolves any 'env:NAME' string from a Settings/.env or the OS env at load time; save_settings() restores env: markers so real keys are never written back. lru_cache'd."},
+      {"name": "Path + logging + dir helpers", "file": "Application/utils/paths.py, logger.py", "status": "live", "detail": "ROOT-relative paths (PRODUCT, ONBASE, RAG_INDEX, DESIGN), ensure_dirs() on startup, setup_logging(level)."},
+      {"name": "Test suite", "file": "tests/ (≈14 modules)", "status": "live", "detail": "≈95 test functions across validator, drafter, audit, routes, anchors, bridges, sources, RAG index/query, vendor router, discovery/visualizer, and server smoke. Runs against FakeChatVendor/FakeEmbedVendor — no API keys required."},
+      {"name": "QI_CogniBase NSSM service", "file": "install_tunnel_service.bat, install_sync_service.bat, QI_Service_Registry.md", "status": "planned", "detail": "Service QI_CogniBase (venv python, AppDirectory C:\\CogniBase, requires sqlglot) + QI_CogniBaseTunnel documented in the service registry; not yet installed/running 24/7. Stderr logs show clean manual starts on :8650."}
+    ]
+  }
+]

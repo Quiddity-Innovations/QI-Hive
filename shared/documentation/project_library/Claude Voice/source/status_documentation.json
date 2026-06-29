@@ -1,0 +1,76 @@
+{
+  "sections": [
+    {
+      "name": "Project Guides & Specs",
+      "documents": [
+        {"title": "Claude Voice — session instructions", "file": "CLAUDE.md", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Markdown", "description": "The standing rules: MALE-voice + 'name is Claude' identity rules, what each file does, run commands, QI compliance (ports 8720-8729, loopback-only, validate), and the realtime Mode-B architecture signed off 2026-06-20."},
+        {"title": "VOICE.md — full spec", "file": "VOICE.md", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Markdown", "description": "Full voice spec: voices, engines, usage, current limitations, and the roadmap toward two-way conversation."},
+        {"title": "Master Plan (research -> roadmap)", "file": "MASTER_PLAN.md", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Markdown", "description": "Approved 2026-06-21: the LiveKit decision, the Voice-Dispatch re-frame, the exact Hive dispatch contract, the fix-vs-rebuild verdict per layer, the free tech stack, and the phased build task list (A-F)."},
+        {"title": "How to talk to Claude", "file": "HOW_TO_TALK_TO_CLAUDE.md", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Markdown", "description": "Quick user guide for talking to Claude across the surfaces (voice on, name toggles, take-a-break)."},
+        {"title": "Channels guide", "file": "Claude_Channels.md", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Markdown", "description": "How the LINE, Telegram, and meeting-room channels are set up and behave (owner vs guest, voice notes, controls)."},
+        {"title": "Cheatsheet", "file": "CHEATSHEET.md", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Markdown", "description": "Quick-reference commands for running and operating Claude Voice."},
+        {"title": "Generated documentation set", "file": "", "location": "C:\\CLAUDE\\Claude Voice\\Quiddity Innovations - Claude Voice Documentation\\", "type": "Folder", "description": "Generated Claude Voice documentation bundle (built by data/make_docs.py)."}
+      ]
+    },
+    {
+      "name": "Key Source — Brain & Backends",
+      "documents": [
+        {"title": "LLM backends + router", "file": "backends.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Four pluggable streamers (claude_cli=free real Claude via headless `claude -p`, ollama, anthropic, openrouter) behind stream_reply with active-first fallback. Loads secrets/claude_voice.env; OpenRouter key falls back to shared C:\\QI\\maia.db."},
+        {"title": "Dual-brain router", "file": "brain.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Two named brains (Claude=claude_cli / Ronald=ollama), switchable by config hard-set OR by name in chat; mishearing-tolerant address matching, persisted active state, honest no-fabrication fallback, and converse() for synchronous voice turns."},
+        {"title": "Control API + brain UI", "file": "server.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "FastAPI on :8720 (loopback): /health, /version, /info, /config, /bridge/health, /brain*, GET / brain toggle UI, /say smoke test. Served by the QI_ClaudeVoiceControl service."}
+      ]
+    },
+    {
+      "name": "Key Source — Voice Loop & Surfaces",
+      "documents": [
+        {"title": "Realtime voice loop", "file": "realtime.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "mic -> VAD/wake/PTT -> faster-whisper -> brain -> per-sentence edge-tts -> ffplay, with barge-in. Greets as the active brain and routes via brain.converse()."},
+        {"title": "TTS — Claude speaks", "file": "speak.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Pipe text in; the PC speaks it in Claude's MALE voice. Engines: edge (neural), sapi (offline), auto. Pronunciation fix applied; ffplay playback with .NET MediaPlayer fallback."},
+        {"title": "STT — push-to-talk", "file": "listen.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Press-Enter push-to-talk; faster-whisper transcribes to clipboard (or --type into the focused window) for the Mode-A Code Voice bridge."},
+        {"title": "LINE channel", "file": "line_bot.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Signed webhook on :8721, owner-vs-guest routing, dual-brain owner path, voice in (Whisper) and out (edge-tts m4a), owner /commands, talking-avatar /video."},
+        {"title": "Telegram channel", "file": "telegram_bot.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Outbound long-poll bot, /start /reset /whoami /voice /video, per-chat memory, dual-brain routing, OGG/Opus voice notes."},
+        {"title": "Meeting room", "file": "meeting_server.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Multi-participant Zoom-style room on :8722 hosted by Claude: WebSocket roster + shared transcript, per-participant voices, turn-taking, /stt, and /minutes .docx export."},
+        {"title": "Meeting room UI", "file": "meeting.html", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "HTML", "description": "Browser front-end for the meeting room — roster, transcript, mic capture, host avatar."},
+        {"title": "Agent join template", "file": "agent_join.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Template for another AI agent to join the meeting over WebSocket and answer only when addressed by name."}
+      ]
+    },
+    {
+      "name": "Key Source — Helpers",
+      "documents": [
+        {"title": "Reply modality engine", "file": "modality.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Decides text vs voice vs video per reply from length + moment detection; cooldown-gated video; reusable across QI bots."},
+        {"title": "Spoken-only pronunciation", "file": "pronounce.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Rewrites speech only (printed text unchanged) — e.g. 'Renne' -> 'Renee'; map editable in config.json voice.pronunciation."},
+        {"title": "ffmpeg/ffprobe resolver", "file": "util.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Service-safe ffmpeg resolution (config dir -> PATH -> common dirs -> WinGet glob) fixing the empty-PATH service account that dropped voice notes."},
+        {"title": "Bridge health monitor", "file": "bridge_health.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Hourly probe of the real-Claude path (token, CLI, brain wiring, live reply + latency, /health endpoints) -> data/bridge_health.json; Tasuke alert + PENDING_REVIEW on failure."},
+        {"title": "Avatar video builder", "file": "media.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Builds the talking-avatar video (avatar image + Claude's voice) used by /video on LINE and Telegram."}
+      ]
+    },
+    {
+      "name": "Configuration & Secrets",
+      "documents": [
+        {"title": "Runtime config", "file": "config.json", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "JSON", "description": "All live settings: identity/system prompt, voices (Andrew/Antonio, english_only), automation (modality), stt/listening/barge_in, line/telegram, and the brains block (default=claude, locked=true, registry, fallback_to_local=false) + backends (active=ollama, providers)."},
+        {"title": "Secrets (gitignored)", "file": "secrets\\claude_voice.env", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Env", "description": "LINE_CHANNEL_SECRET/ACCESS_TOKEN, TELEGRAM_BOT_TOKEN, CLAUDE_CODE_OAUTH_TOKEN (subscription), optional ANTHROPIC_API_KEY/OPENROUTER_API_KEY. Template at secrets\\claude_voice.env.template."},
+        {"title": "Brain state", "file": "data\\brain_state.json", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "JSON", "description": "Persisted active brain, shared across all surfaces and the :8720 UI."},
+        {"title": "LINE control state", "file": "data\\line_control.json", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "JSON", "description": "Owner-set runtime flags: paused, guests_allowed, directive."},
+        {"title": "Python dependencies", "file": "requirements.txt", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Text", "description": "edge-tts, faster-whisper, sounddevice/soundfile/numpy, silero-vad/webrtcvad, openwakeword, pyperclip, fastapi/uvicorn, requests, anthropic, openai. ffplay/ffmpeg external (PATH)."}
+      ]
+    },
+    {
+      "name": "Operations & Persistence",
+      "documents": [
+        {"title": "Service installer", "file": "ClaudeVoice_Install.bat", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Batch", "description": "Self-elevating NSSM installer for QI_ClaudeVoiceTunnel, QI_ClaudeVoiceLine (:8721), QI_ClaudeVoiceTelegram, QI_ClaudeVoiceControl (:8720) — sets AppDirectory + Description per QI service rule."},
+        {"title": "Meeting-room launcher + schedule", "file": "ClaudeVoice_Start_MeetingRoom.bat / setup_meeting_schedule.ps1", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Batch / PowerShell", "description": "Daily 08:00 task QI_ClaudeVoiceMeeting_8AM via conhost --headless cmd /c (no window pop, no admin). ClaudeVoice_Install_Meeting.bat exists if it's ever promoted to a service."},
+        {"title": "Bridge health output", "file": "data\\bridge_health.json", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "JSON", "description": "Latest hourly probe result (served at :8720/bridge/health). Current: ok=true, engine=claude_cli, live_probe 'BRIDGE OK' ~20s, active_brain=claude."},
+        {"title": "Logs", "file": "", "location": "C:\\CLAUDE\\Claude Voice\\LOGS\\", "type": "Folder", "description": "Per-service logs: line_service.log, telegram_service.log, tunnel_service.log, control_server.log, meeting_scheduled.log, bridge_health.log."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Memory",
+      "documents": [
+        {"title": "QI Ecosystem Registry (claude_voice)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "Registry entry: id claude_voice, path C:\\CLAUDE\\Claude Voice, status active_development, ports 8720/8721/8722, family_tier cousin, integrates_with qi_brain/nexus/maia, voice_rules (MALE), scheduled_tasks, tunnel exposure note."},
+        {"title": "QI Service Registry", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM service registry. NOTE: the QI_ClaudeVoice* services are installed but not yet recorded here — a known roadmap gap to backfill."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Port table, family map, and integration contracts placing Claude Voice (8720-8729, cousin) in the wider ecosystem."},
+        {"title": "Persistence memory note", "file": "project_claude_voice_persistence.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "Markdown", "description": "Claude's persistent note on the persistence model (which parts are services vs the daily task), the file-bridge replacement by claude_cli, and the dual-brain routing decision."},
+        {"title": "Session Summaries", "file": "ClaudeVoice_Summary_*.docx", "location": "C:\\QIH\\shared\\documentation\\session_summaries\\", "type": "Word Document", "description": "Auto-saved dated .docx session summaries (prefix ClaudeVoice_)."}
+      ]
+    }
+  ]
+}

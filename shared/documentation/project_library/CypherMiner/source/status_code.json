@@ -1,0 +1,205 @@
+{
+  "intro": "Excerpts copied from the live CypherMiner source (C:\\CypherMiner). Each shows the real code behind a capability and explains how it powers that feature. The 59 tools are pure client-side TypeScript — no AI, no server, no network calls; the only Python is an optional FastAPI backend that implements the QI module contract.",
+  "sections": [
+    {
+      "category": "Core — The Tool Contract & Registry",
+      "snippets": [
+        {
+          "title": "The Tool interface — every tool implements this",
+          "feature": "Self-registering, drop-in tool modules",
+          "file": "frontend/src/types.ts",
+          "language": "javascript",
+          "code": "export type Lang = 'en' | 'pt';\nexport type Loc = Record<Lang, string>;\nexport type CategoryId = 'crypto' | 'encoding' | 'math' | 'lottery' | 'text';\n\nexport interface Tool {\n  id: string;\n  category: CategoryId;\n  icon: string;\n  name: Loc;\n  blurb: Loc;\n  inputs: ToolInput[];\n  run: (values: Record<string, string>, ctx: ToolContext) => string | Promise<string>;\n  /** Optional live visual (e.g. cipher wheel). Receives a container to render into. */\n  visual?: (values: Record<string, string>, container: HTMLElement, ctx: ToolContext) => void;\n}",
+          "explanation": "The single contract the whole app is built on. A tool is just data + two functions: run() turns the form values into a result string (sync or async), and an optional visual() draws a live diagram. name/blurb are Loc {en,pt} pairs, so bilingual support is structural. Because the type fixes the shape, the UI can render any tool generically — the interface IS the catalog."
+        },
+        {
+          "title": "register() — importing a module adds the tool",
+          "feature": "In-memory registry with duplicate protection",
+          "file": "frontend/src/core/registry.ts",
+          "language": "javascript",
+          "code": "const tools: Tool[] = [];\n\nexport function register(tool: Tool): void {\n  if (tools.some((t) => t.id === tool.id)) {\n    console.warn(`[CypherMiner] duplicate tool id ignored: ${tool.id}`);\n    return;\n  }\n  tools.push(tool);\n}\n\nexport function toolsByCategory(cat: CategoryId): Tool[] {\n  return tools.filter((t) => t.category === cat);\n}",
+          "explanation": "The registry is just an array. Each tool module calls register() at import time, so simply importing the file (via tools/index.ts) wires it in — no central switch statement. Duplicate ids are warned and ignored. toolsByCategory() and friends are what the sidebar, search and category pages read, so the UI and the catalog can never drift apart."
+        },
+        {
+          "title": "The registration index — add a tool in one line",
+          "feature": "59 tools self-register on import",
+          "file": "frontend/src/tools/index.ts",
+          "language": "javascript",
+          "code": "// Importing a tool registers it. Add new tools here.\n// Crypto\nimport './crypto/caesar';\nimport './crypto/vigenere';\n// ...17 more crypto...\n// Encoding\nimport './encoding/base64';\n// ...12 more encoding...\n// Math\nimport './math/factor';\n// ...13 more math...\n// Lottery\nimport './lottery/odds';\nimport './lottery/wheel';\n// Text\nimport './text/slugify';\n// ...10 more text...",
+          "explanation": "This file is the only place that knows the full tool list. Each import has the side effect of running that module's register() call. Adding a new tool to CypherMiner is therefore exactly two steps: drop one file into src/tools/<category>/, and add one import line here. main.ts imports './tools' once, and all 59 tools come online."
+        }
+      ]
+    },
+    {
+      "category": "Core — UI Shell (framework-free)",
+      "snippets": [
+        {
+          "title": "Live tool runner with async-safe results",
+          "feature": "Recompute results on every keystroke; handle Promises",
+          "file": "frontend/src/core/ui.ts · renderToolView() update()",
+          "language": "javascript",
+          "code": "let runToken = 0;\nconst update = () => {\n  const myToken = ++runToken;\n  try {\n    const result = tool.run(values, { lang: getLang() });\n    if (result instanceof Promise) {\n      result\n        .then((out) => {\n          if (myToken !== runToken) return; // a newer run superseded this one\n          outputPre.textContent = out;\n        })\n        .catch((err) => {\n          if (myToken !== runToken) return;\n          outputPre.textContent = '⚠ ' + (err instanceof Error ? err.message : String(err));\n        });\n    } else {\n      outputPre.textContent = result;\n    }\n  } catch (err) {\n    outputPre.textContent = '⚠ ' + (err instanceof Error ? err.message : String(err));\n  }\n  if (tool.visual) tool.visual(values, visualBox, { lang: getLang() });\n};",
+          "explanation": "The generic engine behind every tool view. It calls tool.run() on each input change, supports both sync strings and Promises (async tools like SHA), and uses a monotonically increasing runToken so a slow async result that arrives after a newer edit is discarded — no flicker, no stale output. Thrown errors render inline with a warning glyph instead of crashing. If the tool defines visual(), it's redrawn with the same values."
+        },
+        {
+          "title": "The form is generated from tool.inputs",
+          "feature": "Auto-built input form for any tool",
+          "file": "frontend/src/core/ui.ts · renderInput()",
+          "language": "javascript",
+          "code": "if (inp.type === 'select') {\n  const sel = el('select', { class: 'cm-input cm-select' }) as HTMLSelectElement;\n  for (const opt of (inp as SelectInput).options) {\n    const o = el('option', { value: opt.value }, loc(opt.label)) as HTMLOptionElement;\n    if (opt.value === values[inp.id]) o.selected = true;\n    sel.append(o);\n  }\n  sel.addEventListener('change', () => { values[inp.id] = sel.value; update(); });\n  control = sel;\n} else if (inp.type === 'number' || inp.type === 'range') {\n  const n = inp as NumberInput;\n  const i = el('input', { class: 'cm-input cm-' + inp.type, type: inp.type }) as HTMLInputElement;\n  if (n.min !== undefined) i.min = String(n.min);\n  // ...max, step...\n  i.addEventListener('input', () => { values[inp.id] = i.value; update(); });\n  control = i;\n}",
+          "explanation": "renderInput() maps each ToolInput kind (text/textarea/number/range/select) to the right HTML control, wires its change/input event to update the values bag and re-run the tool, and localises every label and option via loc(). This is why a tool author never writes any DOM code — they declare inputs as data and the shell builds the live, bilingual form for them."
+        }
+      ]
+    },
+    {
+      "category": "Bilingual Layer (EN / PT)",
+      "snippets": [
+        {
+          "title": "Loc resolution + persisted language toggle",
+          "feature": "Whole UI + every tool switches EN/PT instantly",
+          "file": "frontend/src/core/i18n.ts",
+          "language": "javascript",
+          "code": "let current: Lang = (localStorage.getItem('cm-lang') as Lang) || 'en';\n\nexport function setLang(l: Lang): void {\n  current = l;\n  localStorage.setItem('cm-lang', l);\n}\n\n/** Resolve a Loc to the active language, falling back to English. */\nexport function loc(s: Loc): string {\n  return s[current] ?? s.en;\n}\n\nexport function t(key: string): string {\n  const entry = UI[key];\n  return entry ? loc(entry) : key;\n}",
+          "explanation": "The heart of the bilingual design. loc() is called on every Loc {en,pt} pair in the app — UI labels, tool names, blurbs, input labels, select options and educational text — returning the active language with an English fallback. The choice is persisted in localStorage and read on load, so the language survives reloads. setLang() + a full re-render is all it takes to flip the entire interface."
+        },
+        {
+          "title": "A tool returns localised output via ctx.lang",
+          "feature": "Tool results adapt to the user's language",
+          "file": "frontend/src/tools/math/factor.ts · run()",
+          "language": "javascript",
+          "code": "run: (v, ctx) => {\n  const raw = (v.n || '').trim().replace(/[\\s,_]/g, '');\n  if (!raw) return '';\n  if (!/^\\d+$/.test(raw)) throw new Error('Enter a positive integer');\n  const n = BigInt(raw);\n  if (n < 2n) throw new Error('Enter an integer ≥ 2');\n  if (isPrime(n)) return ctx.lang === 'pt' ? `${n} é PRIMO` : `${n} is PRIME`;\n  const factors: bigint[] = [];\n  factorize(n, factors);\n  // ...group into p^e...\n  const label = ctx.lang === 'pt' ? 'Fatores' : 'Factors';\n  return `${label}: ${pretty}`;\n}",
+          "explanation": "Tools receive a ToolContext with the active lang, so even computed output is bilingual. Here the factorizer prints 'is PRIME' / 'é PRIMO' and labels factors in the user's language. Input is sanitised (commas/underscores stripped), validated with a clear thrown error (which the UI shows inline), then parsed as BigInt for arbitrary precision."
+        }
+      ]
+    },
+    {
+      "category": "Cryptography Tools",
+      "snippets": [
+        {
+          "title": "Caesar shift + the live cipher wheel",
+          "feature": "Caesar cipher with an SVG wheel visual",
+          "file": "frontend/src/tools/crypto/caesar.ts",
+          "language": "javascript",
+          "code": "function shiftText(text: string, shift: number): string {\n  const s = ((shift % 26) + 26) % 26;\n  return text.replace(/[a-z]/gi, (ch) => {\n    const base = ch <= 'Z' ? 65 : 97;\n    return String.fromCharCode(((ch.charCodeAt(0) - base + s) % 26) + base);\n  });\n}\n\nregister({\n  id: 'caesar', category: 'crypto', icon: '🏛️',\n  name: { en: 'Caesar Cipher', pt: 'Cifra de César' },\n  inputs: [\n    { id: 'text', type: 'textarea', label: { en: 'Text', pt: 'Texto' }, default: 'Hello, World!' },\n    { id: 'shift', type: 'range', label: { en: 'Shift', pt: 'Deslocamento' }, default: 3, min: 0, max: 25, step: 1 },\n    { id: 'mode', type: 'select', /* encrypt|decrypt */ },\n  ],\n  run: (v) => shiftText(v.text || '', v.mode === 'decrypt' ? -parseInt(v.shift) : parseInt(v.shift)),\n  visual: (v, container) => { container.innerHTML = renderWheel(/* current shift */); },\n});",
+          "explanation": "A representative crypto tool. shiftText() does the classic modular alphabet shift, preserving case and passing non-letters through. The tool object declares a textarea, a range slider and an encrypt/decrypt select — and a visual() that renders an SVG cipher wheel (renderWheel) reflecting the current shift, so the diagram animates as you drag the slider. Decryption is just a negative shift."
+        },
+        {
+          "title": "Native browser hashing via Web Crypto",
+          "feature": "SHA-1 / 256 / 384 / 512 with no library",
+          "file": "frontend/src/tools/crypto/sha.ts",
+          "language": "javascript",
+          "code": "async function sha(algo: string, text: string): Promise<string> {\n  const data = new TextEncoder().encode(text);\n  const buf = await crypto.subtle.digest(algo, data);\n  return Array.from(new Uint8Array(buf))\n    .map((b) => b.toString(16).padStart(2, '0'))\n    .join('');\n}\n\nregister({\n  id: 'sha', category: 'crypto',\n  name: { en: 'SHA Hash', pt: 'Hash SHA' },\n  inputs: [ /* text + algo select: SHA-1/256/384/512 */ ],\n  run: (v) => sha(v.algo || 'SHA-256', v.text || ''),\n});",
+          "explanation": "An async tool. It uses the browser's built-in crypto.subtle.digest — real, audited SHA implementations with no third-party dependency — then hex-encodes the resulting byte buffer. Because run() returns a Promise, the UI runner's runToken guard ensures the hash for the latest input wins. This is the offline-first principle in action: cryptographic primitives come from the platform, not the network."
+        },
+        {
+          "title": "Cipher Auto-Solver — IoC + chi-squared",
+          "feature": "Fingerprint the cipher and crack simple ones",
+          "file": "frontend/src/tools/crypto/autosolve.ts · run()",
+          "language": "javascript",
+          "code": "// Statistical fingerprint\nconst i = ioc(text);\nlines.push(`• IoC = ${i.toFixed(4)} → ${i > 0.06\n  ? 'likely monoalphabetic (Caesar/substitution)'\n  : 'possibly polyalphabetic (Vigenère)'}`);\n\n// Best Caesar shifts by chi-squared against English letter frequencies\nconst scored = Array.from({ length: 26 }, (_, s) => ({\n    s,\n    text: caesarShift(text, (26 - s) % 26),\n    chi: chiSquared(caesarShift(text, (26 - s) % 26)),\n  }))\n  .sort((a, b) => a.chi - b.chi)\n  .slice(0, 3);\nfor (const cand of scored) lines.push(`  [shift ${cand.s}] ${cand.text.slice(0, 80)}`);",
+          "explanation": "The cryptanalysis showpiece. It computes the Index of Coincidence to guess whether the cipher is mono- or poly-alphabetic, applies regex format heuristics (BINARY/HEX/MORSE/BASE64), then scores all 26 Caesar shifts by chi-squared distance from English letter frequencies and returns the three most English-looking decryptions. All statistics run in the browser on the pasted ciphertext."
+        }
+      ]
+    },
+    {
+      "category": "Encoding & Text Tools",
+      "snippets": [
+        {
+          "title": "Base64 over a UTF-8 byte view",
+          "feature": "Unicode-safe Base64 encode/decode",
+          "file": "frontend/src/tools/encoding/base64.ts",
+          "language": "javascript",
+          "code": "function toB64(s: string): string {\n  const bytes = new TextEncoder().encode(s);\n  let bin = '';\n  bytes.forEach((b) => (bin += String.fromCharCode(b)));\n  return btoa(bin);\n}\nfunction fromB64(s: string): string {\n  const bin = atob(s.trim());\n  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));\n  return new TextDecoder().decode(bytes);\n}\n// run(): try { return v.mode === 'decode' ? fromB64(v.text) : toB64(v.text); }\n//        catch { throw new Error(v.mode === 'decode' ? 'Invalid Base64 input' : 'Encoding error'); }",
+          "explanation": "Naive btoa(str) breaks on non-Latin characters. This routes through TextEncoder/TextDecoder so the Base64 is taken over the UTF-8 bytes — emoji and accented text round-trip correctly. Invalid decode input is caught and rethrown as a friendly, mode-aware message that the UI surfaces inline."
+        },
+        {
+          "title": "Morse map + bidirectional translation",
+          "feature": "Text ↔ Morse with full punctuation",
+          "file": "frontend/src/tools/encoding/morse.ts",
+          "language": "javascript",
+          "code": "const MAP: Record<string, string> = {\n  A: '.-', B: '-...', C: '-.-.', /* ...letters, 0-9, punctuation... */ '@': '.--.-.',\n};\nconst REV: Record<string, string> = Object.fromEntries(\n  Object.entries(MAP).map(([k, v]) => [v, k]));\n\nfunction toMorse(s: string): string {\n  return s.toUpperCase().split(/\\s+/)\n    .map((word) => word.split('').map((c) => MAP[c] ?? '').filter(Boolean).join(' '))\n    .join(' / ');\n}",
+          "explanation": "A clean encoding tool: one lookup table covers letters, digits and punctuation, and the reverse table is derived automatically from it with Object.fromEntries — no second table to keep in sync. Letters are space-separated and words are joined with ' / ', the conventional Morse word separator, so the output decodes cleanly back."
+        },
+        {
+          "title": "Accent-stripping slugify",
+          "feature": "URL-friendly slugs from accented text",
+          "file": "frontend/src/tools/text/slugify.ts · run()",
+          "language": "javascript",
+          "code": "run: (v) => {\n  const sep = v.sep || '-';\n  return (v.text || '')\n    .normalize('NFD')          // split accented chars into base + combining mark\n    .replace(/\\p{M}/gu, '')    // drop the combining marks\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, sep)\n    .replace(/^[-_]+|[-_]+$/g, '');\n}",
+          "explanation": "A small but telling text tool. Unicode NFD normalisation decomposes 'Café' into 'Cafe' + a combining accent, which the \\p{M} unicode-property regex then strips — so 'Olá, Mundo! Café com Pão' becomes 'ola-mundo-cafe-com-pao'. The separator (hyphen or underscore) is user-selectable, and leading/trailing separators are trimmed."
+        }
+      ]
+    },
+    {
+      "category": "Mathematics & Lottery",
+      "snippets": [
+        {
+          "title": "BigInt factorization (Miller-Rabin + Pollard rho)",
+          "feature": "Factor large integers, exactly",
+          "file": "frontend/src/tools/math/factor.ts",
+          "language": "javascript",
+          "code": "function isPrime(n: bigint): boolean {\n  if (n < 2n) return false;\n  for (const p of [2n,3n,5n,7n,11n,13n,17n,19n,23n,29n,31n,37n]) if (n % p === 0n) return n === p;\n  let d = n - 1n, s = 0n;\n  while ((d & 1n) === 0n) { d >>= 1n; s++; }\n  for (const a of [2n,3n,5n,7n,11n,13n,17n,19n,23n,29n,31n,37n]) {\n    let x = powmod(a, d, n);\n    if (x === 1n || x === n - 1n) continue;\n    let ok = false;\n    for (let i = 0n; i < s - 1n; i++) { x = mulmod(x, x, n); if (x === n - 1n) { ok = true; break; } }\n    if (!ok) return false;\n  }\n  return true;\n}\nfunction factorize(n: bigint, out: bigint[]): void {\n  if (n === 1n) return;\n  if (isPrime(n)) { out.push(n); return; }\n  const d = pollardRho(n);\n  factorize(d, out); factorize(n / d, out);\n}",
+          "explanation": "Real number theory, not float approximations. Miller-Rabin primality testing over a fixed witness set proves primality for the integer range JS BigInt handles, and Pollard's rho finds non-trivial factors of composites; factorize() recurses until everything is prime, then the tool groups repeats as p^e. Everything is BigInt, so there's no precision loss on large inputs."
+        },
+        {
+          "title": "Exact lottery odds with BigInt combinatorics",
+          "feature": "True per-tier odds for 'pick k from n'",
+          "file": "frontend/src/tools/lottery/odds.ts · run()",
+          "language": "javascript",
+          "code": "const total = nCrBig(n, k);                 // total combinations, exact BigInt\nconst totalNum = Number(total);\nfor (let j = k; j >= 0; j--) {\n  const fav = nCrBig(k, j) * nCrBig(n - k, k - j);   // ways to match exactly j\n  if (fav === 0n) continue;\n  const favNum = Number(fav);\n  const odds = totalNum / favNum;\n  const pct = (favNum / totalNum) * 100;\n  const tag = j === k ? (ctx.lang === 'pt' ? '  ← prêmio máximo' : '  ← jackpot') : '';\n  lines.push(`${matchL} ${j}: ${oneIn} ${Math.round(odds).toLocaleString('en-US')}  (${pct.toExponential(2)}%)${tag}`);\n}",
+          "explanation": "The lottery odds tool uses the hypergeometric formula: the ways to match exactly j of the drawn numbers is C(k,j)·C(n-k,k-j), over C(n,k) total combinations. Combination counts are computed with exact BigInt (nCrBig) so the totals are precise even for large pools, then converted to '1 in X' odds and a percentage per prize tier, with the jackpot row tagged bilingually."
+        }
+      ]
+    },
+    {
+      "category": "On-Device Assistant",
+      "snippets": [
+        {
+          "title": "TF-IDF scoring over the bilingual tool index",
+          "feature": "'Which tool do I need?' answered offline",
+          "file": "frontend/src/assistant/local.ts · localProvider.ask()",
+          "language": "javascript",
+          "code": "const scored = docs.map((d) => {\n    let score = 0;\n    for (const q of expanded) {            // query tokens + synonyms\n      for (const [t, w] of d.weights) {\n        if (matches(t, q)) {\n          const idf = Math.log(1 + total / (df.get(t) || 1));\n          // square the idf so rare, specific terms (e.g. \"palindrome\")\n          // outweigh generic category words (e.g. \"cipher\").\n          score += w * idf * idf;\n        }\n      }\n    }\n    if (!explicitOther && context?.toolId && d.id === context.toolId) score *= 1.3;\n    return { id: d.id, score };\n  })\n  .filter((s) => s.score > 0)\n  .sort((a, b) => b.score - a.score);",
+          "explanation": "The assistant is a pure in-browser information-retrieval engine. ensureIndex() pre-weights each tool's bilingual name (×5), blurb (×3), category and educational text; queries are normalised (accents stripped), de-pluralised and synonym-expanded. Scoring uses squared IDF so distinctive words dominate, with a gentle 1.3× boost for the tool you're currently viewing. It returns the top matches above a 40% relevance cutoff — zero network calls."
+        },
+        {
+          "title": "Local vs cloud assistant, chosen by config",
+          "feature": "Switch to a hosted assistant with no rebuild",
+          "file": "frontend/src/assistant/index.ts + cloud.ts",
+          "language": "javascript",
+          "code": "// index.ts\nexport function getAssistant(): AssistantProvider {\n  return getConfig().assistantMode === 'cloud' ? cloudProvider : localProvider;\n}\n\n// cloud.ts\nexport const cloudProvider: AssistantProvider = {\n  id: 'cloud',\n  async ask(query, lang, context) {\n    const endpoint = getConfig().cloudEndpoint;\n    if (!endpoint) throw new Error('Cloud assistant is not configured (set cloudEndpoint in config.json).');\n    const res = await fetch(endpoint, { method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ query, lang, context }) });\n    if (!res.ok) throw new Error('Assistant request failed');\n    return await res.json();\n  },\n};",
+          "explanation": "Both providers honour the same AssistantProvider contract, so the UI dock is provider-agnostic. getAssistant() reads assistantMode from the runtime config.json: 'local' (the shipped default) uses the offline TF-IDF engine, 'cloud' POSTs to a hosted endpoint expecting the same {text,tools} shape. Switching modes is a config edit, not a rebuild — and API keys stay server-side, never in config.json."
+        }
+      ]
+    },
+    {
+      "category": "Backend, Config & Bootstrap",
+      "snippets": [
+        {
+          "title": "FastAPI app + QI module contract",
+          "feature": "Health/version/info so QI Hive can monitor it",
+          "file": "api/main.py",
+          "language": "python",
+          "code": "try:\n    sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8502\", \"http://localhost:7842\"]\n\napp = FastAPI(title=\"CypherMiner API\",\n    description=\"Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools — Quiddity Innovations\",\n    version=\"0.1.0\")\napp.add_middleware(CORSMiddleware, allow_origins=_cors, allow_methods=[\"GET\", \"POST\"], allow_headers=[\"*\"])\n\n@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\"}\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"cypherminer\", \"version\": \"0.1.0\", \"status\": \"development\"}",
+          "explanation": "The optional Python backend on port 8502. It implements the three QI module-contract endpoints so QI Hive Mission Control can monitor CypherMiner like every other ecosystem project, and reads CORS origins from the shared QI registry (with a safe localhost fallback) rather than hardcoding them. The 59 tools don't need this server at all — it's reserved for future heavy/data tools that genuinely can't run client-side."
+        },
+        {
+          "title": "Runtime config: reconfigure without rebuilding",
+          "feature": "Edit config.json on a published site, no rebuild",
+          "file": "frontend/src/core/config.ts",
+          "language": "javascript",
+          "code": "const DEFAULTS: SiteConfig = {\n  assistantMode: 'local', cloudEndpoint: '',\n  lotteryWizUrl: 'http://localhost:8777', showAllTools: false,\n};\nlet config: SiteConfig = { ...DEFAULTS };\n\nexport async function loadConfig(): Promise<SiteConfig> {\n  try {\n    const res = await fetch('./config.json', { cache: 'no-store' });\n    if (res.ok) config = { ...DEFAULTS, ...(await res.json()) };\n  } catch { /* keep defaults — file missing or offline first load */ }\n  return config;\n}",
+          "explanation": "On startup main.ts awaits loadConfig(), which fetches ./config.json with cache:'no-store' (so edits take effect on reload) and merges it over typed defaults. This lets an operator switch the assistant to cloud mode, point the lottery tools at a deployed LotteryWiz, or expand the default sidebar on a published build — purely by editing a JSON file. If the file is absent (e.g. offline first load) the defaults apply silently, preserving the offline guarantee."
+        },
+        {
+          "title": "App bootstrap — wire the pieces, then mount",
+          "feature": "Tools + content self-load, then UI mounts",
+          "file": "frontend/src/main.ts",
+          "language": "javascript",
+          "code": "import './styles.css';\nimport { mount } from './core/ui';\nimport './tools';    // tools self-register on import\nimport './content';  // educational metadata (how it works / history / trivia)\nimport { loadConfig } from './core/config';\n\nloadConfig().finally(() => {\n  const root = document.getElementById('app');\n  if (root) mount(root);\n});",
+          "explanation": "The whole app comes up in a few lines. Importing './tools' triggers all 59 register() calls; importing './content' registers the bilingual educational docs; loadConfig() pulls runtime settings. Crucially it's .finally() (not .then()) so even if config.json is missing offline, the UI still mounts with defaults. mount() then renders the registry-driven interface into #app."
+        }
+      ]
+    }
+  ]
+}

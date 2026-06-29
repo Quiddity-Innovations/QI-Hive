@@ -1,0 +1,50 @@
+{
+  "categories": [
+    {
+      "name": "QI Ecosystem Integration",
+      "priority": "high",
+      "items": [
+        {"title": "QI Brain session + decision logging", "detail": "Today only implement-worthy features are logged to the Brain (POST /api/log_feature). Wire qi.log_session() per cycle (videos swept, summarized, scored) and qi.log_decision() for notable picks, so the ecosystem has cross-project visibility into what TubeScout is surfacing. integration.brain_base is already configured."},
+        {"title": "Reconcile registry vs. live tunnel", "detail": "qi_registry.json still describes QI_TubeScoutTunnel as an ephemeral quick tunnel, but it was migrated 2026-06-18 to the permanent named tunnel tubescout.quiddityinnovations.com. Update the registry services[] entry and exposes_to_ecosystem to match QI_Service_Registry.md."},
+        {"title": "Reconcile CLAUDE.md paths", "detail": "CLAUDE.md and api/main.py still import the QI registry from the legacy C:\\QI\\ECOSYSTEM; the canonical location migrated to C:\\QIH\\ecosystem on 2026-04-22. Repoint the sys.path.insert and the doc references."},
+        {"title": "Run qi_validator on tubescout", "detail": "Run python C:\\QIH\\ecosystem\\qi_validator.py --project tubescout to confirm folder layout, port allocation (8503 API / 7843 UI) and the Module Interface Contract, and fix any drift flagged."}
+      ]
+    },
+    {
+      "name": "Pipeline Quality",
+      "priority": "high",
+      "items": [
+        {"title": "Drain the transcript backlog", "detail": "3,824 videos sit transcript_status='pending' while summaries already exist from descriptions. With the IP-block backoff in place, run shared.process in paced batches (or raise transcripts.max_per_run) to upgrade description-fallback cards (1,640 of them) to real transcript-based briefs."},
+        {"title": "Score-aware news ordering", "detail": "implement_score is computed for AI/dev videos but the news page orders only by favorite + recency. Surface the highest-signal (highest-scoring) AI/dev briefs first, and show the score/tags on the card for builder triage."},
+        {"title": "Smarter dedup (semantic, not token)", "detail": "Dedup is Jaccard over headline tokens — robust but misses paraphrases. Consider embedding headlines (reuse NEXUS/ChromaDB) for semantic clustering, while keeping the conservative false-merge bias."},
+        {"title": "Per-channel sweep cadence", "detail": "All channels are swept on the same 07:00/19:00 schedule. High-volume must-reads could sweep more often and dormant channels less, spreading quota and freshness intelligently."}
+      ]
+    },
+    {
+      "name": "Discovery & Personalization",
+      "priority": "medium",
+      "items": [
+        {"title": "Harden Discover (partial → live)", "detail": "The recommender works but depends on enough favorites for a taste signal and on NEXUS being up. Add graceful empty-state guidance, cache resolved channels, and make the gemma4 fully-local path the documented default for privacy."},
+        {"title": "Interest-weighted briefs", "detail": "interests (AI/Travel/Retirement/DOAC) steer Discover; extend them to weight the news feed itself — pin briefs that match stated interests higher, not just by topic chip."},
+        {"title": "Watch-later / read state", "detail": "Let the owner mark a brief read or save-for-later so the feed reflects what's already been triaged across the 07:00/19:00 windows."}
+      ]
+    },
+    {
+      "name": "Transcription & Coverage",
+      "priority": "medium",
+      "items": [
+        {"title": "Evaluate Whisper fallback at scale", "detail": "Whisper fallback is built and verified but off by default (downloads audio). Benchmark cost/quality on the ~38 caption-less videos and decide whether to enable it selectively for favorites/must-reads only."},
+        {"title": "Multi-language brief output", "detail": "Transcripts are fetched in en/pt/es/ja/fr but briefs are always English. Offer pt-BR briefs (Renne is Brazilian) by passing the target language into the NEXUS summary prompt."}
+      ]
+    },
+    {
+      "name": "Release Hardening",
+      "priority": "low",
+      "items": [
+        {"title": "Enforce the write token publicly", "detail": "The write-guard middleware exists but writes are open when TUBESCOUT_PAGE_TOKEN is unset. Set the token in secrets for the public tunnel so the page stays read-only to visitors while the owner can still tune it."},
+        {"title": "DB growth + retention", "detail": "videos/summaries are at ~4,000 rows and the DB file is ~12 MB. Add a retention/archival policy for old videos and a periodic VACUUM as the twice-daily sweep keeps accumulating."},
+        {"title": "Expand smoke coverage", "detail": "tests/test_smoke.py checks the live contract endpoints. Add offline unit tests for organizer.classify(), dedup._jaccard()/run_dedup(), and summarize._parse() so pipeline logic is covered without a running service."}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "categories": [
+    {
+      "name": "Prove the Full Generative Pipeline End-to-End",
+      "priority": "high",
+      "items": [
+        {"title": "Run a real SDXL + SVD render start-to-finish", "detail": "The service pipeline (engine/video_generator.py) is wired but lightly exercised. Generate one full video from a real song with actual SDXL stills and SVD motion (not placeholders) and capture timings, VRAM peaks, and output quality on the RTX 5080."},
+        {"title": "Generate real frames via generate_frames.py", "detail": "Run the ComfyUI driver against a running ComfyUI instance to replace the placeholder frames in the forro proof-of-concept with the 10 real anime key visuals it was designed to produce, then re-render forro_anime_mv.mp4."},
+        {"title": "Reconcile the two code tracks", "detail": "Decide whether the standalone MoviePy/ComfyUI track folds into the service pipeline or is retired. Today both exist in parallel; consolidating avoids drift and clarifies which path is supported."}
+      ]
+    },
+    {
+      "name": "Config & Code Hygiene",
+      "priority": "high",
+      "items": [
+        {"title": "Fix config/code backend drift", "detail": "config/m2v.json still names img_ffmpeg (sdxl-turbo) and cogvideox backends that the live engine no longer uses (it runs SDXL Base 1.0 + SVD). Reconcile config to the real engine or make the engine read backend choice from config."},
+        {"title": "Tighten CORS", "detail": "api/main.py uses allow_origins=['*']. Switch to QI registry-driven origins (QI.cors_origins(), as NEXUS does) before any public exposure."},
+        {"title": "Register the service in QI_Service_Registry.md", "detail": "QI_M2V and QI_M2VTunnel installers exist but are absent from C:\\QIH\\ecosystem\\QI_Service_Registry.md. Add both entries (AppDirectory, port, log path) so ops triage can find them."},
+        {"title": "Write the documentation set", "detail": "The 'Quiddity Innovations - M2V Documentation' folders (Business / Technical / User / Implementation Log / Meeting Minutes / Session Summaries) are empty stubs and there is no root README.md (status_documentation.json currently references one that does not exist). Author at least a README, a user guide, and a technical reference."}
+      ]
+    },
+    {
+      "name": "Persistence & Job Management",
+      "priority": "medium",
+      "items": [
+        {"title": "Persistent job store", "detail": "JOBS is an in-memory dict — a service restart loses all job history and the download endpoint for in-flight jobs. Move to SQLite (a m2v.db, mirroring the QI single-file pattern) so jobs and their event logs survive restarts."},
+        {"title": "Output retention / cleanup", "detail": "data/output and data/scenes accumulate multi-MB MP4s and per-scene clips per run with no cleanup. Add a retention policy and a tools/ cleanup script (cleanup_models.py already handles model cache; add render-output cleanup)."},
+        {"title": "Streaming progress over SSE", "detail": "The UI polls /api/status/{id}/events every 3s. A Server-Sent Events stream (as NEXUS does for /synthesize/stream) would give smoother live progress and drop the polling loop."}
+      ]
+    },
+    {
+      "name": "Generation Quality & Features",
+      "priority": "medium",
+      "items": [
+        {"title": "Beat-synced cuts", "detail": "Audio segmentation already uses librosa MFCC boundaries; extend it to align scene transitions to detected beats/downbeats so cuts land on the music rather than on even time splits."},
+        {"title": "Per-scene motion control", "detail": "SVD motion_bucket_id is fixed at 127 for every clip. Let the lyric analyzer's per-scene 'mood' drive motion intensity (calmer verses, energetic choruses)."},
+        {"title": "Smarter inter-clip transitions", "detail": "Assembly currently concatenates clips with a fade parameter that is plumbed but not applied in _concat_clips. Implement real crossfades/transitions between SVD clips (the standalone MoviePy track already does crossfades — borrow that)."},
+        {"title": "Longer / variable clip lengths", "detail": "SVD produces a fixed 25-frame (~3.1s) clip that is then looped to fill scene duration, which can look repetitive. Explore frame interpolation or chained SVD passes for longer, non-looping motion."}
+      ]
+    },
+    {
+      "name": "Ecosystem Integration",
+      "priority": "low",
+      "items": [
+        {"title": "Wire PersonalSong -> M2V", "detail": "PersonalSong generates audio locally; let its output feed straight into M2V's /api/generate so a song produced in one tool becomes a video in the other with no manual file shuffling. integrates_with is currently empty in the registry."},
+        {"title": "QI Brain logging", "detail": "Log each render job (style, scene count, duration, elapsed) and significant decisions to the QI Brain via qi.log_session / qi.log_decision for cross-project visibility, once the heavy pipeline is stable."},
+        {"title": "AvatarStudio handoff", "detail": "As the sibling video/avatar tool matures, define a contract so M2V can request avatar-driven scenes from AvatarStudio for performer-led music videos."}
+      ]
+    }
+  ]
+}

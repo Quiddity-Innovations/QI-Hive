@@ -1,0 +1,62 @@
+[
+  {
+    "category": "Set Generation (the core)",
+    "features": [
+      {"name": "Covering-design wheel", "description": "From a reduced pool of numbers, build tickets so that every t-subset of the pool appears on at least one ticket. Comes with a plain-English guarantee label.", "status": "live", "notes": "Guarantee: if at least t of your pool numbers are drawn, >=1 ticket shows a t-match. Restructures coverage, never the odds."},
+      {"name": "Structured set", "description": "Feature-targeted set: aim for a sum range, odd/even and low/high balance, no consecutive numbers, optional hot bias, while keeping pair overlap between tickets low.", "status": "live", "notes": "engine_py.gen_structured - greedy minimise-overlap selection with a relax fallback"},
+      {"name": "Hybrid set", "description": "70% structured tickets plus 30% diversified random tickets - structure with some spread.", "status": "live", "notes": "engine_py.gen_hybrid"},
+      {"name": "Curated 'Build My Play Set'", "description": "A transparent 6-step funnel: start from the full combination space, reduce to your pool, drop combos that already occurred, drop statistical 'edge' shapes, score survivors by the game's profile, then coverage-aware greedy top-N. Shows the funnel counts and coverage achieved.", "status": "live", "notes": "engine_py.build_play_set (F5) / lottery_general.build_curated (any game). Scores SHAPE, not likelihood."},
+      {"name": "Documented research sets", "description": "All 48 sets from Renne's research (S1/S2/A63/B63 x 12) are embedded, selectable, with a monthly rotation ('this month').", "status": "live", "notes": "Fantasy 5 only; grouped picker + family-selectable rotation"}
+    ]
+  },
+  {
+    "category": "Analysis & Honesty",
+    "features": [
+      {"name": "Backtest against history", "description": "Replay a set across every historical draw and report how often the best ticket hit >=2/3/4/5 numbers per draw.", "status": "live", "notes": "engine_py.backtest / lottery_general.backtest; date-windowed (All / 5y / 2y / this year)"},
+      {"name": "The Brutal Ledger", "description": "The signature feature: replay a fixed set across all draws with REAL payout math, returning net profit/loss, ROI, an equity curve, tier histogram, best single draw and worst losing streak.", "status": "live", "notes": "engine_py.ledger_run - bitmask-accelerated; uses persisted prize + ticket-cost settings"},
+      {"name": "Random quick-pick control", "description": "Compares your set's net result against thousands of equal-volume random quick-pick runs, giving the percentile you land at versus pure luck.", "status": "live", "notes": "engine_py.montecarlo_control - exact multinomial (numpy), microseconds; 'beat_random' verdict"},
+      {"name": "Blunt AI verdict", "description": "A local AI states in 2-4 sentences whether the strategy beat random, by how much, what it cost, and the honest takeaway - no hype, no prediction claims.", "status": "live", "notes": "/api/ledger/verdict - SSE-streamed, statistician system prompt"},
+      {"name": "Win-tier probability", "description": "Exact hypergeometric odds of >=2/3/4/5 matches for N independent tickets in one draw - and the reminder that strategy does not change them.", "status": "live", "notes": "engine_py.probability_profile (Appendix-A formulas)"},
+      {"name": "Check winners", "description": "Enter the actual drawn numbers and see each ticket's matches highlighted, its prize tier, and the total payout.", "status": "live", "notes": "engine_py.check_set; uses persisted prize settings"}
+    ]
+  },
+  {
+    "category": "Number & Draw Insights",
+    "features": [
+      {"name": "Heat-mapped pool picker", "description": "Pick your pool on a number grid coloured by historical draw frequency, with hot / cold / random helper buttons.", "status": "live", "notes": "ranked_numbers / hot_numbers / cold_numbers; honest 'not predictive' caveat shown"},
+      {"name": "Recent-hot & overdue chips", "description": "Surface recently-hot and most-overdue numbers, always labelled 'independent draws - not predictive'.", "status": "live", "notes": "Fantasy 5 heat card"},
+      {"name": "Draw-history viewer", "description": "Browse, search by date/number, and delete stored draws; add a draw manually or import a CSV.", "status": "live", "notes": "/api/draws/list, DELETE /api/draws/{date}, /api/draws/add, /api/draws/import"},
+      {"name": "Auto-update draws", "description": "Pull the latest results from official/community feeds for the loaded games, closing any gap since the last stored draw.", "status": "live", "notes": "F5: galottery.com + lottonumbers backfill. Universal: data.ny.gov, Caixa, FDJ, EuroMillions community."}
+    ]
+  },
+  {
+    "category": "Multi-Game (Universal)",
+    "features": [
+      {"name": "Any lottery, config-driven", "description": "One engine handles any N-pick-k game with an optional bonus ball - Powerball, Mega Millions, EuroMillions, Mega-Sena, Quina, Lotofacil and more - selected from a preset or fully custom.", "status": "live", "notes": "lottery_general.py + PRESETS; verified exact odds vs published (Powerball 1/292,201,338 etc.)"},
+      {"name": "Bonus-ball strategies", "description": "The bonus ball (Powerball / Mega Ball / Euro stars / Trevo / Chance) is treated honestly as an independent draw, with rotate / fixed / cover-every-value modes.", "status": "live", "notes": "attach_bonus(); cannot be wheeled by design"},
+      {"name": "Per-game auto-derived profile", "description": "The curated builder learns each game's shape from its OWN draw history (sum hotzone, odd/low targets, low/high split) - no Fantasy-5 constants leak into other games.", "status": "live", "notes": "lottery_general.derive_profile"},
+      {"name": "Latest Results dashboard", "description": "A single page showing every game's newest draw grouped by region (USA / Europe / Brazil), auto-refreshed from official feeds, with next-draw jackpot estimates where a reputable source exists.", "status": "live", "notes": "/results; jackpots from Caixa + Mega Millions official, Cash4Life fixed; Powerball/Euro honestly blank"},
+      {"name": "Super Sete positional game", "description": "The Brazilian 7-column 0-9 game: mark 1-3 digits per column, see live games-count, cost and exact odds, quick-pick and build.", "status": "live", "notes": "/supersete; Poisson-binomial odds verified vs published (7/7 = 1 in 10,000,000)"},
+      {"name": "Scratch-off EV tracker", "description": "Enter a scratch game's published prize-remaining data and get its expected value per ticket, % returned and an honest verdict - every scratch game has negative EV; this finds the least-bad.", "status": "live", "notes": "/scratch; EV = sum(prize x remaining)/tickets_remaining - price"}
+    ]
+  },
+  {
+    "category": "AI Assistant (Ask Wiz)",
+    "features": [
+      {"name": "Built-in AI helper", "description": "Chat with 'Wiz' to choose a pool, design a request, interpret backtests, and explain the math plainly - running on local Ollama models or, with a key, a cloud model.", "status": "live", "notes": "/api/chat SSE; Ollama auto-detected; Anthropic/OpenAI optional"},
+      {"name": "AI that drives the app", "description": "When asked to build/wheel/backtest, Wiz emits an action block the UI executes - so the AI's result is identical to pressing the buttons. It never invents numbers.", "status": "live", "notes": "lotterywiz action block; per-app prompts (F5, Universal, Super Sete, Scratch)"},
+      {"name": "Ask Wiz to review", "description": "Send any built set's coverage/profile/tickets to the AI for a critique and adjustment suggestions.", "status": "live", "notes": "WizDock.review; on F5 + Universal results"},
+      {"name": "Claude Desktop via MCP", "description": "Drive Lottery Wiz from inside Claude Desktop using the existing subscription (no paid API) - 11 tools covering generate, backtest, ledger, build, check winners and draw management.", "status": "partial", "notes": "mcp_server.py registered in claude_desktop_config.json; needs a Claude Desktop restart to load"}
+    ]
+  },
+  {
+    "category": "Output, Access & Operations",
+    "features": [
+      {"name": "Export & save", "description": "Every result set can be printed, copied, downloaded as CSV or Excel, saved to a library, or logged as actually played.", "status": "live", "notes": "/api/export (csv/xlsx via openpyxl); /api/sets; /api/plays"},
+      {"name": "My Plays dashboard", "description": "Profiles your logged plays as data: a coverage map of how often each number is played, typical shape, and the real scoreboard (each play matched to its date's actual draw -> spend/won/net).", "status": "live", "notes": "/api/plays/analyze; plays.db"},
+      {"name": "Owner lock on presets", "description": "Public visitors can use every game and build their own, but the official preset game DEFINITIONS are read-only - only the owner (via secret link or password) can edit them.", "status": "live", "notes": "/api/owner/check constant-time (hmac.compare_digest); key in env or .owner_key, never returned"},
+      {"name": "24/7 service + public tunnel", "description": "Runs as the QI_LotteryWiz Windows service on port 8777, reachable publicly via a Cloudflare tunnel at a permanent QI domain.", "status": "partial", "notes": "QI_LotteryWiz + QI_LotteryWizTunnel registered; user must run install_service.bat / install_tunnel.bat (UAC)"},
+      {"name": "Offline mode", "description": "The Fantasy 5 page opens standalone from disk with embedded fallback draws and reference data when the server is not running.", "status": "live", "notes": "Fantasy5/data.js; no live updates / AI / xlsx / ledger in offline mode"}
+    ]
+  }
+]

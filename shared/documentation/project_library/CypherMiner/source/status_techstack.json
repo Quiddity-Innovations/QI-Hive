@@ -1,0 +1,51 @@
+{
+  "table": [
+    {"layer": "Frontend Language", "technology": "TypeScript", "role": "Sole implementation language for the tool suite — every tool, the registry, UI shell, i18n, assistant and visuals", "license": "Apache 2.0", "version": "^5.6.3"},
+    {"layer": "Build Tooling", "technology": "Vite", "role": "Dev server (port 7842) and static production bundler (tsc && vite build -> frontend/dist)", "license": "MIT", "version": "^6.0.7"},
+    {"layer": "Offline / PWA", "technology": "vite-plugin-pwa", "role": "Generates the service worker so the suite is installable and works fully offline", "license": "MIT", "version": "^0.21.1"},
+    {"layer": "UI", "technology": "Vanilla DOM (no framework)", "role": "The entire UI is hand-built with a small el() helper in core/ui.ts and generated from the tool registry — no React/Vue/Svelte", "license": "n/a", "version": "—"},
+    {"layer": "Styling", "technology": "CSS variables", "role": "Dark/light theming via a data-theme attribute; layout in src/styles.css", "license": "n/a", "version": "—"},
+    {"layer": "Cryptography", "technology": "Web Crypto API (crypto.subtle)", "role": "Native browser SHA-1/256/384/512 digests in the SHA tool", "license": "Browser built-in", "version": "—"},
+    {"layer": "Big Numbers", "technology": "JavaScript BigInt", "role": "Arbitrary-precision integers for factorization, combinatorics, lottery odds and large-sequence math", "license": "Built-in (ES2020)", "version": "—"},
+    {"layer": "Persistence (client)", "technology": "localStorage", "role": "Stores language, theme, favourites, sidebar pins and assistant-open state — no server, no cookies", "license": "Browser built-in", "version": "—"},
+    {"layer": "Backend Language", "technology": "Python", "role": "FastAPI service implementing the QI module contract; reserved for future heavy/data tools", "license": "PSF", "version": "3.10+"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API on port 8502 — /health, /version, /info (QI contract); CORS from the QI registry", "license": "MIT", "version": ">=0.115"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (run_api.py / main.py)", "license": "BSD", "version": ">=0.30 [standard]"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Request/response validation for FastAPI (pulled in for future endpoints)", "license": "MIT", "version": ">=2.7"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads secrets/cypherminer.env over config/cypherminer.json in shared/config.py", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Generates the project's Word documentation (make_summary.py)", "license": "MIT", "version": ">=1.1"},
+    {"layer": "HTTP (placeholder UI)", "technology": "httpx", "role": "Used by the legacy Gradio placeholder to poll the API; not part of the real tool suite", "license": "BSD", "version": ">=0.27"},
+    {"layer": "UI Serving (prod)", "technology": "Python http.server", "role": "QI_CypherMinerUI serves the static frontend/dist on 127.0.0.1:7842 for the tunnel", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_CypherMinerAPI (:8502) + QI_CypherMinerUI (:7842) Windows services; static named tunnel qi-cypherminer -> https://cypher.quiddityinnovations.com", "license": "Open source / Cloudflare", "version": "nssm 2.24"}
+  ],
+  "descriptions": [
+    {
+      "title": "Why a registry, not a framework",
+      "body": "CypherMiner deliberately ships no UI framework. Every tool is a self-contained object matching the Tool interface in src/types.ts; importing the module calls register() (core/registry.ts) and pushes it into an in-memory list. The UI shell (core/ui.ts) reads that list to auto-build the sidebar, search, the input form (from tool.inputs), the live result panel, the copy button and any optional visual. The payoff: adding a tool is dropping one file into src/tools/<category>/ and adding one import line in src/tools/index.ts — no routing, no form code, no wiring. The catalog and the interface can never drift apart because the interface IS the catalog."
+    },
+    {
+      "title": "Local-first and genuinely offline",
+      "body": "Every tool runs in the browser with zero network calls. Ciphers, encoders, hashing (Web Crypto), number theory (BigInt) and text utilities are all pure client-side functions. vite-plugin-pwa registers a service worker so the static build is installable and keeps working with no connection. The only Python in the picture is an optional FastAPI backend reserved for future heavy/data tools — the 59 shipping tools need no server at all. This is a privacy guarantee, not just a feature: sensitive text never leaves the device."
+    },
+    {
+      "title": "Bilingual to the core (Loc pairs)",
+      "body": "Bilingual EN/PT support is structural, not bolted on. The type system defines Lang = 'en' | 'pt' and Loc = Record<Lang, string>, and every user-facing string in the codebase is a Loc pair: UI labels (i18n.ts), tool names and blurbs, input labels, select options, and the entire educational layer (history, trivia, sources in src/content/). loc() resolves the active language with an English fallback; setLang() persists the choice and re-renders instantly. The on-device assistant indexes both languages at once."
+    },
+    {
+      "title": "The on-device assistant (TF-IDF retrieval)",
+      "body": "assistant/local.ts builds a weighted token index over each tool's bilingual name, blurb, category and educational content, with stop-words for both languages, a synonym map (e.g. 'password' -> hash/sha/md5), accent normalisation and light de-pluralisation. It scores tools with squared-IDF weighting so rare, specific terms (like 'palindrome') outrank generic ones (like 'cipher'), boosts the tool you're currently viewing, and answers context-aware questions ('how does this work?'). It returns up to three matches above a 40% relevance cutoff — all computed in the browser. A cloud provider (assistant/cloud.ts) can take over by config when the suite is published."
+    },
+    {
+      "title": "Visuals generated from inputs",
+      "body": "Several crypto tools render a live diagram as you type. caesar.ts builds an SVG cipher wheel from the current shift; widgets/visuals.ts provides reusable builders — a two-row mapping strip with active-letter highlighting (substitution-style ciphers), a 5x5 Polybius grid with row/column headers, and a rail-fence zigzag grid. The UI runner calls tool.visual(values, container, ctx) on every input change, so the picture always matches the output."
+    },
+    {
+      "title": "Heavy math done right (BigInt)",
+      "body": "The mathematics category does real number theory rather than float approximations. factor.ts implements Miller-Rabin primality testing over a fixed witness set, Pollard's rho with Brent-style cycle detection, and recursive factorization — all in BigInt — so it can factor large integers and group results as p^e. Lottery odds and combinatorics use exact BigInt combination counts (nCrBig) so the probabilities are precise, not rounded."
+    },
+    {
+      "title": "Runtime config without a rebuild",
+      "body": "core/config.ts fetches ./config.json (cache:'no-store') at startup and merges it over typed defaults (assistantMode, cloudEndpoint, lotteryWizUrl, showAllTools). On a published site an operator can edit config.json to switch the assistant to cloud mode, point lottery tools at a deployed LotteryWiz, or expand the default sidebar — all without rebuilding. If the file is missing (e.g. first offline load) the defaults apply silently."
+    }
+  ]
+}

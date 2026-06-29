@@ -1,0 +1,51 @@
+{
+  "categories": [
+    {
+      "name": "Unblock & Go Live",
+      "priority": "high",
+      "items": [
+        {"title": "Obtain Meta credentials", "detail": "Get Facebook Page approval + Meta Developer app, then populate secrets/mq.env with FB_PAGE_ID, FB_PAGE_ACCESS_TOKEN (Maia page) and QI_PAGE_ID, QI_PAGE_ACCESS_TOKEN (QI page). This is the single hard blocker for any real publishing."},
+        {"title": "First end-to-end dry run", "detail": "Run Kaze to fetch a real digest, Fumi to generate a draft, and the publisher in --dry-run mode — proving the pipeline works before a single live post. Nothing in the pipeline has executed yet."},
+        {"title": "Configure the LLM keys", "detail": "Set CF_ACCOUNT_ID + CF_AI_TOKEN (Cloudflare Workers AI) and confirm a local Ollama with qwen3:8b for fallback, so Fumi can actually generate text."},
+        {"title": "Register as a persistent QI service", "detail": "Wrap main.py as an NSSM service named QI_MQ* (AppDirectory C:\\MQ), set Description, and register it in C:\\QIH\\ecosystem\\QI_Service_Registry.md so the API/UI stay up and the Hive dashboard can monitor MQ live."}
+      ]
+    },
+    {
+      "name": "The Approval Gate (Governor, made operational)",
+      "priority": "high",
+      "items": [
+        {"title": "Build gate/ — draft to approve to publish", "detail": "Implement the approval queue so nothing reaches a surface without the Governor approving it (Bible Law 0 / D3). Today Fumi would auto-publish, which the persona model forbids. Default mode must be draft-and-approve."},
+        {"title": "Approval UI", "detail": "A review surface (likely a Gradio tab) where pending drafts are approved, edited, or rejected before they go out. Listed as a future extension in FUMI.md."}
+      ]
+    },
+    {
+      "name": "Become the real Maia (the Hybrid migration)",
+      "priority": "medium",
+      "items": [
+        {"title": "Split Fumi: writing half to maia/voice", "detail": "Move post composition (PERSONA_MAIA/PERSONA_QI + generate_draft) out of agents/fumi into maia/voice — because the composer IS Maia, not plumbing (D11). Done once, alongside the gate and memory, since the pipeline is being redesigned for 4 surfaces."},
+        {"title": "Build maia/memory — her diary", "detail": "Persistent persona memory of places 'been', posts made, opinions formed, threads in progress. Required for consistency and for the maturation arc (D8). Without it she is amnesiac and cannot mature."},
+        {"title": "Wire all four surfaces", "detail": "Today only the Maia page and QI page are coded. Add the weekly AI+markets analyst register (Morningstar-style, named sources, never financial advice) and the unfiltered quiddam.com diary feed (D6/D7)."},
+        {"title": "Settle the open dials", "detail": "Resolve the 6 open decisions in DECISIONS.md — chiefly Dial #1 (how openly AI she is), which unblocks her biography, plus posting intervals, which QI projects she may discuss, markets depth, biographical anchors, and the platform vehicle (profile vs Page)."}
+      ]
+    },
+    {
+      "name": "Identity & Media",
+      "priority": "medium",
+      "items": [
+        {"title": "Lock the Identity Kit", "detail": "Populate identity/manifest.json: canonical face reference images + a fixed seed/embedding, one canonical TTS voice, and a visual style (palette/fonts/aesthetic). Lock this BEFORE generating any media or every render is a different Maia."},
+        {"title": "Visible Maia (maia/face)", "detail": "Consistent AI-generated photos and realistic video of Maia, all the same person — depends on the locked likeness."},
+        {"title": "Spoken Maia (maia/speech)", "detail": "TTS in one canonical voice so Maia can speak — depends on the locked voice."}
+      ]
+    },
+    {
+      "name": "Channels & Conversation",
+      "priority": "low",
+      "items": [
+        {"title": "Instagram posting + DM auto-reply", "detail": "Publish images + captions via the IG Content Publishing API and auto-reply to DMs on the linked Business account (FUMI.md future extensions)."},
+        {"title": "WhatsApp Business auto-reply", "detail": "Free-tier automated replies via the WhatsApp Cloud API under the Maia Quiddam identity."},
+        {"title": "Facebook Messenger auto-reply", "detail": "Inbound -> compose in voice -> gate -> reply, via maia/conversation."},
+        {"title": "Post analytics + smarter sourcing", "detail": "Track reach/engagement via Graph API insights; select post images from an image API (e.g. Unsplash) by topic. Both listed as future extensions in FUMI.md."}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+[
+  {
+    "category": "Cost Comparison",
+    "features": [
+      {"name": "Three side-by-side scenarios", "description": "Compares vendor full service, a hybrid two-step path, and in-house direct-to-OnBase scanning at once, on the identical page volume and document profile.", "status": "live", "notes": "Scenarios A / B / C are always all calculated, even when only one is expanded for editing"},
+      {"name": "Itemized line-item breakdown", "description": "Every scenario shows each cost line — scanning, prep, OCR, indexing, transport, project management — with quantity, unit, rate, and amount.", "status": "live", "notes": "Includes explicit $0 lines so departments see what they are NOT paying for"},
+      {"name": "Lowest-cost recommendation banner", "description": "A green banner names the cheapest option and shows the dollar and percent savings versus the other two, plus weeks saved.", "status": "live", "notes": "Falls back to an amber banner when in-house is not the cheapest for that volume"},
+      {"name": "Effective cost-per-page", "description": "Each scenario total is also expressed as an effective $/page so different-sized projects can be compared on a common basis.", "status": "live", "notes": "total divided by page count"},
+      {"name": "Calendar duration estimate", "description": "Each scenario reports an estimated number of weeks, broken into procurement, scanning, gap, and OnBase phases.", "status": "live", "notes": "Directional only; clearly disclaimed on the report"}
+    ]
+  },
+  {
+    "category": "Records Profile & Scoping",
+    "features": [
+      {"name": "Volume by boxes or page count", "description": "Enter banker's boxes x pages-per-box, or override with an exact total page count.", "status": "live", "notes": "Page override wins over boxes when filled"},
+      {"name": "Per-document or per-bundle indexing", "description": "Choose how index units are counted — average pages per document, or pages per bundle when pages-per-document is unknown.", "status": "live", "notes": "A bundle is one set sharing the same keyword values, indexed once"},
+      {"name": "Condition and indexing-depth drivers", "description": "Document condition (clean / average / complex) drives prep cost; indexing depth (basic / standard / deep) sets keyword count and indexing rates.", "status": "live", "notes": "Both feed vendor rates and in-house throughput"},
+      {"name": "OCR, large-format, and destruction options", "description": "Toggle full-text OCR, enter large-format (blueprint/map) pages, and flag certified destruction of originals.", "status": "live", "notes": "OCR is $0 in OnBase/capture but per-page for vendors"}
+    ]
+  },
+  {
+    "category": "Hybrid Service Matrix",
+    "features": [
+      {"name": "Pick who performs each service", "description": "For pickup, prep, scanning, capture software, scanner equipment, OCR, indexing, QC, storage, box storage, and destruction, choose 3rd party or BU students.", "status": "live", "notes": "Each choice re-prices that line at the appropriate vendor or student rate"},
+      {"name": "Two-step overhead modeled honestly", "description": "Because hybrid output lands outside OnBase, the tool always adds a second project, DRIP import, a rework factor, and lead supervision.", "status": "live", "notes": "Makes the hidden cost of the two-tier PaperVision practice visible"}
+    ]
+  },
+  {
+    "category": "Staffing & Budget Insight",
+    "features": [
+      {"name": "Student labor breakdown", "description": "Shows total student cost and hours, then the hours and pay per student for the chosen team size.", "status": "live", "notes": "Only shown for scenarios that use BU students (B and C)"},
+      {"name": "Staffing sensitivity table", "description": "A 1-to-5-student table proves that adding students shortens the timeline and per-student load while the total barely moves.", "status": "live", "notes": "Recomputes each scenario at each staffing level"},
+      {"name": "Budget check + best value", "description": "Enter a budget and the tool flags which scenarios fit, by how much, and recommends the best value within budget.", "status": "live", "notes": "Optional; appears on both the results and the report"}
+    ]
+  },
+  {
+    "category": "Reporting & Output",
+    "features": [
+      {"name": "Signed budgetary report", "description": "One click builds a BU-letterhead report: executive summary, comparison table, hybrid assignment, why-two-step-costs-more, line items, assumptions, sources, and a signature block.", "status": "live", "notes": "Includes a prominent 'reference estimate only' disclaimer"},
+      {"name": "Print / Save as PDF", "description": "The report paginates into letter-size pages on screen and prints or saves to PDF with an auto-built, descriptive file name.", "status": "live", "notes": "File name derived from contact, department, preparer, date, and scenario"}
+    ]
+  },
+  {
+    "category": "Configuration & Portability",
+    "features": [
+      {"name": "Editable rate table", "description": "Document Imaging & Services can edit every unit rate, wage, throughput, and planning factor behind a password gate; estimates recompute live.", "status": "live", "notes": "Items with no published market price are tagged 'assumption'"},
+      {"name": "Preparer roster", "description": "Maintain the team members who prepare analyses; the report's Prepared By field is a dropdown of default-flagged preparers.", "status": "live", "notes": "Saved per browser; travels with the JSON export"},
+      {"name": "Export / import config and rates", "description": "Export the full configuration (rates + preparers) as JSON to share between machines, or export rates as an Excel-editable CSV.", "status": "live", "notes": "Import accepts both JSON and CSV"},
+      {"name": "Runs anywhere, offline", "description": "A single self-contained HTML file that works from a USB stick, a shared drive, a web server, or an embed — no install, no internet.", "status": "live", "notes": "Resilient localStorage with in-memory fallback when storage is blocked"},
+      {"name": "QI standard layout migration", "description": "Move the project from Downloads to a C:\\ QI project root with the standard folder structure.", "status": "planned", "notes": "Registry family_notes flags migration pending"}
+    ]
+  }
+]

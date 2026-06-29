@@ -1,0 +1,53 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the API, Gradio UI, scout engine, adapters, and shared modules", "license": "PSF (open source)", "version": "3.11"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API on port 8505 — QI /health//version//info contract plus listings/profiles/ingest/notifications/digest/regions/sources", "license": "MIT", "version": ">=0.115"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (started from main.py on a daemon thread)", "license": "BSD", "version": ">=0.30 [standard]"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Request models — ProfileIn / ProfilePatch validation for the profiles API", "license": "MIT", "version": ">=2.7"},
+    {"layer": "UI", "technology": "Gradio", "role": "Operator dashboard on port 7845 — 6 tabs (Map / Discover / Profiles / Matches / Notifications / Settings) with an EN/日本語/Both toggle and a dark slate theme", "license": "Apache 2.0", "version": ">=5.0"},
+    {"layer": "Scraping", "technology": "selectolax", "role": "Fast HTML parsing for the live portal adapters (section.propety on at-home, div.property_unit on SUUMO)", "license": "MIT", "version": ">=0.3.21"},
+    {"layer": "HTTP", "technology": "httpx", "role": "Synchronous HTTP client for polite rate-limited crawling, geocoding, DeepL/Ollama translation, and detail-page enrichment", "license": "BSD", "version": ">=0.27"},
+    {"layer": "Mapping", "technology": "folium (+ MarkerCluster)", "role": "Interactive Leaflet map of Japan — prefecture choropleth, clustered price pins, base-layer + hazard-overlay toggles", "license": "MIT", "version": ">=0.20"},
+    {"layer": "Map tiles", "technology": "Esri / CartoDB / GSI / MLIT disaportal", "role": "English-label, Japanese-label, satellite, topographic base layers + flood/landslide/tsunami/storm-surge hazard overlays", "license": "Tile-provider terms (attribution required)", "version": "live tiles"},
+    {"layer": "Geocoding", "technology": "OpenStreetMap Nominatim", "role": "Municipality -> lat/lng lookup (max ~1 req/sec, cached in geocache)", "license": "ODbL (free, usage policy)", "version": "public API"},
+    {"layer": "Scheduling", "technology": "APScheduler", "role": "BackgroundScheduler (Asia/Tokyo): interval ingest, 08:00 daily digest, per-profile cron digests — POC-grade, no Redis/Celery", "license": "MIT", "version": ">=3.10"},
+    {"layer": "Database", "technology": "SQLite (akiyascout.db)", "role": "Single-file bilingual store: prefectures, sources, raw_listings, listings, translations, profiles, matches, schedules, notifications, geocache, settings", "license": "Public domain", "version": "3.x (WAL mode)"},
+    {"layer": "Translation — paid", "technology": "DeepL API", "role": "Preferred JA->EN engine when DEEPL_API_KEY is set (auto-detects free vs pro host) — currently unconfigured", "license": "Paid / free-tier API", "version": "v2"},
+    {"layer": "Translation — local", "technology": "Ollama", "role": "Free local JA->EN fallback (default model qwen2.5:7b) — the engine behind all 187 cached translations today", "license": "MIT (runtime)", "version": "qwen2.5:7b"},
+    {"layer": "Translation — offline", "technology": "Built-in glossary stub", "role": "Zero-dependency real-estate term translator — deterministic, demo-safe last resort", "license": "In-house", "version": "n/a"},
+    {"layer": "Email", "technology": "smtplib (stdlib)", "role": "Optional local SMTP digest delivery (off by default; needs SMTP_PASSWORD env)", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Generates project documentation (implementation log, meeting minutes, version history .docx)", "license": "MIT", "version": ">=1.1"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads DEEPL_API_KEY / SMTP_PASSWORD from secrets env; static config in config/akiyascout.json, runtime config in the DB settings table", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Operations", "technology": "Console batch (Start_AkiyaScout.bat)", "role": "Current launcher — cd C:\\AkiyaScout && python main.py. NSSM QI_AkiyaScout service is planned, not yet registered", "license": "n/a", "version": "n/a"}
+  ],
+  "descriptions": [
+    {
+      "title": "Bilingual, region-driven SQLite spine",
+      "body": "The schema is the architecture. Every user-facing text field is a *_ja / *_en pair so the Japanese original is never lost while English is layered on top (Design Decision D4). Geography is a first-class reference table — all 47 prefectures with region group, climate, and an in_poc flag — so widening coverage is a data change, not a code change (D3). raw_listings holds the immutable scraped JSON keyed UNIQUE(source_id, source_listing_id) so a parser fix can re-derive listings without re-hitting the portal. listings carries the normalized, translated, deduped record with indexes on prefecture, price, type and dedup_key. SQLite runs in WAL with foreign keys enforced — adequate for a single-user local tool, and no server to operate."
+    },
+    {
+      "title": "Adapter pattern: fixtures by default, live per portal",
+      "body": "Every source is a BaseAdapter subclass exposing fetch_raw(). When use_live_scraping=0 (the polite, offline POC default) it loads local JSON fixtures so the whole pipeline runs without touching the internet; when =1 it calls the portal-specific fetch_live(). Two portals — the at-home national Akiya Bank and SUUMO — have real selectolax scrapers (JIS-code per-prefecture URLs, section.propety / div.property_unit cards, polite rate-limited _get with a contact User-Agent). The other five adapters document their live selectors but still inherit fixture loading. A failing source is caught and skipped so it can never abort the whole ingest run."
+    },
+    {
+      "title": "The ingest pipeline and cross-source dedup",
+      "body": "ingest() walks each enabled adapter: fetch_raw -> _store_raw (hash-guarded raw capture) -> normalize (derive era, seismic class, bedrooms, renovation estimate, and a bucketed dedup_key) -> translate (title now, description lazily) -> _upsert_listing. Upsert classifies every row as new / updated / duplicate / unchanged: the same raw capture updates only on content-hash change, and a listing sharing a dedup_key (prefecture + 5sqm-bucketed area + 100k-yen-bucketed price + address head) with an active listing from ANY source collapses to a duplicate. Only touched listing ids are then re-scored against profiles, so a re-run is cheap."
+    },
+    {
+      "title": "Translation: free-first with a persistent cache",
+      "body": "translate() hashes the source text and checks the translations cache first — translate once, reuse forever, re-translate only when the source changes. On a miss it walks the configured engine order; 'auto' tries DeepL (if DEEPL_API_KEY is present), then a local Ollama model, then an offline real-estate glossary stub that does deterministic longest-match token replacement. This is the QI free-first principle in practice: with no paid key configured, all 187 current translations were produced locally by Ollama at zero marginal cost, and the stub guarantees the demo never breaks even fully offline."
+    },
+    {
+      "title": "The matching engine — AND of specified constraints",
+      "body": "A Profile's criteria_json is a bag of optional constraints; a listing matches when it satisfies every constraint that is actually set (unspecified = no filter). Hard constraints (type, price with JPY/USD conversion, prefecture, region, land/building area, bedrooms, build year, seismic class, akiya-bank-only) gate the match; soft preferences (climate, keywords) only feed a 0..1 relevance score blended with price headroom (cheaper-vs-ceiling scores higher). A deliberate scout choice: akiya with NULL 'price on request' are never dropped by the price filter. match_for_listings scores on ingest; rematch_profile rebuilds one profile's matches on create/edit."
+    },
+    {
+      "title": "Map, geocoding and hazard layers",
+      "body": "at-home detail pages carry no coordinates, so geocode.py resolves each distinct municipality once via OSM Nominatim (rate-limited to ~1/sec, cached in geocache) and applies a small deterministic jitter so several homes in one town don't stack on a single pixel. mapview.build_map() renders a folium choropleth of all 47 prefectures shaded by live listing count, highlights the focus corridor, and adds clustered price/photo pins. Base layers cover English labels, Japanese labels, GSI satellite and topographic maps, and four MLIT hazard overlays (flood, landslide, tsunami, storm surge) are toggleable for due-diligence."
+    },
+    {
+      "title": "Scheduling without the heavy machinery",
+      "body": "The product spec floated Redis/Celery; for a single-user local tool that is overkill. scheduler.py uses one APScheduler BackgroundScheduler pinned to Asia/Tokyo: an interval job re-ingests and enriches every ingest_interval_hours (default 12), a daily 08:00 JST job digests houses added in the last 24h, and reload_profile_jobs registers one CronTrigger digest per enabled profile schedule (daily / weekly / monthly / custom 5-field cron). Digests bundle new matches into an on-site notification (read/unread tracked) and optionally email via local SMTP when email_enabled=1 and credentials are present."
+    }
+  ]
+}

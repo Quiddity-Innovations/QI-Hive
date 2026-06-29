@@ -1,0 +1,50 @@
+{
+  "categories": [
+    {
+      "name": "Gmail Perfection (v1.2.x)",
+      "priority": "high",
+      "items": [
+        {"title": "v1.2 feature set (LOCKED, 6 features)", "detail": "Phase A: Import/Export Config + Smart Suggestions. Phase B: Batch Unsubscribe Manager + Undo Classify/Deploy. Phase C: Email Analytics Dashboard + Scheduled Digest. Feature freeze active — no 7th feature; new ideas go to the v1.3+ parking lot (project_locked_scope.md)."},
+        {"title": "Tester feedback cycle", "detail": "After v1.2 Gmail perfection, run the tester feedback loop and ship v1.2.x patches before any new platform work (sequencing LOCKED 2026-04-19)."},
+        {"title": "Apps Script auto-deploy hardening", "detail": "/api/deploy/auto works but needs a saved apps_script_id + script.projects token and the Apps Script API enabled in the user's GCP project. Smooth the connect-and-deploy path so non-technical users never have to copy-paste code."}
+      ]
+    },
+    {
+      "name": "Store Launch & Verification",
+      "priority": "high",
+      "items": [
+        {"title": "CASA security verification", "detail": "Cloud Application Security Assessment is the 6-14 week critical path for restricted Gmail scopes. Keep OAuth scopes and client IDs frozen (changing them voids CASA). Resubmit to Chrome Web Store + Edge Add-ons at the end of the window."},
+        {"title": "Store listing assets", "detail": "Finalize screenshots, localized store copy (__MSG_extName__/__MSG_extDescription__), and the privacy/permissions justification. CWS rejection (Red Potassium / sign-in not reproducible) was handled 2026-04-14 with GCP fixes."},
+        {"title": "Foundation stack (business/legal)", "detail": "Domain (quiddityinnovations.com) → LLC → EIN → ToS → D-U-N-S (paused at step 5, needs EIN+DBA) → Gumroad. Runs parallel to dev; unblocks ~60% of paid-tier work."}
+      ]
+    },
+    {
+      "name": "Outlook / Microsoft 365 (dual-provider)",
+      "priority": "medium",
+      "items": [
+        {"title": "Provider abstraction (highest risk)", "detail": "Phase 1 of the Outlook plan: extract the Gmail-specific code into a provider module so the same tier engine drives both Gmail and Outlook. ~80% code reuse target."},
+        {"title": "Microsoft OAuth2 + Graph API", "detail": "Phase 2-3: MS OAuth2 with PKCE + Azure AD app registration, then core ops (folders/categories, rules, message moves) via Microsoft Graph. Folders replace labels; categories add color."},
+        {"title": "Classification & search port + UI", "detail": "Phase 4-6: port the rules/AI classifier and search to the Graph data model, then adapt the side-panel UI. Goal is feature parity with the Gmail side — no Outlook-only features in this cycle."}
+      ]
+    },
+    {
+      "name": "Monetization (v1.3+, LOCKED)",
+      "priority": "medium",
+      "items": [
+        {"title": "Three tiers: Free / Pro $39 / Premium $79", "detail": "Monetization v2 approved 2026-04-16. Free core stays free; Pro and Premium add power features. Gmail-anchored 30-day trial. Side panel for unlicensed users is visible-but-read-only with a CTA."},
+        {"title": "Licensing backend (Cloudflare Workers + KV)", "detail": "Serverless license validation on Cloudflare Workers + KV — keeps the extension itself backend-free while gating paid features. BYOK AI model: users bring their own keys, optionally used in tandem."},
+        {"title": "Payments via Gumroad", "detail": "Start on Gumroad; migrate to Paddle only past ~$5k/yr revenue (parking lot)."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Developer Experience",
+      "priority": "low",
+      "items": [
+        {"title": "QI Brain integration", "detail": "Wire brain_log_session.py / brain_update_state.py into real qi.log_session() / qi.log_decision() / qi.update_project_state() calls so EasyFlow's state and decisions surface on the QI Hive dashboard. Hive reporting block already in .claude/CLAUDE.md."},
+        {"title": "CI test runner", "detail": "Wire regression_test.js / dry_run.js / v12_feature_test.js and tests/test_smoke.py into an automated runner (npm test / GitHub Actions). Currently all manual."},
+        {"title": "Backend API documentation", "detail": "Document the Tools/app.py endpoints (port 8550) — request/response shapes for /api/config, /api/tier*, /api/filters/*, /api/migrate/*, /api/deploy/auto — for future contributors and the Outlook port."},
+        {"title": "RTL edition", "detail": "Arabic/Hebrew/Farsi/Urdu bundled as a dedicated RTL release (dir='rtl', CSS logical properties, mirrored icons). Explicitly deferred 2026-04-14 to avoid RTL layout work in the current cycle."}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole backend language: server, both engines, live fetchers, MCP server", "license": "PSF (open source)", "version": "3.x"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "Single app on port 8777 - ~45 endpoints + 5 static mounts (Fantasy5, Universal, Super Sete, Scratch, Results)", "license": "MIT", "version": "current"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (python server.py / run.bat)", "license": "BSD", "version": "current"},
+    {"layer": "Math / Engine", "technology": "Python stdlib (itertools, math, random)", "role": "combinations, math.comb (binomials), bit_count (popcount payout math), seeded RNG for deterministic generators", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Math / Engine", "technology": "NumPy", "role": "Exact multinomial sampling for the Brutal Ledger random control (microseconds); pure-Python fallback if absent", "license": "BSD", "version": "optional"},
+    {"layer": "HTTP", "technology": "httpx", "role": "Calls the Georgia Lottery API, Ollama, and cloud LLMs; SSE streaming for chat/verdict", "license": "BSD", "version": "current"},
+    {"layer": "HTTP", "technology": "urllib (stdlib)", "role": "live_sources.py fetchers for data.ny.gov, Caixa, FDJ and community feeds", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Scraping", "technology": "BeautifulSoup (bs4)", "role": "Parses lottonumbers.com year archives to backfill Fantasy 5 history (official API gives only the latest)", "license": "MIT", "version": "current"},
+    {"layer": "Persistence", "technology": "JSON files", "role": "Draw stores: Fantasy5/draws_store.json (4,222 draws) + 14 per-game data/draws/<id>.json; settings.json", "license": "n/a (data)", "version": "-"},
+    {"layer": "Persistence", "technology": "SQLite", "role": "plays.db (logged plays), saved_sets.db (saved-set library), scratch.db (scratch EV games/tiers/plays)", "license": "Public domain", "version": "3.x"},
+    {"layer": "Exports", "technology": "openpyxl", "role": "Styled .xlsx play-sheet generation (gold header, borders, metadata); CSV via stdlib csv", "license": "MIT", "version": "current"},
+    {"layer": "AI - Local", "technology": "Ollama", "role": "Default Ask Wiz + Brutal-Ledger verdict engine; models auto-detected via /api/tags (embeddings filtered)", "license": "MIT", "version": "local runtime"},
+    {"layer": "AI - Cloud (optional)", "technology": "Anthropic / OpenAI SDKs", "role": "Optional cloud chat models, enabled only when a key is present in .aikeys.json or env; preferred path is MCP (no API spend)", "license": "Paid API", "version": "claude-* / gpt-4o*"},
+    {"layer": "AI - Desktop", "technology": "MCP (FastMCP)", "role": "mcp_server.py exposes 11 tools to Claude Desktop over stdio - drive Lottery Wiz on the subscription, no paid API", "license": "MIT", "version": "mcp.server.fastmcp"},
+    {"layer": "Frontend", "technology": "Vanilla JS + HTML/CSS", "role": "Four self-contained browser apps; engine.js mirrors the Python F5 engine for offline use; shared gamebar.js + aidock.js (WizDock)", "license": "n/a (app code)", "version": "versioned ?v= assets"},
+    {"layer": "Data sources", "technology": "data.ny.gov / Caixa / FDJ / community APIs", "role": "Official US (Socrata), Brazil (Caixa), France (FDJ open data) feeds + EuroMillions community API for live results + jackpots", "license": "Open data / official", "version": "live"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_LotteryWiz Windows service (AppDirectory C:\\Lottery Wiz, server.py, :8777) + QI_LotteryWizTunnel static named tunnel", "license": "Open source / Cloudflare", "version": "nssm"}
+  ],
+  "descriptions": [
+    {
+      "title": "What a covering design actually is (and is not)",
+      "body": "A covering design is a set of k-number tickets chosen so that every t-subset of your chosen pool appears on at least one ticket. The guarantee is purely combinatorial: IF at least t of your pool numbers happen to be drawn, THEN at least one ticket is guaranteed to show a t-match. This restructures HOW your tickets overlap the combination space - it does not change the per-ticket odds and cannot predict a draw. Lottery Wiz states this everywhere, including inside the AI's own system prompt, because the whole point of the tool is honest structure, not false hope. gen_wheel (Fantasy 5) and wheel (any game) implement it as a greedy maximum-coverage selection."
+    },
+    {
+      "title": "Two engines, one contract",
+      "body": "engine_py.py is the deep Fantasy-5 engine with N=42, PICK=5 baked in and a single rich draw store. lottery_general.py is the generalized engine: every function takes (N, k) and an optional bonus pool (Bn, b), with a PRESETS registry of real games and per-game draw stores. The split keeps the F5 app fast and faithful to Renne's original research while letting any other lottery reuse the same backtest / ledger / curated-builder ideas. Critically, Fantasy5/engine.js mirrors engine_py so the browser page runs offline, and mcp_server.py imports engine_py directly - so the math is identical across the server, the browser, and Claude Desktop."
+    },
+    {
+      "title": "The Brutal Ledger and its exact random control",
+      "body": "ledger_run replays a FIXED ticket set across every historical draw with real payout math, returning net P/L, ROI, an equity curve, a per-tier histogram, the best single-draw payout and the worst losing streak. Tickets and draws are encoded as integer bitmasks so each match count is a single popcount (bit_count), making thousands of draws cheap. The honest counterweight is montecarlo_control: because a uniformly-random ticket's match count against any fixed draw has the SAME hypergeometric distribution by symmetry, an entire random-quick-pick run reduces to ONE multinomial draw over n_tickets*n_draws trials. NumPy makes 2,000 control runs take microseconds, and percentile_of reports exactly where your strategy lands versus pure luck - usually the blunt truth that it didn't beat random."
+    },
+    {
+      "title": "The curated 'Build My Play Set' funnel",
+      "body": "build_play_set is a transparent six-stage pipeline whose every count is shown to the user: the full C(N,5) space -> reduce to your pool -> drop combinations that already occurred in history -> drop is_edge() shapes (all-consecutive, all-odd/even, all-low/high, arithmetic progressions, range<=6 clusters, extreme sums) -> rank survivors by profile_score (a gaussian peak at the ~107 sum hotzone, odd/even and low/high near 2-3, zero consecutive, spread, and novelty versus recent draws) -> coverage-aware greedy top-N that maximises pair/triple coverage while keeping profile high. It scores SHAPE, not likelihood; the Universal version (build_curated + derive_profile) learns the profile from each game's own history instead of using Fantasy-5 constants."
+    },
+    {
+      "title": "Local-first AI with a no-paid-API path",
+      "body": "Ask Wiz defaults to local Ollama models (auto-detected, embeddings filtered) and streams tokens as Server-Sent Events; a cloud model is used only when a key is configured. Crucially the AI does not invent numbers: when asked to build something it emits a fenced 'lotterywiz' action block that the UI parses and executes by driving the real controls, so the AI's result is byte-identical to pressing the buttons. Four per-app system prompts (Fantasy 5, Universal, Super Sete, Scratch) shape its behaviour, and the preferred zero-cost route is the MCP server, which lets Claude Desktop call the same engine over the subscription with no per-token billing."
+    },
+    {
+      "title": "Honest data, official where possible",
+      "body": "Fantasy 5 history is built from the official Georgia Lottery API (latest draw only) plus lottonumbers.com year archives (cross-validated) for backfill - 4,222 draws from 2015 to mid-2026. The Universal games pull from official feeds where they exist: data.ny.gov Socrata (Powerball/Mega Millions/Cash4Life), the Caixa API (eight Brazilian games, with month-name and trevo bonus parsing), and FDJ open data (France Loto), plus an EuroMillions community API. Where no reliable free source exists (SuperEnalotto, EuroJackpot, UK Lotto, Lotto 6/49; Powerball/EuroMillions jackpots) the app says so plainly and falls back to CSV import rather than fabricating data."
+    }
+  ]
+}

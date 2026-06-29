@@ -64,6 +64,12 @@
   .grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;
   }
+
+  /* ===== Columns view: each category is a vertical column, items stack down ===== */
+  #content.view-columns { display: flex; gap: 20px; align-items: flex-start; overflow-x: auto; padding-bottom: 24px; }
+  #content.view-columns .tier { flex: 0 0 330px; margin-bottom: 0; }
+  #content.view-columns .grid { grid-template-columns: 1fr; }
+  #content.view-columns .card { min-height: 0; }
   .card {
     background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
     padding: 16px; display: flex; flex-direction: column; min-height: 170px;
@@ -83,6 +89,19 @@
   }
   .links a:hover { background: var(--accent); color: var(--bg); }
   .links a.muted { color: var(--muted); }
+  .links button.oc-refresh {
+    background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+    padding: 5px 10px; border-radius: 6px; font-size: 12px; font-family: Consolas, monospace;
+    cursor: pointer; transition: background .15s, color .15s;
+  }
+  .links button.oc-refresh:hover { background: var(--accent); color: var(--bg); }
+  .oc-note { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  .oc-note code { color: #94a3b8; }
+  /* Public tunnel buttons (resolved live from tunnels.js) */
+  .links a.tunnel { color: var(--accent-2); border-color: #3a3324; }
+  .links a.tunnel.on:hover { background: var(--accent-2); color: var(--bg); }
+  .links a.tunnel.off { color: var(--idle); border-style: dashed; cursor: default; }
+  .links a.tunnel.off:hover { background: var(--panel-2); color: var(--idle); }
 
   .status {
     display: inline-block; width: 8px; height: 8px; border-radius: 50%;
@@ -104,11 +123,13 @@
   .badge.backbone  { color: var(--accent);   border-color: var(--accent); }
   .badge.tool      { color: var(--good);     border-color: var(--good); }
   .badge.paused    { color: var(--paused);   border-color: var(--paused); }
+  .badge.agent     { color: var(--paused);   border-color: var(--paused); }
 
   /* Type strip (left edge of card) */
   .card.type-service     { border-left: 3px solid var(--good); }
   .card.type-tool        { border-left: 3px solid var(--accent-2); }
   .card.type-paused      { border-left: 3px solid var(--paused); }
+  .card.type-agent       { border-left: 3px solid var(--paused); }
 
   .head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
   .type-tag {
@@ -124,9 +145,29 @@
   }
   .filters button.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
+  /* Tunnels modal */
+  #tn-modal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.6); }
+  #tn-modal.open { display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow: auto; }
+  #tn-modal .tn-sheet { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; max-width: 760px; width: 100%; padding: 20px; }
+  #tn-modal .tn-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  #tn-modal .tn-top h2 { margin: 0; font-size: 19px; }
+  #tn-modal .tn-x { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 5px 11px; cursor: pointer; font-size: 14px; }
+  #tn-modal .tn-card { display: flex; gap: 14px; align-items: center; background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--good); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  #tn-modal .tn-qr { flex: 0 0 auto; width: 150px; height: 150px; background: #fff; border-radius: 8px; padding: 8px; }
+  #tn-modal .tn-qr img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  #tn-modal .tn-b { min-width: 0; flex: 1; }
+  #tn-modal .tn-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  #tn-modal .tn-url { display: block; color: var(--accent); font-family: Consolas, monospace; font-size: 12.5px; word-break: break-all; text-decoration: none; margin-bottom: 8px; }
+  #tn-modal .tn-url:hover { text-decoration: underline; }
+  #tn-modal .tn-btn { background: var(--panel); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 4px 11px; font-size: 12px; cursor: pointer; text-decoration: none; margin-right: 6px; display: inline-block; }
+  #tn-modal .tn-btn:hover { background: var(--accent); color: var(--bg); }
+  #tn-modal .tn-empty { color: var(--muted); font-size: 13px; }
+  #tn-modal .tn-note { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 16px; border-top: 1px solid var(--border); }
   footer a { color: var(--accent); }
 </style>
+<script src="tunnels.js"></script>
 </head>
 <body>
 
@@ -137,6 +178,8 @@
   </div>
   <div class="controls">
     <input id="filter" placeholder="Filter by name / port..." oninput="filterCards()">
+    <button id="viewToggle" onclick="toggleView()" title="Switch between grid and column layouts">▥ Columns view</button>
+    <button id="tnOpen" onclick="tnShow()" title="Show all public tunnel URLs with QR codes">⛅ Tunnels</button>
     <button onclick="pingAll()">Ping All</button>
   </div>
 </header>
@@ -152,6 +195,7 @@
   <button class="active" data-filter="all" onclick="setFilter(this)">All</button>
   <button data-filter="service" onclick="setFilter(this)">Services only</button>
   <button data-filter="tool" onclick="setFilter(this)">Tools only</button>
+  <button data-filter="agent" onclick="setFilter(this)">Agents</button>
   <button data-filter="paused" onclick="setFilter(this)">Paused / WIP</button>
 </div>
 
@@ -172,6 +216,7 @@
         <div class="links">
           <a href="http://localhost:7860" target="_blank" data-port="7860" data-type="service">UI :7860 <span class="status unk"></span></a>
           <a href="http://localhost:8001" target="_blank" data-port="8001" data-type="service">API :8001 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="maia" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
           <a class="muted" href="https://github.com/Quiddity-Innovations/MAIA" target="_blank">GitHub</a>
         </div>
       </div>
@@ -194,11 +239,12 @@
         <div class="links">
           <a href="http://localhost:7880" target="_blank" data-port="7880" data-type="service">UI :7880 <span class="status unk"></span></a>
           <a href="http://localhost:8010" target="_blank" data-port="8010" data-type="service">API :8010 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="nexus" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
           <a class="muted" href="https://github.com/rennesan/NEXUS" target="_blank">GitHub</a>
         </div>
       </div>
 
-      <div class="card type-service" data-type="service" data-keywords="qi brain knowledge mcp 9010 chromadb">
+      <div class="card type-service" data-type="service" data-keywords="qi brain knowledge mcp 9011 chromadb">
         <div class="head-row">
           <h3>QI Brain <span class="badge backbone">backbone</span></h3>
           <span class="type-tag">Service</span>
@@ -206,9 +252,9 @@
         <div class="desc">Shared knowledge substrate — SQLite + ChromaDB + 12-tool MCP. Cross-project memory and decisions.</div>
         <div class="path">C:\QIH\engine\brain</div>
         <div class="links">
-          <a href="http://localhost:9010/docs" target="_blank" data-port="9010" data-type="service">Swagger :9010/docs <span class="status unk"></span></a>
-          <a href="http://localhost:9010/api/agents" target="_blank" data-port="9010" data-type="service">/api/agents</a>
-          <a href="http://localhost:9010/health" target="_blank" data-port="9010" data-type="service">/health</a>
+          <a href="http://localhost:9011/docs" target="_blank" data-port="9011" data-type="service">Swagger :9011/docs <span class="status unk"></span></a>
+          <a href="http://localhost:9011/api/agents" target="_blank" data-port="9011" data-type="service">/api/agents</a>
+          <a href="http://localhost:9011/health" target="_blank" data-port="9011" data-type="service">/health</a>
         </div>
       </div>
 
@@ -222,6 +268,19 @@
         <div class="links">
           <a href="http://localhost:8600" target="_blank" data-port="8600" data-type="service">Dashboard :8600 <span class="status unk"></span></a>
           <a href="http://localhost:8600/compliance" target="_blank" data-port="8600" data-type="service">/compliance</a>
+          <a class="tunnel" data-tunnel="dashboard" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
+        </div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="claude manager meta orchestration reconciliation brain backfill">
+        <div class="head-row">
+          <h3>Claude Manager <span class="badge backbone">backbone</span></h3>
+          <span class="type-tag">Meta workspace</span>
+        </div>
+        <div class="desc">Claude Code management workspace — ecosystem reconciliation, Brain backfills, cross-project session management. Operates ON the ecosystem; absorbed into QI Hive. No served UI.</div>
+        <div class="path">C:\CLAUDE</div>
+        <div class="links">
+          <a class="muted" href="javascript:void(0)">No HTTP UI</a>
         </div>
       </div>
 
@@ -230,7 +289,7 @@
 
   <!-- ============ ASSISTANTS & AGENTS ============ -->
   <section class="tier" data-tier="family">
-    <h2>Assistants & Agents</h2>
+    <h2>Assistants</h2>
     <div class="grid">
 
       <div class="card type-service" data-type="service" data-keywords="naya personal ai telegram 8002 7861">
@@ -238,12 +297,27 @@
           <h3>Naya</h3>
           <span class="type-tag">Service</span>
         </div>
-        <div class="desc">Personal AI for Renne — AI/physics/programming domains + file scanning (FileHQ absorbed). Telegram only, LAN-only.</div>
+        <div class="desc">Personal AI for Renne — AI/physics/programming domains + file scanning (FileHQ absorbed). Telegram only, LAN-only. <em>Running daily, but a work in progress — active development paused, to be resumed.</em></div>
         <div class="path">C:\NAYA</div>
         <div class="links">
           <a href="http://localhost:7861" target="_blank" data-port="7861" data-type="service">UI :7861 <span class="status unk"></span></a>
           <a href="http://localhost:8002" target="_blank" data-port="8002" data-type="service">API :8002 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="naya" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
           <a class="muted" href="https://github.com/Quiddity-Innovations/NAYA" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="claude voice ronald two-way spoken assistant line telegram meeting room brain config 8720 8721 8722 dual brain toggle andrew bridge ollama">
+        <div class="head-row">
+          <h3>Claude Voice</h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Two-way spoken assistant on LINE + Telegram. <strong>Dual brain</strong> — <em>Claude</em> (real me, via bridge) / <em>Ronald</em> (local Ollama); switch by name in chat or in the Brain UI. Meeting Room = live voice call. Male voice (Andrew).</div>
+        <div class="path">C:\CLAUDE\Claude Voice</div>
+        <div class="links">
+          <a href="http://localhost:8720/" target="_blank" data-port="8720" data-type="service">🧠 Brain UI :8720 <span class="status unk"></span></a>
+          <a href="http://localhost:8722/" target="_blank" data-port="8722" data-type="service">🎙 Meeting Room :8722 <span class="status unk"></span></a>
+          <a class="muted" href="javascript:void(0)" title="LINE webhook (named tunnel) → :8721. Webhook endpoint, not a browsable page. Telegram uses outbound long-poll (no port).">⛅ LINE webhook · claudevoice.quiddityinnovations.com</a>
         </div>
       </div>
 
@@ -261,15 +335,122 @@
         </div>
       </div>
 
-      <div class="card type-service" data-type="service" data-keywords="openclaw oc wsl agents tasuke kaze sentry yubin">
+      <div class="card type-service" data-type="service" data-keywords="openclaw oc wsl agents tasuke kaze sentry yubin koe asa kakei notebooklm seiri">
         <div class="head-row">
           <h3>OpenClaw</h3>
           <span class="type-tag">Service (WSL)</span>
         </div>
-        <div class="desc">Autonomous AI agent platform — 5 agents (Tasuke, Kaze, Sentry, Yubin, Koe). Runs in WSL Ubuntu-24.04 via OC keep-alive.</div>
+        <div class="desc">Autonomous AI agent platform — Tasuke-orchestrated; Renne talks only to Tasuke. Five core agents: Tasuke, Kaze, Sentry, Yubin, Koe. Runs in WSL Ubuntu-24.04 via OC keep-alive. <em>Helper agents Asa, Kakei &amp; NotebookLM are paused in development; Seiri lives in a separate worktree.</em></div>
         <div class="path">C:\OC (WSL)</div>
         <div class="links">
-          <a class="muted" href="javascript:void(0)">No HTTP UI</a>
+          <a href="http://localhost:18789/#token=627db52a242d2ec31b44037b2e0fdf6d923e8be86f351507" target="_blank" data-port="18789" data-type="service">OC Gateway :18789 <span class="status unk"></span></a>
+          <button class="oc-refresh" onclick="refreshOCToken()" title="Token rotates on gateway restart — click to refresh">⟳ Refresh token</button>
+        </div>
+        <div class="oc-note">⚠️ Token rotates when the WSL gateway restarts. If the link stops working, run <code>openclaw dashboard</code> in WSL and click Refresh.</div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="kaze news tunnel maia quiddam digest cloudflare phone remote 18800 openclaw">
+        <div class="head-row">
+          <h3>Kaze News Tunnel</h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Public Cloudflare tunnel for the Kaze news digest ("Prepared via Kaze | By Maia Quiddam") — viewable anywhere, including phone. <em>Public link changes per restart and is pushed to your Telegram; the "Public link" button below always opens the current one.</em></div>
+        <div class="path">QI_KazeNewsTunnel · C:\OC</div>
+        <div class="links">
+          <a href="http://localhost:18800/ai-digest/" target="_blank" data-port="18800" data-type="service">News (local) :18800 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="kaze" target="_blank" rel="noopener" href="file:///C:/OC/runtime/dashboard/news-tunnel.html" title="Resolving…">⛅ Public link ↗</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ AGENTS (QI Hive team) ============ -->
+  <section class="tier" data-tier="agents">
+    <h2>Agents <span style="font-size:11px; color:var(--muted); text-transform:none; letter-spacing:0;">— the QI Hive team (open a profile in the Hive Dashboard)</span></h2>
+    <div class="grid">
+
+      <div class="card type-agent" data-type="agent" data-keywords="architect agent hive design adr blueprint plan">
+        <div class="head-row">
+          <h3>🏗️ Architect <span class="badge agent">agent</span></h3>
+          <span class="type-tag">Hive Agent</span>
+        </div>
+        <div class="desc">Designs the plan before anyone builds. Turns an idea into blueprints, trade-off decisions (ADRs), and a step-by-step build plan. Decides <em>how</em> — never writes the final code.</div>
+        <div class="path">QI Hive · hive_architect</div>
+        <div class="links">
+          <a href="http://localhost:8600/hive/agent/hive_architect" target="_blank">Profile ↗</a>
+        </div>
+      </div>
+
+      <div class="card type-agent" data-type="agent" data-keywords="builder agent hive code python sql api implement">
+        <div class="head-row">
+          <h3>🔨 Builder <span class="badge agent">agent</span></h3>
+          <span class="type-tag">Hive Agent</span>
+        </div>
+        <div class="desc">The hands of the Hive. Takes the Architect's plan and writes the actual code — Python, SQL, APIs, config. Gets features built and shipped.</div>
+        <div class="path">QI Hive · hive_builder</div>
+        <div class="links">
+          <a href="http://localhost:8600/hive/agent/hive_builder" target="_blank">Profile ↗</a>
+        </div>
+      </div>
+
+      <div class="card type-agent" data-type="agent" data-keywords="scout agent hive research api news pricing investigate">
+        <div class="head-row">
+          <h3>🔍 Scout <span class="badge agent">agent</span></h3>
+          <span class="type-tag">Hive Agent</span>
+        </div>
+        <div class="desc">The researcher. Quickly looks up APIs, libraries, pricing and AI news, and investigates unknowns. Fast, cheap first-responder for "how does X work?"</div>
+        <div class="path">QI Hive · hive_scout</div>
+        <div class="links">
+          <a href="http://localhost:8600/hive/agent/hive_scout" target="_blank">Profile ↗</a>
+        </div>
+      </div>
+
+      <div class="card type-agent" data-type="agent" data-keywords="scribe agent hive docs documentation summaries minutes">
+        <div class="head-row">
+          <h3>✍️ Scribe <span class="badge agent">agent</span></h3>
+          <span class="type-tag">Hive Agent</span>
+        </div>
+        <div class="desc">The writer. Produces all documentation — session summaries, meeting minutes, version history and guides. Keeps the project's memory readable.</div>
+        <div class="path">QI Hive · hive_scribe</div>
+        <div class="links">
+          <a href="http://localhost:8600/hive/agent/hive_scribe" target="_blank">Profile ↗</a>
+        </div>
+      </div>
+
+      <div class="card type-agent" data-type="agent" data-keywords="ops agent hive services restart logs health custodian operations">
+        <div class="head-row">
+          <h3>🛠️ Ops <span class="badge agent">agent</span></h3>
+          <span class="type-tag">Hive Agent</span>
+        </div>
+        <div class="desc">The custodian. Watches the services, restarts what's down, reads the logs and keeps every app healthy. Operational triage for the whole ecosystem.</div>
+        <div class="path">QI Hive · hive_ops</div>
+        <div class="links">
+          <a href="http://localhost:8600/hive/agent/hive_ops" target="_blank">Profile ↗</a>
+        </div>
+      </div>
+
+      <div class="card type-agent" data-type="agent" data-keywords="inspector agent hive review security quality standards compliance">
+        <div class="head-row">
+          <h3>🛡️ Inspector <span class="badge agent">agent</span></h3>
+          <span class="type-tag">Hive Agent</span>
+        </div>
+        <div class="desc">The reviewer. Checks code and config for bugs, security issues and QI-standards compliance before anything ships. A read-only quality gate.</div>
+        <div class="path">QI Hive · hive_inspector</div>
+        <div class="links">
+          <a href="http://localhost:8600/hive/agent/hive_inspector" target="_blank">Profile ↗</a>
+        </div>
+      </div>
+
+      <div class="card type-agent" data-type="agent" data-keywords="tester agent hive tests api ui load regression quality">
+        <div class="head-row">
+          <h3>✅ Tester <span class="badge agent">agent</span></h3>
+          <span class="type-tag">Hive Agent</span>
+        </div>
+        <div class="desc">The quality guardian. Runs API, UI and load tests across every QI project and reports what passed or failed. Cross-project regression checks.</div>
+        <div class="path">QI Hive · hive_tester</div>
+        <div class="links">
+          <a href="http://localhost:8600/hive/agent/hive_tester" target="_blank">Profile ↗</a>
         </div>
       </div>
 
@@ -290,19 +471,21 @@
         <div class="path">C:\CogniBase</div>
         <div class="links">
           <a href="http://localhost:8650" target="_blank" data-port="8650" data-type="tool">:8650 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="cognibase" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
           <a class="muted" href="https://github.com/rennesan/cognibase" target="_blank">GitHub</a>
         </div>
       </div>
 
-      <div class="card type-tool" data-type="tool" data-keywords="mapsnap jenzabar schema browser erp 9876">
+      <div class="card type-tool" data-type="tool" data-keywords="mapsnap schema intelligence database profile sql server oracle postgres mysql sqlite jenzabar onbase sap nl2sql nl-to-sql erd browser 9876">
         <div class="head-row">
           <h3>MapSnap <span class="badge tool">tool</span></h3>
           <span class="type-tag">On-demand</span>
         </div>
-        <div class="desc">Standalone Jenzabar EX schema browser — navigable HTML with FK relationships, ERD edges, module groupings.</div>
+        <div class="desc">Local-first schema-intelligence tool for <strong>any</strong> enterprise database set up as a profile — SQL Server, Oracle, PostgreSQL, MySQL, SQLite (e.g. Jenzabar EX, Hyland OnBase, SAP/BUworks). Navigable HTML browser (tables, columns, FK/ERD relationships) plus a local AI that explains the schema and turns plain English into read-only SQL; egress guardrail keeps regulated data on-box. Onboarding tool for the BU systems-of-record federation feeding CogniBase.</div>
         <div class="path">C:\MapSnap</div>
         <div class="links">
           <a href="http://localhost:9876" target="_blank" data-port="9876" data-type="tool">:9876 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="mapsnap" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
           <a class="muted" href="https://github.com/rennesan/mapsnap" target="_blank">GitHub</a>
         </div>
       </div>
@@ -313,9 +496,10 @@
           <span class="type-tag">On-demand</span>
         </div>
         <div class="desc">Self-contained PDF toolkit — convert / split / extract / catalog. Local-only, smart mapping via Ollama.</div>
-        <div class="path">C:\Users\renne\Downloads\AUTOPDF</div>
+        <div class="path">C:\AutoPDF</div>
         <div class="links">
           <a href="http://localhost:6969" target="_blank" data-port="6969" data-type="tool">:6969 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="autopdf" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
         </div>
       </div>
 
@@ -328,6 +512,124 @@
         <div class="path">C:\EasyFlow</div>
         <div class="links">
           <a href="http://localhost:8550" target="_blank" data-port="8550" data-type="tool">:8550 <span class="status unk"></span></a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="digitization cost tool document imaging comparison html on-demand">
+        <div class="head-row">
+          <h3>Digitization Cost Tool <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">BU Digitization Cost Comparison Tool — single-file client-side HTML calculator (no server). Open the HTML file directly.</div>
+        <div class="path">C:\Users\renne\Downloads\DIGITIZATION COSTS</div>
+        <div class="links">
+          <a class="muted" href="https://github.com/Quiddity-Innovations/DigitizationCostTool" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ UTILITIES & MEDIA ============ -->
+  <section class="tier" data-tier="utilities">
+    <h2>Utilities &amp; Media <span style="font-size:11px; color:var(--muted); text-transform:none; letter-spacing:0;">— standalone apps</span></h2>
+    <div class="grid">
+
+      <div class="card type-service" data-type="service" data-keywords="lotterywiz lottery fantasy 5 covering design 8777">
+        <div class="head-row">
+          <h3>LotteryWiz <span class="badge tool">tool</span></h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Fantasy 5 covering-design app — generates optimal play sets with guaranteed coverage. FastAPI + export to .xlsx/.csv. Public Cloudflare tunnel (QI_LotteryWizTunnel).</div>
+        <div class="path">C:\Lottery Wiz</div>
+        <div class="links">
+          <a href="http://localhost:8777" target="_blank" data-port="8777" data-type="service">App :8777 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="lotterywiz" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/LotteryWiz" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="cypherminer crypto encoding math text bilingual offline 7842 8502">
+        <div class="head-row">
+          <h3>CypherMiner <span class="badge tool">tool</span></h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">Local-first bilingual (EN/PT) offline suite of crypto, encoding, math &amp; text tools. Static frontend on :7842, backend API on :8502. Public tunnel (QI_CypherMinerTunnel).</div>
+        <div class="path">C:\CypherMiner</div>
+        <div class="links">
+          <a href="http://localhost:7842" target="_blank" data-port="7842" data-type="service">UI :7842 <span class="status unk"></span></a>
+          <a href="http://localhost:8502/health" target="_blank" data-port="8502" data-type="service">API :8502 <span class="status unk"></span></a>
+          <a class="tunnel" data-tunnel="cypherminer" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/CypherMiner" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-service" data-type="service" data-keywords="tubescout youtube subscription news transcript digest 8503 7843">
+        <div class="head-row">
+          <h3>TubeScout <span class="badge tool">tool</span></h3>
+          <span class="type-tag">Service</span>
+        </div>
+        <div class="desc">YouTube subscription intelligence — sweeps daily uploads, transcript-to-news page, feeds NEXUS Scout / Kaze digest. Public tunnel (QI_TubeScoutTunnel).</div>
+        <div class="path">C:\TUBESCOUT</div>
+        <div class="links">
+          <a href="http://localhost:8503" target="_blank" data-port="8503" data-type="service">App :8503 <span class="status unk"></span></a>
+          <a href="http://localhost:8503/news" target="_blank" data-port="8503" data-type="service">/news</a>
+          <a class="tunnel" data-tunnel="tubescout" target="_blank" rel="noopener" href="javascript:void(0)" title="Resolving…">⛅ Tunnel</a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/TubeScout" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="retirement fidelity portfolio analyzer allocation rebalance 8504 7844">
+        <div class="head-row">
+          <h3>Retirement Analyzer <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Fidelity positions CSV → allocation, concentration (HHI), glide-path drift, rebalancing trades + 5-year retirement readiness plan. FastAPI + Gradio.</div>
+        <div class="path">C:\RetirementAnalyzer</div>
+        <div class="links">
+          <a href="http://localhost:7844" target="_blank" data-port="7844" data-type="tool">UI :7844 <span class="status unk"></span></a>
+          <a href="http://localhost:8504" target="_blank" data-port="8504" data-type="tool">API :8504 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/RetirementAnalyzer" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="m2v music to video music video generator lyrics 8501 7841">
+        <div class="head-row">
+          <h3>M2V <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Music to Video — AI music-video generator from lyrics + audio track.</div>
+        <div class="path">C:\M2V</div>
+        <div class="links">
+          <a href="http://localhost:7841" target="_blank" data-port="7841" data-type="tool">UI :7841 <span class="status unk"></span></a>
+          <a href="http://localhost:8501" target="_blank" data-port="8501" data-type="tool">API :8501 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/M2V" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="personalsong song generator ace-step vocals voice clone 8088">
+        <div class="head-row">
+          <h3>PersonalSong Studio <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone.</div>
+        <div class="path">C:\PersonalSong</div>
+        <div class="links">
+          <a href="http://localhost:8088" target="_blank" data-port="8088" data-type="tool">App :8088 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/PersonalSong" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <div class="card type-tool" data-type="tool" data-keywords="avatarstudio talking head avatar video gradio tts 7862">
+        <div class="head-row">
+          <h3>AvatarStudio <span class="badge tool">tool</span></h3>
+          <span class="type-tag">On-demand</span>
+        </div>
+        <div class="desc">Script → voice → talking-head avatar MP4 (Gradio + WSL2 render backends).</div>
+        <div class="path">C:\1-AI\APPS\AvatarStudio</div>
+        <div class="links">
+          <a href="http://localhost:7862" target="_blank" data-port="7862" data-type="tool">UI :7862 <span class="status unk"></span></a>
+          <a class="muted" href="https://github.com/Quiddity-Innovations/AvatarStudio" target="_blank">GitHub</a>
         </div>
       </div>
 
@@ -358,7 +660,7 @@
 </main>
 
 <footer>
-  Last generated 2026-05-11 &middot; Edit at <code>C:\QIH\landing\index.html</code> &middot; Open via <code>C:\QIH\landing\Open-Launchpad.bat</code>
+  Last generated 2026-06-21 &middot; Edit at <code>C:\QIH\landing\index.html</code> &middot; Open via <code>C:\QIH\landing\Open-Launchpad.bat</code>
 </footer>
 
 <script>
@@ -423,8 +725,117 @@
       pingPort(port, type, dot);
     });
   }
-  // Auto-ping on load
-  window.addEventListener('load', () => setTimeout(pingAll, 200));
+  // ===== Resolve public tunnel buttons from tunnels.js =====
+  // tunnels.js is regenerated by refresh-tunnels.py each time Open-Launchpad.bat
+  // runs, so these buttons always point at the current (random) quick-tunnel URL.
+  function resolveTunnels() {
+    const data = window.QI_TUNNELS || {};
+    document.querySelectorAll('a.tunnel[data-tunnel]').forEach(a => {
+      const key = a.getAttribute('data-tunnel');
+      const t = data[key];
+      const baseLabel = a.textContent.replace(/^⛅\s*/, '').replace(/\s*↗$/, '').trim() || 'Tunnel';
+      if (t && t.url && t.status === 'running') {
+        a.href = t.url;
+        a.classList.add('on'); a.classList.remove('off');
+        a.title = (t.label || baseLabel) + '  →  ' + t.url;
+      } else {
+        a.classList.add('off'); a.classList.remove('on');
+        a.href = 'javascript:void(0)';
+        a.title = (t && t.note) ? (baseLabel + ' — ' + t.note) : (baseLabel + ' — tunnel offline (start its tunnel, then reopen the launcher)');
+        if (a.textContent.indexOf('offline') === -1 && key !== 'kaze') a.textContent = '⛅ Tunnel offline';
+      }
+    });
+    if (!window.QI_TUNNELS) {
+      document.querySelectorAll('a.tunnel[data-tunnel]').forEach(a => {
+        a.title = 'tunnels.js not loaded — run refresh-tunnels.py (or open via Open-Launchpad.bat)';
+      });
+    }
+  }
+
+  // ===== Layout toggle: grid <-> columns =====
+  function applyView(mode) {
+    const content = document.getElementById('content');
+    const btn = document.getElementById('viewToggle');
+    if (mode === 'columns') {
+      content.classList.add('view-columns');
+      btn.textContent = '▤ Grid view';
+    } else {
+      content.classList.remove('view-columns');
+      btn.textContent = '▥ Columns view';
+    }
+    try { localStorage.setItem('qiLaunchpadView', mode); } catch (e) {}
+  }
+  function toggleView() {
+    const isColumns = document.getElementById('content').classList.contains('view-columns');
+    applyView(isColumns ? 'grid' : 'columns');
+  }
+
+  // Auto-ping + resolve tunnels + restore view on load
+  window.addEventListener('load', () => {
+    setTimeout(pingAll, 200);
+    resolveTunnels();
+    let saved = 'grid';
+    try { saved = localStorage.getItem('qiLaunchpadView') || 'grid'; } catch (e) {}
+    applyView(saved);
+  });
+
+  // ===== OpenClaw gateway token refresh =====
+  function refreshOCToken() {
+    const newToken = prompt(
+      'Run this in WSL:\n\n  ~/.npm-global/bin/openclaw dashboard\n\nPaste the token value here (the part after #token=):',
+      ''
+    );
+    if (newToken && newToken.trim()) {
+      document.querySelectorAll('a[href*="18789"]').forEach(a => {
+        a.href = 'http://localhost:18789/#token=' + newToken.trim();
+      });
+      alert('Token updated for this session. To make it permanent, edit C:\\QIH\\landing\\index.html (and the mirror at C:\\QIH\\ecosystem\\launcher\\index.html).');
+    }
+  }
+</script>
+
+<div id="tn-modal" onclick="if(event.target===this)tnHide()">
+  <div class="tn-sheet">
+    <div class="tn-top"><h2>⛅ Public Tunnels</h2><button class="tn-x" onclick="tnHide()">✕ Close</button></div>
+    <div id="tn-list"></div>
+  </div>
+</div>
+
+<script>
+  // ===== Tunnels modal (QR + copy, from tunnels.js) =====
+  function tnShow(){
+    var data = window.QI_TUNNELS || {};
+    var live = Object.keys(data).filter(function(k){
+      var t = data[k]; return t && t.url && t.status === 'running' && /^https?:/.test(t.url);
+    });
+    var html = '';
+    if (!live.length) {
+      html = '<div class="tn-empty">No public tunnels are running right now. Start a QI_&lt;App&gt;Tunnel service and reopen the launcher (via Open-Launchpad.bat).</div>';
+    }
+    live.forEach(function(k){
+      var t = data[k];
+      var label = (t.label || k).replace(/\s*\(.*/, '');
+      html += '<div class="tn-card">'
+        + '<div class="tn-qr">' + (t.qr || '') + '</div>'
+        + '<div class="tn-b">'
+        +   '<div class="tn-name">' + label + '</div>'
+        +   '<a class="tn-url" href="' + t.url + '" target="_blank" rel="noopener">' + t.url + '</a>'
+        +   '<div><button class="tn-btn" data-url="' + t.url + '" onclick="tnCopy(this)">Copy</button>'
+        +   '<a class="tn-btn" href="' + t.url + '" target="_blank" rel="noopener">Open ↗</a></div>'
+        +   '<div class="tn-note">📱 scan the QR to open on your phone</div>'
+        + '</div></div>';
+    });
+    document.getElementById('tn-list').innerHTML = html;
+    document.getElementById('tn-modal').classList.add('open');
+  }
+  function tnHide(){ document.getElementById('tn-modal').classList.remove('open'); }
+  function tnCopy(btn){
+    var u = btn.getAttribute('data-url');
+    function done(){ var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function(){ btn.textContent = o; }, 1200); }
+    function fb(){ var t = document.createElement('textarea'); t.value = u; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch(e){} document.body.removeChild(t); done(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(u).then(done, fb); } else { fb(); }
+  }
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') tnHide(); });
 </script>
 
 </body>

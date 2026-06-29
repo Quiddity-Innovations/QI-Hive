@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {
+      "name": "Lip-Sync Quality (the #1 issue)",
+      "priority": "high",
+      "items": [
+        {"title": "Make lip sync trustworthy by default", "detail": "LivePortrait alone has no audio-driven mouth — lips are driven by the driving video, not the script. CLAUDE.md flags this as the #1 issue. Decide the default path: auto-enable video-retalking on LivePortrait renders, or default production renders to Hallo2 (audio-driven natively)."},
+        {"title": "Evaluate MuseTalk for real-time sync", "detail": "MuseTalk is pre-wired (run_musetalk, studio_config open_source.musetalk enabled=true) but not installed in WSL2. Install the conda env at /home/hyosuke/qi_avatar/musetalk and benchmark its real-time lip sync against retalking for the fast-preview path."},
+        {"title": "Speed up Hallo2", "detail": "Hallo2 is ~15-30 min per minute of audio. Profile inference_steps (40 default) vs quality, cache the kept-warm model, and consider GPU batching so production renders are practical for longer scripts."}
+      ]
+    },
+    {
+      "name": "Avatar Sources & Phase 2",
+      "priority": "medium",
+      "items": [
+        {"title": "Generate avatar from a text description", "detail": "The 'Describe background' and 'Generate avatar from description (Phase 2)' UI options currently record intent only (apply_background returns the source unchanged; pipeline_generate just logs the description). Wire a text-to-image backend so an avatar can be created without a portrait photo."},
+        {"title": "Add missing agent portraits", "detail": "agents.json points Maia at inputs/Maia Quiddam/maia.png and Tasuke at inputs/Tasuke Hattori/tasuke.jpg, but the inputs/ folder only has alternate-named files. Reconcile agents.json photo paths with the actual files in inputs/ so every agent renders without a custom upload."}
+      ]
+    },
+    {
+      "name": "Cloud Engines & Secrets",
+      "priority": "medium",
+      "items": [
+        {"title": "Finish the D-ID path", "detail": "run_did() is fully implemented and D-ID is enabled in studio_config.json, but no key is set in secrets/avatarstudio.env, so it never appears in get_engine_choices(). Add and rotate the D-ID key, then verify the upload -> talk -> poll -> download flow end to end."},
+        {"title": "Enable HeyGen as a fallback cloud engine", "detail": "run_heygen() is implemented but disabled. Add a key and enable it so cloud rendering has a second provider when D-ID quota or quality falls short."}
+      ]
+    },
+    {
+      "name": "QI Ecosystem Integration",
+      "priority": "high",
+      "items": [
+        {"title": "Wire avatar outputs to the QI Hive dashboard", "detail": "CLAUDE.md lists wiring rendered avatars to the QI Hive War Room / Mission Control board (:8600). The registry integrates_with is empty today — add a publish step so finished MP4s surface on the dashboard."},
+        {"title": "Register in the QI Brain", "detail": "Log renders, decisions, and the avatar/voice patterns to QI Brain (:9011) via qi.log_session / qi.log_feature so the avatar+voice capability is discoverable across the ecosystem. No qi.* calls exist in the codebase yet."},
+        {"title": "Use NEXUS for Scene AI split + script generation", "detail": "scene_pipeline.split_with_ai() expects NEXUS to split scripts into scenes. Confirm the NEXUS client wiring (:8010 /synthesize) and add graceful fallback messaging when NEXUS is offline so the Scene pipeline degrades to rule-based split cleanly."},
+        {"title": "Add the QI service contract endpoints", "detail": "tests/test_smoke.py notes the app has no /health, /version, /info — only a Gradio root probe. Add the QI contract endpoints (or a sidecar) so Mission Control can health-check Avatar Studio like other QI projects."}
+      ]
+    },
+    {
+      "name": "Operations & Release Hardening",
+      "priority": "low",
+      "items": [
+        {"title": "Register QI_AvatarStudio in the service registry", "detail": "install_service.bat creates the NSSM service QI_AvatarStudio (demand-start) but it is absent from C:\\QIH\\ecosystem\\QI_Service_Registry.md. Add the canonical entry (AppDirectory, port 7862, log path) and decide whether it should auto-start and get a Cloudflare tunnel."},
+        {"title": "Manage outputs/ growth", "detail": "outputs/ already holds dozens of WAV/MP4 test artifacts (gitignored). Add a retention/cleanup policy so large media doesn't accumulate, and confirm allowed_paths stays scoped to outputs/."},
+        {"title": "Add a requirements file", "detail": "There is no requirements.txt — the dependency set lives only in the .venv (gradio 6.14, kokoro 0.9.4, edge-tts 7.2.8, rembg 2.0.75, torch 2.11+cu128, scipy, soundfile, pillow). Pin them to a requirements file so the env is reproducible."},
+        {"title": "End-to-end test all 10 languages with full render", "detail": "Language tests currently cover TTS routing only. CLAUDE.md wants a full TTS->render pass per language. Add an integration run (gated/offline-skippable like the smoke test) that renders a short clip per language."}
+      ]
+    }
+  ]
+}

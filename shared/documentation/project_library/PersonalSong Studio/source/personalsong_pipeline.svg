@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 660" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-green" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#a855f7"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#b8860b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="660" fill="#ffffff" rx="12"/>
+  <text x="480" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2d3d">PersonalSong Studio — Generation Pipeline</text>
+  <text x="480" y="49" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Active Development · 2026</text>
+  <text x="480" y="65" text-anchor="middle" font-size="10" fill="#9aa5b1">lyrics + style → ACE-Step sung vocals → (optional) Demucs / Seed-VC voice clone → finished track</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="742" y="78" width="206" height="150" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="845" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="752" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="772" y="113" font-size="9" fill="#374151">Core / always-run step</text>
+  <rect x="752" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="772" y="130" font-size="9" fill="#374151">Optional step</text>
+  <rect x="752" y="138" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="772" y="147" font-size="9" fill="#374151">GPU model (resident)</text>
+  <line x1="752" y1="164" x2="770" y2="164" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="776" y="168" font-size="9" fill="#374151">Main pipeline flow</text>
+  <line x1="752" y1="181" x2="770" y2="181" stroke="#a855f7" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#arr-purple)"/>
+  <text x="776" y="185" font-size="9" fill="#374151">Voice-clone path (subprocess)</text>
+  <line x1="752" y1="198" x2="770" y2="198" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+  <text x="776" y="202" font-size="9" fill="#374151">Optional publish</text>
+  <text x="845" y="221" text-anchor="middle" font-size="8" fill="#9aa5b1">Quiddity Innovations © 2026</text>
+
+  <!-- ══ BAND 1: INPUTS ══ -->
+  <text x="20" y="98" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">① INPUTS</text>
+  <rect x="14" y="104" width="200" height="118" rx="9" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-dasharray="6,3"/>
+
+  <rect x="26" y="114" width="176" height="46" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="114" y="132" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e40af">Creation form</text>
+  <text x="114" y="146" text-anchor="middle" font-size="8" fill="#3b82f6">recipient · story · genre · mood</text>
+  <text x="114" y="156" text-anchor="middle" font-size="8" fill="#3b82f6">language · singer · duration</text>
+
+  <rect x="26" y="166" width="176" height="46" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="114" y="184" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7a5b06">Source song (optional)</text>
+  <text x="114" y="198" text-anchor="middle" font-size="8" fill="#9a7a2e">YouTube · upload · local · CD</text>
+  <text x="114" y="208" text-anchor="middle" font-size="8" fill="#9a7a2e">for remix or voice clone</text>
+
+  <!-- arrow form -> lyrics -->
+  <line x1="214" y1="137" x2="252" y2="137" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr-green)"/>
+
+  <!-- ══ BAND 2: LYRICS ══ -->
+  <text x="260" y="98" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">② LYRICS (Ollama)</text>
+  <rect x="252" y="104" width="206" height="118" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="355" y="124" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">Ollama writes lyrics</text>
+  <text x="262" y="142" font-size="8.5" fill="#2e7d32">• think=False → emits lyrics, not</text>
+  <text x="270" y="153" font-size="8.5" fill="#2e7d32">a hidden &lt;think&gt; block (else empty)</text>
+  <text x="262" y="167" font-size="8.5" fill="#2e7d32">• duration-scaled section layout</text>
+  <text x="262" y="181" font-size="8.5" fill="#2e7d32">• name must be sung ≥ 2× (chorus)</text>
+  <text x="262" y="195" font-size="8.5" fill="#2e7d32">• normalize → [verse]/[chorus] tags</text>
+  <text x="262" y="209" font-size="8.5" fill="#2e7d32">• inject name + respell for singing</text>
+  <text x="355" y="219" text-anchor="middle" font-size="8" fill="#5f8a66">keep_alive=0 frees the GPU →</text>
+
+  <!-- arrow lyrics -> ACE -->
+  <line x1="458" y1="160" x2="496" y2="160" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr-green)"/>
+
+  <!-- ══ BAND 3: ACE-STEP (GPU core) ══ -->
+  <text x="504" y="98" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">③ SING (ACE-Step, GPU)</text>
+  <rect x="496" y="104" width="222" height="118" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="607" y="124" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">ACE-Step pipeline</text>
+  <text x="506" y="142" font-size="8.5" fill="#cbd5e1">prompt = build_tags(genre, mood,</text>
+  <text x="514" y="153" font-size="8.5" fill="#cbd5e1">vocal, language, singer descriptor)</text>
+  <text x="506" y="167" font-size="8.5" fill="#cbd5e1">lyrics = sung text (respelled name)</text>
+  <text x="506" y="181" font-size="8.5" fill="#cbd5e1">bf16 · infer_step 60 · euler · apg</text>
+  <text x="506" y="195" font-size="8.5" fill="#cbd5e1">audio2audio when remixing a source</text>
+  <text x="607" y="214" text-anchor="middle" font-size="8" fill="#64748b">resident singleton · serialized (1 GPU)</text>
+
+  <!-- arrow ACE -> gender check (down) -->
+  <line x1="607" y1="222" x2="607" y2="250" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr-green)"/>
+
+  <!-- ══ BAND 4: VERIFY / BRANCH ══ -->
+  <text x="20" y="270" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">④ VERIFY &amp; BRANCH</text>
+
+  <!-- gender check -->
+  <rect x="496" y="276" width="222" height="74" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="607" y="296" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b4d22">Sung-gender check</text>
+  <text x="607" y="312" text-anchor="middle" font-size="8.5" fill="#2e7d32">Demucs vocal (CPU) + librosa pitch</text>
+  <text x="607" y="325" text-anchor="middle" font-size="8.5" fill="#2e7d32">wrong gender → retry once, new seed</text>
+  <text x="607" y="340" text-anchor="middle" font-size="8" fill="#5f8a66">ace_engine.detect_gender()</text>
+
+  <!-- arrow gender -> straight output (left-down) -->
+  <path d="M 496 313 H 360 V 372" fill="none" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="372" y="366" font-size="8" fill="#5f8a66">straight song path</text>
+
+  <!-- arrow ACE/branch -> clone path (down to band 5 right) -->
+  <line x1="607" y1="350" x2="607" y2="378" stroke="#a855f7" stroke-width="1.8" stroke-dasharray="4,2" marker-end="url(#arr-purple)"/>
+
+  <!-- ══ BAND 5: VOICE CLONE (optional) ══ -->
+  <rect x="448" y="384" width="500" height="120" rx="9" fill="#faf5ff" stroke="#a855f7" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <rect x="460" y="378" width="220" height="14" rx="3" fill="#ffffff"/>
+  <text x="500" y="389" text-anchor="middle" font-size="10" fill="#a855f7" font-weight="700" letter-spacing="1">⑤ VOICE CLONE (optional)</text>
+
+  <rect x="460" y="398" width="148" height="44" rx="7" fill="#f5edff" stroke="#a855f7" stroke-width="1.4"/>
+  <text x="534" y="416" text-anchor="middle" font-size="9.5" font-weight="700" fill="#581c87">Demucs ×2</text>
+  <text x="534" y="430" text-anchor="middle" font-size="8" fill="#7e22ce">source + ACE → vocals</text>
+
+  <rect x="618" y="398" width="160" height="44" rx="7" fill="#f5edff" stroke="#a855f7" stroke-width="1.4"/>
+  <text x="698" y="416" text-anchor="middle" font-size="9.5" font-weight="700" fill="#581c87">Seed-VC convert</text>
+  <text x="698" y="430" text-anchor="middle" font-size="8" fill="#7e22ce">own venv · f0 (sing)</text>
+
+  <rect x="788" y="398" width="148" height="44" rx="7" fill="#f5edff" stroke="#a855f7" stroke-width="1.4"/>
+  <text x="862" y="416" text-anchor="middle" font-size="9.5" font-weight="700" fill="#581c87">Mix over backing</text>
+  <text x="862" y="430" text-anchor="middle" font-size="8" fill="#7e22ce">ACE or original instr.</text>
+
+  <line x1="608" y1="420" x2="616" y2="420" stroke="#a855f7" stroke-width="1.6" marker-end="url(#arr-purple)"/>
+  <line x1="778" y1="420" x2="786" y2="420" stroke="#a855f7" stroke-width="1.6" marker-end="url(#arr-purple)"/>
+
+  <text x="460" y="464" font-size="8.5" fill="#7e22ce">cover.py — re-sing the ACE vocal in a source singer's voice.</text>
+  <text x="460" y="478" font-size="8.5" fill="#7e22ce">voice_clone.py — re-voice the spoken dedication in the artist's timbre (non-f0).</text>
+  <text x="460" y="492" font-size="8" fill="#a855f7">Seed-VC runs in an isolated venv as a subprocess (deps clash with ACE-Step).</text>
+
+  <!-- clone -> output -->
+  <path d="M 862 442 V 524 H 360 V 540" fill="none" stroke="#a855f7" stroke-width="1.8" stroke-dasharray="4,2" marker-end="url(#arr-purple)"/>
+
+  <!-- ══ BAND 4b: DEDICATION (optional) on the left ══ -->
+  <rect x="14" y="276" width="430" height="74" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="229" y="296" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7a5b06">Dedication (optional, prepended)</text>
+  <text x="229" y="312" text-anchor="middle" font-size="8.5" fill="#9a7a2e">edge-tts native voice · radio / concert · heartfelt / warm / festive</text>
+  <text x="229" y="326" text-anchor="middle" font-size="8.5" fill="#9a7a2e">8 languages · concert crowd bed · may be cloned into the artist's voice</text>
+  <text x="229" y="341" text-anchor="middle" font-size="8" fill="#9a7a2e">dedication.py — prepended to the finished song</text>
+  <line x1="229" y1="350" x2="229" y2="372" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+
+  <!-- ══ BAND 6: FINISH & OUTPUT ══ -->
+  <text x="20" y="534" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">⑥ FINISH &amp; OUTPUT</text>
+
+  <rect x="14" y="540" width="220" height="92" rx="9" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="124" y="560" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Finish track</text>
+  <text x="124" y="576" text-anchor="middle" font-size="8.5" fill="#cbd5e1">WAV → MP3 (FFmpeg libmp3lame)</text>
+  <text x="124" y="589" text-anchor="middle" font-size="8.5" fill="#cbd5e1">ID3 tags · cover art (PIL/SDXL)</text>
+  <text x="124" y="602" text-anchor="middle" font-size="8.5" fill="#cbd5e1">write .json sidecar metadata</text>
+  <text x="124" y="620" text-anchor="middle" font-size="8" fill="#64748b">routers/audio.py</text>
+
+  <!-- finish -> library -->
+  <line x1="234" y1="586" x2="272" y2="586" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr-green)"/>
+
+  <rect x="272" y="540" width="196" height="92" rx="9" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="370" y="560" text-anchor="middle" font-size="11" font-weight="700" fill="#0c4a6e">Local Library</text>
+  <text x="370" y="576" text-anchor="middle" font-size="8.5" fill="#0284c7">music_library/&lt;Occasion&gt;/</text>
+  <text x="370" y="589" text-anchor="middle" font-size="8.5" fill="#0284c7">play · download · bundle zip</text>
+  <text x="370" y="602" text-anchor="middle" font-size="8.5" fill="#0284c7">karaoke stems · QR card</text>
+  <text x="370" y="620" text-anchor="middle" font-size="8" fill="#0284c7">routers/library.py · extras.py</text>
+
+  <!-- library -> publish (optional) -->
+  <line x1="468" y1="586" x2="506" y2="586" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+
+  <rect x="506" y="540" width="200" height="92" rx="9" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="606" y="560" text-anchor="middle" font-size="11" font-weight="700" fill="#7a5b06">Publish (optional)</text>
+  <text x="606" y="576" text-anchor="middle" font-size="8.5" fill="#9a7a2e">Plex sync → Google Home / Alexa</text>
+  <text x="606" y="589" text-anchor="middle" font-size="8.5" fill="#9a7a2e">YouTube Music auto-upload</text>
+  <text x="606" y="602" text-anchor="middle" font-size="8.5" fill="#9a7a2e">never blocks the song</text>
+  <text x="606" y="620" text-anchor="middle" font-size="8" fill="#9a7a2e">needs config (token / auth)</text>
+
+  <!-- batch/queue note -->
+  <rect x="726" y="540" width="222" height="92" rx="9" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.3" stroke-dasharray="5,3"/>
+  <text x="837" y="560" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Batch &amp; Queue</text>
+  <text x="837" y="576" text-anchor="middle" font-size="8.5" fill="#6b7280">Album mode runs many songs</text>
+  <text x="837" y="589" text-anchor="middle" font-size="8.5" fill="#6b7280">Overnight queue (retry on fail)</text>
+  <text x="837" y="602" text-anchor="middle" font-size="8.5" fill="#6b7280">each item replays this pipeline</text>
+  <text x="837" y="620" text-anchor="middle" font-size="8" fill="#9aa5b1">routers/batch.py · run_queue.py</text>
+</svg>

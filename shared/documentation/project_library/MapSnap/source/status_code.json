@@ -1,0 +1,234 @@
+{
+  "intro": "Code Explained — real excerpts from MapSnap's source, each mapped to the feature it creates. MapSnap is a local-first schema-intelligence tool: one stdlib http.server module, an engine-agnostic extraction layer, a compliance-first egress guardrail, a 6-layer per-profile enrichment stack, and local-first AI (Ollama) with a guarded cloud escape hatch.",
+  "sections": [
+    {
+      "category": "HTTP Server & Routing",
+      "snippets": [
+        {
+          "title": "Bind to 127.0.0.1:9876 and serve",
+          "feature": "The zero-framework local web server (no Flask/FastAPI)",
+          "file": "server.py · main()",
+          "language": "python",
+          "code": "server = ThreadingHTTPServer((\"127.0.0.1\", args.port), Handler)\nurl    = f\"http://localhost:{args.port}/\"\n\nprint(f\"==========================================\")\nprint(f\"  MapSnap  |  {url}\")\nprint(f\"==========================================\")\n...\nif not args.no_browser:\n    threading.Timer(0.8, lambda: webbrowser.open(url)).start()\n\ntry:\n    server.serve_forever()\nexcept KeyboardInterrupt:\n    print(\"\\nStopped.\")",
+          "explanation": "The entire app is one stdlib ThreadingHTTPServer bound to localhost only — no web framework, threaded so SSE streaming works. This is what keeps the install dependency-light and trivially portable to a customer or air-gapped box."
+        },
+        {
+          "title": "Path-based dispatch of ~50 /api/* routes",
+          "feature": "The API surface that backs every tab in the HTML browser",
+          "file": "server.py · Handler.do_GET()",
+          "language": "python",
+          "code": "def do_GET(self):\n    path = self.path.split(\"?\")[0].rstrip(\"/\")\n\n    # ── auth gate (login mode only) ──\n    if self._auth_gate_blocked(path):\n        self._json(401, {\"error\": \"login required\"}); return\n\n    if path == \"/api/auth/status\":\n        self._json(200, {\n            \"auth_mode\":   auth.auth_mode(),\n            \"needs_setup\": auth.auth_mode() == \"login\" and not auth.has_any_user(),\n            \"session\":     _resolve_permissions(self),\n        })\n        return\n    if path == \"/api/settings\":\n        ...\n    if path == \"/api/ollama/status\":\n        ...\n    if path == \"/api/openrouter/models\":\n        ...\n    if path == \"/api/check-drivers\":\n        ...",
+          "explanation": "do_GET / do_POST normalise the path then run a flat if/elif chain, dispatching each /api/* route to its handler. There is no router object — the dispatch table IS the if-chain, which keeps the single-file design honest and greppable."
+        }
+      ]
+    },
+    {
+      "category": "Database Access & Extraction",
+      "snippets": [
+        {
+          "title": "SQLite schema extraction via PRAGMA",
+          "feature": "Multi-engine extraction — one canonical schema.json per engine",
+          "file": "db_extractors.py · SqliteExtractor.extract()",
+          "language": "python",
+          "code": "import sqlite3\nconn = sqlite3.connect(self.file_path)\nconn.row_factory = sqlite3.Row\ncur = conn.cursor()\n\ncur.execute(\n    \"SELECT name, type FROM sqlite_master \"\n    \"WHERE type IN ('table','view') ORDER BY name\"\n)\n...\nfor obj_name, obj in objects_map.items():\n    cur.execute(f\"PRAGMA table_info(\\\"{obj_name}\\\")\")\n    for row in cur.fetchall():\n        obj[\"columns\"].append(_make_col(\n            name=row[\"name\"],\n            data_type=(row[\"type\"] or \"text\").lower(),\n            is_pk=bool(row[\"pk\"]),\n            nullable=not row[\"notnull\"],\n            default=row[\"dflt_value\"],\n        ))",
+          "explanation": "Each engine has its own extractor class, but all of them emit the SAME shape via the shared _make_object / _make_col / _make_schema helpers. SQLite reads sqlite_master + PRAGMA table_info / foreign_key_list; the result is one canonical schema.json the rest of MapSnap understands regardless of source engine."
+        },
+        {
+          "title": "PostgreSQL connect + information_schema pull",
+          "feature": "Engine-agnostic live extract over Postgres / MySQL / Oracle",
+          "file": "db_extractors.py · PostgresExtractor.extract()",
+          "language": "python",
+          "code": "try:\n    import psycopg2\nexcept ImportError:\n    print(\"ERROR: psycopg2 not installed. Run: pip install psycopg2-binary\")\n    sys.exit(1)\n\nprint(f\"Connecting to PostgreSQL: {self.host}:{self.port}/{self.database}\")\nconn = psycopg2.connect(\n    host=self.host, port=self.port, dbname=self.database,\n    user=self.username, password=self.password, connect_timeout=15,\n)\ncur = conn.cursor()\n...\nrows = q(\"\"\"\n    SELECT t.table_schema, t.table_name, t.table_type\n    FROM information_schema.tables t\n    WHERE t.table_type IN ('BASE TABLE','VIEW')\n    ...\n\"\"\")",
+          "explanation": "Postgres, MySQL and Oracle extractors each import their driver lazily (so the app ships thin and only pulls the driver a connection needs) and walk information_schema / ALL_TAB_COLUMNS. The MySQL and Oracle classes reuse PostgresExtractor._wire_fks to build the FK graph, so all relational engines converge on identical foreign_keys_in / foreign_keys_out."
+        },
+        {
+          "title": "Open a live connection per engine for queries",
+          "feature": "One saved connection, five engines — SQL Server/SQLite/Postgres/MySQL/Oracle",
+          "file": "server.py · _open_saved_sql_conn()",
+          "language": "python",
+          "code": "db_type = (conn.get(\"db_type\") or \"sqlserver\").lower()\nif db_type == \"sqlserver\":\n    import pyodbc\n    dsn = conn.get(\"dsn\") or conn.get(\"connection_string\", \"\")\n    ...\n    cx = pyodbc.connect(dsn, timeout=10)\n    cx.timeout = 30                       # per-query timeout (seconds)\n    return cx, db_type\nif db_type == \"sqlite\":\n    import sqlite3\n    return sqlite3.connect(conn.get(\"file\", \"\")), db_type\nif db_type == \"postgres\":\n    import psycopg2\n    return psycopg2.connect(host=conn.get(\"host\"), port=int(conn.get(\"port\", 5432)),\n        dbname=conn.get(\"database\"), user=conn.get(\"username\"),\n        password=conn.get(\"password\", \"\"), connect_timeout=10), db_type\nif db_type == \"mysql\":\n    import pymysql\n    return pymysql.connect(...), db_type\nif db_type == \"oracle\":\n    import oracledb\n    dsn_str = f\"{conn.get('host')}:{conn.get('port', 1521)}/{conn.get('service', '')}\"\n    return oracledb.connect(user=conn.get(\"username\"),\n        password=conn.get(\"password\", \"\"), dsn=dsn_str), db_type\nraise RuntimeError(f\"Live SQL not supported for db_type '{db_type}'.\")",
+          "explanation": "At query time the saved .mapsnap_conn.json's db_type selects the right DB-API driver — pyodbc (Trusted_Connection for Windows auth), sqlite3, psycopg2, pymysql, or oracledb thin mode — and returns a live connection the caller closes. This is the single point where 'which engine' becomes a concrete connection."
+        }
+      ]
+    },
+    {
+      "category": "Compliance Egress Guardrail",
+      "snippets": [
+        {
+          "title": "The single cloud-egress chokepoint",
+          "feature": "Fail-safe compliance control plane (FERPA / GLBA / HIPAA)",
+          "file": "guardrail.py · guard_cloud_egress()",
+          "language": "python",
+          "code": "if policy is None:\n    policy = resolve_data_policy(profile_folder, settings)\n...\nif not cloud_allowed(policy):\n    reason = (\n        f\"Data policy for this profile is '{policy}' - cloud models are \"\n        f\"blocked. Only local (Ollama) models may be used. ...\")\n    _log(f\"GUARDRAIL block: cloud egress refused model={model} \"\n         f\"policy={policy} folder={profile_folder}\", \"warning\")\n    return {\"allowed\": False, \"policy\": policy, \"reason\": reason,\n            \"messages\": messages, \"redacted\": []}\n\n# Cloud is permitted. First strip LOCAL_ONLY-wrapped spans (profiling\n# sample VALUES) so they never leave, then scrub stray regulated VALUES.\nstripped_local = False\npre = []\nfor m in messages:\n    clean, removed = strip_local_only(m.get(\"content\", \"\"))\n    if removed:\n        stripped_local = True\n    nm = dict(m); nm[\"content\"] = clean; pre.append(nm)\nscrubbed, redacted = scrub_messages(pre)",
+          "explanation": "Every cloud-model call passes through this one function. It resolves the per-profile data_policy (fail-safe local_only), BLOCKS the call outright when cloud is not allowed, strips local-only profiling samples, scrubs regulated values, and logs an auditable decision. Local Ollama and local SQL execution never call it, so they are never touched."
+        },
+        {
+          "title": "Fail-safe policy resolution",
+          "feature": "Compliant-by-default posture — unknown means local_only",
+          "file": "guardrail.py · resolve_data_policy()",
+          "language": "python",
+          "code": "policy = None\ntry:\n    if profile_folder:\n        meta = _read_json(Path(profile_folder) / \"mapsnap_meta.json\")\n        ai = meta.get(\"ai\") if isinstance(meta.get(\"ai\"), dict) else {}\n        policy = ai.get(\"data_policy\")\nexcept Exception:\n    policy = None\nif policy not in VALID_POLICIES:\n    # fall back to the global default\n    gdef = None\n    if isinstance(settings, dict):\n        gdef = settings.get(\"default_data_policy\")\n    policy = gdef if gdef in VALID_POLICIES else DEFAULT_POLICY\nreturn policy",
+          "explanation": "Policy comes from the per-profile mapsnap_meta.json, else the global default, else the hard-coded DEFAULT_POLICY = 'local_only'. Any unset/unknown/corrupt value collapses to local_only, so a profile is compliant before anyone configures it — the safe state is the default, not a retrofit."
+        },
+        {
+          "title": "Value-level PII detection + local-only sentinel",
+          "feature": "Regulated-value scrubbing and profiling-sample withholding",
+          "file": "guardrail.py · scrub_text() / strip_local_only()",
+          "language": "python",
+          "code": "_PII_PATTERNS = [\n    (\"ssn\",   re.compile(r\"\\b\\d{3}-\\d{2}-\\d{4}\\b\")),\n    (\"email\", re.compile(r\"\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b\")),\n    (\"phone\", re.compile(r\"\\b\\(?\\d{3}\\)?[ .-]?\\d{3}[ .-]?\\d{4}\\b\")),\n    (\"ccard\", re.compile(r\"\\b(?:\\d[ -]?){13,16}\\b\")),\n]\n...\ndef strip_local_only(text):\n    if not text or LOCAL_ONLY_OPEN not in text:\n        return text, False\n    new = _LOCAL_ONLY_RE.sub(LOCAL_ONLY_PLACEHOLDER, text)\n    if LOCAL_ONLY_OPEN in new:\n        new = new.split(LOCAL_ONLY_OPEN, 1)[0]\n    return new, (new != text)",
+          "explanation": "scrub_text redacts SSN / email / phone / card-number value patterns from any outbound payload (schema/metadata text doesn't match, so it's untouched). strip_local_only removes any span the prompt-builder wrapped in the [[MAPSNAP_LOCAL_ONLY]] sentinel — the Layer-4 sample VALUES — so profiling data physically cannot reach a cloud model."
+        }
+      ]
+    },
+    {
+      "category": "Local & Cloud AI",
+      "snippets": [
+        {
+          "title": "Local Ollama streaming (default path)",
+          "feature": "Local-first chat + NL→SQL — no data leaves the box",
+          "file": "server.py · Handler._pipe_ollama_sse()",
+          "language": "python",
+          "code": "p    = urllib.parse.urlparse(ollama_url)\n# Generous timeout: a large model cold-loading from disk plus prompt-eval\n# over a big schema can take minutes. The SSE keepalive thread holds the\n# client connection open meanwhile.\nconn = http.client.HTTPConnection(\n    p.hostname or \"localhost\", p.port or 11434, timeout=600)\nconn.request(\"POST\", endpoint, body=ollama_body,\n             headers={\"Content-Type\": \"application/json\",\n                      \"Content-Length\": str(len(ollama_body))})\nresp = conn.getresponse()\n...\nmsg = chunk.get(\"message\") or {}\nthink = msg.get(\"thinking\") or \"\"\nif think:\n    sse(\"thinking\", {\"text\": think})",
+          "explanation": "The default model call goes to local Ollama on :11434 via /api/chat or /api/generate and is streamed to the browser as Server-Sent Events. A background keepalive thread prevents proxy idle-timeouts, and reasoning models' separate 'thinking' field is forwarded as its own event so the UI shows 'Reasoning…' instead of looking hung. This path never passes through the guardrail — it stays on-box."
+        },
+        {
+          "title": "OpenRouter cloud streaming (escape hatch)",
+          "feature": "Optional frontier-model access, OpenAI-compatible SSE",
+          "file": "server.py · Handler._pipe_openrouter_sse()",
+          "language": "python",
+          "code": "body = json.dumps({\"model\": model, \"messages\": messages, \"stream\": True}).encode(\"utf-8\")\nconn = _hc.HTTPSConnection(\"openrouter.ai\", 443, timeout=600)\nconn.request(\"POST\", \"/api/v1/chat/completions\", body=body, headers={\n    \"Authorization\": f\"Bearer {api_key}\",\n    \"Content-Type\":  \"application/json\",\n    \"HTTP-Referer\":  \"https://mapsnap.local\",\n    \"X-Title\":       \"MapSnap\",\n})\nresp = conn.getresponse()\n...\nwhile True:\n    line = resp.readline()\n    if not line: break\n    line = line.strip()\n    if not line or not line.startswith(b\"data:\"): continue\n    payload = line[5:].strip()\n    if payload == b\"[DONE]\": break\n    chunk = json.loads(payload.decode(\"utf-8\"))\n    token = (chunk[\"choices\"][0].get(\"delta\") or {}).get(\"content\") or \"\"\n    if token:\n        sse(\"token\", {\"text\": token})",
+          "explanation": "When (and only when) the guardrail has allowed it, cloud calls go to OpenRouter's OpenAI-compatible /api/v1/chat/completions and parse 'data:' SSE delta lines into the same token/done/error events as the local path — so the UI is identical whether the model is local or cloud."
+        },
+        {
+          "title": "Guardrail wraps the cloud call in /api/chat",
+          "feature": "Egress enforcement wired into the chat pipeline",
+          "file": "server.py · Handler.do_POST() · /api/chat",
+          "language": "python",
+          "code": "if is_cloud:\n    try:\n        g_settings = (json.loads(SETTINGS_FILE.read_text(encoding=\"utf-8\"))\n                      if SETTINGS_FILE.exists() else {})\n    except Exception:\n        g_settings = {}\n    decision = guardrail.guard_cloud_egress(\n        sf.parent, model, messages,\n        settings=g_settings, log=app_log,\n    )\n    if not decision[\"allowed\"]:\n        sse(\"error\", {\"text\": decision[\"reason\"]})\n        sse(\"done\", {\"ok\": False})\n        end_chunked()\n        return\n    messages = decision[\"messages\"]\n    if decision[\"redacted\"]:\n        sse(\"guardrail\", {\"policy\": decision[\"policy\"],\n                          \"redacted\": decision[\"redacted\"]})",
+          "explanation": "Only the is_cloud branch invokes the guardrail. A blocked decision short-circuits with the policy reason; an allowed decision swaps in the scrubbed messages and emits a 'guardrail' event so the UI can show what was redacted. This is the integration point that makes 'use a frontier model' and 'choose what may leave' the same deliberate decision."
+        }
+      ]
+    },
+    {
+      "category": "NL→SQL Assistant",
+      "snippets": [
+        {
+          "title": "Natural-language question to read-only SQL",
+          "feature": "The NL→SQL assistant over the per-profile schema",
+          "file": "server.py · Handler.do_POST() · /api/nl2sql",
+          "language": "python",
+          "code": "schema = json.loads(sf.read_text(encoding=\"utf-8\"))\ntables = find_relevant_tables(schema, question, max_tables=8)\n# Hybrid retrieval (Layer 5): augment keyword tables with semantic\n# (meaning) matches so NL->SQL sees the right tables even when the\n# question words don't appear in any table name. Best-effort.\ntables = _interleave_unique(\n    [], tables, _semantic_objects(schema, question, sf.parent, k=5),\n    cap=10)\nddl    = _fmt_ddl(tables)\ndialect = (schema.get(\"metadata\", {}).get(\"db_type\") or \"sqlserver\")\n...\nprompt = (\n    \"### Task\\n\"\n    f\"Generate a single read-only {dialect} SELECT query to answer \"\n    f\"[QUESTION]{question}[/QUESTION]\\n\\n\"\n    \"### Database Schema\\n\"\n    f\"{ddl}\\n\\n\"\n    + ex_block + ann_block + prof_block + onbase_hint +\n    \"### Rules\\n\"\n    \"- Output ONLY the SQL, no prose, no markdown fences.\\n\"\n    \"- SELECT only; never modify data.\\n\")",
+          "explanation": "NL→SQL picks the relevant tables (keyword + semantic, see Layer 5), renders their DDL, and builds a dialect-aware prompt (the model defaults to sqlcoder via Ollama /api/generate). The prompt is enriched with worked examples (ex_block), annotations and profiling, and explicitly constrains the model to a single read-only SELECT."
+        }
+      ]
+    },
+    {
+      "category": "6-Layer Enrichment Stack",
+      "snippets": [
+        {
+          "title": "The enrichment layer registry",
+          "feature": "'Born understood' — schemas auto-enriched on extract/import",
+          "file": "enrich.py · LAYERS",
+          "language": "python",
+          "code": "LAYERS = {\n    \"profiling\": {\n        \"sidecar\": \"profile.json\",     \"needs_live\": True,  \"cloud_capable\": False,\n        \"tool\": \"profile_schema.py\",   \"phase\": \"B\",\n        \"desc\": \"Data profiling - distinct counts, samples, semantic types (read-only, capped)\",\n    },\n    \"embeddings\": {\n        \"sidecar\": \".index\",           \"needs_live\": False, \"cloud_capable\": False,\n        \"tool\": \"build_embeddings.py\", \"phase\": \"C\",\n        \"desc\": \"Semantic embeddings (local nomic-embed + ChromaDB)\",\n    },\n    \"annotations\": {\n        \"sidecar\": \"annotations.json\", \"needs_live\": False, \"cloud_capable\": True,\n        \"tool\": \"build_annotations.py\",\"phase\": \"A/1\",\n        \"desc\": \"Per-table purpose/role/centrality (LLM pass)\",\n    },\n    \"catalog\": {\n        \"sidecar\": \"BU_Catalog.json\",  \"needs_live\": True,  \"cloud_capable\": True,\n        \"tool\": \"discovery/build_bu_catalog.py\", \"phase\": \"A/1\",\n        \"desc\": \"Business-name value catalog (DocType/keyword defs)\",\n    },\n}",
+          "explanation": "The enrichment stack is data-driven: each layer declares the sidecar it produces, whether it needs a live connection, whether it may use a cloud model, and the tool that implements it. enrich.py reads this registry to know what can run — adding a layer is a registry entry plus a tool, not orchestration surgery."
+        },
+        {
+          "title": "Gated, idempotent, best-effort layer runner",
+          "feature": "Enrichment that never breaks a build",
+          "file": "enrich.py · enrich()",
+          "language": "python",
+          "code": "for layer in candidates:\n    ...\n    # 1) db_type / system dispatch\n    if layer not in sys_allowed:\n        log(f\"  skip {layer}: not applicable to system '{system or db_type}'\")\n        continue\n    # 2) per-profile grid\n    if not _enabled_in_grid(meta, layer, trigger):\n        log(f\"  skip {layer}: disabled for trigger '{trigger}' in enrichment grid\")\n        continue\n    # 3) live-connection gate\n    if info[\"needs_live\"] and not live:\n        log(f\"  skip {layer}: needs a live connection (none configured)\")\n        continue\n    # 4) idempotency\n    prev = status[\"layers\"].get(layer, {})\n    if not force and prev.get(\"source_hash\") == src_hash and prev.get(\"status\") == \"ok\":\n        log(f\"  skip {layer}: already fresh (source unchanged)\")\n        continue\n    # 5) run (best-effort)\n    try:\n        result = _run_layer(layer, folder, schema, dry_run=dry_run,\n                            system=system, db_type=db_type)\n    except Exception as exc:\n        log(f\"  {layer} FAILED (skipped, build continues): {exc}\")\n        result = {\"status\": \"error\", \"error\": str(exc)}",
+          "explanation": "Each layer passes five gates — system applicability, the per-profile enable grid, live-connection need, source-hash idempotency, then a try/except run. A layer failure is logged and skipped; enrichment is best-effort and always exits 0, so it can run inline on every extract / doc-import / config-import without ever blocking the build."
+        },
+        {
+          "title": "Read-only, PII-masked data profiling (Layer 4)",
+          "feature": "Real-sample column profiling with auto PII classification",
+          "file": "profile_schema.py · module header / caps",
+          "language": "python",
+          "code": "DEFAULT_MAX_TABLES = 250\nDEFAULT_SAMPLE = 25          # rows pulled per table\nMAX_SAMPLE = 1000            # hard cap, matches run-sql\nSAMPLE_VALUES_KEPT = 8       # distinct sample values stored per column\nLOOKUP_ROW_CEILING = 500     # a small reference table is a \"lookup\"\n\n# Binary / BLOB / opaque types never pulled over the wire.\n_BLOB_HINTS = (\n    \"binary\", \"image\", \"blob\", \"bytea\", \"raw\", \"geography\", \"geometry\",\n    \"hierarchyid\", \"sql_variant\", \"rowversion\", \"timestamp\",\n    \"clob\", \"nclob\", \"xml\",\n)\n\nimport guardrail  # portable PII masking (scrub_text) + classifications",
+          "explanation": "Layer 4 reads ACTUAL data in place — one capped SELECT sample plus a COUNT(*) per table, read-only, never selecting BLOB/binary columns. It auto-detects PII classes (SSN/email/phone/DOB/name/account) and writes them to mapsnap_meta.json so the guardrail can mask them, and it masks samples via the shared guardrail before they ever land in profile.json."
+        }
+      ]
+    },
+    {
+      "category": "Semantic Index / RAG",
+      "snippets": [
+        {
+          "title": "One local embedding per table (Layer 5 build)",
+          "feature": "Meaning-based table retrieval — 'checks' finds doctype/itemdata",
+          "file": "semantic_index.py · build() / _embed()",
+          "language": "python",
+          "code": "def _embed(texts, *, ollama_url=OLLAMA_URL, model=EMBED_MODEL, timeout=120):\n    \"\"\"Embed a list of strings via Ollama /api/embed (batched).\"\"\"\n    out = []\n    for i in range(0, len(texts), EMBED_BATCH):\n        chunk = texts[i:i + EMBED_BATCH]\n        body = json.dumps({\"model\": model, \"input\": chunk}).encode(\"utf-8\")\n        req = urllib.request.Request(ollama_url + \"/api/embed\", data=body,\n                                     headers={\"Content-Type\": \"application/json\"})\n        with urllib.request.urlopen(req, timeout=timeout) as r:\n            data = json.loads(r.read().decode(\"utf-8\"))\n        out.extend(data.get(\"embeddings\") or [])\n    return out\n...\nimport chromadb\nclient = chromadb.PersistentClient(path=str(idx_path))\ncol = client.create_collection(COLLECTION, metadata={\"hnsw:space\": \"cosine\"})\ncol.add(ids=ids[i:i + 2000], embeddings=vectors[i:i + 2000],\n        documents=docs[i:i + 2000])",
+          "explanation": "Each table is turned into one synthesized document (name + purpose + columns + masked samples + business names) and embedded with the LOCAL nomic-embed-text model via Ollama, then stored in a per-profile ChromaDB .index/. Because vectors can encode sample values, keeping both the embed model and the store local means they never leave the box. The build is source-hash-gated so a fresh index is skipped."
+        },
+        {
+          "title": "Semantic query with graceful keyword fallback",
+          "feature": "Hybrid retrieval that degrades to keyword when Ollama is down",
+          "file": "semantic_index.py · query()",
+          "language": "python",
+          "code": "def query(folder, question: str, *, top_k: int = 6, ollama_url=OLLAMA_URL) -> list:\n    try:\n        folder = Path(folder)\n        col = _get_collection(folder)\n        if col is None or not question.strip():\n            return []\n        qvec = _embed([question], ollama_url=ollama_url)\n        if not qvec:\n            return []\n        res = col.query(query_embeddings=qvec, n_results=top_k)\n        ids = (res.get(\"ids\") or [[]])[0]\n        dists = (res.get(\"distances\") or [[]])[0]\n        out = []\n        for i, name in enumerate(ids):\n            dist = dists[i] if i < len(dists) else 1.0\n            out.append((name, round(1.0 - float(dist), 4)))\n        return out\n    except Exception:\n        return []",
+          "explanation": "At query time the question is embedded and matched against the index, returning [(table, score)] for the closest tables by meaning. Any failure — no index, Ollama down — returns [] so the caller silently falls back to pure keyword retrieval, which is why the assistant stays useful even with no GPU or no embeddings built."
+        },
+        {
+          "title": "Server-side interleave of keyword + semantic hits",
+          "feature": "The hybrid retriever the NL→SQL and chat prompts consume",
+          "file": "server.py · _semantic_objects()",
+          "language": "python",
+          "code": "def _semantic_objects(schema: dict, question: str, schema_folder, k: int = 6) -> list:\n    \"\"\"Layer-5 semantic hits as schema objects, best-effort.\"\"\"\n    if not schema_folder:\n        return []\n    try:\n        hits = semantic_index.query(schema_folder, question, top_k=k)\n    except Exception:\n        return []\n    by_name = {o.get(\"name\"): o for o in schema.get(\"objects\", [])}\n    out = []\n    for name, _score in hits:\n        o = by_name.get(name)\n        if o is not None and not _is_junk_table(name):\n            out.append(o)\n    return out",
+          "explanation": "The server maps semantic_index.query's table names back to full schema objects, drops junk tables and anything not in this schema, and hands them to _interleave_unique so keyword matches and meaning matches are merged into one capped table set. This is the bridge between the vector index and the prompt builders."
+        }
+      ]
+    },
+    {
+      "category": "Local SQL Execution",
+      "snippets": [
+        {
+          "title": "Read-only SELECT guard",
+          "feature": "SQL safety — only a single SELECT runs, against the live DB",
+          "file": "server.py · validate_readonly_sql()",
+          "language": "python",
+          "code": "_SQL_FORBIDDEN = re.compile(\n    r\"\\b(insert|update|delete|drop|alter|create|truncate|merge|grant|revoke|\"\n    r\"exec|execute|sp_\\w+|xp_\\w+|into|bulk|shutdown|waitfor|backup|restore|\"\n    r\"reconfigure|openquery|openrowset)\\b\",\n    re.IGNORECASE,\n)\n\ndef validate_readonly_sql(sql: str):\n    ...\n    # strip /* */ and -- comments so keywords can't hide in them\n    s = re.sub(r\"/\\*.*?\\*/\", \" \", sql, flags=re.S)\n    s = re.sub(r\"--[^\\n]*\", \" \", s)\n    s = s.strip().rstrip(\";\").strip()\n    if \";\" in s:\n        return False, \"Only a single statement is allowed (no ';').\"\n    low = s.lower()\n    if not (low.startswith(\"select\") or low.startswith(\"with\")):\n        return False, \"Only SELECT (or WITH ... SELECT) queries are allowed.\"\n    m = _SQL_FORBIDDEN.search(low)\n    if m:\n        return False, f\"Keyword '{m.group(1)}' is not allowed (read-only mode).\"\n    return True, s",
+          "explanation": "Before any model-written or user-written SQL touches the database, it is stripped of comments, forced to a single statement, required to begin with SELECT/WITH, and screened against a forbidden-keyword list. This guard is what lets MapSnap run AI-generated SQL against a real production database without risk of mutation."
+        },
+        {
+          "title": "Execute locally, cap rows, record verified pairs",
+          "feature": "Local query execution that never leaves the box",
+          "file": "server.py · Handler.do_POST() · /api/run-sql",
+          "language": "python",
+          "code": "ok_sql, cleaned = validate_readonly_sql(sql_in)\nif not ok_sql:\n    self._json(400, {\"ok\": False, \"error\": cleaned}); return\nconn_file = PRODUCT_DIR / folder / \".mapsnap_conn.json\"\n...\nconn = json.loads(conn_file.read_text(encoding=\"utf-8\"))\ncx, db_type = _open_saved_sql_conn(conn)\ncur = cx.cursor()\ncur.execute(cleaned)\ncolumns = [d[0] for d in cur.description] if cur.description else []\nfetched = cur.fetchmany(limit_n)\ntruncated = bool(cur.fetchone())     # was there at least one more row?\nrows = [list(r) for r in fetched]\n...\nif question:\n    try:\n        recorded = query_library.record(PRODUCT_DIR / folder, question, cleaned)\n    except Exception:\n        recorded = False",
+          "explanation": "/api/run-sql validates the SQL, opens the profile's saved live connection (any engine), executes, and fetches at most limit_n rows (hard-capped at 1000) with a truncation flag. Execution is entirely local — results never go to a cloud model. When the query came from an NL question, the (question, SQL) pair is recorded as a verified few-shot example."
+        }
+      ]
+    },
+    {
+      "category": "App Store, Users & Sessions",
+      "snippets": [
+        {
+          "title": "SQLite users + sessions schema",
+          "feature": "The login-mode account store (mapsnap_users.db)",
+          "file": "auth.py · _init_db()",
+          "language": "python",
+          "code": "c.executescript(\"\"\"\n    CREATE TABLE IF NOT EXISTS users (\n        id              INTEGER PRIMARY KEY AUTOINCREMENT,\n        username        TEXT NOT NULL UNIQUE COLLATE NOCASE,\n        password_hash   TEXT NOT NULL,\n        role            TEXT NOT NULL DEFAULT 'viewer',\n        tabs_override   TEXT,\n        must_change_pw  INTEGER NOT NULL DEFAULT 0,\n        created_at      TEXT NOT NULL\n    );\n    CREATE TABLE IF NOT EXISTS sessions (\n        token       TEXT PRIMARY KEY,\n        user_id     INTEGER NOT NULL,\n        expires_at  INTEGER NOT NULL,\n        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE\n    );\n\"\"\")\ncols = [r[\"name\"] for r in c.execute(\"PRAGMA table_info(users)\").fetchall()]\nif \"features_override\" not in cols:\n    c.execute(\"ALTER TABLE users ADD COLUMN features_override TEXT\")",
+          "explanation": "The only SQLite database MapSnap owns is the app store: users and sessions. Sessions are opaque tokens with a 7-day expiry and a cascade delete on the owning user. The inline ALTER migration adds feature-level permissions to older DBs without a migration tool — fitting the dependency-light design."
+        },
+        {
+          "title": "PBKDF2 password hashing",
+          "feature": "Secure credential storage for ship-mode login",
+          "file": "auth.py · _hash_password() / _verify_password()",
+          "language": "python",
+          "code": "PBKDF2_ITERS = 200_000  # OWASP 2023 minimum for SHA-256\n\ndef _hash_password(password: str) -> str:\n    salt = secrets.token_bytes(16)\n    dk = hashlib.pbkdf2_hmac(\"sha256\", password.encode(\"utf-8\"), salt, PBKDF2_ITERS)\n    return f\"pbkdf2_sha256${PBKDF2_ITERS}${salt.hex()}${dk.hex()}\"\n\ndef _verify_password(password: str, stored: str) -> bool:\n    try:\n        algo, iters_s, salt_hex, hash_hex = stored.split(\"$\")\n        if algo != \"pbkdf2_sha256\":\n            return False\n        iters = int(iters_s)\n        salt = bytes.fromhex(salt_hex)\n        expected = bytes.fromhex(hash_hex)\n        dk = hashlib.pbkdf2_hmac(\"sha256\", password.encode(\"utf-8\"), salt, iters)\n        return hmac.compare_digest(dk, expected)\n    except Exception:\n        return False",
+          "explanation": "Passwords are stored as salted PBKDF2-HMAC-SHA256 with 200k iterations (OWASP 2023 minimum), self-describing so the iteration count can rise later. Verification uses hmac.compare_digest for constant-time comparison. All of this is stdlib — no crypto dependency to ship."
+        },
+        {
+          "title": "Session resolution on each request",
+          "feature": "Login-mode auth gate over the /api/* surface",
+          "file": "server.py · _resolve_permissions() / _session_user_from_handler()",
+          "language": "python",
+          "code": "def _session_user_from_handler(handler) -> dict:\n    \"\"\"Return the user dict for the session cookie on this request, or None.\"\"\"\n    token = auth.parse_session_cookie(handler.headers.get(\"Cookie\", \"\"))\n    return auth.lookup_session(token) if token else None\n\ndef _resolve_permissions(handler=None) -> dict:\n    try:\n        mode = auth.auth_mode()\n    except Exception:\n        mode = \"os_user\"\n    if mode == \"login\":\n        user = _session_user_from_handler(handler) if handler is not None else None\n        if user:\n            return auth.resolve_for_user(user)\n        return auth.anonymous_payload(needs_setup=not auth.has_any_user())\n    # os_user mode - preserves legacy behaviour\n    return auth.resolve_for_os_user()",
+          "explanation": "On each request the server reads the mapsnap_session cookie, looks up the live session, and resolves the user's role / tabs / features. Two modes coexist: 'login' (real accounts, ship-mode) and 'os_user' (role from %USERNAME%, dev box). The do_GET/do_POST auth gate uses this to block the /api/* surface for visitors without a valid session."
+        }
+      ]
+    }
+  ]
+}

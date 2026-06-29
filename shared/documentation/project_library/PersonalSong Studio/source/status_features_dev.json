@@ -1,0 +1,82 @@
+[
+  {
+    "category": "Entry Point & Service",
+    "features": [
+      {"name": "FastAPI app + router wiring", "file": "main.py :: app", "status": "live", "detail": "FastAPI(title='PersonalSong Studio', version='2.2.0'). Imports env_setup first (FFmpeg DLLs on PATH), load_dotenv(), ensures music_library/ exists, then mounts 12 routers under /api/* (lyrics, audio, library, config, media, source, extras, voices, batch, prompt, ytmusic). Serves static/index.html at / and /health -> {status: ok}."},
+      {"name": "In-process uvicorn launcher", "file": "serve.py :: __main__", "status": "live", "detail": "Runs uvicorn.run('main:app', host=0.0.0.0, port=8088, reload=False) IN-PROCESS so the server uses THIS venv (which has acestep). 'python -m uvicorn' spawned a child on base Python lacking acestep. Asserts `import acestep` before serving."},
+      {"name": "QI_PersonalSong NSSM service", "file": "PersonalSong_Install.bat", "status": "live", "detail": "Installs service QI_PersonalSong -> .venv\\Scripts\\python.exe serve.py, AppDirectory C:\\PersonalSong, SERVICE_DEMAND_START, rotating logs at logs\\service.log. Uses the standardized C:\\QIH\\engine\\bin\\nssm.exe. PersonalSong_Start_Server.bat is the manual equivalent."},
+      {"name": "Shared FFmpeg-on-PATH bootstrap", "file": "env_setup.py :: ensure_ffmpeg_on_path()", "status": "live", "detail": "Prepends ffmpeg_shared/v71/.../bin (FFmpeg 7.1 shared DLLs) to PATH so torchcodec (torchaudio.load/save in torch 2.11) loads; without it Demucs/Seed-VC fail with 'libtorchcodec_core7.dll could not be loaded'. Applied on import; subprocesses inherit PATH."}
+    ]
+  },
+  {
+    "category": "Lyric Generation (Ollama)",
+    "features": [
+      {"name": "POST /api/lyrics/generate", "file": "routers/lyrics.py :: generate_lyrics()", "status": "live", "detail": "Builds a structured prompt, calls Ollama /api/generate with think=False (qwen3 emits lyrics instead of burning budget on reasoning -> empty response) and keep_alive=0 (unload model to free VRAM for ACE-Step). Strips <think> blocks. 503 on connect/404 model, 504 on timeout."},
+      {"name": "Duration-scaled song structure", "file": "routers/lyrics.py :: _structure_for_duration() / _build_prompt()", "status": "live", "detail": "Maps target seconds to a section layout (<=35s verse+chorus .. >130s intro/verse/pre-chorus/chorus/bridge/verse3/final-chorus/outro). Prompt enforces the exact name appears >=2x including the chorus, short singable lines, lyrics-only output. Handles blend mode + anthem (country/team) framing."},
+      {"name": "GET /api/lyrics/models", "file": "routers/lyrics.py :: list_models()", "status": "live", "detail": "Lists installed Ollama models from /api/tags for the settings picker; returns online flag. Default model qwen3:8b (configurable via OLLAMA_MODEL / app_config)."}
+    ]
+  },
+  {
+    "category": "ACE-Step Singing Engine",
+    "features": [
+      {"name": "Lazy singleton pipeline", "file": "ace_engine.py :: get_pipeline()", "status": "live", "detail": "Thread-locked lazy-load of ACEStepPipeline(checkpoint_dir=None auto-download, dtype='bfloat16', torch_compile=False, cpu_offload=False). Resident in VRAM across requests. Patches torchaudio.save to write via soundfile (libsndfile) to bypass missing TorchCodec FFmpeg DLLs on Windows."},
+      {"name": "generate_song()", "file": "ace_engine.py :: generate_song()", "status": "live", "detail": "Core call: pipe(audio_duration, prompt=tags, lyrics, infer_step=60, guidance_scale=7.5, scheduler='euler', cfg_type='apg', use_erg_*=True, manual_seeds, audio2audio_enable + ref_audio_strength when a reference is given, save_path). Returns save_path."},
+      {"name": "Style-tag builder", "file": "ace_engine.py :: build_tags() / _genre_tag()", "status": "live", "detail": "Composes the ACE prompt: vocal gender FIRST (weighted), genre tag(s), singer voice descriptor, mood, language conditioning, 'studio quality'. Curated tag dicts for ~30 genres incl. Brazilian/Japanese/French styles; unknown genres get a best-effort expansion. Genres + languages may be lists (blend)."},
+      {"name": "Lyric normalization + name injection", "file": "ace_engine.py :: normalize_lyrics() / ensure_name_in_lyrics() / apply_pronunciation()", "status": "live", "detail": "normalize_lyrics strips <think>, maps headers to lowercase [verse]/[chorus]/etc, drops prose. ensure_name_in_lyrics injects the name as a vocative into chorus/verse if absent. apply_pronunciation swaps the name for its respelling ONLY in the sung text (display lyrics keep the real name)."},
+      {"name": "Sung-gender verification", "file": "ace_engine.py :: detect_gender() / levers_to_ref_strength()", "status": "live", "detail": "Isolates the vocal with Demucs (forced CPU to avoid VRAM contention with the resident ACE-Step), estimates median f0 with librosa.pyin -> male/female/unknown. levers_to_ref_strength maps melody+feel change sliders (1..10) to ref_audio_strength (capped 0.80 so the model re-sings)."}
+    ]
+  },
+  {
+    "category": "Audio Generation API",
+    "features": [
+      {"name": "POST /api/audio/generate", "file": "routers/audio.py :: generate_audio()", "status": "live", "detail": "Resolves singer -> descriptor/seed/gender, builds tags, normalizes + injects name + applies respelling, frees Ollama VRAM, runs ACE-Step off the event loop in a single-worker ThreadPoolExecutor (serialized GPU). Transcodes WAV->MP3, optional dedication, writes a JSON sidecar, Plex sync + YT Music upload (both silent/optional)."},
+      {"name": "Gender-locked retry", "file": "routers/audio.py :: _generate_sync()", "status": "live", "detail": "When a specific gender is requested, generates, verifies via detect_gender(), and retries once with a fresh random seed if wrong (ACE's gender tag alone is unreliable). Bounded to 2 tries."},
+      {"name": "POST /api/audio/generate_based", "file": "routers/audio.py :: generate_based()", "status": "live", "detail": "audio2audio remix from a source song steered by melody/lyrics/feel levers. Low lyrics-change transcribes the source via Whisper (asr.transcribe) and re-sings its words; otherwise uses provided lyrics. ref_strength from levers_to_ref_strength."},
+      {"name": "POST /api/audio/generate_cover", "file": "routers/audio.py :: generate_cover() / _generate_cover_sync()", "status": "live", "detail": "Full voice-clone cover in the thread executor: ACE-Step base song -> ingest source voice -> cover.make_cover (Demucs x2 + Seed-VC + mix). Saves final + JSON, syncs to Plex/YT."},
+      {"name": "GET /api/audio/stream/{song_id}", "file": "routers/audio.py :: stream_audio()", "status": "live", "detail": "Finds the song's metadata sidecar by song_id and streams the audio file via FileResponse."}
+    ]
+  },
+  {
+    "category": "Source Ingestion & Stems (Demucs)",
+    "features": [
+      {"name": "Demucs stem separation", "file": "source_engine.py :: separate_stems()", "status": "live", "detail": "Runs `python -m demucs --two-stems vocals -n htdemucs -d <device>` as a subprocess in the venv. Returns {vocals, instrumental} paths (htdemucs/<track>/vocals.wav + no_vocals.wav). device='cpu' avoids VRAM contention with a resident GPU model."},
+      {"name": "Source acquisition", "file": "source_engine.py :: fetch_from_youtube() / ingest_local() / save_upload() / extract_audio()", "status": "live", "detail": "yt-dlp bestaudio->WAV from a URL; copy a local audio file; persist an upload (video -> audio extracted via ffmpeg); extract_audio trims/transcodes any media to MP3. Sources saved under a configurable sources/ folder."},
+      {"name": "CD ripping", "file": "source_engine.py :: list_cd_tracks() / rip_cd() / cd_has_libcdio() / list_optical_drives()", "status": "live", "detail": "Detects optical drives via WMI (PowerShell), checks for a libcdio-enabled gyan ffmpeg build, lists tracks (chapters), and rips all/one track to MP3. Gracefully reports when the libcdio build is absent."},
+      {"name": "WAV->MP3 transcode", "file": "source_engine.py :: transcode_to_mp3()", "status": "live", "detail": "ffmpeg libmp3lame 192k -q:a 2; smaller + reliable for browser/Plex/Google Home; deletes the WAV on success."},
+      {"name": "POST /api/source/* router", "file": "routers/source_api.py", "status": "live", "detail": "/list, /upload, /url, /local (audio or video w/ optional trim), /drives, /cd/tracks, /cd/rip. Validates input and surfaces ffmpeg/yt-dlp failures as HTTP errors."}
+    ]
+  },
+  {
+    "category": "Voice Clone (Seed-VC)",
+    "features": [
+      {"name": "Cover orchestrator", "file": "cover.py :: make_cover() / seedvc_convert() / mix_vocal_over_backing()", "status": "live", "detail": "make_cover: Demucs(source)->ref voice + orig instrumental; Demucs(ACE song)->its vocals+instrumental; seedvc_convert(ACE vocals -> source voice) with --f0-condition True (singing); mix over chosen backing. Seed-VC runs in its OWN venv (seed-vc/.venv) as a subprocess to isolate incompatible deps."},
+      {"name": "Spoken-dedication clone", "file": "voice_clone.py :: clone_dedication() / convert() / isolate_reference()", "status": "live", "detail": "Isolates a vocal-rich 30s slice of the artist's song (Demucs, GPU->CPU fallback) and re-voices the spoken dedication via Seed-VC (--f0-condition False for speech, --fp16 True). Separate Seed-VC venv driven as a subprocess with a 900s timeout."}
+    ]
+  },
+  {
+    "category": "Dedication & TTS (edge-tts)",
+    "features": [
+      {"name": "Native-voice dedication renderer", "file": "dedication.py :: render_dedication() / draft_text()", "status": "live", "detail": "edge-tts neural voices per language (8 langs, male/female). draft_text composes native wording per [style][language][tone] (radio/concert x heartfelt/warm/festive) with a sender tail. Prosody (rate/pitch) preset per tone+style. edge-tts async is run in a dedicated thread (safe inside the FastAPI loop). Optional Seed-VC clone_ref re-voices into the artist's timbre."},
+      {"name": "Concert ambience + prepend", "file": "dedication.py :: _crowd_ambience() / _apply_concert_bed() / prepend_to_song() / add_dedication()", "status": "live", "detail": "Synthesizes a subtle crowd/applause bed (numpy) for concert style. prepend_to_song puts the spoken intro before the song with a gap + fade. add_dedication drafts->renders->prepends and replaces the song file in place."},
+      {"name": "POST /api/media/* (mic & dedication)", "file": "routers/media.py", "status": "live", "detail": "/transcribe-name (Whisper -> heard text + suggested respelling), /pronounce-preview (hear a respelling spoken in the target language), /dedication-draft, /add-dedication (prepend a spoken intro to an ALREADY-finished uploaded song, optionally mimicking the artist's voice; song audio untouched)."}
+    ]
+  },
+  {
+    "category": "Config, Library & Extras",
+    "features": [
+      {"name": "Persistent config + dictionaries", "file": "appconfig.py", "status": "live", "detail": "JSON-backed config under config/ (app_config.json) with thread-locked save and folder auto-creation. Holds pronunciations.json (per-language respellings), singers.json (10 presets), voices.json (saved reference clips), queue.json (overnight queue). DEFAULTS include paths, Plex creds, ollama_model qwen3:8b, default language/genres/duration."},
+      {"name": "POST/GET /api/config/* + /api/voices/*", "file": "routers/config_api.py, routers/voices.py", "status": "live", "detail": "Settings CRUD, pronunciation CRUD (per language), singers CRUD, Plex status/sections probes, and a named reference-voice library for reuse in voice cloning."},
+      {"name": "Library + extras", "file": "routers/library.py, routers/extras.py", "status": "live", "detail": "library: list/stream/delete songs (scans music_library/*.json, skips ACE _input_params sidecars), GPU/ACE-ready settings probe. extras: cover art generate/serve, MP3 download, share-bundle zip, karaoke stems zip, mobile play page, printable QR greeting card."},
+      {"name": "Cover-art engine", "file": "art_engine.py :: procedural_cover() / ai_cover() / make_cover()", "status": "live", "detail": "PIL gradient cover (genre palette + radial glow + music note + name/occasion) always works instantly. ai_cover runs SDXL-Turbo in a subprocess (own VRAM, freed on exit; imports StableDiffusionXLPipeline directly to dodge diffusers' flux2/transformers pin conflict with ACE-Step). Falls back to procedural on any error."}
+    ]
+  },
+  {
+    "category": "Integrations",
+    "features": [
+      {"name": "YouTube Music manager", "file": "ytmusic_manager.py + routers/ytmusic_api.py", "status": "partial", "detail": "Browser-header auth (ytmusicapi.setup) saved to config/ytmusic_headers.json; lazy thread-safe client. Upload one / all-from-library (background task), list/delete uploads, playlist CRUD, auto-upload toggle. Live code but inactive until headers are pasted once."},
+      {"name": "Plex sync", "file": "plex_module/ (sync.py, plex_api.py, tagger.py, watcher.py)", "status": "partial", "detail": "_sync_to_plex tags the finished MP3 (ID3) and copies it to the Plex-watched folder, then triggers a section scan; reads Plex creds from app_config. check_connection/list_sections power the Settings probes. Built but needs a Plex token + music section id configured; never blocks the song."},
+      {"name": "Whisper ASR (shared)", "file": "asr.py :: get_model() / transcribe()", "status": "live", "detail": "Lazy singleton whisper 'base' model on cuda/cpu. Used by /transcribe-name (teach a name) and generate_based (transcribe a source song's lyrics when lyrics-change is low)."},
+      {"name": "Prompt export", "file": "prompt_export.py + routers/prompt_api.py", "status": "live", "detail": "Exports a ready-to-paste prompt/lyrics package for external generators (e.g. Suno) for users who skip the local pipeline."}
+    ]
+  }
+]

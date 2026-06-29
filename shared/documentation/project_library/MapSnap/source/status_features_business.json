@@ -1,0 +1,212 @@
+[
+  {
+    "category": "Schema Discovery & Browsing",
+    "features": [
+      {
+        "name": "Connect & extract schema",
+        "description": "Connect directly to a live database and pull every table, view, column, key, and relationship into a navigable map.",
+        "status": "live",
+        "notes": "Supports SQL Server, PostgreSQL, MySQL, Oracle, and SQLite from one UI."
+      },
+      {
+        "name": "Visual schema browser",
+        "description": "A single-page HTML browser of the whole database: searchable table list with columns, types, and primary keys.",
+        "status": "live",
+        "notes": "Served locally at http://localhost:9876."
+      },
+      {
+        "name": "Relationship views (FK-in / FK-out / diagram)",
+        "description": "See what each table points to, what points back at it, and a relationship diagram of the neighbourhood.",
+        "status": "live",
+        "notes": "Works even when the database declares no formal foreign keys."
+      },
+      {
+        "name": "Inferred relationships for FK-less schemas",
+        "description": "MapSnap discovers likely joins from naming and config so OnBase-style schemas stop looking like disconnected islands.",
+        "status": "live",
+        "notes": "Critical for OnBase, where relationships are enforced in the application layer."
+      },
+      {
+        "name": "Module / system grouping",
+        "description": "Tables are grouped by the enterprise system and module they belong to for easier navigation.",
+        "status": "live",
+        "notes": "Auto-detected via table-name signatures (OnBase, Jenzabar, PeopleSoft, Banner, SAP, Epic, Blackbaud, Dynamics 365)."
+      },
+      {
+        "name": "Schema compare / diff",
+        "description": "Compare two profiles or two snapshots to see what tables and columns were added, removed, or changed.",
+        "status": "live",
+        "notes": "Useful for tracking schema drift between environments or vendor upgrades."
+      }
+    ]
+  },
+  {
+    "category": "AI Assistant",
+    "features": [
+      {
+        "name": "Chat with your schema",
+        "description": "Ask plain-English questions about the database and get answers grounded in the actual schema and its enrichment.",
+        "status": "live",
+        "notes": "Runs on a local Ollama model by default; no data leaves the machine."
+      },
+      {
+        "name": "Natural-language to SQL",
+        "description": "Type a question; MapSnap drafts the SQL, you review it, and run it read-only against the live database.",
+        "status": "live",
+        "notes": "Generation is live; results render locally only."
+      },
+      {
+        "name": "Local SQL execution with results",
+        "description": "Run the generated (or hand-written) read-only query and view results inside the app.",
+        "status": "live",
+        "notes": "A read-only guard rejects writes; row caps are enforced."
+      },
+      {
+        "name": "Verified-query library",
+        "description": "Successful queries are remembered and offered as worked examples, so the assistant gets better at each database over time.",
+        "status": "partial",
+        "notes": "Code shipped; goes fully live after the pending elevated service restart."
+      },
+      {
+        "name": "Frontier (cloud) model option",
+        "description": "Optionally route the assistant to a top-tier cloud model for stronger reasoning, gated by the profile's data policy.",
+        "status": "partial",
+        "notes": "Mechanism is live; enabling it for regulated data needs the institution's DPA/BAA and a raised policy."
+      }
+    ]
+  },
+  {
+    "category": "Data Governance & Compliance",
+    "features": [
+      {
+        "name": "Local-only by default",
+        "description": "Out of the box nothing leaves the machine — neither data nor schema — so the compliant posture is the default, not an afterthought.",
+        "status": "live",
+        "notes": "FERPA / GLBA / HIPAA-aware; fail-safe for any unset policy."
+      },
+      {
+        "name": "Per-profile data policy",
+        "description": "Each database can be set to local_only, cloud_metadata_only, or cloud_with_agreement to control exactly what may reach a cloud model.",
+        "status": "live",
+        "notes": "Enforced server-side at a single egress chokepoint."
+      },
+      {
+        "name": "Automatic PII detection & masking",
+        "description": "Profiling flags columns that look like SSNs, emails, phones, names, or account numbers and masks their sample values.",
+        "status": "partial",
+        "notes": "Profiling pass shipped; live after the pending elevated service restart."
+      },
+      {
+        "name": "Egress audit log",
+        "description": "Every cloud-bound call is logged with what was sent and why, so compliance can prove regulated data did not leave.",
+        "status": "live",
+        "notes": "Written to the MapSnap log; level configurable."
+      },
+      {
+        "name": "Profile lock",
+        "description": "A profile carrying regulated columns can be locked so raising its policy requires an admin and a recorded agreement.",
+        "status": "live",
+        "notes": "Prevents casual downgrade of the compliance posture."
+      }
+    ]
+  },
+  {
+    "category": "Content Library & Imports",
+    "features": [
+      {
+        "name": "CSV schema import",
+        "description": "When direct connection is blocked, export catalog queries to CSV and import them to build the same map.",
+        "status": "live",
+        "notes": "Auto-detects Objects / Columns / Primary Keys / Foreign Keys CSV roles by header."
+      },
+      {
+        "name": "DDL schema import",
+        "description": "Build a schema directly from a CREATE TABLE / DDL export when no live connection is available.",
+        "status": "live",
+        "notes": "Handy for offline or air-gapped reviews."
+      },
+      {
+        "name": "OnBase config import",
+        "description": "Import OnBase .expk / .spk Studio packages to extract DocType and keyword definitions into a business-value catalog.",
+        "status": "live",
+        "notes": "Turns 'checks' into the real DocType 'Check Image'."
+      },
+      {
+        "name": "Document library with RAG search",
+        "description": "Drop reference documents beside a schema; MapSnap indexes them so the assistant can cite them.",
+        "status": "live",
+        "notes": "Supports txt / md / csv / docx / pdf / xml / json / OnBase packages."
+      },
+      {
+        "name": "Add reference content by URL",
+        "description": "Attach a web page or document URL to a profile's knowledge base.",
+        "status": "live",
+        "notes": "Fetched and indexed alongside uploaded documents."
+      }
+    ]
+  },
+  {
+    "category": "Access & Administration",
+    "features": [
+      {
+        "name": "Login authentication",
+        "description": "Real user accounts with hashed passwords and session tokens for shipped / customer deployments.",
+        "status": "live",
+        "notes": "A first-run admin is seeded and forced to change its password."
+      },
+      {
+        "name": "Roles & per-tab permissions",
+        "description": "Viewer, contributor, builder, analyst, and admin roles control which tabs and features each user sees.",
+        "status": "live",
+        "notes": "Per-user overrides can only narrow a role's permissions."
+      },
+      {
+        "name": "Multi-profile management",
+        "description": "Manage many database profiles side by side and switch the active one without restarting.",
+        "status": "live",
+        "notes": "Each profile keeps its own schema, sidecars, and connection."
+      },
+      {
+        "name": "AI Connections settings",
+        "description": "Configure local Ollama models, OpenRouter, and direct cloud providers in one panel.",
+        "status": "live",
+        "notes": "Cloud options are greyed out for local_only profiles."
+      },
+      {
+        "name": "Remote access via secure tunnel",
+        "description": "Reach the local MapSnap UI from anywhere over a stable, named Cloudflare tunnel.",
+        "status": "live",
+        "notes": "mapsnap.quiddityinnovations.com, managed centrally by QI Hive."
+      }
+    ]
+  },
+  {
+    "category": "Reporting & Operations",
+    "features": [
+      {
+        "name": "Schema confirmation report",
+        "description": "Generate a Word report confirming the extracted schema, counts, and relationships for stakeholder sign-off.",
+        "status": "live",
+        "notes": "Produced via the docs generators (python-docx)."
+      },
+      {
+        "name": "Admin guide & feature list",
+        "description": "Maintained operator documentation covering setup, AI connections, and the full feature catalogue.",
+        "status": "live",
+        "notes": "Lives under C:\\MapSnap\\docs as .docx files."
+      },
+      {
+        "name": "Runs as a managed Windows service",
+        "description": "MapSnap and its tunnel run unattended as QI_MapSnap and QI_MapSnapTunnel NSSM services.",
+        "status": "live",
+        "notes": "Auto-start, log rotation, and central registry entry."
+      },
+      {
+        "name": "Auto-enrichment on build",
+        "description": "Extract, document import, and config import automatically trigger the enrichment chain so schemas are born understood.",
+        "status": "partial",
+        "notes": "Orchestrator wired; the live profiling/embedding layers activate after the pending restart."
+      }
+    ]
+  }
+]

@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="fk" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#c2185b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="800" fill="#ffffff" rx="12"/>
+  <text x="500" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2d3d">AkiyaScout — Database Schema (akiyascout.db)</text>
+  <text x="500" y="50" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · English-first JP Real-Estate Scout · 2026</text>
+  <text x="500" y="66" text-anchor="middle" font-size="10" fill="#9aa5b1">SQLite · WAL · foreign_keys ON · bilingual *_ja/*_en · region-driven · live row counts · PK = primary key · FK = foreign key</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="784" y="78" width="200" height="120" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="884" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="794" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="814" y="113" font-size="9" fill="#374151">Reference / spine tables</text>
+  <rect x="794" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="814" y="130" font-size="9" fill="#374151">Inventory &amp; scout tables</text>
+  <rect x="794" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="814" y="147" font-size="9" fill="#374151">Cache / bookkeeping</text>
+  <rect x="794" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="814" y="164" font-size="9" fill="#374151">Title bar (table header)</text>
+  <line x1="794" y1="180" x2="812" y2="180" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <text x="818" y="184" font-size="9" fill="#374151">Foreign-key reference</text>
+
+  <!-- ══ ROW 1: prefectures · sources · raw_listings ══ -->
+  <text x="22" y="92" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">REFERENCE SPINE &amp; RAW CAPTURE</text>
+
+  <!-- prefectures (reference) -->
+  <rect x="20" y="100" width="220" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="100" width="220" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="130" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">prefectures</text>
+  <text x="32" y="144" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="32" y="161" font-size="10" fill="#374151">code (UNIQUE) · name_en · name_ja</text>
+  <text x="32" y="178" font-size="10" fill="#374151">region_group · climate</text>
+  <text x="32" y="195" font-size="10" fill="#374151">in_poc</text>
+  <text x="32" y="216" font-size="9" fill="#5f8a66">47 rows — all Japan seeded</text>
+  <text x="32" y="232" font-size="8.5" fill="#9aa5b1">region-driven: add area by data (D3)</text>
+
+  <!-- sources (reference) -->
+  <rect x="264" y="100" width="222" height="150" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="264" y="100" width="222" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="375" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">sources</text>
+  <text x="276" y="144" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="276" y="161" font-size="10" fill="#374151">key (UNIQUE) · name · base_url</text>
+  <text x="276" y="178" font-size="10" fill="#374151">type (national/commercial/municipal)</text>
+  <text x="276" y="195" font-size="10" fill="#374151">enabled · rate_limit_sec · last_run</text>
+  <text x="276" y="216" font-size="9" fill="#5f8a66">7 rows — 2 portal · 4 commercial · 1 muni</text>
+  <text x="276" y="232" font-size="8.5" fill="#9aa5b1">polite crawl delay per source (D1)</text>
+
+  <!-- raw_listings (inventory) -->
+  <rect x="510" y="100" width="254" height="150" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="510" y="100" width="254" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="637" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">raw_listings</text>
+  <text x="522" y="144" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="522" y="161" font-size="10" fill="#c2185b">source_id → sources.id</text>
+  <text x="522" y="178" font-size="10" fill="#7a5b06">source_listing_id · url · raw_json</text>
+  <text x="522" y="195" font-size="10" fill="#7a5b06">content_hash · scraped_at</text>
+  <text x="522" y="216" font-size="9" fill="#9a7a2e">1,915 rows — immutable capture</text>
+  <text x="522" y="232" font-size="8.5" fill="#9aa5b1">UNIQUE(source_id, source_listing_id)</text>
+
+  <!-- FK raw->sources -->
+  <line x1="510" y1="161" x2="488" y2="161" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+
+  <!-- ══ ROW 2: listings (big, center) + translations ══ -->
+  <text x="22" y="278" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">NORMALIZED + TRANSLATED INVENTORY</text>
+
+  <rect x="20" y="286" width="466" height="226" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="20" y="286" width="466" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="253" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">listings  (the catalogue · bilingual)</text>
+  <text x="32" y="330" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="32" y="347" font-size="10" fill="#c2185b">raw_id → raw_listings.id</text>
+  <text x="32" y="364" font-size="10" fill="#c2185b">source_id → sources.id</text>
+  <text x="32" y="381" font-size="10" fill="#c2185b">prefecture_id → prefectures.id</text>
+  <text x="32" y="398" font-size="10" fill="#374151">dedup_key (cross-source identity)</text>
+  <text x="32" y="415" font-size="10" fill="#374151">property_type · is_akiya_bank</text>
+  <text x="260" y="330" font-size="10" fill="#374151">title_ja / title_en</text>
+  <text x="260" y="347" font-size="10" fill="#374151">description_ja / _en · address_ja / _en</text>
+  <text x="260" y="364" font-size="10" fill="#374151">municipality_ja / _en · region_group</text>
+  <text x="260" y="381" font-size="10" fill="#374151">price_jpy · property_tax_jpy</text>
+  <text x="260" y="398" font-size="10" fill="#374151">renovation_estimate_jpy</text>
+  <text x="260" y="415" font-size="10" fill="#374151">land/building_area_sqm · layout · bedrooms</text>
+  <text x="32" y="436" font-size="10" fill="#374151">build_year · build_era (Showa/Heisei/Reiwa)</text>
+  <text x="32" y="453" font-size="10" fill="#374151">seismic (kyu/shin_taishin) · lat · lng</text>
+  <text x="32" y="470" font-size="10" fill="#374151">specs_json · photos_json · listed_date · station_ja · active</text>
+  <text x="32" y="492" font-size="9" fill="#9a7a2e">1,865 active rows · indexes: pref · price · type · dedup_key</text>
+  <text x="32" y="506" font-size="8.5" fill="#9aa5b1">every text field stored JA + EN (D4)</text>
+
+  <!-- translations cache -->
+  <rect x="510" y="286" width="254" height="120" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <rect x="510" y="286" width="254" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="637" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">translations</text>
+  <text x="522" y="330" font-size="10" fill="#1f2d3d">(src_hash, tgt_lang)  (PK)</text>
+  <text x="522" y="347" font-size="10" fill="#374151">src_text · tgt_text</text>
+  <text x="522" y="364" font-size="10" fill="#374151">engine · created_at</text>
+  <text x="522" y="385" font-size="9" fill="#6b7280">187 rows — translate once, reuse</text>
+  <text x="522" y="399" font-size="8.5" fill="#9aa5b1">all via Ollama (no DeepL key yet)</text>
+
+  <!-- geocache -->
+  <rect x="510" y="416" width="254" height="96" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <rect x="510" y="416" width="254" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="637" y="434" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">geocache</text>
+  <text x="522" y="460" font-size="10" fill="#1f2d3d">name  (PK · pref+municipality)</text>
+  <text x="522" y="477" font-size="10" fill="#374151">lat · lng · ok</text>
+  <text x="522" y="497" font-size="9" fill="#6b7280">265 rows — Nominatim cache</text>
+
+  <!-- FK listings -> raw/sources/prefectures -->
+  <path d="M 510 130 C 500 270 260 270 200 282" fill="none" stroke="#c2185b" stroke-width="1.2" marker-end="url(#fk)"/>
+  <text x="350" y="266" font-size="8" fill="#c2185b">raw_id</text>
+  <path d="M 130 250 C 130 268 150 268 150 282" fill="none" stroke="#c2185b" stroke-width="1.2" marker-end="url(#fk)"/>
+  <text x="118" y="266" font-size="8" fill="#c2185b">prefecture_id</text>
+
+  <!-- ══ ROW 3: profiles · matches · schedules · notifications ══ -->
+  <text x="22" y="544" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">PREFERENCE ENGINE · SCHEDULING · NOTIFICATIONS</text>
+
+  <!-- profiles -->
+  <rect x="20" y="552" width="222" height="120" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="20" y="552" width="222" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="131" y="570" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">profiles</text>
+  <text x="32" y="596" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="32" y="613" font-size="10" fill="#7a5b06">name · active</text>
+  <text x="32" y="630" font-size="10" fill="#7a5b06">criteria_json (ranges/sets)</text>
+  <text x="32" y="647" font-size="10" fill="#7a5b06">created_at</text>
+  <text x="32" y="665" font-size="9" fill="#9a7a2e">3 active rows · multi-profile (D1)</text>
+
+  <!-- matches -->
+  <rect x="266" y="552" width="222" height="120" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="266" y="552" width="222" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="377" y="570" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">matches</text>
+  <text x="278" y="596" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="278" y="613" font-size="10" fill="#c2185b">profile_id → profiles.id (cascade)</text>
+  <text x="278" y="630" font-size="10" fill="#c2185b">listing_id → listings.id (cascade)</text>
+  <text x="278" y="647" font-size="10" fill="#7a5b06">score · matched_at · notified</text>
+  <text x="278" y="665" font-size="9" fill="#9a7a2e">203 rows · UNIQUE(profile_id, listing_id)</text>
+
+  <!-- schedules -->
+  <rect x="512" y="552" width="222" height="120" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="512" y="552" width="222" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="623" y="570" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">schedules</text>
+  <text x="524" y="596" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="524" y="613" font-size="10" fill="#c2185b">profile_id → profiles.id (cascade)</text>
+  <text x="524" y="630" font-size="10" fill="#7a5b06">cadence · custom_cron · enabled</text>
+  <text x="524" y="647" font-size="10" fill="#7a5b06">last_run · next_run</text>
+  <text x="524" y="665" font-size="9" fill="#9a7a2e">3 rows · daily/weekly/monthly/custom</text>
+
+  <!-- FK matches -> profiles + listings, schedules -> profiles -->
+  <line x1="266" y1="613" x2="244" y2="613" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <path d="M 377 630 C 377 530 320 524 253 516" fill="none" stroke="#c2185b" stroke-width="1.2" marker-end="url(#fk)"/>
+  <text x="395" y="540" font-size="8" fill="#c2185b">listing_id</text>
+  <path d="M 512 613 C 300 700 200 700 131 674" fill="none" stroke="#c2185b" stroke-width="1.1" marker-end="url(#fk)"/>
+
+  <!-- notifications + settings row -->
+  <rect x="20" y="690" width="466" height="92" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="20" y="690" width="466" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="253" y="707" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">notifications</text>
+  <text x="32" y="732" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="32" y="749" font-size="10" fill="#7a5b06">created_at · channel (dashboard/daily/email) · subject · body</text>
+  <text x="32" y="766" font-size="10" fill="#7a5b06">profile_ids (JSON) · match_count · read</text>
+  <text x="32" y="779" font-size="8.5" fill="#9aa5b1">3 rows — digest inbox (profile_ids is a soft link, not an FK)</text>
+
+  <rect x="512" y="690" width="252" height="92" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <rect x="512" y="690" width="252" height="24" rx="8" fill="#1f2d3d"/>
+  <text x="638" y="707" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">settings</text>
+  <text x="524" y="732" font-size="10" fill="#1f2d3d">key (PK) · value</text>
+  <text x="524" y="749" font-size="9.5" fill="#374151">usd_jpy_rate · translation_engine</text>
+  <text x="524" y="765" font-size="9.5" fill="#374151">ingest_interval_hours · use_live_scraping · email_*</text>
+  <text x="524" y="779" font-size="8.5" fill="#9aa5b1">11 rows — no hardcoded runtime config</text>
+
+  <!-- ══ FOOTNOTE ══ -->
+  <rect x="784" y="552" width="200" height="230" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="884" y="572" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Design notes</text>
+  <text x="794" y="592" font-size="8.5" fill="#374151">• Every *_ja/*_en pair keeps the</text>
+  <text x="800" y="603" font-size="8.5" fill="#9aa5b1">Japanese original (D4)</text>
+  <text x="794" y="619" font-size="8.5" fill="#374151">• prefectures is the geography</text>
+  <text x="800" y="630" font-size="8.5" fill="#9aa5b1">spine; coverage = data (D3)</text>
+  <text x="794" y="646" font-size="8.5" fill="#374151">• raw_listings is immutable so</text>
+  <text x="800" y="657" font-size="8.5" fill="#9aa5b1">a parser fix re-derives listings</text>
+  <text x="794" y="673" font-size="8.5" fill="#374151">• dedup_key collapses the same</text>
+  <text x="800" y="684" font-size="8.5" fill="#9aa5b1">house across sources</text>
+  <text x="794" y="700" font-size="8.5" fill="#374151">• translations + geocache mean</text>
+  <text x="800" y="711" font-size="8.5" fill="#9aa5b1">translate/geocode once, reuse</text>
+  <text x="794" y="727" font-size="8.5" fill="#374151">• matches/schedules cascade on</text>
+  <text x="800" y="738" font-size="8.5" fill="#9aa5b1">profile delete</text>
+  <text x="794" y="756" font-size="8.5" fill="#6b7280">single-user · LOCAL-only</text>
+  <text x="794" y="769" font-size="8.5" fill="#9aa5b1">family tier: cousin</text>
+</svg>

@@ -1,0 +1,53 @@
+{
+  "categories": [
+    {
+      "name": "Live OnBase Connectivity",
+      "priority": "high",
+      "items": [
+        {"title": "M2 — OAuth2 PKCE auth + live REST client", "detail": "Wire AuthManager (PKCE against the institution IdP) and exercise OnBaseRestClient against a real OnBase host: document types, keyword types, lifecycles, and document binaries. This is the single biggest gap between pre-POC and POC — today everything runs on fixtures."},
+        {"title": "M3 — Unity API client", "detail": "Reach Unity-only capabilities (dashboards, full lifecycle definitions) the REST API doesn't expose, via a small C# HTTP shim or REST overlap. UnityClient currently raises NotImplementedError on every method."},
+        {"title": "M4–M9 — live schema + metadata collector", "detail": "Replace fixture schema.json with a live-pulled OnBase schema; download doc types, keyword types, lifecycles, dashboards, and work folders into the local store; build the navigable schema browser HTML (MapSnap-style)."},
+        {"title": "Auto-fallback hardening", "detail": "OnBaseSource.mode=auto already falls back to fixtures on any live failure. Add explicit connection-health surfacing in the UI so an operator can tell whether answers came from live OnBase or fixtures."}
+      ]
+    },
+    {
+      "name": "QI Ecosystem Compliance",
+      "priority": "high",
+      "items": [
+        {"title": "Implement /version and /info", "detail": "Only GET /health exists. Add GET /version (project=cognibase, semver, status) and GET /info (this project's qi_registry.json entry) to honour the QI module interface contract every project must implement."},
+        {"title": "Stand up QI_CogniBase + QI_CogniBaseTunnel", "detail": "Both services are documented in QI_Service_Registry.md (venv python, AppDirectory C:\\CogniBase, requires sqlglot) and a named tunnel cognibase.quiddityinnovations.com is reserved — but neither is installed/running 24/7. Register with NSSM and confirm the public tunnel."},
+        {"title": "Run qi_validator.py --project cognibase", "detail": "Validate folder layout, naming, and contract compliance against QI_Standards.md before promoting beyond pre-POC. Reconcile the project's capital-A 'Application' package layout with QI standards."},
+        {"title": "Promote status from pre_poc", "detail": "Once a live OnBase connection works end-to-end and a real (non-fixture) anchor materializes, update qi_registry.json status from pre_poc to poc/active_development with an honest milestone note."}
+      ]
+    },
+    {
+      "name": "Real End-User Experience",
+      "priority": "medium",
+      "items": [
+        {"title": "M10 — OnBase Web Client look-alike retrieval UI", "detail": "Replace DESIGN/mockup.html (served at GET /) with the real retrieval UI: keyword search, doc-type filters, result grid, document viewer — decoupled from any installed OnBase client."},
+        {"title": "M11–M13 — templated + dashboard reports", "detail": "Finish reports/template_engine.py and dashboard_repro.py: generate .docx reports from templates and reproduce OnBase Unity dashboards. Blocked on the Unity client (M3)."},
+        {"title": "M14 — Settings UI", "detail": "Vendor management, API-key entry (env-indirected), source configuration, and active-flag toggles in the browser instead of hand-editing settings.json."},
+        {"title": "Real RBAC", "detail": "Replace header-based actor identity (X-Admin-User / X-CB-Group) on capability endpoints with real authentication and role enforcement before any multi-user deployment."}
+      ]
+    },
+    {
+      "name": "Cross-Source Reasoning (the differentiators)",
+      "priority": "medium",
+      "items": [
+        {"title": "M20-wire — entity resolver into the materializer", "detail": "EntityResolver is built and tested but not yet invoked during materialization. Wire it so anchored records are clustered by entity (deterministic keys + fuzzy name match) as they land in the lake."},
+        {"title": "M21 — anchor-scoped agent with bridge-aware UNION rewriting", "detail": "An agent loop that, given a workspace, rewrites queries to UNION across bridged silo members at query time — the practical payoff of the Bridges feature."},
+        {"title": "M22–M23 — cross-source reports + grounding", "detail": "Reports that span multiple anchored sources, with explicit grounding/provenance so every figure traces back to a source record."},
+        {"title": "LLM-assisted capability drafter", "detail": "Upgrade the heuristic drafter stub to call the active chat vendor: turn an admin's plain-English intent into a validated SQL capability draft, with the validator gating the result before save."}
+      ]
+    },
+    {
+      "name": "Visualization & Demo Polish",
+      "priority": "low",
+      "items": [
+        {"title": "M24 — Canvas v1", "detail": "Bar / Pie / KPI / Grid chart primitives plus Rect / Ellipse / Arrow / Text annotations for building report canvases."},
+        {"title": "M25 — AI-driven lifecycle canvas (killer demo)", "detail": "Extend the M25-minimal SVG lifecycle visualizer into an AI-driven canvas that 'breathes' with live state-population counts — the headline demo for BU."},
+        {"title": "Semantic chunker", "detail": "Replace the character-window chunker with a semantic splitter so embeddings respect record/section boundaries and improve retrieval precision."}
+      ]
+    }
+  ]
+}

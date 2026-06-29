@@ -1,0 +1,55 @@
+[
+  {
+    "category": "Avatar Video Generation",
+    "features": [
+      {"name": "Script to talking-head video", "description": "Type a script, pick an agent and language, click Generate — the studio produces an MP4 of that portrait speaking the script.", "status": "live", "notes": "Full pipeline: TTS -> background -> face animation -> audio mux -> MP4 in outputs/"},
+      {"name": "Choose your render engine", "description": "Pick how the face is animated per render: fast preview (LivePortrait) or production audio-driven quality (Hallo2).", "status": "live", "notes": "Engine dropdown; selection persisted to studio_config.json ui_prefs.render_engine"},
+      {"name": "Lip-sync fix pass", "description": "Optionally run a post-process lip-sync pass on top of any render so the mouth matches the audio.", "status": "partial", "notes": "video-retalking checkbox; WSL2 env + checkpoints in place; lip sync is the #1 open quality issue"},
+      {"name": "Use a built-in agent or any photo", "description": "Render one of the QI agents (Tasuke, Maia, Naya, Kaze) or upload your own portrait photo.", "status": "live", "notes": "agents.json roster + custom_photo upload field; clear error if no photo found"},
+      {"name": "Headless CLI render", "description": "Generate a Kokoro voice + Hallo2 avatar from the command line without opening the UI.", "status": "live", "notes": "run_avatar.bat <agent> \"text\" -> avatar_pipeline.py; --no-tts reuses an existing WAV"}
+    ]
+  },
+  {
+    "category": "Voice & Language",
+    "features": [
+      {"name": "10-language narration", "description": "Generate the voiceover in any of ten languages, each routed to the engine that sounds best for it.", "status": "live", "notes": "6 local (Kokoro) + 4 Edge TTS; routing table in languages.json"},
+      {"name": "Local, offline voices", "description": "American & British English, Brazilian Portuguese, Spanish, Italian and Mandarin run fully offline with no internet or API cost.", "status": "live", "notes": "Kokoro-82M (Apache 2.0) in the project .venv; kokoro==0.9.4"},
+      {"name": "Microsoft neural voices", "description": "Japanese, French, Russian and German use free Microsoft Edge Neural voices where a good local voice isn't available.", "status": "live", "notes": "edge-tts==7.2.8; requires internet; used where Kokoro-82M lacks a usable voice"},
+      {"name": "Voice catalog & overrides", "description": "Browse voices by category (Women / Men / Girls / Boys) and override the default voice for any language.", "status": "live", "notes": "VOICE_CATALOG with ~60 voice entries; per-language voice override carried through the pipeline"},
+      {"name": "Speed & pitch control", "description": "Adjust how fast and how high or low the voice sounds per render.", "status": "live", "notes": "speed maps to Edge rate %; pitch via SSML for Edge, scipy resampling for Kokoro (+/-12 semitones)"}
+    ]
+  },
+  {
+    "category": "Portrait & Background",
+    "features": [
+      {"name": "Background replacement", "description": "Swap the portrait background for a solid color or an uploaded image before rendering.", "status": "live", "notes": "rembg==2.0.75 cutout + PIL composite; gracefully keeps original photo if rembg missing"},
+      {"name": "Auto best-portrait finder", "description": "Point at a video and the studio samples frames and picks the sharpest, most front-facing, mouth-closed frame as the portrait.", "status": "live", "notes": "OpenCV Haar cascades score face area + eyes + Laplacian sharpness; ffmpeg frame extraction"},
+      {"name": "Frame & screen capture", "description": "Grab a single frame from a video at a chosen timestamp, or screen-capture a region, to use as the source portrait.", "status": "live", "notes": "extract_frame_at() via ffmpeg; screen_capture_region() via PIL ImageGrab"},
+      {"name": "Describe the avatar (Phase 2)", "description": "Generate an avatar from a text description instead of a photo.", "status": "planned", "notes": "UI option present but records intent only; generation not implemented"}
+    ]
+  },
+  {
+    "category": "Multi-Language & Multi-Scene",
+    "features": [
+      {"name": "One-click multi-language batch", "description": "Select several languages, enter a script for each, and render all of them in a single run with live per-language progress.", "status": "live", "notes": "pipeline_generate loops languages; per-language slug filenames + step counter"},
+      {"name": "Scene movie pipeline", "description": "Split a long script into scenes, assign a character to each, render every scene, and concatenate them into one movie.", "status": "partial", "notes": "scene_pipeline.py: manual (---), AI (NEXUS), or hybrid split; ffmpeg concat; AI split needs NEXUS reachable"},
+      {"name": "Independent character roster", "description": "Use any photo and any name per scene, beyond the four built-in agents.", "status": "partial", "notes": "characters.json supplemental roster + inline [Name:photo] syntax; surfaced in the Scene tab"}
+    ]
+  },
+  {
+    "category": "Cloud Render Options",
+    "features": [
+      {"name": "D-ID cloud render", "description": "Render via the D-ID Talks API for a polished cloud result when local engines aren't enough.", "status": "partial", "notes": "run_did() fully implemented (upload image+audio, create talk, poll, download); enabled in config but no API key set"},
+      {"name": "HeyGen cloud render", "description": "Render via the HeyGen Talking Photo API as an alternative cloud provider.", "status": "partial", "notes": "run_heygen() implemented; disabled in studio_config.json, needs API key"},
+      {"name": "Secrets kept out of config", "description": "Cloud API keys load from a gitignored secrets file or environment at runtime and are never written back into the saved config.", "status": "live", "notes": "secrets/avatarstudio.env + _SECRET_MAP; save_studio_config strips keys before persisting"}
+    ]
+  },
+  {
+    "category": "Operations & Studio Control",
+    "features": [
+      {"name": "Kill & restart from the UI", "description": "Restart the studio with one button without touching the terminal.", "status": "live", "notes": "restart_studio() spawns a detached kill+relaunch helper; detached launcher start_studio.py also provided"},
+      {"name": "Run as a Windows service", "description": "Install Avatar Studio as a QI_AvatarStudio Windows service so it survives reboots.", "status": "partial", "notes": "install_service.bat registers NSSM QI_AvatarStudio (demand-start); not yet in QI_Service_Registry.md, no tunnel"},
+      {"name": "QI Hive dashboard integration", "description": "Surface rendered avatars and studio status on the QI Hive Mission Control board.", "status": "planned", "notes": "Listed in CLAUDE.md pending work; no integration wired (integrates_with empty in registry)"}
+    ]
+  }
+]

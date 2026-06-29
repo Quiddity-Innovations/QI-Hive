@@ -1,0 +1,207 @@
+{
+  "intro": "Excerpts copied from the live NEXUS source (C:\\NEXUS). Each shows the real code behind a capability and explains how it powers that feature. Config-driven throughout — no AI model names are hardcoded in source; they live in config/providers.json and config/nexus.json.",
+  "sections": [
+    {
+      "category": "API Surface (FastAPI :8010)",
+      "snippets": [
+        {
+          "title": "App + CORS from the QI registry",
+          "feature": "FastAPI service that any QI project can call",
+          "file": "api/main.py · module scope",
+          "language": "python",
+          "code": "app = FastAPI(\n    title=\"NEXUS API\",\n    description=\"Neural Exchange and Unified Synthesis — Quiddity Innovations AI Backbone\",\n    version=\"0.1.0\"\n)\n\ntry:\n    import sys as _sys; _sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI as _QI\n    _cors_origins = _QI.cors_origins()\nexcept Exception:\n    # Fallback if registry not available\n    _cors_origins = [\"http://localhost:7880\", \"http://localhost:8001\", ...]\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=_cors_origins,\n    allow_methods=[\"GET\", \"POST\", \"PUT\", \"DELETE\"],\n    allow_headers=[\"*\"]\n)\n\n# Singletons\n_dispatcher = Dispatcher()\n_synthesizer = Synthesizer()",
+          "explanation": "Creates the single FastAPI app that exposes all 60+ NEXUS routes on port 8010. Allowed CORS origins are pulled from the shared qi_registry (never hardcoded) so sibling QI projects — Maia, Naya, FileHQ, OpenClaw — can call NEXUS without per-project edits. The Dispatcher and Synthesizer are built once as module singletons and reused for every request."
+        },
+        {
+          "title": "The /synthesize route — three routing modes",
+          "feature": "Multi-AI ask-once endpoint (parallel / chain / iterative)",
+          "file": "api/main.py · synthesize()",
+          "language": "python",
+          "code": "@app.post(\"/synthesize\", response_model=SynthesizeResponse)\nasync def synthesize(req: SynthesizeRequest):\n    mode = req.routing_mode.lower()\n    if mode == \"chain\":\n        dispatch_result = await _dispatcher.chain_dispatch(\n            prompt=req.prompt, provider_ids=req.provider_ids, ...)\n        successful = dispatch_result.successful\n        synthesis = successful[-1].text if successful else \"No successful responses from chain.\"\n    elif mode == \"iterative\":\n        ...  # N rounds of dispatch + synthesize, capped at 3\n    else:  # Mode A: Parallel (default)\n        dispatch_result = await _dispatcher.dispatch(\n            prompt=req.prompt, provider_ids=req.provider_ids,\n            persona_map=req.persona_map, inference_mode=req.inference_mode, ...)\n        synthesis = await _synthesizer.synthesize(\n            original_prompt=req.prompt, responses=dispatch_result.responses, ...)",
+          "explanation": "This is the headline endpoint QI apps hit. One prompt fans out to every enabled provider in parallel (default), or runs sequentially so each model improves the last answer (chain), or loops dispatch+synthesis for up to 3 refinement rounds (iterative). The result is then sent to the synthesizer for one unified answer."
+        }
+      ]
+    },
+    {
+      "category": "Orchestration & LLM Chain",
+      "snippets": [
+        {
+          "title": "Parallel fan-out with crash isolation",
+          "feature": "Dispatch one prompt to all providers concurrently with failover",
+          "file": "core/dispatcher.py · Dispatcher.dispatch()",
+          "language": "python",
+          "code": "# Fire all providers concurrently. Pass per-provider mode and persona.\ntasks = [\n    p.generate(\n        prompt,\n        system_prompt=(persona_map or {}).get(p.provider_id),\n        inference_mode=_mode_for(p.provider_id),\n    )\n    for p in providers\n]\n# return_exceptions=True so one misbehaving adapter can't abort the whole\n# parallel run and discard every other provider's successful result. (P0)\nraw = await asyncio.gather(*tasks, return_exceptions=True)\nresponses: list[ProviderResponse] = []\nfor prov, resp in zip(providers, raw):\n    if isinstance(resp, ProviderResponse):\n        responses.append(resp)\n    else:\n        logger.error(f\"[{session_id[:8]}] {prov.provider_id} raised {type(resp).__name__}: {resp}\")\n        responses.append(ProviderResponse(\n            provider_id=prov.provider_id, status=\"error\",\n            error_message=f\"{type(resp).__name__}: {resp}\"))",
+          "explanation": "The heart of the orchestration layer. Every enabled provider's generate() is launched as an asyncio task and awaited together. asyncio.gather(return_exceptions=True) is the failover mechanism: if one adapter raises, its exception is captured and converted to an error ProviderResponse instead of killing the run — so a single dead provider never costs you the other providers' good answers."
+        },
+        {
+          "title": "Sequential chain — each model improves the last",
+          "feature": "Chain routing mode (refine-the-previous-answer)",
+          "file": "core/dispatcher.py · Dispatcher.chain_dispatch()",
+          "language": "python",
+          "code": "for i, provider in enumerate(providers):\n    if last_answer is None:\n        # No prior successful answer yet — ask fresh.\n        chain_prompt = prompt\n    else:\n        chain_prompt = (\n            f\"Original question: {prompt}\\n\\n\"\n            f\"Previous AI answer:\\n{last_answer}\\n\\n\"\n            f\"Your task: Improve on this answer. Keep what's correct, \"\n            f\"add what's missing, fix any errors, make it more complete and accurate.\")\n    try:\n        response = await provider.generate(\n            chain_prompt, inference_mode=_mode_for(provider.provider_id))\n    except Exception as e:\n        response = ProviderResponse(provider_id=provider.provider_id,\n            status=\"error\", error_message=f\"{type(e).__name__}: {e}\")\n    all_responses.append(response)\n    if response.ok:\n        last_answer = response.text",
+          "explanation": "Powers the 'chain' routing mode. Instead of asking providers in parallel, each provider receives the previous one's successful answer and is told to improve it. A failed step is caught and skipped (last_answer is only updated on a successful response), so one weak link doesn't poison the chain — the next provider still works from the last good answer."
+        },
+        {
+          "title": "Lazy, thread-safe provider loading",
+          "feature": "Providers loaded from config, not hardcoded",
+          "file": "core/dispatcher.py · Dispatcher._ensure_loaded()",
+          "language": "python",
+          "code": "def _ensure_loaded(self):\n    # Double-checked lock: concurrent first dispatches must not both run\n    # load_providers() and end up with duplicate provider objects.\n    if not self._loaded:\n        with self._load_lock:\n            if not self._loaded:\n                if self._providers is None:\n                    self._providers = load_providers(role_filter=\"dispatch\")\n                self._loaded = True",
+          "explanation": "The dispatcher never hardcodes which AIs exist. On first use it calls load_providers(role_filter='dispatch') to build the active provider list from config/providers.json. A double-checked lock guarantees that two simultaneous first requests don't both load the providers and create duplicate adapter objects."
+        }
+      ]
+    },
+    {
+      "category": "Provider Adapters",
+      "snippets": [
+        {
+          "title": "Adapter base contract",
+          "feature": "Pluggable provider model — add an AI by dropping in one file",
+          "file": "core/providers/base.py · NexusProvider / ProviderResponse",
+          "language": "python",
+          "code": "@dataclass\nclass ProviderResponse:\n    provider_id: str\n    provider_name: str\n    text: str = \"\"\n    status: str = \"success\"       # success | timeout | error\n    latency_ms: int = 0\n    error_message: Optional[str] = None\n\n    @property\n    def ok(self) -> bool:\n        return self.status == \"success\" and bool(self.text.strip())\n\n\nclass NexusProvider(ABC):\n    @abstractmethod\n    async def generate(self, prompt: str, system_prompt: Optional[str] = None,\n                       inference_mode: Optional[str] = None) -> ProviderResponse:\n        \"\"\"Send prompt to the AI and return a ProviderResponse. Must not raise.\"\"\"\n        ...",
+          "explanation": "Every AI integration inherits from NexusProvider and returns the uniform ProviderResponse. The contract is strict: generate() must never raise — it catches its own errors and reports status='error'. The .ok property (success AND non-empty text) is what the dispatcher, synthesizer and scorer all use to decide which answers count. Adding a new provider = one new file, no other code changes."
+        },
+        {
+          "title": "Local Ollama call (Gemma-4 / qwen3)",
+          "feature": "Free local inference + the primary synthesizer model",
+          "file": "core/providers/ollama.py · OllamaProvider.generate()",
+          "language": "python",
+          "code": "payload = {\n    \"model\": self._model,\n    \"prompt\": prompt_with_prefix,\n    \"stream\": False,\n    \"keep_alive\": self._keep_alive,\n    \"options\": {\"temperature\": 0.7, \"num_predict\": num_predict}\n}\nif system_prompt:\n    payload[\"system\"] = system_prompt\ntry:\n    async with httpx.AsyncClient(timeout=self.effective_timeout(inference_mode)) as client:\n        resp = await client.post(url, json=payload)\n        resp.raise_for_status()\n        data = resp.json()\n        text = data.get(\"response\", \"\")\n        # Strip <think> blocks if present (reasoning models)\n        text = re.sub(r\"<think>.*?</think>\", \"\", text, flags=re.DOTALL).strip()\n        return self._make_response(text=text, latency_ms=latency)\nexcept httpx.TimeoutException:\n    return self._make_response(status=\"timeout\", error=\"Request timed out\", ...)",
+          "explanation": "A concrete adapter: it POSTs to the local Ollama server at 127.0.0.1:11434, so models like gemma4:26b and qwen3:4b run free, private and offline. keep_alive keeps the model resident (no cold start), inference_mode maps to /think or /no_think for reasoning models, and <think> blocks are stripped so callers only see the final answer. This same adapter backs the primary synthesizer."
+        }
+      ]
+    },
+    {
+      "category": "Config & Provider Registry",
+      "snippets": [
+        {
+          "title": "providers.json — enable/disable an AI by data",
+          "feature": "Config-driven provider grid (active / disabled / pre-wired)",
+          "file": "config/providers.json",
+          "language": "json",
+          "code": "{\n  \"id\": \"gemma4\",\n  \"name\": \"Gemma 4 26B (Local)\",\n  \"adapter\": \"ollama\",\n  \"enabled\": true,\n  \"role\": [\"dispatch\"],\n  \"timeout_seconds\": 180,\n  \"base_url\": \"http://127.0.0.1:11434\",\n  \"model\": \"gemma4:26b\",\n  \"notes\": \"Google Gemma 4 26B running locally via Ollama. Replaces cloud Gemini.\"\n},\n{\n  \"id\": \"gemini\",\n  \"name\": \"Gemini\",\n  \"adapter\": \"gemini\",\n  \"enabled\": false,\n  \"notes\": \"Disabled 2026-06-12 — free-tier quota now 0 (429 RESOURCE_EXHAUSTED); replaced by local gemma4:26b.\"\n}",
+          "explanation": "The single source of truth for which AIs NEXUS talks to. Each entry maps an id to an adapter class plus model and timeout. enabled:true/false turns a provider on or off with no code change — here Gemini is disabled after its free quota hit zero, and the local gemma4:26b takes its place. Roughly 9 more providers (Anthropic, Azure, Bedrock, OpenRouter, etc.) sit pre-wired with enabled:false, ready once a key is added."
+        },
+        {
+          "title": "Loader: turn config rows into live adapters",
+          "feature": "Auto-instantiate enabled providers by role",
+          "file": "core/providers/__init__.py · load_providers()",
+          "language": "python",
+          "code": "for p in data.get(\"providers\", []):\n    if not p.get(\"enabled\", False):\n        continue\n    roles = p.get(\"role\", [\"dispatch\"])\n    if role_filter not in roles:\n        continue\n    adapter_name = p[\"adapter\"]\n    cls = ADAPTER_MAP.get(adapter_name)\n    if cls is None:\n        logger.warning(f\"Unknown adapter '{adapter_name}' — skipping\")\n        continue\n    config = {k: v for k, v in p.items()\n              if k not in (\"id\", \"name\", \"adapter\", \"enabled\", \"role\", \"timeout_seconds\")}\n    instance = cls(provider_id=p[\"id\"], name=p[\"name\"],\n                   timeout_seconds=p.get(\"timeout_seconds\", 60), config=config)\n    result.append(instance)",
+          "explanation": "Reads config/providers.json, skips anything not enabled or not tagged with the requested role (e.g. 'dispatch' vs 'scout_synthesis'), looks the adapter name up in ADAPTER_MAP, and instantiates the matching class with its leftover config keys. This is what the dispatcher's _ensure_loaded() calls — the bridge from JSON config to live provider objects."
+        }
+      ]
+    },
+    {
+      "category": "Synthesis",
+      "snippets": [
+        {
+          "title": "Primary + fallback synthesizer",
+          "feature": "Merge many answers into one (Gemma-4 local, ChatGPT fallback)",
+          "file": "core/synthesizer.py · Synthesizer.synthesize()",
+          "language": "python",
+          "code": "ok_responses = [r for r in responses if r.ok]\nif not ok_responses:\n    return \"No successful responses were collected from any AI provider.\"\nif len(ok_responses) == 1:\n    return ok_responses[0].text   # only one response — no synthesis needed\n\n# Try primary first (config: core.synthesis_provider / synthesis_model)\nresult = await self._primary.generate(synthesis_prompt)\nif result.ok:\n    return result.text\n\n# Fallback (if configured)\nif self._fallback is None:\n    parts = [f\"[{r.provider_name}]\\n{r.text}\" for r in ok_responses]\n    return \"⚠️ Synthesis unavailable. Raw responses:\\n\\n\" + \"\\n\\n---\\n\\n\".join(parts)\nfallback_result = await self._fallback.generate(fallback_prompt)\nif fallback_result.ok:\n    return fallback_result.text",
+          "explanation": "Takes every successful provider answer and produces one definitive response. The synthesis model is config-driven (nexus.json core.synthesis_provider = ollama/gemma4:26b primary, chatgpt fallback). It short-circuits when there's nothing or only one answer to merge, tries the local primary first, falls back to ChatGPT if the primary fails, and as a last resort concatenates the raw answers so the caller always gets something."
+        },
+        {
+          "title": "Structure-preserving synthesis prompt",
+          "feature": "Don't lose tables / code / lists when merging",
+          "file": "core/synthesizer.py · FALLBACK_SYNTHESIS_PROMPT",
+          "language": "python",
+          "code": "FALLBACK_SYNTHESIS_PROMPT = \"\"\"You are synthesizing responses from multiple AI systems into one definitive answer.\n\nSTRICT RULES — do not violate these:\n1. PRESERVE ALL TABLES: Every markdown table in any response must appear in your synthesis...\n2. PRESERVE CODE BLOCKS: All code snippets must appear verbatim...\n3. PRESERVE STRUCTURED LISTS: Keep numbered/bulleted lists intact...\n4. USE THE BEST RESPONSE AS YOUR BASE...\n5. ADD GAPS, DON'T REPLACE...\n6. NOTE REAL CONTRADICTIONS ONLY...\n\nORIGINAL QUESTION:\n{original_prompt}\n\nRESPONSES FROM AI SYSTEMS:\n{responses}\"\"\"",
+          "explanation": "The instruction that makes synthesis trustworthy. Naive merging tends to flatten markdown tables into prose and drop code. These strict rules force the synthesis model to keep every table and code block verbatim, start from the strongest answer, only add genuinely missing content, and flag only real factual contradictions — so the unified answer is at least as complete as the best single response."
+        }
+      ]
+    },
+    {
+      "category": "Judge / Scorer",
+      "snippets": [
+        {
+          "title": "NexusJudge — wrap any provider for DeepEval",
+          "feature": "User-selectable judge model for scoring",
+          "file": "core/scorer.py · NexusJudge",
+          "language": "python",
+          "code": "class NexusJudge(DeepEvalBaseLLM):\n    \"\"\"Wraps a NEXUS provider as a DeepEval-compatible judge model.\"\"\"\n\n    def __init__(self, provider_id: str):\n        providers = load_providers(role_filter=\"dispatch\")\n        match = [p for p in providers if p.provider_id == provider_id]\n        if not match:\n            raise ValueError(f\"Judge provider '{provider_id}' is not registered or not enabled.\")\n        self._provider = match[0]\n        self._provider_id = provider_id\n\n    async def a_generate(self, prompt: str) -> str:\n        result = await self._provider.generate(prompt)\n        return result.text if result.ok else \"\"\n\n    def get_model_name(self) -> str:\n        return f\"nexus:{self._provider_id}\"",
+          "explanation": "DeepEval needs an LLM to act as judge. NexusJudge adapts any registered NEXUS provider into a DeepEval model, so the user can pick which AI grades the answers (default Groq, per nexus.json scorer.judge_provider). DeepEval's metrics just call a_generate(); NexusJudge delegates to the underlying provider, keeping NEXUS's pluggable-provider design intact for scoring too."
+        },
+        {
+          "title": "Concurrent G-Eval scoring with per-metric timeout",
+          "feature": "Score Clarity / Accuracy / Depth, pick the best response",
+          "file": "core/scorer.py · score_responses()",
+          "language": "python",
+          "code": "async def _run_metric(metric):\n    name = metric.name.lower()\n    try:\n        await asyncio.wait_for(metric.a_measure(test_case), timeout=metric_timeout)\n        score_val = round((metric.score or 0.0) * 10, 1)\n        return name, {\"score\": score_val, \"reason\": (metric.reason or \"\").strip()}, \"ok\"\n    except asyncio.TimeoutError:\n        return name, {\"score\": 0.0, \"reason\": f\"TIMEOUT after {metric_timeout}s...\"}, \"timeout\"\n\nmetric_results = await asyncio.gather(*[_run_metric(m) for m in make_metrics()])\n...\nbest = max((p for p in scores if \"total\" in scores[p]),\n           key=lambda p: scores[p][\"total\"], default=None)",
+          "explanation": "For each provider answer, three G-Eval metrics (Clarity, Accuracy, Depth) run concurrently, each independently bounded by scorer.metric_timeout_seconds so one slow judge call can't hang the whole run. Scores are normalised to /10, averaged into a total, and the highest total wins 'best response'. An all-timeout/all-error run raises so NEXUS can fall back to the cheaper simple-judge mode."
+        }
+      ]
+    },
+    {
+      "category": "Scout Ingestion (RSS / Reddit / HN / YouTube)",
+      "snippets": [
+        {
+          "title": "RSS fetcher — normalise feed entries",
+          "feature": "Topic-aware source ingestion into scout_items",
+          "file": "scout/fetcher.py · fetch_rss()",
+          "language": "python",
+          "code": "feed = feedparser.parse(feed_config[\"url\"])\nfor entry in feed.entries[:50]:\n    title = entry.get(\"title\", \"\").strip()\n    url = entry.get(\"link\", \"\")\n    summary = entry.get(\"summary\", entry.get(\"description\", \"\"))[:500]\n    pub = normalize_date(entry.get(\"published\", entry.get(\"updated\", \"\")))\n    if not title or not url:\n        continue\n    items.append({\n        \"source_type\": \"rss\", \"source_id\": feed_config[\"id\"],\n        \"external_id\": url, \"title\": title, \"summary\": summary,\n        \"url\": url, \"author\": entry.get(\"author\", \"\"), \"published_at\": pub})",
+          "explanation": "One of four fetchers (RSS, Reddit, HackerNews, YouTube) feeding Scout. Each pulls items, normalises them into a common dict shape with a stable external_id, and returns them; fetch_for_topic() runs all enabled sources for a topic. The runner then deduplicates with rapidfuzz and stores into scout_items (~13,200 rows), keyed UNIQUE(source_type, external_id) so re-runs don't duplicate."
+        },
+        {
+          "title": "Digest builder — grouped markdown + .docx",
+          "feature": "Daily topic digest report",
+          "file": "scout/digest.py · generate_digest()",
+          "language": "python",
+          "code": "by_source = {}\nfor item in items:\n    src = item.get(\"source_type\", \"other\")\n    by_source.setdefault(src, []).append(item)\n\nsource_labels = {\"rss\": \"📰 News & Blogs\", \"hackernews\": \"🔶 Hacker News\",\n                 \"reddit\": \"🟠 Reddit\", \"youtube\": \"▶️ YouTube\"}\nlines = [f\"# 🤖 NEXUS {topic_name} Digest — {date}\",\n         f\"*{len(items)} items · Quiddity Innovations*\", \"\"]\nfor source_type, label in source_labels.items():\n    source_items = by_source.get(source_type, [])\n    if not source_items:\n        continue\n    lines.append(f\"## {label} ({len(source_items)})\")\n    for item in source_items[:15]:\n        lines.append(f\"### [{item.get('title','Untitled')}]({item.get('url','')})\")",
+          "explanation": "After fetch + dedup, the unique items are grouped by source and rendered as a clean markdown digest, then saved as a Word .docx (save_digest_docx). Each digest is stored in scout_digests (~99 rows, UNIQUE(topic_id, date)) and served via /scout/digest. This is the end product of a Scout cycle — a dated, sourced intelligence brief per topic."
+        }
+      ]
+    },
+    {
+      "category": "Bench Harness",
+      "snippets": [
+        {
+          "title": "Run a regression suite across providers",
+          "feature": "Benchmark providers over time, detect regressions",
+          "file": "bench/runner.py · run_suite()",
+          "language": "python",
+          "code": "for pid in provider_ids:\n    run_cur = conn.execute(\n        \"INSERT INTO bench_provider_runs (suite_id, provider_id, mode, scored, case_count) \"\n        \"VALUES (?, ?, ?, ?, ?)\", (int(suite_id), pid, mode, 1 if scorer_fn else 0, len(cases)))\n    run_id = run_cur.lastrowid\n    for c in cases:\n        res = await dispatcher.dispatch(c[\"prompt\"], provider_ids=[pid], inference_mode=mode)\n        resp = res.responses[0] if res.responses else None\n        text = resp.text if resp and resp.ok else \"\"\n        case_score = None\n        if scorer_fn and text:\n            sr = await scorer_fn(c[\"prompt\"], [{\"provider_name\": pid, \"text\": text}], judge)\n            case_score = (sr.get(\"scores\", {}).get(pid) or {}).get(\"total\")\n        conn.execute(\"INSERT INTO bench_results (run_id, case_id, prompt, response, score, \"\n                     \"latency_ms, status) VALUES (?, ?, ?, ?, ?, ?, ?)\", ...)",
+          "explanation": "Bench reuses the dispatcher and scorer rather than reimplementing them: for each provider it runs every case in a suite, optionally scores the answer with the same DeepEval scorer, and persists a bench_provider_runs row plus per-case bench_results. Mean score and latency are stored so /bench/recommend can rank providers by historical performance and flag regressions when a model is swapped."
+        }
+      ]
+    },
+    {
+      "category": "RAG / Knowledge (ChromaDB)",
+      "snippets": [
+        {
+          "title": "Semantic query over the knowledge base",
+          "feature": "Retrieve relevant context to augment synthesis",
+          "file": "shared/rag.py · NexusRAG.query()",
+          "language": "python",
+          "code": "results = self._collection.query(\n    query_texts=[text.strip()[:500]],\n    n_results=min(n_results, count),\n    include=[\"documents\", \"metadatas\", \"distances\"])\nitems = []\nfor doc, meta, dist in zip(docs, metas, dists):\n    relevance = max(0.0, 1.0 - dist)        # cosine distance → relevance\n    if relevance < min_relevance:\n        continue\n    items.append({\n        \"content\": doc, \"metadata\": meta,\n        \"distance\": round(dist, 4),\n        \"relevance_pct\": round(relevance * 100, 1)})\nreturn items",
+          "explanation": "NEXUS keeps a persistent ChromaDB collection (nexus_knowledge) of curated text, embedded with the default embedding function. query() does a cosine-similarity search, converts distance to a relevance percentage, and drops anything below min_relevance. format_context() then turns the hits into a context block injected into the prompt — optional RAG augmentation for synthesis."
+        }
+      ]
+    },
+    {
+      "category": "Persistence (nexus.db)",
+      "snippets": [
+        {
+          "title": "WAL connection with FK enforcement",
+          "feature": "Single SQLite store for sessions, providers, scout, bench",
+          "file": "shared/db.py · get_connection()",
+          "language": "python",
+          "code": "DB_PATH = Path(__file__).parent.parent / \"nexus.db\"\nCURRENT_VERSION = 4\n\ndef get_connection() -> sqlite3.Connection:\n    \"\"\"Return a connection with row_factory set.\"\"\"\n    conn = sqlite3.connect(str(DB_PATH))\n    conn.row_factory = sqlite3.Row\n    conn.execute(\"PRAGMA journal_mode=WAL\")\n    conn.execute(\"PRAGMA foreign_keys=ON\")\n    return conn",
+          "explanation": "Every part of NEXUS opens its DB through this one helper. It points at nexus.db, sets Row factory so queries return dict-like rows, enables WAL mode (concurrent reads while the API writes), and turns on foreign-key enforcement so the FK relationships (responses→sessions, bench_results→runs, scout_items→clusters) are actually honoured. A short-lived connection is opened per operation."
+        },
+        {
+          "title": "Versioned migrations + provider seeding",
+          "feature": "Schema evolves safely; provider table seeded from config",
+          "file": "shared/db.py · init_db() / _seed_providers()",
+          "language": "python",
+          "code": "version = get_schema_version(conn)\nif version < 2: _migrate_v2(conn)   # synthesis columns on sessions\nif version < 3: _migrate_v3(conn)   # batch_jobs, batch_results, scheduled_jobs\nif version < 4: _migrate_v4(conn)   # bench_suites/cases/provider_runs/results\nif version < CURRENT_VERSION:\n    conn.execute(\"INSERT OR IGNORE INTO schema_version (version, notes) VALUES (?, ?)\", ...)\n\n# _seed_providers(): populate providers table from config/providers.json if empty\nfor p in data.get(\"providers\", []):\n    conn.execute(\"INSERT OR IGNORE INTO providers (id, name, adapter, enabled, role, \"\n                 \"timeout_seconds, config_json) VALUES (?, ?, ?, ?, ?, ?, ?)\", ...)",
+          "explanation": "On startup init_db() reads the current schema_version and applies only the migrations newer than it (idempotent ALTER/CREATE wrapped in try/except), bumping to v4 which introduced the Bench tables. It then seeds the providers table from config/providers.json on first run — so config/providers.json remains the live source of truth and the DB mirrors it."
+        }
+      ]
+    }
+  ]
+}

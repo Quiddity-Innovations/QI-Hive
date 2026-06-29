@@ -1,0 +1,52 @@
+{
+  "categories": [
+    {
+      "name": "QI Ecosystem Integration",
+      "priority": "high",
+      "items": [
+        {"title": "M2V integration (song -> music video)", "detail": "Wire PersonalSong to feed finished songs (audio + lyrics + cover + metadata) into the M2V music-video project. The registry already declares integrates_with: m2v and exposes 'Song generation' + 'Voice cloning' to the ecosystem; no actual contract/endpoint exists yet. Define the handoff (file drop or REST)."},
+        {"title": "Register QI_PersonalSong in the Service Registry", "detail": "QI_PersonalSong (NSSM, :8088, serve.py, logs\\service.log) is installed via PersonalSong_Install.bat but is NOT listed in C:\\QIH\\ecosystem\\QI_Service_Registry.md. Add it so symptom->service->log triage works ecosystem-wide."},
+        {"title": "Port-block compliance decision", "detail": "Port 8088 was chosen before registry registration (2026-06-10) and falls outside every allocated block. The registry recommends migrating to 8502 in the 8500-8599 cousin block. Decide: keep 8088 (documented exception) or migrate (update serve.py, service, PersonalSong_Start_Server.bat, registry)."},
+        {"title": "QI Brain logging", "detail": "Log generation sessions/decisions (model used, genre/language, voice-clone vs straight, success) to the QI Brain so the ecosystem has cross-project visibility. No qi.* calls exist in the codebase today."}
+      ]
+    },
+    {
+      "name": "Generation Quality & Control",
+      "priority": "medium",
+      "items": [
+        {"title": "Generation progress + cancel", "detail": "ACE-Step runs blocking in a single-worker executor; the UI waits with no progress feedback and no way to cancel. Surface infer_step progress (SSE/websocket) and a cancel control, and a job status endpoint for batch/queue runs."},
+        {"title": "Longer / structured songs", "detail": "Duration scales structure up to ~4 min, but very long generations are slow and untested. Add chunked/section-wise generation and stitching so full-length songs are reliable, plus a tempo/key control surfaced in the form."},
+        {"title": "Multi-singer duets", "detail": "Singers are per-song today. Allow assigning different singer presets to different sections (e.g. a duet, or a child + parent), building on the existing per-language singer map."},
+        {"title": "Smarter gender lock", "detail": "Gender verification (Demucs + librosa pitch) retries only once with a random seed. Make the retry budget configurable and cache the detected gender so re-rolls don't re-run Demucs unnecessarily."}
+      ]
+    },
+    {
+      "name": "Voice Cloning Depth",
+      "priority": "medium",
+      "items": [
+        {"title": "Reusable cloned-voice profiles", "detail": "Today a clone is computed per cover from a fresh source. Persist isolated reference vocals as named voice profiles (the voices.json library exists for clips) so a loved one's voice can be reused across many songs without re-isolating each time."},
+        {"title": "Quality + speed tuning for Seed-VC", "detail": "diffusion-steps and inference-cfg-rate are hardcoded (25/30). Expose presets (fast/quality) and document the GPU-vs-CPU fallback behavior; add a quality check so a bad isolation doesn't ship a muddy cover."},
+        {"title": "Consent / ethics guardrail", "detail": "Voice cloning is powerful and personal. Add an explicit in-app consent acknowledgement and a watermark/metadata note on cloned outputs, since the app can clone any uploaded or YouTube voice."}
+      ]
+    },
+    {
+      "name": "Sharing & Playback",
+      "priority": "low",
+      "items": [
+        {"title": "Complete the Plex path end-to-end", "detail": "Plex sync is built but unverified without a configured token/section. Add a one-click Settings wizard (probe -> pick section -> test copy + scan) and surface sync status on each song card so 'play on Google Home' is provably working."},
+        {"title": "Finish YouTube Music onboarding", "detail": "Auth needs raw headers pasted from DevTools — fiddly. Add an in-app guided capture and a connection health badge; verify upload-all-from-library at scale."},
+        {"title": "Gift delivery polish", "detail": "Build on the QR greeting card + play page: scheduled reveal (don't show until the date), a themed per-occasion card gallery, and an email/LINE share that the Tasuke/QI notifier could send."}
+      ]
+    },
+    {
+      "name": "Hardening & Hygiene",
+      "priority": "low",
+      "items": [
+        {"title": "Refresh README to match the live engine", "detail": "README.md still documents the original MusicGen/HuggingFace + Suno approach and uvicorn main:app on :8000. The live engine is ACE-Step via serve.py on :8088. Rewrite it so setup instructions match reality (Ollama + ACE-Step + Seed-VC venv + ffmpeg_shared)."},
+        {"title": "Document the dual ffmpeg setup", "detail": "Two ffmpeg builds ship (bundled BtbN shared DLLs for torchcodec + a gyan libcdio build for CD ripping). Document which is used where and pin versions, since this is a known setup gotcha (cu128 / FFmpeg)."},
+        {"title": "Tests beyond smoke", "detail": "tests/ + a few _test_*.py scripts exist; add real coverage for lyric normalization, name injection, pronunciation swap, lever->ref_strength math, and the gender detector — the pure functions that are cheap and high-value to lock down."},
+        {"title": "Clean up stray dev artifacts", "detail": "The repo root holds scratch files (batch_log*.txt, name_check*.txt, final_*.txt, null, an oddly-named 'C:PersonalSongLOGSserver.log'). Sweep them into tools/ or delete; confirm requirements.txt reflects the real deps (it still lists transformers/torch generically, not acestep/demucs/seed-vc/edge-tts)."}
+      ]
+    }
+  ]
+}

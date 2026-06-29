@@ -1,0 +1,189 @@
+{
+  "intro": "Excerpts from the live CogniBase source (C:\\CogniBase\\Application). CogniBase is pre-POC: the code below is real and runs locally, but it currently operates against fixtures, not a live OnBase deployment (the REST/Unity clients are stubs). The design is config-driven throughout — no AI model names are hardcoded in source; they live in Settings/settings.json.",
+  "sections": [
+    {
+      "category": "Server & App Wiring (FastAPI :8650)",
+      "snippets": [
+        {
+          "title": "Startup: registry → router → query engine",
+          "feature": "FastAPI server boot",
+          "file": "Application/server/app.py · lifespan()",
+          "language": "python",
+          "code": "@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    ensure_dirs()\n    settings = load_settings()\n    setup_logging(settings.get(\"server\", {}).get(\"log_level\", \"INFO\"))\n    app.state.settings = settings\n    app.state.registry = VendorRegistry(settings)\n    app.state.router = VendorRouter(app.state.registry)\n    app.state.query_engine = _build_query_engine_or_none(app.state.router, settings)\n    log.info(\"CogniBase started. Active vendors: %s\",\n             [v.id for v in app.state.registry._vendors.values()])\n    log.info(\"Query engine: %s\", \"ready\" if app.state.query_engine else \"not initialized (no RAG index yet)\")\n    yield\n    log.info(\"Shutting down\")",
+          "explanation": "On boot the server loads settings, builds the vendor registry and router, and tries to construct a RAG QueryEngine. If no embedding vendor or index exists yet, the engine is None and /chat will return 503 rather than crash — so the server always starts even before OnBase or a vector index is configured."
+        },
+        {
+          "title": "Health endpoint + mockup index",
+          "feature": "QI /health contract + placeholder UI",
+          "file": "Application/server/app.py · health() / index()",
+          "language": "python",
+          "code": "app = FastAPI(title=\"CogniBase\", version=\"0.1.0-dev\", lifespan=lifespan)\n\n@app.get(\"/health\")\ndef health():\n    return {\"status\": \"ok\", \"version\": \"0.1.0-dev\"}\n\n@app.get(\"/\")\ndef index():\n    \"\"\"Serves the design mockup until the real UI is built.\"\"\"\n    mockup = DESIGN / \"mockup.html\"\n    if mockup.exists():\n        return FileResponse(str(mockup))\n    return JSONResponse({\"message\": \"CogniBase. UI mockup not yet generated.\"})",
+          "explanation": "The only QI-contract endpoint implemented today is /health (/version and /info are still planned). GET / serves the React mockup from DESIGN/ as a stand-in for the real OnBase-Web-Client-style retrieval UI (M10)."
+        }
+      ]
+    },
+    {
+      "category": "Config & Settings",
+      "snippets": [
+        {
+          "title": "Secret indirection — keys never live in settings.json",
+          "feature": "env: indirection for API keys",
+          "file": "Application/utils/config.py · _resolve_env() / save_settings()",
+          "language": "python",
+          "code": "def _resolve_env(node):\n    \"\"\"Recursively replace \\\"env:NAME\\\" string values with os.environ[NAME].\"\"\"\n    if isinstance(node, dict):\n        return {k: _resolve_env(v) for k, v in node.items()}\n    if isinstance(node, list):\n        return [_resolve_env(v) for v in node]\n    if isinstance(node, str) and node.startswith(\"env:\"):\n        return os.environ.get(node[4:], \"\")\n    return node\n\n@lru_cache(maxsize=1)\ndef load_settings() -> dict:\n    if not SETTINGS_PATH.exists():\n        raise FileNotFoundError(...)\n    _load_env_file()\n    with SETTINGS_PATH.open(\"r\", encoding=\"utf-8\") as f:\n        return _resolve_env(json.load(f))",
+          "explanation": "Any value like \"api_key\": \"env:ANTHROPIC_API_KEY\" is resolved from a Settings/.env file or the OS environment at load time. save_settings() does the reverse — it restores the env: marker before writing — so real secrets are never persisted back into settings.json. An unset variable resolves to \"\" so a vendor fails the same way as a blank key."
+        }
+      ]
+    },
+    {
+      "category": "Vendor Layer (vendor-neutral LLM router)",
+      "snippets": [
+        {
+          "title": "The vendor contract",
+          "feature": "Pluggable LLM vendor interface",
+          "file": "Application/vendors/base.py · LLMVendor",
+          "language": "python",
+          "code": "class LLMVendor(ABC):\n    id: str = \"base\"\n    label: str = \"Base\"\n    capabilities: set[str] = set()\n\n    def __init__(self, config: dict):\n        self.config = config\n\n    @abstractmethod\n    def chat(self, messages, *, model=None, max_tokens=1024,\n             temperature=0.2, tools=None) -> ChatResult: ...\n\n    def embed(self, texts, *, model=None) -> EmbedResult:\n        raise NotImplementedError(f\"{self.id} does not support embeddings\")\n\n    def ping(self) -> tuple[bool, str]:\n        try:\n            r = self.chat([ChatMessage(\"user\", \"ping\")], max_tokens=4)\n            return True, f\"ok ({len(r.text)} chars)\"\n        except Exception as e:\n            return False, str(e)",
+          "explanation": "Every AI integration inherits from LLMVendor and returns uniform ChatResult / EmbedResult dataclasses. capabilities is a set ({'chat','embed','vision'…}) the router consults; embed() raises by default so a chat-only vendor is never asked to embed. ping() gives /vendors/{id}/test a cheap liveness check."
+        },
+        {
+          "title": "importlib vendor discovery from config",
+          "feature": "Vendors loaded from JSON, not hardcoded",
+          "file": "Application/vendors/registry.py · VendorRegistry.reload()",
+          "language": "python",
+          "code": "def reload(self):\n    self._vendors.clear()\n    for entry in self._settings.get(\"vendors\", []):\n        if not entry.get(\"active\"):\n            continue\n        try:\n            mod = importlib.import_module(f\"Application.vendors.{entry['module']}\")\n            cls = getattr(mod, entry[\"class\"])\n            self._vendors[entry[\"id\"]] = cls(entry)\n            log.info(\"Loaded vendor %s (%s)\", entry[\"id\"], entry[\"class\"])\n        except Exception as e:\n            log.error(\"Failed to load vendor %s: %s\", entry.get(\"id\"), e)",
+          "explanation": "The registry reads settings['vendors'], skips inactive ones, and dynamically imports each module/class. Adding a model is a JSON edit — module + class + active flag — with no code change. A vendor that fails to import (e.g. missing SDK) is logged and skipped rather than killing the registry."
+        },
+        {
+          "title": "Router fallback chain (no lock-in)",
+          "feature": "Pick the right vendor: prefer → default → first-active",
+          "file": "Application/vendors/router.py · VendorRouter.pick_chat()",
+          "language": "python",
+          "code": "def pick_chat(self, prefer: str | None = None) -> LLMVendor:\n    if prefer and self.registry.is_active(prefer):\n        return self.registry.get(prefer)\n    d = self.registry.default(\"chat\")\n    if d:\n        return d\n    for v in self.registry.active_with(\"chat\"):\n        return v\n    raise RuntimeError(\"No active chat vendor configured\")",
+          "explanation": "Resolution order is explicit: a caller's preferred vendor (if active), then the configured default for that capability, then any active vendor that has the capability, else a clear RuntimeError. pick_embed() is the same but additionally requires 'embed' in the vendor's capabilities. This is the anti-lock-in core — swap Claude for a local Ollama model by toggling settings.json."
+        },
+        {
+          "title": "Claude adapter",
+          "feature": "Anthropic Claude chat vendor (default active)",
+          "file": "Application/vendors/claude.py · ClaudeVendor.chat()",
+          "language": "python",
+          "code": "def chat(self, messages, *, model=None, max_tokens=1024, temperature=0.2, tools=None):\n    model = model or self.config.get(\"default_chat_model\", \"claude-sonnet-4-6\")\n    sys = next((m.content for m in messages if m.role == \"system\"), None)\n    msgs = [{\"role\": m.role, \"content\": m.content}\n            for m in messages if m.role in (\"user\", \"assistant\")]\n    kwargs = dict(model=model, max_tokens=max_tokens, temperature=temperature, messages=msgs)\n    if sys:\n        kwargs[\"system\"] = sys\n    r = self.client.messages.create(**kwargs)\n    text = \"\".join(b.text for b in r.content if hasattr(b, \"text\"))\n    return ChatResult(text=text, tokens_in=getattr(r.usage, \"input_tokens\", 0),\n                      tokens_out=getattr(r.usage, \"output_tokens\", 0), model=model, ...)",
+          "explanation": "A concrete adapter. It splits the system message out of the message list (the Anthropic API takes system separately), calls messages.create(), flattens the content blocks to text, and reports token usage on the uniform ChatResult. The default model lives in config, not code."
+        }
+      ]
+    },
+    {
+      "category": "RAG / Vector Store",
+      "snippets": [
+        {
+          "title": "Persistent Chroma indexer",
+          "feature": "Local vector store (embeddings via the router)",
+          "file": "Application/rag/indexer.py · RagIndexer.index_records()",
+          "language": "python",
+          "code": "def _ensure(self):\n    if self._collection is not None:\n        return\n    import chromadb\n    self.index_path.mkdir(parents=True, exist_ok=True)\n    self._client = chromadb.PersistentClient(path=str(self.index_path))\n    self._collection = self._client.get_or_create_collection(self.collection_name)\n\ndef index_records(self, records, batch_size=64) -> int:\n    self._ensure()\n    embedder = self.router.pick_embed()\n    total = 0\n    for start in range(0, len(records), batch_size):\n        batch = records[start:start + batch_size]\n        vecs = embedder.embed([r[\"text\"] for r in batch]).vectors\n        self._collection.upsert(ids=[r[\"id\"] for r in batch],\n            documents=[r[\"text\"] for r in batch], embeddings=vecs,\n            metadatas=[r.get(\"metadata\", {}) for r in batch])\n        total += len(batch)\n    return total",
+          "explanation": "A ChromaDB PersistentClient persists to Product/ONBASE/RAG_Index on disk, so semantic search is fully local. Records are embedded in batches of 64 using whatever vendor the router picks for embeddings, then upserted with documents + metadata. The same indexer backs both the main collection and per-anchor anchor_<id> collections."
+        },
+        {
+          "title": "Retriever — semantic search with scores",
+          "feature": "Top-K vector retrieval",
+          "file": "Application/rag/retriever.py · RagRetriever.search()",
+          "language": "python",
+          "code": "def search(self, query, top_k=8, filters=None) -> list[dict]:\n    self._ensure()\n    if self._collection.count() == 0:\n        return []\n    embedder = self.router.pick_embed()\n    qvec = embedder.embed([query]).vectors[0]\n    r = self._collection.query(query_embeddings=[qvec], n_results=top_k,\n                               where=filters or None)\n    out = []\n    for i in range(len(r[\"ids\"][0])):\n        out.append({\"id\": r[\"ids\"][0][i], \"text\": r[\"documents\"][0][i],\n                    \"metadata\": r[\"metadatas\"][0][i],\n                    \"score\": 1 - r[\"distances\"][0][i] if r.get(\"distances\") else None})\n    return out",
+          "explanation": "Embeds the query through the same router, runs a Chroma similarity query with optional metadata filters, and returns id/text/metadata plus a similarity score (1 − distance). Returns an empty list when the collection is empty, so callers degrade gracefully before anything is indexed."
+        },
+        {
+          "title": "Query engine — retrieve then synthesize, with citations",
+          "feature": "Natural-language Q&A over OnBase data",
+          "file": "Application/rag/query_engine.py · QueryEngine.answer()",
+          "language": "python",
+          "code": "SYSTEM_PROMPT = (\n    \"You are CogniBase, a senior OnBase analyst. \"\n    \"Use ONLY the provided context to answer. Cite sources by their id. \"\n    \"If context is insufficient, say so.\")\n\ndef answer(self, question, *, vendor=None, top_k=8) -> dict:\n    hits = self.retriever.search(question, top_k=top_k)\n    ctx = \"\\n\\n\".join(f\"[{h['id']}] {h['text']}\" for h in hits)\n    chat = self.router.pick_chat(prefer=vendor)\n    result = chat.chat([\n        ChatMessage(\"system\", SYSTEM_PROMPT),\n        ChatMessage(\"user\", f\"Context:\\n{ctx}\\n\\nQuestion: {question}\")])\n    return {\"answer\": result.text,\n            \"citations\": [{\"id\": h[\"id\"], \"metadata\": h[\"metadata\"], \"score\": h[\"score\"]}\n                          for h in hits],\n            \"vendor_used\": f\"{chat.id}:{result.model}\", ...}",
+          "explanation": "The end-to-end RAG path: retrieve top-K chunks, build a context block tagged with each chunk's id, and ask the active chat vendor with a system prompt that forces grounded, cited answers and an explicit 'say so if insufficient'. The response ships with citations and which vendor/model produced it — verifiability over blind trust."
+        }
+      ]
+    },
+    {
+      "category": "OnBase Source (fixture-mode connector)",
+      "snippets": [
+        {
+          "title": "Live-or-fixture fallback",
+          "feature": "OnBase connector that works without live credentials",
+          "file": "Application/sources/onbase.py · OnBaseSource._live() / list_doc_types()",
+          "language": "python",
+          "code": "def _live(self):\n    \"\"\"Lazy-init live REST/Unity clients. Returns False if unavailable.\"\"\"\n    if self.mode == \"fixture\":\n        return False\n    if self._rest is not None:\n        return True\n    try:\n        from ..api_clients.rest_client import OnBaseRestClient\n        auth_cfg = self.config.get(\"auth\")\n        if not auth_cfg:\n            return False\n        auth = AuthManager(auth_cfg)\n        self._rest = OnBaseRestClient(self.config[\"rest_base_url\"], auth, ...)\n        return True\n    except Exception as e:\n        log.info(\"OnBase live init unavailable, will use fixtures: %s\", e)\n        return False\n\ndef list_doc_types(self):\n    if self._live():\n        try:\n            return [self.annotate(d, source_id=str(d.get(\"id\",\"\")), method=\"rest\")\n                    for d in self._rest.list_doc_types()]\n        except Exception as e:\n            log.warning(\"Live REST failed: %s — falling back to fixtures\", e)\n    # Fixture: read schema.json's DOCTYPE-like rows\n    schema = self.fixture_dir / \"schema.json\"\n    ...",
+          "explanation": "This is why pre-POC development works without OnBase. In mode=auto, _live() tries to build the REST client and returns False on any failure — and it always fails today because OnBaseRestClient is an unexercised stub. Every list/extract call falls back to reading local fixtures (schema.json, parsed .expk), so the whole pipeline runs end-to-end against synthetic data."
+        },
+        {
+          "title": "Provenance-stamped synthetic extract",
+          "feature": "Fixture extraction with provenance + confidence",
+          "file": "Application/sources/onbase.py · _extract_doc_type()",
+          "language": "python",
+          "code": "def _extract_doc_type(self, request):\n    dt_id = request.selectors.get(\"doc_type_id\")\n    # Synthetic minimal placeholder until live REST is wired up\n    records = [self.annotate({\n        \"doc_id\": f\"FIXTURE-{i:06d}\",\n        \"doc_type_id\": dt_id, \"doc_type_name\": f\"DocType-{dt_id}\",\n        \"store_date\": datetime.utcnow().date().isoformat(),\n        \"synthetic\": True,\n    }, source_id=f\"fixture-{dt_id}-{i}\", method=\"fixture\", confidence=0.0)\n        for i in range(min(request.limit or 10, 10))]\n    return ExtractResult(records=records, total_count=len(records),\n                         metadata={\"mode\": \"fixture\", \"note\": \"Synthetic — no live OnBase\"})",
+          "explanation": "Honest synthetic data: each fixture record is stamped via annotate() with method='fixture' and confidence=0.0 so downstream consumers can tell it is not real. The confidence=0.0 is deliberate — it signals 'do not trust this as a real OnBase document'. Replacing this body with a real REST call is exactly the M2 work that moves the project from pre-POC to POC."
+        }
+      ]
+    },
+    {
+      "category": "Anchors, Lake & Bridges",
+      "snippets": [
+        {
+          "title": "Materialize an anchor → JSONL + vector index",
+          "feature": "Anchor materialization (extract → lake → embed)",
+          "file": "Application/anchors/materializer.py · materialize()",
+          "language": "python",
+          "code": "raw_dir = root / \"raw\" / source.id / anchor.id\nraw_dir.mkdir(parents=True, exist_ok=True)\nraw_path = raw_dir / f\"{ts}.jsonl\"\n\nresult = source.extract(request)\nwith raw_path.open(\"w\", encoding=\"utf-8\") as f:\n    for rec in result.records:\n        f.write(json.dumps(rec, default=str) + \"\\n\")\n\nif index_into_vector_store and router is not None and anchor.vectorize and result.records:\n    from ..rag.indexer import RagIndexer\n    collection = f\"anchor_{anchor.id}\"\n    indexer = RagIndexer(router, collection_name=collection)\n    texts = _records_to_text(result.records)\n    rag_records = [{\"id\": f\"{anchor.id}:{i}\", \"text\": text,\n                    \"metadata\": {**_meta(rec), \"anchor_id\": anchor.id, \"source\": source.id}}\n                   for i, (rec, text) in enumerate(zip(result.records, texts))]\n    indexer.index_records(rag_records)",
+          "explanation": "Materializing an anchor runs its source extract, writes raw JSONL into the lake at raw/<source>/<anchor>/<timestamp>.jsonl, and — if the anchor opts into vectorization — embeds the records into a dedicated Chroma collection named anchor_<id>. Each anchor thus owns its own vector namespace, which is what lets the agent be scoped to specific anchors later."
+        },
+        {
+          "title": "Heuristic bridge suggester (un-silo BU prefixes)",
+          "feature": "Cross-silo Bridges with calibrated confidence",
+          "file": "Application/bridges/suggester.py · suggest_bridges()",
+          "language": "python",
+          "code": "by_field_root = defaultdict(list)\nfor silo in silos:\n    silo_name = silo.get(\"silo_name\", silo.get(\"source\", \"\"))\n    for kw in silo.get(\"keywords\", []) or []:\n        _, root = _strip_prefix(kw.get(\"name\", \"\"))   # ADM_StudentID -> studentid\n        by_field_root[root].append((silo_name, kw))\n\nfor root, items in by_field_root.items():\n    if len(items) < 2 or len({s for s, _ in items}) < 2:\n        continue   # need the same root across >=2 distinct silos\n    types = {(kw.get(\"data_type\") or \"\").lower() for _, kw in items}; types.discard(\"\")\n    same_type = len(types) <= 1\n    sample_overlap = _sample_value_overlap([kw for _, kw in items])\n    if same_type and sample_overlap >= 0.5:\n        confidence, note = 0.95, \"matching data type and strong sample-value overlap\"\n    elif same_type:\n        confidence, note = 0.82, \"matching data type; sample values not available\"\n    else:\n        confidence, note = 0.55, \"mixed data types; review carefully\"",
+          "explanation": "The differentiator that beats single-silo tools. It strips department prefixes (ADM_/HR_/FIN_/IST_…), groups keyword types by their normalized root, and only proposes a bridge when the same root appears in two or more distinct silos. Confidence is calibrated (0.55–0.95) by whether the data types match and how much the sample values overlap — so a human reviews weak bridges before they're trusted."
+        }
+      ]
+    },
+    {
+      "category": "Capability Safety (the SQL validator)",
+      "snippets": [
+        {
+          "title": "Reject anything that isn't a scoped read-only SELECT",
+          "feature": "Capability SQL validator — the safety boundary",
+          "file": "Application/capabilities/validator.py · validate()",
+          "language": "python",
+          "code": "_FORBIDDEN_NODES = (exp.Insert, exp.Update, exp.Delete, exp.Drop, exp.Alter,\n                    exp.Create, exp.TruncateTable, exp.Pragma, exp.Attach,\n                    exp.Detach, exp.Merge)\n\nstatements = sqlglot.parse(sql, read=\"sqlite\")\nif len([s for s in statements if s is not None]) != 1:\n    rep.fail(\"expected exactly 1 statement\")          # no ;-chaining\n...\nfor node in tree.walk():\n    if isinstance(node, _FORBIDDEN_NODES):\n        rep.fail(f\"forbidden operation in SQL: {type(node).__name__.upper()}\")\n\nfor t in tree.find_all(exp.Table):\n    tlc = t.name.lower()\n    if tlc in cte_names: continue\n    if any(tlc.startswith(p) for p in _FORBIDDEN_TABLE_PREFIXES):  # sqlite_/pragma_\n        rep.fail(f\"forbidden system table reference: {t.name}\")\n    elif tlc not in declared_anchors_lc:\n        rep.fail(f\"table {t.name!r} is not in declared anchors ...\")",
+          "explanation": "The single most important safety code in CogniBase. Capability SQL is authored by a human and later run by end-users, so it is the attack surface. sqlglot parses it and the validator rejects multi-statements, any write/DDL/PRAGMA node anywhere in the tree, sqlite_/pragma_ system tables, table-valued functions, and — critically — any table not in the capability's declared anchors. It runs at publish AND at run time."
+        },
+        {
+          "title": "Validate twice — defense in depth",
+          "feature": "Re-validate at run, not just at publish",
+          "file": "Application/server/routes/capability_routes.py · run_capability()",
+          "language": "python",
+          "code": "if not body.preview:\n    if cap.status != \"published\":\n        raise HTTPException(403, f\"Capability is {cap.status}, not published\")\n    grants = reg.list_grants(capability_id)\n    if not any(g.cb_group == x_cb_group for g in grants):\n        raise HTTPException(403, f\"Group {x_cb_group!r} has no grant ...\")\n\n# --- validator gate (defense in depth) ---\nreport = validate_capability(cap)\nif not report.ok:\n    raise HTTPException(400, {\"message\": \"capability failed validation\",\n                             \"errors\": report.errors, \"warnings\": report.warnings})\nbackend = get_backend(cap)\nresult = backend.execute(cap.sql_template, body.params or {}, row_limit=int(body.row_limit))",
+          "explanation": "Even though publish already validated the SQL, run_capability() validates again — capability JSON files can be hand-edited between publish and run. It also enforces that non-preview runs target a published capability the caller's group has been explicitly granted. Only then does the (already-validated) SQL reach the backend."
+        }
+      ]
+    },
+    {
+      "category": "Capability Execution & Audit",
+      "snippets": [
+        {
+          "title": "Anchor-scoped in-memory SQLite sandbox",
+          "feature": "Lake backend — run SQL against only declared anchors",
+          "file": "Application/capabilities/backends/lake.py · LakeBackend.execute()",
+          "language": "python",
+          "code": "def execute(self, sql, params, *, row_limit=1000) -> SqlResult:\n    conn = sqlite3.connect(\":memory:\")\n    conn.row_factory = sqlite3.Row\n    try:\n        for anchor_id in self.anchors:          # ONLY declared anchors\n            snap = self._load_anchor_into(conn, anchor_id)\n            ...\n        try:\n            cur = conn.execute(sql, params)     # safe param binding\n        except sqlite3.Error as e:\n            raise BackendError(f\"SQL execution failed: {e}\") from e\n        cols = [d[0] for d in cur.description] if cur.description else []\n        rows = []\n        for i, r in enumerate(cur):\n            if i >= row_limit:\n                truncated = True; break\n            rows.append([r[c] for c in cols])\n        return SqlResult(columns=cols, rows=rows, row_count=len(rows), ...)\n    finally:\n        conn.close()",
+          "explanation": "Each capability run gets a throwaway in-memory SQLite database into which ONLY the anchors that capability declared are loaded (one TEXT table per anchor from the latest JSONL). The validated SQL runs there with parameter binding (safe against injection), row-limited, and the connection is discarded afterward. The anchor scope is enforced a second time here: a table that wasn't loaded simply doesn't exist."
+        },
+        {
+          "title": "Pinned-version audit on every run",
+          "feature": "Reproducible audit_summary.docx + JSON sidecar",
+          "file": "Application/server/routes/capability_routes.py · run_capability()",
+          "language": "python",
+          "code": "# M48: always produce an audit_summary on every run (preview or real).\n# The capability version is pinned at run time so the audit reproduces\n# byte-for-byte even after later edits.\ndocx_path, audit_record = generate_audit_summary(\n    capability_id=cap.id, capability_version=cap.version,\n    capability_name=cap.name, capability_kind=cap.kind,\n    sql_template=cap.sql_template, parameters_bound=body.params or {},\n    backend_id=result.backend_id, snapshot_id=result.snapshot_id,\n    cb_group=cb_group_eff, actor=actor, elapsed_ms=result.elapsed_ms,\n    row_count=result.row_count, truncated=result.truncated,\n    columns=result.columns, rows=result.rows,\n    audit_template=cap.audit_template or \"default\")\nreturn {..., \"audit\": {\"run_id\": audit_record.run_id,\n    \"docx_url\": f\"/capabilities/{capability_id}/audit/{audit_record.run_id}.docx\", ...}}",
+          "explanation": "Every run — preview or real — emits a Word audit document plus a JSON sidecar capturing who ran what, with which parameters, against which data snapshot, returning which rows. The capability version is pinned at run time, so the audit reproduces byte-for-byte even after the capability is later edited. This is the provenance receipt that sets CogniBase apart from a generic BI tool."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "table": [
+    {"layer": "Application", "technology": "Single-file HTML5", "role": "The entire tool — UI, cost model, report generator — is one self-contained index.html (~1,450 lines). No build step required to run it.", "license": "N/A (project source)", "version": "v3.1"},
+    {"layer": "Logic", "technology": "Vanilla JavaScript (ES2015+)", "role": "All calculation, rendering, persistence, export/import, and pagination. Zero runtime dependencies, no framework, no bundler.", "license": "N/A (project source)", "version": "strict mode"},
+    {"layer": "Styling", "technology": "Hand-written CSS", "role": "BU-branded layout (CSS custom properties for the BU red palette), responsive input grids, bar charts, and a print stylesheet that paginates the report to letter size.", "license": "N/A (project source)", "version": "embedded <style>"},
+    {"layer": "Persistence", "technology": "Web Storage (localStorage / sessionStorage)", "role": "Stores rate table (budct_rates_v2), last inputs (budct_inputs_v2), preparers, password hash, and prefs — entirely client-side, no server.", "license": "Web standard", "version": "with in-memory fallback"},
+    {"layer": "Output", "technology": "Browser print-to-PDF", "role": "The signed report is produced via window.print() and the browser's 'Save as PDF'; on-screen it renders as stacked 8.5x11 pages. No PDF library bundled.", "license": "Browser-native", "version": "@media print"},
+    {"layer": "Build / Packaging", "technology": "Python 3 + python-docx", "role": "build_package.py and make_docs.py generate the web-ready index.html, the three Word deliverables, and the distributable zip. Tooling only — not shipped to the end user.", "license": "PSF / MIT", "version": "3.x"},
+    {"layer": "Distribution", "technology": "Zip archive", "role": "dist/ holds the packaged build: index.html + User Guide + Deployment Guide, zipped for hand-off to Document Imaging & Services.", "license": "N/A", "version": "v3.1 internal"},
+    {"layer": "Hosting (any of three)", "technology": "file:// · web server · SharePoint embed", "role": "Runs from a local file, a USB/shared drive, an HTTPS web server, or an embedded SharePoint page (which requires the web-hosted URL, since SharePoint blocks page JS).", "license": "N/A", "version": "no install"}
+  ],
+  "descriptions": [
+    {
+      "title": "Why a single client-side HTML file (no server, no database)",
+      "body": "The tool is deliberately one self-contained index.html with embedded CSS and JavaScript and zero dependencies. It needs no install, no internet, and no backend, so a department can run it from a USB stick, a shared drive, or a hosted page, and every entry stays on the user's own computer. This is the right fit for a small, single-purpose calculator used occasionally by a handful of staff: there is no data to centralize, no concurrency, and nothing to operate. The trade-off — no central rate table or shared audit trail — is handled by the JSON export/import, which lets one maintained configuration travel between machines."
+    },
+    {
+      "title": "How the cost model is structured",
+      "body": "All pricing lives in RATE_DEFS, a flat catalog of ~50 rate definitions (vendor service rates, BU student wages, throughput planning factors, hardware/software, internal effort, and timeline assumptions), each carrying a default, a unit, a category, and a source citation. calc() turns a records profile into three scenarios by summing arrays of line items built from those rates: vendor lines price as rate x quantity, while BU lines price as student-hours x wage x fringe, where hours come from page volume divided by throughput. Because the rate table is data, Document Imaging & Services can re-price the whole tool by editing values — no code change — and items with no published market price are explicitly tagged as assumptions."
+    },
+    {
+      "title": "Persistence with a safety shim",
+      "body": "Rates, the last-used inputs, the preparer roster, and the (hashed) Configuration password all persist in the browser's localStorage under budct_* keys, so the tool remembers its setup between visits. Some hosts block storage — a sandboxed iframe, private browsing, or a SharePoint embed — and touching a blocked store throws a SecurityError that would otherwise kill every button. A boot-time shim probes each store and, if blocked, transparently swaps in an in-memory store so the tool still works fully for that session; it just won't remember settings afterward."
+    },
+    {
+      "title": "Report generation and pagination",
+      "body": "The report is assembled as one HTML string (BU letterhead, executive summary, comparison table, the hybrid assignment matrix, a 'why two-step costs more' section, full line items, assumptions, sources, and a signature block) wrapped in a mandatory reference-estimate disclaimer. For the on-screen preview, paginateReport() measures and splits that markup into stacked letter-size pages with keep-with-next logic so headings never strand at the bottom of a page; for the actual PDF, printReport() hands off to the browser's own print pagination and sets the document title to an auto-built, descriptive filename so 'Save as PDF' suggests a sensible name."
+    },
+    {
+      "title": "Access mode vs. real security (honest framing)",
+      "body": "Two mechanisms look like security but are not. The BU_INTERNAL_ONLY flag only toggles a 'Confidential' banner and a body class — it cannot stop anyone from viewing the page. The Configuration password is a convenience gate so departments can view estimates without altering the official rate table; it is stored only as a hash, but the tool holds no sensitive data and the gate is trivially bypassable. Genuine BU-only access must come from where the file is hosted (a login-gated web page or a permissioned SharePoint site), and the documentation states this plainly rather than overselling the flags."
+    }
+  ]
+}

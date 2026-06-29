@@ -1,0 +1,202 @@
+{
+  "intro": "Every excerpt below is copied from QI Hive's live source (the dashboard at C:\\QIH\\engine\\hive, QI Brain at C:\\QIH\\engine\\brain, the shared engine\\common broker, the ecosystem registry, and the hive-* sub-agent definitions). QI Hive is the meta-platform that orchestrates the whole ecosystem, so this code is mostly glue, governance, and shared memory rather than a leaf product.",
+  "sections": [
+    {
+      "category": "Dashboard — FastAPI App & Routes",
+      "snippets": [
+        {
+          "title": "The dashboard app + CORS",
+          "feature": "QI Hive Dashboard (port 8600) — the ecosystem control surface",
+          "file": "engine\\hive\\dashboard\\server.py · module top",
+          "language": "python",
+          "code": "app = FastAPI(title=\"QI Hive\", version=\"3.0.0\")\napp.mount(\"/static\", StaticFiles(directory=str(Path(__file__).parent / \"static\")), name=\"static\")\napp.add_middleware(CORSMiddleware, allow_origins=[\"*\"], allow_methods=[\"*\"], allow_headers=[\"*\"])",
+          "explanation": "Creates the single FastAPI application that serves the whole dashboard on port 8600 (NSSM service QI_Dashboard). Static assets are mounted under /static and CORS is opened so any sibling QI service can call its JSON endpoints. Every route below hangs off this one app object."
+        },
+        {
+          "title": "Per-project status page route",
+          "feature": "Project Status pages — the tabbed page you are reading right now",
+          "file": "engine\\hive\\dashboard\\server.py · GET /project/{pid}/status",
+          "language": "python",
+          "code": "@app.get(\"/project/{pid}/status\", response_class=HTMLResponse)\ndef project_status_page(pid: str, tab: str = \"overview\"):\n    title, body = render_project_status(pid, tab)\n    return base_layout(title, body, \"dashboard\")",
+          "explanation": "This is the route that renders this very page. It hands the project id and the selected tab to render_project_status() in project_status.py, which reads the INTRO/status_*.json + status_intro.md files and emits the Overview, Blueprint, Code Explained, Features, Tech Stack and Docs tabs."
+        },
+        {
+          "title": "Content-negotiated health probe",
+          "feature": "Health endpoint that serves humans HTML and monitors JSON",
+          "file": "engine\\hive\\dashboard\\server.py · GET /health",
+          "language": "python",
+          "code": "@app.get(\"/health\")\ndef health_page(request: Request):\n    accept = (request.headers.get(\"accept\") or \"\").lower()\n    wants_html = \"text/html\" in accept and \"application/json\" not in accept\n    if wants_html:\n        return HTMLResponse(base_layout(\"Health Check\", render_health(), \"health\"))\n    return JSONResponse({\n        \"status\":  \"ok\",\n        \"service\": \"qi_hive\",\n        \"port\":    8600,\n        \"version\": \"3.0.0\",\n    })",
+          "explanation": "One endpoint, two audiences. A browser (Accept: text/html) gets the rendered health dashboard; the QI validator and uptime monitors (default Accept or application/json) get a compact JSON probe. This closed the old 'health returns HTML not JSON' audit gap."
+        }
+      ]
+    },
+    {
+      "category": "Access Control — Tunnel Write-Guard",
+      "snippets": [
+        {
+          "title": "Block writes that arrive through the public tunnel",
+          "feature": "Tunnel write-protection — public Cloudflare tunnel stays read-only without a token",
+          "file": "engine\\hive\\dashboard\\server.py · tunnel_write_guard middleware",
+          "language": "python",
+          "code": "@app.middleware(\"http\")\nasync def tunnel_write_guard(request: Request, call_next):\n    if request.method in (\"POST\", \"PUT\", \"PATCH\", \"DELETE\"):\n        via_tunnel = bool(request.headers.get(\"cf-ray\") or request.headers.get(\"cf-connecting-ip\"))\n        if via_tunnel:\n            tok = _write_token()\n            supplied = request.headers.get(\"x-qi-token\") or request.query_params.get(\"qi_token\", \"\")\n            if not tok or supplied != tok:\n                return JSONResponse({\"status\": \"error\", \"error\": \"write access via tunnel requires X-QI-Token\"},\n                                    status_code=403)\n    return await call_next(request)",
+          "explanation": "Cloudflare injects cf-ray / cf-connecting-ip headers on tunnelled traffic. This middleware lets the public tunnel stay up for read access, but any mutating request (POST/PUT/PATCH/DELETE) coming through it must carry the shared X-QI-Token, or it gets a 403. Direct localhost/LAN calls have neither header, so local workflow and hive agents are unaffected."
+        },
+        {
+          "title": "No-store on dynamic HTML",
+          "feature": "Live pages never serve stale cache across origins",
+          "file": "engine\\hive\\dashboard\\server.py · no_store_html middleware",
+          "language": "python",
+          "code": "@app.middleware(\"http\")\nasync def no_store_html(request: Request, call_next):\n    response = await call_next(request)\n    ctype = response.headers.get(\"content-type\", \"\")\n    if ctype.startswith(\"text/html\"):\n        response.headers[\"Cache-Control\"] = \"no-store, must-revalidate\"\n        response.headers[\"Pragma\"] = \"no-cache\"\n        response.headers[\"Expires\"] = \"0\"\n    return response",
+          "explanation": "Dashboard pages render live on every request. This forces browsers to revalidate HTML so a public-tunnel origin can't show a stale launcher after services or tunnels change. Static assets keep their own caching since the guard only fires on text/html responses."
+        }
+      ]
+    },
+    {
+      "category": "Brain — DB Connection & Schema",
+      "snippets": [
+        {
+          "title": "The single qi_brain.db connection helper",
+          "feature": "One safe, WAL-mode gateway to the shared knowledge database",
+          "file": "engine\\brain\\core\\db.py · open_brain_db()",
+          "language": "python",
+          "code": "DB_PATH = Path(os.environ.get(\"QI_BRAIN_DB\", str(_DATA_DIR / \"qi_brain.db\")))\n\ndef open_brain_db(path: Path = DB_PATH) -> sqlite3.Connection:\n    conn = sqlite3.connect(str(path), check_same_thread=False)\n    conn.row_factory = sqlite3.Row\n    conn.execute(\"PRAGMA journal_mode = WAL\")\n    conn.execute(\"PRAGMA synchronous = NORMAL\")\n    conn.execute(\"PRAGMA busy_timeout = 5000\")\n    conn.execute(\"PRAGMA foreign_keys = ON\")\n    return conn",
+          "explanation": "Every Brain module opens the database through this one helper so the PRAGMAs are always identical: WAL mode lets the API, poller, harvester and dashboard all touch C:\\QIH\\data\\qi_brain.db concurrently; busy_timeout avoids 'database is locked' errors; foreign_keys keeps referential integrity across the 24 tables; Row factory gives column-name access."
+        },
+        {
+          "title": "The decisions table (governance memory)",
+          "feature": "Permanent, supersede-able record of every architecture decision",
+          "file": "engine\\brain\\core\\schema.sql · CREATE TABLE decisions",
+          "language": "sql",
+          "code": "CREATE TABLE IF NOT EXISTS decisions (\n    decision_id      INTEGER PRIMARY KEY AUTOINCREMENT,\n    project_id       TEXT NOT NULL REFERENCES projects(project_id),\n    agent_id         TEXT NOT NULL DEFAULT 'claude' REFERENCES agents(agent_id),\n    decision_code    TEXT UNIQUE,\n    title            TEXT NOT NULL,\n    rationale        TEXT NOT NULL,\n    impact_scope     TEXT NOT NULL DEFAULT 'project',  -- 'project' | 'ecosystem' | 'global'\n    tags             TEXT,\n    superseded_by    INTEGER REFERENCES decisions(decision_id),\n    superseded_at    TEXT,\n    superseded_reason TEXT,\n    recorded_at      TEXT NOT NULL DEFAULT (datetime('now'))\n);",
+          "explanation": "The heart of QI's institutional memory (~491 rows). Each decision is tied to a project and the agent that logged it, scoped project/ecosystem/global, and is never deleted — it is superseded by pointing superseded_by at the newer decision. That is how get_context() can always surface the current ruling while keeping the audit trail."
+        }
+      ]
+    },
+    {
+      "category": "Brain — Knowledge API",
+      "snippets": [
+        {
+          "title": "Log a decision (SQL + vector in one call)",
+          "feature": "qi.log_decision() — durable record plus semantic searchability",
+          "file": "engine\\brain\\api.py · POST /api/log_decision",
+          "language": "python",
+          "code": "@app.post(\"/api/log_decision\")\nasync def log_decision(req: LogDecisionRequest):\n    tags_json = json.dumps(req.tags or [])\n    with open_brain_db() as conn:\n        req.project_id = _resolve_pid(conn, req.project_id)\n        cur = conn.execute(\n            \"\"\"INSERT INTO decisions\n                (project_id, agent_id, decision_code, title, rationale, impact_scope, tags)\n               VALUES (?, ?, ?, ?, ?, ?, ?)\"\"\",\n            (req.project_id, req.agent_id, req.decision_code,\n             req.title, req.rationale, req.impact_scope, tags_json))\n        decision_id = cur.lastrowid\n        conn.commit()\n    # Embed into ChromaDB async\n    text = f\"{req.title}\\n{req.rationale}\"\n    try:\n        await _memory().add_decision(decision_id=decision_id, text=text,\n            metadata={\"project_id\": req.project_id, \"scope\": req.impact_scope})\n    except Exception:\n        pass  # DB write succeeded; Chroma failure is non-fatal\n    return {\"ok\": True, \"decision_id\": decision_id}",
+          "explanation": "The dual-write that makes the Brain useful. The decision is committed to SQLite first (the source of truth), then vectorised into ChromaDB so it can be found by meaning later. If the embedding step fails the structured record still survives — Chroma is treated as a rebuildable index, not the primary store."
+        },
+        {
+          "title": "Budgeted session context assembly",
+          "feature": "qi.get_context() — what a new session is told about the project",
+          "file": "engine\\brain\\api.py · POST /api/context",
+          "language": "python",
+          "code": "decisions = conn.execute(\n    \"\"\"SELECT d.decision_id, d.decision_code, d.title, d.rationale,\n              d.impact_scope, d.tags, d.project_id, d.recorded_at\n       FROM decisions d\n       WHERE d.superseded_by IS NULL\n         AND (d.project_id = ? OR d.impact_scope IN ('ecosystem','global'))\n         AND d.recorded_at >= ?\n       ORDER BY\n           CASE WHEN d.project_id = ? THEN 0 ELSE 1 END,\n           d.recorded_at DESC\n       LIMIT 50\"\"\",\n    (req.project_id, cutoff, req.project_id)).fetchall()\n\nranked_decisions = []\nfor row in decisions:\n    d = dict(row)\n    cost = _est_tokens(str(d))\n    if used + cost > budget:\n        break\n    ranked_decisions.append(d)\n    used += cost",
+          "explanation": "When a session starts, this pulls only the still-current decisions (superseded_by IS NULL) for this project plus any ecosystem/global rulings, newest first, then packs them into the caller's token budget and stops once it is full. That is how a fresh Claude session is briefed without blowing the context window."
+        }
+      ]
+    },
+    {
+      "category": "Brain — Semantic Memory (ChromaDB)",
+      "snippets": [
+        {
+          "title": "Four cosine-distance collections",
+          "feature": "Vector memory: decisions, features, sessions and docs are all searchable by meaning",
+          "file": "engine\\brain\\core\\memory_store.py · MemoryStore",
+          "language": "python",
+          "code": "COL_DECISIONS = \"qi_decisions\"\nCOL_FEATURES  = \"qi_features\"\nCOL_SESSIONS  = \"qi_sessions\"\nCOL_DOCS      = \"qi_docs\"\nALL_COLLECTIONS = [COL_DECISIONS, COL_FEATURES, COL_SESSIONS, COL_DOCS]\n\nclass MemoryStore:\n    def __init__(self, chroma_path: Path = CHROMA_PATH):\n        CHROMA_PATH.mkdir(parents=True, exist_ok=True)\n        self._client = chromadb.PersistentClient(\n            path=str(chroma_path),\n            settings=Settings(anonymized_telemetry=False))\n\n    def _get_col(self, name: str):\n        return self._client.get_or_create_collection(\n            name=name, metadata={\"hnsw:space\": \"cosine\"})",
+          "explanation": "The Brain's semantic layer. A persistent ChromaDB store at engine\\brain\\qi_memory holds four collections — decisions, features, session summaries and harvested ecosystem docs — each using cosine distance. Embeddings come from nomic-embed-text via the provider factory, so retrieval is by meaning rather than keyword."
+        },
+        {
+          "title": "Semantic search over a collection",
+          "feature": "Find the closest records by meaning (powers the Documentation Brain search)",
+          "file": "engine\\brain\\core\\memory_store.py · MemoryStore.search()",
+          "language": "python",
+          "code": "async def search(self, query: str, collection: str = COL_DECISIONS,\n                 n: int = 5, where: Optional[dict] = None) -> list[dict]:\n    vec = await self._embed(query)\n    col = self._get_col(collection)\n    kwargs = {\"query_embeddings\": [vec], \"n_results\": n,\n              \"include\": [\"documents\", \"metadatas\", \"distances\"]}\n    if where:\n        kwargs[\"where\"] = where\n    results = col.query(**kwargs)\n    output = []\n    for i, doc_id in enumerate(results[\"ids\"][0]):\n        output.append({\"id\": doc_id, \"document\": results[\"documents\"][0][i],\n                       \"metadata\": results[\"metadatas\"][0][i],\n                       \"distance\": results[\"distances\"][0][i]})\n    return output",
+          "explanation": "Embeds the query with the same model used for storage, then asks ChromaDB for the n nearest vectors, returning each hit with its similarity distance. The dashboard's /api/library/search calls this (collection='docs') so a plain-English query finds the right doc across ~921 indexed files."
+        }
+      ]
+    },
+    {
+      "category": "Governance — Ecosystem Registry",
+      "snippets": [
+        {
+          "title": "Never hardcode a port — derive CORS from the registry",
+          "feature": "Single source of truth for ports / URLs across all 25 projects",
+          "file": "ecosystem\\qi_registry.py · QI.cors_origins() / QI.port()",
+          "language": "python",
+          "code": "class QI:\n    @staticmethod\n    def port(project_id: str, service: str = \"api\") -> int | None:\n        proj = _PROJECTS.get(project_id, {})\n        ports = proj.get(\"ports\", {})\n        entry = ports.get(service, {})\n        return entry.get(\"current\")\n\n    @staticmethod\n    def cors_origins() -> list[str]:\n        origins = []\n        for proj in _PROJECTS.values():\n            for service_key, service_val in proj.get(\"ports\", {}).items():\n                p = service_val.get(\"current\")\n                if p:\n                    origins.append(f\"http://localhost:{p}\")\n                    origins.append(f\"http://127.0.0.1:{p}\")\n        return list(set(origins))",
+          "explanation": "The registry module any QI service imports. Instead of scattering port numbers and CORS origins across codebases, projects call QI.port('maia','api') or feed QI.cors_origins() straight into FastAPI — so changing a port is a one-line registry edit, not a hunt-and-replace. This enforces the ecosystem's 'no hardcoded values' law."
+        },
+        {
+          "title": "Port-block allocation rule",
+          "feature": "Each project owns a dedicated port block — no random adjacent ports",
+          "file": "ecosystem\\qi_registry.json · port_strategy.api_blocks",
+          "language": "json",
+          "code": "\"port_strategy\": {\n  \"rule\": \"Each project owns a dedicated port BLOCK. No project may use another project's block.\",\n  \"api_blocks\": {\n    \"8000-8099\": \"System / FileHQ family\",\n    \"8100-8199\": \"Maia family\",\n    \"8200-8299\": \"Naya family\",\n    \"8300-8399\": \"NEXUS family\",\n    \"8600-8649\": \"QI Launcher family\",\n    \"9000-9099\": \"QI Hive family (Brain at 9011, Dashboard at 8600 migrating)\"\n  }\n}",
+          "explanation": "The machine-readable governance that keeps services from colliding. Every family gets a reserved block; the validator and new-project wizard read this so a fresh service is assigned a port inside its own block rather than grabbing whatever is free. QI Brain sits at 9011 in the Hive block, the Dashboard at 8600."
+        }
+      ]
+    },
+    {
+      "category": "Service Fabric — Elevation Broker",
+      "snippets": [
+        {
+          "title": "Run a privileged command from a non-admin process",
+          "feature": "QI_Elevate broker — restart services / run admin ops without UAC popups",
+          "file": "engine\\common\\qi_elevate_client.py · run_elevated()",
+          "language": "python",
+          "code": "CMD_DIR = Path(r\"C:\\QIH\\commands\")\nPENDING = CMD_DIR / \"pending\"\nCOMPLETED = CMD_DIR / \"completed\"\n\ndef run_elevated(cmd: str, args: list[str], submitted_by: str = \"unknown\",\n                 timeout: float = 30.0, poll_interval: float = 0.5) -> dict:\n    \"\"\"Submit a command to the elevation broker and wait for the result.\"\"\"\n    rid = f\"req_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}\"\n    request = {\"id\": rid, \"cmd\": cmd, \"args\": args,\n               \"submitted_by\": submitted_by, \"timestamp\": datetime.now().isoformat()}\n    (PENDING / f\"{rid}.json\").write_text(json.dumps(request, indent=2), encoding=\"utf-8\")\n    result_path = COMPLETED / f\"{rid}.json\"\n    deadline = time.time() + timeout\n    while time.time() < deadline:\n        if result_path.exists():\n            return json.loads(result_path.read_text(encoding=\"utf-8\"))\n        time.sleep(poll_interval)\n    raise TimeoutError(...)",
+          "explanation": "The file-queue broker that replaced gsudo (which failed from headless contexts). A non-admin caller drops a request JSON in C:\\QIH\\commands\\pending; the elevated QI_Elevate service picks it up, runs it, and writes the result to completed. The client just polls for that result — e.g. run_elevated('nssm', ['restart','QI_Dashboard']) restarts a service with no UAC prompt."
+        }
+      ]
+    },
+    {
+      "category": "Governance — Inspector / Compliance",
+      "snippets": [
+        {
+          "title": "Scan committed source for leaked credentials",
+          "feature": "Standards Enforcer — catches hardcoded tokens before they ship",
+          "file": "engine\\hive\\inspector\\inspector.py · check_secrets_in_source()",
+          "language": "python",
+          "code": "patterns = [\n    (r'[0-9]{8,10}:AA[A-Za-z0-9_-]{30,}',  'Telegram bot token'),\n    (r'sk-ant-[A-Za-z0-9_-]{20,}',          'Anthropic API key'),\n    (r'sk-proj-[A-Za-z0-9_-]{20,}',         'OpenAI API key'),\n    (r'AIza[0-9A-Za-z_-]{30,}',             'Google API key'),\n    (r'EAA[A-Za-z0-9]{60,}',                'Meta page/access token'),\n    (r'gh[ops]_[A-Za-z0-9]{30,}',           'GitHub token'),\n]\nhits = []\nfor pat, label in patterns:\n    out = subprocess.run(\n        ['git', '-C', str(path), 'grep', '-l', '-E', pat,\n         '--', '*.py', '*.js', '*.json', '*.ps1', '*.md', '*.bat'],\n        capture_output=True, text=True, timeout=30)\n    for f in out.stdout.split():\n        hits.append(f\"{label} in {f}\")\nif hits:\n    did = file_dispatch(pid, 'secrets_in_source', msg, fix)\n    return CheckResult('secrets_in_source', pid, 'fail', 'high', False, msg, fix, dispatch_id=did)",
+          "explanation": "Added after live LINE/FB/Telegram tokens were found committed to maia_server.py. The inspector greps git-tracked files (so gitignored secrets are never flagged) for known credential shapes; any hit becomes a high-severity finding and is filed as a dispatch for follow-up. This is one of the checks the Inspector runs every 4 hours plus a nightly deep pass."
+        },
+        {
+          "title": "Detect unlogged work (Brain drift)",
+          "feature": "Catches projects where code shipped but Brain never heard about it",
+          "file": "engine\\hive\\inspector\\inspector.py · check_brain_drift()",
+          "language": "python",
+          "code": "def check_brain_drift(pid: str, path: Path, auto_fix: bool):\n    evidence: list[tuple[str, str]] = []  # (date 'YYYY-MM-DD', source)\n    if (path / '.git').exists():\n        try:\n            out = subprocess.check_output(\n                ['git', '-C', str(path), 'log', '-1', '--format=%cs'],\n                text=True, timeout=15).strip()\n            if out:\n                evidence.append((out, f'git commit {out}'))\n        except Exception:\n            pass\n    summaries = Path(r'C:\\QIH\\shared\\documentation\\session_summaries')",
+          "explanation": "Where check_session_freshness only notices silence, this notices unlogged activity: if the last git commit (or a session-summary .docx) is newer than the project's last session_log row in the Brain, work happened that the Brain never recorded. Added after an audit found project_state frozen and two projects entirely absent from the Brain."
+        }
+      ]
+    },
+    {
+      "category": "Agent Fabric — Sub-Agents & Dispatch",
+      "snippets": [
+        {
+          "title": "A sub-agent is defined by Markdown front-matter",
+          "feature": "Seven specialist hive agents loaded by Claude Code",
+          "file": ".claude\\agents\\hive-architect.md · front-matter (at C:\\CLAUDE)",
+          "language": "markdown",
+          "code": "---\nname: hive-architect\ndescription: Strategic system designer for QI Hive. Use for architecture decisions, multi-project design, choosing patterns, breaking-change analysis, ADRs, and implementation plans before code is written. NOT for writing code — design only.\nmodel: opus\ntools: Read, Glob, Grep, Bash, WebFetch, WebSearch\n---\n\nYou are the **QI Hive Architect**. You design systems before anyone builds them.",
+          "explanation": "Each hive agent is just a Markdown file: YAML front-matter declares its name, when to use it (description), which model it runs on, and which tools it may touch; the body is its system prompt. Claude Code loads every *.md in .claude\\agents at startup. The architect runs on Opus and is read-only by design — it plans, it does not edit."
+        },
+        {
+          "title": "The dispatch discipline",
+          "feature": "Agentic operating mode — main thread routes work to the right specialist",
+          "file": ".claude\\agents\\DISPATCH_PROTOCOL.md · Workflow A",
+          "language": "markdown",
+          "code": "### Workflow A — design + implement + ship\n1. **hive-architect** (Opus) — design the change. Output: implementation plan.\n2. **hive-builder** (Sonnet) — execute the plan. Output: code on disk.\n3. **hive-inspector** (Sonnet) — review the change. Output: findings (pass / fail / fixes needed).\n4. If inspector found issues: back to **hive-builder** with the findings.\n5. **hive-scribe** (Haiku) — write session summary at end.",
+          "explanation": "QI Hive's operating mode is a discipline, not magic: the main-thread Claude is the dispatcher and routes each sub-task to a specialist via Agent(subagent_type='hive-<role>'). The model assignment is deliberate cost control — Opus only for architecture, Sonnet for build/review, Haiku for cheap ops and docs — keeping delegation one level deep."
+        },
+        {
+          "title": "CoWork → Hive work-order endpoint",
+          "feature": "External agents (CoWork) hand work to the Hive over HTTP",
+          "file": "engine\\hive\\dashboard\\server.py · POST /api/dispatch",
+          "language": "python",
+          "code": "@app.post(\"/api/dispatch\")\nasync def api_dispatch(request: Request):\n    body = await request.json()\n    msg_type   = body.get(\"type\", \"note\")\n    project_id = body.get(\"project_id\", \"unknown\")\n    source     = body.get(\"source\", \"cowork\")\n    result = {\"ok\": True, \"type\": msg_type, \"project_id\": project_id}\n    if msg_type in (\"brain_update\", \"state_update\", \"decision\", \"session\", \"scope_drop\"):\n        async with httpx.AsyncClient(timeout=10) as client:\n            r = await client.post(\"http://127.0.0.1:9011/api/inbox\",\n                                  json={**body, \"source\": source})\n            result[\"brain_response\"] = r.json()\n    elif msg_type == \"task_create\":\n        ...  # add a task card to the Hive board\n    return JSONResponse(result)",
+          "explanation": "The integration seam between CoWork (Claude Work) and the Hive. Incoming work orders are typed: brain_update/decision/session payloads are forwarded to the Brain's inbox at :9011, while task_create drops a card onto the Hive board. This is how the 4-way architecture (CoWork / Claude Code / Hive / Renne) actually exchanges work."
+        }
+      ]
+    }
+  ]
+}

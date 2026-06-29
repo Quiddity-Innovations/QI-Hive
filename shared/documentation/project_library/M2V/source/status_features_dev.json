@@ -1,0 +1,66 @@
+[
+  {
+    "category": "Entry Point & Service",
+    "features": [
+      {"name": "main.py — launcher", "file": "main.py :: start_api() / start_ui()", "status": "live", "detail": "argparse CLI: default runs API (uvicorn, daemon thread) + UI (Gradio, main thread); --api-only / --ui-only. Reconfigures stdout to UTF-8, sets up file+stream logging to data/logs/m2v.log. API on 127.0.0.1:8501, UI on 127.0.0.1:7841 (purple/zinc theme). Confirmed launching cleanly in m2v.log (2026-06-09/10)."},
+      {"name": "QI_M2V NSSM service", "file": "install_service.bat", "status": "partial", "detail": "Installs Windows service QI_M2V via C:\\QIH\\engine\\bin\\nssm.exe, AppDirectory C:\\M2V, runs .venv python main.py, logs to C:\\M2V\\logs\\service.log, SERVICE_DEMAND_START, rotate 1MB. Built and QI_-prefixed but not yet recorded in C:\\QIH\\ecosystem\\QI_Service_Registry.md."},
+      {"name": "QI_M2VTunnel (named tunnel)", "file": "install_tunnel.bat", "status": "partial", "detail": "Cloudflare tunnel exposing :7841. File carries a deprecation notice: quick tunnels retired in favour of the static named tunnel qi-m2v (m2v.quiddityinnovations.com), managed centrally at C:\\QIH\\engine\\tunnels\\."},
+      {"name": "Start_M2V.bat / setup_venv.py", "file": "Start_M2V.bat, setup_venv.py", "status": "live", "detail": "Start_M2V.bat runs main.py from .venv (falls back to global Python). setup_venv.py provisions the venv and installs cu128 torch FIRST, then requirements.txt (per the RTX 5080 note)."}
+    ]
+  },
+  {
+    "category": "API — FastAPI (:8501)",
+    "features": [
+      {"name": "QI contract endpoints", "file": "api/main.py :: health() / version() / info()", "status": "live", "detail": "GET /health -> {status:ok, project:m2v}; /version -> version 0.1.0, status development; /info -> id/name/ports/endpoints/styles/backends. CORS allow_origins=['*'] (permissive — to be tightened). Covered by tests/test_smoke.py."},
+      {"name": "POST /api/generate", "file": "api/main.py :: generate()", "status": "partial", "detail": "Multipart: audio (UploadFile), lyrics (Form), style, show_lyrics, optional reference_image, ip_scale. Saves uploads to data/uploads/<job_id>, registers an in-memory JOBS entry, spawns a daemon thread running run_pipeline(), returns job_id immediately. No persistence — JOBS is a process-lifetime dict."},
+      {"name": "Job polling endpoints", "file": "api/main.py :: status() / status_events() / list_jobs()", "status": "live", "detail": "GET /api/status/{id} (summary + last_event), /api/status/{id}/events?since=N (incremental event stream the UI consumes), /api/jobs (all jobs newest-first). Drives the live progress log."},
+      {"name": "GET /api/download/{id}", "file": "api/main.py :: download()", "status": "partial", "detail": "Returns the finished MP4 as a FileResponse once job status==done; 400 if not ready, 404 if the output file is missing. Verified output files exist in data/output (3 .mp4 + .srt pairs)."},
+      {"name": "POST /api/extract-lyrics", "file": "api/main.py :: extract_lyrics_endpoint()", "status": "partial", "detail": "Saves a temp upload, tries _from_id3() first, then Whisper via extract(); returns {lyrics, source(id3|whisper), metadata}. Cleans up the temp file in a finally block."}
+    ]
+  },
+  {
+    "category": "Pipeline Orchestration",
+    "features": [
+      {"name": "run() — staged generator", "file": "engine/pipeline.py :: run()", "status": "partial", "detail": "Generator that yields progress dicts per stage: start -> analyzing -> analyzed -> audio -> generating (per clip) -> clip_done/clip_error -> assembling -> done. Creates data/scenes/<job_id> + data/output/<job_id>.mp4. Skips assembly with an error event if every clip fails. Streamed straight to the API JOBS event list."}
+    ]
+  },
+  {
+    "category": "Engine — Lyric & Audio Analysis",
+    "features": [
+      {"name": "Lyric analyzer (LLM director)", "file": "engine/lyric_analyzer.py :: analyze() / _split_lyrics() / _generate_prompts_ollama()", "status": "partial", "detail": "Splits lyrics on [Verse]/[Chorus] markers, then blank lines, then 4-line chunks; merges down to MAX_SCENES=10. Calls Ollama qwen3:8b (think:false) for a per-segment {prompt, mood, color_palette}; regex-extracts the JSON array; falls back to _fallback_prompt() if Ollama is down. Scene is a dataclass (index/label/lyrics/start/end/prompt/negative/mood/palette)."},
+      {"name": "Audio analyzer", "file": "engine/audio_analyzer.py :: get_duration() / get_section_timestamps()", "status": "partial", "detail": "Duration via librosa, then mutagen, then ffprobe, else 180s. Section boundaries via librosa MFCC + agglomerative segmentation (merges shortest gaps to hit n_segments); falls back to even time split on any failure."},
+      {"name": "Lyrics extractor", "file": "engine/lyrics_extractor.py :: extract() / _from_id3() / _from_whisper()", "status": "partial", "detail": "ID3 USLT/SYLT (mp3), FLAC lyrics, MP4 \\xa9lyr; else Whisper (default 'base', cuda if available) grouped into verse blocks on >2s gaps. get_song_metadata() pulls title/artist/album. Raises LyricsNotFound if both strategies are empty."}
+    ]
+  },
+  {
+    "category": "Engine — Image & Video Generation",
+    "features": [
+      {"name": "VideoGenerator — SDXL + IP-Adapter", "file": "engine/video_generator.py :: VideoGenerator._make_image()", "status": "partial", "detail": "StableDiffusionXLPipeline (stabilityai/stable-diffusion-xl-base-1.0), fp16 on cuda, attention slicing, 30 steps, guidance 7.5, 1024x576. If a reference image is supplied it load_ip_adapter(h94/IP-Adapter, ip-adapter_sdxl.bin) and set_ip_adapter_scale(ip_scale). Code complete; depends on multi-GB model weights present locally."},
+      {"name": "VideoGenerator — Stable Video Diffusion", "file": "engine/video_generator.py :: _animate()", "status": "partial", "detail": "StableVideoDiffusionPipeline (svd-img2vid-xt), fp16, model CPU offload, 25 frames @ 8fps (~3.1s), motion_bucket 127, seed 42, export_to_video; then FFmpeg stream_loop to fill scene duration + scale to 1280x720. VRAM strategy: SDXL (~8GB) and SVD (~8GB) loaded/unloaded alternately to stay within 16GB."},
+      {"name": "config/m2v.json backend defs (drift)", "file": "config/m2v.json :: backends", "status": "disabled", "detail": "Config still names backends img_ffmpeg (sdxl-turbo, 4 steps) and cogvideox (THUDM/CogVideoX-5b). These do NOT match the live engine/video_generator.py (SDXL Base 1.0 + SVD). Config is stale relative to code — reconcile or remove."}
+    ]
+  },
+  {
+    "category": "Engine — Assembly (FFmpeg)",
+    "features": [
+      {"name": "assemble() — stitch + mux + subtitle", "file": "engine/assembler.py :: assemble()", "status": "partial", "detail": "3 FFmpeg passes: _concat_clips() (concat demuxer, libx264, yuv420p), _replace_audio() (map video + original audio, aac 192k, -shortest), _burn_subtitles() (subtitles filter with force_style). Cleans up intermediates. Produced real .mp4 + .srt pairs in data/output."},
+      {"name": "_write_srt() — lyric subtitles", "file": "engine/assembler.py :: _write_srt() / _srt_time()", "status": "live", "detail": "Writes an SRT from scene start/end times (first 2 lyric lines per block). Confirmed by data/output/*.srt sample with timed Portuguese captions."}
+    ]
+  },
+  {
+    "category": "Standalone Proof-of-Concept",
+    "features": [
+      {"name": "make_forro_video.py — MoviePy MV builder", "file": "make_forro_video.py :: main() / build_scene_clip()", "status": "live", "detail": "Self-contained MoviePy renderer: reads scenes.json, Ken Burns zoom per still, 0.8s crossfades, lower-third captions, missing image -> labelled placeholder, fade in/out. Rendered forro_anime_mv.mp4 (1920x1080, 30fps, 160.5s) in 706s (forro_video_build.log) — used placeholders as no real frames were generated."},
+      {"name": "generate_frames.py — ComfyUI driver", "file": "generate_frames.py :: build_graph() / generate()", "status": "planned", "detail": "stdlib-only urllib client that drives a running ComfyUI (:8188): auto-detects an anime/SDXL checkpoint, builds a canonical txt2img graph (CheckpointLoader/CLIPTextEncode/EmptyLatent/KSampler/VAEDecode/SaveImage), polls /history, saves scene_##.png. Not yet run — the forro video still uses placeholders per the build log."},
+      {"name": "scenes.json — 10-scene storyboard", "file": "scenes.json", "status": "live", "detail": "Hand-authored storyboard for 'Churrasco na Geórgia': resolution/fps, style_prefix, negative_prompt, and 10 scenes with start time, label, image, Portuguese caption, and an SDXL positive prompt each."}
+    ]
+  },
+  {
+    "category": "Config & Tooling",
+    "features": [
+      {"name": "Config loader", "file": "shared/config.py :: load_config() / get()", "status": "live", "detail": "Caches config/m2v.json, loads secrets/m2v.env via python-dotenv if present, dotted-path get(). secrets/m2v.env.template is an empty placeholder (no keys needed — everything runs local)."},
+      {"name": "Model cache cleanup", "file": "tools/cleanup_models.py", "status": "live", "detail": "Removes the abandoned sdxl-turbo from the HuggingFace hub cache; keeps SDXL Base 1.0, IP-Adapter, and SVD. Reports freed GB. Confirms the move off the config-named turbo backend toward the engine's SDXL+SVD chain."},
+      {"name": "Live smoke tests", "file": "tests/test_smoke.py", "status": "live", "detail": "pytest hitting :8501 — /health, /version, /info, and /openapi.json. Skips the whole module cleanly if the service is offline so CI stays green."}
+    ]
+  }
+]

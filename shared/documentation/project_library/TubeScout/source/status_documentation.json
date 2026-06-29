@@ -1,0 +1,68 @@
+{
+  "sections": [
+    {
+      "name": "Project Overview & Setup",
+      "documents": [
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\TUBESCOUT\\", "type": "Markdown", "description": "Session-start protocol, what TubeScout is (cousin tier), ports (8503 API / 7843 UI), and the parallel-projects port table. Note: still references the legacy C:\\QI\\ECOSYSTEM registry path — migrated to C:\\QIH\\ecosystem."},
+        {"title": "YouTube OAuth Setup Guide", "file": "SETUP_YOUTUBE_OAUTH.md", "location": "C:\\TUBESCOUT\\", "type": "Markdown", "description": "One-time 5-minute setup: create a Desktop OAuth client (youtube.readonly), drop client_secret.json into secrets/, run --login, verify with --test, and the quota math (~600 of 10,000 free units/day)."},
+        {"title": "Requirements", "file": "requirements.txt", "location": "C:\\TUBESCOUT\\", "type": "Text", "description": "Pinned dependencies: fastapi, uvicorn[standard], gradio, httpx, python-dotenv, python-docx, pydantic; google-api-python-client + auth libs (P1); youtube-transcript-api (P2)."},
+        {"title": "Start scripts", "file": "TubeScout_Start.bat / TubeScout_Start_Server.bat / start_server_hidden.vbs / TubeScout_Run_Cycle.bat", "location": "C:\\TUBESCOUT\\", "type": "Batch / VBS", "description": "Manual launchers for the server and the twice-daily cycle (the latter mirrors what Task Scheduler runs)."}
+      ]
+    },
+    {
+      "name": "Key Source — Entry & API",
+      "documents": [
+        {"title": "Main Entry Point", "file": "main.py", "location": "C:\\TUBESCOUT\\", "type": "Python", "description": "Starts the FastAPI API (uvicorn :8503) in a daemon thread and the Gradio status UI (:7843); UTF-8 + file logging to data/logs/tubescout.log."},
+        {"title": "FastAPI App + News Page", "file": "main.py", "location": "C:\\TUBESCOUT\\api\\", "type": "Python", "description": "All endpoints + the server-rendered HTML pages: /health,/version,/info,/stats,/channels,/videos,/topics, channel mutations, /news,/favorites,/discover,/digest,/settings, /api/news,/api/config. Central write-guard middleware; CORS from qi_registry; tunnel-aware NEXUS link."},
+        {"title": "Gradio Status UI", "file": "app.py", "location": "C:\\TUBESCOUT\\ui\\", "type": "Python", "description": "Minimal operator console on :7843 (Status + About tabs). The real user interface is the FastAPI HTML news page."}
+      ]
+    },
+    {
+      "name": "Key Source — Pipeline (shared/)",
+      "documents": [
+        {"title": "YouTube Data API client", "file": "youtube_client.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "OAuth (youtube.readonly) + get_service(); list_subscriptions, get_uploads_playlists, list_recent_uploads. CLI: --login / --test."},
+        {"title": "Sweep orchestrator", "file": "sweep.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "pull_subscriptions() + run_sweep(): discover new uploads across active channels since the lookback window, retire dead playlists. CLI: --pull-subs / --organize / --sweep / --all."},
+        {"title": "Channel organizer + reclassifier", "file": "organizer.py, reclassify.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "Keyword classifier (whole-word) + YouTube topicCategories with a specificity rank; reduced 'other' from ~450 to ~3. Respects manual topic locks."},
+        {"title": "Transcript fetcher", "file": "transcripts.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "Captions-only fetch (youtube-transcript-api), favorites-first queue, randomized throttle, IPBlocked detection + multi-hour cooldown persisted in state."},
+        {"title": "Whisper fallback (opt-in)", "file": "whisper_fallback.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "yt-dlp audio download + faster-whisper local transcription for caption-less videos; off by default (whisper.enabled), live-stream/duration guards."},
+        {"title": "Summarizer + dedup + scorer", "file": "summarize.py, dedup.py, score.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "NEXUS /synthesize news cards (HEADLINE+SUMMARY, description fallback); Jaccard headline dedup; implement-worthiness scoring → QI Brain /api/log_feature."},
+        {"title": "Ecosystem feeds", "file": "scout_feed.py, recommend.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "scout_feed builds the curated OPML and imports it to NEXUS Scout (Kaze); recommend builds the local taste profile, reasons via NEXUS, and follows channels without subscribing."},
+        {"title": "Cycle + drainer", "file": "cycle.py, process.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "cycle.run_cycle() is the 07:00/19:00 job (sweep→reclassify→transcripts→summarize→dedup→score→scout, each _safe-wrapped); process.py drains the transcript/summary backlog in committed batches."},
+        {"title": "Data layer + config", "file": "db.py, config.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "SQLite (WAL, FK on, schema v1, idempotent migrations) + channel/video/sweep helpers; dotted-path config get()/set_values() over config/tubescout.json with hot reload."},
+        {"title": "Service installer", "file": "install_service.py", "location": "C:\\TUBESCOUT\\shared\\", "type": "Python", "description": "Registers the QI_TubeScout NSSM service via the QI_Elevate broker (AppDirectory C:\\TUBESCOUT, Description set, AUTO_START)."}
+      ]
+    },
+    {
+      "name": "Configuration",
+      "documents": [
+        {"title": "Runtime Config", "file": "tubescout.json", "location": "C:\\TUBESCOUT\\config\\", "type": "JSON", "description": "Ports, interests (AI/Travel/Retirement/DOAC), youtube (scopes, max_subscriptions), sweep (07:00/19:00, 14h lookback), transcripts (languages, throttle, cooldown), whisper (off), scoring (threshold 7.0, brain_autolog), dedup (0.55/72h), integration (NEXUS/Brain/Hive URLs), scout_export, and the topic keyword map."},
+        {"title": "Secrets (gitignored)", "file": "client_secret.json, token.json, tubescout.env", "location": "C:\\TUBESCOUT\\secrets\\", "type": "JSON / env", "description": "YouTube OAuth client + refreshable token, and optional TUBESCOUT_PAGE_TOKEN / TUBESCOUT_NEXUS_LINK_MODE env. Never committed (secrets/ is gitignored)."}
+      ]
+    },
+    {
+      "name": "Tools & Tests",
+      "documents": [
+        {"title": "Smoke tests", "file": "test_smoke.py", "location": "C:\\TUBESCOUT\\tests\\", "type": "Python", "description": "Live HTTP smoke tests against :8503; whole module skips cleanly when the service is offline; contract + authed endpoints validated conditionally."},
+        {"title": "Service / interest tools", "file": "fix_services.ps1, mark_interests.py, session_wrap.py, _write_summary.py", "location": "C:\\TUBESCOUT\\tools\\", "type": "PowerShell / Python", "description": "Idempotent NSSM service+tunnel fixer (run elevated), interest-marking helper, and session-wrap/summary helpers."},
+        {"title": "Admin service installer", "file": "TubeScout_Install.bat", "location": "C:\\TUBESCOUT\\", "type": "Batch", "description": "Elevated one-shot to (re)install the QI_TubeScout service and tunnel."}
+      ]
+    },
+    {
+      "name": "Project Documentation Folder",
+      "documents": [
+        {"title": "Business Documentation", "file": "Business Documentation\\", "location": "C:\\TUBESCOUT\\Quiddity Innovations - TubeScout Documentation\\", "type": "Folder", "description": "Business-facing docs for TubeScout (QI documentation convention)."},
+        {"title": "Technical & User Documentation", "file": "Technical Documentation\\, User Documentation\\, Cheatsheets\\", "location": "C:\\TUBESCOUT\\Quiddity Innovations - TubeScout Documentation\\", "type": "Folder", "description": "Technical reference, user guide and cheatsheets folders."},
+        {"title": "Logs, Minutes & Summaries", "file": "Implementation Log\\, Meeting Minutes\\, Session Summaries\\", "location": "C:\\TUBESCOUT\\Quiddity Innovations - TubeScout Documentation\\", "type": "Folder", "description": "Implementation log, meeting minutes and dated session summaries."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Registry",
+      "documents": [
+        {"title": "QI Ecosystem Registry (tubescout)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "TubeScout entry: ports 8503/7843, family_tier=cousin, integrates_with nexus/qi_brain/openclaw, exposed + consumed endpoints, QI_TubeScout + QI_TubeScoutTunnel services, QI_TubeScout_AM/_PM tasks."},
+        {"title": "QI Service Registry (QI_TubeScout)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entries: QI_TubeScout (uvicorn :8503, AppDirectory C:\\TUBESCOUT, log data/logs/service.log) + QI_TubeScoutTunnel (permanent named tunnel tubescout.quiddityinnovations.com). Includes the 2026-06-18 AppDirectory fix note."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Where TubeScout sits in the QI port/family map and integration contracts."},
+        {"title": "Project Memory Index", "file": "MEMORY.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "Markdown", "description": "Claude's persistent memory; the TubeScout entry records the build (2026-06-15, :8503) and watch interests."}
+      ]
+    }
+  ]
+}

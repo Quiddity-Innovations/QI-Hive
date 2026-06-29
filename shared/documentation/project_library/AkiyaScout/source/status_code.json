@@ -1,0 +1,197 @@
+{
+  "intro": "Excerpts copied from the live AkiyaScout source (C:\\AkiyaScout). Each shows the real code behind a capability and explains how it works. Bilingual and region-driven throughout: nothing about geography, sources, or rates is hardcoded in logic — it lives in the SQLite reference + settings tables.",
+  "sections": [
+    {
+      "category": "Persistence (akiyascout.db)",
+      "snippets": [
+        {
+          "title": "WAL connection + FK enforcement",
+          "feature": "Single bilingual SQLite store",
+          "file": "scout/db.py · connect()",
+          "language": "python",
+          "code": "def connect() -> sqlite3.Connection:\n    DB_PATH.parent.mkdir(parents=True, exist_ok=True)\n    conn = sqlite3.connect(str(DB_PATH), timeout=30)\n    conn.row_factory = sqlite3.Row\n    conn.execute(\"PRAGMA foreign_keys = ON\")\n    conn.execute(\"PRAGMA busy_timeout = 5000\")\n    return conn",
+          "explanation": "Every part of AkiyaScout opens its DB through this one helper. Row factory returns dict-like rows; foreign keys are enforced so the FK chain (matches->profiles/listings, listings->prefectures/sources/raw_listings) is honoured; busy_timeout lets the background scheduler and the UI write without immediate lock errors. The DB lives at data/akiyascout.db."
+        },
+        {
+          "title": "init_db — schema + additive migration + seed",
+          "feature": "Self-seeding region-driven database",
+          "file": "scout/db.py · init_db()",
+          "language": "python",
+          "code": "conn.executescript(SCHEMA_PATH.read_text(encoding=\"utf-8\"))\n\n# migrate existing DBs: add columns introduced after first install\nhave = {r[\"name\"] for r in conn.execute(\"PRAGMA table_info(listings)\")}\nfor col, decl in [(\"specs_json\", \"TEXT\"), (\"listed_date\", \"TEXT\"),\n                  (\"station_ja\", \"TEXT\")]:\n    if col not in have:\n        conn.execute(f\"ALTER TABLE listings ADD COLUMN {col} {decl}\")\n\n# Seed prefectures (all 47, nationwide)\nfor code, en, ja, grp, climate, in_poc in regions.PREFECTURES:\n    conn.execute(\n        \"INSERT OR IGNORE INTO prefectures(code,name_en,name_ja,region_group,climate,in_poc)\"\n        \" VALUES(?,?,?,?,?,?)\", (code, en, ja, grp, climate, in_poc))\nconn.execute(\"UPDATE prefectures SET in_poc=1\")   # all Japan now in scope",
+          "explanation": "On startup the full schema is (re)applied idempotently, then any columns added after a user's first install are ALTERed in without a migration framework. All 47 prefectures are seeded from regions.PREFECTURES — the geography spine that makes coverage a data concern, not a code one (Design Decision D3). The final UPDATE widened scope from the original Honshu corridor to nationwide."
+        },
+        {
+          "title": "Bilingual region-driven listings table",
+          "feature": "Every text field stored JA + EN; geography as FK",
+          "file": "scout/schema.sql · listings",
+          "language": "sql",
+          "code": "CREATE TABLE IF NOT EXISTS listings (\n    id              INTEGER PRIMARY KEY,\n    raw_id          INTEGER REFERENCES raw_listings(id),\n    source_id       INTEGER NOT NULL REFERENCES sources(id),\n    dedup_key       TEXT,                       -- cross-source identity\n    property_type   TEXT,                       -- akiya / kominka / modern / ...\n    title_ja        TEXT, title_en      TEXT,\n    description_ja  TEXT, description_en TEXT,\n    address_ja      TEXT, address_en     TEXT,\n    prefecture_id   INTEGER REFERENCES prefectures(id),\n    price_jpy       INTEGER,\n    build_year      INTEGER,\n    build_era       TEXT,                        -- Showa / Heisei / Reiwa\n    seismic         TEXT,                        -- kyu_taishin / shin_taishin\n    is_akiya_bank   INTEGER DEFAULT 0,\n    active          INTEGER NOT NULL DEFAULT 1\n);\nCREATE INDEX IF NOT EXISTS ix_listings_dedup ON listings(dedup_key);",
+          "explanation": "The schema is the architecture. Every user-facing string is a *_ja/*_en pair so the Japanese original is preserved for use with local agents while English is layered on top (D4). Geography is a foreign key to the prefectures reference table, and buyer-critical signals — build era and the pre/post-1981 seismic class — are first-class columns. The dedup_key index makes the cross-source duplicate check fast."
+        }
+      ]
+    },
+    {
+      "category": "Source Adapters — at-home Akiya Bank",
+      "snippets": [
+        {
+          "title": "Polite, fixtures-or-live base adapter",
+          "feature": "Offline-by-default scraping with crash isolation",
+          "file": "scout/adapters/base.py · BaseAdapter",
+          "language": "python",
+          "code": "def fetch_raw(self) -> list[dict]:\n    use_live = db.get_setting(\"use_live_scraping\", \"0\") == \"1\"\n    if use_live:\n        try:\n            return self.fetch_live() or []\n        except NotImplementedError:\n            return []   # this source has no live adapter yet; skip\n        except Exception as e:  # never let one source break ingest\n            print(f\"  [{self.source_key}] live fetch failed ({e}); skipping\")\n            return []\n    return self._load_fixtures()\n\ndef _get(self, url, rate_limit_sec=4.0):\n    wait = rate_limit_sec - (time.time() - self._last_request)\n    if wait > 0:\n        time.sleep(wait)\n    self._last_request = time.time()\n    headers = {\"User-Agent\": \"AkiyaScout/0.1 (personal research tool; contact rennesan@gmail.com)\"}\n    return httpx.get(url, headers=headers, timeout=20, follow_redirects=True)",
+          "explanation": "The contract for every source. With use_live_scraping=0 (the polite default) adapters serve local fixtures so the whole pipeline runs offline; with =1 they call the portal-specific fetch_live(). A source raising NotImplementedError (no live adapter yet) or any other exception is caught and skipped, so one broken portal can never abort the run. _get() enforces a per-source rate limit and sends a courteous, identifiable User-Agent (D1)."
+        },
+        {
+          "title": "Crawl at-home Akiya Bank per prefecture",
+          "feature": "Live national akiya-bank scraping (profile-scoped)",
+          "file": "scout/adapters/portals.py · AtHomeAkiyaAdapter.fetch_live()",
+          "language": "python",
+          "code": "targets = [(p[\"code\"], p[\"name_ja\"]) for p in prefs if p[\"code\"] in athome_live.JIS]\nov = db.get_setting(\"live_target_prefectures\", \"\")\nif ov:                       # on-demand override: just one profile's areas\n    want = set(_json.loads(ov))\n    targets = [t for t in targets if t[0] in want]\nelif cap > 0:\n    targets = targets[:cap]\n\nresults = []\nfor code, name_ja in targets:\n    url = f\"{athome_live.BASE}/buy/{athome_live.JIS[code]}/\"\n    resp = self._get(url, rate)\n    if resp.status_code != 200:\n        print(f\"  [athome_akiya] {code}: HTTP {resp.status_code}\")\n        continue\n    rows = athome_live.parse_list_page(resp.text, code, name_ja)\n    print(f\"  [athome_akiya] {code}: {len(rows)} listings\")\n    results.extend(rows)\nreturn results",
+          "explanation": "The working scraper for one of the two MLIT-sanctioned national akiya-bank portals. It maps each prefecture slug to its JIS X 0401 code to build the buy/<code>/ list URL, one polite request per prefecture. Crucially it is profile-scoped: the live_target_prefectures setting (set by pull_for_profile) narrows the crawl to exactly the areas a Profile cares about rather than the whole country. This source produced 926 of the live listings."
+        },
+        {
+          "title": "Parse at-home list cards into raw listings",
+          "feature": "Structural parsing of Japanese HTML",
+          "file": "scout/adapters/athome_live.py · parse_list_page()",
+          "language": "python",
+          "code": "for card in tree.css(\"section.propety\"):\n    a = card.css_first(\"a[href*='bukken/detail']\")\n    href = a.attributes.get(\"href\", \"\") if a else \"\"\n    text = re.sub(r\"\\s+\", \" \", card.text()).strip()\n    price_man = _num(r\"価格\\s*([\\d,]+)\\s*万円\", text, int)\n    price_jpy = price_man * 10000 if price_man else None\n    land = _num(r\"土地面積\\s*([\\d.]+)\\s*㎡\", text)\n    year = _num(r\"築年月?\\s*(\\d{4})\\s*年\", text, int)\n    ptype = _map_type(type_label, text)\n    title_en = f\"{TYPE_EN.get(ptype, 'Property')} — {place} (akiya bank)\"\n    out.append({\"source_key\": \"athome_akiya\",\n                \"source_listing_id\": f\"{pref_code}-{listing_id}\",\n                \"property_type\": ptype, \"title_ja\": title_ja, \"title_en\": title_en,\n                \"price_jpy\": price_jpy, \"land_area_sqm\": land, \"build_year\": year,\n                \"is_akiya_bank\": True, ...})",
+          "explanation": "selectolax parses each section.propety card, pulling the 万円 price (converted from 10k-yen units to yen), 土地面積 land area, 築年月 build year, and property type from the Japanese labels. The English title is built in code from a type glossary and the verbatim Japanese place name — deliberately avoiding sending place names through the LLM, which would mangle them into Chinese pinyin. Each row is keyed by a stable source_listing_id for the raw-capture UNIQUE constraint."
+        },
+        {
+          "title": "Detail page → photos, spec table, days-on-market",
+          "feature": "Listing detail enrichment",
+          "file": "scout/adapters/athome_live.py · parse_detail()",
+          "language": "python",
+          "code": "m = re.search(r\"image_tile_carousel_image_s\\s*=\\s*(\\[.*?\\]);\", html, re.S)\nif m:\n    for o in json.loads(m.group(1)):\n        u = o.get(\"image_url_fullsize\") or o.get(\"image_url_thumbnail\")\n        if u:\n            out[\"photos\"].append((\"https:\" + u) if u.startswith(\"//\") else u)\n\nd = _between(txt, \"情報公開日\")            # listing publication date\nif d:\n    md = re.search(r\"(\\d{4})年(\\d{1,2})月(\\d{1,2})日\", d)\n    if md:\n        out[\"listed_date\"] = f\"{md.group(1)}-{int(md.group(2)):02d}-{int(md.group(3)):02d}\"\nout[\"station_ja\"] = _between(txt, \"交通\")\nfor key, label in [(\"tsubo_unit_price\", \"坪単価\"), (\"building_coverage\", \"建ぺい率\"),\n                   (\"floor_area_ratio\", \"容積率\"), (\"land_category\", \"地目\")]:\n    v = _between(txt, label)\n    if v and v not in (\"-\", \"‐\"):\n        out[\"specs\"][key] = v[:40]",
+          "explanation": "When a listing is opened, enrich.py fetches its at-home detail page and this parser extracts the photo carousel JSON, the publication date (情報公開日, which drives days-on-market), the nearest-station note (交通), and a spec table of buyer-relevant fields — price per tsubo, building coverage ratio, floor area ratio, land category — plus a utilities scan. _between() slices the value after each Japanese label up to the next known label."
+        }
+      ]
+    },
+    {
+      "category": "Source Adapters — SUUMO",
+      "snippets": [
+        {
+          "title": "Prefecture + city-page crawl with intra-source dedup",
+          "feature": "Live commercial-portal scraping",
+          "file": "scout/adapters/portals.py · SuumoAdapter.fetch_live()",
+          "language": "python",
+          "code": "for code in sorted(targets):\n    page = self._get(suumo_live.pref_url(code), rate)\n    if page.status_code != 200:\n        continue\n    rows = suumo_live.parse_list_page(page.text, code, name)\n    # rural prefectures list directly; populous ones gate behind city pages\n    for city in suumo_live.city_urls(page.text, code, limit=3):\n        cp = self._get(city, rate)\n        if cp.status_code == 200:\n            rows.extend(suumo_live.parse_list_page(cp.text, code, name))\n    seen, uniq = set(), []\n    for r in rows:\n        if r[\"source_listing_id\"] in seen:\n            continue\n        seen.add(r[\"source_listing_id\"]); uniq.append(r)\n    results.extend(uniq)",
+          "explanation": "SUUMO gates populous prefectures behind a city picker, so the adapter parses the prefecture page directly AND drills into up to 3 city result-pages, then de-duplicates within SUUMO by listing id before returning. Target prefectures come from active profiles (or the focus corridor as a fallback), keeping the crawl proportional to what the user actually wants. This source produced 939 of the live listings."
+        },
+        {
+          "title": "Classify property type from build year",
+          "feature": "SUUMO card parsing → normalized type",
+          "file": "scout/adapters/suumo_live.py · parse_list_page()",
+          "language": "python",
+          "code": "man = re.search(r\"([\\d,]+)\\s*万円\", _between(text, \"販売価格\") or text)\nprice_jpy = int(man.group(1).replace(\",\", \"\")) * 10000 if man else None\nym = re.search(r\"(\\d{4})年\", _between(text, \"築年月\") or \"\")\nptype = \"kominka\" if (ym and int(ym.group(1)) < 1960) else \"modern\"\nout.append({\n    \"source_key\": \"suumo\",\n    \"source_listing_id\": f\"{pref_code}-{listing_id}\",\n    \"property_type\": ptype,\n    \"title_en\": f\"Used house — {muni or pref_name_ja} (SUUMO)\",\n    \"price_jpy\": price_jpy,\n    \"build_year\": int(ym.group(1)) if ym else None,\n    \"is_akiya_bank\": False, ...})",
+          "explanation": "Each div.property_unit card yields the 販売価格 sale price and 築年月 build year. A pre-1960 build is classified as a traditional kominka, everything else as a modern used house — a pragmatic heuristic since SUUMO doesn't tag akiya. These market listings are explicitly is_akiya_bank=False, the flag the dashboard and matching engine use to separate akiya-bank inventory from the open market."
+        }
+      ]
+    },
+    {
+      "category": "Normalization & Cross-Source Dedup",
+      "snippets": [
+        {
+          "title": "Derive era, seismic class, and a bucketed dedup key",
+          "feature": "Uniform schema + cross-source identity",
+          "file": "scout/normalize.py · derive_seismic / dedup_key",
+          "language": "python",
+          "code": "def derive_seismic(year):\n    \"\"\"Shin-Taishin (new seismic code) applies to buildings from 1981 onward.\"\"\"\n    if not year:\n        return None\n    return \"shin_taishin\" if year >= 1981 else \"kyu_taishin\"\n\ndef dedup_key(raw: dict) -> str:\n    \"\"\"Same prefecture + rounded area + rounded price = likely same house.\"\"\"\n    pref = (raw.get(\"prefecture_code\") or \"\").lower()\n    area = round((raw.get(\"building_area_sqm\") or 0) / 5) * 5      # bucket to 5 sqm\n    price = round((raw.get(\"price_jpy\") or 0) / 100000) * 100000   # bucket to 100k yen\n    addr = re.sub(r\"[\\s　0-9０-９-－]\", \"\", (raw.get(\"address_ja\") or \"\"))[:12]\n    return hashlib.sha1(f\"{pref}|{area}|{price}|{addr}\".encode(\"utf-8\")).hexdigest()",
+          "explanation": "Normalization derives buyer-critical signals from build year — the building era and the pre/post-1981 seismic code class that tells a foreign buyer whether an old house meets modern earthquake standards. The dedup_key is the cross-source identity trick: by bucketing area to 5sqm and price to 100k yen and stripping digits/spaces from the address, the same physical house listed on two portals collapses to one key, so it appears once even when SUUMO and an akiya bank both carry it."
+        },
+        {
+          "title": "Upsert with new/updated/duplicate/unchanged classification",
+          "feature": "Idempotent ingest + cross-source collapse",
+          "file": "scout/pipeline.py · _upsert_listing()",
+          "language": "python",
+          "code": "existing = conn.execute(\"SELECT id, content_hash FROM listings WHERE raw_id=?\", (raw_id,)).fetchone()\nif existing:\n    if existing[\"content_hash\"] != norm[\"content_hash\"]:\n        _translate_fields(norm, conn)\n        _write_listing(conn, existing[\"id\"], source_id, raw_id, norm, update=True)\n        return existing[\"id\"], \"updated\"\n    conn.execute(\"UPDATE listings SET last_seen=?, active=1 WHERE id=?\", (db.now_iso(), existing[\"id\"]))\n    return existing[\"id\"], \"unchanged\"\n\n# cross-source duplicate? (same dedup_key from any source)\ndup = conn.execute(\n    \"SELECT id FROM listings WHERE dedup_key=? AND active=1\", (norm[\"dedup_key\"],)).fetchone()\nif dup:\n    conn.execute(\"UPDATE listings SET last_seen=? WHERE id=?\", (db.now_iso(), dup[\"id\"]))\n    return dup[\"id\"], \"duplicate\"\n\n_translate_fields(norm, conn)\ncur = _write_listing(conn, None, source_id, raw_id, norm, update=False)\nreturn cur, \"new\"",
+          "explanation": "Every ingested row is classified. If a listing already exists for this raw capture it updates only on content-hash change (otherwise just refreshes last_seen). If not, a matching active dedup_key from ANY source collapses it to a duplicate. Only genuinely new or changed listings get translated and written — making re-runs cheap and keeping the translation cache from being hammered."
+        }
+      ]
+    },
+    {
+      "category": "Translation Layer (EN-first, cached)",
+      "snippets": [
+        {
+          "title": "Cached fallback chain: DeepL → Ollama → glossary",
+          "feature": "Free-first translation, translate once",
+          "file": "scout/translate.py · translate()",
+          "language": "python",
+          "code": "src_hash = _hash(text)\ncached = _cache_get(src_hash, tgt, conn)\nif cached is not None:\n    return cached\n\nengine_pref = db.get_setting(\"translation_engine\", \"auto\")\nresult, used = None, \"stub\"\norder = ([\"deepl\", \"ollama\", \"stub\"] if engine_pref == \"auto\" else [engine_pref])\nfor eng in order:\n    if eng == \"deepl\":\n        result = _deepl_translate(text, tgt)\n    elif eng == \"ollama\":\n        result = _ollama_translate(text, tgt)\n    elif eng == \"stub\":\n        result = _stub_translate(text)\n    if result:\n        used = eng\n        break\n_cache_put(src_hash, tgt, text, result, used, conn)\nreturn result",
+          "explanation": "The English-first layer (D4). Each source string is hashed and looked up in the translations cache — translate once, reuse forever. On a miss the 'auto' order tries DeepL (paid, best), then a local Ollama model (free), then an offline glossary stub that always succeeds. With no DEEPL_API_KEY configured today, all 187 cached translations were produced locally by Ollama at zero cost — the QI free-first principle in action."
+        },
+        {
+          "title": "Offline real-estate glossary stub",
+          "feature": "Zero-dependency, demo-safe translator",
+          "file": "scout/translate.py · _stub_translate() / GLOSSARY",
+          "language": "python",
+          "code": "GLOSSARY = {\n    \"空き家\": \"vacant house (akiya)\", \"古民家\": \"traditional kominka\",\n    \"要リフォーム\": \"needs renovation\", \"温泉\": \"hot spring (onsen)\",\n    \"雪国\": \"snow country\", \"駅徒歩\": \"walk from station\",\n    \"即入居可\": \"move-in ready\", \"空き家バンク\": \"akiya bank\", ...\n}\n\ndef _stub_translate(text: str) -> str:\n    out = text\n    # longest keys first so compound terms win\n    for ja in sorted(GLOSSARY, key=len, reverse=True):\n        out = out.replace(ja, \" \" + GLOSSARY[ja] + \" \")\n    out = re.sub(r\"\\s+\", \" \", out).strip()\n    out = out.replace(\"、\", \", \").replace(\"。\", \". \")\n    return out.strip(\" ,.\")",
+          "explanation": "The last-resort engine guarantees the app is never broken — even fully offline with no LLM. It does deterministic longest-match token replacement over a curated glossary of the akiya/kominka real-estate vocabulary (sorting keys longest-first so compound terms like 空き家バンク win over 空き家). Crude but readable, and it never makes a network call."
+        }
+      ]
+    },
+    {
+      "category": "Matching Engine",
+      "snippets": [
+        {
+          "title": "AND of specified constraints; akiya price-on-request kept",
+          "feature": "Profile match + relevance score",
+          "file": "scout/matching.py · match()",
+          "language": "python",
+          "code": "lo, hi = _price_bounds(criteria)\nprice = listing.get(\"price_jpy\")\n# Price-on-request akiya (NULL price) are NOT excluded — a scout shouldn't drop them;\n# the price filter only rejects listings whose known price is out of range.\nif price is not None:\n    if lo is not None and price < lo:  return False, 0.0\n    if hi is not None and price > hi:  return False, 0.0\n\nprefs = criteria.get(\"prefectures\")\nif prefs and listing.get(\"prefecture_code\") not in prefs:\n    return False, 0.0\n\n# price headroom bonus (cheaper vs ceiling scores higher)\nscore = 0.5\nif hi and price:\n    score = max(0.0, min(1.0, 1.0 - (price / hi)))\nif soft_total:\n    score = 0.5 * score + 0.5 * (soft_hit / soft_total)\nreturn True, round(score, 3)",
+          "explanation": "The Scout's core. A listing matches a Profile when it satisfies every constraint that is actually specified (unspecified keys impose no filter) — type, price (JPY or USD-converted), prefecture, region, areas, bedrooms, build year, seismic, akiya-bank. A deliberate scout decision: akiya with a NULL 'price on request' are never dropped by the price filter. The 0..1 relevance score rewards listings well under the budget ceiling, blended with how many soft preferences (climate, keywords) hit."
+        },
+        {
+          "title": "Score new listings against all active profiles",
+          "feature": "Match-on-ingest",
+          "file": "scout/matching.py · match_for_listings()",
+          "language": "python",
+          "code": "profiles = _active_profiles(conn)\nfor lid in listing_ids:\n    row = conn.execute(\"\"\"\n        SELECT l.*, p.code AS prefecture_code\n        FROM listings l LEFT JOIN prefectures p ON p.id=l.prefecture_id\n        WHERE l.id=? AND l.active=1\"\"\", (lid,)).fetchone()\n    if not row:\n        continue\n    listing = dict(row)\n    for pid, criteria in profiles:\n        ok, score = match(criteria, listing)\n        if ok:\n            cur = conn.execute(\n                \"INSERT OR IGNORE INTO matches(profile_id,listing_id,score,matched_at,notified)\"\n                \" VALUES(?,?,?,?,0)\", (pid, lid, score, db.now_iso()))\n            if cur.rowcount:\n                created += 1",
+          "explanation": "Called at the end of every ingest over just the touched listing ids. Each is joined to its prefecture code and scored against every active profile; matches are recorded with INSERT OR IGNORE (the UNIQUE(profile_id, listing_id) constraint makes re-ingest idempotent) and start notified=0 so the next digest picks them up. This is what makes AkiyaScout watch the market for you. 203 matches are currently recorded."
+        }
+      ]
+    },
+    {
+      "category": "API & Search (FastAPI :8505)",
+      "snippets": [
+        {
+          "title": "App + QI registry CORS + contract endpoints",
+          "feature": "Standard QI service interface",
+          "file": "api/main.py · module scope + version()",
+          "language": "python",
+          "code": "try:\n    sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8505\", \"http://localhost:7845\"]\n\napp = FastAPI(title=\"AkiyaScout API\",\n              description=\"English-first Japanese real-estate Scout Engine — Quiddity Innovations\",\n              version=\"0.1.0\")\napp.add_middleware(CORSMiddleware, allow_origins=_cors,\n                   allow_methods=[\"GET\", \"POST\", \"PUT\", \"DELETE\"], allow_headers=[\"*\"])\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"akiyascout\", \"version\": \"0.1.0\", \"status\": \"development\"}",
+          "explanation": "AkiyaScout implements the QI service contract every ecosystem project exposes (/health, /version, /info). CORS origins are pulled from the shared qi_registry so sibling QI projects are trusted without per-project edits, with a localhost fallback. Note the import path still points at the legacy C:\\QI\\ECOSYSTEM location (migration to C:\\QIH\\ecosystem is a pending compliance item)."
+        },
+        {
+          "title": "Dynamic listing search with USD/JPY conversion",
+          "feature": "Filter & slice the inventory",
+          "file": "scout/queries.py · search_listings()",
+          "language": "python",
+          "code": "lo = f.get(\"price_jpy_min\")\nhi = f.get(\"price_jpy_max\")\nif lo is None and f.get(\"price_usd_min\") is not None:\n    lo = f[\"price_usd_min\"] * rate\nif hi is None and f.get(\"price_usd_max\") is not None:\n    hi = f[\"price_usd_max\"] * rate\nif hi is not None:\n    where.append(\"l.price_jpy <= ?\"); params.append(hi)\n...\nsql = f\"\"\"SELECT l.*, p.code AS prefecture_code, p.name_en AS prefecture_en,\n                 s.name AS source_name\n          FROM listings l\n          LEFT JOIN prefectures p ON p.id=l.prefecture_id\n          LEFT JOIN sources s ON s.id=l.source_id\n          WHERE {' AND '.join(where)}\n          ORDER BY (l.price_jpy IS NULL OR l.price_jpy=0), l.price_jpy ASC LIMIT ?\"\"\"\nfor r in rows:\n    r[\"price_usd\"] = int((r[\"price_jpy\"] or 0) / rate) if r[\"price_jpy\"] else None",
+          "explanation": "The engine behind the Discover tab and GET /listings. It builds a parameterized WHERE clause from whatever filters are present, converting USD budgets to JPY at the configurable rate, joins prefecture and source names, and orders cheapest-first while pushing price-on-request listings to the end (not dropping them). Each row gets a computed price_usd so the UI can show either currency."
+        }
+      ]
+    },
+    {
+      "category": "Geocoding & Scheduling",
+      "snippets": [
+        {
+          "title": "Cached Nominatim geocoding with pin jitter",
+          "feature": "Map coordinates for listings",
+          "file": "scout/geocode.py · geocode_municipality() / jitter()",
+          "language": "python",
+          "code": "wait = 1.1 - (time.time() - _last)   # Nominatim: max ~1 req/sec\nif wait > 0:\n    time.sleep(wait)\n_last = time.time()\nresp = httpx.get(\"https://nominatim.openstreetmap.org/search\",\n                 params={\"q\": key, \"format\": \"json\", \"limit\": 1, \"countrycodes\": \"jp\"},\n                 headers=UA, timeout=15)\ndata = resp.json()\nif data:\n    lat, lng = float(data[0][\"lat\"]), float(data[0][\"lon\"])\n    _cache_put(conn, key, lat, lng, 1)\n    return (lat, lng)\n\ndef jitter(lat, lng, seed):\n    \"\"\"Small deterministic offset (~+/-1.5km) so co-located pins separate.\"\"\"\n    if lat is None:\n        return (None, None)\n    return (lat + ((seed % 7) - 3) * 0.004, lng + (((seed // 7) % 7) - 3) * 0.004)",
+          "explanation": "at-home detail pages carry no coordinates, so each distinct municipality is geocoded once via OpenStreetMap Nominatim (respecting its ~1 req/sec policy with a Japan country filter) and cached in geocache (265 rows). A deterministic jitter keyed on the listing id spreads multiple homes in one town so they don't stack on a single map pixel. 1,171 listings now carry coordinates."
+        },
+        {
+          "title": "APScheduler: interval ingest + per-profile cron digests",
+          "feature": "Background Scout cadence",
+          "file": "scout/scheduler.py · start_scheduler() / _cadence_trigger()",
+          "language": "python",
+          "code": "_scheduler = BackgroundScheduler(timezone=\"Asia/Tokyo\")\nhours = float(db.get_setting(\"ingest_interval_hours\", \"12\"))\n_scheduler.add_job(_ingest_job, IntervalTrigger(hours=hours), id=\"ingest\", replace_existing=True)\n# daily update of newly-added houses at 08:00 JST\n_scheduler.add_job(_daily_digest_job, CronTrigger(hour=8, minute=0), id=\"daily_digest\",\n                   replace_existing=True)\n_scheduler.start()\nreload_profile_jobs()\n\ndef _cadence_trigger(cadence, custom_cron):\n    if cadence == \"daily\":   return CronTrigger(hour=7, minute=0)\n    if cadence == \"weekly\":  return CronTrigger(day_of_week=\"mon\", hour=7, minute=0)\n    if cadence == \"monthly\": return CronTrigger(day=1, hour=7, minute=0)\n    if cadence == \"custom\" and custom_cron:\n        return CronTrigger.from_crontab(custom_cron)",
+          "explanation": "The whole scheduling story without Redis or Celery — appropriate for a single-user local tool. One BackgroundScheduler pinned to Japan time runs a re-ingest+enrich every 12h (configurable), a daily 08:00 JST new-houses digest, and one cron digest job per enabled profile schedule mapped from its cadence (daily/weekly/monthly/custom 5-field cron). reload_profile_jobs() re-registers these whenever schedules change."
+        }
+      ]
+    }
+  ]
+}

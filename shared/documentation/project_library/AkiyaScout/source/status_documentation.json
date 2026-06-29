@@ -1,0 +1,76 @@
+{
+  "sections": [
+    {
+      "name": "Project Overview & Spec",
+      "documents": [
+        {"title": "Product Specification (source brief)", "file": "AkiyaScout.md", "location": "C:\\AkiyaScout\\", "type": "Markdown", "description": "The original full product specification: vision, benchmarks (AkiyaHub/AkiyaMart), frontend filters, the scraping-engine ingestion targets (national portals / commercial portals / municipal akiya banks), translation layer, profile wizard, and scheduler requirements."},
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\AkiyaScout\\", "type": "Markdown", "description": "Session-start rules, what AkiyaScout is, paths, ports (API 8505 / UI 7845), family tier 'cousin', and the parallel-projects table — read before any structural change."},
+        {"title": "Product Spec v1", "file": "AkiyaScout_Product_Spec_v1.md", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Technical Documentation\\", "type": "Markdown", "description": "Refined v1 product specification for the proof-of-concept scope."}
+      ]
+    },
+    {
+      "name": "Architecture & Design",
+      "documents": [
+        {"title": "Architecture v1", "file": "AkiyaScout_Architecture_v1.md", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Technical Documentation\\", "type": "Markdown", "description": "System architecture: the bilingual region-driven schema, adapter/pipeline design, matching engine, scheduler, and map/geocoding stack."},
+        {"title": "Design Decisions v1 (D1-D4)", "file": "AkiyaScout_Design_Decisions_v1.md", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Technical Documentation\\", "type": "Markdown", "description": "The numbered design decisions referenced throughout the code (D1 single-user/polite/offline-first, D3 region-driven geography, D4 English-first with JA retained)."},
+        {"title": "Version History", "file": "AkiyaScout_Version_History.docx", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Technical Documentation\\", "type": "Word Document", "description": "Version changelog for the project (app version 0.1.0)."}
+      ]
+    },
+    {
+      "name": "Business & Benchmarks",
+      "documents": [
+        {"title": "Feature Scoring v1", "file": "AkiyaScout_Feature_Scoring_v1.md", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Business Documentation\\", "type": "Markdown", "description": "Prioritized feature scoring used to plan the v1 build."},
+        {"title": "Reference Benchmarks & Redesign", "file": "AkiyaScout_Reference_Benchmarks_and_Redesign.md", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Business Documentation\\", "type": "Markdown", "description": "Analysis of the AkiyaHub / AkiyaMart benchmarks and the resulting UX/redesign direction."}
+      ]
+    },
+    {
+      "name": "User Guide & Logs",
+      "documents": [
+        {"title": "Quickstart", "file": "AkiyaScout_Quickstart.md", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\User Documentation\\", "type": "Markdown", "description": "How to launch (Start_AkiyaScout.bat / python main.py), open the dashboard, build a profile, and run an ingest."},
+        {"title": "Implementation Log", "file": "AkiyaScout_Implementation_Log.docx", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Implementation Log\\", "type": "Word Document", "description": "Chronological build history of what was created, fixed, and decided."},
+        {"title": "Meeting Minutes", "file": "AkiyaScout_Meeting_Minutes.docx", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\Meeting Minutes\\", "type": "Word Document", "description": "Session-by-session decisions and next steps."},
+        {"title": "Cheatsheets", "file": "Cheatsheets\\", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\", "type": "Folder", "description": "Quick-reference notes for the project."},
+        {"title": "Session Summaries", "file": "Session Summaries\\", "location": "C:\\AkiyaScout\\Quiddity Innovations - AkiyaScout Documentation\\", "type": "Folder", "description": "Dated .docx session summaries."}
+      ]
+    },
+    {
+      "name": "Key Source — Entry & API",
+      "documents": [
+        {"title": "Main Entry Point", "file": "main.py", "location": "C:\\AkiyaScout\\", "type": "Python", "description": "Boots DB, seeds on first run, starts the scheduler, serves the FastAPI API (8505) on a thread and the Gradio UI (7845) on the main thread."},
+        {"title": "FastAPI App", "file": "main.py", "location": "C:\\AkiyaScout\\api\\", "type": "Python", "description": "REST endpoints: QI contract (/health,/version,/info), /stats, /regions, /sources, /listings(+/{id}), /profiles CRUD + /matches, /ingest, /notifications, /digest. CORS from qi_registry."},
+        {"title": "Static Config", "file": "akiyascout.json", "location": "C:\\AkiyaScout\\config\\", "type": "JSON", "description": "App name/version, server ports + host, logging level/dir. Runtime settings live in the DB settings table."}
+      ]
+    },
+    {
+      "name": "Key Source — Scout Engine",
+      "documents": [
+        {"title": "Ingestion Pipeline", "file": "pipeline.py", "location": "C:\\AkiyaScout\\scout\\", "type": "Python", "description": "ingest / refresh / pull_for_profile / clear_listings; raw capture, normalize, translate, cross-source dedup, upsert, match-on-ingest."},
+        {"title": "DB Layer + Schema", "file": "db.py, schema.sql", "location": "C:\\AkiyaScout\\scout\\", "type": "Python / SQL", "description": "WAL connection helper, init_db with additive migrations, seeds 47 prefectures + 7 sources + default settings. Bilingual region-driven schema."},
+        {"title": "Normalizer", "file": "normalize.py", "location": "C:\\AkiyaScout\\scout\\", "type": "Python", "description": "raw -> uniform listing fields; derives era / seismic class / bedrooms / renovation estimate and the cross-source dedup_key."},
+        {"title": "Translation Engine", "file": "translate.py", "location": "C:\\AkiyaScout\\scout\\", "type": "Python", "description": "Cached JA->EN with DeepL -> Ollama -> offline glossary fallback chain; never discards the Japanese original."},
+        {"title": "Matching Engine", "file": "matching.py", "location": "C:\\AkiyaScout\\scout\\", "type": "Python", "description": "match() (AND of specified constraints + 0..1 relevance score), match_for_listings (on ingest), rematch_profile (on profile edit)."},
+        {"title": "Profiles / Notify / Scheduler / Queries", "file": "profiles.py, notify.py, scheduler.py, queries.py", "location": "C:\\AkiyaScout\\scout\\", "type": "Python", "description": "Profile CRUD + cadence; digest builder + SMTP email; APScheduler ingest/daily/per-profile jobs; dynamic listing search + stats."},
+        {"title": "Geocoding / Enrichment / Map", "file": "geocode.py, enrich.py, mapview.py", "location": "C:\\AkiyaScout\\scout\\", "type": "Python", "description": "Nominatim municipality geocoder (cached); detail-page enrichment (photos/specs/station/days-on-market); folium Japan choropleth + clustered pins + hazard overlays."}
+      ]
+    },
+    {
+      "name": "Key Source — Source Adapters",
+      "documents": [
+        {"title": "Adapter Base + Registry", "file": "base.py, registry.py, __init__.py", "location": "C:\\AkiyaScout\\scout\\adapters\\", "type": "Python", "description": "BaseAdapter (fixtures-vs-live, polite rate-limited _get); registry mapping 7 source keys to adapter instances."},
+        {"title": "at-home Akiya Bank scraper", "file": "athome_live.py", "location": "C:\\AkiyaScout\\scout\\adapters\\", "type": "Python", "description": "Live scraper for the MLIT-sanctioned at-home national akiya-bank portal: JIS-code per-prefecture URLs, section.propety list parsing, detail-page photo/spec extraction. 926 listings."},
+        {"title": "SUUMO scraper", "file": "suumo_live.py", "location": "C:\\AkiyaScout\\scout\\adapters\\", "type": "Python", "description": "Live scraper for SUUMO used detached houses: prefecture + city result pages, div.property_unit parsing. 939 listings."},
+        {"title": "Portal adapter classes", "file": "portals.py", "location": "C:\\AkiyaScout\\scout\\adapters\\", "type": "Python", "description": "LIFULL / at-home / HOME'S / Rakumachi / Municipal-Nagano adapters (fixture-only, documented selectors) + the working at-home-akiya & SUUMO fetch_live implementations and profile-target-prefecture resolution."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Operations",
+      "documents": [
+        {"title": "QI Ecosystem Registry (akiyascout)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "Registry entry: ports api 8505 / ui 7845, family_tier 'cousin', status active_development, exposed endpoints, single-user LOCAL-only notes."},
+        {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Full port table, family map, and integration contracts for the whole QI ecosystem."},
+        {"title": "QI Standards / Architecture Principles", "file": "QI_Standards.md, QI_Architecture_Principles.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Naming/folder/code conventions and the Six Laws AkiyaScout is built to comply with."},
+        {"title": "QI Service Registry", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM service registry. No QI_AkiyaScout service is registered yet — AkiyaScout currently runs via Start_AkiyaScout.bat (service registration is a planned item)."},
+        {"title": "Console Launcher", "file": "Start_AkiyaScout.bat", "location": "C:\\AkiyaScout\\", "type": "Batch", "description": "Launches python main.py with the API/UI URLs printed; the current run method pending an NSSM service."}
+      ]
+    }
+  ]
+}

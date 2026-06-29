@@ -1,0 +1,55 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the API, news page, sweep/transcript/summary pipeline, and shared modules", "license": "PSF (open source)", "version": "3.10+"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API + server-rendered news/favorites/discover/settings/digest pages on port 8503; QI Module Interface Contract (/health, /version, /info)", "license": "MIT", "version": ">=0.115"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (started from main.py in a daemon thread, and by the NSSM service)", "license": "BSD", "version": ">=0.30 [standard]"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Request/response validation under FastAPI", "license": "MIT", "version": ">=2.7"},
+    {"layer": "UI", "technology": "Gradio", "role": "Minimal operator status/About console on port 7843 (the real interface is the FastAPI HTML news page)", "license": "Apache 2.0", "version": ">=5.0"},
+    {"layer": "News Page", "technology": "Server-rendered HTML + CSS + vanilla JS", "role": "The public news/favorites/discover/settings pages built as f-string HTML in api/main.py with an embedded NEXUS-tangerine theme (THEME_CSS); no front-end framework", "license": "n/a (in-repo)", "version": "—"},
+    {"layer": "HTTP Client", "technology": "httpx", "role": "Synchronous calls to NEXUS /synthesize + /scout/import/opml, QI Brain /api/log_feature, and integration health probes", "license": "BSD", "version": ">=0.27"},
+    {"layer": "YouTube — Subscriptions/Uploads", "technology": "google-api-python-client", "role": "YouTube Data API v3 access: subscriptions.list, channels.list (contentDetails + topicDetails), playlistItems.list, search.list (neutral name lookup)", "license": "Apache 2.0", "version": ">=2.130"},
+    {"layer": "YouTube — Auth", "technology": "google-auth-oauthlib + google-auth-httplib2", "role": "OAuth 2.0 InstalledAppFlow (youtube.readonly), token refresh, persisted to secrets/token.json", "license": "Apache 2.0", "version": ">=1.2 / >=0.2"},
+    {"layer": "YouTube — Transcripts", "technology": "youtube-transcript-api", "role": "Caption fetch (instance .fetch(), languages en/pt/es/ja/fr); skip reasons vs. IP-block markers handled distinctly", "license": "MIT", "version": ">=0.6.2"},
+    {"layer": "Transcription (opt-in)", "technology": "faster-whisper + yt-dlp", "role": "Local audio download + CPU/int8 transcription for caption-less videos; disabled by default (whisper.enabled)", "license": "MIT / Unlicense", "version": "optional dep"},
+    {"layer": "Database", "technology": "SQLite (tubescout.db)", "role": "Single-file store: channels, videos, transcripts, summaries, scores, sweeps, state, recommendations; WAL mode, foreign keys ON, schema v1", "license": "Public domain", "version": "3.x (WAL)"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads secrets/tubescout.env into the environment; runtime config layered over config/tubescout.json", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Generates project/session Word documents (declared dependency; QI doc convention)", "license": "MIT", "version": ">=1.1"},
+    {"layer": "AI Backbone (external)", "technology": "NEXUS (:8010)", "role": "All summarization + implement-worthiness scoring + recommender reasoning via POST /synthesize; OPML ingest via /scout/import/opml. No LLM runs inside TubeScout", "license": "QI internal", "version": "0.1.0"},
+    {"layer": "AI Providers (via NEXUS)", "technology": "Groq · Cloudflare · Gemini · gemma4 (local)", "role": "Summary chain pinned to Groq→Cloudflare→Gemini; Discover reasoner defaults to Groq, switchable to fully-local gemma4", "license": "Free tier / local", "version": "see NEXUS providers.json"},
+    {"layer": "Ecosystem (external)", "technology": "QI Brain (:9011) · NEXUS Scout/Kaze · QI Hive (:8600)", "role": "Brain receives implement-worthy features; Kaze digest consumes the curated OPML; Hive supplies the live NEXUS tunnel URL", "license": "QI internal", "version": "—"},
+    {"layer": "Scheduling", "technology": "Windows Task Scheduler", "role": "QI_TubeScout_AM (07:00) + QI_TubeScout_PM (19:00) run shared.cycle daily; no in-process scheduler", "license": "OS", "version": "—"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_TubeScout Windows service (AppDirectory C:\\TUBESCOUT, uvicorn :8503) + QI_TubeScoutTunnel exposing it at tubescout.quiddityinnovations.com", "license": "Open source / Cloudflare", "version": "nssm 2.24"},
+    {"layer": "Elevation", "technology": "QI_Elevate broker", "role": "install_service.py registers the NSSM service through qi_elevate_client.run_elevated() (the QI standard for elevated ops)", "license": "QI internal", "version": "—"},
+    {"layer": "Testing", "technology": "pytest + requests", "role": "Live HTTP smoke tests against :8503; skip cleanly when the service is offline", "license": "MIT / Apache 2.0", "version": "—"}
+  ],
+  "descriptions": [
+    {
+      "title": "Subscription-first, not algorithm-first",
+      "body": "TubeScout's whole premise is that you already curated your channels by subscribing — the value is in keeping up with THAT list, not an engagement feed. It reads subscriptions.list with read-only OAuth and never posts or changes anything on YouTube. Uploads are read from each channel's uploads playlist (playlistItems.list = 1 quota unit) rather than search.list (100 units), so two daily sweeps of 800+ channels use ~600 of the 10,000 free units/day. Dead/terminated playlists are detected and retired so they aren't retried forever."
+    },
+    {
+      "title": "No LLM inside TubeScout — everything routes through NEXUS",
+      "body": "TubeScout deliberately hosts no model. Every news-card summary, every implement-worthiness score, and the Discover reasoning all go to NEXUS POST /synthesize with a pinned provider list (summaries: Groq→Cloudflare→Gemini; Discover: Groq default, gemma4 local switchable). This keeps per-video cost at effectively zero (NEXUS favours free/local models) and means TubeScout inherits NEXUS's failover for free. When NEXUS is unreachable the summarizer falls back to a trimmed description so the page never empties; a scorer simply leaves the video pending for the next run."
+    },
+    {
+      "title": "Graceful degradation is the architecture",
+      "body": "The twice-daily cycle (sweep → reclassify → transcripts → summarize → dedup → score → scout) wraps every stage in a _safe() guard so one failure never aborts the rest. Summaries are decoupled from transcripts: the page uses the transcript when present, otherwise the description, so it keeps working even when YouTube IP-blocks the caption scraper. That scraper distinguishes 'no captions available' (skip quietly) from 'YouTube is blocking us' (raise IPBlocked) and, on a block, persists a multi-hour cooldown in the state table so it never extends the block by hammering."
+    },
+    {
+      "title": "Two-pass channel classification",
+      "body": "Channels are bucketed into topics twice. The keyword organizer (organizer.classify) does whole-word matching (word-boundary regex, so 'ai' doesn't match 'painting') over title+description against the config topic map — strong on the specific tech buckets. The smart reclassifier (reclassify.py) then adds YouTube's own topicDetails.topicCategories and picks the most specific candidate via a TOPIC_RANK table (ai_ml/software_dev=10 down to lifestyle=1), so a [Lifestyle, Science] channel lands in science. This combination cut the 'other' pile from ~450 channels to ~3. User-set topics (topic_manual=1) are never overwritten."
+    },
+    {
+      "title": "Conservative cross-channel dedup",
+      "body": "The same story often hits ten channels at once. dedup.run_dedup tokenizes each headline (stopword-filtered, len>2), clusters by Jaccard similarity ≥ dedup.threshold (0.55) within a dedup.window_hours (72h) window, and marks one canonical card with dup_of/dup_count on the rest. It is deliberately conservative — a false merge (hiding a distinct story) is worse than a miss — so the threshold is high and bounded by time. The page hides duplicates by default and shows '+N also covered' on the canonical card; ?show=all reveals them all."
+    },
+    {
+      "title": "Privacy-preserving discovery",
+      "body": "The Discover recommender never feeds your taste into YouTube's recommendation or ad system. build_profile assembles a taste profile entirely on-machine (favorited channels, must-reads, AI/tech channels, your top implement-score tags) and a NEXUS provider reasons over it to suggest real channels — the reasoner can be switched to a fully-local gemma model in Settings so nothing leaves the machine at all. YouTube is touched only for a neutral search().list name→channel lookup that reveals nothing about you, and 'Follow privately' ingests a channel into TubeScout without subscribing on YouTube."
+    },
+    {
+      "title": "Public page, owner controls, permanent link",
+      "body": "Reads (news, favorites, digest, settings views) are public; mutations are guarded centrally by the require_token_for_writes middleware, which enforces TUBESCOUT_PAGE_TOKEN on every POST/PUT/PATCH/DELETE when the token is set (open in local single-user mode). The page is served by the QI_TubeScout NSSM service (AppDirectory C:\\TUBESCOUT, corrected 2026-06-18) and exposed by QI_TubeScoutTunnel as a permanent named Cloudflare tunnel at tubescout.quiddityinnovations.com — no open inbound port on the machine. The 'pairs with NEXUS' link auto-resolves to NEXUS's local or tunnel URL depending on how TubeScout itself is being viewed."
+    }
+  ]
+}

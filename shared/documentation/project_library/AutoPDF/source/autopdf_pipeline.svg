@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 720" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="parr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="parr-navy" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1f2d3d"/>
+    </marker>
+    <marker id="parr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="parr-amber" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+    <marker id="parr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e8772e"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="720" fill="#ffffff" rx="12"/>
+  <text x="550" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#b3261e">AutoPDF — Extraction Pipeline (Design-time → Run-time)</text>
+  <text x="550" y="50" text-anchor="middle" font-size="11.5" fill="#5b6b7c">Quiddity Innovations · Local-first PDF Toolkit · 2026 · author a template once on a sample, run it unattended over a folder</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="872" y="60" width="216" height="178" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="980" y="79" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="882" y="87" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="902" y="96" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="882" y="104" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="902" y="113" font-size="9" fill="#374151">Built · Partial / Pending</text>
+  <rect x="882" y="121" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="902" y="130" font-size="9" fill="#374151">Planned</text>
+  <rect x="882" y="138" width="14" height="10" rx="2" fill="#fff3e8" stroke="#e8772e" stroke-dasharray="3,2"/>
+  <text x="902" y="147" font-size="9" fill="#374151">AI assist (opt-in)</text>
+  <rect x="882" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#0f1620"/>
+  <text x="902" y="164" font-size="9" fill="#374151">Server engine step</text>
+  <line x1="882" y1="180" x2="900" y2="180" stroke="#1f2d3d" stroke-width="2" marker-end="url(#parr-navy)"/>
+  <text x="906" y="184" font-size="9" fill="#374151">Data flow (solid)</text>
+  <path d="M 882,198 H 900" fill="none" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#parr-amber)"/>
+  <text x="906" y="202" font-size="9" fill="#374151">Saved template (reuse)</text>
+  <text x="980" y="222" text-anchor="middle" font-size="8" fill="#9aa5b1">No database — templates &amp; recipes</text>
+  <text x="980" y="233" text-anchor="middle" font-size="8" fill="#9aa5b1">are portable JSON files.</text>
+
+  <!-- ══ DESIGN-TIME BAND ══ -->
+  <text x="22" y="78" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">DESIGN-TIME — author on one sample (Smart Mapping tab)</text>
+  <rect x="14" y="84" width="838" height="150" rx="9" fill="none" stroke="#3b6ea5" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+  <rect x="28" y="104" width="150" height="112" rx="7" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="103" y="126" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d3a5f">Sample PDF</text>
+  <text x="103" y="144" text-anchor="middle" font-size="8" fill="#33475b">one representative</text>
+  <text x="103" y="156" text-anchor="middle" font-size="8" fill="#33475b">document of the batch</text>
+  <text x="103" y="176" text-anchor="middle" font-size="8" fill="#7a8a9a">rendered to PNG via</text>
+  <text x="103" y="188" text-anchor="middle" font-size="8" fill="#7a8a9a">Ghostscript (zone-mapper)</text>
+
+  <rect x="208" y="104" width="160" height="112" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="288" y="126" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b5e20">Draw zones</text>
+  <text x="288" y="144" text-anchor="middle" font-size="8" fill="#2e7d32">drag rectangle (app.js)</text>
+  <text x="288" y="156" text-anchor="middle" font-size="8" fill="#2e7d32">stored as page fractions</text>
+  <text x="288" y="174" text-anchor="middle" font-size="8" fill="#2e7d32">zone · regex_match · ai_extract</text>
+  <text x="288" y="188" text-anchor="middle" font-size="8" fill="#2e7d32">tagged (anchor-relative) option</text>
+  <text x="288" y="204" text-anchor="middle" font-size="7.5" fill="#4a7d4f">~30 builtin regexes, user-editable</text>
+
+  <rect x="398" y="104" width="150" height="112" rx="7" fill="#fff3e8" stroke="#e8772e" stroke-width="1.5"/>
+  <text x="473" y="126" text-anchor="middle" font-size="10.5" font-weight="700" fill="#a8541a">AI assist (opt-in)</text>
+  <text x="473" y="144" text-anchor="middle" font-size="8" fill="#b8631f">chat with local Ollama</text>
+  <text x="473" y="156" text-anchor="middle" font-size="8" fill="#b8631f">Invoke-OllamaPrompt</text>
+  <text x="473" y="174" text-anchor="middle" font-size="8" fill="#c47a3a">proposes fields &amp; regex</text>
+  <text x="473" y="188" text-anchor="middle" font-size="8" fill="#c47a3a">— never dictates schema</text>
+  <text x="473" y="204" text-anchor="middle" font-size="7.5" fill="#c47a3a">127.0.0.1:11434</text>
+
+  <rect x="578" y="104" width="160" height="112" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="658" y="126" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6b5200">Save template</text>
+  <text x="658" y="144" text-anchor="middle" font-size="8" fill="#8a6d00">templates\*.json</text>
+  <text x="658" y="156" text-anchor="middle" font-size="8" fill="#8a6d00">recipes\*.json</text>
+  <text x="658" y="174" text-anchor="middle" font-size="8" fill="#8a6d00">fields · regex · anchors</text>
+  <text x="658" y="188" text-anchor="middle" font-size="8" fill="#8a6d00">OnBase XML config</text>
+  <text x="658" y="204" text-anchor="middle" font-size="7.5" fill="#a8861a">portable · copies between machines</text>
+
+  <rect x="752" y="104" width="88" height="112" rx="7" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="796" y="150" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d3a5f">Author</text>
+  <text x="796" y="166" text-anchor="middle" font-size="8" fill="#33475b">iterate /</text>
+  <text x="796" y="178" text-anchor="middle" font-size="8" fill="#33475b">preview</text>
+
+  <!-- design-time arrows -->
+  <line x1="178" y1="160" x2="208" y2="160" stroke="#1f2d3d" stroke-width="1.6" marker-end="url(#parr-navy)"/>
+  <line x1="368" y1="160" x2="398" y2="160" stroke="#e8772e" stroke-width="1.6" marker-end="url(#parr-orange)"/>
+  <line x1="548" y1="160" x2="578" y2="160" stroke="#1f2d3d" stroke-width="1.6" marker-end="url(#parr-navy)"/>
+  <line x1="752" y1="160" x2="700" y2="160" stroke="#3b6ea5" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#parr)"/>
+
+  <!-- saved template dashed handoff to run-time -->
+  <path d="M 658,216 V 256 H 200 V 300" fill="none" stroke="#b8860b" stroke-width="1.8" stroke-dasharray="4,2" marker-end="url(#parr-amber)"/>
+  <text x="430" y="250" text-anchor="middle" font-size="9" font-weight="600" fill="#8a6d00">saved template / recipe reused unattended ▾</text>
+
+  <!-- ══ RUN-TIME BAND ══ -->
+  <text x="22" y="284" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">RUN-TIME — apply over a whole folder (Splitter / Index Creator)</text>
+  <rect x="14" y="290" width="1072" height="210" rx="9" fill="none" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+  <rect x="28" y="306" width="140" height="92" rx="7" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="98" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#1d3a5f">Input folder</text>
+  <text x="98" y="348" text-anchor="middle" font-size="8" fill="#33475b">batch of PDFs</text>
+  <text x="98" y="360" text-anchor="middle" font-size="8" fill="#33475b">or one big scan</text>
+  <text x="98" y="380" text-anchor="middle" font-size="8" fill="#7a8a9a">/api/template-</text>
+  <text x="98" y="391" text-anchor="middle" font-size="8" fill="#7a8a9a">apply-batch</text>
+
+  <rect x="196" y="306" width="150" height="92" rx="7" fill="#1f2d3d" stroke="#0f1620" stroke-width="1.5"/>
+  <text x="271" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">Split / page-text</text>
+  <text x="271" y="348" text-anchor="middle" font-size="8" fill="#aeb8c4">Split-PdfPages</text>
+  <text x="271" y="360" text-anchor="middle" font-size="8" fill="#aeb8c4">PDFtk / Ghostscript</text>
+  <text x="271" y="378" text-anchor="middle" font-size="8" fill="#7e8b99">zones · patterns ·</text>
+  <text x="271" y="389" text-anchor="middle" font-size="8" fill="#7e8b99">bookmarks · ranges</text>
+
+  <rect x="374" y="306" width="156" height="92" rx="7" fill="#1f2d3d" stroke="#0f1620" stroke-width="1.5"/>
+  <text x="452" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">Re-find anchors</text>
+  <text x="452" y="348" text-anchor="middle" font-size="8" fill="#aeb8c4">Resolve-TaggedZoneRect</text>
+  <text x="452" y="360" text-anchor="middle" font-size="8" fill="#aeb8c4">Get-PdfTextBboxByPage</text>
+  <text x="452" y="378" text-anchor="middle" font-size="8" fill="#7e8b99">value box floats with its</text>
+  <text x="452" y="389" text-anchor="middle" font-size="8" fill="#7e8b99">label on each document</text>
+
+  <rect x="558" y="306" width="156" height="92" rx="7" fill="#1f2d3d" stroke="#0f1620" stroke-width="1.5"/>
+  <text x="636" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">Extract fields</text>
+  <text x="636" y="348" text-anchor="middle" font-size="8" fill="#aeb8c4">Get-PdfTextInRegion</text>
+  <text x="636" y="360" text-anchor="middle" font-size="8" fill="#aeb8c4">pdftotext -x -y -W -H</text>
+  <text x="636" y="378" text-anchor="middle" font-size="8" fill="#7e8b99">+ regex match · OCR</text>
+  <text x="636" y="389" text-anchor="middle" font-size="8" fill="#7e8b99">(Tesseract) if scanned</text>
+
+  <rect x="742" y="306" width="156" height="92" rx="7" fill="#fff3e8" stroke="#e8772e" stroke-width="1.5"/>
+  <text x="820" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#a8541a">AI ai_extract</text>
+  <text x="820" y="348" text-anchor="middle" font-size="8" fill="#b8631f">Invoke-AiFieldExtraction</text>
+  <text x="820" y="360" text-anchor="middle" font-size="8" fill="#b8631f">local Ollama (optional)</text>
+  <text x="820" y="378" text-anchor="middle" font-size="8" fill="#c47a3a">disambiguates only;</text>
+  <text x="820" y="389" text-anchor="middle" font-size="8" fill="#c47a3a">primed by zone results</text>
+
+  <rect x="926" y="306" width="150" height="92" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="1001" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#1b5e20">Index rows</text>
+  <text x="1001" y="348" text-anchor="middle" font-size="8" fill="#2e7d32">one row per document</text>
+  <text x="1001" y="360" text-anchor="middle" font-size="8" fill="#2e7d32">headers = fields</text>
+  <text x="1001" y="378" text-anchor="middle" font-size="8" fill="#4a7d4f">FILENAME = OnBase</text>
+  <text x="1001" y="389" text-anchor="middle" font-size="8" fill="#4a7d4f">linking key</text>
+
+  <!-- run-time horizontal arrows -->
+  <line x1="168" y1="352" x2="196" y2="352" stroke="#1f2d3d" stroke-width="1.6" marker-end="url(#parr-navy)"/>
+  <line x1="346" y1="352" x2="374" y2="352" stroke="#1f2d3d" stroke-width="1.6" marker-end="url(#parr-navy)"/>
+  <line x1="530" y1="352" x2="558" y2="352" stroke="#1f2d3d" stroke-width="1.6" marker-end="url(#parr-navy)"/>
+  <line x1="714" y1="352" x2="742" y2="352" stroke="#e8772e" stroke-width="1.4" stroke-dasharray="4,2" marker-end="url(#parr-orange)"/>
+  <line x1="898" y1="352" x2="926" y2="352" stroke="#2e7d32" stroke-width="1.6" marker-end="url(#parr-green)"/>
+
+  <!-- run-time helper note -->
+  <text x="540" y="430" text-anchor="middle" font-size="8.5" fill="#7a8a9a">Per-word bounding boxes are parsed once per file (pdftotext -bbox-layout) and cached by path + mtime, so multi-field runs stay fast.</text>
+  <text x="540" y="446" text-anchor="middle" font-size="8.5" fill="#7a8a9a">Rule-based extraction is authoritative; AI only proposes or disambiguates. Nothing leaves the machine.</text>
+  <line x1="1001" y1="398" x2="1001" y2="470" stroke="#2e7d32" stroke-width="1.6" marker-end="url(#parr-green)"/>
+  <path d="M 1001,460 H 540 V 540" fill="none" stroke="#2e7d32" stroke-width="1.6" marker-end="url(#parr-green)"/>
+
+  <!-- ══ OUTPUT BAND ══ -->
+  <text x="22" y="534" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">OUTPUT — deliverables</text>
+  <rect x="14" y="540" width="1072" height="124" rx="9" fill="none" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+  <rect x="40" y="560" width="220" height="86" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="150" y="584" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Per-document PDFs</text>
+  <text x="150" y="604" text-anchor="middle" font-size="8.5" fill="#2e7d32">split output, optionally renamed</text>
+  <text x="150" y="618" text-anchor="middle" font-size="8.5" fill="#2e7d32">from captured fields</text>
+  <text x="150" y="635" text-anchor="middle" font-size="8" fill="#4a7d4f">searchable OCR layer if scanned</text>
+
+  <rect x="300" y="560" width="220" height="86" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="410" y="584" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">CSV / XLSX index</text>
+  <text x="410" y="604" text-anchor="middle" font-size="8.5" fill="#2e7d32">one row per document</text>
+  <text x="410" y="618" text-anchor="middle" font-size="8.5" fill="#2e7d32">columns = mapped fields</text>
+  <text x="410" y="635" text-anchor="middle" font-size="8" fill="#4a7d4f">Index Creator: folder-tree → table</text>
+
+  <rect x="560" y="560" width="240" height="86" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="680" y="584" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">OnBase XML Index DIP</text>
+  <text x="680" y="604" text-anchor="middle" font-size="8.5" fill="#2e7d32">Write-IndexXml · Foundation 24.1</text>
+  <text x="680" y="618" text-anchor="middle" font-size="8.5" fill="#2e7d32">&lt;NewDocument&gt; · &lt;Keyword&gt; · &lt;FilePath&gt;</text>
+  <text x="680" y="635" text-anchor="middle" font-size="8" fill="#4a7d4f">UTF-8 no BOM · Hyland ingestion handoff</text>
+
+  <rect x="840" y="560" width="220" height="86" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="950" y="584" text-anchor="middle" font-size="11" font-weight="700" fill="#6b5200">Workflow + Scheduler</text>
+  <text x="950" y="604" text-anchor="middle" font-size="8.5" fill="#8a6d00">chain convert → split → index</text>
+  <text x="950" y="618" text-anchor="middle" font-size="8.5" fill="#8a6d00">watch-folder jobs (30s tick)</text>
+  <text x="950" y="635" text-anchor="middle" font-size="8" fill="#a8861a">⚠ Partial — being hardened</text>
+
+  <!-- footer -->
+  <text x="550" y="688" text-anchor="middle" font-size="8.5" fill="#9aa5b1">Confidential records never reach a cloud OCR or LLM — convert, OCR, split and extract all run locally. AI is opt-in and local. © Quiddity Innovations 2026</text>
+</svg>

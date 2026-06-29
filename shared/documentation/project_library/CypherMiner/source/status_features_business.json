@@ -1,0 +1,69 @@
+[
+  {
+    "category": "Cryptography (19 tools)",
+    "features": [
+      {"name": "Classical substitution ciphers", "description": "Encrypt and decrypt with Caesar (with a live cipher wheel), ROT13, ROT47, Atbash, Affine, Baconian, A1Z26 and a full custom Substitution alphabet.", "status": "live", "notes": "All client-side; mode select (encrypt/decrypt) per tool"},
+      {"name": "Polyalphabetic & keyword ciphers", "description": "Vigenère and Beaufort drive the shift from a repeating keyword for stronger classical encryption.", "status": "live", "notes": "Keyword input; non-letters passed through"},
+      {"name": "Transposition & grid ciphers", "description": "Rail Fence (zigzag), Scytale and Polybius rearrange or grid-map letters rather than substituting them.", "status": "live", "notes": "Rail-fence and Polybius show a live visual grid"},
+      {"name": "XOR cipher", "description": "Byte-level XOR of text against a key — the building block of modern stream ciphers.", "status": "live", "notes": "Hex/key handling in-browser"},
+      {"name": "Cryptographic hashing", "description": "Compute MD5 and SHA-1/256/384/512 fingerprints of any text.", "status": "live", "notes": "SHA via the browser's native Web Crypto API; MD5 implemented from scratch"},
+      {"name": "Cryptanalysis toolkit", "description": "Letter Frequency Analysis (bar chart), Index of Coincidence, and a Cipher Auto-Solver that fingerprints the likely cipher and auto-cracks simple ones.", "status": "live", "notes": "Auto-Solver uses IoC + chi-squared scoring of all 26 Caesar shifts + format heuristics"}
+    ]
+  },
+  {
+    "category": "Encoding (13 tools)",
+    "features": [
+      {"name": "Base encodings", "description": "Base64, Base64 URL-safe, Base32, Base58 and ASCII85 encode/decode for binary-safe text.", "status": "live", "notes": "Base64 uses native btoa/atob over a UTF-8 byte view"},
+      {"name": "Number-base text encodings", "description": "Hexadecimal and Binary representations of text, both directions.", "status": "live", "notes": "Round-trips arbitrary text"},
+      {"name": "Web encodings", "description": "URL percent-encoding, HTML entity encoding, and Unicode code-point conversion for safe web/markup handling.", "status": "live", "notes": "Handles emoji and accented characters"},
+      {"name": "Signalling alphabets", "description": "Morse code, NATO phonetic alphabet, and Tap code translate text to/from human/signal alphabets.", "status": "live", "notes": "Full Morse map incl. punctuation; word separators preserved"}
+    ]
+  },
+  {
+    "category": "Mathematics (14 tools)",
+    "features": [
+      {"name": "Number theory", "description": "Prime test & factors, large-integer Factorization, GCD/LCM, and Modular Inverse — the maths behind real cryptography.", "status": "live", "notes": "Factorization uses BigInt with Miller-Rabin + Pollard's rho"},
+      {"name": "Number representation", "description": "Base Converter (any base 2-36), Roman Numerals, and Number-to-Words spelling.", "status": "live", "notes": "Bilingual word output (EN/PT)"},
+      {"name": "Sequences & combinatorics", "description": "Factorial, Fibonacci, Combinatorics (nCr / nPr), and the Quadratic equation solver.", "status": "live", "notes": "BigInt where values grow large"},
+      {"name": "Everyday calculators", "description": "Statistics (mean/median/mode/stdev), Percentage, and Temperature conversion.", "status": "live", "notes": "Instant, live recompute on input"}
+    ]
+  },
+  {
+    "category": "Lottery (2 tools)",
+    "features": [
+      {"name": "Lottery odds calculator", "description": "Compute the true odds of matching each prize tier in a 'pick k from n' lottery, with exact combination counts.", "status": "live", "notes": "BigInt combinatorics; links out to the QI LotteryWiz app"},
+      {"name": "Covering wheel", "description": "Generate a reduced set of tickets that guarantees coverage of a chosen pool of numbers.", "status": "live", "notes": "Shares combinatorics helpers with the odds tool"}
+    ]
+  },
+  {
+    "category": "Text (11 tools)",
+    "features": [
+      {"name": "Transform & clean", "description": "Case Converter, Reverse, Leet Speak, Clean Whitespace and Slugify reshape text for any need.", "status": "live", "notes": "Slugify strips accents via NFD normalisation"},
+      {"name": "Analyse", "description": "Text Statistics (chars/words/lines/sentences) and Word Frequency surface the shape of a body of text.", "status": "live"},
+      {"name": "List operations", "description": "Sort Lines, Remove Duplicates and Find & Replace operate line-by-line on pasted lists.", "status": "live"},
+      {"name": "Generate", "description": "Lorem Ipsum placeholder text generator for mock-ups and design.", "status": "live"}
+    ]
+  },
+  {
+    "category": "Experience & Platform",
+    "features": [
+      {"name": "Fully bilingual (EN / PT)", "description": "Every label, tool, option and educational article switches between English and Brazilian Portuguese with one toggle, instantly, no reload.", "status": "live", "notes": "Loc {en,pt} pairs throughout; language persisted in localStorage"},
+      {"name": "100% offline & private", "description": "Everything runs in the browser. No data ever leaves the device and the app keeps working with no internet, installable as a PWA.", "status": "live", "notes": "vite-plugin-pwa service worker; static build, no backend needed for the tools"},
+      {"name": "Instant search & favorites", "description": "Search all 59 tools by name or description across categories; star favourites to pin them to the top.", "status": "live", "notes": "Favorites persisted in localStorage"},
+      {"name": "Learn-as-you-go content", "description": "Each tool carries a 'How it works' explainer plus history, trivia and a source link — a teaching toolbox, not just a calculator.", "status": "live", "notes": "Bilingual educational layer attached by tool id"},
+      {"name": "Live visuals", "description": "Selected tools render a live diagram as you type — the Caesar cipher wheel, Polybius 5x5 grid, rail-fence zigzag and substitution mapping strips.", "status": "live", "notes": "SVG/HTML generated from current inputs"},
+      {"name": "On-device assistant", "description": "Ask in plain language ('is there a tool for palindromes?') and the assistant points you to the right tool — running entirely on your device.", "status": "live", "notes": "TF-IDF retrieval over the bilingual tool index; synonym + de-pluralisation expansion"},
+      {"name": "Dark / light theme", "description": "Switch between dark and light themes; the choice is remembered.", "status": "live", "notes": "CSS variables, data-theme attribute"},
+      {"name": "Cloud assistant (optional)", "description": "The assistant can be pointed at a hosted endpoint for richer answers when CypherMiner is published — switched purely by config.", "status": "partial", "notes": "Cloud provider implemented; cloudEndpoint not configured, local offline mode is the default"}
+    ]
+  },
+  {
+    "category": "QI Ecosystem Integration",
+    "features": [
+      {"name": "QI module contract API", "description": "Exposes the standard QI endpoints /health, /version and /info so QI Hive Mission Control can monitor it.", "status": "live", "notes": "FastAPI on port 8502; /info returns the registry self-description"},
+      {"name": "Registry-driven CORS", "description": "Allowed origins are read from the QI ecosystem registry rather than hardcoded, so sibling QI projects are trusted automatically.", "status": "live", "notes": "QI.cors_origins() with a safe localhost fallback"},
+      {"name": "24/7 services + public tunnel", "description": "Runs as Windows services and is reachable remotely at a permanent URL via a static Cloudflare named tunnel.", "status": "live", "notes": "QI_CypherMinerAPI + QI_CypherMinerUI + QI_CypherMinerTunnel -> https://cypher.quiddityinnovations.com"},
+      {"name": "Registered in QI ecosystem", "description": "Listed in qi_registry.json with ports 8502/7842 (blocks 8500-8599 / 7840-7849), path and status.", "status": "live", "notes": "family_tier: sibling"}
+    ]
+  }
+]

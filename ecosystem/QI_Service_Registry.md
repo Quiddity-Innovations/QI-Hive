@@ -7,6 +7,15 @@
 
 > **Looking for Scheduled Tasks (not services)?** — e.g. a task popping a command window, or you need to enable/disable one — see the sibling **`QI_Scheduled_Tasks_Registry.md`**.
 
+> ## ⏳ PENDING — Per-product NSSM (arming for Sat 2026-06-27 00:05 (midnight ending Fri))
+> Today every `QI_*` service shares one `C:\QIH\engine\bin\nssm.exe`, so the UAC
+> consent popup reads *"the non-sucking service manager"* and never says which
+> product. On Friday, task **`QI_NamingStandardize_Friday`** re-points each
+> service to a **per-product copy** (`Maia_NSSM.exe`, `Naya_NSSM.exe`, …) whose
+> embedded FileDescription names the product, so the popup identifies it.
+> The 18 copies are already staged in `C:\QIH\engine\bin\`. Tooling, dry-runs,
+> rollback, and the service→exe map: **`C:\QIH\tools\naming_standardization\`**.
+
 > ## 🌐 STATIC NAMED TUNNELS (2026-06-20)
 > All QI `*Tunnel` services were migrated from **quick tunnels** (random `*.trycloudflare.com`,
 > URL changes every restart) to **static named tunnels** on the new domain
@@ -352,7 +361,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | Field | Value |
 |---|---|
 | **Display name** | QI - MapSnap Schema Browser |
-| **Description** | MapSnap Jenzabar schema browser. Local Python HTTP server. Added by dashboard registry-driven launcher build. |
+| **Description** | MapSnap schema-intelligence tool for any enterprise DB profile (SQL Server/Oracle/Postgres/MySQL/SQLite). Local Python HTTP server. Added by dashboard registry-driven launcher build. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `Application\server.py` |
 | **Working dir** | `C:\MapSnap` |
@@ -574,6 +583,24 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Status** | Registry entry added 2026-06-19; service install pending an elevated run of install_service.bat |
 | **Added** | 2026-06-19 |
 
+### QI_GamezQuantProxy
+| Field | Value |
+|---|---|
+| **Display name** | QI Gamez Quant (Hyde) Service |
+| **Description** | WC2026 private 'Quant' AI persona side-service (Mr. Hyde). Serves /quant-persona on 127.0.0.1:8712 so the public proxy relays it ONLY while this service runs. The public face stays the sanitized 'Analyst' when this is stopped. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `hyde_service.py` |
+| **Working dir** | `C:\Gamez\proxy` |
+| **Port** | 8712 (Gamez block 8710-8719; localhost-only, no tunnel) |
+| **Stdout/Stderr log** | `C:\Gamez\proxy\LOGS\hyde_service.log` |
+| **Start type** | DEMAND_START (manual — OFF by default; this is the Hyde access switch) |
+| **Account** | LocalSystem |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Install** | `C:\Gamez\proxy\install_hyde_service.bat` (double-click; self-elevates via UAC). On/off: `start_hyde.bat` / `stop_hyde.bat`. No-service alternative: `run_hyde.bat`. |
+| **Note** | The Jekyll/Hyde switch: typing `hyde` in the app fetches this persona via the public proxy's `/persona?mode=hyde`; stop this service and that 503s, so the public Analyst is the only reachable persona. Same public name (worldcup:8710); no new tunnel/hostname. |
+| **Status** | Registry entry added 2026-06-27; service install pending an elevated run of install_hyde_service.bat |
+| **Added** | 2026-06-27 |
+
 ### QI_Caddy
 | Field | Value |
 |---|---|
@@ -593,3 +620,19 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Note** | Caddy installed its internal root CA into the Windows trust store on first run, so `https://*.qi.local` shows a valid padlock. Adding a new app = one block in the Caddyfile + reload (`caddy reload`). |
 | **Status** | Registry entry added 2026-06-23; verified serving lottery.qi.local. Service install pending an elevated run of install_qi_caddy.bat. |
 | **Added** | 2026-06-23 |
+
+### QI_M2VTunnel
+| Field | Value |
+|---|---|
+| **Display name** | QI - M2V Cloudflare Tunnel |
+| **Description** | STATIC NAMED tunnel `qi-m2v` exposing the M2V Music-to-Video Gradio UI (127.0.0.1:7841) at **https://m2v.quiddityinnovations.com**. |
+| **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
+| **Parameters** | `tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-m2v.yml run qi-m2v` |
+| **Working dir** | `C:\QIH\engine\tunnels` |
+| **Exposes port** | 7841 (M2V — NOT an NSSM service; launched via `C:\M2V\Start_M2V.bat` / `.venv\Scripts\python.exe main.py`) |
+| **Stdout/Stderr log** | `C:\QIH\engine\tunnels\LOGS\QI_M2VTunnel.{out,err}.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **Note** | **Repaired 2026-06-25** — the named-tunnel migration (late add 2026-06-23) left **AppParameters empty** and AppDirectory at the cloudflared default, so the service ran cloudflared with no args and registered ZERO edge connections (m2v 530 despite origin up). Params/AppDirectory/logs set via the QI_Elevate broker (`fix_m2v_service.py`). Config origin pinned to `127.0.0.1` (Gradio is IPv4-only; `localhost`→`::1` timed out). |
+| **Status** | ✅ Live — https://m2v.quiddityinnovations.com returns 200 (verified 2026-06-25) |
+| **Added** | 2026-06-23 · **Repaired** 2026-06-25 |

@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 780" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="fk" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#c2185b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="780" fill="#ffffff" rx="12"/>
+  <text x="500" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2d3d">NEXUS — Database Schema (nexus.db)</text>
+  <text x="500" y="50" text-anchor="middle" font-size="11.5" fill="#64748b">Quiddity Innovations · AI Orchestration Engine · 2026</text>
+  <text x="500" y="66" text-anchor="middle" font-size="10" fill="#9aa5b1">SQLite · WAL · schema_version v4 · 17 app tables · live row counts · PK = primary key · FK = foreign key</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="784" y="78" width="200" height="120" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="884" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="794" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="814" y="113" font-size="9" fill="#374151">Core orchestration tables</text>
+  <rect x="794" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="814" y="130" font-size="9" fill="#374151">Batch / schedule / scout</text>
+  <rect x="794" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="814" y="147" font-size="9" fill="#374151">Empty / Phase-2 stub</text>
+  <rect x="794" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="814" y="164" font-size="9" fill="#374151">Title bar (table header)</text>
+  <line x1="794" y1="180" x2="812" y2="180" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <text x="818" y="184" font-size="9" fill="#374151">Foreign-key reference</text>
+
+  <!-- ══ ROW 1: providers · sessions · responses ══ -->
+
+  <!-- providers (core) -->
+  <rect x="20" y="90" width="222" height="148" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="20" y="90" width="222" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="131" y="108" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">providers</text>
+  <text x="32" y="134" font-size="10" fill="#1f2d3d">id  (PK, text)</text>
+  <text x="32" y="151" font-size="10" fill="#374151">name · adapter · enabled</text>
+  <text x="32" y="168" font-size="10" fill="#374151">role · timeout_seconds</text>
+  <text x="32" y="185" font-size="10" fill="#374151">config_json</text>
+  <text x="32" y="206" font-size="9" fill="#5f8a66">6 enabled rows</text>
+  <text x="32" y="222" font-size="8.5" fill="#9aa5b1">seeded from config/providers.json</text>
+
+  <!-- sessions (core) -->
+  <rect x="266" y="90" width="248" height="172" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="266" y="90" width="248" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="390" y="108" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">sessions</text>
+  <text x="278" y="134" font-size="10" fill="#1f2d3d">id  (PK, uuid)</text>
+  <text x="278" y="151" font-size="10" fill="#374151">prompt · status</text>
+  <text x="278" y="168" font-size="10" fill="#374151">synthesis · provider_count</text>
+  <text x="278" y="185" font-size="10" fill="#374151">success_count · elapsed_ms</text>
+  <text x="278" y="202" font-size="10" fill="#374151">routing_mode (parallel|chain|iterative)</text>
+  <text x="278" y="219" font-size="10" fill="#374151">created_at · completed_at</text>
+  <text x="278" y="240" font-size="9" fill="#5f8a66">5,093 rows — every /synthesize call</text>
+  <text x="278" y="255" font-size="8.5" fill="#9aa5b1">+ migration v2 added synthesis columns</text>
+
+  <!-- responses (core) -->
+  <rect x="538" y="90" width="226" height="148" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <rect x="538" y="90" width="226" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="651" y="108" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">responses</text>
+  <text x="550" y="134" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="550" y="151" font-size="10" fill="#c2185b">session_id  → sessions.id</text>
+  <text x="550" y="168" font-size="10" fill="#c2185b">provider_id → providers.id</text>
+  <text x="550" y="185" font-size="10" fill="#374151">response_text · status</text>
+  <text x="550" y="202" font-size="10" fill="#374151">latency_ms · error_message</text>
+  <text x="550" y="223" font-size="9" fill="#9aa5b1">0 rows — per-provider detail (Phase 2)</text>
+
+  <!-- FK lines row 1 -->
+  <line x1="538" y1="151" x2="516" y2="151" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <path d="M 651 90 C 651 60 250 60 200 86" fill="none" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+
+  <!-- ══ ROW 2: batch_jobs · batch_results · scheduled_jobs (amber, migration v3) ══ -->
+  <text x="22" y="288" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">BATCH &amp; SCHEDULE — migration v3</text>
+
+  <rect x="20" y="296" width="232" height="138" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="20" y="296" width="232" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="136" y="314" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">batch_jobs</text>
+  <text x="32" y="340" font-size="10" fill="#1f2d3d">id  (PK, uuid)</text>
+  <text x="32" y="357" font-size="10" fill="#7a5b06">name · description · config_json</text>
+  <text x="32" y="374" font-size="10" fill="#7a5b06">log_mode · status · prompt_count</text>
+  <text x="32" y="391" font-size="10" fill="#7a5b06">completed_count · error_count</text>
+  <text x="32" y="408" font-size="10" fill="#7a5b06">started_at · completed_at</text>
+  <text x="32" y="427" font-size="9" fill="#9a7a2e">1 row</text>
+
+  <rect x="276" y="296" width="232" height="138" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="276" y="296" width="232" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="392" y="314" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">batch_results</text>
+  <text x="288" y="340" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="288" y="357" font-size="10" fill="#c2185b">batch_id  → batch_jobs.id</text>
+  <text x="288" y="374" font-size="10" fill="#c2185b">session_id → sessions.id</text>
+  <text x="288" y="391" font-size="10" fill="#7a5b06">prompt_id · prompt_text · synthesis</text>
+  <text x="288" y="408" font-size="10" fill="#7a5b06">status · elapsed_ms · log_path</text>
+  <text x="288" y="427" font-size="9" fill="#9aa5b1">0 rows</text>
+
+  <rect x="532" y="296" width="232" height="138" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="532" y="296" width="232" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="648" y="314" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">scheduled_jobs</text>
+  <text x="544" y="340" font-size="10" fill="#1f2d3d">id  (PK, uuid)</text>
+  <text x="544" y="357" font-size="10" fill="#7a5b06">name · batch_config</text>
+  <text x="544" y="374" font-size="10" fill="#7a5b06">schedule_type · schedule_value</text>
+  <text x="544" y="391" font-size="10" fill="#7a5b06">enabled · run_count</text>
+  <text x="544" y="408" font-size="10" fill="#7a5b06">last_run_at · next_run_at</text>
+  <text x="544" y="427" font-size="9" fill="#9aa5b1">0 rows · once | interval | cron | daily</text>
+
+  <!-- FK lines row 2 -->
+  <line x1="276" y1="357" x2="254" y2="357" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+  <path d="M 392 374 C 392 270 410 270 408 264" fill="none" stroke="#c2185b" stroke-width="1.2" marker-end="url(#fk)"/>
+
+  <!-- ══ ROW 3: scout cluster ══ -->
+  <text x="22" y="462" font-size="9.5" fill="#9aa5b1" font-weight="700" letter-spacing="0.5">SCOUT INGESTION</text>
+
+  <rect x="20" y="470" width="290" height="184" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="20" y="470" width="290" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="165" y="488" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">scout_items</text>
+  <text x="32" y="514" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="32" y="531" font-size="10" fill="#7a5b06">topic_id · source_type · source_id</text>
+  <text x="32" y="548" font-size="10" fill="#7a5b06">external_id · title · summary · url</text>
+  <text x="32" y="565" font-size="10" fill="#7a5b06">author · published_at · fetched_at</text>
+  <text x="32" y="582" font-size="10" fill="#c2185b">cluster_id → scout_clusters.id</text>
+  <text x="32" y="599" font-size="10" fill="#c2185b">duplicate_of → scout_items.id · score</text>
+  <text x="32" y="620" font-size="9" fill="#9a7a2e">13,244 rows</text>
+  <text x="32" y="636" font-size="8.5" fill="#9aa5b1">UNIQUE(source_type, external_id)</text>
+
+  <rect x="334" y="470" width="230" height="86" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <rect x="334" y="470" width="230" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="449" y="488" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">scout_clusters</text>
+  <text x="346" y="514" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="346" y="531" font-size="10" fill="#374151">topic · unified_summary · item_count</text>
+  <text x="346" y="548" font-size="9" fill="#9aa5b1">0 rows — topic grouping (Phase 2)</text>
+
+  <rect x="334" y="568" width="230" height="86" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <rect x="334" y="568" width="230" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="449" y="586" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">scout_digests</text>
+  <text x="346" y="612" font-size="10" fill="#1f2d3d">id  (PK)</text>
+  <text x="346" y="629" font-size="10" fill="#7a5b06">topic_id · date · content_md · docx_path</text>
+  <text x="346" y="646" font-size="9" fill="#9a7a2e">99 rows · UNIQUE(topic_id, date)</text>
+
+  <line x1="310" y1="540" x2="332" y2="520" stroke="#c2185b" stroke-width="1.6" marker-end="url(#fk)"/>
+
+  <!-- ══ BENCH BLOCK (migration v4) ══ -->
+  <rect x="588" y="470" width="392" height="26" rx="8" fill="#1f2d3d"/>
+  <text x="784" y="488" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Bench — regression suites (migration v4 · 2026-06-13)</text>
+
+  <rect x="588" y="504" width="188" height="92" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="682" y="524" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b4d22">bench_suites</text>
+  <text x="600" y="544" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="600" y="561" font-size="10" fill="#374151">name (UNIQUE) · description</text>
+  <text x="600" y="578" font-size="10" fill="#374151">created_at</text>
+  <text x="600" y="591" font-size="8.5" fill="#5f8a66">1 suite</text>
+
+  <rect x="792" y="504" width="188" height="92" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="886" y="524" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b4d22">bench_cases</text>
+  <text x="804" y="544" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="804" y="561" font-size="10" fill="#c2185b">suite_id → bench_suites.id</text>
+  <text x="804" y="578" font-size="10" fill="#374151">prompt · rubric · category</text>
+  <text x="804" y="591" font-size="8.5" fill="#5f8a66">5 cases</text>
+
+  <rect x="588" y="606" width="188" height="100" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="682" y="626" text-anchor="middle" font-size="11" font-weight="700" fill="#1b4d22">bench_provider_runs</text>
+  <text x="600" y="646" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="600" y="663" font-size="10" fill="#c2185b">suite_id → bench_suites.id</text>
+  <text x="600" y="680" font-size="10" fill="#374151">provider_id · model · mode</text>
+  <text x="600" y="697" font-size="10" fill="#374151">mean_score · mean_latency_ms</text>
+
+  <rect x="792" y="606" width="188" height="100" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="886" y="626" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b4d22">bench_results</text>
+  <text x="804" y="646" font-size="10" fill="#1f2d3d">id (PK)</text>
+  <text x="804" y="663" font-size="10" fill="#c2185b">run_id → bench_provider_runs.id</text>
+  <text x="804" y="680" font-size="10" fill="#374151">case_id · prompt · response</text>
+  <text x="804" y="697" font-size="10" fill="#374151">score · latency_ms · status</text>
+
+  <!-- bench FK lines -->
+  <line x1="776" y1="550" x2="790" y2="550" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+  <line x1="682" y1="596" x2="682" y2="604" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+  <line x1="776" y1="656" x2="790" y2="656" stroke="#c2185b" stroke-width="1.4" marker-end="url(#fk)"/>
+  <text x="886" y="603" text-anchor="middle" font-size="8.5" fill="#5f8a66">4 runs · 20 results</text>
+
+  <!-- ══ FOOTNOTE: stub / empty tables ══ -->
+  <rect x="20" y="724" width="960" height="40" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="34" y="742" font-size="9.5" fill="#6b7280" font-weight="600">Phase-2 stubs &amp; bookkeeping (0 rows):</text>
+  <text x="34" y="757" font-size="9.5" fill="#9aa5b1">bench_runs &amp; bench_scenarios (legacy stubs, superseded by bench_provider_runs) · llm_scores (per-dimension scores) · schema_version (migration log, v4) · sqlite_sequence (SQLite internal)</text>
+</svg>

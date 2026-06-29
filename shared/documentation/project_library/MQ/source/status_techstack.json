@@ -1,0 +1,44 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the API, UI, and the Kaze/Fumi agent pipeline", "license": "PSF (open source)", "version": "3.x"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API on port 8500 — currently the QI contract endpoints (/health, /version, /info); business endpoints not yet added", "license": "MIT", "version": ">=0.115"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app (started from main.py in a daemon thread)", "license": "BSD", "version": ">=0.30 [standard]"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Declared dependency for request/response models (no models defined yet)", "license": "MIT", "version": ">=2.7"},
+    {"layer": "UI", "technology": "Gradio", "role": "Operator console on port 7840 — minimal Status + About shell, pings the API health endpoint", "license": "Apache 2.0", "version": ">=5.0"},
+    {"layer": "News Fetching", "technology": "feedparser", "role": "RSS/Atom parsing for Kaze's travel / photo / AI source feeds", "license": "BSD", "version": ">=6.0.11"},
+    {"layer": "HTTP", "technology": "httpx", "role": "Async HTTP client used by the Gradio UI to call the API health endpoint", "license": "BSD", "version": ">=0.27"},
+    {"layer": "HTTP", "technology": "requests", "role": "HTTP client used by the smoke tests; declared in requirements", "license": "Apache 2.0", "version": ">=2.32"},
+    {"layer": "HTTP", "technology": "urllib (stdlib)", "role": "Fumi's actual HTTP calls — Cloudflare Workers AI, Ollama, and the Facebook Graph API are all called via urllib.request, not an external client", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads API keys + page tokens from secrets/mq.env; config layered over config/mq.json", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Declared for QI documentation generation (session summaries)", "license": "MIT", "version": ">=1.1"},
+    {"layer": "AI — Cloud (primary)", "technology": "Cloudflare Workers AI", "role": "Primary post-generation LLM — @cf/qwen/qwen2.5-7b-instruct-fast (free tier). Needs CF_ACCOUNT_ID + CF_AI_TOKEN; not yet configured", "license": "Free tier", "version": "qwen2.5-7b-instruct-fast"},
+    {"layer": "AI — Local (fallback)", "technology": "Ollama", "role": "Local fallback LLM — qwen3:8b via http://localhost:11434/api/generate (free, private)", "license": "MIT", "version": "qwen3:8b"},
+    {"layer": "Channels", "technology": "Facebook Graph API", "role": "Page feed publishing at graph.facebook.com/v19.0/{page_id}/feed (Fumi). Blocked on Meta credentials", "license": "Meta Platform Terms", "version": "v19.0"},
+    {"layer": "Channels (planned)", "technology": "Instagram + WhatsApp APIs", "role": "Planned — IG Content Publishing + WhatsApp Cloud API under the Maia Quiddam identity. No code yet", "license": "Meta Platform Terms", "version": "planned"},
+    {"layer": "Scheduling", "technology": "Windows Task Scheduler (schtasks)", "role": "Runs the Fumi pipelines on cadence (FumiMaiaWeekly Sat, FumiQIDaily Mon-Fri). Setup script ready; jobs not registered", "license": "OS component", "version": "Windows 11"},
+    {"layer": "Operations", "technology": "Cloudflare Tunnel (NSSM)", "role": "Static named tunnel qi-mq (service QI_MQTunnel) exposing quiddam.com -> :7840 and api.quiddam.com -> :8500. Live; the MQ app service itself is not yet registered", "license": "Cloudflare / open source", "version": "named tunnel"},
+    {"layer": "Persistence", "technology": "JSON files on disk", "role": "There is no database. State lives as files: config/mq.json, data/digests/*.json, data/posts/{drafts,published,failed}/*.json, identity/manifest.json", "license": "N/A", "version": "n/a"}
+  ],
+  "descriptions": [
+    {
+      "title": "Why this status page is deliberately conservative",
+      "body": "MQ's registry status is 'new', and the evidence backs that up. The code is real — a complete Kaze (RSS) -> Fumi (LLM compose) -> Fumi (Graph API publish) pipeline plus a FastAPI/Gradio shell — but almost none of it has run. The only on-disk runtime artefact is data/logs/mq.log, which shows the API+UI booted manually once on 2026-06-10. There are no digests, no drafts, no published posts, no database, and no Meta credentials. So most capabilities here are marked Built/Partial (code exists, unexecuted) or Planned, and very little is Live. The most developed part of MQ is not its code but its soul: the Persona Bible, the decision log, and the architecture blueprint."
+    },
+    {
+      "title": "The Hybrid coherence model (maia/ vs agents/)",
+      "body": "MQ's folder layout encodes one rule: anything the audience experiences AS Maia lives under maia/ and is branded with her name; anything that merely produces it stays in agents/ as invisible plumbing with poetic codenames (Kaze = perception, Fumi = publisher), Renne's boundaries become gate/ (the Governor), and identity is one identity/ kit. Today the working code all lives in agents/ and the maia/ + gate/ folders are pre-wired empty rooms. The first real development step is the 'Hybrid migration': split Fumi's writing half into maia/voice, build the gate/ approval queue, and build maia/memory — done together because the pipeline is being redesigned for four surfaces anyway, so it migrates once rather than twice."
+    },
+    {
+      "title": "Two-tier LLM with cloud-then-local failover",
+      "body": "Fumi generates posts with a small, cheap chain: it tries Cloudflare Workers AI first (qwen2.5-7b-instruct-fast, free tier) and falls back to a local Ollama model (qwen3:8b) if Cloudflare fails or is unconfigured. Both are called over plain urllib with explicit timeouts (30s cloud, 60s local), and the whole thing raises only if both tiers fail. This mirrors the QI cost discipline — free/local models for routine generation — and means MQ has no per-post LLM cost. Neither tier is wired up yet (no CF token configured), so this path is untested in practice."
+    },
+    {
+      "title": "No database — everything is files",
+      "body": "Unlike its sibling projects (Maia's maia.db, NEXUS's nexus.db), MQ has no SQLite or ChromaDB store. State is plain JSON on disk: config/mq.json for settings, data/digests/kaze-<stream>-digest.json for fetched news, and data/posts/{drafts,published,failed}/*.json for the post lifecycle, with each draft physically moved between folders as its status changes. The Identity Kit (identity/manifest.json) and the soul (docs/PERSONA_BIBLE.md) are likewise just files. When persona memory (maia/memory) is built it will need a real continuity store — that is the most likely point at which a database is introduced."
+    },
+    {
+      "title": "Publishing safety: dry-run today, gate tomorrow",
+      "body": "The publisher supports a --dry-run flag that previews exactly what would be posted without calling the Graph API, and the scheduler injects it automatically for the publish step. That is the only safety mechanism in place right now. The persona model (Bible Law 0 / decision D3) requires a stronger guarantee: a draft-and-approve gate where the Governor reviews every post before it goes out. As written, Fumi would auto-publish whatever it generates — which is why building gate/ is a high-priority next step, not an optional one."
+    }
+  ]
+}

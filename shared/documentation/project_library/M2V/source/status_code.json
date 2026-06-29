@@ -1,0 +1,168 @@
+{
+  "intro": "Excerpts copied from the live M2V source (C:\\M2V). M2V is an early-stage project, so this set is proportionate — it covers the real pipeline (lyric direction, audio segmentation, image+video generation, FFmpeg assembly), the API/job model, and the standalone proof-of-concept that actually rendered a video. Everything runs locally; there are no external AI keys.",
+  "sections": [
+    {
+      "category": "Service Launch & API (FastAPI :8501)",
+      "snippets": [
+        {
+          "title": "One process, both faces — API thread + UI",
+          "feature": "main.py launcher",
+          "file": "main.py :: __main__",
+          "language": "python",
+          "code": "def start_api():\n    import uvicorn\n    logger.info(\"Starting M2V API  \\u2192 http://127.0.0.1:8501\")\n    uvicorn.run(\"api.main:app\", host=\"127.0.0.1\", port=8501, log_level=\"warning\")\n\ndef start_ui():\n    from ui.app import demo\n    logger.info(\"Starting M2V UI   \\u2192 http://127.0.0.1:7841\")\n    import gradio as gr\n    demo.queue().launch(server_name=\"127.0.0.1\", server_port=7841, quiet=True,\n        theme=gr.themes.Base(primary_hue=\"purple\", neutral_hue=\"zinc\"))\n\nif __name__ == \"__main__\":\n    ...\n    if args.api_only:   start_api()\n    elif args.ui_only:  start_ui()\n    else:\n        threading.Thread(target=start_api, daemon=True).start()\n        start_ui()",
+          "explanation": "The default `python main.py` runs the FastAPI API in a daemon thread and the Gradio UI in the main thread, so one command brings up both the :8501 API and the :7841 console. The logs confirm this path works — m2v.log shows the API and UI starting and answering /health on 2026-06-09 and -10."
+        },
+        {
+          "title": "QI module contract endpoints",
+          "feature": "Standard health/identity any QI project can call",
+          "file": "api/main.py :: health/version/info",
+          "language": "python",
+          "code": "@app.get(\"/health\")\ndef health():\n    return {\"status\": \"ok\", \"project\": \"m2v\", \"version\": \"0.1.0\"}\n\n@app.get(\"/info\")\ndef info():\n    return {\n        \"id\": \"m2v\",\n        \"name\": \"M2V \\u2014 Music to Video\",\n        \"description\": \"AI-powered music video generator from lyrics + audio\",\n        \"port\": 8501,\n        \"endpoints\": [\"/api/generate\", \"/api/status/{id}\", \"/api/download/{id}\"],\n        \"styles\": [\"cinematic\", \"anime\", \"watercolor\", \"cyberpunk\",\n                   \"fantasy\", \"documentary\", \"abstract\", \"vintage\"],\n    }",
+          "explanation": "The three QI contract endpoints (/health, /version, /info) let the QI Hive dashboard and sibling projects discover M2V and check it is alive. These are the parts of M2V verified live — tests/test_smoke.py asserts exactly this shape. (Note: /info still advertises legacy backend names that the live engine no longer uses.)"
+        },
+        {
+          "title": "Submit a job, run it in the background",
+          "feature": "POST /api/generate — fire-and-poll job model",
+          "file": "api/main.py :: generate()",
+          "language": "python",
+          "code": "job_id = uuid.uuid4().hex[:12]\n... # save audio (+ optional reference image) under data/uploads/<job_id>\nJOBS[job_id] = {\"job_id\": job_id, \"status\": \"queued\", \"events\": [],\n                \"output_path\": None, \"error\": None, \"created_at\": time.time(), ...}\n\ndef _run():\n    JOBS[job_id][\"status\"] = \"running\"\n    try:\n        for event in run_pipeline(audio_path=str(audio_path), lyrics=lyrics,\n                output_dir=str(DATA_DIR), job_id=job_id, style=style, ...):\n            JOBS[job_id][\"events\"].append(event)\n            stage = event.get(\"stage\", \"\")\n            if stage == \"done\":\n                JOBS[job_id][\"status\"] = \"done\"\n                JOBS[job_id][\"output_path\"] = event.get(\"output\")\n            elif stage == \"error\":\n                JOBS[job_id][\"status\"] = \"error\"; JOBS[job_id][\"error\"] = event.get(\"message\")\n    except Exception as e:\n        JOBS[job_id][\"status\"] = \"error\"; JOBS[job_id][\"error\"] = str(e)\n\nthreading.Thread(target=_run, daemon=True).start()\nreturn {\"job_id\": job_id, \"status\": \"queued\"}",
+          "explanation": "Generation is long (~20-30 min), so the endpoint returns a job_id immediately and runs the pipeline on a background daemon thread. As run_pipeline() yields progress events they are appended to the job's event list, which the UI polls via /api/status/{id}/events. JOBS is an in-memory dict — simple, but it means a restart loses all job history (a database is on the roadmap)."
+        }
+      ]
+    },
+    {
+      "category": "Pipeline Orchestration",
+      "snippets": [
+        {
+          "title": "The five-stage generator",
+          "feature": "engine/pipeline.py — stream progress per stage",
+          "file": "engine/pipeline.py :: run()",
+          "language": "python",
+          "code": "yield {\"stage\": \"analyzing\", \"message\": \"Analyzing lyrics with LLM\\u2026\"}\naudio_duration = get_duration(audio_path)\nscenes: list[Scene] = analyze_lyrics(lyrics, audio_duration, style=style)\nyield {\"stage\": \"analyzed\", \"n_scenes\": len(scenes),\n       \"scenes\": [asdict(s) for s in scenes]}\n\n# align audio timestamps onto the scenes\ntimestamps = get_section_timestamps(audio_path, len(scenes))\nfor i, (start, end) in enumerate(timestamps):\n    scenes[i].start_time = start; scenes[i].end_time = end\n\ngenerator = VideoGenerator(reference_image_path=reference_image_path, ip_scale=ip_scale)\nfor i, scene in enumerate(scenes):\n    duration = max(scene.end_time - scene.start_time, 3.2)\n    clip_path = os.path.join(scenes_dir, f\"clip_{i:03d}.mp4\")\n    yield {\"stage\": \"generating\", \"clip_index\": i, \"total_clips\": len(scenes), ...}\n    generator.generate(prompt=scene.prompt, negative_prompt=scene.negative_prompt,\n                       duration=duration, output_path=clip_path)\n    clip_paths.append(clip_path)\ngenerator.unload()",
+          "explanation": "The whole product is this one generator function. It writes a scene prompt per lyric section, segments the audio to give each scene a time window, generates one clip per scene, then assembles. Being a generator means it can `yield` a status dict after every step — which is exactly what the API turns into the UI's live progress log, with no extra streaming machinery."
+        }
+      ]
+    },
+    {
+      "category": "Lyric Direction (Ollama)",
+      "snippets": [
+        {
+          "title": "Local LLM as music-video director",
+          "feature": "Per-section visual scene prompts",
+          "file": "engine/lyric_analyzer.py :: _generate_prompts_ollama()",
+          "language": "python",
+          "code": "system_prompt = (\n    \"You are a music video director. For each song segment, create a vivid visual scene \"\n    \"description optimized for AI image generation. Be specific about lighting, setting, \"\n    \"subject, and atmosphere. Avoid abstract concepts \\u2014 describe concrete visual scenes.\")\n\nresp = requests.post(OLLAMA_URL, json={\n    \"model\": OLLAMA_MODEL,            # qwen3:8b\n    \"prompt\": user_prompt, \"system\": system_prompt,\n    \"stream\": False, \"think\": False,\n    \"options\": {\"temperature\": 0.7}}, timeout=120)\nraw = resp.json().get(\"response\", \"\")\nmatch = re.search(r'\\[.*\\]', raw, re.DOTALL)   # pull the JSON array out\nif match:\n    return json.loads(match.group())",
+          "explanation": "Rather than naively turning lyrics into prompts, M2V asks a local Ollama model (qwen3:8b) to act as a director and return a JSON array of {prompt, mood, color_palette} — one per song section. `think:false` suppresses the reasoning-model preamble; a regex pulls the JSON array out of whatever the model wraps around it. Runs entirely on the local Ollama server, so it costs nothing and stays private."
+        },
+        {
+          "title": "Structure-aware lyric splitting with fallbacks",
+          "feature": "Break lyrics into labelled scenes",
+          "file": "engine/lyric_analyzer.py :: _split_lyrics()",
+          "language": "python",
+          "code": "# Try bracket markers: [Verse 1], [Chorus], etc.\npattern = r'\\[([^\\]]+)\\]([^\\[]*)'\nmatches = re.findall(pattern, lyrics, re.DOTALL | re.IGNORECASE)\nif matches:\n    segments = [(_normalize_label(label), text.strip())\n                for label, text in matches if text.strip()]\n    if segments:\n        return segments\n\n# Try double-newline paragraphs\nparagraphs = [p.strip() for p in re.split(r'\\n\\s*\\n', lyrics) if p.strip()]\nif len(paragraphs) >= 2:\n    return list(zip(_auto_label(paragraphs), paragraphs))\n\n# Last resort: ~4-line chunks\nlines = [l for l in lyrics.splitlines() if l.strip()]\nchunks = [\"\\n\".join(lines[i:i+4]) for i in range(0, len(lines), 4)]\nreturn list(zip(_auto_label(chunks), chunks))",
+          "explanation": "Lyrics arrive in every shape, so the splitter degrades gracefully: first it honours explicit [Verse]/[Chorus] markers, then falls back to blank-line paragraphs, then to fixed 4-line chunks. _auto_label() even guesses chorus vs verse by spotting repeated paragraphs. The result is capped to 10 scenes (adjacent shortest segments merged) to keep render time sane."
+        },
+        {
+          "title": "Fallback prompt when Ollama is down",
+          "feature": "Pipeline never dies just because the LLM is offline",
+          "file": "engine/lyric_analyzer.py :: _fallback_prompt()",
+          "language": "python",
+          "code": "def _fallback_prompt(lyrics_text: str, style_mod: str) -> dict:\n    lines = [l.strip() for l in lyrics_text.splitlines() if l.strip()][:2]\n    base = \" \".join(lines)[:120]\n    return {\n        \"prompt\": f\"A visual scene inspired by the lyrics '{base}', {style_mod}\",\n        \"mood\": \"neutral\",\n        \"color_palette\": \"natural tones\",\n    }",
+          "explanation": "If the Ollama call raises or times out, the analyzer logs it and builds a simple prompt straight from the first two lyric lines plus the chosen style modifier. It is cruder than the LLM's output but keeps the pipeline producing scenes — a recurring 'produce something rather than crash' theme across M2V."
+        }
+      ]
+    },
+    {
+      "category": "Audio & Lyrics Ingestion",
+      "snippets": [
+        {
+          "title": "Structural segmentation with even-split fallback",
+          "feature": "Place scene boundaries on the song",
+          "file": "engine/audio_analyzer.py :: _detect_sections_librosa()",
+          "language": "python",
+          "code": "y, sr = librosa.load(audio_path, sr=22050, mono=True)\nmfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)\nbounds = librosa.segment.agglomerative(mfcc, k=n_segments + 1)\nbound_times = librosa.frames_to_time(bounds, sr=sr)\ntimes = sorted(set([0.0] + list(bound_times) + [duration]))\nwhile len(times) - 1 > n_segments:        # merge the shortest gap\n    gaps = [(times[i+1] - times[i], i) for i in range(len(times) - 1)]\n    gaps.sort()\n    times.pop(gaps[0][1] + 1)\nreturn [(round(times[i],2), round(times[i+1],2)) for i in range(len(times)-1)]",
+          "explanation": "To make cuts land near real musical sections, the analyzer computes MFCCs and runs librosa's agglomerative clustering to find structural boundaries, then trims to exactly the number of scenes by merging the shortest gaps. If librosa is missing or fails, get_section_timestamps() silently falls back to an even time split — the video still gets sensible scene windows."
+        },
+        {
+          "title": "Lyrics from tags first, Whisper second",
+          "feature": "Auto-extract lyrics from the audio",
+          "file": "engine/lyrics_extractor.py :: extract()",
+          "language": "python",
+          "code": "lyrics = _from_id3(audio_path)          # USLT/SYLT embedded tags\nif lyrics:\n    print(f\"[lyrics_extractor] Found embedded lyrics ({len(lyrics)} chars)\")\n    return lyrics\n\nprint(\"[lyrics_extractor] No embedded lyrics \\u2014 transcribing with Whisper\\u2026\")\nlyrics = _from_whisper(audio_path, whisper_model)\nif lyrics:\n    return lyrics\nraise LyricsNotFound(\"No embedded lyrics and Whisper transcription returned empty.\")",
+          "explanation": "Reading lyrics from embedded ID3 tags is instant and exact, so it is tried first; only when a song has no embedded lyrics does M2V fall back to transcribing the audio with Whisper (which is slower and approximate). If both come up empty it raises LyricsNotFound rather than guessing."
+        }
+      ]
+    },
+    {
+      "category": "Image & Video Generation (SDXL + SVD)",
+      "snippets": [
+        {
+          "title": "SDXL still, optionally IP-Adapter-conditioned",
+          "feature": "Per-scene image with consistent faces",
+          "file": "engine/video_generator.py :: _load_sdxl() / _make_image()",
+          "language": "python",
+          "code": "self._sdxl = StableDiffusionXLPipeline.from_pretrained(\n    SDXL_MODEL, torch_dtype=dtype,\n    variant=\"fp16\" if device == \"cuda\" else None, use_safetensors=True).to(device)\nself._sdxl.enable_attention_slicing()\n\nif self._ref is not None:\n    self._sdxl.load_ip_adapter(IP_ADAPTER_REPO, subfolder=\"sdxl_models\",\n                               weight_name=IP_ADAPTER_WEIGHT)\n    self._sdxl.set_ip_adapter_scale(self._ip_scale)\n...\nkwargs = dict(prompt=prompt, negative_prompt=negative_prompt,\n              num_inference_steps=30, guidance_scale=7.5, width=1024, height=576)\nif self._ref is not None:\n    kwargs[\"ip_adapter_image\"] = self._ref\nreturn self._sdxl(**kwargs).images[0]",
+          "explanation": "Each scene's still comes from SDXL Base 1.0. If the user supplied a reference photo, IP-Adapter is loaded and the photo is passed as ip_adapter_image so the same face/style carries across every scene — the project's answer to AI videos where the cast changes every shot. The scale slider (ip_scale) tunes how strongly the photo constrains the output."
+        },
+        {
+          "title": "Animate the still with Stable Video Diffusion",
+          "feature": "Turn each image into real motion",
+          "file": "engine/video_generator.py :: _animate()",
+          "language": "python",
+          "code": "frames = self._svd(image, num_frames=SVD_FRAMES,        # 25 frames\n        num_inference_steps=25, decode_chunk_size=8,\n        motion_bucket_id=127, noise_aug_strength=0.02,\n        generator=torch.Generator().manual_seed(42)).frames[0]\n\ntmp = output_path.replace(\".mp4\", \"_raw.mp4\")\nexport_to_video(frames, tmp, fps=SVD_FPS)               # 8 fps -> ~3.1s\n\nclip_dur = SVD_FRAMES / SVD_FPS\nloops = max(1, round(duration / clip_dur))\ncmd = [\"ffmpeg\", \"-y\", \"-stream_loop\", str(loops - 1), \"-i\", tmp,\n       \"-t\", str(duration), \"-vf\", f\"scale={OUT_W}:{OUT_H}\",\n       \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-preset\", \"fast\", output_path]",
+          "explanation": "SVD produces a fixed 25-frame (~3.1s) clip from the still. Because a scene usually needs to be longer, FFmpeg loops the raw clip enough times to fill the scene's duration and scales it to the 1280x720 output. The fixed seed keeps motion deterministic. (The loop-to-fill approach can look repetitive on long scenes — non-looping motion is a roadmap item.)"
+        },
+        {
+          "title": "Two 8GB models sharing 16GB of VRAM",
+          "feature": "Alternate load/unload to fit the GPU",
+          "file": "engine/video_generator.py :: generate()",
+          "language": "python",
+          "code": "def generate(self, prompt, negative_prompt, duration, output_path):\n    img_path = output_path.replace(\".mp4\", \"_frame.png\")\n    image = self._make_image(prompt, negative_prompt)   # loads SDXL\n    image.save(img_path)\n    self._unload_sdxl()        # free ~8GB before SVD loads\n    self._animate(image, max(duration, 3.2), output_path)   # loads SVD\n    return output_path",
+          "explanation": "SDXL (~8GB) and SVD (~8GB) won't both fit comfortably in the RTX 5080's 16GB, so generate() makes the image, explicitly unloads SDXL and empties the CUDA cache, then loads SVD to animate. This per-scene swap is the main reason a 10-scene video takes ~20-30 minutes, but it keeps peak VRAM within budget."
+        }
+      ]
+    },
+    {
+      "category": "Assembly (FFmpeg)",
+      "snippets": [
+        {
+          "title": "Mux the original song over the cut",
+          "feature": "Final video carries the real audio track",
+          "file": "engine/assembler.py :: _replace_audio()",
+          "language": "python",
+          "code": "cmd = [\"ffmpeg\", \"-y\",\n    \"-i\", video_path, \"-i\", audio_path,\n    \"-c:v\", \"copy\", \"-c:a\", \"aac\", \"-b:a\", \"192k\",\n    \"-map\", \"0:v:0\", \"-map\", \"1:a:0\", \"-shortest\", out]\n_run(cmd)",
+          "explanation": "After the SVD clips are concatenated, the silent video is muxed with the original song: the video stream is copied as-is, the audio is re-encoded to AAC 192k, and -shortest trims to whichever track ends first. This is what makes the output an actual music video synced to the song rather than a silent montage."
+        },
+        {
+          "title": "Burn lyrics in as timed subtitles",
+          "feature": "On-screen captioning from scene timings",
+          "file": "engine/assembler.py :: _write_srt() / _burn_subtitles()",
+          "language": "python",
+          "code": "with open(srt_path, \"w\", encoding=\"utf-8\") as f:\n    for i, scene in enumerate(scenes, 1):\n        start = _srt_time(scene.start_time); end = _srt_time(scene.end_time)\n        lines = [l.strip() for l in scene.lyrics.splitlines() if l.strip()][:2]\n        f.write(f\"{i}\\n{start} --> {end}\\n{chr(10).join(lines)}\\n\\n\")\n...\ncmd = [\"ffmpeg\", \"-y\", \"-i\", video_path,\n    \"-vf\", (f\"subtitles='{srt_escaped}':force_style='FontName=Arial,FontSize=22,\"\n            \"PrimaryColour=&HFFFFFF,OutlineColour=&H000000,Bold=1,Outline=2,\"\n            \"Shadow=1,Alignment=2,MarginV=20'\"),\n    \"-c:a\", \"copy\", out]",
+          "explanation": "An SRT is written straight from the scene start/end times (first two lyric lines per block) and burned into the video with FFmpeg's subtitles filter and an explicit caption style. Real .srt files with timed Portuguese captions exist in data/output, confirming this path runs. Subtitles are optional via the UI's 'Burn subtitles' toggle."
+        }
+      ]
+    },
+    {
+      "category": "Standalone Proof-of-Concept",
+      "snippets": [
+        {
+          "title": "Ken Burns scene, or a labelled placeholder",
+          "feature": "make_forro_video.py — render even with missing frames",
+          "file": "make_forro_video.py :: build_scene_clip()",
+          "language": "python",
+          "code": "try:\n    if not os.path.exists(img_path):\n        raise FileNotFoundError(img_path)\n    base = ImageClip(img_path)\n    cover = max(w / base.w, h / base.h)              # scale to fill frame\n    clip = (base.with_duration(duration)\n                .resized(lambda t: cover * (1 + ZOOM * t / duration))  # Ken Burns\n                .with_position(\"center\"))\n    return clip\nexcept Exception as e:\n    logger.warning(f\"Scene {scene['n']:>2} MISSING '{scene['image']}' ({e}); using placeholder\")\n    bg = ColorClip(size=resolution, color=PLACEHOLDER_BG).with_duration(duration)\n    ...  # overlay a [label] caption and continue\n    return bg",
+          "explanation": "This is the standalone track that actually rendered M2V's first full video (forro_anime_mv.mp4, 160s). Each scene gets a slow Ken Burns zoom; if a scene image is missing it logs a warning and substitutes a labelled placeholder rather than aborting — which is exactly what happened on the proof-of-concept run (all 10 frames were placeholders, per forro_video_build.log) so the render still completed."
+        },
+        {
+          "title": "Drive ComfyUI over HTTP to make frames",
+          "feature": "generate_frames.py — canonical SDXL txt2img graph",
+          "file": "generate_frames.py :: build_graph()",
+          "language": "python",
+          "code": "return {\n  \"4\": {\"class_type\": \"CheckpointLoaderSimple\", \"inputs\": {\"ckpt_name\": ckpt}},\n  \"6\": {\"class_type\": \"CLIPTextEncode\", \"inputs\": {\"text\": positive, \"clip\": [\"4\", 1]}},\n  \"7\": {\"class_type\": \"CLIPTextEncode\", \"inputs\": {\"text\": negative, \"clip\": [\"4\", 1]}},\n  \"5\": {\"class_type\": \"EmptyLatentImage\",\n        \"inputs\": {\"width\": GEN_WIDTH, \"height\": GEN_HEIGHT, \"batch_size\": 1}},\n  \"3\": {\"class_type\": \"KSampler\",\n        \"inputs\": {\"seed\": SEED, \"steps\": STEPS, \"cfg\": CFG,\n                   \"sampler_name\": SAMPLER, \"scheduler\": SCHEDULER, \"denoise\": 1.0,\n                   \"model\": [\"4\", 0], \"positive\": [\"6\", 0],\n                   \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0]}},\n  \"8\": {\"class_type\": \"VAEDecode\", \"inputs\": {\"samples\": [\"3\", 0], \"vae\": [\"4\", 2]}},\n  \"9\": {\"class_type\": \"SaveImage\", \"inputs\": {\"filename_prefix\": prefix, \"images\": [\"8\", 0]}},\n}",
+          "explanation": "An alternative image source for the standalone track: a stdlib-only urllib client builds a canonical SDXL text-to-image graph in ComfyUI's API format and POSTs it to a running ComfyUI, then polls /history for the result. It uses core nodes only so it loads on any ComfyUI install. This is wired but not yet run — which is why the proof-of-concept video still uses placeholder frames."
+        }
+      ]
+    }
+  ]
+}

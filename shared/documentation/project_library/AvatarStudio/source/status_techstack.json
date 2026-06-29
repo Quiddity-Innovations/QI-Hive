@@ -1,0 +1,48 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the Gradio app, pipeline, TTS, render wrappers, and scene engine", "license": "PSF (open source)", "version": "3.x (project .venv)"},
+    {"layer": "UI", "technology": "Gradio", "role": "Studio web UI on port 7862 — agent picker, per-language scripts, engine config, live progress, video preview", "license": "Apache 2.0", "version": "6.14.0"},
+    {"layer": "TTS — Local", "technology": "Kokoro (Kokoro-82M)", "role": "Offline neural TTS for en-US, en-GB, pt-BR, es, it, zh — primary voice engine", "license": "Apache 2.0", "version": "0.9.4"},
+    {"layer": "TTS — Cloud (free)", "technology": "edge-tts (Microsoft Neural)", "role": "Free neural voices for ja, fr, ru, de where Kokoro-82M lacks a usable voice", "license": "GPL-3.0 (client) / MS voices", "version": "7.2.8"},
+    {"layer": "Audio I/O", "technology": "soundfile + NumPy + SciPy", "role": "Read/write WAV (24 kHz), concatenate Kokoro chunks, pitch-shift via resampling", "license": "BSD", "version": "soundfile 0.13.1 / numpy 2.4.5 / scipy 1.17.1"},
+    {"layer": "Face Animation — Fast", "technology": "LivePortrait (WSL2)", "role": "Driving-video motion transfer (~30s render); lips not audio-driven", "license": "MIT (research)", "version": "WSL2 conda env 'liveportrait'"},
+    {"layer": "Face Animation — Quality", "technology": "Hallo2 (WSL2)", "role": "Audio-driven talking-head diffusion render; lips match the waveform; slow", "license": "MIT (research)", "version": "WSL2 conda env 'hallo'"},
+    {"layer": "Lip-Sync Post-process", "technology": "video-retalking (WSL2)", "role": "Optional lip-sync correction pass on top of any rendered video", "license": "Apache 2.0 (research)", "version": "WSL2 conda env 'retalking'"},
+    {"layer": "Face Animation — Pre-wired", "technology": "MuseTalk / SadTalker / Wav2Lip (WSL2)", "role": "Alternate render engines, wrappers present but disabled until their WSL2 envs are installed", "license": "Mixed (research)", "version": "config-gated, not installed"},
+    {"layer": "Render — Cloud", "technology": "D-ID Talks API / HeyGen API", "role": "Cloud talking-photo rendering (upload -> generate -> poll -> download); for production polish", "license": "Commercial SaaS", "version": "D-ID v1, HeyGen v2"},
+    {"layer": "Video / FFmpeg", "technology": "ffmpeg + ffprobe (WSL2) + imageio-ffmpeg", "role": "Audio mux into renders, frame extraction, duration probe, scene concatenation", "license": "LGPL/GPL", "version": "WSL2 system ffmpeg + imageio-ffmpeg 0.6.0"},
+    {"layer": "Image / Background", "technology": "rembg + Pillow", "role": "Background removal (cutout) and solid-color / uploaded-image compositing on the portrait", "license": "MIT", "version": "rembg 2.0.75 / pillow 12.2.0"},
+    {"layer": "Computer Vision", "technology": "OpenCV (Haar cascades)", "role": "Best-portrait-frame scoring: face/eye detection + Laplacian sharpness over sampled frames", "license": "Apache 2.0", "version": "opencv-python (cv2)"},
+    {"layer": "ML Runtime", "technology": "PyTorch (CUDA 12.8)", "role": "Backs Kokoro TTS in the Windows venv; render models run in their own WSL2 conda envs", "license": "BSD", "version": "torch 2.11.0+cu128 (torchaudio/torchvision matched)"},
+    {"layer": "HTTP / Cloud calls", "technology": "requests", "role": "D-ID / HeyGen REST uploads, generate, status polling, result download", "license": "Apache 2.0", "version": "2.34.2"},
+    {"layer": "Compute Host", "technology": "WSL2 Ubuntu-24.04", "role": "Runs all render engines + ffmpeg; driven from Windows via 'wsl -d Ubuntu-24.04 bash -c'; Windows paths translated to /mnt/c", "license": "Open source", "version": "Ubuntu-24.04"},
+    {"layer": "Operations", "technology": "NSSM (Windows service)", "role": "QI_AvatarStudio demand-start service (AppDirectory C:\\1-AI\\APPS\\AvatarStudio, port 7862)", "license": "Public domain", "version": "C:\\QIH\\engine\\bin\\nssm.exe"},
+    {"layer": "Ecosystem (planned)", "technology": "NEXUS / QI Brain / QI Hive dashboard", "role": "Scene AI split (NEXUS :8010), session/feature logging (Brain :9011), output surfacing (dashboard :8600)", "license": "Internal (QI)", "version": "not yet wired"}
+  ],
+  "descriptions": [
+    {
+      "title": "Windows orchestrates, WSL2 does the heavy lifting",
+      "body": "The studio is a Windows Python process, but every GPU-heavy step runs inside WSL2 Ubuntu-24.04. avatar_studio.py shells out with `wsl -d Ubuntu-24.04 bash -c '<cmd>'` for LivePortrait, Hallo2, video-retalking, and all ffmpeg/ffprobe work. Each render model lives in its own conda env (liveportrait, hallo, retalking) so their conflicting CUDA/dlib/numpy requirements never collide. to_wsl_path() rewrites C:\\... to /mnt/c/... (and quotes paths with spaces) for every file handed across the boundary. This split is why the install fixes in CLAUDE.md (dlib CPU-only, GPEN CUDA symlinks, numpy-2.x basicsr patches) all live on the WSL2 side, not in the Windows venv."
+    },
+    {
+      "title": "Two TTS engines, routed per language",
+      "body": "Voice generation is dual-engine and the choice is data-driven from languages.json, not hardcoded. Kokoro-82M (local, offline, Apache 2.0) serves the six languages it has good voices for — American & British English, Brazilian Portuguese, Spanish, Italian, Mandarin. The other four — Japanese, French, Russian, German — route to Microsoft Edge Neural voices via edge-tts because Kokoro-82M lacks them (no male French voice; Windows pyopenjtalk broken for Japanese). generate_voice() reads the engine field and either runs an async edge_tts.Communicate (rate/pitch as SSML) or a Kokoro KPipeline (chunks concatenated, written at 24 kHz, pitch optionally shifted by SciPy resampling)."
+    },
+    {
+      "title": "Swappable render engines behind one pipeline",
+      "body": "pipeline_generate() is engine-agnostic: it produces the WAV, prepares the portrait, then dispatches to whichever engine the UI selected — run_liveportrait, run_hallo2, run_heygen, run_did, run_musetalk, run_sadtalker, or run_wav2lip — and optionally runs run_retalking afterward. get_engine_choices() decides which engines are even offered: LivePortrait and Hallo2 are always available; cloud engines appear only when both an api_key and the enabled flag are present; the extra WSL2 engines appear only when enabled in studio_config.json. Adding an engine is one run_* function plus a branch in the dispatch ladder."
+    },
+    {
+      "title": "LivePortrait vs Hallo2 — speed vs lip accuracy",
+      "body": "The two local engines make opposite trade-offs. LivePortrait transfers motion from a curated driving video (d13 recommended) and renders in ~30 seconds, but the mouth follows the driving clip, not the script — so lips don't match the audio unless the optional video-retalking pass is enabled. Hallo2 is fully audio-driven: the mouth is generated from the WAV itself, so lip sync is native, at the cost of ~15-30 minutes per minute of audio. run_hallo2 also re-muxes our exact WAV over Hallo2's output with ffmpeg (-map 0:v:0 -map 1:a:0) so the rendered script is guaranteed to be what's heard. Lip sync is the project's #1 open issue."
+    },
+    {
+      "title": "Secrets kept out of the repo",
+      "body": "Cloud API keys never live in version-controlled config. studio_config.json holds only the enabled flags and (blank) key slots; the real keys come from secrets/avatarstudio.env (gitignored) or environment variables, mapped by _SECRET_MAP (did -> DID_API_KEY, heygen -> HEYGEN_API_KEY). _apply_secret_overlay() injects them into the in-memory config at load time, and save_studio_config() deep-copies and blanks every key before writing the file back — so a key can never be accidentally persisted. The git baseline commit's message records exactly this hardening: 'secrets moved out of studio_config.json'."
+    },
+    {
+      "title": "Scene pipeline — one script to a multi-character movie",
+      "body": "scene_pipeline.py extends the single-clip studio into a movie maker. A full script is split into scenes three ways: manual (--- breaks with optional [Name] or [Name:photo] tags), AI (NEXUS LLM split for intelligent scene boundaries), or hybrid (LLM split then user-editable before render). Characters are decoupled from agents.json — any photo and name via characters.json or inline syntax — with the agent roster offered only as a convenience. run_pipeline() renders each scene through the same TTS->render->retalking path, then concat_scenes() stitches the per-scene MP4s into one final movie with ffmpeg. The AI split depends on NEXUS being reachable; it falls back to a rule-based splitter otherwise."
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "intro": "Excerpts copied from the live Claude Manager workspace (C:\\CLAUDE) and its companion hook scripts in C:\\Users\\renne\\.claude. Each shows the real code behind an orchestration, supervision, hook, or automation capability. Registry-driven throughout — paths and ports come from C:\\QIH\\ecosystem\\qi_registry.json, never hardcoded.",
+  "sections": [
+    {
+      "category": "Agent Fabric (.claude/agents/)",
+      "snippets": [
+        {
+          "title": "Agent definition front-matter + role",
+          "feature": "8-agent Hive fabric — model-tiered specialists",
+          "file": ".claude/agents/hive-architect.md",
+          "language": "markdown",
+          "code": "---\nname: hive-architect\ndescription: Strategic system designer for QI Hive. Use for architecture\n  decisions, multi-project design, choosing patterns, breaking-change\n  analysis, ADRs, and implementation plans before code is written.\n  NOT for writing code — design only. Hand off to hive-builder.\nmodel: opus\ntools: Read, Glob, Grep, Bash, WebFetch, WebSearch\n---\n\nYou are the **QI Hive Architect**. You design systems before anyone builds them.\n...\nYou are the most expensive model in the team. Use deep reasoning. Do not generate code.",
+          "explanation": "Every hive-* agent is a Markdown file whose YAML front-matter pins three things the harness reads: the model tier (Opus here — reserved for design), the exact tools the agent may use (the architect is read-only + web; no Write/Edit), and the description the dispatcher matches against. The body is the role prompt. Eight such files (architect, builder, inspector, ops, scout, scribe, tester, librarian) make up the fabric."
+        },
+        {
+          "title": "Builder hardcodes the QI conventions",
+          "feature": "Convention enforcement at the agent level",
+          "file": ".claude/agents/hive-builder.md",
+          "language": "markdown",
+          "code": "## QI conventions you must respect\n- Ports: pull from `C:\\QIH\\ecosystem\\qi_registry.json` — never hardcode a port from memory.\n- File paths: raw strings `r\"C:\\...\"` in Python.\n- Encoding: always `encoding=\"utf-8\"`. On stdout: `sys.stdout.reconfigure(encoding=\"utf-8\")`.\n- Scripts: write to `.py` files; never use bash heredocs (encoding breaks).\n- Services: NSSM service names ALWAYS prefixed `QI_` (e.g., `QI_MapSnap`).\n- Logs go to `<project>\\LOGS\\` — never the project root.\n\n## When to hand off\n- After implementation: dispatch to `hive-inspector` for review before merging.",
+          "explanation": "The builder agent doesn't just say 'write code' — it bakes the QI Standards into the prompt so every sub-agent run produces compliant output (registry ports, raw-string paths, UTF-8, QI_ service prefix, logs in LOGS\\). It also encodes the workflow contract: after building, hand off to the inspector. This is how the fabric keeps standards without the main thread re-stating them each time."
+        }
+      ]
+    },
+    {
+      "category": "Dispatch Protocol",
+      "snippets": [
+        {
+          "title": "The dispatcher principle",
+          "feature": "Dispatch discipline — main thread is the orchestrator",
+          "file": ".claude/agents/DISPATCH_PROTOCOL.md",
+          "language": "markdown",
+          "code": "## Core principle\n\nI am the **dispatcher**, not the doer of everything. Each task type below has\nan agent. If a sub-task fits a role, I dispatch via the `Agent` tool with\n`subagent_type=hive-<role>`. I do not do the work in the main thread when there\nis an agent for it.\n\nExceptions: trivial single-step tasks (one Edit, one Bash command, answering a\nfactual question). For anything multi-step, dispatch.\n\n## Standard workflows\n### Workflow A — design + implement + ship\n1. **hive-architect** (Opus) — design the change. Output: implementation plan.\n2. **hive-builder** (Sonnet) — execute the plan. Output: code on disk.\n3. **hive-inspector** (Sonnet) — review the change. Output: findings.\n4. If inspector found issues: back to **hive-builder** with the findings.\n5. **hive-scribe** (Haiku) — write session summary at end.",
+          "explanation": "Claude Code does not auto-route to sub-agents — the protocol is explicit that 'if I don't dispatch, no one does.' This file is the operating rule the main thread follows: a trigger->agent table plus chained workflows (design->build->review->document). It is what turns eight inert .md files into an actual multi-agent operating mode, with anti-patterns (never bypass the inspector, never fake attribution, keep delegation one level deep) spelled out below."
+        }
+      ]
+    },
+    {
+      "category": "Supervisor (drift scanner)",
+      "snippets": [
+        {
+          "title": "Registry walk — the main loop",
+          "feature": "Cross-project health scan",
+          "file": "supervisor/supervisor.py :: main()",
+          "language": "python",
+          "code": "reg = json.loads(REGISTRY.read_text(encoding=\"utf-8\"))\nprojects = reg.get(\"projects\", [])\nreport = {\"generated_at\": now_iso(), \"projects\": []}\nfor p in projects:\n    print(f\"[supervisor] inspecting {p['id']} at {p['path']} ...\")\n    try:\n        report[\"projects\"].append(inspect_project(p))\n    except Exception as exc:\n        report[\"projects\"].append({\"id\": p[\"id\"], \"name\": p.get(\"name\", p[\"id\"]),\n                                    \"path\": p.get(\"path\"), \"severity\": \"red\",\n                                    \"findings\": [{\"severity\": \"red\", \"kind\": \"supervisor_error\",\n                                                  \"msg\": f\"inspector exception: {exc}\"}]})\n\nOUT_REPORT.write_text(json.dumps(report, indent=2), encoding=\"utf-8\")\nOUT_DASHBOARD.write_text(render_dashboard(report), encoding=\"utf-8\")\nfeed_qih_status(report)",
+          "explanation": "The supervisor's spine: read the single ecosystem registry, inspect every registered project, and emit three artifacts — report.json (machine), DASHBOARD.md (human), and a feed into C:\\QIH\\data\\status.json (the Hive dashboard panels). The per-project try/except is deliberate: an inspector exception on one project becomes a red finding for that project, never a crash that loses the whole scan."
+        },
+        {
+          "title": "Per-project drift inspection",
+          "feature": "Drift detection — git, services, tasks, keepalive",
+          "file": "supervisor/supervisor.py :: inspect_project()",
+          "language": "python",
+          "code": "# Git\ngs = git_state(path)\nresult[\"git\"] = gs\nif gs.get(\"status\") == \"dirty\":\n    sev = \"yellow\" if (gs[\"untracked\"] + gs[\"modified\"]) <= 5 else \"red\"\n    result[\"findings\"].append({\"severity\": sev, \"kind\": \"git_dirty\",\n        \"msg\": f\"{gs['untracked']} untracked, {gs['modified']} modified\"})\nif (gs.get(\"last_commit_age_days\") or 0) > 14:\n    result[\"findings\"].append({\"severity\": \"yellow\", \"kind\": \"stale_commits\",\n        \"msg\": f\"Last commit was {gs['last_commit_age_days']} days ago\"})\n\n# Services\nsvcs = list_services_for(str(path))\nfor s in svcs:\n    if s.get(\"Status\") != \"Running\":\n        result[\"findings\"].append({\"severity\": \"red\", \"kind\": \"service_down\",\n            \"msg\": f\"Service {s['Name']} is {s['Status']}\"})\n\nresult[\"severity\"] = severity_for(result)",
+          "explanation": "What 'drift' concretely means. For each project the supervisor checks git cleanliness (>5 dirty files escalates yellow->red), commit staleness (>14 days), keepalive failure files, QI_ NSSM service state (anything not Running is red), and scheduled-task exit codes. Each becomes a severity-tagged finding; severity_for() rolls them into the project's red/yellow/green."
+        },
+        {
+          "title": "Finding the project's QI_ services via NSSM",
+          "feature": "Service drift — only services rooted under the project",
+          "file": "supervisor/supervisor.py :: list_services_for()",
+          "language": "powershell",
+          "code": "Get-Service | ForEach-Object {\n  $app = & 'C:\\QIH\\engine\\bin\\nssm.exe' get $_.Name Application 2>$null;\n  $dir = & 'C:\\QIH\\engine\\bin\\nssm.exe' get $_.Name AppDirectory 2>$null;\n  if ($app -like \"$root*\" -or $dir -like \"$root*\") {\n    $out += [pscustomobject]@{ Name = $_.Name; Status = $_.Status.ToString() }\n  }\n}; $out | ConvertTo-Json -Compress -AsArray",
+          "explanation": "The supervisor shells into PowerShell to attribute services to projects correctly: for every Windows service it asks nssm.exe for the Application and AppDirectory, and only counts a service as belonging to a project if one of those paths is rooted under the project's registered path. That way a stopped QI_ service is reported against the right project, not guessed by name."
+        }
+      ]
+    },
+    {
+      "category": "Session Hooks",
+      "snippets": [
+        {
+          "title": "Hook + permission wiring",
+          "feature": "Harness config — bypassPermissions + hook commands",
+          "file": ".claude/settings.json",
+          "language": "json",
+          "code": "{\n  \"permissions\": {\n    \"allow\": [\"Bash(*)\", \"Read(*)\", \"Write(*)\", \"Edit(*)\",\n              \"Glob(*)\", \"Grep(*)\", \"WebFetch(*)\", \"WebSearch(*)\", \"mcp__*\"],\n    \"defaultMode\": \"bypassPermissions\"\n  },\n  \"hooks\": {\n    \"SessionEnd\": [{ \"hooks\": [{ \"type\": \"command\",\n      \"command\": \"C:\\\\1-AI\\\\APPS\\\\PYTHON\\\\python.exe C:\\\\Users\\\\renne\\\\.claude\\\\session_end.py\",\n      \"timeout\": 15 }] }],\n    \"SubagentStop\": [{ \"hooks\": [{ \"type\": \"command\",\n      \"command\": \"C:\\\\1-AI\\\\APPS\\\\PYTHON\\\\python.exe C:\\\\Users\\\\renne\\\\.claude\\\\subagent_stop.py\",\n      \"timeout\": 15 }] }]\n  }\n}",
+          "explanation": "This project's harness config does two jobs. permissions.defaultMode=bypassPermissions (plus the explicit allow list) is why a management session never stops to ask before running Bash/Edit/MCP. The hooks block wires SessionEnd and SubagentStop to fire the two inbox scripts via the pinned Python interpreter with a 15s timeout. (SessionStart/UserPromptSubmit are wired in the global ~/.claude config, not here.)"
+        },
+        {
+          "title": "SessionStart — Brain probe that fails LOUD",
+          "feature": "Session-start briefing + degraded-session guard",
+          "file": "~/.claude/session_context.py :: probe_brain()",
+          "language": "python",
+          "code": "def probe_brain(timeout=2.0):\n    try:\n        with urllib.request.urlopen(\"http://localhost:9010/api/status\", timeout=timeout) as r:\n            return True, json.loads(r.read().decode(\"utf-8\"))\n    except urllib.error.URLError as e:\n        return False, f\"URLError: {e.reason}\"\n\nbrain_ok, brain_payload = probe_brain()\nif not brain_ok:\n    brain_block = (\n        \"[QI BRAIN — UNREACHABLE \\u26a0\\ufe0f — DEGRADED SESSION]\\n\"\n        f\"  \\u2022 Probe error: {brain_payload}\\n\"\n        \"  \\u2192 Tell Renne immediately. Do NOT silently proceed as if Brain is healthy.\\n\"\n        \"  \\u2192 Do NOT pretend to have called qi.get_context or qi.log_session.\")",
+          "explanation": "The SessionStart hook injects the ecosystem briefing AND a live Brain probe. The design choice is to fail LOUD: if Brain is unreachable, the injected context explicitly tells Claude the session is degraded and forbids pretending qi.* calls succeeded — so memory integrity can't be silently lost. Note the probe still targets :9010, the pre-2026-05-14 port; Brain now lives on :9011, which is why this is flagged on the roadmap."
+        },
+        {
+          "title": "Inferring the project from cwd",
+          "feature": "Every session leaves a trace — correct project attribution",
+          "file": "~/.claude/session_end.py :: infer_project()",
+          "language": "python",
+          "code": "cwd_n = os.path.normcase(os.path.normpath(cwd))\nreg = json.loads(REGISTRY.read_text(encoding=\"utf-8\"))\nbest, best_len = None, 0\nfor proj in reg.get(\"projects\", []):\n    p_n = os.path.normcase(os.path.normpath(proj.get(\"path\") or \"\"))\n    if cwd_n == p_n or cwd_n.startswith(p_n + os.sep):\n        if len(p_n) > best_len:\n            best, best_len = proj.get(\"id\"), len(p_n)\nif best:\n    return best\n# Special case: Claude Manager worktrees live under C:\\CLAUDE\nif cwd_n.startswith(os.path.normcase(r\"C:\\CLAUDE\")):\n    return \"claude_manager\"",
+          "explanation": "Both inbox hooks decide which project a session belongs to by longest-prefix matching the current working directory against every registered project path (longest match wins, so C:\\NAYA\\filehq beats C:\\NAYA). Anything under C:\\CLAUDE — including ephemeral worktrees — falls through to claude_manager. This is what lets the SessionEnd stub be filed under the right project in qi_brain.db without Claude stating it."
+        },
+        {
+          "title": "Normalising a sub-agent name to its Hive role",
+          "feature": "Sub-agent work logged by role",
+          "file": "~/.claude/subagent_stop.py :: main()",
+          "language": "python",
+          "code": "HIVE_ROLES = {\"architect\", \"builder\", \"inspector\", \"ops\", \"scout\", \"scribe\", \"tester\"}\n\nagent_raw = (payload_in.get(\"subagent_type\") or payload_in.get(\"agent_type\")\n             or payload_in.get(\"agent\") or payload_in.get(\"subagent\")\n             or \"unknown_subagent\")\nagent = str(agent_raw).strip().lower()\nbare = agent.replace(\"hive-\", \"\").replace(\"hive_\", \"\")\nif bare in HIVE_ROLES:\n    agent_norm = f\"hive_{bare}\"\nelse:\n    agent_norm = agent.replace(\"-\", \"_\") or \"unknown_subagent\"",
+          "explanation": "When a sub-agent finishes, the SubagentStop hook has to record WHO did the work. Different harness versions name the agent field differently, so it tries four keys, strips any hive-/hive_ prefix, and — if the bare name is a known Hive role — normalises to a canonical hive_<role> id. That id is written into the inbox stub so qi_brain.db attributes the work to the right specialist instead of a generic 'subagent'."
+        }
+      ]
+    },
+    {
+      "category": "Environment Hygiene",
+      "snippets": [
+        {
+          "title": "Building the kill-set — without touching services",
+          "feature": "Clean-restart guard — orphaned MCP trees only",
+          "file": "Tools/claude_restart_guard.ps1 :: Build-KillSet",
+          "language": "powershell",
+          "code": "# 1. all claude.exe roots and their full descendant trees\n$claudeRoots = $map.Values | Where-Object { $_.Name -match '^Claude(\\.exe)?$' } |\n               Select-Object -ExpandProperty Pid\n$kill = Get-Descendants $claudeRoots $map\n# 2. orphaned MCP-signature processes (parent claude already dead) not under a service\nforeach ($p in $map.Values) {\n  if ($p.Cmd -match $McpSig -and -not (Is-UnderService $p.Pid $map)) { [void]$kill.Add($p.Pid) }\n}\n# 3. self-protection: never kill this script's process or its ancestor chain\nforeach ($a in Get-Ancestors $PID $map) { [void]$kill.Remove($a) }\nreturn $kill",
+          "explanation": "The fix for Claude Desktop's 'file in use' restart failure. It maps the whole process tree, then targets two things: every claude.exe descendant tree, and orphaned MCP-signature processes (sqlite/git/brain/peers stdio servers) whose parent Claude is gone. Is-UnderService excludes anything parented by services.exe/nssm/svchost, so the QI_ tunnels and the Brain API are never collateral — and it removes its own ancestor chain so running it from inside a session can't kill the host."
+        },
+        {
+          "title": "Only ever auto-fix what is provably safe",
+          "feature": "Safe-by-design monthly self-audit",
+          "file": "Tools/qi_self_audit.py :: worktree prune",
+          "language": "python",
+          "code": "if APPLY:\n    sh(\"git worktree prune\", cwd=repo)\n    removed = 0\n    for wt in paths:\n        wt_win = wt.replace(\"/\", \"\\\\\")\n        status = sh(\"git status --porcelain\", cwd=wt_win)\n        if status == \"\":   # clean working tree -> safe to remove ephemeral worktree\n            sh(f'git worktree remove --force \"{wt_win}\"', cwd=repo)\n            removed += 1\n    sh(\"git worktree prune\", cwd=repo)\nelse:\n    if len(paths) > 3:\n        report[\"needs_decision\"].append(f\"{repo}: {len(paths)} worktrees to prune\")",
+          "explanation": "The self-audit's guiding rule: --apply-safe only removes a git worktree if its working tree is completely clean (no uncommitted changes), so no work is ever destroyed. A dirty or numerous worktree is not touched — it's pushed onto needs_decision for the in-session review gate. The same split (auto_fixed vs needs_decision) governs orphan kills and .claude.json pruning; risky items are always reported, never auto-applied."
+        },
+        {
+          "title": "Audit -> notify -> open the decision gate",
+          "feature": "Monthly self-audit orchestration",
+          "file": "Tools/Run-Monthly-SelfAudit.ps1",
+          "language": "powershell",
+          "code": "# 1. audit + safe auto-fix\n$summary = & $py \"$tool\\qi_self_audit.py\" \"--apply-safe\" 2>&1 | Out-String\n$head = ($summary -split \"`n\" | Where-Object { $_ -match \"^AUDIT \" } | Select-Object -First 1)\n$decisions = ($summary -split \"`n\" | Where-Object { $_ -match \"DECISION:\" }).Count\n$msg = \"QI Monthly Self-Audit ($ts)`n$head`n$decisions item(s) need your decision. \" +\n       \"Open Claude and say 'monthly audit' to review.\"\n# 2. notify via Tasuke\n& $py \"$tool\\qi_tasuke_notify.py\" $msg 2>&1 | Add-Content $log\n# 3. auto-open Claude Desktop\nStart-Process \"shell:AppsFolder\\Claude_pzs8sxrjxfjjc!Claude\"",
+          "explanation": "The body of the QI_ClaudeSelfAudit task (last Friday of the month). It runs the audit with safe auto-fixes, parses the one-line AUDIT summary and the DECISION count out of stdout, sends Renne a LINE heads-up via Tasuke, then auto-launches Claude Desktop. The launch matters: the SessionStart hook sees PENDING_REVIEW.json and presents the decision gate before any new work — closing the loop from cron to human review."
+        }
+      ]
+    },
+    {
+      "category": "Brain Reconciliation",
+      "snippets": [
+        {
+          "title": "Register projects + refresh recorded state",
+          "feature": "Keep the Brain in sync with reality",
+          "file": "Tools/brain_reconcile_2026_06_10.py",
+          "language": "python",
+          "code": "db = sqlite3.connect(r\"C:\\QIH\\data\\qi_brain.db\")\ncur = db.cursor()\n\n# Step 1: register new projects (idempotent)\nfor p in new_projects:\n    cur.execute(\"INSERT OR IGNORE INTO projects VALUES (?,?,?,?,?,?,?,?,?)\", p)\ncur.execute(\"UPDATE projects SET api_port=9011 WHERE project_id='qi_brain'\")\n\n# Step 2: refresh project_state for all projects\nfor pid, phase, status, summary, blockers, nxt in states:\n    cur.execute(\n        \"INSERT INTO project_state (project_id, agent_id, phase, status, summary, \"\n        \"blockers, next_steps, recorded_at) VALUES (?,?,?,?,?,?,?,?)\",\n        (pid, AGENT, phase, status, summary, blockers, nxt, NOW))\n\n# Step 3: merge bad project IDs in session_log\ncur.execute(\"UPDATE session_log SET project_id='openclaw' WHERE project_id='OpenClaw'\")\ndb.commit()",
+          "explanation": "A reconciliation pass operating directly on qi_brain.db — the Brain's SQLite store. It registers projects the Brain didn't know yet (INSERT OR IGNORE so re-runs are safe), corrects stale fields (qi_brain's own port to 9011 after the 9010 move), writes a fresh project_state row for every project from observed git/service reality, and merges mislabelled session_log rows (OpenClaw -> the canonical lowercase openclaw). This is how the management workspace makes the Brain's memory match what actually happened on disk."
+        }
+      ]
+    },
+    {
+      "category": "Ecosystem Briefing",
+      "snippets": [
+        {
+          "title": "Composing the injected session context",
+          "feature": "Session-start ecosystem briefing + dispatch reminder",
+          "file": "~/.claude/session_context.py",
+          "language": "python",
+          "code": "additional = (\n    \"[QI SESSION START — ECOSYSTEM CONTEXT LOADED]\\n\\n\"\n    + briefing +\n    \"\\n\\n\" + brain_block +\n    \"\\n\\n\" + hive_block +\n    ((\"\\n\\n\" + _audit) if _audit else \"\") +\n    \"\\n\\n[PROJECT CONTEXT PENDING]\\n...\")\n\nprint(json.dumps({\n    \"hookSpecificOutput\": {\n        \"hookEventName\": \"SessionStart\",\n        \"additionalContext\": additional,\n    }\n}))",
+          "explanation": "The SessionStart hook's payload. It concatenates four blocks — the ecosystem briefing (MEMORY.md + rules + user profile via qi_context_loader), the live Brain status block, the Hive dispatch reminder (roles + DISPATCH_PROTOCOL.md path), and the monthly-audit gate if one is pending — then emits them as additionalContext under hookSpecificOutput. Claude Code injects that string into the session so the model wakes up already knowing the whole QI landscape and the dispatch rule before the first user message."
+        }
+      ]
+    }
+  ]
+}

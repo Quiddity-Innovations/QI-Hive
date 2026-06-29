@@ -1,0 +1,213 @@
+{
+  "intro": "Excerpts copied from the live TubeScout source (C:\\TUBESCOUT). Each shows the real code behind a capability and explains how it powers that feature. TubeScout hosts no LLM of its own — summarization, scoring and recommendation all route through NEXUS; YouTube is read-only; every pipeline stage degrades gracefully.",
+  "sections": [
+    {
+      "category": "Database (tubescout.db)",
+      "snippets": [
+        {
+          "title": "WAL connection with FK + busy-timeout",
+          "feature": "Single SQLite store for channels, videos, summaries, scores",
+          "file": "shared/db.py · connect()",
+          "language": "python",
+          "code": "def connect(db_path: str | None = None) -> sqlite3.Connection:\n    \"\"\"Open a connection with WAL + foreign keys enabled.\"\"\"\n    conn = sqlite3.connect(str(db_path or DB_PATH), timeout=10)\n    conn.row_factory = sqlite3.Row\n    conn.execute(\"PRAGMA journal_mode=WAL\")\n    conn.execute(\"PRAGMA foreign_keys=ON\")\n    conn.execute(\"PRAGMA busy_timeout=8000\")  # wait, don't error, on concurrent writers\n    return conn",
+          "explanation": "Every part of TubeScout opens its DB through this one helper. WAL lets the news page read while the sweep writes; foreign_keys=ON enforces the videos→channels / summaries→videos relationships; busy_timeout makes a concurrent writer wait rather than raise — important because the twice-daily cycle and the live page touch the same file. Row factory returns dict-like rows."
+        },
+        {
+          "title": "Idempotent schema migrations",
+          "feature": "Schema evolves safely without a rebuild",
+          "file": "shared/db.py · _migrate()",
+          "language": "python",
+          "code": "def _migrate(conn) -> None:\n    \"\"\"Add columns introduced after the initial schema (idempotent).\"\"\"\n    ch_cols = {r[\"name\"] for r in conn.execute(\"PRAGMA table_info(channels)\").fetchall()}\n    if \"favorite\" not in ch_cols:\n        conn.execute(\"ALTER TABLE channels ADD COLUMN favorite INTEGER DEFAULT 0\")\n    if \"topic_manual\" not in ch_cols:\n        conn.execute(\"ALTER TABLE channels ADD COLUMN topic_manual INTEGER DEFAULT 0\")\n    if \"disabled\" not in ch_cols:\n        conn.execute(\"ALTER TABLE channels ADD COLUMN disabled INTEGER DEFAULT 0\")\n    v_cols = {r[\"name\"] for r in conn.execute(\"PRAGMA table_info(videos)\").fetchall()}\n    if \"dup_of\" not in v_cols:\n        conn.execute(\"ALTER TABLE videos ADD COLUMN dup_of TEXT\")\n    if \"dup_count\" not in v_cols:\n        conn.execute(\"ALTER TABLE videos ADD COLUMN dup_count INTEGER DEFAULT 0\")",
+          "explanation": "init_db() runs the base CREATE TABLE script then this migrator on every startup. Each ALTER is guarded by a PRAGMA table_info check, so re-running is harmless. This is how favorites, manual-topic locks, channel-disable and the dedup columns were added after v1 shipped without ever dropping data."
+        },
+        {
+          "title": "Upsert that preserves manual overrides",
+          "feature": "Re-syncing subscriptions never clobbers your tuning",
+          "file": "shared/db.py · upsert_channel()",
+          "language": "python",
+          "code": "existing = conn.execute(\n    \"SELECT topic, priority FROM channels WHERE channel_id=?\", (ch[\"channel_id\"],)\n).fetchone()\ntopic = ch.get(\"topic\") or (existing[\"topic\"] if existing else \"other\")\npriority = ch.get(\"priority\") or (existing[\"priority\"] if existing else PRIORITY_DIGEST)\nconn.execute(\"\"\"\n    INSERT INTO channels (channel_id, title, ..., topic, priority, subscribed, added_at)\n    VALUES (:channel_id, :title, ..., :topic, :priority, 1, :added_at)\n    ON CONFLICT(channel_id) DO UPDATE SET\n        title=excluded.title,\n        description=excluded.description,\n        thumbnail=excluded.thumbnail,\n        uploads_playlist=COALESCE(excluded.uploads_playlist, channels.uploads_playlist),\n        subscribed=1\n\"\"\", {...})",
+          "explanation": "When pull_subscriptions re-reads your 816 subs, this upsert refreshes title/thumbnail but the ON CONFLICT clause deliberately does NOT touch topic or priority — so a channel you muted or moved stays muted/moved. uploads_playlist is COALESCE'd so a known playlist isn't wiped by a NULL from a partial fetch."
+        }
+      ]
+    },
+    {
+      "category": "YouTube Access (Data API v3)",
+      "snippets": [
+        {
+          "title": "Read-only OAuth with auto-refresh",
+          "feature": "Read your own subscriptions, change nothing",
+          "file": "shared/youtube_client.py · get_credentials()",
+          "language": "python",
+          "code": "scopes = cfg.get(\"youtube.scopes\", [\"https://www.googleapis.com/auth/youtube.readonly\"])\ntoken_path = _abs(cfg.get(\"youtube.oauth_token\", \"secrets/token.json\"))\ncreds = None\nif token_path.exists():\n    creds = Credentials.from_authorized_user_file(str(token_path), scopes)\nif creds and creds.valid:\n    return creds\nif creds and creds.expired and creds.refresh_token:\n    creds.refresh(Request())\n    token_path.write_text(creds.to_json(), encoding=\"utf-8\")\n    return creds\nif not interactive:\n    raise RuntimeError(\"No valid YouTube token. Run: python -m shared.youtube_client --login\")",
+          "explanation": "The only scope requested is youtube.readonly — TubeScout can read your subscriptions and uploads but can never post, like, or subscribe. A saved token is refreshed silently; a missing/expired token in a non-interactive run raises a clear instruction instead of crashing the cycle. The one-time browser login (--login) writes secrets/token.json, which is gitignored."
+        },
+        {
+          "title": "Quota-friendly upload reads",
+          "feature": "Sweep 800+ channels inside the free tier",
+          "file": "shared/youtube_client.py · list_recent_uploads()",
+          "language": "python",
+          "code": "resp = service.playlistItems().list(\n    part=\"snippet,contentDetails\",\n    playlistId=uploads_playlist,\n    maxResults=min(max_videos * 2, 50),\n).execute()\nvideos = []\nfor item in resp.get(\"items\", []):\n    cd = item.get(\"contentDetails\", {})\n    pub_str = cd.get(\"videoPublishedAt\") or item[\"snippet\"].get(\"publishedAt\")\n    pub = datetime.fromisoformat(pub_str.replace(\"Z\", \"+00:00\"))\n    if pub <= since:\n        continue\n    vid = cd.get(\"videoId\") or item[\"snippet\"].get(\"resourceId\", {}).get(\"videoId\")\n    videos.append({\"video_id\": vid, \"channel_id\": item[\"snippet\"].get(\"channelId\"), ...})\n    if len(videos) >= max_videos:\n        break\nreturn videos",
+          "explanation": "Each channel's new uploads are read from its uploads playlist with playlistItems.list — 1 quota unit — instead of search.list which costs 100. Items published on/before the lookback cutoff are skipped. At 1 unit/channel × ~800 channels × 2 sweeps that's ~1,600 units against the 10,000/day free tier, with comfortable headroom."
+        }
+      ]
+    },
+    {
+      "category": "Server, Routing & Auth Gate",
+      "snippets": [
+        {
+          "title": "App + CORS from the QI registry",
+          "feature": "FastAPI news page + API any QI project can reach",
+          "file": "api/main.py · module scope",
+          "language": "python",
+          "code": "try:\n    sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8503\", \"http://localhost:7843\"]\n\napp = FastAPI(\n    title=\"TubeScout API\",\n    description=\"YouTube subscription intelligence ... — Quiddity Innovations\",\n    version=\"0.1.0\"\n)\napp.add_middleware(CORSMiddleware, allow_origins=_cors,\n                   allow_methods=[\"GET\", \"POST\"], allow_headers=[\"*\"])",
+          "explanation": "The single FastAPI app on :8503 serving both the HTML pages and the JSON API. Allowed CORS origins come from the shared QI registry (with a localhost fallback) so sibling projects don't need per-project edits. Only GET/POST are allowed at the CORS layer — consistent with the read-public / token-guarded-write model."
+        },
+        {
+          "title": "One middleware guards every write",
+          "feature": "Public reads, token-gated mutations",
+          "file": "api/main.py · require_token_for_writes()",
+          "language": "python",
+          "code": "@app.middleware(\"http\")\nasync def require_token_for_writes(request: Request, call_next):\n    if request.method in (\"POST\", \"PUT\", \"PATCH\", \"DELETE\"):\n        required = os.environ.get(\"TUBESCOUT_PAGE_TOKEN\", \"\").strip()\n        if required:\n            supplied = (request.query_params.get(\"token\")\n                        or request.headers.get(\"X-TubeScout-Token\", \"\"))\n            if supplied != required:\n                return JSONResponse(\n                    {\"status\": \"error\", \"error\": \"write access requires token\"},\n                    status_code=401)\n    return await call_next(request)",
+          "explanation": "The auth gate for a public demo. The news/digest pages are public content, but ANY mutation (set priority, change topic, edit config, run Discover) flows through this one middleware: if TUBESCOUT_PAGE_TOKEN is set, the request must carry it via ?token= or the X-TubeScout-Token header. When the token is unset (local single-user mode) writes are open. Centralizing it means every current and future write endpoint is protected without per-route code."
+        },
+        {
+          "title": "Rendering the news feed",
+          "feature": "The news page — cards joined across 3 tables",
+          "file": "api/main.py · _fetch_cards()",
+          "language": "python",
+          "code": "q = f\"\"\"\n    SELECT v.video_id, v.url, v.published_at, v.thumbnail, {dup_count},\n           COALESCE(s.headline, v.title) AS headline, s.news_card, s.engine,\n           c.title AS channel, c.topic, c.priority, c.favorite\n    FROM videos v\n    JOIN channels c ON v.channel_id = c.channel_id\n    LEFT JOIN summaries s ON s.video_id = v.video_id\n    WHERE s.video_id IS NOT NULL{dup_filter} AND c.priority != 'mute' AND c.disabled = 0\n\"\"\"\n# favorites float up, then newest-first\nq += \" ORDER BY c.favorite DESC, v.published_at DESC LIMIT ?\"",
+          "explanation": "The query behind every card: videos joined to their channel and (left) to their summary. It only shows videos that HAVE a summary, hides duplicates unless ?show=all, and excludes muted/disabled channels. Favorites float to the top, then newest-first. COALESCE(s.headline, v.title) means a card still has a headline even if summarization is mid-flight."
+        }
+      ]
+    },
+    {
+      "category": "The Daily Sweep",
+      "snippets": [
+        {
+          "title": "Discovering new uploads",
+          "feature": "Twice-daily sweep across active channels",
+          "file": "shared/sweep.py · run_sweep()",
+          "language": "python",
+          "code": "run_id = db.start_sweep(conn)\nchannels = db.active_channels(conn)\nfor ch in channels:\n    pl = ch[\"uploads_playlist\"]\n    if not pl:\n        continue\n    try:\n        vids = yt.list_recent_uploads(svc, pl, since, max_videos=max_per)\n    except Exception as e:\n        if \"playlistNotFound\" in str(e):\n            # Dead/terminated channel — retire it so pull-subs won't re-backfill\n            conn.execute(\"UPDATE channels SET uploads_playlist='' WHERE channel_id=?\",\n                         (ch[\"channel_id\"],))\n            dead += 1\n        continue\n    for v in vids:\n        if db.insert_video(conn, v, run_id):\n            new_total += 1\n    db.mark_channel_swept(conn, ch[\"channel_id\"])",
+          "explanation": "The heart of the 07:00/19:00 job. It opens a sweeps run row, walks the active (subscribed + enabled + non-muted) channels favorites-first, and inserts uploads newer than the lookback cutoff. A playlistNotFound error means the channel is dead, so its playlist is set to '' (not NULL) which stops pull-subs from re-backfilling it forever. The last real run discovered 364 new videos across 811 channels."
+        },
+        {
+          "title": "Overlapping lookback window",
+          "feature": "Two daily windows that never miss an upload",
+          "file": "shared/sweep.py · run_sweep()",
+          "language": "python",
+          "code": "lookback_h = cfg.get(\"sweep.lookback_hours\", 14)\nmax_per = cfg.get(\"sweep.max_videos_per_channel\", 10)\nsince = datetime.now(timezone.utc) - timedelta(hours=lookback_h)",
+          "explanation": "Sweeps run at 07:00 and 19:00 — 12 hours apart — but each looks back 14 hours. The 2-hour overlap guarantees that an upload published right around a window boundary is still caught by the next sweep, so nothing slips through the cracks. All three knobs are config-driven."
+        },
+        {
+          "title": "Two-pass topic classification",
+          "feature": "Auto-organize channels into topics",
+          "file": "shared/reclassify.py · reclassify()",
+          "language": "python",
+          "code": "for r in rows:  # only channels with topic_manual = 0\n    kw = organizer.classify(r[\"title\"], r[\"description\"], topics_cfg)\n    cat = best_category_topic(cats_map.get(r[\"channel_id\"], []))\n    # Keyword and YouTube category compete — pick the most specific (highest rank).\n    candidates = [t for t in (kw if kw != \"other\" else None, cat) if t]\n    topic = max(candidates, key=lambda t: TOPIC_RANK.get(t, 0)) if candidates else \"other\"\n    db.set_channel_topic(conn, r[\"channel_id\"], topic)",
+          "explanation": "Classification runs the keyword heuristic AND YouTube's own topicCategories, then picks the most specific bucket via TOPIC_RANK (ai_ml/software_dev=10 … lifestyle=1) — so a channel tagged [Lifestyle, Science] lands in science, not the lifestyle catch-all. Channels you re-categorized by hand (topic_manual=1) are excluded entirely. This pass cut the 'other' pile from ~450 to ~3."
+        }
+      ]
+    },
+    {
+      "category": "Transcript Fetch",
+      "snippets": [
+        {
+          "title": "Captions vs. block — two different outcomes",
+          "feature": "Fetch captions without ever crashing",
+          "file": "shared/transcripts.py · fetch_transcript()",
+          "language": "python",
+          "code": "api = YouTubeTranscriptApi()\ntry:\n    fetched = api.fetch(video_id, languages=languages)\nexcept Exception as e:\n    name, msg = type(e).__name__, str(e)\n    if name in _SKIP_REASONS:        # TranscriptsDisabled / NoTranscriptFound / ...\n        return None                  # no captions — skip quietly, not an error\n    if name in (\"RequestBlocked\", \"IpBlocked\") or any(m in msg for m in _BLOCK_MARKERS):\n        raise IPBlocked(msg)         # YouTube is throttling us — abort the run\n    raise\ntext = \" \".join(sn.text for sn in fetched.snippets).strip()\nreturn (getattr(fetched, \"language_code\", languages[0]), text) if text else None",
+          "explanation": "The fetcher distinguishes two failure classes that look similar but mean opposite things. 'No captions available' returns None — a normal outcome marked transcript_status='none'. 'YouTube is blocking your IP' raises IPBlocked, which the caller turns into a cooldown. Everything else re-raises. This is why the caption stage can run unattended twice a day without ever taking down the page."
+        },
+        {
+          "title": "IP-block backoff via the state table",
+          "feature": "Back off for hours instead of hammering",
+          "file": "shared/transcripts.py · process_pending()",
+          "language": "python",
+          "code": "blocked_until = db.get_state(conn, _BLOCK_KEY)\nif blocked_until:\n    until = datetime.fromisoformat(blocked_until)\n    if datetime.now(timezone.utc) < until:\n        return {\"done\": 0, \"none\": 0, \"error\": 0, \"blocked\": True, ...}\n...\nexcept IPBlocked as e:\n    until = datetime.now(timezone.utc) + timedelta(hours=cooldown_h)\n    db.set_state(conn, _BLOCK_KEY, until.isoformat())\n    log.warning(\"IP-blocked after %d fetches — backing off %dh\", done+none+error, cooldown_h)\n    blocked = True\n    break",
+          "explanation": "When YouTube blocks the scraper, hammering it only extends the block. So on IPBlocked the runner records a future timestamp (transcripts_blocked_until) in the persistent state table and stops; the next cycle sees the cooldown is still active and skips the transcript stage entirely. Favorites/must-reads are fetched first, so the limited transcript budget is spent on what matters most."
+        }
+      ]
+    },
+    {
+      "category": "NEXUS Summary & Score",
+      "snippets": [
+        {
+          "title": "The NEXUS /synthesize call",
+          "feature": "Summarize a video via the QI AI backbone",
+          "file": "shared/summarize.py · nexus_synthesize()",
+          "language": "python",
+          "code": "base = cfg.get(\"integration.nexus_base\", \"http://127.0.0.1:8010\")\nproviders = cfg.get(\"integration.nexus_summary_providers\", [\"groq\"])\ntimeout = timeout or cfg.get(\"integration.nexus_timeout\", 90)\npayload = {\"prompt\": prompt, \"iterations\": 1, \"routing_mode\": \"parallel\"}\nif providers:\n    payload[\"provider_ids\"] = providers\ntry:\n    r = httpx.post(f\"{base}{path}\", json=payload, timeout=timeout)\n    r.raise_for_status()\n    text = (r.json().get(\"synthesis\") or \"\").strip()\n    if not text or \"no successful responses\" in text.lower():\n        return None\n    return text\nexcept Exception as e:\n    log.warning(\"NEXUS synthesize failed: %s\", e)\n    return None",
+          "explanation": "TubeScout runs no model itself — this is the single bridge to NEXUS. It POSTs to /synthesize pinned to a fast provider chain (Groq→Cloudflare→Gemini), asking for one parallel pass. Crucially it returns None on any failure — NEXUS down, all-providers-rate-limited, or the 'no successful responses' sentinel — which lets the caller fall back to the description so the page never empties."
+        },
+        {
+          "title": "Summarize-or-fallback per video",
+          "feature": "News card from transcript, else description",
+          "file": "shared/summarize.py · summarize_video()",
+          "language": "python",
+          "code": "tr = conn.execute(\"SELECT text FROM transcripts WHERE video_id=?\", (vid,)).fetchone()\nif tr and tr[\"text\"]:\n    body, src = tr[\"text\"][:MAX_BODY_CHARS], \"transcript\"\nelse:\n    body, src = (video.get(\"description\") or \"\")[:MAX_BODY_CHARS], \"description\"\n\nused_nexus = False\nif body.strip():\n    out = nexus_synthesize(PROMPT_TEMPLATE.format(channel=..., title=..., src=src, body=body))\n    if out:\n        headline, news_card = _parse(out, video.get(\"title\", \"\"))\n        used_nexus = True\n    else:\n        headline, news_card = video.get(\"title\", \"\"), (body[:400] or video.get(\"title\", \"\"))\nengine = \"nexus\" if used_nexus else \"fallback\"\nconn.execute(\"INSERT OR REPLACE INTO summaries (video_id, headline, news_card, engine, created_at) \"\n             \"VALUES (?,?,?,?,?)\", (vid, headline, news_card, engine, db.utcnow()))",
+          "explanation": "Summaries are decoupled from transcripts: it uses the transcript when one exists, otherwise the video description. NEXUS produces a HEADLINE + 2–4 sentence card; if NEXUS is unavailable it falls back to a trimmed description. The engine column ('nexus' vs 'fallback') records which path was taken — currently 2,374 NEXUS-written vs 1,640 fallback, the backlog the transcript drainer will upgrade."
+        },
+        {
+          "title": "Implement-worthiness → QI Brain",
+          "feature": "Log build-worthy videos to the ecosystem",
+          "file": "shared/score.py · log_feature_to_brain()",
+          "language": "python",
+          "code": "base = cfg.get(\"integration.brain_base\", \"http://127.0.0.1:9011\")\nr = httpx.post(f\"{base}/api/log_feature\", json={\n    \"source_project\": \"tubescout\",\n    \"name\": (video.get(\"headline\") or video.get(\"title\") or \"\")[:160],\n    \"description\": f\"[score {score:.0f}/10] {rationale}\\nTags: {tags}\\nVideo: {video.get('url')}\",\n    \"domain\": \"ai/youtube-scout\",\n    \"code_ref\": video.get(\"url\"),\n}, timeout=20)  # agent_id omitted -> Brain default 'claude' (FK-valid)\nr.raise_for_status()\nreturn True",
+          "explanation": "For ai_ml/software_dev videos, NEXUS rates 0–10 how worth-IMPLEMENTING the content is for Renne's own stack (SCORE/TAGS/RATIONALE). Anything ≥ the threshold (default 7.0) is POSTed to the QI Brain's pending-features queue — so a technique demoed on YouTube becomes a candidate the whole ecosystem can decide to adopt. 439 videos scored so far."
+        }
+      ]
+    },
+    {
+      "category": "Dedup & Discover",
+      "snippets": [
+        {
+          "title": "Conservative cross-channel dedup",
+          "feature": "\"+N also covered\" — show a story once",
+          "file": "shared/dedup.py · run_dedup()",
+          "language": "python",
+          "code": "for r in rows:  # summarized videos, newest first\n    toks = _tokens(r[\"headline\"])\n    placed = False\n    for c in clusters:\n        if pub and c[\"pub\"] and abs((c[\"pub\"] - pub).total_seconds()) > window_h * 3600:\n            continue\n        if _jaccard(toks, c[\"toks\"]) >= threshold:\n            c[\"members\"].append(r[\"video_id\"]); placed = True; break\n    if not placed:\n        clusters.append({\"canonical\": r[\"video_id\"], \"toks\": toks, \"pub\": pub,\n                         \"members\": [r[\"video_id\"]]})\nfor c in clusters:\n    extra = len(c[\"members\"]) - 1\n    if extra > 0:\n        conn.execute(\"UPDATE videos SET dup_count=? WHERE video_id=?\", (extra, c[\"canonical\"]))\n        for vid in c[\"members\"][1:]:\n            conn.execute(\"UPDATE videos SET dup_of=? WHERE video_id=?\", (c[\"canonical\"], vid))",
+          "explanation": "Headlines are tokenized (stopwords + short words dropped) and clustered by Jaccard overlap ≥ threshold (0.55) within a 72h window. The first video in a cluster is canonical and gets dup_count; the rest get dup_of and are hidden by default, surfaced as '+N also covered'. It is intentionally strict and time-bounded — a false merge that hides a distinct story is worse than missing a near-duplicate."
+        },
+        {
+          "title": "Local taste profile (never leaves the machine)",
+          "feature": "Private discovery without YouTube's ad profile",
+          "file": "shared/recommend.py · build_profile()",
+          "language": "python",
+          "code": "favs = [r[\"title\"] for r in conn.execute(\n    \"SELECT title FROM channels WHERE favorite=1 AND subscribed=1 LIMIT 25\").fetchall()]\nmusts = [r[\"title\"] for r in conn.execute(\n    \"SELECT title FROM channels WHERE priority='must_read' AND subscribed=1 LIMIT 25\").fetchall()]\nseed = favs + musts\nif len(seed) < 6:  # not enough signal — fall back to AI/tech + biggest topics\n    seed += [r[\"title\"] for r in conn.execute(\n        \"SELECT title FROM channels WHERE topic IN ('ai','ai_ml','software_dev') ...\").fetchall()]\ntags = []\nfor r in conn.execute(\"SELECT tags FROM scores WHERE implement_score>=7 LIMIT 40\").fetchall():\n    tags += [t.strip() for t in (r[\"tags\"] or \"\").split(\",\") if t.strip()]\nreturn {\"seed_channels\": ..., \"topics\": ..., \"tags\": top_tags}",
+          "explanation": "The recommender's taste profile is assembled entirely from your own local data — favorited channels, must-reads, AI/tech channels, and the tags of your highest implement-scored videos — and never sent to YouTube. A NEXUS provider (Groq default, fully-local gemma4 switchable in Settings) reasons over it to suggest channels; YouTube is touched only for a neutral name→channel lookup that reveals nothing about you."
+        }
+      ]
+    },
+    {
+      "category": "Config, Interests & Cycle",
+      "snippets": [
+        {
+          "title": "Interests config (editable in-app)",
+          "feature": "Renne's watch interests steer the recommender",
+          "file": "config/tubescout.json",
+          "language": "json",
+          "code": "{\n  \"interests\": [\"AI\", \"Travel\", \"Retirement\", \"DOAC\"],\n  \"sweep\": { \"times\": [\"07:00\", \"19:00\"], \"lookback_hours\": 14 },\n  \"scoring\": { \"implement_threshold\": 7.0, \"brain_autolog\": true },\n  \"dedup\": { \"threshold\": 0.55, \"window_hours\": 72 },\n  \"integration\": {\n    \"nexus_base\": \"http://127.0.0.1:8010\",\n    \"nexus_summary_providers\": [\"groq\", \"cloudflare\", \"gemini\"],\n    \"brain_base\": \"http://127.0.0.1:9011\"\n  }\n}",
+          "explanation": "The single config file. The interests list (AI, Travel, Retirement, DOAC) is editable in the UI at Settings → Your interests and steers the Discover recommender. Everything operational — sweep times, the implement-score threshold, dedup strictness, the NEXUS provider chain, integration URLs — lives here too, so tuning the pipeline never needs a code change or restart."
+        },
+        {
+          "title": "Editing interests from the Settings tab",
+          "feature": "Settings → Your interests writes back to config",
+          "file": "api/main.py · post_config() + config.set_values()",
+          "language": "python",
+          "code": "# api/main.py — whitelist + coerce, then persist\n_EDITABLE = {\"interests\": list, \"whisper.enabled\": bool,\n             \"scoring.implement_threshold\": float, \"dedup.threshold\": float, ...}\nfor k, v in (payload or {}).items():\n    if k not in _EDITABLE: continue\n    if _EDITABLE[k] is list and isinstance(v, str):\n        v = [x.strip() for x in v.split(\",\") if x.strip()]\n    updates[k] = v\ncfg.set_values(updates)\n\n# shared/config.py — write nested keys back to tubescout.json + refresh cache\nfor key_path, value in updates.items():\n    node = cfg\n    for part in key_path.split(\".\")[:-1]:\n        node = node.setdefault(part, {})\n    node[key_path.split(\".\")[-1]] = value\njson.dump(cfg, f, indent=2, ensure_ascii=False)",
+          "explanation": "The Settings tab posts only whitelisted keys (_EDITABLE), each coerced to the right type — comma strings become lists, so typing 'AI, Travel, Retirement, DOAC' updates the interests array. set_values walks the dotted path, writes the change back to config/tubescout.json, and reloads the cache, so the next sweep picks it up with no restart."
+        },
+        {
+          "title": "The fault-tolerant cycle",
+          "feature": "One stage failing never aborts the run",
+          "file": "shared/cycle.py · run_cycle()",
+          "language": "python",
+          "code": "def _safe(label, fn, *a, **k):\n    try:\n        r = fn(*a, **k); log.info(\"%s: %s\", label, r); return r\n    except Exception as e:\n        log.error(\"%s FAILED: %s\", label, e); return None\n\n_safe(\"sweep\", sweep.run_sweep)\n_safe(\"reclassify\", reclassify.reclassify, conn)\n_safe(\"transcripts\", transcripts.process_pending, conn, tcap)\n_safe(\"summarize\", summarize.process_pending, conn, 500)\n_safe(\"dedup\", dedup.run_dedup, conn)\n_safe(\"score\", score.process_pending, conn, 100)\n_safe(\"scout_refresh\", scout_feed.import_to_scout, conn)",
+          "explanation": "The 07:00/19:00 job (QI_TubeScout_AM/_PM) runs all six pipeline stages plus the Kaze/Scout refresh through _safe(), which catches and logs any stage's exception and returns None. So a YouTube hiccup in the sweep, a NEXUS outage during summarize, or a Brain timeout in score degrades to a logged error — the remaining stages still run and the page stays current."
+        }
+      ]
+    }
+  ]
+}

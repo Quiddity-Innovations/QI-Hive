@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 720" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-navy" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1f2d3d"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e8772e"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="720" fill="#ffffff" rx="12"/>
+  <text x="550" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#b3261e">AutoPDF — System Architecture</text>
+  <text x="550" y="50" text-anchor="middle" font-size="11.5" fill="#5b6b7c">Quiddity Innovations · Local-first PDF Toolkit · 2026 · 127.0.0.1:6969 · v2026.06.15 · no cloud · no telemetry</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="872" y="60" width="216" height="196" rx="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="980" y="79" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="882" y="87" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="902" y="96" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="882" y="104" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="902" y="113" font-size="9" fill="#374151">Built · Partial / Pending</text>
+  <rect x="882" y="121" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="902" y="130" font-size="9" fill="#374151">Planned</text>
+  <rect x="882" y="138" width="14" height="10" rx="2" fill="#fff3e8" stroke="#e8772e" stroke-dasharray="3,2"/>
+  <text x="902" y="147" font-size="9" fill="#374151">Caution / Disabled</text>
+  <rect x="882" y="155" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#0f1620"/>
+  <text x="902" y="164" font-size="9" fill="#374151">Core server (PowerShell)</text>
+  <line x1="882" y1="180" x2="900" y2="180" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+  <text x="906" y="184" font-size="9" fill="#374151">Request flow (solid)</text>
+  <path d="M 882,198 H 900" fill="none" stroke="#2e7d32" stroke-width="1.6" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <text x="906" y="202" font-size="9" fill="#374151">Tunnel / secure path (dashed)</text>
+  <rect x="882" y="211" width="14" height="10" rx="2" fill="none" stroke="#3b6ea5" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="902" y="220" font-size="9" fill="#374151">Layer boundary</text>
+  <text x="980" y="240" text-anchor="middle" font-size="8" fill="#9aa5b1">All processing stays on the machine.</text>
+  <text x="980" y="251" text-anchor="middle" font-size="8" fill="#9aa5b1">Quiddity Innovations © 2026</text>
+
+  <!-- ══ USER / LAUNCH BAND ══ -->
+  <text x="22" y="78" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">USER · LAUNCH</text>
+  <rect x="20" y="84" width="180" height="92" rx="8" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="110" y="106" text-anchor="middle" font-size="12" font-weight="700" fill="#1d3a5f">Records / Office user</text>
+  <text x="110" y="124" text-anchor="middle" font-size="8.5" fill="#33475b">Double-clicks AutoPDF.exe</text>
+  <text x="110" y="137" text-anchor="middle" font-size="8.5" fill="#33475b">or opens the browser UI</text>
+  <text x="110" y="155" text-anchor="middle" font-size="8" fill="#7a8a9a">No installer · no admin</text>
+  <text x="110" y="168" text-anchor="middle" font-size="8" fill="#7a8a9a">copy-folder portable</text>
+
+  <rect x="216" y="84" width="180" height="92" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="306" y="106" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">AutoPDF.exe</text>
+  <text x="306" y="124" text-anchor="middle" font-size="8.5" fill="#2e7d32">Native C# launcher (Launcher.cs)</text>
+  <text x="306" y="137" text-anchor="middle" font-size="8.5" fill="#2e7d32">Pings /api/status; start-or-open</text>
+  <text x="306" y="155" text-anchor="middle" font-size="8" fill="#4a7d4f">Starts server hidden (pwsh/PS 5.1)</text>
+  <text x="306" y="168" text-anchor="middle" font-size="8" fill="#4a7d4f">Splash + browser, AUTOPDF_NO_BROWSER</text>
+
+  <!-- arrows user -> launcher -> browser -->
+  <line x1="200" y1="130" x2="216" y2="130" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ══ BROWSER UI BAND ══ -->
+  <text x="22" y="206" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">BROWSER UI (single page · vanilla JS)</text>
+  <rect x="14" y="212" width="850" height="82" rx="9" fill="none" stroke="#3b6ea5" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <rect x="28" y="226" width="160" height="56" rx="7" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="108" y="248" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d3a5f">AutoPDFTool.html</text>
+  <text x="108" y="263" text-anchor="middle" font-size="8" fill="#33475b">Converter · Splitter · Index</text>
+  <text x="108" y="275" text-anchor="middle" font-size="8" fill="#33475b">Scan · Settings tabs</text>
+
+  <rect x="198" y="226" width="160" height="56" rx="7" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="278" y="248" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d3a5f">app.js</text>
+  <text x="278" y="263" text-anchor="middle" font-size="8" fill="#33475b">fetch() the ~80 /api routes</text>
+  <text x="278" y="275" text-anchor="middle" font-size="8" fill="#33475b">drag-to-draw zones</text>
+
+  <rect x="368" y="226" width="170" height="56" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="453" y="248" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b5e20">zone-mapper.html</text>
+  <text x="453" y="263" text-anchor="middle" font-size="8" fill="#2e7d32">Visual Zone Mapper</text>
+  <text x="453" y="275" text-anchor="middle" font-size="8" fill="#2e7d32">Modal / Tab / Window / Split</text>
+
+  <rect x="548" y="226" width="150" height="56" rx="7" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.5"/>
+  <text x="623" y="248" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1d3a5f">styles.css</text>
+  <text x="623" y="263" text-anchor="middle" font-size="8" fill="#33475b">Segoe UI theme</text>
+  <text x="623" y="275" text-anchor="middle" font-size="8" fill="#33475b">no build step</text>
+
+  <rect x="708" y="226" width="146" height="56" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="781" y="248" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6b5200">recipes · templates</text>
+  <text x="781" y="263" text-anchor="middle" font-size="8" fill="#8a6d00">JSON, portable</text>
+  <text x="781" y="275" text-anchor="middle" font-size="8" fill="#8a6d00">design-time authored</text>
+
+  <!-- launcher -> browser -->
+  <line x1="306" y1="176" x2="306" y2="212" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+  <!-- ══ CLOUDFLARE TUNNEL (right, secure path) ══ -->
+  <rect x="876" y="280" width="208" height="86" rx="9" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="980" y="302" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Cloudflare Tunnel</text>
+  <text x="980" y="320" text-anchor="middle" font-size="8.5" fill="#2e7d32">HTTPS · no open inbound port</text>
+  <text x="980" y="335" text-anchor="middle" font-size="8.5" fill="#2e7d32">PIN-gated (CF-Ray detected)</text>
+  <text x="980" y="352" text-anchor="middle" font-size="8" fill="#4a7d4f">/health · /version bypass the PIN</text>
+
+  <!-- browser <-> tunnel dashed (remote access) -->
+  <path d="M 864,253 H 980 V 280" fill="none" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-green)"/>
+  <!-- tunnel -> core (dashed down to server band) -->
+  <path d="M 980,366 V 392 H 700 V 408" fill="none" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-green)"/>
+
+  <!-- browser UI -> core server -->
+  <line x1="306" y1="294" x2="306" y2="408" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+
+  <!-- ══ POWERSHELL SERVER (core) ══ -->
+  <text x="22" y="404" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">POWERSHELL SERVER</text>
+  <rect x="14" y="408" width="850" height="92" rx="9" fill="#1f2d3d" stroke="#0f1620" stroke-width="2"/>
+  <text x="439" y="432" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">AutoPDF-Server.ps1 — .NET HttpListener</text>
+  <text x="439" y="450" text-anchor="middle" font-size="9.5" fill="#aeb8c4">~7,400 lines · loopback 127.0.0.1:6969 · switch -Regex route dispatch · ~80 /api/* routes · Send-Json</text>
+  <text x="439" y="467" text-anchor="middle" font-size="9" fill="#7e8b99">Access gate (PIN for tunnel) · Read-AppSettings (autopdf-settings.json) · single-threaded loop + async index tasks</text>
+  <text x="439" y="485" text-anchor="middle" font-size="9" fill="#7e8b99">Convert · Split · Zone/Tagged extract · Index Creator · Write-IndexXml (OnBase DIP) · Scheduler (partial)</text>
+
+  <!-- core -> engines / ai / output -->
+  <line x1="150" y1="500" x2="150" y2="540" stroke="#1f2d3d" stroke-width="1.6" marker-end="url(#arr-navy)"/>
+  <line x1="439" y1="500" x2="439" y2="540" stroke="#e8772e" stroke-width="1.6" marker-end="url(#arr-orange)"/>
+  <line x1="700" y1="500" x2="700" y2="540" stroke="#2e7d32" stroke-width="1.6" marker-end="url(#arr-green)"/>
+
+  <!-- ══ ENGINES BAND ══ -->
+  <text x="22" y="536" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">BUNDLED ENGINES (Application\)</text>
+  <rect x="14" y="542" width="560" height="100" rx="9" fill="none" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <rect x="26" y="556" width="100" height="36" rx="6" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.3"/>
+  <text x="76" y="573" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1b5e20">Ghostscript</text>
+  <text x="76" y="586" text-anchor="middle" font-size="7.5" fill="#2e7d32">gs\ · pdfwrite · render</text>
+  <rect x="134" y="556" width="100" height="36" rx="6" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.3"/>
+  <text x="184" y="573" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1b5e20">Poppler</text>
+  <text x="184" y="586" text-anchor="middle" font-size="7.5" fill="#2e7d32">poppler\ · pdftotext</text>
+  <rect x="242" y="556" width="100" height="36" rx="6" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.3"/>
+  <text x="292" y="573" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1b5e20">Tesseract</text>
+  <text x="292" y="586" text-anchor="middle" font-size="7.5" fill="#2e7d32">tesseract\ · OCR</text>
+  <rect x="350" y="556" width="100" height="36" rx="6" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.3"/>
+  <text x="400" y="573" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1b5e20">PDFtk</text>
+  <text x="400" y="586" text-anchor="middle" font-size="7.5" fill="#2e7d32">pdftk\ · split/merge</text>
+  <rect x="458" y="556" width="104" height="36" rx="6" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.3"/>
+  <text x="510" y="573" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1b5e20">Tabula · Java</text>
+  <text x="510" y="586" text-anchor="middle" font-size="7.5" fill="#2e7d32">tabula\ · java\</text>
+  <rect x="26" y="600" width="216" height="32" rx="6" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.3"/>
+  <text x="134" y="620" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1b5e20">NAPS2 (naps2\) — scanner capture</text>
+  <rect x="250" y="600" width="312" height="32" rx="6" fill="#eef4fb" stroke="#3b6ea5" stroke-width="1.3"/>
+  <text x="406" y="620" text-anchor="middle" font-size="9" fill="#1d3a5f">Office COM (Word/Excel SaveAs PDF) · native WIA scan · invoked as child processes</text>
+
+  <!-- ══ LOCAL AI BAND ══ -->
+  <text x="592" y="536" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">LOCAL AI (opt-in)</text>
+  <rect x="588" y="542" width="276" height="100" rx="9" fill="#fff3e8" stroke="#e8772e" stroke-width="1.5"/>
+  <text x="726" y="566" text-anchor="middle" font-size="11" font-weight="700" fill="#a8541a">Ollama — local LLM</text>
+  <text x="726" y="584" text-anchor="middle" font-size="8.5" fill="#b8631f">127.0.0.1:11434 · /api/generate</text>
+  <text x="726" y="599" text-anchor="middle" font-size="8.5" fill="#b8631f">chat · propose fields · ai_extract</text>
+  <text x="726" y="616" text-anchor="middle" font-size="8" fill="#c47a3a">Proposes only — rules stay authoritative</text>
+  <text x="726" y="630" text-anchor="middle" font-size="8" fill="#c47a3a">No OpenAI / Anthropic / Gemini · no telemetry</text>
+
+  <!-- ══ OUTPUT / DEPLOYMENT BAND ══ -->
+  <text x="22" y="664" font-size="10" fill="#9aa5b1" font-weight="600" letter-spacing="1">OUTPUT · DEPLOYMENT</text>
+  <rect x="14" y="668" width="200" height="44" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="114" y="686" text-anchor="middle" font-size="10" font-weight="700" fill="#1b5e20">PDFs (convert / split)</text>
+  <text x="114" y="700" text-anchor="middle" font-size="8" fill="#2e7d32">per-document · searchable OCR</text>
+
+  <rect x="222" y="668" width="200" height="44" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="322" y="686" text-anchor="middle" font-size="10" font-weight="700" fill="#1b5e20">CSV · XLSX index</text>
+  <text x="322" y="700" text-anchor="middle" font-size="8" fill="#2e7d32">metadata per document</text>
+
+  <rect x="430" y="668" width="220" height="44" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="540" y="686" text-anchor="middle" font-size="10" font-weight="700" fill="#1b5e20">OnBase XML Index DIP</text>
+  <text x="540" y="700" text-anchor="middle" font-size="8" fill="#2e7d32">Hyland Foundation 24.1 · Write-IndexXml</text>
+
+  <rect x="658" y="668" width="206" height="44" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="761" y="686" text-anchor="middle" font-size="10" font-weight="700" fill="#6b5200">QI_AutoPDF service + Tunnel</text>
+  <text x="761" y="700" text-anchor="middle" font-size="8" fill="#8a6d00">optional logon task / NSSM · PIN-gated</text>
+
+  <!-- engines -> output -->
+  <line x1="150" y1="642" x2="150" y2="668" stroke="#2e7d32" stroke-width="1.4" marker-end="url(#arr-green)"/>
+  <!-- core -> output (index/onbase) elbow -->
+  <path d="M 540,500 V 520 H 540 V 668" fill="none" stroke="#2e7d32" stroke-width="1.2" marker-end="url(#arr-green)"/>
+</svg>

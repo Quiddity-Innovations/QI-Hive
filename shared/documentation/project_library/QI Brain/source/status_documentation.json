@@ -1,0 +1,57 @@
+{
+  "sections": [
+    {
+      "name": "Key Source — Service & Interfaces",
+      "documents": [
+        {"title": "FastAPI App", "file": "api.py", "location": "C:\\QIH\\engine\\brain\\", "type": "Python", "description": "All Brain logic. 40+ endpoints on :9011 — the 12 MCP-backed memory tools plus /api/status, agents, heartbeats, war room, dispatch, compliance, poller, distiller, inbox. CORS *, project_id normalization + fuzzy resolution. ~1,770 LOC."},
+        {"title": "MCP Server", "file": "mcp.py", "location": "C:\\QIH\\engine\\brain\\", "type": "Python", "description": "stdio JSON-RPC 2.0 bridge exposing 12 tools (qi_get_context, qi_log_decision, ...). ~150 LOC of forwarders to the FastAPI endpoints. Registered globally in claude.json."},
+        {"title": "Bootstrap", "file": "bootstrap.py", "location": "C:\\QIH\\engine\\brain\\", "type": "Python", "description": "Idempotent 10-step init (create_db, seed agents/providers/config/projects, init Chroma, ingest docs + summaries, seed decisions, log bootstrap). Tracked in bootstrap_log; --reset re-runs all."}
+      ]
+    },
+    {
+      "name": "Key Source — Core Stores",
+      "documents": [
+        {"title": "DB Connection Helper", "file": "db.py", "location": "C:\\QIH\\engine\\brain\\core\\", "type": "Python", "description": "open_brain_db() — the single WAL-mode connection factory (busy_timeout 5000, foreign_keys ON, Row factory). DB_PATH = C:\\QIH\\data\\qi_brain.db. init_db() applies schema.sql per-statement."},
+        {"title": "Database Schema", "file": "schema.sql", "location": "C:\\QIH\\engine\\brain\\core\\", "type": "SQL", "description": "CREATE TABLE IF NOT EXISTS for the core tables (agents, llm_providers, brain_config, projects, project_state, decisions, features, feature_evaluations, evaluation_overrides, session_log, bootstrap_log) + indexes + seed agents. Per Plan 001 + Supplement A."},
+        {"title": "ChromaDB Memory Store", "file": "memory_store.py", "location": "C:\\QIH\\engine\\brain\\core\\", "type": "Python", "description": "MemoryStore — PersistentClient at qi_memory/, 4 cosine collections (qi_decisions/qi_features/qi_sessions/qi_docs), add_decision/feature/session/doc upserts, search() returns id/document/metadata/distance, collection_counts()."},
+        {"title": "Provider Factory + Adapters", "file": "factory.py, base.py, ollama.py, nomic_embed.py", "location": "C:\\QIH\\engine\\brain\\core\\providers\\", "type": "Python", "description": "Config-driven providers from llm_providers. ProviderFactory.from_db()/get_by_role(); BrainProvider ABC; OllamaProvider (/api/generate, strips <think>); NomicEmbedProvider (768-dim, /api/embeddings, embed-only)."}
+      ]
+    },
+    {
+      "name": "Key Source — Autonomy & Hive",
+      "documents": [
+        {"title": "Background Poller", "file": "poller.py", "location": "C:\\QIH\\engine\\brain\\", "type": "Python", "description": "Daemon thread: per-project state.json + git log --since, file inbox ingest. Config in brain_config (poll_interval_s, poll_min_file_age_s, poll_enabled). start_poller/stop_poller/run_poll_cycle."},
+        {"title": "Feature Propagation Engine", "file": "feature_engine.py", "location": "C:\\QIH\\engine\\brain\\", "type": "Python", "description": "propagate_feature()/propagate_all_pending(): local qwen3:8b judges cross-project relevance with last-5-eval history; strict JSON contract + 1 retry; writes feature_evaluations + marks propagated."},
+        {"title": "Distiller", "file": "distiller.py", "location": "C:\\QIH\\engine\\brain\\", "type": "Python", "description": "LLM summarization of raw inbox notes into structured records (VALID_REASONS). Backs POST /api/distill + /api/distill/history."},
+        {"title": "Documentation Harvester", "file": "doc_harvester.py", "location": "C:\\QIH\\engine\\brain\\", "type": "Python", "description": "Discovers/classifies every ecosystem .md/.docx into the docs table (921), derives typed edges into doc_relationships (2,203), optional embed into qi_docs. Self-ensures tables; prune() drops vanished files."}
+      ]
+    },
+    {
+      "name": "Migrations & Tools",
+      "documents": [
+        {"title": "SQL Migrations", "file": "2026_05_13_agent_heartbeats.sql, 2026_05_13_auto_apply.sql, 2026_06_18_doc_index.sql, 2026_06_18_warroom_chat.sql", "location": "C:\\QIH\\engine\\brain\\migrations\\", "type": "SQL", "description": "Dated idempotent migrations adding heartbeats, the auto-apply/dispatch pipeline, the doc index + knowledge graph, and War Room chat. Applied via run_migration.py."},
+        {"title": "Backup Task", "file": "backup.py, install_backup_task.bat", "location": "C:\\QIH\\engine\\brain\\tools\\", "type": "Python / Batch", "description": "Scheduled SQLite backup of qi_brain.db (brain_config backup_enabled=true, retain 30)."},
+        {"title": "First Brain Call + Helpers", "file": "first_brain_call.py, ollama_helper.py, register_hive_agents.py, update_registry.py", "location": "C:\\QIH\\engine\\brain\\tools\\", "type": "Python", "description": "Operational helpers: smoke a first MCP call, Ollama availability checks, register the 7 hive agents, push the Brain entry into qi_registry.json."},
+        {"title": "Smoke Test", "file": "test_smoke.py", "location": "C:\\QIH\\engine\\brain\\tests\\", "type": "Python", "description": "Pytest smoke check of the Brain API surface; part of the ecosystem SMOKE_TARGETS suite (driven from qi_registry.json)."}
+      ]
+    },
+    {
+      "name": "Planning & History",
+      "documents": [
+        {"title": "Brain Architecture Plan 001", "file": "QI_Ecosystem_Plan_001_Brain_Architecture_2026-04-18.md", "location": "C:\\QIH\\shared\\documentation\\session_summaries\\", "type": "Markdown", "description": "The founding plan: the dual-store design, the 12-tool contract, and Supplement A implementation rules (I-01 thin MCP, I-02 WAL, I-08 supersede, I-14 override)."},
+        {"title": "Brain Build Complete", "file": "QIBrain_Build_Complete_2026-04-19_0030.docx", "location": "C:\\QIH\\shared\\documentation\\session_summaries\\", "type": "Word Document", "description": "Build-completion summary for the initial Brain (DB + Chroma + MCP + bootstrap)."},
+        {"title": "Documentation Brain Summary", "file": "QIBrain_Summary_2026-06-18_1754.docx", "location": "C:\\QIH\\shared\\documentation\\session_summaries\\", "type": "Word Document", "description": "Session summary for the Documentation Brain work — doc_harvester, the doc index migration, and the hive-librarian agent."},
+        {"title": "One-Brain Next Session", "file": "QI_NextSession_OneBrain_2026-04-19_1135.docx", "location": "C:\\QIH\\shared\\documentation\\session_summaries\\", "type": "Word Document", "description": "Hand-off prompt consolidating the Brain into the single ecosystem nervous system."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Memory",
+      "documents": [
+        {"title": "QI Ecosystem Registry (qi_brain)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "Brain registry entry: id qi_brain, path C:\\QIH\\engine\\brain, tier backbone, family orchestration, api port 9011 (block 9000-9099), mcp stdio, service QI_BrainAPI, dependents = all projects via MCP, the 12 mcp_tools."},
+        {"title": "QI Service Registry (QI_BrainAPI)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entry: QI_BrainAPI, binary python.exe, params api.py, AppDirectory C:\\QIH, log qi_brain_api.log. Symptom->service->log table: 'Brain API (:9011) down -> nssm status QI_BrainAPI'."},
+        {"title": "Documentation Brain (memory)", "file": "project_documentation_brain.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\", "type": "Markdown", "description": "Claude's persistent memory note on the doc index + knowledge graph, the ChromaDB multi-process caveat, and the /api/admin/reload_memory fix."},
+        {"title": "QI Architecture Principles (Law 6)", "file": "QI_Architecture_Principles.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "The Six Laws governing all QI projects; Law 6 (Owner Override) is the basis for the Brain's evaluation_overrides + qi_override_evaluation."}
+      ]
+    }
+  ]
+}

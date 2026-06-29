@@ -1,0 +1,218 @@
+{
+  "intro": "Every snippet below is copied from OpenClaw's actual source under C:\\OC. They trace the real spine of the system: the gateway capability contract (TOOLS.md), the orchestrator's permission firewall, the LLM router every agent shares, and each specialist's core logic.",
+  "sections": [
+    {
+      "category": "Gateway & Capability Wiring (TOOLS.md)",
+      "snippets": [
+        {
+          "title": "How a capability is wired — text, not code",
+          "feature": "Capabilities wired as text, not code",
+          "file": "repo/scripts/tasuke/TOOLS_ADDITIONS.md",
+          "language": "markdown",
+          "code": "The OpenClaw npm package runs a gateway daemon as a systemd user\nservice. The gateway:\n1. Polls Telegram getUpdates for the bot\n2. Forwards each message to the active agent (default: main = Tasuke,\n   model ollama/gemma4:26b)\n3. The agent reads its workspace files on every turn — IDENTITY.md,\n   SOUL.md, USER.md, MEMORY.md, and **TOOLS.md**\n4. TOOLS.md lists \"Conversation flows\" — natural-language patterns\n   mapped to shell commands.\n\nThis means wiring a new capability != writing a bot or webhook. It is:\n> add a section to TOOLS.md -> restart the gateway -> the LLM uses it.",
+          "explanation": "This is the single most important fact about OpenClaw. The gateway LLM re-reads TOOLS.md on every turn, so a capability is declared in Markdown and activated by a restart — no deploy, no webhook, no parallel bot. The canonical copy lives in the repo so it can be re-applied after an upgrade overwrites the live file."
+        },
+        {
+          "title": "Restart the gateway after editing flows",
+          "feature": "OpenClaw gateway daemon",
+          "file": "repo/scripts/tasuke/TOOLS_ADDITIONS.md",
+          "language": "bash",
+          "code": "systemctl --user restart openclaw-gateway.service\nsleep 3 && curl -s http://127.0.0.1:18789/health",
+          "explanation": "The gateway is a systemd --user service inside WSL. After editing TOOLS.md you restart it and probe the health endpoint on the gateway's TCP port 18789. Config changes hot-reload the worker; flow changes need this restart."
+        }
+      ]
+    },
+    {
+      "category": "Tasuke — Permission Firewall (TALK / DO / PRIVATE)",
+      "snippets": [
+        {
+          "title": "Three permission tiers",
+          "feature": "Permission firewall (TALK / DO / PRIVATE)",
+          "file": "repo/scripts/tasuke/tools_global_context.md",
+          "language": "markdown",
+          "code": "  TALK    — anyone in an allowed chat can trigger Tasuke to engage\n            conversationally, deliver the public news briefing,\n            translate it, and send a voice version.\n\n  DO      — only RENNE (sender.id == 260811037) can ask Tasuke to\n            mutate state: add/remove groups, schedules, friendly\n            bots, news sites; change voice or language preferences.\n\n  PRIVATE — personal information (calendar, inbox, bills, system\n            health, file paths, secrets) is NEVER revealed in a\n            non-DM chat. The firewall applies regardless of who asks.",
+          "explanation": "The security model is three tiers enforced by the LLM on every message. TALK is open to anyone in an allowed chat; DO (state changes) is locked to Renne's exact Telegram user id; PRIVATE is an orthogonal rule that blocks personal info in group chats even for Renne. This is what makes it safe to add Tasuke to shared groups."
+        },
+        {
+          "title": "First-match gate evaluation",
+          "feature": "Permission firewall (TALK / DO / PRIVATE)",
+          "file": "repo/scripts/tasuke/tools_global_context.md",
+          "language": "markdown",
+          "code": "## Gate evaluation order — FIRST MATCH WINS\n\n### Gate 2: Is the sender Renne?\n  sender.id == 260811037\n    -> RENNE — full TALK and DO. PRIVATE rules still apply.\n\n### Gate 3: Is the sender a bot (any bot)?\n  sender.is_bot == true\n    -> 1. Loop guard pre-check (bot-loop-guard.py check ...)\n       2. If in friendly-bots.json -> known sibling (warmer tone)\n       4. TALK actions only — never execute DO actions for a bot.",
+          "explanation": "Gates are evaluated top-down, first match wins. Renne is identified by a hard-coded user id (gate 2); other bots are routed through the loop guard and treated as TALK-only peers (gate 3). This ordered evaluation is the runtime contract the LLM follows for every inbound message."
+        }
+      ]
+    },
+    {
+      "category": "Shared LLM Router (Cloudflare -> Ollama)",
+      "snippets": [
+        {
+          "title": "Provider selection with automatic fallback",
+          "feature": "LLM provider router",
+          "file": "repo/scripts/kaze/kaze-llm-provider.py",
+          "language": "python",
+          "code": "if provider == \"cloudflare\":\n    try:\n        text = call_cloudflare(prompt, model, max_tokens, temperature)\n        if text:\n            return text\n    except Exception as e:\n        errors.append(f\"Cloudflare: {e}\")\n    # Fallback to Ollama\n    print(f\"[kaze-llm] Cloudflare failed, falling back to Ollama\",\n          file=sys.stderr)\n    ollama_model = os.environ.get(\"KAZE_LLM_MODEL\", OLLAMA_DEFAULT_MODEL)\n    text = call_ollama(prompt, ollama_model, max_tokens, temperature)",
+          "explanation": "Every agent that needs an LLM routes through this one function. It reads KAZE_LLM_PROVIDER, tries the primary, and on any failure logs to stderr and falls back to the other provider. This is why a Cloudflare free-tier outage never takes the system down — local Ollama silently takes over."
+        },
+        {
+          "title": "think=false so reasoning models actually answer",
+          "feature": "Local LLM (Ollama)",
+          "file": "repo/scripts/kaze/kaze-llm-provider.py",
+          "language": "python",
+          "code": "payload = json.dumps({\n    \"model\": model,\n    \"prompt\": prompt,\n    \"stream\": False,\n    \"think\": False,\n    \"options\": {\"temperature\": temperature, \"num_ctx\": 8192,\n                \"num_predict\": max_tokens}\n}).encode()\n...\ntext = result.get(\"response\", \"\")\n# Strip any residual think tags as a safety net\ntext = re.sub(r\"<think>.*?</think>\", \"\", text, flags=re.DOTALL).strip()",
+          "explanation": "Reasoning models (qwen3, deepseek-r1) put output in a 'thinking' field unless think=false, which would leave the response empty. The router forces think=false and, belt-and-braces, strips any leftover <think> tags from the text — a hard-won gotcha applied consistently across the ecosystem."
+        },
+        {
+          "title": "Cloudflare Workers AI call",
+          "feature": "Cloud LLM (Cloudflare Workers AI)",
+          "file": "repo/scripts/kaze/kaze-llm-provider.py",
+          "language": "python",
+          "code": "url = f\"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{cf_model}\"\npayload = json.dumps({\n    \"messages\": [{\"role\": \"user\", \"content\": prompt}],\n    \"max_tokens\": max_tokens,\n    \"temperature\": temperature\n}).encode()\nreq = urllib.request.Request(url, data=payload, headers={\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": f\"Bearer {api_token}\"})",
+          "explanation": "The free-tier cloud path: a plain stdlib urllib POST to Cloudflare Workers AI using the chat 'messages' shape, default model @cf/meta/llama-3.1-8b-instruct. No SDK, no key in code — credentials come from ~/.openclaw/secrets/kaze-llm.env."
+        }
+      ]
+    },
+    {
+      "category": "Kaze — News Aggregation",
+      "snippets": [
+        {
+          "title": "Parallel RSS fetch with feedparser",
+          "feature": "RSS fetch / score / cluster",
+          "file": "repo/scripts/kaze/kaze-news-fetch.py",
+          "language": "python",
+          "code": "import feedparser\nfrom concurrent.futures import ThreadPoolExecutor, as_completed\nfrom difflib import SequenceMatcher\n\nMAX_ITEMS_PER_FEED = 6\nMAX_ITEMS_PER_CATEGORY = 12\nFETCH_WORKERS = 8\n\ndef load_feeds():\n    \"\"\"Load the RSS feed definitions from kaze-feeds.json.\"\"\"\n    return load_json(FEEDS_PATH)[\"categories\"]",
+          "explanation": "Kaze fetches many feeds concurrently (8 workers), caps items per feed and per category, and uses difflib.SequenceMatcher to fuzzy-match near-duplicate titles so the digest does not repeat the same story from five outlets. Feeds and categories are pure config in kaze-feeds.json."
+        },
+        {
+          "title": "HTML cleaning for digest text",
+          "feature": "Twice-daily news briefing",
+          "file": "repo/scripts/kaze/kaze-news-fetch.py",
+          "language": "python",
+          "code": "def clean_text(text):\n    \"\"\"Strip HTML tags, collapse whitespace, and unescape entities.\"\"\"\n    text = text or \"\"\n    text = html.unescape(text)\n    text = re.sub(r\"<[^>]+>\", \" \", text)\n    text = re.sub(r\"\\s+\", \" \", text).strip()\n    return text",
+          "explanation": "RSS summaries arrive full of HTML and entities. This normaliser unescapes entities, strips tags, and collapses whitespace before the text is handed to the LLM for summarisation — keeping prompts clean and token-efficient."
+        }
+      ]
+    },
+    {
+      "category": "Tasuke — Dispatch & Delegation",
+      "snippets": [
+        {
+          "title": "Route a command, then execute the delegated shell",
+          "feature": "Slash-command router (fallback CLI)",
+          "file": "repo/scripts/tasuke/tasuke-bot.py",
+          "language": "python",
+          "code": "def handle_text_command(tg, text):\n    routed = run_router(text)\n    response = routed.get(\"response\", \"(no response)\")\n    if not routed.get(\"execute\"):\n        tg.send_message(response)\n        return\n    tg.send_action(\"typing\")\n    tg.send_message(response)\n    stdout, stderr, rc = run_shell(routed[\"execute\"])\n    body = f\"<pre>{stdout.strip()[:3500]}</pre>\" if rc == 0 else \\\n           f\"⚠️ {routed['command']} failed (exit {rc})\"\n    tg.send_message(body)",
+          "explanation": "The dispatch pattern (used by the fallback poller and mirrored by the live gateway flows): the router returns a response plus an optional 'execute' shell command. Tasuke acknowledges, runs the delegated agent script, and returns its output. This is the orchestrator-delegates-to-specialist mechanic in code."
+        },
+        {
+          "title": "Delegating /email to Yubin",
+          "feature": "Inbox triage & summary",
+          "file": "repo/scripts/shared/tasuke_commands.py",
+          "language": "python",
+          "code": "def _cmd_email(args: str) -> dict:\n    \"\"\"Delegate to the Yubin email fetch pipeline.\"\"\"\n    hours = \"24\"\n    if \"--hours\" in args:\n        hours = args.split(\"--hours\")[1].strip().split()[0]\n    return {\n        \"command\": \"/email\", \"agent\": \"yubin\", \"status\": \"delegated\",\n        \"response\": f\"📧 Delegating to Yubin — fetching last {hours}h...\",\n        \"execute\": f\"bash {SCRIPTS_DIR}/yubin/yubin-daily.sh --hours {hours}\",\n    }",
+          "explanation": "Each command maps to a specialist agent and the exact shell to run. Tasuke never does the work itself — it names the agent ('yubin'), writes a user-facing line, and hands back the bash for the dispatcher to execute. Adding an agent is adding one of these mappings."
+        }
+      ]
+    },
+    {
+      "category": "Kakei — Finance Ledger",
+      "snippets": [
+        {
+          "title": "SQLite ledger initialisation",
+          "feature": "SQLite ledger CRUD",
+          "file": "repo/scripts/kakei/kakei-ledger.py",
+          "language": "python",
+          "code": "DB_PATH = os.path.expanduser(os.environ.get(\n    \"KAKEI_DB\", \"~/.openclaw/workspace-kakei/kakei.db\"))\n\ndef conn():\n    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)\n    c = sqlite3.connect(DB_PATH)\n    c.row_factory = sqlite3.Row\n    return c\n\ndef cmd_init(_args):\n    with open(SCHEMA, encoding=\"utf-8\") as f:\n        c.executescript(f.read())",
+          "explanation": "Kakei is the only agent with a database, and it is a single local SQLite file in its own workspace. init runs the committed schema (bills + expenses tables) idempotently. No central DB, no server — the ledger is a file you can back up by copying."
+        },
+        {
+          "title": "Weekly summary query",
+          "feature": "Weekly spending summary",
+          "file": "repo/scripts/kakei/kakei-ledger.py",
+          "language": "python",
+          "code": "bills = c.execute(\n  \"\"\"SELECT * FROM bills WHERE paid_at IS NULL\n     AND due_date <= ? AND due_date >= ?\n     ORDER BY due_date ASC\"\"\", (cutoff, today))\nrecent = c.execute(\n  \"\"\"SELECT category, SUM(amount) AS total, currency FROM expenses\n     WHERE spent_on >= ? GROUP BY category, currency\n     ORDER BY total DESC\"\"\", (week_ago,))",
+          "explanation": "The Sunday rollup is two SQL queries: unpaid bills due in the window, and the week's spending grouped by category. The result is emitted as JSON and turned into a Telegram message. Kakei records only — there is no payment path by design."
+        },
+        {
+          "title": "Receipt photo -> ledger row",
+          "feature": "Receipt photo skill",
+          "file": "repo/scripts/tasuke/tasuke-bot.py",
+          "language": "python",
+          "code": "stdout, stderr, rc = run_shell(\n    f\"python3 {RECEIPT_SKILL} {shlex.quote(out)}\", timeout=180)\nr = json.loads(stdout.strip())\ntg.send_message(\n    f\"💰 Receipt logged.\\n  payee: <b>{r['payee']}</b>\\n\"\n    f\"  amount: <b>{r['amount']:.2f} {r['currency']}</b>\\n\"\n    f\"  ledger id: {r.get('expense_id')}\")",
+          "explanation": "Send a photo to Tasuke and it shells out to the receipt skill (OCR via qwen3-vl), which extracts payee/amount/date and inserts an expense row, then reports the new ledger id. The handler is built; the live gateway photo flow + qwen3-vl pull complete the loop (status: partial)."
+        }
+      ]
+    },
+    {
+      "category": "Koe — Voice (STT / TTS)",
+      "snippets": [
+        {
+          "title": "Local transcription pipeline",
+          "feature": "Speech-to-text",
+          "file": "repo/scripts/koe/koe-stt.py",
+          "language": "python",
+          "code": "Pipeline:\n    1. ffmpeg converts the input to 16kHz mono 16-bit WAV\n       (whisper.cpp requires this)\n    2. whisper.cpp transcribes\n    3. We strip whisper's bracketed timestamps and return plain text\n\ndef emit(status, **kwargs):\n    print(json.dumps({\"status\": status, **kwargs}, ensure_ascii=False))\n    sys.exit(0 if status == \"ok\" else 1)",
+          "explanation": "Voice notes are transcribed entirely on-device: ffmpeg normalises the audio to the format whisper.cpp needs, whisper transcribes, timestamps are stripped. Nothing leaves the machine — the privacy guarantee Koe makes for spoken input."
+        },
+        {
+          "title": "Per-language neural voice selection",
+          "feature": "Text-to-speech (edge, default)",
+          "file": "repo/scripts/koe/koe-tts-edge.py",
+          "language": "python",
+          "code": "DEFAULT_VOICES = {\n    \"pt\": \"pt-BR-FranciscaNeural\",\n    \"en\": \"en-US-JennyNeural\",\n    \"es\": \"es-ES-ElviraNeural\",\n    \"ja\": \"ja-JP-NanamiNeural\",\n    \"fr\": \"fr-FR-DeniseNeural\",\n}",
+          "explanation": "Koe detects each paragraph's language and synthesises with the matching native (female) Microsoft neural voice via edge-tts, concatenating mixed-language input into a single Ogg/Opus file. edge-tts is free and keyless; Piper is the offline fallback."
+        }
+      ]
+    },
+    {
+      "category": "Sentry — Health & Security",
+      "snippets": [
+        {
+          "title": "Deterministic gateway + Ollama probe",
+          "feature": "Daily system health check",
+          "file": "repo/scripts/sentry/sentry-health-check.sh",
+          "language": "bash",
+          "code": "# Gateway\nif ss -tlnp 2>/dev/null | grep -q \":18789\"; then\n  GW_STATUS=\"running\"\nelse\n  GW_STATUS=\"DOWN\"\nfi\n\n# Ollama\nif curl -s --max-time 5 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then\n  OLLAMA_STATUS=\"running\"\nelse\n  OLLAMA_STATUS=\"DOWN\"\nfi",
+          "explanation": "Sentry is deliberately LLM-free: pure shell checks that the gateway is listening on 18789 and Ollama answers on 11434. Determinism matters for a monitor — it must never hallucinate that a down service is up."
+        },
+        {
+          "title": "Severity verdict + dashboard JSON",
+          "feature": "Daily system health check",
+          "file": "repo/scripts/sentry/sentry-health-check.sh",
+          "language": "bash",
+          "code": "[ \"$GW_STATUS\" = \"DOWN\" ] && CRITICAL=$((CRITICAL+1))\n[ \"$OLLAMA_STATUS\" = \"DOWN\" ] && WARNINGS=$((WARNINGS+1))\n[ \"$CONFIG_OK\" = \"false\" ] && CRITICAL=$((CRITICAL+1))\n\nif [ $CRITICAL -gt 0 ]; then VERDICT=\"🔴 CRITICAL ISSUES FOUND\"\nelif [ $WARNINGS -gt 0 ]; then VERDICT=\"🟡 WARNINGS\"\nelse VERDICT=\"🟢 ALL CLEAR\"; fi",
+          "explanation": "Findings are scored into critical/warning counts that collapse to a single traffic-light verdict, written to both a human report and a dashboard JSON (sentry-latest.json). The gateway being down or the config being invalid are criticals; Ollama down is a warning (Cloudflare can cover)."
+        }
+      ]
+    },
+    {
+      "category": "Bridges & Ecosystem",
+      "snippets": [
+        {
+          "title": "HMAC-signed cross-bot messages",
+          "feature": "Cross-bot peer bridge",
+          "file": "repo/scripts/bridge/peer-bridge.py",
+          "language": "python",
+          "code": "# Telegram refuses to deliver messages between bots. This bridge\n# fixes that: when one bot replies in a shared chat, peer-bridge.py\n# POSTs the message to the other bot's endpoint with HMAC auth.\n#\n#   X-Peer-Bridge-Signature: hex(hmac_sha256(secret, f\"{ts}.{body}\"))\n#   Body: { \"synthetic_update\": { ... Telegram-shaped ... } }",
+          "explanation": "Telegram drops bot-to-bot messages, which blocks Maia and Tasuke from talking. The peer bridge sends an HMAC-signed HTTP POST carrying a synthetic Telegram-shaped update, so the receiving bot can route it through its normal pipeline. This is the candidate transport for the future Maia-OpenClaw marriage."
+        },
+        {
+          "title": "Loop guard against bot-war spirals",
+          "feature": "Bot-to-bot loop guard",
+          "file": "repo/scripts/broadcast/bot-loop-guard.py",
+          "language": "python",
+          "code": "# Maintains a per-chat counter and refuses if the chat exceeds the\n# threshold of bot-to-bot exchanges within the cooldown window.\n#\n# Counter reset: ANY message from a human resets the counter to zero.\n#\n#   bot-loop-guard.py check --chat-id <id> --sender-is-bot <bool>\n#       -> exits 0 if Tasuke MAY reply, 1 if it must stay silent",
+          "explanation": "Two bots replying to each other would loop forever. Before answering a friendly bot, Tasuke calls the loop guard; if too many bot-only exchanges have happened in the window, it stays silent. A human speaking resets the counter — that signals the bot chatter is welcome again."
+        },
+        {
+          "title": "Querying the QI Hive Brain",
+          "feature": "QI Hive bridge skill",
+          "file": "repo/scripts/hive-bridge/tasuke-hive-skill.py",
+          "language": "python",
+          "code": "BRAIN_URL = os.environ.get(\"QI_BRAIN_URL\", \"http://localhost:9011\").rstrip(\"/\")\n# Note: Brain API moved 9010 -> 9011 on 2026-05-14\n#       (Logitech G HUB squats 9010).\n\ndef fmt_status():\n    snap = call(\"/api/ecosystem_snapshot\")\n    if \"_error\" in snap:\n        h = call(\"/health\")  # fallback probe\n    projects = snap.get(\"projects\") or snap.get(\"project_states\") or []",
+          "explanation": "Tasuke reaches into the wider QI ecosystem by calling the QI Hive Brain at :9011 for status, project state, pending features, or a semantic 'ask'. It degrades to /health if the snapshot endpoint is missing, and never lets an exception leak to the user — failures become a short text line."
+        }
+      ]
+    }
+  ]
+}

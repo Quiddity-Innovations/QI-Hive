@@ -86,12 +86,16 @@ PROJECTS = {
     "mapsnap": {
         "name": "MapSnap",
         "path": r"C:\MapSnap",
-        "tagline": "Local schema browser for Jenzabar EX",
+        "tagline": "Schema intelligence for any enterprise database",
         "status_line": "Active and stable.",
-        "what": ("MapSnap is a standalone local schema browser for Jenzabar EX (university "
-                 "ERP). It reads a schema.json built from CSV/SQL exports and renders a "
-                 "navigable HTML browser with FK relationships, ERD-confirmed edges, and "
-                 "module groupings. Original product; sibling of mapsnap_onbase."),
+        "what": ("MapSnap is a local-first schema-intelligence tool for ANY enterprise "
+                 "database set up as a profile (SQL Server, Oracle, PostgreSQL, MySQL, "
+                 "SQLite — e.g. Jenzabar EX, Hyland OnBase, SAP/BUworks). Live extract or "
+                 "CSV/DDL import builds schema.json; it renders a navigable HTML browser "
+                 "with FK relationships, ERD-confirmed edges, and module groupings, plus a "
+                 "local AI that explains the schema and does NL→SQL. Egress guardrail keeps "
+                 "regulated data on-box. Onboarding tool for the BU systems-of-record "
+                 "federation feeding CogniBase. Original product; design ancestor of cognibase."),
         "port": "9876",
         "ports_block": "8650-8659 (reserved)",
     },

@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#475569"/>
+    </marker>
+    <marker id="arr-green" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#f97316"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="11" markerHeight="8" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 11 4, 0 8" fill="#ca8a04"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="560" fill="#f8fafc" rx="12"/>
+  <text x="450" y="25" text-anchor="middle" font-size="17" font-weight="700" fill="#1e293b">QI Avatar Studio — Render Pipeline (Data Flow)</text>
+  <text x="450" y="45" text-anchor="middle" font-size="11" fill="#64748b">Quiddity Innovations · Proof of Concept · 2026</text>
+
+  <!-- ══ LEGEND (top right) ══ -->
+  <rect x="688" y="58" width="204" height="150" rx="7" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="790" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Legend</text>
+  <rect x="696" y="83" width="14" height="10" rx="2" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="716" y="93" font-size="9" fill="#374151">Live / Active</text>
+  <rect x="696" y="100" width="14" height="10" rx="2" fill="#fef9c3" stroke="#ca8a04"/>
+  <text x="716" y="110" font-size="9" fill="#374151">Built · Partial / slow</text>
+  <rect x="696" y="117" width="14" height="10" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,2"/>
+  <text x="716" y="127" font-size="9" fill="#374151">Disabled / optional</text>
+  <rect x="696" y="134" width="14" height="10" rx="2" fill="#1f2d3d"/>
+  <text x="716" y="143" font-size="9" fill="#374151">Stage (core)</text>
+  <line x1="696" y1="159" x2="714" y2="159" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="720" y="163" font-size="9" fill="#374151">Main data flow</text>
+  <line x1="696" y1="176" x2="714" y2="176" stroke="#ca8a04" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-amber)"/>
+  <text x="720" y="180" font-size="9" fill="#374151">Optional / branch path</text>
+  <text x="790" y="200" text-anchor="middle" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026</text>
+
+  <!-- ── STAGE 1: SCRIPT ── -->
+  <rect x="26" y="250" width="120" height="100" rx="10" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="86" y="280" text-anchor="middle" font-size="12" font-weight="700" fill="white">① Script</text>
+  <text x="86" y="300" text-anchor="middle" font-size="8" fill="#94a3b8">Text per language</text>
+  <text x="86" y="313" text-anchor="middle" font-size="8" fill="#94a3b8">+ agent / portrait</text>
+  <text x="86" y="326" text-anchor="middle" font-size="8" fill="#94a3b8">+ language choice</text>
+  <text x="86" y="341" text-anchor="middle" font-size="7.5" fill="#64748b">Gradio :7862</text>
+
+  <!-- arrow 1 -->
+  <line x1="146" y1="300" x2="186" y2="300" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arr-green)"/>
+
+  <!-- ── STAGE 2: TTS ── -->
+  <rect x="188" y="250" width="150" height="100" rx="10" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="263" y="276" text-anchor="middle" font-size="12" font-weight="700" fill="#9a3412">② Text-to-Speech</text>
+  <text x="263" y="291" text-anchor="middle" font-size="7.5" fill="#c2410c">generate_voice()</text>
+  <rect x="198" y="298" width="64" height="44" rx="5" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="230" y="314" text-anchor="middle" font-size="8" font-weight="700" fill="#14532d">Kokoro</text>
+  <text x="230" y="325" text-anchor="middle" font-size="6.5" fill="#16a34a">local · offline</text>
+  <text x="230" y="335" text-anchor="middle" font-size="6.5" fill="#16a34a">en·pt·es·it·zh</text>
+  <rect x="266" y="298" width="64" height="44" rx="5" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="298" y="314" text-anchor="middle" font-size="8" font-weight="700" fill="#14532d">edge-tts</text>
+  <text x="298" y="325" text-anchor="middle" font-size="6.5" fill="#16a34a">MS Neural</text>
+  <text x="298" y="335" text-anchor="middle" font-size="6.5" fill="#16a34a">ja·fr·ru·de</text>
+
+  <!-- arrow 2: TTS → branch hub (WAV) -->
+  <line x1="338" y1="300" x2="378" y2="300" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arr-green)"/>
+  <text x="358" y="293" text-anchor="middle" font-size="8" fill="#15803d">WAV</text>
+
+  <!-- ── PORTRAIT PREP feeding in from top ── -->
+  <rect x="188" y="120" width="150" height="74" rx="10" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="263" y="143" text-anchor="middle" font-size="11" font-weight="700" fill="#581c87">Portrait Prep</text>
+  <text x="263" y="159" text-anchor="middle" font-size="7.5" fill="#7e22ce">apply_background() · rembg</text>
+  <text x="263" y="171" text-anchor="middle" font-size="7.5" fill="#7e22ce">OpenCV best-frame finder</text>
+  <text x="263" y="183" text-anchor="middle" font-size="7.5" fill="#7e22ce">solid color / image / original</text>
+  <!-- arrow portrait → render (image) -->
+  <path d="M 338,157 H 453 V 250" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="462" y="225" font-size="8" fill="#581c87">portrait</text>
+
+  <!-- ── STAGE 3: FACE ANIMATION (WSL2) ── -->
+  <rect x="380" y="244" width="290" height="180" rx="10" fill="none" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="392" y="238" width="150" height="14" rx="3" fill="#f8fafc"/>
+  <text x="467" y="249" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="700" letter-spacing="1">③ FACE ANIMATION · WSL2</text>
+
+  <!-- LivePortrait -->
+  <rect x="392" y="262" width="128" height="52" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="456" y="280" text-anchor="middle" font-size="9.5" font-weight="700" fill="#14532d">LivePortrait</text>
+  <text x="456" y="293" text-anchor="middle" font-size="7" fill="#16a34a">motion transfer · fast ~30s</text>
+  <text x="456" y="304" text-anchor="middle" font-size="7" fill="#16a34a">lips NOT audio-driven</text>
+
+  <!-- Hallo2 -->
+  <rect x="528" y="262" width="130" height="52" rx="7" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="593" y="280" text-anchor="middle" font-size="9.5" font-weight="700" fill="#713f12">Hallo2</text>
+  <text x="593" y="293" text-anchor="middle" font-size="7" fill="#ca8a04">audio-driven · lips=WAV</text>
+  <text x="593" y="304" text-anchor="middle" font-size="7" fill="#ca8a04">slow ~15–30 min/min</text>
+
+  <!-- Cloud + alternates row -->
+  <rect x="392" y="322" width="128" height="44" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="456" y="339" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Cloud: D-ID / HeyGen</text>
+  <text x="456" y="352" text-anchor="middle" font-size="7" fill="#b45309">REST upload→poll→download</text>
+  <text x="456" y="362" text-anchor="middle" font-size="7" fill="#b45309">need API key</text>
+
+  <rect x="528" y="322" width="130" height="44" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="593" y="339" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">MuseTalk · SadTalker</text>
+  <text x="593" y="350" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Wav2Lip</text>
+  <text x="593" y="361" text-anchor="middle" font-size="7" fill="#b45309">disabled · need install</text>
+
+  <!-- dispatch note -->
+  <text x="525" y="384" text-anchor="middle" font-size="7.5" fill="#475569">pipeline_generate selects ONE engine per render</text>
+  <text x="525" y="396" text-anchor="middle" font-size="7.5" fill="#475569">silent video produced → audio muxed next stage</text>
+  <text x="525" y="412" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1f2937">Windows ↔ WSL2 bridge: to_wsl_path() · wsl -d Ubuntu-24.04 bash -c</text>
+
+  <!-- WAV arrow into render group -->
+  <line x1="378" y1="300" x2="392" y2="300" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arr-green)"/>
+
+  <!-- arrow 3: render → retalking -->
+  <path d="M 670,290 H 706 V 300" fill="none" stroke="#ca8a04" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-amber)"/>
+
+  <!-- ── OPTIONAL: RETALKING ── -->
+  <rect x="700" y="262" width="172" height="52" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="786" y="282" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">video-retalking</text>
+  <text x="786" y="296" text-anchor="middle" font-size="7.5" fill="#b45309">optional lip-sync pass</text>
+  <text x="786" y="307" text-anchor="middle" font-size="7.5" fill="#b45309">apply_retalking checkbox · WSL2</text>
+
+  <!-- ── STAGE 4: VIDEO ASSEMBLY ── -->
+  <rect x="380" y="448" width="290" height="74" rx="10" fill="#1f2d3d" stroke="#334155" stroke-width="2"/>
+  <text x="525" y="473" text-anchor="middle" font-size="12" font-weight="700" fill="white">④ Video Assembly (ffmpeg · WSL2)</text>
+  <text x="525" y="490" text-anchor="middle" font-size="8" fill="#94a3b8">mux WAV onto render: -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest</text>
+  <text x="525" y="504" text-anchor="middle" font-size="8" fill="#94a3b8">Hallo2: WAV replaces embedded audio · Scene mode: concat_scenes()</text>
+  <text x="525" y="516" text-anchor="middle" font-size="7.5" fill="#64748b">copy WSL → Windows path</text>
+
+  <!-- arrow render → assembly -->
+  <line x1="525" y1="424" x2="525" y2="448" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arr-green)"/>
+  <!-- arrow retalking → assembly -->
+  <path d="M 786,314 V 485 H 670" fill="none" stroke="#ca8a04" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-amber)"/>
+
+  <!-- arrow assembly → output -->
+  <line x1="380" y1="485" x2="338" y2="485" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arr-green)"/>
+  <text x="358" y="478" text-anchor="middle" font-size="8" fill="#15803d">MP4</text>
+
+  <!-- ── STAGE 5: OUTPUT ── -->
+  <rect x="188" y="448" width="150" height="74" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="263" y="473" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">⑤ MP4 Out</text>
+  <text x="263" y="490" text-anchor="middle" font-size="8" fill="#16a34a">outputs/&lt;agent&gt;_&lt;lang&gt;_&lt;ts&gt;.mp4</text>
+  <text x="263" y="503" text-anchor="middle" font-size="8" fill="#16a34a">per-language · served by Gradio</text>
+  <text x="263" y="515" text-anchor="middle" font-size="7.5" fill="#15803d">talking-head video</text>
+
+  <!-- loop note: multi-language -->
+  <path d="M 263,448 V 360 H 110 V 350" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <rect x="40" y="372" width="138" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="109" y="389" text-anchor="middle" font-size="8.5" font-weight="700" fill="#1e40af">Loop: next language</text>
+  <text x="109" y="402" text-anchor="middle" font-size="7.5" fill="#3b82f6">one click → N languages</text>
+</svg>

@@ -1,0 +1,48 @@
+{
+  "categories": [
+    {
+      "name": "Deeper File Intelligence",
+      "priority": "high",
+      "items": [
+        {"title": "Near-duplicate / similarity detection", "detail": "Today FileHQ finds only byte-for-byte exact duplicates (matching xxhash64). Add perceptual / fuzzy matching so re-encoded videos, resized photos, and edited documents are surfaced as similar-not-identical groups. The HINT capability ('near-duplicate/similarity detection') is the headline gap between what FileHQ advertises and what it currently does."},
+        {"title": "Document content extraction + full-text search", "detail": "qi_registry.json advertises 'Document content extraction' and a 'File search API', but search today is only filename LIKE matching over the files table. Extract text from PDFs/Office docs and index it (full-text or vector) so Naya can answer 'which document mentions X?' not just 'which file is named X?'."},
+        {"title": "Content-aware categorization", "detail": "Categorization is extension-only. Use extracted content (and optionally NEXUS LLM analysis, already declared as a consumes_from_ecosystem dependency) to classify by what a file actually is, not just its suffix."}
+      ]
+    },
+    {
+      "name": "Naya Integration Hardening",
+      "priority": "high",
+      "items": [
+        {"title": "Reconcile FileHQ port (8000 vs 8200)", "detail": "config.py / run.py / main.py bind 127.0.0.1:8000 and qi_registry.json records port 8000, but filehq_bridge.py calls http://127.0.0.1:8200 and FileHQ_Master_Status_Report.md claims 8200. Pick one, fix the bridge or the launcher, and update the registry + Service Registry so Naya reliably reaches the engine."},
+        {"title": "Define the managed start/stop contract", "detail": "Document and codify exactly how Naya launches FileHQ (Naya_Control.bat option [8] / File Manager tab) and how is_running() health-checks it, so the engine is never silently offline when Naya needs it."},
+        {"title": "Phase 2 code absorption", "detail": "Registry family_notes: 'Phase 1 (bridge) complete. Phase 2 (code absorption) pending Renne approval.' Decide whether filehq/ stays a self-contained sub-package or is fully folded into Naya's modules + naya.db."}
+      ]
+    },
+    {
+      "name": "Scheduling & Automation",
+      "priority": "medium",
+      "items": [
+        {"title": "Seed real scheduled tasks", "detail": "The APScheduler wiring + tasks/task_runs tables exist but hold 0 rows. Register a recurring incremental scan (default 24h) and weekly dedup so the ~2.86M-file index stays fresh without manual triggering."},
+        {"title": "Auto-maintenance schedule", "detail": "Run maintenance.full_maintenance() (VACUUM + purge missing/resolved) on a schedule so the DB self-heals after large scans and deletions instead of only on a chat request."}
+      ]
+    },
+    {
+      "name": "Safety & Data Integrity",
+      "priority": "medium",
+      "items": [
+        {"title": "Recycle-bin instead of hard delete", "detail": "execute_dedup_actions delete uses os.remove (permanent). Route deletes to the Windows Recycle Bin (e.g. send2trash) or a quarantine folder so an approved clean-up is still recoverable beyond the operations log."},
+        {"title": "Verify-before-act on stale paths", "detail": "With millions of indexed paths, some go stale between scan and action. Re-stat each file immediately before delete/move/rename and skip mismatches, to avoid acting on a path that has changed underneath the index."},
+        {"title": "Per-operation undo coverage audit", "detail": "operations carries reversible/undo_path/batch_id, but the dedup delete path doesn't capture an undo copy. Ensure every destructive action writes a genuine undo artefact before it runs."}
+      ]
+    },
+    {
+      "name": "Ecosystem & Observability",
+      "priority": "low",
+      "items": [
+        {"title": "Standard /health + /version endpoints", "detail": "is_running() pings /api/stats as a liveness proxy. Add explicit /health (JSON) and /version endpoints per QI standards so QI Hive Mission Control can monitor FileHQ like the other engines."},
+        {"title": "Register engine state in QI Brain", "detail": "Log scan/dedup runs and index size to the QI Brain so the ecosystem has cross-project visibility into FileHQ activity."},
+        {"title": "Retire the original C:\\FileHQ", "detail": "Registry marks the original standalone path for deletion. Confirm nothing references C:\\FileHQ (server_status() error text still says 'python C:\\FileHQ\\run.py') and remove it."}
+      ]
+    }
+  ]
+}

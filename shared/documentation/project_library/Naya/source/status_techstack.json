@@ -1,0 +1,53 @@
+{
+  "table": [
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the server, file modules, and Gradio console", "license": "PSF (open source)", "version": "3.11+"},
+    {"layer": "API Server", "technology": "Flask", "role": "HTTP server on port 8002 — /ask, /health, /status, /version, /info, /api/action, /webhook/*", "license": "BSD", "version": "3.x"},
+    {"layer": "API Server", "technology": "Anthropic SDK", "role": "Calls Claude Sonnet (claude-sonnet-4-6) as the chain's high-quality fallback; prompt caching for long system prompts", "license": "MIT (client)", "version": "anthropic>=0.40"},
+    {"layer": "API Server", "technology": "requests", "role": "HTTP client to Ollama, OpenRouter, Cloudflare, NEXUS /synthesize, and Telegram getUpdates", "license": "Apache 2.0", "version": ">=2.31"},
+    {"layer": "File Engine", "technology": "FastAPI + Uvicorn (FileHQ)", "role": "Merged FileHQ file-index engine, lazily started on internal port 8200", "license": "MIT / BSD", "version": ">=0.115 / >=0.30"},
+    {"layer": "UI", "technology": "Gradio", "role": "Local operator console on port 7861 — Chat, File Manager, Naya Brain, Settings, Logs tabs", "license": "Apache 2.0", "version": ">=5.0"},
+    {"layer": "Database", "technology": "SQLite (naya.db)", "role": "Control plane: config (93 keys), llm_chain (8 rows), conversations (690), subjects; Maia-style schema via the maia_db shim", "license": "Public domain", "version": "3.x (WAL)"},
+    {"layer": "Database", "technology": "SQLite (naya_brain.db)", "role": "File-intelligence store: naya_scans, naya_similarity_groups (~2.7M rows), folder insights, intents, operations, drives, settings", "license": "Public domain", "version": "3.x (~2.3 GB)"},
+    {"layer": "Shared Engine", "technology": "maia_db / maia_context / maia_lang (C:\\QI)", "role": "Reused from Maia; naya_db.py repoints maia_db.DB_FILE to naya.db so they run against Naya's own data", "license": "Quiddity Innovations (internal)", "version": "shared with Maia"},
+    {"layer": "Chat Channel", "technology": "Telegram Bot API", "role": "Outbound long-poll getUpdates loop (@Naya_qi_bot); owner-restricted; no inbound port", "license": "Free API", "version": "Bot API"},
+    {"layer": "AI — Local (Ollama)", "technology": "DeepSeek-R1 8B / GPT-OSS 20B / Gemma3:27b / Qwen3:4b", "role": "Local, free, private inference at 127.0.0.1:11434 — first in the failover chain (DeepSeek-R1 8B is primary)", "license": "Mixed open weights / MIT runtime", "version": "via Ollama"},
+    {"layer": "AI — Cloud (free)", "technology": "Cloudflare Workers AI · OpenRouter", "role": "Free-tier cloud models: Cloudflare Qwen1.5 7B, MiniMax M2.5, GPT-OSS 120B", "license": "Free tier", "version": "see llm_chain"},
+    {"layer": "AI — Cloud (paid)", "technology": "Anthropic Claude Sonnet", "role": "Last-resort high-quality model; promoted for complex queries when personal.anthropic_mode=fallback", "license": "Paid API", "version": "claude-sonnet-4-6"},
+    {"layer": "AI — Synthesis", "technology": "NEXUS (sibling project)", "role": "Optional multi-AI synthesis via POST :8010 /synthesize; off by default", "license": "Quiddity Innovations (internal)", "version": "—"},
+    {"layer": "Hashing", "technology": "hashlib (SHA-256)", "role": "Streaming chunked file hashing for exact-duplicate detection", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Fuzzy Match", "technology": "difflib", "role": "Near-duplicate filename similarity for the fuzzy scanner", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Safe Delete", "technology": "send2trash", "role": "Recycle-bin-first deletion (graceful fallback if missing)", "license": "BSD", "version": ">=1.8"},
+    {"layer": "Scheduling", "technology": "APScheduler", "role": "Drives the disk monitor, USB watcher, and off-hours scheduler inside the server", "license": "MIT", "version": ">=3.10"},
+    {"layer": "Scheduling", "technology": "Windows Task Scheduler (schtasks)", "role": "Registers deferred / recurring scan jobs under the Naya\\ task prefix", "license": "OS built-in", "version": "—"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Word (.docx) report generation; Markdown/text fallback for PDF when COM is unavailable", "license": "MIT", "version": ">=1.1"},
+    {"layer": "Documents", "technology": "pywin32 (win32com)", "role": "Optional PDF export via Word COM automation", "license": "PSF-style", "version": "optional"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads tokens/keys from C:\\NAYA\\secrets\\naya.env at startup", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_NayaBot (8002) + QI_NayaGradio (7861) Windows services; QI_NayaTunnel exposes the UI for occasional demos only", "license": "Open source / Cloudflare", "version": "nssm 2.24"}
+  ],
+  "descriptions": [
+    {
+      "title": "Sibling of Maia — one engine, two products",
+      "body": "Naya does not reimplement chat, context, or language handling. naya_db.py imports Maia's maia_db, overwrites its DB_FILE to C:\\NAYA\\naya.db, and re-exports every symbol — so maia_context.build_context() and maia_lang.detect_input_language() run unchanged but against Naya's own data. naya_db MUST be imported before any maia_* module so the patch lands first. The result: Maia's battle-tested classroom engine becomes a single-owner personal assistant just by swapping the database and the persona. Maia and Naya stay separate projects; Maia may call Naya's API, but Naya never merges into Maia's codebase."
+    },
+    {
+      "title": "Two databases, two jobs",
+      "body": "naya.db is the control plane — it inherits Maia's schema (config, llm_chain, conversations, the unused school tables) and is small (~900 KB). naya_brain.db is the file-intelligence store and is large (~2.3 GB): naya_scans (178 runs), naya_similarity_groups (~2.7M duplicate/fuzzy rows), naya_folder_insights, naya_intents, naya_operations, naya_drives, naya_settings. Keeping them apart means a giant scan history never bloats the conversational DB, and the brain store can be VACUUMed or pruned independently. The advisor, memory, scanner and executor all share naya_brain.db; FileHQ keeps its own filehq.db that Naya reads read-only."
+    },
+    {
+      "title": "The 8-model failover chain (local-first)",
+      "body": "Naya's chain lives in the llm_chain table, ordered by priority, and _llm_call() walks it until one model returns usable text. The order is local-first and free-first: DeepSeek-R1 8B (primary, local), Cloudflare Qwen1.5 7B, GPT-OSS 20B (local), Gemma3:27b (local), Qwen3:4b (local), MiniMax M2.5 (OpenRouter free), GPT-OSS 120B (OpenRouter free), and Claude Sonnet as the paid last resort. Per-provider branches handle the Anthropic SDK, Ollama's OpenAI-compatible /v1/chat/completions, and OpenRouter/Cloudflare. force_fast reorders to small local models for cheap intent extraction; force_sonnet promotes Claude for complex questions when personal.anthropic_mode=fallback. Nothing is hardcoded — reorder or disable a model by editing one DB row."
+    },
+    {
+      "title": "LLM-first intent routing",
+      "body": "Rather than regex-matching commands, Naya sends every message to the LLM with a strict schema prompt (naya_llm_intent) and parses a JSON intent: {action, target, destination, format, schedule_time, chain_action, confidence}. naya_action_router.dispatch() maps the action to a permission-gated handler; if the model emits two actions in one message it fills chain_action and both run. The old keyword router (naya_intent_router) survives only as a fallback for when the LLM is unreachable, so file commands keep working offline. The same handler set serves chat, Telegram, and the Gradio File Manager via dispatch_action()."
+    },
+    {
+      "title": "Safety is structural",
+      "body": "Because Naya can touch the filesystem, every destructive path is gated. _is_approved() reads boolean flags from naya.db (file_scan_approved=true, file_modify_approved=false by default); a denied action returns the exact phrase to enable it. Deletes go to the recycle bin via send2trash unless permanent deletion is explicitly approved. The executor moves files to a NAYA_TRASH folder and logs each batch so undo_last() can restore them, and it never removes the keep copy (is_oldest) of a duplicate group. Folder access exceptions are tracked per-path in naya_folder_access."
+    },
+    {
+      "title": "LAN-only, paused-but-running",
+      "body": "The QI registry marks Naya status 'paused' — no active feature development — yet QI_NayaBot and QI_NayaGradio are live NSSM services, so Naya still answers daily on Telegram and the local console. By deliberate design Naya is never exposed to the internet: Telegram uses outbound long-polling (no inbound port), and the only public surface is QI_NayaTunnel, a Cloudflare tunnel that exposes the read-mostly Gradio UI for occasional remote demos. The registry's standing instruction is explicit: never expose Naya's API via Cloudflare."
+    }
+  ]
+}
