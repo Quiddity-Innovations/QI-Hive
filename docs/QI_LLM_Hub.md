@@ -48,7 +48,7 @@ via `nexus.json → hub.auto_order`). **Any unknown model string → routed as `
 | **TUBESCOUT** | ✅ LIVE (pre-dates hub) | Calls NEXUS `/synthesize` directly | `config/tubescout.json → integration.nexus_base` |
 | **Gamez / WC2026** | ✅ **LIVE** | AI analyst proxy → hub | `proxy/config.json → openrouter_base` (delete the line to revert) |
 | **EasyFlow** | ✅ Ready (flip in UI) | Hub-first in extension chat + AI triage, falls back to configured provider | Extension Options → Settings → **"QI LLM Hub"** card → select "QI LLM Hub first" (reload extension once after update) |
-| **QIH Brain** | 🟡 Provider active in DB; needs Brain restart to load code | `openai_hub` provider (`qi_llm_hub` row) | `qi_brain.db → llm_providers` (role ordering still prefers local ollama) |
+| **QIH Brain** | ✅ **LIVE** (cascade restart 2026-07-02 14:19) | `openai_hub` provider (`qi_llm_hub` row, active) — verified generating via hub | `qi_brain.db → llm_providers` (role ordering still prefers local ollama for 'general'; the hub provider is selectable by id) |
 | **CogniBase** | 🟡 Vendor available | `qi_llm_hub` vendor (openai_compatible) added to settings.json | CogniBase UI vendor selector, or `defaults.chat = "qi_llm_hub"` |
 | **Retirement Analyzer** | 🟡 Provider available | `qi_llm_hub` entry in `config/ai_providers.json` | Set `"active": "qi_llm_hub"` |
 | **M2V** | ⬜ Config-only flip | Ollama-native shim | `config/m2v.json → ollama.url` → `http://127.0.0.1:8010/api/generate` |
