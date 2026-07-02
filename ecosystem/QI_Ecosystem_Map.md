@@ -198,7 +198,9 @@ Each project has its own SQLite database. **Never share databases across project
 | Naya | FileHQ | `GET /files/search` | Personal file queries |
 | Any | NEXUS | `GET /providers` | Check which AIs are available |
 
-**Hub adoption pattern** (per tool, non-breaking): add config `llm_source: hub|direct` (or `llm_hub_enabled` bool) + `llm_hub_url`, default = current behavior; when enabled, try the hub first (`model: auto`) and fall through to the tool's existing direct path on any failure. Adopted: Maia 2026-07-02 (`system.llm_hub_enabled` in maia.db).
+**Hub adoption pattern** (per tool, non-breaking): add config `llm_source: hub|direct` (or `llm_hub_enabled` bool) + `llm_hub_url`, default = current behavior; when enabled, try the hub first (`model: auto`) and fall through to the tool's existing direct path on any failure. The hub also speaks **Ollama-native** (`/api/tags`, `/api/chat`, `/api/generate`) so Ollama-based tools adopt it by changing one URL, and unknown model names route as `auto`.
+
+**Adoption status + full per-tool guide: `C:\QIH\docs\QI_LLM_Hub.md`.** Live 2026-07-02: Maia, Naya, Gamez/WC2026, TUBESCOUT (pre-dating). Ready-to-flip: EasyFlow (extension UI card), CogniBase + Retirement Analyzer (provider entries added), Brain (openai_hub provider), M2V/PersonalSong/LotteryWiz/MQ/MailBrain/MapSnap/AutoPDF/ClaudeVoice (one-URL flips via the Ollama shim).
 
 ---
 
