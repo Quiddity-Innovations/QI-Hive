@@ -37,6 +37,13 @@ via `nexus.json → hub.auto_order`). **Any unknown model string → routed as `
 (so tools can keep sending their own model names like `qwen3:8b` or
 `deepseek/deepseek-r1:free`).
 
+**Response attribution (added 2026-07-02):** the response's `model` field reports
+which LLM actually served the call as `<provider_id>/<model>` — e.g.
+`groq_gptoss/openai/gpt-oss-120b`, `cerebras/llama-3.3-70b` — falling back to just
+the provider id when an adapter doesn't expose its model. Consumers can show
+"answered by X" (Retirement Analyzer's assistant does). Don't parse `model` for
+exact provider-id equality; match on the prefix before the first `/`.
+
 ---
 
 ## 2. Per-tool adoption status (2026-07-02)
@@ -51,14 +58,14 @@ via `nexus.json → hub.auto_order`). **Any unknown model string → routed as `
 | **QIH Brain** | ✅ **LIVE** (cascade restart 2026-07-02 14:19) | `openai_hub` provider (`qi_llm_hub` row, active) — verified generating via hub | `qi_brain.db → llm_providers` (role ordering still prefers local ollama for 'general'; the hub provider is selectable by id) |
 | **CogniBase** | 🟡 Vendor available | `qi_llm_hub` vendor (openai_compatible) added to settings.json | CogniBase UI vendor selector, or `defaults.chat = "qi_llm_hub"` |
 | **Retirement Analyzer** | 🟡 Provider available | `qi_llm_hub` entry in `config/ai_providers.json` | Set `"active": "qi_llm_hub"` |
-| **M2V** | ⬜ Config-only flip | Ollama-native shim | `config/m2v.json → ollama.url` → `http://127.0.0.1:8010/api/generate` |
-| **PersonalSong** | ⬜ Config-only flip | Ollama-native shim | `OLLAMA_BASE_URL` → `http://127.0.0.1:8010` |
-| **Lottery Wiz** | ⬜ Config-only flip | Ollama-native shim | `OLLAMA_URL` env → `http://127.0.0.1:8010` |
-| **MQ** | ⬜ Config-only flip (fallback path) | Ollama-native shim | `secrets/mq.env → OLLAMA_URL` → `http://127.0.0.1:8010` (Cloudflare stays primary) |
-| **MailBrain** | ⬜ Config-only flip | Its "Custom" provider OR Ollama URL | Extension options → Custom API → base URL `http://127.0.0.1:8010/v1` |
-| **MapSnap** | ⬜ Config-only flip | Ollama URL in its settings | Settings UI → Ollama URL → `http://127.0.0.1:8010` |
-| **AutoPDF** | ⬜ Config-only flip | Ollama-native shim (`/api/tags` + `/api/generate`) | `PP-OCRv6/settings.json → ollamaHost` → `http://127.0.0.1:8010` |
-| **Claude Voice** | ⬜ Config-only flip (ollama backend) | Ollama-native shim | `config.json → backends.ollama.host` → `http://127.0.0.1:8010` |
+| **M2V** | ✅ **FLIPPED** (2026-07-02 PM) | Ollama-native shim | `config/m2v.json → ollama.url` (revert note inside) |
+| **PersonalSong** | ✅ **FLIPPED** (default; env `OLLAMA_BASE_URL` overrides) | Ollama-native shim | `routers/lyrics.py` default |
+| **Lottery Wiz** | ✅ **FLIPPED + verified live** (X-QI-App: lotterywiz) | Ollama-native shim | `server.py` default; env `OLLAMA_URL` overrides |
+| **MQ** | ✅ **FLIPPED** (fallback path only; Cloudflare stays primary) | Ollama-native shim | `config/mq.json → llm.fallback_url` |
+| **MailBrain** | 👤 USER-SIDE flip (settings live in chrome.storage) | Custom provider or Ollama URL | Extension options → Custom API base URL `http://127.0.0.1:8010/v1` (or Ollama URL `:8010`) |
+| **MapSnap** | 👤 USER-SIDE flip (Ollama URL stored client-side) | Ollama URL in its settings UI | Settings → Ollama URL → `http://127.0.0.1:8010` |
+| **AutoPDF** | ❌ **INTENTIONALLY DIRECT** — Smart Mapping uses the custom fine-tuned local model `autopdf-mapper:latest`; generic hub models would degrade extraction | — | keep `ollamaHost` on `:11434` |
+| **Claude Voice** | ✅ **FLIPPED** (ollama backend; config is live-editable) | Ollama-native shim | `config.json → backends.providers.ollama.host` |
 | CypherMiner, AkiyaScout, AvatarStudio, FileHQ, EasyFlow dashboard, claude_manager, QIB, QIP | — | No LLM calls | — |
 | OpenClaw | Excluded | Claude-only (owner decision: Claude stays direct) | — |
 
@@ -70,8 +77,10 @@ direct path** — hub mode must never make a tool less reliable.
 
 ## 3. Caveats & rules
 
-- **LAN-only. Never tunnel port 8010.** The hub has no auth (POC). Adding a token
-  check is the prerequisite for any external exposure.
+- **LAN-only by default. Never tunnel port 8010 without auth.** Optional auth exists
+  (2026-07-02 PM): set `QI_HUB_TOKEN=<secret>` in `C:/NEXUS/secrets/nexus.env` and every
+  hub route then requires `X-QI-Token: <secret>` or `Authorization: Bearer <secret>`.
+  Unset = open (current POC posture). Enable it before any external exposure.
 - **Shared quotas:** every tool draws from the same free tiers. Watch
   `GET /hub/usage` — if one app dominates, throttle it or pin it to a provider.
 - **OpenRouter cap:** ~50 req/day free. **Gemini:** enabling billing on the Google
