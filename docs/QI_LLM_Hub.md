@@ -90,7 +90,26 @@ direct path** — hub mode must never make a tool less reliable.
 - **Key rotation:** edit `C:\NEXUS\secrets\nexus.env`, restart `QI_NEXUS`. That's it —
   no tool needs touching.
 
-## 4. Troubleshooting
+## 4. Bench scorecard (2026-07-02, suite 1 — drives `auto` routing order)
+
+| Rank | Provider | Quality (0-10) | Latency | Note |
+|---|---|---|---|---|
+| 1 | groq_gptoss (gpt-oss-120b) | **9.46** | 1.0s | Champion on both axes — first in `auto` |
+| 2 | cf_kimi (Kimi K2.6) | 9.40 | 20s | |
+| 3 | nvidia_nim (DeepSeek V4) | 9.20 | 48s | thinking model |
+| 4 | chatgpt (gpt-4o-mini) | 9.14 | 3.8s | PAID — kept last in `auto` |
+| 5 | nim_qwen (Qwen3.5 397B) | 9.06 | 29s | |
+| 6 | gemini (3.5-flash) | 8.90 | 9.4s | |
+| 7 | cerebras (GLM-4.7) | 8.80 | 2.0s | |
+| 8 | gemma4 (local 26B) | 8.66 | 18s | private — use for confidential content |
+| 9 | cf_glm (GLM-5.2) | 8.62 | 32s | |
+| 10-13 | mistral 6.93 · groq/llama-4-scout 6.80 · openrouter/nemotron 5.85 · cloudflare/llama-3.3 5.74 | | | fallback tier |
+
+`hub.auto_order` (nexus.json) = quality>=8.5 tier ordered by latency, then the rest by
+score, chatgpt last (only paid channel). Re-run: NEXUS UI -> Bench tab, then edit the
+order in the **Hub tab -> Auto Order** editor. Rebenchmark after fleet changes.
+
+## 5. Troubleshooting
 
 | Symptom | Check |
 |---|---|
