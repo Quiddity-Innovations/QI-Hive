@@ -18,10 +18,12 @@ from ..db import open_brain_db
 from .base import BrainProvider
 from .ollama import OllamaProvider
 from .nomic_embed import NomicEmbedProvider
+from .openai_hub import OpenAIHubProvider
 
 _TYPE_MAP: dict[str, type[BrainProvider]] = {
     "ollama":       OllamaProvider,
     "nomic_embed":  NomicEmbedProvider,
+    "openai_hub":   OpenAIHubProvider,   # QI LLM Hub on NEXUS (:8010/v1)
     # Future: "openai": OpenAIProvider, "anthropic": AnthropicProvider
 }
 

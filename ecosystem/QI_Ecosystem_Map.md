@@ -27,6 +27,8 @@
 | OpenClaw | Gateway | 18789 (WSL) | Node.js | — | Local+LAN | Active | rennesan (TBD) |
 | FileHQ | — | (merged→Naya) | — | — | N/A | Merged | — |
 | AutoPDF | HTTP | 6969 | PowerShell | — | **NO — loopback only** | Active Dev (Phase 2c) | TBD |
+| AkiyaScout | API | 8505 | FastAPI | — | **NO — planning** | New (spec/design) | TBD |
+| AkiyaScout | UI | 7845 | Gradio | — | **NO — planning** | New (spec/design) | TBD |
 
 ### Port Block Allocation (follow for all new services)
 
@@ -187,12 +189,16 @@ Each project has its own SQLite database. **Never share databases across project
 
 | Caller | Called | Endpoint | Purpose |
 |---|---|---|---|
+| **Any QI tool** | **NEXUS** | **`POST /v1/chat/completions`** | **QI LLM Hub (added 2026-07-02): OpenAI-compatible gateway. base_url `http://127.0.0.1:8010/v1`, any api_key, model = provider id or `auto`. Send `X-QI-App: <project>` for usage attribution (`GET /hub/usage`). Keys live ONLY in NEXUS `secrets/nexus.env`. LAN-only — never tunnel this.** |
+| Any | NEXUS | `GET /v1/models` | List routable hub provider ids |
 | Maia | NEXUS | `POST /synthesize` | Multi-AI answer for complex questions |
 | Maia | NEXUS | `GET /scout/digest` | Show daily AI news to users |
 | Maia | NEXUS | `GET /bench/recommend` | Auto-select best LLM per task |
 | Naya | NEXUS | `POST /synthesize` | Multi-AI reasoning |
 | Naya | FileHQ | `GET /files/search` | Personal file queries |
 | Any | NEXUS | `GET /providers` | Check which AIs are available |
+
+**Hub adoption pattern** (per tool, non-breaking): add config `llm_source: hub|direct` (or `llm_hub_enabled` bool) + `llm_hub_url`, default = current behavior; when enabled, try the hub first (`model: auto`) and fall through to the tool's existing direct path on any failure. Adopted: Maia 2026-07-02 (`system.llm_hub_enabled` in maia.db).
 
 ---
 

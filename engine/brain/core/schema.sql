@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS agents (
 CREATE TABLE IF NOT EXISTS llm_providers (
     provider_id   TEXT PRIMARY KEY,
     display_name  TEXT NOT NULL,
-    provider_type TEXT NOT NULL CHECK(provider_type IN ('ollama','openai','anthropic','nexus_relay','nomic_embed')),
+    provider_type TEXT NOT NULL CHECK(provider_type IN ('ollama','openai','anthropic','nexus_relay','nomic_embed','openai_hub')),
     base_url      TEXT NOT NULL,
     model_name    TEXT NOT NULL,
     api_key_env   TEXT,           -- env var NAME that holds the key (never the key itself)
