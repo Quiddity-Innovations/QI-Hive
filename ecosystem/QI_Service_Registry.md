@@ -636,3 +636,17 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Note** | **Repaired 2026-06-25** — the named-tunnel migration (late add 2026-06-23) left **AppParameters empty** and AppDirectory at the cloudflared default, so the service ran cloudflared with no args and registered ZERO edge connections (m2v 530 despite origin up). Params/AppDirectory/logs set via the QI_Elevate broker (`fix_m2v_service.py`). Config origin pinned to `127.0.0.1` (Gradio is IPv4-only; `localhost`→`::1` timed out). |
 | **Status** | ✅ Live — https://m2v.quiddityinnovations.com returns 200 (verified 2026-06-25) |
 | **Added** | 2026-06-23 · **Repaired** 2026-06-25 |
+
+### Claude Voice family (QI_ClaudeVoiceLine · QI_ClaudeVoiceTelegram · QI_ClaudeVoiceTunnel · QI_ClaudeVoiceControl)
+| Field | Value |
+|---|---|
+| **Project** | Claude Voice — `C:\CLAUDE\Claude Voice` (registry id `claude_voice`, port block 8720–8729) |
+| **QI_ClaudeVoiceLine** | LINE webhook bridge (text+voice) on **127.0.0.1:8721** — `python line_bot.py`, AppDir = project root, log `C:\CLAUDE\Claude Voice\LOGS\line_service.log` |
+| **QI_ClaudeVoiceTelegram** | Telegram bridge, outbound long-poll only (no port) — `python telegram_bot.py`, log `...\LOGS\telegram_service.log` |
+| **QI_ClaudeVoiceTunnel** | STATIC NAMED tunnel `qi-claudevoice` → **https://claudevoice.quiddityinnovations.com** → :8721; config `C:\QIH\engine\tunnels\configs\qi-claudevoice.yml` |
+| **QI_ClaudeVoiceControl** | Brain control API + config UI on **127.0.0.1:8720** (loopback only, NEVER tunneled). Installed **2026-07-28** via QI_Elevate broker: whitelist requires the entry script under `C:\QIH`, so it runs launcher `C:\QIH\engine\launchers\claudevoice_control_launcher.py` (chdir + runpy → `server.py`). Log `C:\QIH\logs\claudevoice_control.log` |
+| **Related tasks** | `QI_ClaudeVoiceMeeting_8AM` (meeting room :8722, daily 08:00) · `QI_ClaudeVoiceBridgeCheck` (hourly bridge health → `data/bridge_health.json`) — see `QI_Scheduled_Tasks_Registry.md` |
+| **Health** | `http://localhost:8720/health` · `http://localhost:8720/bridge/health` · `https://claudevoice.quiddityinnovations.com/health` |
+| **Start type** | all AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` |
+| **Install** | `C:\CLAUDE\Claude Voice\ClaudeVoice_Install.bat` (elevated) — or per-service via QI_Elevate broker |
+| **Added** | Line/Telegram/Tunnel 2026-06-20 · Control 2026-07-28 (registry entry backfilled 2026-07-28) |
