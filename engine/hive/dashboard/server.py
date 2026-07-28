@@ -48,9 +48,15 @@ def _write_token() -> str:
     except Exception:
         return ""
 
+# Paths exempt from the tunnel write-token guard. Theme is a cosmetic,
+# low-risk preference, so it's temporarily unlocked (2026-06-26) while the
+# token flow for it is being reworked. Revisit and re-lock when ready.
+_WRITE_GUARD_EXEMPT = {"/api/theme"}
+
 @app.middleware("http")
 async def tunnel_write_guard(request: Request, call_next):
-    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") \
+            and request.url.path not in _WRITE_GUARD_EXEMPT:
         via_tunnel = bool(request.headers.get("cf-ray") or request.headers.get("cf-connecting-ip"))
         if via_tunnel:
             tok = _write_token()
@@ -401,6 +407,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("tests",     "/tests",   "bi-bug",           "Tests"),
         ("projects",  "/projects/status", "bi-clipboard-data", "Project Status"),
         ("services",  "/services","bi-gear-wide-connected", "Services"),
+        ("ops",       "/ops",     "bi-wrench-adjustable",   "Ops"),
         ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
         ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage"),
         ("news",      "/news",    "bi-newspaper",     "Headlines"),
@@ -2645,7 +2652,13 @@ def render_launcher(via_tunnel: bool = False) -> str:
 #qi-lp .status.up{background:var(--good);}
 #qi-lp .status.down{background:var(--bad);}
 #qi-lp .status.idle{background:var(--idle);}
-#qi-lp #qilp-content.view-columns{display:flex;gap:18px;align-items:flex-start;overflow-x:auto;padding-bottom:20px;}
+/* Columns view = one tall flex row. Cap its height to the viewport so it
+   scrolls INSIDE the box; this keeps the horizontal scrollbar pinned at the
+   bottom of the visible area instead of hiding below the tallest column
+   (2026-06-26). overflow-x:scroll forces the bar to always show. */
+#qi-lp #qilp-content.view-columns{display:flex;gap:18px;align-items:flex-start;
+  overflow-x:scroll;overflow-y:auto;max-height:calc(100vh - 210px);
+  padding-bottom:6px;scrollbar-gutter:stable;}
 #qi-lp #qilp-content.view-columns .tier{flex:0 0 320px;margin-bottom:0;}
 #qi-lp #qilp-content.view-columns .grid{grid-template-columns:1fr;}
 #qi-lp #qilp-content.view-columns .card{min-height:0;}
@@ -7968,6 +7981,740 @@ async def brain_proxy(path: str, request: Request):
         request.headers.get("content-type"),
     )
     return Response(content=raw, status_code=status, media_type=ctype)
+
+
+# ── Ops Control Panel (added 2026-07-27) ─────────────────────────────────────
+# Run the manual maintenance scripts (supervisor, snapshots, self-audit, service
+# restarts, ...) from the dashboard instead of a terminal. Actions run in a
+# background thread; the page polls /api/ops/status for live state + output.
+# POSTs are covered by the tunnel_write_guard middleware (token required via
+# tunnel; localhost/LAN unaffected).
+
+import threading as _ops_threading
+
+OPS_HISTORY_FILE = _PROJECT_DIR / "data" / "ops_history.json"
+_OPS_PY = sys.executable
+
+# Ordered, safe (read-only / diagnostic) actions for the one-click sequence.
+# Service restarts and apply-mode actions are deliberately NOT in it.
+OPS_SEQUENCE = ["supervisor", "snapshots", "self_audit", "voice_bridge_health", "headroom_status"]
+
+OPS_ACTIONS = {
+    "run_sequence": {
+        "label": "Run Full Maintenance Sequence",
+        "desc":  "Runs the safe diagnostics one at a time, in order: Supervisor → Brain Snapshots → Self-Audit → Voice Bridge Health → Headroom Status. Each step finishes before the next starts; the output shows a per-step log. Schedulable like any card (e.g. daily 06:00).",
+        "icon":  "bi-collection-play", "group": "Monitoring", "confirm": True, "timeout": 4000,
+        "special": "sequence",
+        "cmd":   [],  # handled internally
+    },
+    "supervisor": {
+        "label": "Run Supervisor",
+        "desc":  "Full ecosystem drift scan — regenerates C:\\CLAUDE\\DASHBOARD.md, report.json and the Hive status feed. Takes a few minutes (walks every project, services + scheduled tasks).",
+        "icon":  "bi-radar", "group": "Monitoring", "confirm": False, "timeout": 1800,
+        "cmd":   [_OPS_PY, r"C:\CLAUDE\supervisor\supervisor.py"],
+    },
+    "snapshots": {
+        "label": "Refresh Brain Snapshots",
+        "desc":  "Runs gen_latest.py — rebuilds C:\\CLAUDE\\status.json and Session Summaries\\LATEST.md from QI Brain (:9011, falls back to :9010).",
+        "icon":  "bi-arrow-repeat", "group": "Monitoring", "confirm": False, "timeout": 120,
+        "cmd":   [_OPS_PY, r"C:\CLAUDE\gen_latest.py"],
+    },
+    "self_audit": {
+        "label": "Self-Audit (report only)",
+        "desc":  "qi_self_audit.py without --apply-safe — reports orphaned processes, stale worktrees, config bloat. Read-only.",
+        "icon":  "bi-clipboard-check", "group": "Monitoring", "confirm": False, "timeout": 900,
+        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\qi_self_audit.py"],
+    },
+    "self_audit_apply": {
+        "label": "Self-Audit + Safe Fixes",
+        "desc":  "qi_self_audit.py --apply-safe — also auto-fixes the safe items (kills orphans, prunes clean worktrees, trims .claude.json bloat).",
+        "icon":  "bi-tools", "group": "Maintenance", "confirm": True, "timeout": 900,
+        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\qi_self_audit.py", "--apply-safe"],
+    },
+    "lock_scan": {
+        "label": "Claude Lock Scan",
+        "desc":  "claude_restart_guard.ps1 -Scan — read-only report of Claude/MCP processes holding locks on the install. Does not kill anything.",
+        "icon":  "bi-search", "group": "Maintenance", "confirm": False, "timeout": 300,
+        "cmd":   ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                  "-File", r"C:\CLAUDE\Tools\claude_restart_guard.ps1", "-Scan"],
+    },
+    "maia_restart": {
+        "label": "Restart Maia Services",
+        "desc":  "maia_restart_services.py — bounces QI MaiaTunnel + MaiaBot via sc.exe (needs the one-time service-rights grant; no admin prompt).",
+        "icon":  "bi-bootstrap-reboot", "group": "Services", "confirm": True, "timeout": 300,
+        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\maia_restart_services.py"],
+    },
+    "voice_bridge_health": {
+        "label": "Claude Voice Bridge Health",
+        "desc":  "bridge_health.py — checks the Claude Voice services/bridge and writes data\\bridge_health.json.",
+        "icon":  "bi-mic", "group": "Services", "confirm": False, "timeout": 300,
+        "cmd":   [_OPS_PY, r"C:\CLAUDE\Claude Voice\bridge_health.py"],
+        "cwd":   r"C:\CLAUDE\Claude Voice",
+    },
+    "tasuke_test": {
+        "label": "Test Tasuke Notification",
+        "desc":  "Sends a test push through the Tasuke LINE channel. NOTE: broadcast — every follower of the Tasuke OA receives it.",
+        "icon":  "bi-bell", "group": "Services", "confirm": True, "timeout": 60,
+        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\qi_tasuke_notify.py",
+                  "Test notification from the QI Hive Ops panel."],
+    },
+    "restart_dashboard": {
+        "label": "Restart Dashboard (this app)",
+        "desc":  "Restarts QI_Dashboard by exiting the process — NSSM auto-restarts it. The page goes dark for ~10–20s; reload the browser after. Use after server.py updates.",
+        "icon":  "bi-arrow-clockwise", "group": "Services", "confirm": True, "timeout": 30,
+        "special": "self_restart",
+        "cmd":   [],  # handled internally
+    },
+    "restart_brain": {
+        "label": "Restart Brain API",
+        "desc":  "Bounces QI_BrainAPI (:9011) via sc.exe. Needs the one-time service-rights grant (same as Maia restart); agents lose Brain briefly.",
+        "icon":  "bi-cpu", "group": "Services", "confirm": True, "timeout": 120,
+        "cmd":   ["powershell.exe", "-NoProfile", "-Command",
+                  "sc.exe stop QI_BrainAPI; Start-Sleep 4; sc.exe start QI_BrainAPI; Start-Sleep 3; "
+                  "(Get-Service QI_BrainAPI).Status"],
+    },
+    "headroom_status": {
+        "label": "Headroom Status",
+        "desc":  "Is the compression proxy alive on :9020? Runs doctor + a port check. (Doctor's own 'proxy' line checks its default 8787 — trust the :9020 port check line.)",
+        "icon":  "bi-heart-pulse", "group": "Headroom", "confirm": False, "timeout": 120,
+        "cmd":   ["powershell.exe", "-NoProfile", "-Command",
+                  "$p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue; "
+                  "if ($p) { Write-Output ':9020 proxy: LISTENING (pid ' + ($p | Select-Object -First 1 -ExpandProperty OwningProcess) + ')' } "
+                  "else { Write-Output ':9020 proxy: NOT RUNNING' }; "
+                  "& 'C:\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' doctor"],
+    },
+    "headroom_proxy_start": {
+        "label": "Start Headroom Proxy",
+        "desc":  "Launches the compression proxy on :9020 in front of Ollama (:11434) from the isolated venv. Detached — keeps running after this job finishes.",
+        "icon":  "bi-play-circle", "group": "Headroom", "confirm": False, "timeout": 60,
+        "cmd":   ["powershell.exe", "-NoProfile", "-Command",
+                  "$env:OPENAI_API_BASE='http://localhost:11434/v1'; "
+                  "Start-Process -FilePath 'C:\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' "
+                  "-ArgumentList 'proxy','--port','9020' -WindowStyle Hidden; "
+                  "Start-Sleep 3; "
+                  "$p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue; "
+                  "if ($p) { Write-Output 'Proxy started on :9020' } else { Write-Output 'Launch attempted - port not up yet, run Headroom Status to re-check' }"],
+    },
+    "headroom_proxy_stop": {
+        "label": "Stop Headroom Proxy",
+        "desc":  "Kills the headroom.exe proxy process. Clients pointed at :9020 will fail until restarted.",
+        "icon":  "bi-stop-circle", "group": "Headroom", "confirm": True, "timeout": 60,
+        "cmd":   ["powershell.exe", "-NoProfile", "-Command",
+                  "taskkill /IM headroom.exe /F 2>&1; Write-Output 'Stopped (or was not running).'"],
+    },
+}
+
+_ops_lock = _ops_threading.Lock()
+_ops_state: dict = {}   # action_id -> {running, started, finished, rc, output}
+
+
+def _ops_load_history() -> dict:
+    if OPS_HISTORY_FILE.exists():
+        try:
+            return json.loads(OPS_HISTORY_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _ops_save_history():
+    try:
+        keep = {k: {kk: vv for kk, vv in v.items() if kk != "running"}
+                for k, v in _ops_state.items() if not v.get("running")}
+        merged = _ops_load_history()
+        merged.update(keep)
+        OPS_HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        OPS_HISTORY_FILE.write_text(json.dumps(merged, indent=2), encoding="utf-8")
+    except Exception:
+        logger.exception("ops: failed to persist history")
+
+
+# Seed state from disk so "last run" survives dashboard restarts
+_ops_state.update(_ops_load_history())
+
+
+def _ops_worker(action_id: str):
+    action = _ops_resolve(action_id)
+    if action is None:
+        return
+    if action.get("special") == "sequence":
+        import time as _time
+        total = len(OPS_SEQUENCE)
+        lines, overall = [], 0
+        for i, sub_id in enumerate(OPS_SEQUENCE, 1):
+            sub = _ops_resolve(sub_id)
+            if sub is None:
+                lines.append(f"[{i}/{total}] {sub_id}: SKIPPED (unknown action)")
+                continue
+            label = sub.get("label", sub_id)
+            lines.append(f"[{i}/{total}] {label}: running…")
+            with _ops_lock:
+                _ops_state[action_id]["output"] = "\n".join(lines)
+            if not _ops_start(sub_id):
+                lines[-1] = f"[{i}/{total}] {label}: SKIPPED (already running)"
+                continue
+            t0 = _time.time()
+            limit = sub.get("timeout", 600) + 90
+            while _time.time() - t0 < limit:
+                with _ops_lock:
+                    if not _ops_state.get(sub_id, {}).get("running"):
+                        break
+                _time.sleep(2)
+            with _ops_lock:
+                rc = _ops_state.get(sub_id, {}).get("rc")
+            dur = int(_time.time() - t0)
+            if rc == 0:
+                lines[-1] = f"[{i}/{total}] {label}: OK ({dur}s)"
+            else:
+                overall = 1
+                lines[-1] = f"[{i}/{total}] {label}: FAIL rc={rc} ({dur}s) — see its card's output"
+            with _ops_lock:
+                _ops_state[action_id]["output"] = "\n".join(lines)
+        lines.append("")
+        lines.append("Sequence complete: " + ("all steps OK ✓" if overall == 0 else "one or more steps FAILED ✗"))
+        with _ops_lock:
+            _ops_state[action_id].update({
+                "running": False,
+                "finished": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "rc": overall,
+                "output": "\n".join(lines),
+            })
+            _ops_save_history()
+        return
+    if action.get("special") == "self_restart":
+        # Exit the process; NSSM's restart policy relaunches QI_Dashboard.
+        import os as _os
+        with _ops_lock:
+            _ops_state[action_id].update({
+                "running": False,
+                "finished": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "rc": 0,
+                "output": "Dashboard exiting — NSSM will auto-restart it. Reload the page in ~15s.",
+            })
+            _ops_save_history()
+        _ops_threading.Timer(1.5, lambda: _os._exit(1)).start()
+        return
+    try:
+        proc = subprocess.run(
+            action["cmd"], cwd=action.get("cwd"),
+            capture_output=True, text=True, timeout=action.get("timeout", 600),
+            encoding="utf-8", errors="replace",
+        )
+        rc, output = proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+    except subprocess.TimeoutExpired:
+        rc, output = -1, f"TIMED OUT after {action.get('timeout', 600)}s"
+    except Exception as exc:
+        rc, output = -1, f"launcher error: {exc}"
+    with _ops_lock:
+        _ops_state[action_id].update({
+            "running": False,
+            "finished": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "rc": rc,
+            "output": output[-8000:],
+        })
+        _ops_save_history()
+
+
+# ── Dynamic per-service restart actions ──────────────────────────────────────
+# Any QI_* Windows service gets a virtual action id "restart_svc_<ServiceName>".
+# The service list is discovered live (cached 60s) so new services appear
+# automatically. Requires the one-time service-rights grant for no-admin sc.exe.
+
+_qi_svc_cache = {"services": [], "ts": 0.0}   # [{"name":..., "status":...}]
+
+
+def _qi_services_detail() -> list[dict]:
+    import time as _time
+    if _time.time() - _qi_svc_cache["ts"] < 30 and _qi_svc_cache["services"]:
+        return _qi_svc_cache["services"]
+    try:
+        proc = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command",
+             "Get-Service QI_* | ForEach-Object { $_.Name + '|' + $_.Status }"],
+            capture_output=True, text=True, timeout=30, encoding="utf-8", errors="replace")
+        services = []
+        for ln in (proc.stdout or "").splitlines():
+            ln = ln.strip()
+            if ln.startswith("QI_") and "|" in ln:
+                name, status = ln.split("|", 1)
+                services.append({"name": name.strip(), "status": status.strip()})
+        services.sort(key=lambda s: s["name"])
+    except Exception:
+        services = []
+    if services:
+        _qi_svc_cache.update({"services": services, "ts": _time.time()})
+    return services
+
+
+def _qi_service_names() -> list[str]:
+    return [s["name"] for s in _qi_services_detail()]
+
+
+import re as _ops_re
+
+_QI_APP_FAMILIES = [  # ordered prefix map: service stem -> app label
+    ("ClaudeVoice", "Claude Voice"), ("AutoPDF", "AutoPDF"), ("Brain", "QI Brain"),
+    ("Dashboard", "QI Hive"), ("Hive", "QI Hive"), ("Caddy", "Infrastructure"),
+    ("Elevate", "Infrastructure"), ("CogniBase", "CogniBase"), ("CypherMiner", "CypherMiner"),
+    ("Gamez", "Gamez (WC2026)"), ("Kaze", "OpenClaw / Kaze"), ("LotteryWiz", "LotteryWiz"),
+    ("M2V", "M2V"), ("Maia", "Maia"), ("MapSnap", "MapSnap"), ("MQ", "MQ"),
+    ("Naya", "Naya"), ("NEXUS", "NEXUS"), ("RetirementAnalyzer", "RetirementAnalyzer"),
+    ("TubeScout", "TubeScout"), ("AvatarStudio", "AvatarStudio"), ("Headroom", "Headroom"),
+]
+
+
+def _qi_app_for_service(name: str) -> str:
+    stem = name[3:] if name.startswith("QI_") else name
+    for prefix, label in _QI_APP_FAMILIES:
+        if stem.lower().startswith(prefix.lower()):
+            return label
+    # fallback: first CamelCase token
+    m = _ops_re.match(r"([A-Z][a-z0-9]+)", stem)
+    return m.group(1) if m else stem
+
+
+def _ops_resolve(action_id: str) -> dict | None:
+    """Return the action definition for a static or dynamic action id."""
+    if action_id in OPS_ACTIONS:
+        return OPS_ACTIONS[action_id]
+    if action_id.startswith("restart_svc_"):
+        svc = action_id[len("restart_svc_"):]
+        if svc in _qi_service_names():   # validate against real services (no injection)
+            return {
+                "label": f"Restart {svc}", "group": "Services", "confirm": True,
+                "timeout": 180, "icon": "bi-bootstrap-reboot",
+                "desc": f"sc.exe stop/start {svc}",
+                "cmd": ["powershell.exe", "-NoProfile", "-Command",
+                        f"sc.exe stop {svc}; Start-Sleep 4; sc.exe start {svc}; Start-Sleep 3; "
+                        f"(Get-Service {svc}).Status"],
+            }
+    return None
+
+
+def _ops_start(action_id: str) -> bool:
+    """Begin an action if not already running. Returns True if launched."""
+    if _ops_resolve(action_id) is None:
+        return False
+    with _ops_lock:
+        if _ops_state.get(action_id, {}).get("running"):
+            return False
+        _ops_state[action_id] = {
+            "running": True,
+            "started": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "finished": None, "rc": None, "output": "",
+        }
+    _ops_threading.Thread(target=_ops_worker, args=(action_id,), daemon=True).start()
+    return True
+
+
+@app.post("/api/ops/run/{action_id}")
+def api_ops_run(action_id: str):
+    if _ops_resolve(action_id) is None:
+        raise HTTPException(404, f"Unknown ops action: {action_id}")
+    if not _ops_start(action_id):
+        return JSONResponse({"ok": False, "error": "already running"}, status_code=409)
+    return JSONResponse({"ok": True, "action": action_id, "started": True})
+
+
+@app.get("/api/ops/status")
+def api_ops_status():
+    with _ops_lock:
+        return JSONResponse({"actions": _ops_state, "schedules": _ops_schedules})
+
+
+# ── Ops scheduling ────────────────────────────────────────────────────────────
+# Each action can run on a schedule: every N hours, or daily at HH:MM.
+# Schedules persist in data/ops_schedules.json and are executed by a
+# background thread inside this (24/7 NSSM) dashboard process.
+
+OPS_SCHEDULES_FILE = _PROJECT_DIR / "data" / "ops_schedules.json"
+_ops_schedules: dict = {}   # action_id -> {mode, every_minutes?|at?, last_auto_run?}
+
+
+def _ops_load_schedules():
+    global _ops_schedules
+    if OPS_SCHEDULES_FILE.exists():
+        try:
+            _ops_schedules = json.loads(OPS_SCHEDULES_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            _ops_schedules = {}
+
+
+def _ops_save_schedules():
+    try:
+        OPS_SCHEDULES_FILE.parent.mkdir(parents=True, exist_ok=True)
+        OPS_SCHEDULES_FILE.write_text(json.dumps(_ops_schedules, indent=2), encoding="utf-8")
+    except Exception:
+        logger.exception("ops: failed to persist schedules")
+
+
+_ops_load_schedules()
+
+
+def _ops_sched_describe(s: dict) -> str:
+    if not s or s.get("mode") == "off":
+        return ""
+    if s.get("mode") == "interval":
+        h = s.get("every_minutes", 0) / 60
+        return f"every {h:g}h"
+    if s.get("mode") == "daily":
+        return f"daily at {s.get('at', '?')}"
+    return ""
+
+
+def _ops_sched_due(action_id: str, s: dict, now: datetime) -> bool:
+    last = s.get("last_auto_run")
+    last_dt = None
+    if last:
+        try:
+            last_dt = datetime.strptime(last, "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            last_dt = None
+    if s.get("mode") == "interval":
+        mins = float(s.get("every_minutes", 0))
+        if mins <= 0:
+            return False
+        return last_dt is None or (now - last_dt).total_seconds() >= mins * 60
+    if s.get("mode") == "daily":
+        at = s.get("at", "")
+        try:
+            hh, mm = at.split(":")
+            due_today = now.replace(hour=int(hh), minute=int(mm), second=0, microsecond=0)
+        except Exception:
+            return False
+        if now < due_today:
+            return False
+        return last_dt is None or last_dt < due_today
+    return False
+
+
+def _ops_scheduler_loop():
+    while True:
+        try:
+            now = datetime.now()
+            for aid, s in list(_ops_schedules.items()):
+                if s.get("mode") in (None, "off") or _ops_resolve(aid) is None:
+                    continue
+                if _ops_sched_due(aid, s, now):
+                    if _ops_start(aid):
+                        logger.info("ops scheduler: launched %s (%s)", aid, _ops_sched_describe(s))
+                    # stamp even if already running, so we don't re-fire every 30s
+                    s["last_auto_run"] = now.strftime("%Y-%m-%d %H:%M:%S")
+                    _ops_save_schedules()
+        except Exception:
+            logger.exception("ops scheduler loop error")
+        import time as _time
+        _time.sleep(30)
+
+
+_ops_threading.Thread(target=_ops_scheduler_loop, daemon=True).start()
+
+
+class OpsScheduleBody(BaseModel):
+    mode: str            # "off" | "interval" | "daily"
+    value: str = ""      # interval: hours (e.g. "6" or "0.5"); daily: "HH:MM"
+
+
+@app.post("/api/ops/schedule/{action_id}")
+def api_ops_set_schedule(action_id: str, body: OpsScheduleBody):
+    if _ops_resolve(action_id) is None:
+        raise HTTPException(404, f"Unknown ops action: {action_id}")
+    mode = body.mode.strip().lower()
+    if mode == "off":
+        _ops_schedules.pop(action_id, None)
+        _ops_save_schedules()
+        return JSONResponse({"ok": True, "action": action_id, "schedule": "off"})
+    if mode == "interval":
+        try:
+            hours = float(body.value)
+            assert 0.1 <= hours <= 168
+        except Exception:
+            raise HTTPException(400, "interval value must be hours between 0.1 and 168 (e.g. 6)")
+        _ops_schedules[action_id] = {"mode": "interval", "every_minutes": hours * 60}
+    elif mode == "daily":
+        try:
+            hh, mm = body.value.strip().split(":")
+            assert 0 <= int(hh) <= 23 and 0 <= int(mm) <= 59
+        except Exception:
+            raise HTTPException(400, "daily value must be HH:MM 24h (e.g. 07:30)")
+        _ops_schedules[action_id] = {"mode": "daily", "at": f"{int(hh):02d}:{int(mm):02d}"}
+    else:
+        raise HTTPException(400, "mode must be off | interval | daily")
+    _ops_save_schedules()
+    return JSONResponse({"ok": True, "action": action_id,
+                         "schedule": _ops_sched_describe(_ops_schedules[action_id])})
+
+
+def render_ops() -> str:
+    groups: dict = {}
+    for aid, a in OPS_ACTIONS.items():
+        groups.setdefault(a["group"], []).append((aid, a))
+
+    cards_html = ""
+    for group_name in ("Monitoring", "Maintenance", "Services", "Headroom"):
+        items = groups.get(group_name, [])
+        if not items:
+            continue
+        row = ""
+        for aid, a in items:
+            st = _ops_state.get(aid, {})
+            sched = _ops_schedules.get(aid, {})
+            if sched.get("mode") == "interval":
+                sched_value = f"{sched.get('every_minutes', 0) / 60:g}"
+            elif sched.get("mode") == "daily":
+                sched_value = sched.get("at", "")
+            else:
+                sched_value = ""
+            sched_desc = _ops_sched_describe(sched)
+            if sched_desc and sched.get("last_auto_run"):
+                sched_desc += f" · last auto-run {sched['last_auto_run']}"
+            if st.get("running"):
+                badge = '<span class="badge text-bg-info">running…</span>'
+            elif st.get("rc") is None:
+                badge = '<span class="badge text-bg-secondary">never run</span>'
+            elif st.get("rc") == 0:
+                badge = f'<span class="badge text-bg-success">OK · {st.get("finished","")}</span>'
+            else:
+                badge = f'<span class="badge text-bg-danger">exit {st.get("rc")} · {st.get("finished","")}</span>'
+            confirm_attr = "true" if a.get("confirm") else "false"
+            row += f"""
+            <div class="col-md-6 col-xl-4">
+              <div class="card h-100" id="card-{aid}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <span><i class="bi {a['icon']} me-2"></i><strong>{a['label']}</strong></span>
+                  <span id="badge-{aid}">{badge}</span>
+                </div>
+                <div class="card-body"><p class="mb-0 text-muted" style="font-size:.85rem">{a['desc']}</p></div>
+                <div class="card-footer d-flex gap-2">
+                  <button class="btn btn-sm btn-primary" id="btn-{aid}"
+                          onclick="opsRun('{aid}', {confirm_attr})">
+                    <i class="bi bi-play-fill me-1"></i>Run
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="opsToggleOut('{aid}')">
+                    <i class="bi bi-terminal me-1"></i>Output
+                  </button>
+                </div>
+                <div class="card-footer d-flex gap-1 align-items-center flex-wrap" style="font-size:.78rem">
+                  <i class="bi bi-alarm text-muted"></i>
+                  <select id="sch-mode-{aid}" class="form-select form-select-sm" style="width:auto"
+                          onchange="opsSchedHint('{aid}')">
+                    <option value="off" {"selected" if sched.get("mode") in (None, "off") else ""}>No schedule</option>
+                    <option value="interval" {"selected" if sched.get("mode") == "interval" else ""}>Every N hours</option>
+                    <option value="daily" {"selected" if sched.get("mode") == "daily" else ""}>Daily at</option>
+                  </select>
+                  <input id="sch-val-{aid}" class="form-control form-control-sm" style="width:80px"
+                         placeholder="6 / 07:30" value="{sched_value}">
+                  <button class="btn btn-sm btn-outline-primary" onclick="opsSaveSched('{aid}')">Set</button>
+                  <span id="sch-info-{aid}" class="text-info ms-1">{sched_desc}</span>
+                </div>
+                <pre id="out-{aid}" class="m-0 p-2 bg-black text-success"
+                     style="display:none;max-height:280px;overflow:auto;font-size:.72rem;border-radius:0 0 6px 6px">{html.escape(st.get("output") or "(no output yet)")}</pre>
+              </div>
+            </div>"""
+        cards_html += f"""
+        <h5 class="mt-3 mb-2 text-muted text-uppercase" style="font-size:.8rem;letter-spacing:.08em">{group_name}</h5>
+        <div class="row g-3">{row}</div>"""
+
+    # ── Service Control: every QI_* service, grouped by app ──────────────────
+    services = _qi_services_detail()
+    apps: dict = {}
+    for s in services:
+        apps.setdefault(_qi_app_for_service(s["name"]), []).append(s)
+
+    svc_html = ""
+    if services:
+        app_blocks = ""
+        for app_name in sorted(apps):
+            rows = ""
+            for s in apps[app_name]:
+                name = s["name"]
+                running = s["status"].lower() == "running"
+                dot = "text-success" if running else "text-danger"
+                status_lbl = s["status"]
+                aid = f"restart_svc_{name}"
+                sched = _ops_schedules.get(aid, {})
+                sd = _ops_sched_describe(sched)
+                rows += f"""
+                <tr>
+                  <td style="width:1%"><i class="bi bi-circle-fill {dot}" style="font-size:.6rem"></i></td>
+                  <td><code>{name}</code></td>
+                  <td><small class="text-muted">{status_lbl}</small></td>
+                  <td style="width:1%">
+                    <button class="btn btn-xs btn-sm btn-outline-warning py-0" onclick="svcRestart('{name}')">
+                      <i class="bi bi-bootstrap-reboot"></i> Restart
+                    </button>
+                  </td>
+                  <td><span id="svcb-{name}" class="badge text-bg-secondary" style="font-size:.65rem">{sd or '—'}</span></td>
+                  <td style="width:1%">
+                    <button class="btn btn-sm btn-outline-secondary py-0" style="font-size:.7rem"
+                            onclick="svcSchedPrompt('{name}')"><i class="bi bi-alarm"></i></button>
+                  </td>
+                </tr>"""
+            app_blocks += f"""
+            <div class="col-md-6 col-xxl-4">
+              <div class="card h-100">
+                <div class="card-header py-2"><strong>{app_name}</strong>
+                  <span class="badge text-bg-secondary float-end">{len(apps[app_name])}</span></div>
+                <div class="card-body p-0">
+                  <table class="table table-sm mb-0" style="font-size:.8rem"><tbody>{rows}</tbody></table>
+                </div>
+              </div>
+            </div>"""
+        svc_html = f"""
+        <h5 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:.8rem;letter-spacing:.08em">
+          Service Control — all QI apps</h5>
+        <div class="callout callout-warning py-2 mb-2" style="font-size:.8rem">
+          Restarting a service interrupts its users (e.g. Maia bot drops LINE/Telegram briefly).
+          The alarm button schedules a recurring restart for that service. Statuses refresh on page reload.
+        </div>
+        <div class="row g-3">{app_blocks}</div>"""
+    else:
+        svc_html = """
+        <h5 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:.8rem;letter-spacing:.08em">
+          Service Control — all QI apps</h5>
+        <div class="alert alert-secondary">No QI_* services detected (service query failed or none installed).</div>"""
+
+    return f"""
+    <div class="callout callout-info mb-3">
+      <i class="bi bi-info-circle me-2"></i>Maintenance scripts run here in the background —
+      buttons stay disabled while a job runs, and the badge + output update live.
+      Actions marked with a confirmation touch services or make changes.
+    </div>
+    {cards_html}
+    {svc_html}
+
+    <script>
+    const OPS_IDS = {json.dumps(list(OPS_ACTIONS.keys()))};
+    let opsPoll = null;
+
+    function opsRun(id, needsConfirm) {{
+      if (needsConfirm && !confirm('Run "' + id + '"? This action makes changes / touches services.')) return;
+      document.getElementById('btn-' + id).disabled = true;
+      document.getElementById('badge-' + id).innerHTML = '<span class="badge text-bg-info">starting…</span>';
+      fetch('/api/ops/run/' + id, {{method: 'POST'}})
+        .then(r => r.json())
+        .then(() => {{ if (!opsPoll) opsPoll = setInterval(opsRefresh, 2000); }})
+        .catch(err => {{
+          document.getElementById('badge-' + id).innerHTML = '<span class="badge text-bg-danger">launch failed</span>';
+          document.getElementById('btn-' + id).disabled = false;
+          console.log(err);
+        }});
+    }}
+
+    function opsToggleOut(id) {{
+      const el = document.getElementById('out-' + id);
+      el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+    }}
+
+    function opsSchedHint(id) {{
+      const mode = document.getElementById('sch-mode-' + id).value;
+      const inp  = document.getElementById('sch-val-' + id);
+      inp.placeholder = (mode === 'daily') ? '07:30' : (mode === 'interval') ? '6' : '';
+      inp.style.display = (mode === 'off') ? 'none' : '';
+    }}
+
+    function svcRestart(name) {{
+      if (!confirm('Restart ' + name + '? Its users are interrupted briefly.')) return;
+      const b = document.getElementById('svcb-' + name);
+      if (b) {{ b.textContent = 'restarting…'; b.className = 'badge text-bg-info'; }}
+      fetch('/api/ops/run/restart_svc_' + name, {{method: 'POST'}})
+        .then(r => r.json())
+        .then(() => {{ if (!opsPoll) opsPoll = setInterval(opsRefresh, 2000); }})
+        .catch(err => {{ if (b) {{ b.textContent = 'launch failed'; b.className = 'badge text-bg-danger'; }} }});
+    }}
+
+    function svcSchedPrompt(name) {{
+      const v = prompt('Schedule recurring restart for ' + name + ':\\n' +
+                       '  - hours between restarts (e.g. 24 or 6)\\n' +
+                       '  - or a daily time HH:MM (e.g. 03:30)\\n' +
+                       '  - or "off" to clear', '');
+      if (v === null) return;
+      const val = v.trim();
+      const mode = (val.toLowerCase() === 'off') ? 'off' : (val.includes(':') ? 'daily' : 'interval');
+      fetch('/api/ops/schedule/restart_svc_' + name, {{
+        method: 'POST', headers: {{'Content-Type': 'application/json'}},
+        body: JSON.stringify({{mode: mode, value: val}})
+      }})
+        .then(r => r.json().then(d => ({{ok: r.ok, d: d}})))
+        .then(({{ok, d}}) => {{
+          const b = document.getElementById('svcb-' + name);
+          if (b) {{
+            b.textContent = ok ? (d.schedule === 'off' ? '—' : d.schedule) : 'invalid';
+            b.className = ok ? 'badge text-bg-success' : 'badge text-bg-danger';
+          }}
+        }});
+    }}
+
+    function opsSaveSched(id) {{
+      const mode  = document.getElementById('sch-mode-' + id).value;
+      const value = document.getElementById('sch-val-' + id).value.trim();
+      const info  = document.getElementById('sch-info-' + id);
+      info.textContent = 'saving…';
+      fetch('/api/ops/schedule/' + id, {{
+        method: 'POST',
+        headers: {{'Content-Type': 'application/json'}},
+        body: JSON.stringify({{mode: mode, value: value}})
+      }})
+        .then(r => r.json().then(d => ({{ok: r.ok, d: d}})))
+        .then(({{ok, d}}) => {{
+          info.textContent = ok ? (d.schedule === 'off' ? 'schedule cleared' : '✓ ' + d.schedule)
+                                : '✗ ' + (d.detail || 'invalid value');
+          info.className = ok ? 'text-success ms-1' : 'text-danger ms-1';
+        }})
+        .catch(err => {{ info.textContent = '✗ ' + err; info.className = 'text-danger ms-1'; }});
+    }}
+
+    function opsRefresh() {{
+      fetch('/api/ops/status').then(r => r.json()).then(data => {{
+        let anyRunning = false;
+        Object.keys(data.actions || {{}}).forEach(id => {{
+          const st = data.actions[id];
+          if (!st) return;
+          if (st.running) anyRunning = true;
+          if (id.startsWith('restart_svc_')) {{
+            // dynamic service-restart rows
+            const b = document.getElementById('svcb-' + id.substring('restart_svc_'.length));
+            if (b) {{
+              if (st.running) {{ b.textContent = 'restarting…'; b.className = 'badge text-bg-info'; }}
+              else if (st.rc === 0) {{ b.textContent = 'restarted ' + (st.finished || ''); b.className = 'badge text-bg-success'; }}
+              else if (st.rc !== null) {{ b.textContent = 'failed (exit ' + st.rc + ')'; b.className = 'badge text-bg-danger'; }}
+            }}
+            return;
+          }}
+          const badge = document.getElementById('badge-' + id);
+          const btn   = document.getElementById('btn-' + id);
+          const out   = document.getElementById('out-' + id);
+          if (!badge || !btn) return;
+          if (st.running) {{
+            badge.innerHTML = '<span class="badge text-bg-info">running… (started ' + st.started + ')</span>';
+            btn.disabled = true;
+          }} else if (st.rc === 0) {{
+            badge.innerHTML = '<span class="badge text-bg-success">OK · ' + (st.finished || '') + '</span>';
+            btn.disabled = false;
+          }} else if (st.rc !== null && st.rc !== undefined) {{
+            badge.innerHTML = '<span class="badge text-bg-danger">exit ' + st.rc + ' · ' + (st.finished || '') + '</span>';
+            btn.disabled = false;
+          }}
+          if (out && st.output) out.textContent = st.output;
+        }});
+        if (!anyRunning && opsPoll) {{ clearInterval(opsPoll); opsPoll = null; }}
+      }});
+    }}
+
+    // one refresh on load to sync state, and keep polling if something is mid-run
+    opsRefresh();
+    setTimeout(() => {{
+      fetch('/api/ops/status').then(r => r.json()).then(data => {{
+        const running = Object.values(data.actions || {{}}).some(s => s.running);
+        if (running && !opsPoll) opsPoll = setInterval(opsRefresh, 2000);
+      }});
+    }}, 500);
+    </script>"""
+
+
+@app.get("/ops", response_class=HTMLResponse)
+def ops_page():
+    return base_layout("Ops Control Panel", render_ops(), "ops")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
