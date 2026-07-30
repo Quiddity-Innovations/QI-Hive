@@ -388,3 +388,15 @@ test request — use both to confirm independently of your own logs.
 ---
 
 *This is a generalized extraction of a working QI (Quiddity Innovations) implementation. Platform-specific names, account IDs, and paths have been replaced with config-driven placeholders — see `config.env.example`.*
+
+
+---
+
+## Clean-room certification & teardown (2026-07-30)
+
+This kit was certified by a **clean-room deployment**: a dummy bot stack (prefix `kittest`) was deployed using ONLY the kit's files against a real AWS account, passed all three verification tests (forged signature → 403, valid signature → 200, message received from the queue), and was then fully removed with `teardown.py`.
+
+**QA findings folded into this kit:**
+1. **ROLE_NAME must match your CLI user's scoped role policy.** If your IAM user's role-management permission is scoped to a prefix (e.g. `Resource: role/mybot-*` — the recommended setup from Part 1), then `ROLE_NAME` in config.env MUST start with that prefix, or `deploy.py` fails with AccessDenied at role creation.
+2. **Teardown:** `python teardown.py` removes the Lambda, role (+ inline policies), queue, and SSM secret in dependency order, reading the same config.env. It intentionally leaves the IAM user, budget, and account-level settings alone. Note the role must lose its inline policies before it can be deleted — teardown.py handles the ordering.
+3. `deploy.py` creates the queue if missing (verified) — no separate queue step is needed.

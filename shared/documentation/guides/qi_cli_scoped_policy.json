@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "QIProgramServices",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:*", "sqs:*", "ssm:*", "dynamodb:*", "logs:*",
+        "cloudwatch:*", "events:*", "sns:*", "s3:*", "budgets:*",
+        "sts:GetCallerIdentity", "kms:Decrypt", "kms:Encrypt",
+        "kms:GenerateDataKey", "kms:DescribeKey"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ReadOwnIam",
+      "Effect": "Allow",
+      "Action": ["iam:GetUser", "iam:ListAccessKeys", "iam:ListUserPolicies",
+                 "iam:GetUserPolicy", "iam:ListAttachedUserPolicies"],
+      "Resource": "arn:aws:iam::103140669477:user/qi-claude-cli"
+    }
+  ]
+}

@@ -37,7 +37,7 @@ Mark each ☐ as we review together; corrections get applied to the doc on the s
 ## Session E — The universal kit (shareable product, v0.1)
 - ☐ [universal/README.md](universal/README.md) + [universal/GUIDE.md](universal/GUIDE.md) — neutral guide quality check
 - ☐ [universal/config.env.example](universal/config.env.example) — is every parameter there?
-- ☐ universal code files (lambda_function.py, deploy.py, queue_drainer.py, Dockerfile, compose, grant bat + policy template)
+- ☐ universal code files (lambda_function.py, deploy.py, queue_drainer.py, teardown.py, Dockerfile, compose, grant bat + policy template) — QA'd + clean-room certified 2026-07-30
 - ☐ Decide: publish where? (GitHub repo under Quiddity-Innovations?)
 
 ## Open items carried by this checklist
@@ -49,4 +49,5 @@ Mark each ☐ as we review together; corrections get applied to the doc on the s
 | 4 | M4 week-long CronJob observation | time |
 | 5 | Video 1 production (after storyboard approval) | Claude |
 | 6 | M7 GitOps (needs GitHub remotes/tokens decision) | both |
-| 7 | Universal kit clean-room test + publish decision | both |
+| 7 | Universal kit publish decision (clean-room test ✅ PASSED 3/3 on 2026-07-30; teardown.py added) | Renne |
+| 8 | Run AWS_Tighten_CLI_Policy.bat (replaces PowerUserAccess with program-scoped policy; rollback documented in bat) | Renne |
