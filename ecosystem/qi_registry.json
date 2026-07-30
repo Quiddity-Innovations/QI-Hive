@@ -1163,7 +1163,7 @@
       "name": "QI Connector",
       "description": "QI Connector — remote MCP server (Streamable HTTP) exposing QI ecosystem tools (Brain, registry, service health, public URLs) to Claude across all surfaces (claude.ai web/mobile, Desktop, Claude Code) as a custom connector.",
       "path": "C:\\QIP\\Connector",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/QI-Connector",
       "status": "active_development",
       "primary_language": "Python",
       "ports": {
