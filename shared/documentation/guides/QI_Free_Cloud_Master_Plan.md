@@ -45,14 +45,14 @@ Every milestone below ships all five of these — no exceptions. This is what ma
 
 Two interleaved tracks — AWS/poly-cloud (M1, M3, M5, M8) and containers (M2, M4, M6, M7, M9) — ordered so each skill feeds the next. One milestone ≈ 1–3 working sessions.
 
-### M1 — Maia relay goes live (AWS Phase 3) 🎯 NEXT
+### M1 — Maia relay goes live (AWS Phase 3) ✅ DONE 2026-07-30 (48 h observation → 2026-08-01)
 The home machine learns to drain the cloud mailbox; Maia stops losing messages.
 - **Steps:** study `maia_server.py` event handling → build `queue_drainer.py` (boto3 long-poll → hand events to Maia's existing handler → reply via LINE Push API) → install as `QI_MaiaQueueDrain` (NSSM, per-project nssm.exe, registered in QI_Service_Registry.md) → shadow test (tunnel stays primary; drainer processes synthetic + real queued events) → LINE console cutover → 48 h observation → rollback procedure documented.
 - **New components:** boto3 on desktop. **Cloud cost:** $0.
 - **Done when:** a LINE message sent while `maia_server` is stopped is answered after it restarts; cutover + rollback both proven.
 - **Skills:** SQS consumers, visibility timeouts, push-vs-reply APIs, cloud↔home bridging.
 
-### M2 — First container (Track C1–C2)
+### M2 — First container (Track C1–C2) — C1 ✅ DONE 2026-07-30 (see Docker_Foundations_Guide.md); C2 pending 🎯 NEXT
 - **Steps:** enable WSL2 → install Docker (Desktop personal or engine-in-WSL2) → write Dockerfile for the M1 drainer → run it as a container (secrets via env-file, logs to mounted volume) → `docker compose` adding a second service (e.g., a log-viewer or healthcheck sidecar) → side-by-side soak vs NSSM version → decide which stays primary.
 - **Done when:** containerized drainer processes a real queued message end-to-end.
 - **Skills:** images, layers, volumes, env/secret injection, compose networking. **Guide:** new `Docker_Foundations_Guide.md`.
