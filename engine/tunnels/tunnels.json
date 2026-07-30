@@ -15,53 +15,228 @@
       "name": "qi-maia",
       "product": "Maia",
       "service": "QI_MaiaTunnel",
-      "retire": ["QI_MaiaDemoTunnel"],
+      "retire": [
+        "QI_MaiaDemoTunnel"
+      ],
       "ingress": [
-        { "hostname": "maia", "port": 8001, "note": "Production bot — LINE/Telegram/Messenger webhooks" },
-        { "hostname": "maia-demo", "port": 7860, "note": "Gradio demo UI (origin may be down when demo not running)" }
+        {
+          "hostname": "maia",
+          "port": 8001,
+          "note": "Production bot — LINE/Telegram/Messenger webhooks"
+        },
+        {
+          "hostname": "maia-demo",
+          "port": 7860,
+          "note": "Gradio demo UI (origin may be down when demo not running)"
+        }
       ]
     },
-    { "name": "qi-naya", "product": "Naya", "service": "QI_NayaTunnel",
+    {
+      "name": "qi-naya",
+      "product": "Naya",
+      "service": "QI_NayaTunnel",
       "ingress": [
-        { "hostname": "naya", "port": 7861, "note": "Naya Gradio UI" },
-        { "hostname": "naya-line", "port": 8002, "note": "Naya LINE webhook /webhook/line (QI_NayaBot). Migrated from quick tunnel 2026-06-23 — re-register URL in LINE console." }
-      ] },
-    { "name": "qi-nexus", "product": "NEXUS", "service": "QI_NEXUSTunnel",
-      "ingress": [ { "hostname": "nexus", "port": 7880 } ] },
-    { "name": "qi-hive", "product": "Hive Dashboard", "service": "QI_DashboardTunnel",
-      "url_file": "C:\\QIH\\engine\\hive\\tunnel\\status\\tunnel.json", "url_file_kind": "dashboard_json",
-      "ingress": [ { "hostname": "hive", "port": 8600 } ] },
-    { "name": "qi-autopdf", "product": "AutoPDF", "service": "QI_AutoPDFTunnel",
-      "ingress": [ { "hostname": "autopdf", "port": 6969 } ] },
-    { "name": "qi-cognibase", "product": "CogniBase", "service": "QI_CogniBaseTunnel",
-      "ingress": [ { "hostname": "cognibase", "port": 8650 } ] },
-    { "name": "qi-mapsnap", "product": "MapSnap", "service": "QI_MapSnapTunnel",
-      "ingress": [ { "hostname": "mapsnap", "port": 9876 } ] },
-    { "name": "qi-lotterywiz", "product": "LotteryWiz", "service": "QI_LotteryWizTunnel",
-      "ingress": [ { "hostname": "lottery", "port": 8777 } ] },
-    { "name": "qi-cypherminer", "product": "CypherMiner", "service": "QI_CypherMinerTunnel",
-      "ingress": [ { "hostname": "cypher", "port": 7842 } ] },
-    { "name": "qi-kaze", "product": "Kaze (OpenClaw)", "service": "QI_KazeNewsTunnel",
-      "url_file": "C:\\OC\\runtime\\dashboard\\news-tunnel-url.txt", "url_file_kind": "plain",
+        {
+          "hostname": "naya",
+          "port": 7861,
+          "note": "Naya Gradio UI"
+        },
+        {
+          "hostname": "naya-line",
+          "port": 8002,
+          "note": "Naya LINE webhook /webhook/line (QI_NayaBot). Migrated from quick tunnel 2026-06-23 — re-register URL in LINE console."
+        }
+      ]
+    },
+    {
+      "name": "qi-nexus",
+      "product": "NEXUS",
+      "service": "QI_NEXUSTunnel",
       "ingress": [
-        { "hostname": "kaze", "port": 18800, "note": "Kaze news digest page (OC dashboard)" },
-        { "hostname": "oc-line", "port": 18789, "note": "OpenClaw LINE gateway /line/webhook — carries BOTH Tasuke + Kaze. Migrated from quick tunnel 2026-06-23 — re-register URL in LINE console." }
-      ] },
-    { "name": "qi-tubescout", "product": "TubeScout", "service": "QI_TubeScoutTunnel",
-      "ingress": [ { "hostname": "tubescout", "port": 8503 } ] },
-    { "name": "qi-gamez", "product": "Gamez", "service": "QI_GamezTunnel", "install_if_missing": true,
-      "ingress": [ { "hostname": "gamez", "port": 8710 } ] },
-    { "name": "qi-mq", "product": "Maia Quiddam", "service": "QI_MQTunnel", "install_if_missing": true,
+        {
+          "hostname": "nexus",
+          "port": 7880
+        }
+      ]
+    },
+    {
+      "name": "qi-hive",
+      "product": "Hive Dashboard",
+      "service": "QI_DashboardTunnel",
+      "url_file": "C:\\QIH\\engine\\hive\\tunnel\\status\\tunnel.json",
+      "url_file_kind": "dashboard_json",
+      "ingress": [
+        {
+          "hostname": "hive",
+          "port": 8600
+        }
+      ]
+    },
+    {
+      "name": "qi-autopdf",
+      "product": "AutoPDF",
+      "service": "QI_AutoPDFTunnel",
+      "ingress": [
+        {
+          "hostname": "autopdf",
+          "port": 6969
+        }
+      ]
+    },
+    {
+      "name": "qi-cognibase",
+      "product": "CogniBase",
+      "service": "QI_CogniBaseTunnel",
+      "ingress": [
+        {
+          "hostname": "cognibase",
+          "port": 8650
+        }
+      ]
+    },
+    {
+      "name": "qi-mapsnap",
+      "product": "MapSnap",
+      "service": "QI_MapSnapTunnel",
+      "ingress": [
+        {
+          "hostname": "mapsnap",
+          "port": 9876
+        }
+      ]
+    },
+    {
+      "name": "qi-lotterywiz",
+      "product": "LotteryWiz",
+      "service": "QI_LotteryWizTunnel",
+      "ingress": [
+        {
+          "hostname": "lottery",
+          "port": 8777
+        }
+      ]
+    },
+    {
+      "name": "qi-cypherminer",
+      "product": "CypherMiner",
+      "service": "QI_CypherMinerTunnel",
+      "ingress": [
+        {
+          "hostname": "cypher",
+          "port": 7842
+        }
+      ]
+    },
+    {
+      "name": "qi-kaze",
+      "product": "Kaze (OpenClaw)",
+      "service": "QI_KazeNewsTunnel",
+      "url_file": "C:\\OC\\runtime\\dashboard\\news-tunnel-url.txt",
+      "url_file_kind": "plain",
+      "ingress": [
+        {
+          "hostname": "kaze",
+          "port": 18800,
+          "note": "Kaze news digest page (OC dashboard)"
+        },
+        {
+          "hostname": "oc-line",
+          "port": 18789,
+          "note": "OpenClaw LINE gateway /line/webhook — carries BOTH Tasuke + Kaze. Migrated from quick tunnel 2026-06-23 — re-register URL in LINE console."
+        }
+      ]
+    },
+    {
+      "name": "qi-tubescout",
+      "product": "TubeScout",
+      "service": "QI_TubeScoutTunnel",
+      "ingress": [
+        {
+          "hostname": "tubescout",
+          "port": 8503
+        }
+      ]
+    },
+    {
+      "name": "qi-gamez",
+      "product": "Gamez",
+      "service": "QI_GamezTunnel",
+      "install_if_missing": true,
+      "ingress": [
+        {
+          "hostname": "worldcup",
+          "port": 8710,
+          "note": "WC2026 betting-window tool. Public URL worldcup.quiddityinnovations.com (changed from gamez 2026-06-26). 'gamez' hostname reserved for a future Gamez hub (planned: Fantasy Football). A future all-sports hub may use sports.quiddityinnovations.com."
+        }
+      ]
+    },
+    {
+      "name": "qi-mq",
+      "product": "Maia Quiddam",
+      "service": "QI_MQTunnel",
+      "install_if_missing": true,
       "domain": "quiddam.com",
       "ingress": [
-        { "hostname": "@", "port": 7840, "note": "Apex — public site / combined feed UI (D7)" },
-        { "hostname": "api", "port": 8500, "note": "Meta FB/IG/WhatsApp webhooks" },
-        { "hostname": "dev", "port": 7849, "note": "RESERVED placeholder — Maia Quiddam future dev UI (502 until bound)" },
-        { "hostname": "maia", "port": 8001, "note": "Maia bot (same origin as maia.quiddityinnovations.com) — Renne's primary use for quiddam.com (set 2026-06-20)" }
-      ] },
-    { "name": "qi-claudevoice", "product": "Claude Voice", "service": "QI_ClaudeVoiceTunnel", "install_if_missing": true,
-      "ingress": [ { "hostname": "claudevoice", "port": 8721, "note": "LINE Messaging API webhook (/line/webhook) + /audio voice notes" } ] },
-    { "name": "qi-m2v", "product": "M2V", "service": "QI_M2VTunnel", "install_if_missing": true,
-      "ingress": [ { "hostname": "m2v", "port": 7841, "note": "M2V Music-to-Video Gradio UI (FastAPI on :8501 stays internal). Migrated from quick tunnel 2026-06-23." } ] }
+        {
+          "hostname": "@",
+          "port": 7840,
+          "note": "Apex — public site / combined feed UI (D7)"
+        },
+        {
+          "hostname": "api",
+          "port": 8500,
+          "note": "Meta FB/IG/WhatsApp webhooks"
+        },
+        {
+          "hostname": "dev",
+          "port": 7849,
+          "note": "RESERVED placeholder — Maia Quiddam future dev UI (502 until bound)"
+        },
+        {
+          "hostname": "maia",
+          "port": 8001,
+          "note": "Maia bot (same origin as maia.quiddityinnovations.com) — Renne's primary use for quiddam.com (set 2026-06-20)"
+        }
+      ]
+    },
+    {
+      "name": "qi-claudevoice",
+      "product": "Claude Voice",
+      "service": "QI_ClaudeVoiceTunnel",
+      "install_if_missing": true,
+      "ingress": [
+        {
+          "hostname": "claudevoice",
+          "port": 8721,
+          "note": "LINE Messaging API webhook (/line/webhook) + /audio voice notes"
+        }
+      ]
+    },
+    {
+      "name": "qi-m2v",
+      "product": "M2V",
+      "service": "QI_M2VTunnel",
+      "install_if_missing": true,
+      "ingress": [
+        {
+          "hostname": "m2v",
+          "port": 7841,
+          "note": "M2V Music-to-Video Gradio UI (FastAPI on :8501 stays internal). Migrated from quick tunnel 2026-06-23."
+        }
+      ]
+    },
+    {
+      "name": "qi-connector",
+      "product": "QI Connector (remote MCP for Claude)",
+      "service": "QI_ConnectorTunnel",
+      "install_if_missing": true,
+      "ingress": [
+        {
+          "hostname": "connector",
+          "port": 9030,
+          "note": "Remote MCP connector for Claude (claude.ai/Desktop/Code). /mcp = bearer-token auth; /c/<path-token>/mcp = capability URL; /health open. Added 2026-07-30."
+        }
+      ]
+    }
   ]
 }

@@ -3,7 +3,7 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-07-28",
+    "last_updated": "2026-07-30",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
     "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled."
   },
@@ -1157,6 +1157,66 @@
         "GET /info"
       ],
       "consumes_from_ecosystem": []
+    },
+    {
+      "id": "connector",
+      "name": "QI Connector",
+      "description": "QI Connector — remote MCP server (Streamable HTTP) exposing QI ecosystem tools (Brain, registry, service health, public URLs) to Claude across all surfaces (claude.ai web/mobile, Desktop, Claude Code) as a custom connector.",
+      "path": "C:\\QIP\\Connector",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 9030,
+          "block": "9000-9099",
+          "notes": "QI Hive infrastructure block (Brain :9011, Headroom :9020). MCP endpoint at /mcp — Streamable HTTP, bearer-token auth; capability-URL alias for clients that cannot send headers."
+        }
+      },
+      "family_tier": "backbone",
+      "family_notes": "Backbone infrastructure — the ecosystem's front door for Claude clients. One remote MCP connector (claude.ai custom connector) replaces per-machine, per-tool MCP config: claude.ai web/mobile, Claude Desktop and Claude Code all reach QI tools through connector.quiddityinnovations.com. Registered 2026-07-30.",
+      "integrates_with": [
+        "qi_brain",
+        "qi_hive"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "POST /mcp — MCP Streamable HTTP. Tools: qi_ecosystem_snapshot, qi_search_memory, qi_get_context, qi_log_decision, qi_registry_lookup, qi_service_status, qi_public_urls"
+      ],
+      "consumes_from_ecosystem": [
+        "qi_brain (HTTP :9011 — ecosystem snapshot, memory search, context, decision log; graceful fallback when offline)"
+      ],
+      "paths": {
+        "logs": "C:\\QIP\\Connector\\data\\logs"
+      },
+      "loopback_only": false,
+      "internet_exposed": true,
+      "exposure_note": "Public via named tunnel qi-connector (connector.quiddityinnovations.com). Server binds 127.0.0.1:9030; /mcp requires bearer token (or the secret capability path). /health,/version,/info are open.",
+      "services": [
+        {
+          "name": "connector_mcp",
+          "nssm_name": "QI_ConnectorMCP",
+          "port": 9030,
+          "type": "FastAPI + FastMCP (Streamable HTTP)",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": true,
+          "installed": "2026-07-30"
+        },
+        {
+          "name": "connector_tunnel",
+          "nssm_name": "QI_ConnectorTunnel",
+          "port": null,
+          "type": "Cloudflare Named Tunnel (qi-connector)",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": true,
+          "installed": "2026-07-30"
+        }
+      ],
+      "added_to_registry": "2026-07-30"
     }
   ],
   "family_taxonomy": {
@@ -1428,7 +1488,8 @@
         "quiddam.com": "qi-mq → :7840 (QI_MQTunnel) — apex public site / combined feed",
         "api.quiddam.com": "qi-mq → :8500 — Meta FB/IG/WhatsApp webhooks",
         "dev.quiddam.com": "qi-mq → :7849 — RESERVED placeholder (Maia Quiddam dev)",
-        "maia.quiddam.com": "qi-mq → :8599 — RESERVED placeholder (Maia-on-Quiddam future)"
+        "maia.quiddam.com": "qi-mq → :8599 — RESERVED placeholder (Maia-on-Quiddam future)",
+        "connector.quiddityinnovations.com": "qi-connector → :9030 (QI_ConnectorTunnel) — remote MCP connector for Claude (bearer-token)"
       },
       "domains": [
         "quiddityinnovations.com",

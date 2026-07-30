@@ -684,3 +684,18 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Start type** | all AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` |
 | **Install** | `C:\CLAUDE\Claude Voice\ClaudeVoice_Install.bat` (elevated) — or per-service via QI_Elevate broker |
 | **Added** | Line/Telegram/Tunnel 2026-06-20 · Control 2026-07-28 (registry entry backfilled 2026-07-28) |
+
+### QI Connector family (QI_ConnectorMCP · QI_ConnectorTunnel)
+| Field | Value |
+|---|---|
+| **Project** | QI Connector — `C:\QIP\Connector` (registry id `connector`, port 9030, QI Hive infra block 9000-9099) |
+| **QI_ConnectorMCP** | Remote MCP server (custom Claude connector) on **127.0.0.1:9030** — `C:\1-AI\APPS\PYTHON\python.exe C:\QIP\Connector\api\main.py`, AppDir `C:\QIP\Connector`, logs `C:\QIP\Connector\data\logs\service_std{out,err}.log` + app log `connector.log` |
+| **QI_ConnectorTunnel** | STATIC NAMED tunnel `qi-connector` → **https://connector.quiddityinnovations.com** → :9030; config `C:\QIH\engine\tunnels\configs\qi-connector.yml` |
+| **Purpose** | One custom connector for Claude on ALL surfaces (claude.ai web/mobile, Desktop, Claude Code) instead of per-machine MCP config. Tools: Brain memory/context/decisions, registry lookup, service status, public URLs |
+| **Auth** | `/mcp` = bearer token; `/c/<path-token>/mcp` = capability URL (claude.ai). Secrets in `C:\QIP\Connector\secrets\` (gitignored). 401 without token |
+| **Health** | `http://localhost:9030/health` · `https://connector.quiddityinnovations.com/health` |
+| **Symptom lookup** | Public URL dead → QI_ConnectorTunnel; 401 with saved token → token file regenerated, re-copy from secrets\CONNECTOR_URLS.txt; "Brain API unreachable" in tool results → QI_BrainAPI :9011 down (registry tools still work) |
+| **Smoke test** | `python C:\QIP\Connector\tools\smoke_test.py [public-url]` |
+| **Docs** | `C:\QIH\shared\documentation\guides\QI_Connector_Guide.md` |
+| **Start type** | both AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` |
+| **Added** | 2026-07-30 — installed entirely via QI_Elevate broker (first service proving the `nssm_install_qi` whitelist rule) |
