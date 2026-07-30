@@ -8,7 +8,7 @@
 |---|---|
 | Project | Maia webhook relay (LINE bot → AWS Lambda → SQS → home machine) |
 | Started | 2026-07-30 |
-| Status | 🔄 Phase 1 in progress (account hygiene & tooling) |
+| Status | ✅ Phases 1–3 COMPLETE — relay LIVE (cutover 2026-07-30); 48 h observation running |
 | Cost target | $0/month permanently (always-free tier only) |
 | Companion video | Planned — animated explainer, produced after Phase 3 completes |
 
@@ -30,9 +30,13 @@
 | 2.3 | Write Lambda function + deployment script | ✅ Done | 2026-07-30 |
 | 2.4 | Deploy Lambda + Function URL | ✅ Done | 2026-07-30 |
 | 2.5 | Verify: forged sig 403 / valid sig 200 / message in queue | ✅ All pass | 2026-07-30 |
-| 5.x | **Universal (non-QI) edition** of guide + scripts | ⏳ After Phase 3 | |
-| 3.x | Home-machine queue drainer + LINE cutover | ⏳ Pending | |
+| 3.1 | Queue drainer + reply-token freshness patch | ✅ Done | 2026-07-30 |
+| 3.2 | QI_MaiaQueueDrain service (via elevation broker) | ✅ Done | 2026-07-30 |
+| 3.3 | Shadow test: full path incl. real LINE push | ✅ Pass | 2026-07-30 |
+| 3.4 | LINE CUTOVER — relay is now Maia's front door | ✅ Done | 2026-07-30 |
+| 3.5 | 48 h observation window | 🔄 Running | → 2026-08-01 |
 | 4.x | Explainer video production | ⏳ Pending | |
+| 5.x | **Universal (non-QI) edition** of guide + scripts | ⏳ After Phase 3 | |
 
 ---
 
@@ -233,8 +237,39 @@ Three tests, all must pass (a test script simulates LINE's POSTs):
 
 Result 2026-07-30: all three PASS on first attempt after the resource-policy fix below.
 
-## Part 3 — Home side: queue drainer + cutover *(pending)*
-*Will document: the `QI_MaiaQueueDrain` Python poller, NSSM service registration, shadow-testing alongside the existing tunnel, LINE webhook cutover and rollback.*
+## Part 3 — Home side: queue drainer + cutover ✅ (2026-07-30)
+
+### 3.1 Design: loopback delivery
+The drainer does NOT reimplement any bot logic. It reconstructs each queued event as a LINE-webhook-shaped POST to the local server (`http://127.0.0.1:8001/maia/webhook`), **signed with the same channel secret** — so the bot processes relayed events through its existing, battle-tested code path. A marker header `X-Qi-Relay: 1` tells the server the event came via the queue.
+
+### 3.2 The reply-token economics patch
+LINE replies (via reply token) are free/unlimited but tokens die in ~1 min; pushes always work but free accounts get only ~200/month. The server patch (`channels/line.py` + `make_push_sender()` in `maia_server.py`):
+- relayed event **younger than 45 s** → use its still-valid reply token (free) — the normal case
+- relayed event **older** (backlog drained after downtime) → substitute a push-callable for the token (`send_reply` already accepted callables)
+⚠️ Without the freshness check, ALL relayed replies would be pushes and the monthly quota would die in days. Design rule: **push is for backlog only.**
+
+### 3.3 The drainer
+[`C:\QI\TOOLS\aws_relay\queue_drainer.py`](C:\QI\TOOLS\aws_relay\queue_drainer.py): boto3 long-poll (20 s) on the FIFO queue → loopback POST (180 s timeout — LLM replies are slow) → delete on 200. Verdict logic: `ok`/4xx → delete (4xx = poison message, logged, never loops), 5xx/unreachable → leave for retry via visibility timeout. Heartbeat log line every 10 min. Logs: `C:\QI\LOGS\queue_drain_log.txt` + service log `C:\QIH\logs\maia_queue_drain.log`.
+
+### 3.4 Service installation (via elevation broker)
+Installed as **QI_MaiaQueueDrain** through the QI_Elevate broker (7 whitelisted `nssm` calls: install, AppDirectory, Description, Start, AppStdout, AppStderr, start). The broker whitelist only accepts service scripts under `C:\QIH|C:\QIP`, so a 3-line **launcher shim** (`C:\QIH\engine\relay\maia_queue_drain_service.py`, `runpy.run_path` → real drainer) bridges to the Maia project without weakening the policy. AWS credentials: the service runs as LocalSystem, so the drainer pins `AWS_SHARED_CREDENTIALS_FILE` to the workstation user's credentials file explicitly.
+
+### 3.5 Shadow test (before cutover)
+With LINE still pointed at the tunnel, a synthetic signed event was POSTed to the **Lambda URL**: Lambda → SQS → drainer → local server → LLM reply → push delivered to the owner's real LINE. Full-path proof with zero production risk.
+
+### 3.6 Cutover — and the self-registration gotcha
+The server **re-registers its LINE webhook URL on every startup** — any manual change in the LINE console would be silently reverted on the next restart. So the cutover lives in code: a `_line_webhook_url` constant (set to the Lambda Function URL) now feeds LINE registration, while Telegram keeps the direct tunnel URL. Cutover = edit constant + restart. **Rollback = revert constant + restart** (one line, documented in the code comment).
+Verification, twice over: startup log shows registration to the Lambda URL, and LINE's own APIs confirm — `GET /v2/bot/channel/webhook/endpoint` returns the Lambda URL (`active: true`), and `POST /v2/bot/channel/webhook/test` (LINE fires a real request from their servers) returned `success: true, statusCode: 200`.
+
+### 3.7 What changed on the machine (reproduction summary)
+| File | Change |
+|---|---|
+| `maia_server.py` | + `make_push_sender()`; LINE registration now uses `_line_webhook_url` (Lambda) |
+| `channels/line.py` | + `relayed` flag, `_tok()` freshness helper; 4 reply-token sites now use `_tok(event)` |
+| `TOOLS/aws_relay/queue_drainer.py` | new — the drainer |
+| `C:\QIH\engine\relay\maia_queue_drain_service.py` | new — whitelist launcher shim |
+| `pip install boto3` | drainer dependency |
+| Registries | `QI_Service_Registry.md` + `qi_registry.json` (`shared_infrastructure.aws`) |
 
 ## Part 4 — Explainer video *(pending)*
 *Storyboard + production of the animated step-by-step video from this guide.*
@@ -247,6 +282,9 @@ Result 2026-07-30: all three PASS on first attempt after the resource-policy fix
 ## ⚠️ Lessons & gotchas log
 *(appended as encountered)*
 - **Public Function URL returns bare 403 even with a "correct" policy (Oct 2025 rule change):** a public (auth `NONE`) Function URL now requires **two** resource-policy grants — `lambda:InvokeFunctionUrl` (with the `FunctionUrlAuthType: NONE` condition) **and** plain `lambda:InvokeFunction` (no condition — the API rejects the condition flag on this action). Most tutorials predate this and list only the first; the symptom is AWS's own generic `403 Forbidden` at the URL edge (your function never runs — no log entries). Debug technique that isolated it: `aws lambda invoke` directly worked while the URL 403'd → the block had to be at the URL authorization layer.
+- **LINE SDK strictness:** the v3 SDK parser rejects events missing `deliveryContext` — synthetic test events must include every schema field a real webhook carries (deliveryContext, timestamp, mode). Real LINE events always validate.
+- **Self-registering webhooks:** a bot that re-registers its webhook URL at startup will silently undo a console-side cutover on its next restart. Find the registration code FIRST; make the cutover there.
+- **Push quota economics:** LINE free plan ≈ 200 pushes/month but unlimited replies. Any relay design must prefer reply tokens (valid ~1 min) and reserve push for stale backlog.
 - Cost sanity: everything deployed in Part 2 is $0 — Lambda/SQS/SSM standard/CloudWatch basics all sit in always-free quotas at personal volume.
 - The pre-2025 "12 months free / free t2.micro EC2" model **no longer exists** for new accounts. Plan around credits (6 months) for learning and **always-free** services for anything permanent.
 - When you run `aws configure`, the CLI prints a tip suggesting `aws login` instead. Ignore it for this project: `aws login` issues browser-based **temporary** credentials that expire after hours — fine for interactive humans, fatal for unattended services (our queue drainer must auth 24/7 with no browser). Long-lived IAM access keys via `aws configure` are the right choice here.

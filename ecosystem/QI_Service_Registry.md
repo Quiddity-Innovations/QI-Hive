@@ -89,6 +89,21 @@
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` (standardized 2026-04-22) |
 
+### QI_MaiaQueueDrain
+| Field | Value |
+|---|---|
+| **Display name** | QI_MaiaQueueDrain |
+| **Description** | QI Maia AWS relay queue drainer — polls SQS qi-maia-events.fifo and forwards LINE events to local maia_server (port 8001). Since cutover 2026-07-30, LINE webhooks flow LINE → AWS Lambda qi-maia-webhook → SQS → this drainer; messages survive machine downtime (4-day queue retention). |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `C:\QIH\engine\relay\maia_queue_drain_service.py` (shim → `C:\QI\TOOLS\aws_relay\queue_drainer.py`) |
+| **Working dir** | `C:\QIH\engine\relay` |
+| **Port** | — (outbound long-poll to AWS SQS us-east-1) |
+| **Stdout/err log** | `C:\QIH\logs\maia_queue_drain.log` (drainer also logs to `C:\QI\LOGS\queue_drain_log.txt`) |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem (AWS creds pinned to `C:\Users\renne\.aws\credentials` via env in drainer) |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Symptom lookup** | Maia not answering LINE but /health ok → check this service + `aws sqs get-queue-attributes` message count. Rollback: revert `_line_webhook_url` in maia_server.py to tunnel URL + restart QI_MaiaBot. |
+
 ### QI_MaiaTunnel
 | Field | Value |
 |---|---|
@@ -282,11 +297,29 @@
 
 ---
 
+### QI_PlayDeck
+| Field | Value |
+|---|---|
+| **Display name** | QI PlayDeck |
+| **Description** | PlayDeck — personal hybrid video player (browse / stream / offline library) served at http://localhost:8506. |
+| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Parameters** | `C:\PlayDeck\main.py` |
+| **Working dir** | `C:\PlayDeck` |
+| **Stdout log** | `C:\PlayDeck\data\logs\service_out.log` |
+| **Stderr log** | `C:\PlayDeck\data\logs\service_err.log` |
+| **App log** | `C:\PlayDeck\data\logs\playdeck.log` (only when logging is enabled in Settings) |
+| **Port** | 8506 (loopback only — never tunnel; personal viewing) |
+| **Start type** | AUTO_START |
+| **NSSM binary** | `C:\PlayDeck\engine\bin\nssm.exe` (per-project) |
+| **Install** | Run `C:\PlayDeck\Install_Service.bat` as admin (self-elevates). The QI_Elevate broker cannot create new services — its whitelist covers existing ones only. |
+| **Registered** | 2026-07-29 |
+
+
 ## Quick Reference — NSSM Commands
 
 ```bat
 REM Status check (all QI services)
-for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_HiveApply QI_HiveInspectorDrain QI_KazeConfigAPI QI_KazeNewsTunnel) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
+for %s in (QI_MaiaBot QI_MaiaTunnel QI_MaiaDemoTunnel QI_MaiaGradio QI_NayaBot QI_NayaGradio QI_NEXUS QI_Dashboard QI_DashboardTunnel QI_BrainAPI QI_Elevate QI_HiveIngest QI_HiveApply QI_HiveInspectorDrain QI_KazeConfigAPI QI_KazeNewsTunnel QI_PlayDeck) do @echo %s: & C:\QIH\engine\bin\nssm.exe status %s
 
 REM Restart a specific service (NSSM binary standardized 2026-04-22)
 C:\QIH\engine\bin\nssm.exe restart QI_MaiaBot
@@ -313,6 +346,7 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | Dashboard tunnel URL gone | QI_DashboardTunnel | `C:\QIH\engine\hive\tunnel\LOGS\tunnel_service.log` | `nssm status QI_DashboardTunnel` |
 | Brain API (:9011) down | QI_BrainAPI | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
 | Elevation broker not responding | QI_Elevate | `C:\QIH\logs\elevation\broker_stderr.log` | `nssm status QI_Elevate` |
+| PlayDeck won't open on :8506 | QI_PlayDeck | `C:\PlayDeck\data\logs\service_err.log` | `nssm status QI_PlayDeck` |
 | Hive ingest stalled | QI_HiveIngest | `C:\QIH\logs\hive\ingest_stderr.log` | `nssm status QI_HiveIngest` |
 | Auto-apply pipeline stalled / dispatches stuck in queued | QI_HiveApply | `C:\QIH\logs\hive_apply.log` | `nssm status QI_HiveApply`; check for HALT file |
 | Inspector inbox not draining / envelopes stuck in pending_review | QI_HiveInspectorDrain | `C:\QIH\logs\hive_inspector_drain.log` | `nssm status QI_HiveInspectorDrain`; check quarantine/ dir |

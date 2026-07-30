@@ -3,7 +3,7 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-06-20",
+    "last_updated": "2026-07-28",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
     "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled."
   },
@@ -879,7 +879,7 @@
       "id": "retirementanalyzer",
       "name": "Retirement Analyzer",
       "description": "Ingests a Fidelity positions CSV export and computes allocation, tax-bucket split (Taxable/Tax-Deferred/Roth), concentration risk (top-5 + HHI), glide-path drift vs a years-to-retirement target, rebalancing trades, and a 5-year retirement readiness plan (spending gap, 3-yr cash buffer, withdrawal rate vs 4% rule, income layers, blueprint checklist). FastAPI + Gradio. Formerly Fidelity Portfolio Analyzer (id fidelityanalyzer).",
-      "path": "C:\\RetirementAnalyzer",
+      "path": "C:\\Retirement Analyzer",
       "github": "https://github.com/Quiddity-Innovations/RetirementAnalyzer",
       "status": "active",
       "primary_language": "Python",
@@ -909,7 +909,7 @@
       ],
       "consumes_from_ecosystem": [],
       "paths": {
-        "logs": "C:\\RetirementAnalyzer\\data\\logs"
+        "logs": "C:\\Retirement Analyzer\\data\\logs"
       }
     },
     {
@@ -1094,6 +1094,67 @@
         "GET /listings",
         "GET /profiles",
         "POST /ingest"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "headroom",
+      "name": "Headroom",
+      "description": "Context/token compression layer (open-source, Apache-2.0) — proxy + MCP server that compresses tool outputs, JSON, logs and history before they reach LLMs. Shared infrastructure for the whole ecosystem.",
+      "path": "C:\\CLAUDE\\Tools",
+      "github": "https://github.com/headroomlabs-ai/headroom",
+      "status": "pilot",
+      "primary_language": "Python",
+      "ports": {
+        "proxy": {
+          "current": 9020,
+          "block": "9000-9099",
+          "notes": "Headroom compression proxy (OpenAI-compatible gateway). QI Hive family block — shared infrastructure like Brain (:9011). Registered 2026-07-28 during pilot; promote to QI_Headroom NSSM service if adopted."
+        },
+        "mcp": {
+          "current": "stdio",
+          "block": "N/A",
+          "notes": "headroom mcp serve — stdio MCP for Claude Code sessions (headroom_compress / headroom_retrieve / headroom_stats). Registered in C:\\CLAUDE\\.mcp.json."
+        }
+      },
+      "family_tier": "backbone",
+      "family_notes": "Pilot 2026-07: proxy in front of Ollama first (OPENAI_API_BASE=http://localhost:11434/v1), then NEXUS providers if savings hold. Do NOT re-point Claude Code's own endpoint through the proxy — subscription OAuth path stays untouched; Claude Code uses the MCP mode instead.",
+      "integrates_with": [
+        "nexus",
+        "qi_hive",
+        "claude_manager"
+      ],
+      "exposes_to_ecosystem": [
+        "OpenAI-compatible proxy on :9020",
+        "MCP tools: headroom_compress, headroom_retrieve, headroom_stats"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "playdeck",
+      "name": "PlayDeck",
+      "description": "Personal hybrid video player — custom control UI over YouTube/Vimeo (IFrame API) and general tube sites (yt-dlp + own player); local-only",
+      "path": "C:\\PlayDeck",
+      "github": "TBD",
+      "status": "new",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8506,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7846,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "New project — family role to be determined as it develops.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
       ],
       "consumes_from_ecosystem": []
     }
@@ -1373,6 +1434,36 @@
         "quiddityinnovations.com",
         "quiddam.com"
       ]
+    },
+    "aws": {
+      "account_id": "103140669477",
+      "region": "us-east-1",
+      "iam_cli_user": "qi-claude-cli",
+      "resources": {
+        "lambda": {
+          "qi-maia-webhook": {
+            "purpose": "LINE webhook front door for Maia (signature verify + enqueue)",
+            "function_url": "https://bq6r2rxvueooou5wz6dq4ok7ry0toncw.lambda-url.us-east-1.on.aws/"
+          }
+        },
+        "sqs": {
+          "qi-maia-events.fifo": {
+            "purpose": "Durable LINE event queue, 4-day retention, drained by QI_MaiaQueueDrain"
+          }
+        },
+        "ssm_parameters": [
+          "/qi/maia/line_channel_secret"
+        ],
+        "iam_roles": [
+          "qi-maia-webhook-role"
+        ],
+        "budgets": [
+          "QI-ZeroSpend-Guard"
+        ]
+      },
+      "naming_rule": "all AWS resources prefixed qi-",
+      "docs": "C:\\QIH\\shared\\documentation\\guides\\AWS_Free_Tier_Setup_Guide.md",
+      "registered": "2026-07-30"
     }
   }
 }
