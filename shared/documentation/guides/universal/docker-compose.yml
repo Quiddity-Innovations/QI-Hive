@@ -1,0 +1,30 @@
+# Free Webhook-Bot Cloud Kit — queue drainer compose deployment
+# From WSL2:  cd /path/to/universal && docker compose up -d --build
+#
+# Fill in the placeholders below (or better, generate this file's
+# environment: block from config.env with a small wrapper script —
+# left as an exercise since compose doesn't natively read .env-style
+# files with our KEY=VALUE comments).
+services:
+  drainer:
+    build: .
+    image: <bot-name>-drainer
+    container_name: <bot-name>-drainer
+    restart: unless-stopped
+    environment:
+      QUEUE_URL: "https://sqs.<AWS_REGION>.amazonaws.com/<ACCOUNT_ID>/<QUEUE_NAME>"
+      # If the container cannot route directly to your host's bot
+      # server (common on WSL2 without a NAT gateway route + firewall
+      # rule), reach it through your bot's own public tunnel URL
+      # instead of a loopback address — see GUIDE.md GOTCHAS,
+      # "container-to-host networking".
+      LOCAL_WEBHOOK_URL: "https://<your-public-tunnel-domain>/webhook"
+      CHANNEL_SECRET_ENV_KEY: "CHANNEL_SECRET"
+      SIGNATURE_HEADER_NAME: "X-Line-Signature"
+      RELAY_HEADER_NAME: "X-Relay"
+      RELAY_HEADER_VALUE: "1"
+    volumes:
+      # Host secrets/creds/logs dirs — adjust paths for your machine.
+      - ${HOME}/secrets:/secrets:ro
+      - ${HOME}/.aws:/aws:ro
+      - ${HOME}/logs:/logs

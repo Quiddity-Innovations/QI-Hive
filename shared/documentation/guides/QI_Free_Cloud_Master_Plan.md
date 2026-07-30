@@ -52,18 +52,18 @@ The home machine learns to drain the cloud mailbox; Maia stops losing messages.
 - **Done when:** a LINE message sent while `maia_server` is stopped is answered after it restarts; cutover + rollback both proven.
 - **Skills:** SQS consumers, visibility timeouts, push-vs-reply APIs, cloud↔home bridging.
 
-### M2 — First container (Track C1–C2) — C1 ✅ DONE 2026-07-30 (see Docker_Foundations_Guide.md); C2 pending 🎯 NEXT
+### M2 — First container (Track C1–C2) ✅ DONE 2026-07-30 (C1 + C2 monitor sidecar; Docker_Foundations_Guide.md)
 - **Steps:** enable WSL2 → install Docker (Desktop personal or engine-in-WSL2) → write Dockerfile for the M1 drainer → run it as a container (secrets via env-file, logs to mounted volume) → `docker compose` adding a second service (e.g., a log-viewer or healthcheck sidecar) → side-by-side soak vs NSSM version → decide which stays primary.
 - **Done when:** containerized drainer processes a real queued message end-to-end.
 - **Skills:** images, layers, volumes, env/secret injection, compose networking. **Guide:** new `Docker_Foundations_Guide.md`.
 
-### M3 — Cloud brain: the 5-rung LLM chain (AWS Phase 4)
+### M3 — Cloud brain: the 5-rung LLM chain (AWS Phase 4) — 🔄 SCAFFOLDED 2026-07-30 (code+DynamoDB+SSM slots dormant; see Cloud_Brain_M3_Activation.md — blocked on owner keys/privacy decision)
 Maia gains a degraded-but-alive mode when the desktop is offline.
 - **Steps:** create free accounts (OpenRouter, Google AI Studio, Groq; Workers AI on existing CF account) → store keys in SSM → expose desktop Ollama/NEXUS via authenticated CF tunnel (rung 1) → build provider-adapter module (one interface, five implementations) → `qi-maia-brain-cloud` Lambda: consume queue when drainer is absent OR be called by it → conversation state to DynamoDB → chain testing (kill rungs one by one, watch fallback) → per-bot `local_only` privacy flag (Renne's pending decision, implemented as config).
 - **Done when:** with the desktop fully off, a LINE message gets an answer from a cloud rung; with desktop on, rung 1 answers.
 - **Skills:** multi-provider LLM APIs, adapter pattern, DynamoDB, graceful degradation.
 
-### M4 — Local Kubernetes (Track C3)
+### M4 — Local Kubernetes (Track C3) — ✅ CORE DONE 2026-07-30 (k3s live, self-heal proven 14 s, CronJob running; week-long observation open; K8s_Foundations_Guide.md)
 - **Steps:** k3s (or kind) in WSL2 → deploy the M2 containers as Deployments with Services → convert one Task-Scheduler job to a CronJob → break things on purpose (kill pods, kill node) and watch self-healing → cluster runs PARALLEL to NSSM production (standing rule: existing infra stays authoritative until proven).
 - **Done when:** drainer pod survives a forced kill with zero lost messages; one CronJob runs on schedule for a week.
 - **Skills:** pods/deployments/services, kubectl, manifests-as-code, CronJobs.
@@ -73,7 +73,7 @@ Maia gains a degraded-but-alive mode when the desktop is offline.
 - **Done when:** the ported app serves publicly from Cloudflare with its data in D1, $0.
 - **Skills:** Workers, Pages, D1, R2, wrangler CLI — the second ecosystem.
 
-### M6 — The "QI bot" Helm chart (Track C4) — the template engine realized
+### M6 — The "QI bot" Helm chart (Track C4) — the template engine realized — ✅ CORE DONE 2026-07-30 (chart + maia/demobot releases; real 2nd bot awaits a 2nd LINE channel)
 - **Steps:** Helm chart wrapping the bot runtime (drainer + config + secrets) → Maia = instance #1 via `values-maia.yaml` → spin up bot #2 (test personality) with one command → document "new bot in 5 minutes" procedure.
 - **Done when:** two named bots run from one chart, differing only in values files.
 - **Skills:** Helm templating, releases, upgrades/rollbacks. **Strategic:** this IS the one-codebase→infinite-bots product vision.
@@ -83,7 +83,7 @@ Maia gains a degraded-but-alive mode when the desktop is offline.
 - **Done when:** a one-line code change reaches all three environments with zero manual commands.
 - **Skills:** CI/CD, GitOps, registries, deployment automation — the replication engine for everything.
 
-### M8 — Universal packs + reference app (AWS Phase 6)
+### M8 — Universal packs + reference app (AWS Phase 6) — 🔄 v0.1 SEEDED 2026-07-30 (universal/ kit, 10 files; clean-room test pending)
 - **Steps:** consolidate all `universal\` contributions → standalone neutral repo: "Free Webhook-Bot Cloud Kit" (generic guide with placeholders, parameterized scripts/bats, Lambda, drainer, Dockerfile, Helm chart, Actions workflows) → prove it by deploying a from-scratch demo bot using ONLY the kit → this satisfies the standing "universal, non-QI edition" requirement in full.
 - **Done when:** a clean-room deploy from the kit works without touching QI-specific anything.
 
