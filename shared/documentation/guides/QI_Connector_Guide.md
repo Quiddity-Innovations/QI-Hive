@@ -42,6 +42,8 @@ claude mcp add --transport http qi-connector https://connector.quiddityinnovatio
 | `qi_log_decision(project_id, title, rationale, …)` | Brain `POST /api/log_decision` (writes as agent `qi_connector`) |
 | `qi_registry_lookup(project_id?)` | [C:\QIH\ecosystem\qi_registry.json](C:\QIH\ecosystem\qi_registry.json) read live |
 | `qi_service_status()` | `sc query` on every registered `QI_*` service + parallel `GET /health` probes |
+| `qi_headlines(project_id?, since?, limit?)` | Brain `GET /api/headlines` — ecosystem activity feed (added 2026-07-30) |
+| `qi_dispatches(status?, limit?)` | Brain `GET /api/dispatches` — Hive dispatch queue, read-only (added 2026-07-30) |
 | `qi_public_urls()` | Registry `static_tunnels.map` |
 
 ## Security model

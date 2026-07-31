@@ -1183,7 +1183,7 @@
         "GET /health",
         "GET /version",
         "GET /info",
-        "POST /mcp — MCP Streamable HTTP. Tools: qi_ecosystem_snapshot, qi_search_memory, qi_get_context, qi_log_decision, qi_registry_lookup, qi_service_status, qi_public_urls"
+        "POST /mcp — MCP Streamable HTTP. Tools: qi_ecosystem_snapshot, qi_search_memory, qi_get_context, qi_log_decision, qi_registry_lookup, qi_service_status, qi_headlines, qi_dispatches, qi_public_urls"
       ],
       "consumes_from_ecosystem": [
         "qi_brain (HTTP :9011 — ecosystem snapshot, memory search, context, decision log; graceful fallback when offline)"
