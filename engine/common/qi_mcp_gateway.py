@@ -76,31 +76,113 @@ def load_or_create_token(secrets_dir: Path, fname: str) -> str:
     return tok
 
 
+
+
+# ------------------------------------------------------- audit + rate limit ----
+class McpAudit:
+    """Per-call audit log + global sliding-window rate limit for /mcp traffic.
+    Buffers the ASGI receive stream once to extract the JSON-RPC method and
+    tool name, logs one line per call, and rejects with 429 when the window
+    exceeds the cap. Config: rate_limit_per_min (0 disables the limit)."""
+
+    def __init__(self, logger, rate_per_min: int = 240):
+        import collections
+        self.log = logger
+        self.rate = int(rate_per_min or 0)
+        self.hits = collections.deque()
+
+    def allow(self) -> bool:
+        if self.rate <= 0:
+            return True
+        import time
+        now = time.monotonic()
+        while self.hits and now - self.hits[0] > 60.0:
+            self.hits.popleft()
+        if len(self.hits) >= self.rate:
+            return False
+        self.hits.append(now)
+        return True
+
+    async def buffered_receive(self, receive):
+        """Drain the request body, return (body_bytes, replay_receive)."""
+        chunks = []
+        while True:
+            msg = await receive()
+            if msg["type"] != "http.request":
+                break
+            chunks.append(msg.get("body", b""))
+            if not msg.get("more_body"):
+                break
+        body = b"".join(chunks)
+        sent = {"done": False}
+
+        async def replay():
+            if not sent["done"]:
+                sent["done"] = True
+                return {"type": "http.request", "body": body, "more_body": False}
+            return {"type": "http.request", "body": b"", "more_body": False}
+        return body, replay
+
+    def describe(self, body: bytes) -> str:
+        try:
+            d = json.loads(body.decode("utf-8", "replace") or "{}")
+            method = d.get("method", "?")
+            if method == "tools/call":
+                params = d.get("params") or {}
+                args = params.get("arguments") or {}
+                keys = ",".join(list(args.keys())[:6])
+                return f"tools/call {params.get('name', '?')}({keys})"
+            return method
+        except Exception:
+            return f"(unparsed {len(body)}B)"
+
+
+async def _send_429(send):
+    body = b'{"error":"rate limit exceeded - slow down"}'
+    await send({"type": "http.response.start", "status": 429,
+                "headers": [(b"content-type", b"application/json"),
+                            (b"content-length", str(len(body)).encode()),
+                            (b"retry-after", b"30")]})
+    await send({"type": "http.response.body", "body": body})
+
+
 class AuthGate:
     """ASGI wrapper: bearer on /mcp, optional capability path, open contract
     endpoints, and open-404 /.well-known (see module docstring)."""
 
     OPEN_PATHS = {"/health", "/version", "/info", "/"}
 
-    def __init__(self, inner, mode: str, bearer_token: str, path_token: str):
+    def __init__(self, inner, mode: str, bearer_token: str, path_token: str,
+                 rate_per_min: int = 240):
         self.inner = inner
         self.mode = mode
         self.bearer = bearer_token
         self.ptok = path_token
+        self.audit = McpAudit(log, rate_per_min)
+
+    async def _audited(self, scope, receive, send, via):
+        if scope.get("method") == "POST" and scope.get("path", "").startswith("/mcp"):
+            if not self.audit.allow():
+                log.warning("AUDIT 429 rate-limited (%s)", via)
+                return await _send_429(send)
+            body, replay = await self.audit.buffered_receive(receive)
+            log.info("AUDIT %s %s", via, self.audit.describe(body))
+            return await self.inner(scope, replay, send)
+        return await self.inner(scope, receive, send)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return await self.inner(scope, receive, send)
         path = scope.get("path", "")
         if self.mode == "none":
-            return await self.inner(scope, receive, send)
+            return await self._audited(scope, receive, send, via="open")
         if self.mode in ("capability", "both") and self.ptok:
             cap = f"/c/{self.ptok}"
             if path.startswith(cap + "/") or path == cap:
                 scope = dict(scope)
                 scope["path"] = path[len(cap):] or "/"
                 scope["raw_path"] = scope["path"].encode()
-                return await self.inner(scope, receive, send)
+                return await self._audited(scope, receive, send, via="capability")
         if path in self.OPEN_PATHS or path.startswith("/.well-known"):
             return await self.inner(scope, receive, send)
         if self.mode in ("bearer", "both"):
@@ -110,7 +192,7 @@ class AuthGate:
                     auth = v.decode("latin-1")
                     break
             if auth == f"Bearer {self.bearer}":
-                return await self.inner(scope, receive, send)
+                return await self._audited(scope, receive, send, via="bearer")
         body = b'{"error":"unauthorized"}'
         await send({"type": "http.response.start", "status": 401,
                     "headers": [(b"content-type", b"application/json"),
@@ -367,7 +449,8 @@ def build_application(cfg: dict):
         sdir = Path(auth.get("secrets_dir") or (Path.cwd() / "secrets"))
         bearer = load_or_create_token(sdir, "mcp_bearer_token.txt")
         path_tok = load_or_create_token(sdir, "mcp_path_token.txt")
-    return AuthGate(app, mode, bearer, path_tok)
+    return AuthGate(app, mode, bearer, path_tok,
+                    rate_per_min=int(cfg.get('rate_limit_per_min', 240)))
 
 
 def main(config_path: str):

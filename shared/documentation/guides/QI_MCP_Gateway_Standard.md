@@ -44,7 +44,7 @@ Rules (Six-Laws aligned):
 | MapSnap | `mapsnap` | ✅ live 2026-07-30 | ✅ `QI_MapSnapMCP` :8651 | First adopter; service-token feature added to MapSnap auth |
 | QI Brain/Hive | (native in connector core) | ✅ | n/a | qi_* core tools |
 | NEXUS / AutoPDF / Gamez / TubeScout / CogniBase / Claude Voice / Maia | — | planned | planned | roll out per checklist above |
-| OpenClaw / Hermes | — | investigate first | investigate first | check NATIVE MCP support before building (OpenClaw framework likely ships MCP; gateway only if missing). OC is non-HTTP TCP in WSL — special case |
+| OpenClaw / Hermes | n/a — NATIVE | via native client | native | ✅ VERIFIED 2026-07-31: OpenClaw 2026.4.26 ships `openclaw mcp` (add/manage servers); Hermes ships `hermes mcp {serve,add,test,…}` and can even run AS an MCP server. No gateway builds — wire by config: point them at connector :9030 / gateways with bearer header |
 
 ## UI integration pattern (optional, added 2026-07-31)
 
