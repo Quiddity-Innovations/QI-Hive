@@ -54,6 +54,7 @@ claude mcp add --transport http qi-connector https://connector.quiddityinnovatio
 - `/health`, `/version`, `/info` are open (QI module interface contract; no secrets in responses).
 - Tokens: [C:\QIP\Connector\secrets\](C:\QIP\Connector\secrets\) — `connector_token.txt` (bearer), `connector_path_token.txt` (URL), `CONNECTOR_URLS.txt` (ready to paste). All gitignored.
 - **Rotate a token:** delete its file → `nssm restart QI_ConnectorMCP` (new token auto-generates) → update the Claude client. Rotate immediately if a URL leaks (e.g. pasted in a screenshot).
+- ⚠️ **THE CAPABILITY URL *IS* A PASSWORD (standing rule, 2026-07-30):** never paste it into chats, screenshots, emails or documents — only into the claude.ai / Claude Code connector fields. Anyone who sees the URL can call every connector tool. It happened once (URL pasted in a Claude chat while troubleshooting, 2026-07-30 — low risk, private chat, rotation offered). If it happens again anywhere less private: **rotate first, ask questions later** (1-minute procedure above).
 - MCP transport DNS-rebinding host check is disabled deliberately (public Host headers arrive via the tunnel); auth is the bearer/capability token, not the Host header.
 
 ## Operations
