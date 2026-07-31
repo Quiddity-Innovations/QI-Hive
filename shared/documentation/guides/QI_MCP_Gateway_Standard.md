@@ -49,3 +49,5 @@ Rules (Six-Laws aligned):
 ## UI integration pattern (optional, added 2026-07-31)
 
 Apps with a Settings UI SHOULD surface the gateway config as a panel (MapSnap reference implementation: **Settings → AI Connections & Features → Claude / MCP Access**): admin-gated `GET/POST /api/mcp/config` endpoints that read/write the SAME `mcp_gateway.json` + `service_tokens.json` files (file editing stays valid as plan B), expose only name/role/enabled for service accounts (never token values), show live gateway health, and offer Save vs Save & Apply (service restart). Renne's rule: **UI-configurable everywhere a UI exists; files remain the universal fallback.**
+
+**Companion convention — `show_in_chat` (2026-07-31):** every OUTBOUND AI connection an app configures (Ollama, OpenRouter, direct APIs, …) gets a common "Show in chat picker" switch persisted as `show_in_chat.<connection>` in the app's settings; chat dropdowns filter on it (with an empty-picker fallback). Inbound MCP access never appears in chat pickers — the panel states this. MapSnap = reference implementation.
