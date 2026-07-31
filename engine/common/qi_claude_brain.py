@@ -98,6 +98,7 @@ def ask_claude(system_prompt: str, user_prompt: str, cfg: dict,
     try:
         proc = subprocess.run(args, input=user_prompt or "(no message)",
                               capture_output=True, text=True,
+                              encoding="utf-8", errors="replace",  # Windows defaults to cp1252 → '→' crashes
                               timeout=int(cfg.get("timeout", DEFAULT_TIMEOUT)),
                               cwd=tempfile.gettempdir())
     except subprocess.TimeoutExpired:
