@@ -46,6 +46,10 @@ claude mcp add --transport http qi-connector https://connector.quiddityinnovatio
 | `qi_dispatches(status?, limit?)` | Brain `GET /api/dispatches` — Hive dispatch queue, read-only (added 2026-07-30) |
 | `qi_public_urls()` | Registry `static_tunnels.map` |
 
+## App adapters (added 2026-07-30)
+
+The connector also loads **config-gated adapter tool packs** from the reusable [QI MCP Gateway](QI_MCP_Gateway_Standard.md) (`C:\QIH\engine\common\qi_mcp_gateway.py`). Each adapter is a section in `connector.json` — `"mapsnap": {"enabled": true, "tools": {...}}` — flip `enabled`/per-tool flags and restart `QI_ConnectorMCP`. Live today: **MapSnap** (`mapsnap_profiles`, `mapsnap_schema`, `mapsnap_ask`; `table_data` off by default — row-data egress guardrail). MapSnap access authenticates with a scoped service token (`C:\MapSnap\Application\service_tokens.json`).
+
 ## Security model
 
 - Server binds **127.0.0.1:9030** — only the tunnel reaches it.

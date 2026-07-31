@@ -699,3 +699,16 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Docs** | `C:\QIH\shared\documentation\guides\QI_Connector_Guide.md` |
 | **Start type** | both AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` |
 | **Added** | 2026-07-30 — installed entirely via QI_Elevate broker (first service proving the `nssm_install_qi` whitelist rule) |
+
+### QI_MapSnapMCP (MapSnap MCP Gateway — Phase 2)
+| Field | Value |
+|---|---|
+| **Project** | MapSnap — `C:\MapSnap` (registry id `mapsnap`); gateway port **8651** (MapSnap family block) |
+| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_mcp_launcher.py` → reusable `C:\QIH\engine\common\qi_mcp_gateway.py` with config `C:\MapSnap\config\mcp_gateway.json` |
+| **Purpose** | Standalone MCP server for MapSnap (profiles/schema/ask; table_data via config flag). Config-driven: enabled/bind/port/auth/tools are all settings. BU mode = bind LAN in config |
+| **Auth (inbound)** | bearer + capability URL; tokens in `C:\MapSnap\config\secrets\` |
+| **Auth (to MapSnap)** | service token — `C:\MapSnap\Application\service_tokens.json` entry `qi_gateway` (viewer role); MapSnap validates via `auth.service_token_from_header` |
+| **Logs** | `C:\QIH\logs\mapsnap_mcp.log` / `.err.log` |
+| **Health** | `http://127.0.0.1:8651/health` |
+| **Start type** | AUTO_START · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
+| **Added** | 2026-07-30 — first adopter of the reusable QI MCP Gateway |

@@ -652,6 +652,11 @@
           "current": 9876,
           "block": "8650-8659",
           "notes": "Legacy port 9876 pre-registry. Block 8650-8659 reserved for MapSnap family but not in use here. Per registry rule, existing ports stay unless there's a reason to migrate."
+        },
+        "mcp": {
+          "current": 8651,
+          "block": "8650-8659",
+          "notes": "MapSnap MCP Gateway (QI_MapSnapMCP) — config-driven MCP server via C:\\QIH\\engine\\common\\qi_mcp_gateway.py + C:\\MapSnap\\config\\mcp_gateway.json. Loopback-only by default; BU mode = LAN bind via config. Added 2026-07-30."
         }
       },
       "family_tier": "standalone_tool",
@@ -660,12 +665,26 @@
       "exposes_to_ecosystem": [
         "Schema as JSON (any engine: SQL Server/Oracle/Postgres/MySQL/SQLite)",
         "Schema browser HTML",
-        "Canonical-key mapping proposals (candidate Normalizers for CogniBase)"
+        "Canonical-key mapping proposals (candidate Normalizers for CogniBase)",
+        "MCP :8651 — mapsnap_profiles / mapsnap_schema / mapsnap_ask (+table_data via config)",
+        "Service API tokens (Application\\service_tokens.json) — machine-to-machine bearer auth, added 2026-07-30"
       ],
       "consumes_from_ecosystem": [],
       "paths": {
         "logs": "C:\\MapSnap\\LOGS"
-      }
+      },
+      "services": [
+        {
+          "name": "mapsnap_mcp",
+          "nssm_name": "QI_MapSnapMCP",
+          "port": 8651,
+          "type": "QI MCP Gateway (FastMCP)",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": false,
+          "installed": "2026-07-30"
+        }
+      ]
     },
     {
       "id": "m2v",
@@ -1183,7 +1202,7 @@
         "GET /health",
         "GET /version",
         "GET /info",
-        "POST /mcp — MCP Streamable HTTP. Tools: qi_ecosystem_snapshot, qi_search_memory, qi_get_context, qi_log_decision, qi_registry_lookup, qi_service_status, qi_headlines, qi_dispatches, qi_public_urls"
+        "POST /mcp — MCP Streamable HTTP. Core tools: qi_ecosystem_snapshot, qi_search_memory, qi_get_context, qi_log_decision, qi_registry_lookup, qi_service_status, qi_headlines, qi_dispatches, qi_public_urls. Adapter tools (config-gated via qi_mcp_gateway): mapsnap_profiles, mapsnap_schema, mapsnap_ask"
       ],
       "consumes_from_ecosystem": [
         "qi_brain (HTTP :9011 — ecosystem snapshot, memory search, context, decision log; graceful fallback when offline)"
