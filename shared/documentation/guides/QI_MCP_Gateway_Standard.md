@@ -45,3 +45,7 @@ Rules (Six-Laws aligned):
 | QI Brain/Hive | (native in connector core) | ✅ | n/a | qi_* core tools |
 | NEXUS / AutoPDF / Gamez / TubeScout / CogniBase / Claude Voice / Maia | — | planned | planned | roll out per checklist above |
 | OpenClaw / Hermes | — | investigate first | investigate first | check NATIVE MCP support before building (OpenClaw framework likely ships MCP; gateway only if missing). OC is non-HTTP TCP in WSL — special case |
+
+## UI integration pattern (optional, added 2026-07-31)
+
+Apps with a Settings UI SHOULD surface the gateway config as a panel (MapSnap reference implementation: **Settings → AI Connections & Features → Claude / MCP Access**): admin-gated `GET/POST /api/mcp/config` endpoints that read/write the SAME `mcp_gateway.json` + `service_tokens.json` files (file editing stays valid as plan B), expose only name/role/enabled for service accounts (never token values), show live gateway health, and offer Save vs Save & Apply (service restart). Renne's rule: **UI-configurable everywhere a UI exists; files remain the universal fallback.**
