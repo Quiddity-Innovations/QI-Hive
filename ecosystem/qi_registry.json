@@ -3,7 +3,7 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-07-30",
+    "last_updated": "2026-07-31",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
     "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled."
   },
@@ -179,7 +179,8 @@
         "Personality engine",
         "LLM chain (MiniMax → GPT → Qwen3 → Gemma3 → DeepSeek → Qwen3:4b)",
         "Group/user config system",
-        "RAG (ChromaDB — in development)"
+        "RAG (ChromaDB — in development)",
+        "Connector MCP tools (Phase 1): maia_info / maia_history / maia_memory (generic_tools config)"
       ],
       "consumes_from_ecosystem": [
         "nexus (/synthesize — multi-AI answers)",
@@ -239,7 +240,8 @@
       "exposes_to_ecosystem": [
         "Personal knowledge base queries",
         "File Scout (F:\\ read-only scan)",
-        "Domain-specific reasoning (AI/physics/programming)"
+        "Domain-specific reasoning (AI/physics/programming)",
+        "Connector MCP tools (Phase 1): naya_status / naya_ask (generic_tools config)"
       ],
       "consumes_from_ecosystem": [
         "nexus (/synthesize)",
@@ -268,6 +270,11 @@
           "current": 7880,
           "recommended_block": "7820",
           "notes": "Pre-registry — within safe range, no conflict"
+        },
+        "mcp": {
+          "current": 8310,
+          "block": "8300-8399",
+          "notes": "NEXUS MCP Gateway (QI_NexusMCP) via qi_mcp_gateway + C:\\NEXUS\\config\\mcp_gateway.json. Loopback. Added 2026-07-31."
         }
       },
       "services": [
@@ -280,6 +287,16 @@
           "name": "nexus_ui",
           "port": 7880,
           "type": "Gradio"
+        },
+        {
+          "name": "nexus_mcp",
+          "nssm_name": "QI_NexusMCP",
+          "port": 8310,
+          "type": "QI MCP Gateway",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": false,
+          "installed": "2026-07-31"
         }
       ],
       "family_tier": "backbone",
@@ -295,7 +312,8 @@
         "GET /scout/digest — daily AI news digest",
         "POST /scout/run — trigger news collection",
         "GET /bench/recommend — LLM recommendation by use case [Phase 2]",
-        "GET /providers — list active AI channels"
+        "GET /providers — list active AI channels",
+        "MCP :8310 + connector tools: nexus_providers / nexus_ai_digest / nexus_synthesize (declarative generic_tools)"
       ],
       "consumes_from_ecosystem": [],
       "ai_providers": [

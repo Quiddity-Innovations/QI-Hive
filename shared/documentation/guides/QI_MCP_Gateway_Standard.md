@@ -43,7 +43,10 @@ Rules (Six-Laws aligned):
 |---|---|---|---|---|
 | MapSnap | `mapsnap` | ✅ live 2026-07-30 | ✅ `QI_MapSnapMCP` :8651 | First adopter; service-token feature added to MapSnap auth |
 | QI Brain/Hive | (native in connector core) | ✅ | n/a | qi_* core tools |
-| NEXUS / AutoPDF / Gamez / TubeScout / CogniBase / Claude Voice / Maia | — | planned | planned | roll out per checklist above |
+| NEXUS | generic_tools (no code) | ✅ live 2026-07-31 | ✅ `QI_NexusMCP` :8310 | providers / ai_digest / synthesize — first declarative adopter |
+| Maia | generic_tools | ✅ Phase 1 2026-07-31 (info/history/memory) | follow-up | Phase 2 + claude-brain-in-chain = app-side work |
+| Naya | generic_tools | ✅ Phase 1 2026-07-31 (status/ask) | follow-up | LAN-only app; Phase 2 optional |
+| AutoPDF / Gamez / TubeScout / CogniBase / Claude Voice | — | planned | planned | roll out per checklist above |
 | OpenClaw / Hermes | n/a — NATIVE | via native client | native | ✅ VERIFIED 2026-07-31: OpenClaw 2026.4.26 ships `openclaw mcp` (add/manage servers); Hermes ships `hermes mcp {serve,add,test,…}` and can even run AS an MCP server. No gateway builds — wire by config: point them at connector :9030 / gateways with bearer header |
 
 ## UI integration pattern (optional, added 2026-07-31)
