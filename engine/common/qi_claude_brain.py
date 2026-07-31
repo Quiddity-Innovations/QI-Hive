@@ -81,8 +81,18 @@ def ask_claude(system_prompt: str, user_prompt: str, cfg: dict,
         raise RuntimeError("claude CLI not found — set claude_cli.bin in settings")
     args = [claude, "-p", "--output-format", "text",
             "--no-session-persistence", "--model", model or "sonnet"]
-    if system_prompt:
+    # Windows CreateProcess caps the whole command line at ~32K chars
+    # (WinError 206). App-assembled system prompts include schema/doc context
+    # and easily exceed that, so only SHORT system prompts ride argv; big ones
+    # are embedded in the stdin payload instead (bitten 2026-07-31, MapSnap
+    # Schema Explainer on a large profile).
+    ARGV_SYSTEM_MAX = 6000
+    if system_prompt and len(system_prompt) <= ARGV_SYSTEM_MAX:
         args += ["--append-system-prompt", system_prompt]
+    elif system_prompt:
+        user_prompt = ("<system-instructions>\n" + system_prompt +
+                       "\n</system-instructions>\n\nFollow the system instructions "
+                       "above for the conversation below.\n\n" + (user_prompt or ""))
     # NOT --bare: --bare forces ANTHROPIC_API_KEY and would bypass the free
     # subscription token (same reasoning as Claude Voice backends.py).
     try:
