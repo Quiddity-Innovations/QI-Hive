@@ -712,3 +712,26 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Health** | `http://127.0.0.1:8651/health` |
 | **Start type** | AUTO_START · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
 | **Added** | 2026-07-30 — first adopter of the reusable QI MCP Gateway |
+
+### QI_MapSnapMCPBU (MapSnap BU Edition MCP Gateway)
+| Field | Value |
+|---|---|
+| **Project** | MapSnap BU Edition — `C:\MapSnap` (registry id `mapsnap`); gateway port **8652** (MapSnap family block; 8651 = main gateway, untouched) |
+| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_mcp_bu_launcher.py` → SHIPPED `C:\MapSnap\tools\qi_mcp_gateway.py` (relative-path + deploy.json support) with config `C:\MapSnap\config\mcp_gateway_bu.json` (bind/port from `config\deploy.json`) |
+| **Purpose** | BU Edition MCP gateway: tools profiles/schema/ask, **table_data OFF** (egress guardrail). Loopback-only in both deploy modes. Used by the BU Claude account |
+| **Auth (inbound)** | bearer only; tokens in `C:\MapSnap\config\secrets_bu\` |
+| **Auth (to MapSnap)** | service token — `service_tokens.json` entry `bu_mcp_gateway` (viewer); kill-switch: set its `enabled:false` (no restart) |
+| **Logs** | `C:\QIH\logs\qi_mapsnap_mcp_bu.log` / `.err.log` |
+| **Health** | `http://127.0.0.1:8652/health` |
+| **Start type** | AUTO_START · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
+| **Added** | 2026-07-31 — BU Edition session; installed via QI_Elevate broker |
+
+### QI_MapSnapBUSetup (elevated setup runner — DEMAND_START utility)
+| Field | Value |
+|---|---|
+| **Project** | MapSnap BU Edition — dev-machine utility only (NOT shipped) |
+| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_bu_iis_runner.py` → executes `C:\MapSnap\kit\setup_iis.ps1` elevated with args from `C:\QIH\engine\launchers\mapsnap_bu_iis_args.txt` |
+| **Purpose** | Runs the BU kit's IIS setup/uninstall elevated (SYSTEM) without UAC. Trigger: touch/write the args file, then start/restart the service; read `C:\QIH\logs\mapsnap_bu_iis_setup.log`, then stop the service. Runs once per args-file change (marker: `mapsnap_bu_iis_setup.done`), then idles |
+| **Logs** | `C:\QIH\logs\mapsnap_bu_iis_setup.log` (script output) · `qi_mapsnap_bu_setup_svc.log` (service) |
+| **Start type** | **DEMAND_START** (never auto-runs) · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
+| **Added** | 2026-07-31 — BU Edition session; installed via QI_Elevate broker |
