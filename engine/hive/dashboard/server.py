@@ -2967,6 +2967,21 @@ def api_library_search(q: str = "", project: str = "", doc_type: str = "",
                         c["distance"] = dist.get(i)
                         rows.append(c)
                 mode = "semantic"
+            # title-boost: docs whose title/filename contain every query word
+            # always rank first, so a doc is findable by its own name even when
+            # the semantic embedding of a large/table-heavy file ranks poorly
+            import re as _re
+            words = [w for w in _re.split(r"[^a-zA-Z0-9]+", q) if len(w) >= 3][:6]
+            clauses = " AND ".join("(title LIKE ? OR path LIKE ?)" for _ in words)
+            params = tuple(x for w in words for x in (f"%{w}%", f"%{w}%"))
+            tb = _brain_db_query(
+                f"SELECT * FROM docs WHERE {clauses} AND stale=0 "
+                "ORDER BY mtime DESC LIMIT 10", params) if words else []
+            seen = {r["doc_id"] for r in rows}
+            boosted = [dict(r) for r in tb if r["doc_id"] not in seen]
+            if boosted:
+                rows = boosted + rows
+                mode = "semantic+title"
         except Exception:
             rows = []
         if not rows:                              # Brain API down → keyword fallback
