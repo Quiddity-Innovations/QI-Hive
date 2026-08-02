@@ -24,7 +24,7 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-DATE = "2026-06-29"
+DATE = "2026-08-02"
 LIB = Path(r"C:\QIH\shared\documentation\project_library")
 
 # pid -> (display_name, intro_dir). Builds only those whose INTRO has status_intro.md
@@ -54,6 +54,10 @@ PROJECTS = {
     "filehq":       ("FileHQ",               Path(r"C:\NAYA\filehq\INTRO")),
     "cypherminer":  ("CypherMiner",          Path(r"C:\CypherMiner\INTRO")),
     "digitization": ("Digitization Cost Tool", Path(r"C:\Users\renne\Downloads\DIGITIZATION COSTS\INTRO")),
+    # Batch 3 — added 2026-08-02 (component-inventory follow-up)
+    "playdeck":     ("PlayDeck",     Path(r"C:\PlayDeck\INTRO")),
+    "bakeoff":      ("Bakeoff",      Path(r"C:\QIP\Bakeoff\INTRO")),
+    "qi_connector": ("QI Connector", Path(r"C:\QIP\Connector\INTRO")),
 }
 
 STATUS_LABEL = {
