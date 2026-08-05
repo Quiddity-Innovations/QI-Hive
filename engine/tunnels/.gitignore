@@ -6,3 +6,4 @@ configs/
 LOGS/
 __pycache__/
 *.pyc
+configs_backup_*/

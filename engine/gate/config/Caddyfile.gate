@@ -1,0 +1,515 @@
+# ═══════════════════════════════════════════════════════════════
+# QI Gate — public edge.  GENERATED FILE — DO NOT EDIT BY HAND.
+#   source:    C:\QIH\engine\gate\config\gate.json
+#   regenerate: python C:\QIH\engine\gate\gen_caddyfile.py
+#   generated: 2026-08-05 00:40:20
+#
+#   22 public hostnames: 14 protected, 4 mixed, 4 open
+#
+#   Every Cloudflare tunnel points here. Caddy does the proxying
+#   (websockets/SSE/Gradio queues pass through untouched) and asks
+#   QI Gate whether the caller is signed in.
+# ═══════════════════════════════════════════════════════════════
+
+:9040 {
+	log {
+		output file C:\QIH\engine\gate\LOGS\caddy_edge.log {
+			roll_size 20mb
+			roll_keep 10
+		}
+		format json
+	}
+
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	# ── hive.quiddityinnovations.com  →  QI Hive Dashboard  [protected]
+	#   Crown jewels: ecosystem snapshot, service control, Brain data, war room. Was fully
+	#   readable by anyone before 2026-08-05.
+	@h0 host hive.quiddityinnovations.com
+	handle @h0 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8600 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── cognibase.quiddityinnovations.com  →  CogniBase  [protected]
+	@h1 host cognibase.quiddityinnovations.com
+	handle @h1 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8650 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── mapsnap.quiddityinnovations.com  →  MapSnap  [mixed]
+	#   MapSnap has its own login (Application/auth.py) — the gate is a second wall in front of
+	#   it. /mcp carries its own bearer token for the QI MCP Gateway, so it bypasses the cookie
+	#   wall.
+	@h2 host mapsnap.quiddityinnovations.com
+	handle @h2 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		@h2_public path /mcp
+		handle @h2_public {
+			reverse_proxy 127.0.0.1:9876 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:9876 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── tubescout.quiddityinnovations.com  →  TubeScout  [protected]
+	@h3 host tubescout.quiddityinnovations.com
+	handle @h3 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8503 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── nexus.quiddityinnovations.com  →  NEXUS Gradio UI  [protected]
+	@h4 host nexus.quiddityinnovations.com
+	handle @h4 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:7880 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── naya.quiddityinnovations.com  →  Naya Gradio UI  [protected]
+	@h5 host naya.quiddityinnovations.com
+	handle @h5 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:7861 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── lottery.quiddityinnovations.com  →  LotteryWiz  [protected]
+	@h6 host lottery.quiddityinnovations.com
+	handle @h6 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8777 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── cypher.quiddityinnovations.com  →  CypherMiner  [protected]
+	@h7 host cypher.quiddityinnovations.com
+	handle @h7 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:7842 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── worldcup.quiddityinnovations.com  →  Gamez / World Cup dashboard  [protected]
+	@h8 host worldcup.quiddityinnovations.com
+	handle @h8 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8710 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── m2v.quiddityinnovations.com  →  M2V  [protected]
+	#   127.0.0.1 not localhost — M2V Gradio binds IPv4 only.
+	@h9 host m2v.quiddityinnovations.com
+	handle @h9 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:7841 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── autopdf.quiddityinnovations.com  →  AutoPDF  [protected]
+	@h10 host autopdf.quiddityinnovations.com
+	handle @h10 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:6969 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── maia-demo.quiddityinnovations.com  →  Maia Gradio demo  [protected]
+	@h11 host maia-demo.quiddityinnovations.com
+	handle @h11 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:7860 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── kaze.quiddityinnovations.com  →  Kaze (OpenClaw news)  [protected]
+	@h12 host kaze.quiddityinnovations.com
+	handle @h12 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:18800 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── quiddam.com  →  Maia Quiddam UI  [protected]
+	#   Separate registrable domain -> its own cookie, so it needs its own login. This host is
+	#   the one the /wp-admin and /.env scanners were hitting.
+	@h13 host quiddam.com
+	handle @h13 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:7840 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── dev.quiddam.com  →  Maia Quiddam dev  [protected]
+	@h14 host dev.quiddam.com
+	handle @h14 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:7849 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── maia.quiddityinnovations.com  →  Maia API (LINE/Telegram/FB/WhatsApp)  [mixed]
+	#   Platform callbacks must stay reachable and verify their own signatures. Everything else
+	#   on :8001 -- /panel, /memory, /history, /export, /admin/* -- was publicly readable and is
+	#   now behind the gate.
+	@h15 host maia.quiddityinnovations.com
+	handle @h15 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		@h15_public path /maia/* /health /version
+		handle @h15_public {
+			reverse_proxy 127.0.0.1:8001 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8001 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── maia.quiddam.com  →  Maia API (quiddam.com alias)  [mixed]
+	@h16 host maia.quiddam.com
+	handle @h16 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		@h16_public path /maia/* /health /version
+		handle @h16_public {
+			reverse_proxy 127.0.0.1:8001 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8001 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── naya-line.quiddityinnovations.com  →  Naya webhook  [mixed]
+	#   Routes confirmed in C:\NAYA\naya_server.py: /webhook/telegram, /webhook/peer-bridge.
+	@h17 host naya-line.quiddityinnovations.com
+	handle @h17 {
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		@h17_public path /webhook/* /health
+		handle @h17_public {
+			reverse_proxy 127.0.0.1:8002 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8002 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+	}
+
+	# ── connector.quiddityinnovations.com  →  QI Connector (remote MCP)  [open]
+	#   Already enforces its own auth: bearer token for Claude Code, capability URL for
+	#   claude.ai (qi_mcp_gateway.py). A cookie wall would break the MCP client, which cannot
+	#   log in through a browser.
+	@h18 host connector.quiddityinnovations.com
+	handle @h18 {
+		reverse_proxy 127.0.0.1:9030 {
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {http.request.host}
+		}
+	}
+
+	# ── claudevoice.quiddityinnovations.com  →  Claude Voice (LINE webhook)  [open]
+	#   PENDING VERIFICATION 2026-08-05 -- could not enumerate its routes, so it is left exactly
+	#   as it was rather than risk breaking a live LINE bot overnight. Revisit and switch to
+	#   mixed.
+	@h19 host claudevoice.quiddityinnovations.com
+	handle @h19 {
+		reverse_proxy 127.0.0.1:8721 {
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {http.request.host}
+		}
+	}
+
+	# ── oc-line.quiddityinnovations.com  →  OpenClaw gateway (WSL)  [open]
+	#   PENDING VERIFICATION 2026-08-05 -- Node gateway inside WSL, routes not enumerated. Left
+	#   unchanged rather than risk breaking it overnight.
+	@h20 host oc-line.quiddityinnovations.com
+	handle @h20 {
+		reverse_proxy 127.0.0.1:18789 {
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {http.request.host}
+		}
+	}
+
+	# ── api.quiddam.com  →  MQ API  [open]
+	#   PENDING VERIFICATION 2026-08-05 -- service is not running, routes not enumerated.
+	#   Revisit before MQ goes live.
+	@h21 host api.quiddam.com
+	handle @h21 {
+		reverse_proxy 127.0.0.1:8500 {
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {http.request.host}
+		}
+	}
+
+	# Anything arriving with a Host we do not publish is not ours.
+	handle {
+		respond "Not found" 404
+	}
+}

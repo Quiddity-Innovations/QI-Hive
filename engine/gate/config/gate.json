@@ -1,0 +1,176 @@
+{
+  "_meta": {
+    "name": "QI Gate — public access policy",
+    "description": "Single source of truth for what the internet may reach. Every Cloudflare tunnel points at Caddy on gate.listen_port; Caddy asks QI Gate whether the caller is logged in before proxying to the app.",
+    "created": "2026-08-05",
+    "owner": "Renne Santiago / Quiddity Innovations",
+    "regenerate_caddyfile": "python C:\\QIH\\engine\\gate\\gen_caddyfile.py"
+  },
+
+  "gate": {
+    "listen_port": 9040,
+    "auth_port": 9041,
+    "auth_prefix": "/qi-auth",
+    "cookie_domain": ".quiddityinnovations.com",
+    "brand": "Quiddity Innovations",
+    "access_log": "C:\\QIH\\engine\\gate\\LOGS\\access.log"
+  },
+
+  "_modes": {
+    "protected": "Login required for every path. Default for anything with a UI.",
+    "mixed": "Login required EXCEPT the paths listed in public_paths (machine callbacks that authenticate themselves by signature).",
+    "open": "No gate. Only for endpoints that carry their own strong auth, or that we have not yet finished verifying — each one must carry a 'why' and be revisited."
+  },
+
+  "hosts": [
+    {
+      "host": "hive.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8600",
+      "app": "QI Hive Dashboard",
+      "mode": "protected",
+      "note": "Crown jewels: ecosystem snapshot, service control, Brain data, war room. Was fully readable by anyone before 2026-08-05."
+    },
+
+    {
+      "host": "cognibase.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8650",
+      "app": "CogniBase",
+      "mode": "protected"
+    },
+    {
+      "host": "mapsnap.quiddityinnovations.com",
+      "upstream": "127.0.0.1:9876",
+      "app": "MapSnap",
+      "mode": "mixed",
+      "public_paths": ["/mcp"],
+      "note": "MapSnap has its own login (Application/auth.py) — the gate is a second wall in front of it. /mcp carries its own bearer token for the QI MCP Gateway, so it bypasses the cookie wall."
+    },
+    {
+      "host": "tubescout.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8503",
+      "app": "TubeScout",
+      "mode": "protected"
+    },
+    {
+      "host": "nexus.quiddityinnovations.com",
+      "upstream": "127.0.0.1:7880",
+      "app": "NEXUS Gradio UI",
+      "mode": "protected"
+    },
+    {
+      "host": "naya.quiddityinnovations.com",
+      "upstream": "127.0.0.1:7861",
+      "app": "Naya Gradio UI",
+      "mode": "protected"
+    },
+    {
+      "host": "lottery.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8777",
+      "app": "LotteryWiz",
+      "mode": "protected"
+    },
+    {
+      "host": "cypher.quiddityinnovations.com",
+      "upstream": "127.0.0.1:7842",
+      "app": "CypherMiner",
+      "mode": "protected"
+    },
+    {
+      "host": "worldcup.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8710",
+      "app": "Gamez / World Cup dashboard",
+      "mode": "protected"
+    },
+    {
+      "host": "m2v.quiddityinnovations.com",
+      "upstream": "127.0.0.1:7841",
+      "app": "M2V",
+      "mode": "protected",
+      "note": "127.0.0.1 not localhost — M2V Gradio binds IPv4 only."
+    },
+    {
+      "host": "autopdf.quiddityinnovations.com",
+      "upstream": "127.0.0.1:6969",
+      "app": "AutoPDF",
+      "mode": "protected"
+    },
+    {
+      "host": "maia-demo.quiddityinnovations.com",
+      "upstream": "127.0.0.1:7860",
+      "app": "Maia Gradio demo",
+      "mode": "protected"
+    },
+    {
+      "host": "kaze.quiddityinnovations.com",
+      "upstream": "127.0.0.1:18800",
+      "app": "Kaze (OpenClaw news)",
+      "mode": "protected"
+    },
+    {
+      "host": "quiddam.com",
+      "upstream": "127.0.0.1:7840",
+      "app": "Maia Quiddam UI",
+      "mode": "protected",
+      "note": "Separate registrable domain -> its own cookie, so it needs its own login. This host is the one the /wp-admin and /.env scanners were hitting."
+    },
+    {
+      "host": "dev.quiddam.com",
+      "upstream": "127.0.0.1:7849",
+      "app": "Maia Quiddam dev",
+      "mode": "protected"
+    },
+
+    {
+      "host": "maia.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8001",
+      "app": "Maia API (LINE/Telegram/FB/WhatsApp)",
+      "mode": "mixed",
+      "public_paths": ["/maia/", "/health", "/version"],
+      "note": "Platform callbacks must stay reachable and verify their own signatures. Everything else on :8001 -- /panel, /memory, /history, /export, /admin/* -- was publicly readable and is now behind the gate."
+    },
+    {
+      "host": "maia.quiddam.com",
+      "upstream": "127.0.0.1:8001",
+      "app": "Maia API (quiddam.com alias)",
+      "mode": "mixed",
+      "public_paths": ["/maia/", "/health", "/version"]
+    },
+    {
+      "host": "naya-line.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8002",
+      "app": "Naya webhook",
+      "mode": "mixed",
+      "public_paths": ["/webhook/", "/health"],
+      "note": "Routes confirmed in C:\\NAYA\\naya_server.py: /webhook/telegram, /webhook/peer-bridge."
+    },
+
+    {
+      "host": "connector.quiddityinnovations.com",
+      "upstream": "127.0.0.1:9030",
+      "app": "QI Connector (remote MCP)",
+      "mode": "open",
+      "why": "Already enforces its own auth: bearer token for Claude Code, capability URL for claude.ai (qi_mcp_gateway.py). A cookie wall would break the MCP client, which cannot log in through a browser."
+    },
+    {
+      "host": "claudevoice.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8721",
+      "app": "Claude Voice (LINE webhook)",
+      "mode": "open",
+      "why": "PENDING VERIFICATION 2026-08-05 -- could not enumerate its routes, so it is left exactly as it was rather than risk breaking a live LINE bot overnight. Revisit and switch to mixed."
+    },
+    {
+      "host": "oc-line.quiddityinnovations.com",
+      "upstream": "127.0.0.1:18789",
+      "app": "OpenClaw gateway (WSL)",
+      "mode": "open",
+      "why": "PENDING VERIFICATION 2026-08-05 -- Node gateway inside WSL, routes not enumerated. Left unchanged rather than risk breaking it overnight."
+    },
+    {
+      "host": "api.quiddam.com",
+      "upstream": "127.0.0.1:8500",
+      "app": "MQ API",
+      "mode": "open",
+      "why": "PENDING VERIFICATION 2026-08-05 -- service is not running, routes not enumerated. Revisit before MQ goes live."
+    }
+  ]
+}

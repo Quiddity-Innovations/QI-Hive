@@ -72,6 +72,37 @@
 
 ---
 
+## ⚠️ QI Gate — every public tunnel now terminates here (2026-08-05)
+
+**All internet traffic reaches applications through `QI_Caddy` on :9040, not
+directly.** If a public URL is broken, check these two services *before* the app.
+
+| Field | Value |
+|---|---|
+| **Services** | `QI_Gate` (:9041, identity) · `QI_Caddy` (:9040, public edge) |
+| **AppDirectory** | `C:\QIH\engine\gate` · `C:\QIH\engine\bin` |
+| **Policy file** | `C:\QIH\engine\gate\config\gate.json` — **single source of truth** |
+| **Runbook** | `C:\QIH\engine\gate\README.md` |
+| **Audit record** | `C:\QIH\shared\documentation\security\QI_Public_Exposure_Hardening_2026-08-05.md` |
+| **Logs** | `C:\QIH\logs\qi_gate.log` · `C:\QIH\engine\gate\LOGS\access.log` (per-request audit) |
+| **Admin CLI** | `python C:\QIH\engine\gate\tools\gate_admin.py users\|sessions\|suspects\|revokeall` |
+| **Verify** | `python C:\QIH\engine\gate\verify_gate.py` (security) + `verify_design.py` (didn't break the apps) |
+
+**Symptom → cause lookup:**
+
+| Symptom | Likely cause |
+|---|---|
+| Every public URL returns **502** | `QI_Gate` or `QI_Caddy` stopped. Protected hosts fail **closed** by design. |
+| One public URL returns 502, others fine | That app is down — the gate is fine. |
+| Public URL returns **404 "Not found"** | Hostname not declared in `gate.json`. |
+| Login loop, or app renders **unstyled** | `X-Forwarded-Proto` — see the README. Do not remove `header_up X-Forwarded-Proto https`. |
+| LINE/Telegram webhook broken | Check `public_paths` for that host in `gate.json`. Webhooks bypass auth *before* `forward_auth`, so they survive a gate outage. |
+
+After editing `gate.json`: `python gen_caddyfile.py` then
+`C:\QIH\engine\bin\caddy.exe reload --config C:\QIH\engine\proxy\Caddyfile`.
+
+---
+
 ## Full Service Catalog
 
 ### QI_MaiaBot

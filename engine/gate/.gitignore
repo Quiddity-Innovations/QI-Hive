@@ -1,0 +1,7 @@
+# Secrets and runtime state — never commit
+data/
+LOGS/
+*.db
+*.db-wal
+*.db-shm
+setup_token.txt

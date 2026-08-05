@@ -1,0 +1,137 @@
+# ═══════════════════════════════════════════════════════════════
+# QI Hive — local reverse proxy (Caddy)
+#   One clean front door for every QI app on this machine.
+#   AppDirectory: C:\QIH\engine\proxy
+#   Run as NSSM service: QI_Caddy
+#
+#   Why Caddy and not IIS: Caddy handles ASGI + websockets
+#   (FastAPI, Gradio queues, Claude Voice realtime) transparently,
+#   auto-issues local HTTPS, and is one readable file. IIS+ARR
+#   would fight every Gradio/ML/websocket app you own.
+# ═══════════════════════════════════════════════════════════════
+
+{
+	# Caddy's internal CA → trusted https://*.qi.local on this box.
+	# Run `caddy trust` once to install the CA in Windows' store.
+	# Delete this block if you'd rather serve plain HTTP on :80.
+	local_certs
+}
+
+# ── QI Gate — the public edge (added 2026-08-05) ────────────────
+# Every Cloudflare tunnel now terminates on :9040 in the imported file
+# below instead of hitting app ports directly. That block is GENERATED
+# from C:\QIH\engine\gate\config\gate.json — edit the JSON, then run
+#   python C:\QIH\engine\gate\gen_caddyfile.py
+# The *.qi.local blocks further down are LAN-only and stay unauthenticated.
+import C:\QIH\engine\gate\config\Caddyfile.gate
+
+# ---- reusable "site-grade" snippet (compression + safe headers) ----
+(site) {
+	encode zstd gzip
+	header {
+		-Server
+		X-Content-Type-Options  nosniff
+		X-Frame-Options         SAMEORIGIN
+		Referrer-Policy         strict-origin-when-cross-origin
+	}
+}
+
+# ════════════════════ FEATURED SITES ════════════════════════════
+# The two you flagged. Root-served, compressed, hardened.
+# Same blocks can sit behind their Cloudflare tunnels too.
+
+lottery.qi.local {
+	import site
+	reverse_proxy 127.0.0.1:8777        # LotteryWiz (FastAPI serves UI + API)
+}
+
+cypher.qi.local {
+	import site
+	reverse_proxy 127.0.0.1:7842        # CypherMiner UI
+}
+
+# ════════════════════ AI BACKBONE / DASHBOARDS ══════════════════
+
+hive.qi.local {                          # Hive Dashboard
+	reverse_proxy 127.0.0.1:8600
+}
+brain.qi.local {                         # QI Brain API
+	reverse_proxy 127.0.0.1:9011
+}
+nexus.qi.local {                         # NEXUS API
+	reverse_proxy 127.0.0.1:8010
+}
+nexus-ui.qi.local {                      # NEXUS Gradio UI
+	reverse_proxy 127.0.0.1:7880
+}
+
+# ════════════════════ TOOLS / UTILITIES ═════════════════════════
+
+tubescout.qi.local {
+	reverse_proxy 127.0.0.1:8503
+}
+retire.qi.local {                        # Retirement Analyzer
+	reverse_proxy 127.0.0.1:8504
+}
+akiya.qi.local {                         # AkiyaScout
+	reverse_proxy 127.0.0.1:8505
+}
+cognibase.qi.local {
+	reverse_proxy 127.0.0.1:8650
+}
+mapsnap.qi.local {
+	reverse_proxy 127.0.0.1:9876
+}
+autopdf.qi.local {
+	reverse_proxy 127.0.0.1:6969
+}
+gamez.qi.local {
+	reverse_proxy 127.0.0.1:8710
+}
+m2v.qi.local {
+	reverse_proxy 127.0.0.1:8501
+}
+song.qi.local {                          # PersonalSong
+	reverse_proxy 127.0.0.1:8088
+}
+easyflow.qi.local {
+	reverse_proxy 127.0.0.1:8550
+}
+
+# ════════════════════ MEDIA / GRADIO ════════════════════════════
+# Websockets/streaming pass through automatically — no extra config.
+
+avatar.qi.local {                        # AvatarStudio
+	reverse_proxy 127.0.0.1:7862
+}
+maia-demo.qi.local {                     # Maia Gradio demo
+	reverse_proxy 127.0.0.1:7860
+}
+naya-ui.qi.local {                       # Naya Gradio (LAN only)
+	reverse_proxy 127.0.0.1:7861
+}
+
+# ──────────────────────────────────────────────────────────────
+# DELIBERATELY NOT PROXIED:
+#   • Maia API :8001      — production LINE/Telegram webhooks; leave
+#                            on its own qi-maia tunnel, don't disturb.
+#   • Claude Voice :8721  — LINE webhook already on qi-claudevoice tunnel.
+#   • OpenClaw :18789     — Node gateway in WSL, non-HTTP protocol.
+# ──────────────────────────────────────────────────────────────
+
+# ════════════════════ ALTERNATIVE: single-host path routing ═════
+# What you originally pictured (qi.local/lottery). Left commented.
+# CAVEAT: handle_path strips the prefix, so each app must be told
+# its base path or its /static, /assets, redirects will 404:
+#   FastAPI → uvicorn ... --root-path /lottery
+#   Gradio  → demo.launch(root_path="/cypher")
+# Subdomains above avoid all of this. Use this ONLY if you must
+# stay on one hostname.
+#
+# qi.local {
+# 	import site
+# 	handle_path /lottery/* { reverse_proxy 127.0.0.1:8777 }
+# 	handle_path /cypher/*  { reverse_proxy 127.0.0.1:7842 }
+# 	handle_path /hive/*    { reverse_proxy 127.0.0.1:8600 }
+# 	handle        { respond "QI Hive proxy — try /lottery or /cypher" 200 }
+# }

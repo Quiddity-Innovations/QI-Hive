@@ -4,6 +4,25 @@
 
 ---
 
+> ## ⚠️ 2026-08-05 — the "Internet" column below is OUT OF DATE. Do not trust it.
+>
+> An exposure audit found **22 hostnames published to the internet through 16
+> Cloudflare tunnels**, several of which this document still describes as
+> "**NO — LAN only**" (NEXUS, Naya and others were in fact publicly reachable, with
+> no authentication). Every one of them pointed straight at an app port.
+>
+> **All public traffic now goes through QI Gate** (`QI_Caddy` :9040 →
+> `QI_Gate` :9041) and requires a login.
+>
+> **The authoritative list of what is exposed is now
+> [`C:\QIH\engine\gate\config\gate.json`](../engine/gate/config/gate.json)** — not
+> this file. Full record:
+> [`QI_Public_Exposure_Hardening_2026-08-05.md`](../shared/documentation/security/QI_Public_Exposure_Hardening_2026-08-05.md).
+>
+> **Rule going forward:** any new internet-exposed service must be declared in
+> `gate.json` and routed through :9040. Never point a tunnel at an app port again.
+> Verify with `python C:\QIH\engine\gate\verify_gate.py`.
+
 ## Port Registry
 
 > **Rule:** Each project owns a dedicated port **block**. No project may use another project's block.
@@ -197,6 +216,7 @@ Each project has its own SQLite database. **Never share databases across project
 | Naya | NEXUS | `POST /synthesize` | Multi-AI reasoning |
 | Naya | FileHQ | `GET /files/search` | Personal file queries |
 | Any | NEXUS | `GET /providers` | Check which AIs are available |
+| TubeScout | PlayDeck | `GET http://127.0.0.1:8506/?play=<url>` | "▶ PlayDeck" on news cards (added 2026-08-04): deep link resolves + plays the video in PlayDeck. Buttons self-remove for non-localhost visitors, so the public tunnel page never shows dead links. |
 
 **Hub adoption pattern** (per tool, non-breaking): add config `llm_source: hub|direct` (or `llm_hub_enabled` bool) + `llm_hub_url`, default = current behavior; when enabled, try the hub first (`model: auto`) and fall through to the tool's existing direct path on any failure. The hub also speaks **Ollama-native** (`/api/tags`, `/api/chat`, `/api/generate`) so Ollama-based tools adopt it by changing one URL, and unknown model names route as `auto`.
 
