@@ -397,15 +397,26 @@ first and **aborts the rollout if the reload fails**, so the window cannot reope
 
 ### First external traffic observed at the gate
 
-The access log recorded its first hits from outside the house — both **denied** at
-the login wall:
+The access log recorded its first hits from outside the house. In the first ~2.5
+hours the gate denied **13 external requests, 100% of them against `quiddam.com`** —
+the same host that absorbed 1,758 probes in §2.
 
-| IP | Country | Path | Result |
-|---|---|---|---|
-| `43.164.1.211` | TH | `/` | denied |
-| `43.166.224.244` | US | `/` | denied |
+| IP | Country | Paths probed |
+|---|---|---|
+| `35.230.180.155` (Google Cloud) | US | `/wp/`, `/wordpress/`, `/blog/`, `/backup/`, `/old/`, `/new/`, `/` — **7 requests in the same second** |
+| `43.164.1.211` | TH | `/` |
+| `43.166.224.244` | US | `/` |
+| `43.164.197.117` | BR | `/` |
+| `4.43.184.113` | US | `/` |
+| `74.7.230.54`, `74.7.241.10` | US | `/robots.txt`, `/` |
 
-Both are Tencent Cloud ranges, consistent with the automated scanning in §2. **This is
+Two signals worth noting: the Google Cloud host is running a **WordPress-install
+scanner** (enumerating `/wp/`, `/wordpress/`, `/backup/`, `/old/` in one burst), and
+the 13 requests carried **9 distinct User-Agents** — iPhone, Android, Mac, Fedora,
+Windows — all from datacenter IPs. Rotating UAs like that is deliberate fingerprint
+evasion, not organic traffic.
+
+Every one was denied at the login wall. Both are Tencent Cloud ranges, consistent with the automated scanning in §2. **This is
 exactly the visibility that did not exist before** — under the old setup these would
 have reached the applications and left no record at all.
 
