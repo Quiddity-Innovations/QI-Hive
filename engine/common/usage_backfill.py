@@ -108,7 +108,15 @@ def _apply_window_cap(turns_by_day: dict[date, float], fixed: set) -> dict:
 
 def calibration(today: date) -> dict:
     """Blend the two measured windows into per-turn unit rates."""
-    B = usage_stats.range_stats(MEASURED_START, today)
+    # Calibrate against the LEDGER's measured rows, not live transcripts.
+    # Transcripts are the fragile source this whole ledger exists to outlive;
+    # if they are ever moved or pruned, calibrating from them would silently
+    # narrow the sample and swing every estimate with no warning. The ledger
+    # base only ever grows, so re-running this in December re-derives the
+    # Feb-Jun estimates against many more months of real data.
+    B = usage_ledger.measured_totals()
+    if B["turns"] < 500:                      # ledger not populated yet
+        B = usage_stats.range_stats(MEASURED_START, today)
     A = ANCHOR
     turns = A["turns"] + B["turns"]
     cost = A["cost_usd"] + B["cost_usd"]

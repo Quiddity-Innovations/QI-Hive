@@ -298,6 +298,42 @@ def range_stats(start: date, end: date) -> dict:
     }
 
 
+def measured_span() -> tuple[date, date] | None:
+    """First and last day for which we hold real measured data."""
+    con = connect()
+    r = con.execute(
+        "SELECT MIN(day), MAX(day) FROM usage_daily WHERE source='measured'").fetchone()
+    con.close()
+    if not r or not r[0]:
+        return None
+    return date.fromisoformat(r[0]), date.fromisoformat(r[1])
+
+
+def measured_totals(start: date | None = None, end: date | None = None) -> dict:
+    """Totals over MEASURED days only — the durable calibration base.
+
+    Reconstruction calibrates unit rates ($/turn, tokens/turn) against real
+    data. Reading that base from live transcripts would make it depend on the
+    very files that get deleted; the whole point of the ledger is that it
+    doesn't. As measured history accumulates, this widens automatically and
+    a re-run of the backfill re-derives every estimate against a larger,
+    better sample.
+    """
+    con = connect()
+    q = ("SELECT COALESCE(SUM(tokens),0), COALESCE(SUM(cache_reads),0), "
+         "COALESCE(SUM(cost_usd),0), COALESCE(SUM(turns),0), COUNT(*) "
+         "FROM usage_daily WHERE source='measured'")
+    args: list = []
+    if start:
+        q += " AND day>=?"; args.append(start.isoformat())
+    if end:
+        q += " AND day<=?"; args.append(end.isoformat())
+    r = con.execute(q, args).fetchone()
+    con.close()
+    return {"tokens": r[0], "cache_reads": r[1], "cost_usd": round(r[2], 2),
+            "turns": r[3], "days": r[4]}
+
+
 def coverage() -> list[dict]:
     """Per-source rollup — how much of the ledger is real vs reconstructed."""
     con = connect()
