@@ -153,6 +153,36 @@ from engine.common.qi_logger import get_logger, set_level, list_services
 from engine.common import usage_stats
 log = get_logger("dashboard")
 
+# ── Durable usage history ────────────────────────────────────────────────────
+# usage_stats is stateless: it re-parses ~/.claude/projects/**/*.jsonl on every
+# call, and Claude Code deletes those transcripts on a retention timer. That
+# silently truncated every long-horizon figure (QTD/YTD lost months of history
+# each time cleanup ran). usage_ledger is the persistent per-day store in
+# qi_brain.db; prefer it for calendar-aligned windows and fall back to live
+# parsing if it is empty or unavailable.
+try:
+    from engine.common import usage_ledger
+except Exception as _e:                                    # pragma: no cover
+    usage_ledger = None
+    log.warning(f"usage_ledger unavailable, falling back to live parse: {_e}")
+
+
+def usage_totals_since(start):
+    """Calendar-window totals, preferring the durable ledger.
+
+    Returns the usage_stats shape plus, when the ledger answered,
+    `cost_by_source` / `measured_pct` so the UI can show how much of the
+    figure is measured versus reconstructed.
+    """
+    if usage_ledger is not None:
+        try:
+            r = usage_ledger.totals_since(start)
+            if r.get("turns"):
+                return r
+        except Exception as e:
+            log.warning(f"usage_ledger.totals_since failed: {e}")
+    return usage_stats.totals_since(start)
+
 # ── Data helpers ─────────────────────────────────────────────────────────────
 
 def load_json(path: Path) -> dict:
@@ -1212,8 +1242,8 @@ def render_dashboard() -> str:
         u_today = usage_stats.today()
         u_week  = usage_stats.totals(7)
         u_30    = usage_stats.totals(30)
-        u_qtd   = usage_stats.totals_since(_q_start)
-        u_ytd   = usage_stats.totals_since(_y_start)
+        u_qtd   = usage_totals_since(_q_start)
+        u_ytd   = usage_totals_since(_y_start)
         tokens_today   = _fmt_tok(u_today["tokens"])
         cost_today     = f'${u_today["cost_usd"]:,.2f}'
         sessions_today = u_today["sessions"]
@@ -1225,8 +1255,15 @@ def render_dashboard() -> str:
         sub_today = f'{turns_today} turns'
         sub_week  = f'{_fmt_tok(u_week["tokens"])} tok'
         sub_30    = f'{_fmt_tok(u_30["tokens"])} tok'
-        sub_qtd   = f'{_fmt_tok(u_qtd["tokens"])} tok'
-        sub_ytd   = f'{_fmt_tok(u_ytd["tokens"])} tok'
+        # Long-horizon tiles are served from the durable ledger, which mixes
+        # measured days with reconstructed ones (transcripts deleted before
+        # 2026-06-26 are gone for good). Surface that ratio rather than let a
+        # largely-modelled figure read as hard data.
+        def _prov(u):
+            pct = u.get("measured_pct")
+            return f' · {pct:.0f}% measured' if pct is not None else ''
+        sub_qtd   = f'{_fmt_tok(u_qtd["tokens"])} tok{_prov(u_qtd)}'
+        sub_ytd   = f'{_fmt_tok(u_ytd["tokens"])} tok{_prov(u_ytd)}'
         q_label   = f'Q{_q_num} to date'
     except Exception as e:
         tokens_today = cost_today = sessions_today = turns_today = "—"
@@ -5891,8 +5928,8 @@ def render_usage() -> str:
     from datetime import date as _date
     _td = _date.today()
     _qn = (_td.month - 1) // 3 + 1
-    t_qtd = usage_stats.totals_since(_date(_td.year, (_qn - 1) * 3 + 1, 1))
-    t_ytd = usage_stats.totals_since(_date(_td.year, 1, 1))
+    t_qtd = usage_totals_since(_date(_td.year, (_qn - 1) * 3 + 1, 1))
+    t_ytd = usage_totals_since(_date(_td.year, 1, 1))
     daily = usage_stats.daily(30)
     projects_sav = usage_stats.savings_by_project(30)
     s_models = usage_stats.savings_by_model(30)

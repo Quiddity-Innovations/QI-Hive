@@ -348,13 +348,15 @@ def today() -> dict:
 def daily(days: int = 30) -> list[dict]:
     evs = _iter_events()
     cutoff = date.today() - timedelta(days=days - 1)
-    buckets: dict[date, dict] = defaultdict(lambda: {"tokens": 0, "cost": 0.0, "turns": 0, "sessions": set()})
+    buckets: dict[date, dict] = defaultdict(
+        lambda: {"tokens": 0, "cache_reads": 0, "cost": 0.0, "turns": 0, "sessions": set()})
     for e in evs:
         d = e["ts"].astimezone().date()
         if d < cutoff:
             continue
         b = buckets[d]
         b["tokens"]  += e["tokens"]
+        b["cache_reads"] += e.get("cache_reads", 0)
         b["cost"]    += e["cost"]
         b["turns"]   += 1
         b["sessions"].add(e["session"])
@@ -380,11 +382,15 @@ def daily(days: int = 30) -> list[dict]:
     out = []
     for i in range(days):
         d = cutoff + timedelta(days=i)
-        b = buckets.get(d, {"tokens": 0, "cost": 0.0, "turns": 0, "sessions": set()})
+        b = buckets.get(d, {"tokens": 0, "cache_reads": 0, "cost": 0.0, "turns": 0, "sessions": set()})
         w = whatif.get(d, {"local": 0.0, "batch": 0.0, "combined": 0.0})
         out.append({
             "date":              d.isoformat(),
             "tokens":            b["tokens"],
+            # Cache re-reads are billed at 10% of input rate and excluded from
+            # `tokens` (see _tokens). Surfaced per-day so the ledger can store
+            # them alongside fresh consumption instead of recording zero.
+            "cache_reads":       b["cache_reads"],
             "cost_usd":          round(b["cost"], 2),
             "local_cost_usd":    round(w["local"], 2),
             "batch_cost_usd":    round(w["batch"], 2),
@@ -753,6 +759,77 @@ def totals_since(start: date) -> dict:
         "cost_usd":    round(cost, 2),
         "turns":       turns,
         "sessions":    len(sessions),
+    }
+
+
+def range_stats(start: date, end: date) -> dict:
+    """All metrics for an inclusive [start, end] local-date window: raw totals
+    (tokens / cache-reads / cost / turns / sessions) PLUS the what-if savings
+    breakdown (local offload / batch / combined).
+
+    Powers the LLM-Usage tab's interactive date-range picker and the
+    click-a-bar drilldown — selecting a day or range recomputes every headline
+    field for exactly that window. If end < start the two are swapped so the UI
+    never has to care which input the user touched first."""
+    if end < start:
+        start, end = end, start
+    evs = _iter_events()
+    tokens = cache_reads = turns = 0
+    cost = 0.0
+    sessions: set = set()
+    actual_cost = local_savings = batchable_cost = combined_cost = 0.0
+    offloaded_turns = 0.0
+    offloaded_tokens = 0
+    batchable_turns = 0
+    for e in evs:
+        d = e["ts"].astimezone().date()
+        if d < start or d > end:
+            continue
+        c = e["cost"]; tok = e["tokens"]; fam = e["family"]
+        tokens += tok
+        cache_reads += e.get("cache_reads", 0)
+        cost += c
+        turns += 1
+        sessions.add(e["session"])
+        actual_cost += c
+        frac = LOCAL_OFFLOAD_BY_FAMILY.get(fam, 0.0)
+        local_savings += c * frac
+        offloaded_tokens += int(tok * frac)
+        offloaded_turns += frac
+        hour_local = e["ts"].astimezone().hour
+        in_night = BATCH_WINDOW_START_HOUR <= hour_local < BATCH_WINDOW_END_HOUR
+        if not in_night:
+            batchable_cost += c
+            batchable_turns += 1
+        remaining = c * (1 - frac)
+        if not in_night:
+            remaining *= (1 - BATCH_DISCOUNT)
+        combined_cost += remaining
+
+    batch_savings = batchable_cost * BATCH_DISCOUNT
+    combined_savings = actual_cost - combined_cost
+    def pct(p, w): return round((p / w) * 100, 1) if w > 0 else 0.0
+    return {
+        "start":             start.isoformat(),
+        "end":               end.isoformat(),
+        "days":              (end - start).days + 1,
+        "tokens":            tokens,
+        "cache_reads":       cache_reads,
+        "cost_usd":          round(cost, 2),
+        "turns":             turns,
+        "sessions":          len(sessions),
+        "local_savings_usd": round(local_savings, 2),
+        "local_savings_pct": pct(local_savings, actual_cost),
+        "local_optimized_cost_usd": round(actual_cost - local_savings, 2),
+        "offloaded_turns":   int(offloaded_turns),
+        "offloaded_tokens":  offloaded_tokens,
+        "batch_savings_usd": round(batch_savings, 2),
+        "batch_savings_pct": pct(batch_savings, actual_cost),
+        "batch_optimized_cost_usd": round(actual_cost - batch_savings, 2),
+        "batchable_turns":   batchable_turns,
+        "combined_cost_usd":    round(combined_cost, 2),
+        "combined_savings_usd": round(combined_savings, 2),
+        "combined_savings_pct": pct(combined_savings, actual_cost),
     }
 
 
