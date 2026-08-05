@@ -25,12 +25,26 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 def main() -> int:
     try:
+        from datetime import timedelta
+
+        import usage_dimensions
         import usage_ledger
+
         res = usage_ledger.snapshot(days=45)
+        # Keep the per-project/per-model tables in step with the days just
+        # snapshotted, so the By-Project / By-Model tables never drift from
+        # the day totals. Scoped to the same window to stay cheap.
+        dim = usage_dimensions.backfill(
+            verbose=False, since=date.today() - timedelta(days=45))
         ytd = usage_ledger.totals_since(date(date.today().year, 1, 1))
         print(f"[usage_ledger] snapshotted {res['written']} day(s); "
+              f"dimensions {dim['project_rows']}p/{dim['model_rows']}m; "
               f"YTD ${ytd['cost_usd']:,.2f} "
               f"({ytd['measured_pct']}% measured)")
+        if dim["unreconciled_projects"] or dim["unreconciled_models"]:
+            print(f"[usage_ledger] WARNING unreconciled days — "
+                  f"projects={dim['unreconciled_projects']} "
+                  f"models={dim['unreconciled_models']}", file=sys.stderr)
         return 0
     except Exception as e:
         # Never let a bookkeeping failure break session teardown.

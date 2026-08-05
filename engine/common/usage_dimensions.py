@@ -195,18 +195,27 @@ def _anchor_project_mix() -> dict[str, float]:
     return {k: v / tot for k, v in ANCHOR["by_project"].items()}
 
 
-def backfill(verbose: bool = True) -> dict:
+def backfill(verbose: bool = True, since: date | None = None) -> dict:
     """Rebuild both dimension tables from the day-level ledger.
 
     Measured days come from real transcript events; everything else is split
     by weights. Every day reconciles exactly to usage_daily.cost_usd.
+
+    `since` limits the rebuild to days >= that date, leaving reconstructed
+    history untouched. The SessionEnd hook uses this so keeping dimensions
+    current costs a few hundred rows instead of re-running `git log` across
+    every repo. Omit it for a full historical rebuild.
     """
     import usage_stats
 
     con = usage_ledger.connect()
     con.executescript(DDL)
-    con.execute("DELETE FROM usage_daily_project")
-    con.execute("DELETE FROM usage_daily_model")
+    if since:
+        con.execute("DELETE FROM usage_daily_project WHERE day>=?", (since.isoformat(),))
+        con.execute("DELETE FROM usage_daily_model WHERE day>=?", (since.isoformat(),))
+    else:
+        con.execute("DELETE FROM usage_daily_project")
+        con.execute("DELETE FROM usage_daily_model")
 
     # Real per-day/per-project and per-day/per-model splits where we have logs.
     meas_p: dict[date, collections.Counter] = collections.defaultdict(collections.Counter)
@@ -224,14 +233,18 @@ def backfill(verbose: bool = True) -> dict:
         meas_turns_p[d][e["project"]] += 1
         meas_turns_m[d][e["model"]] += 1
 
-    pw = project_weights()
-    amix = _anchor_project_mix()
-    now = datetime.now().isoformat(timespec="seconds")
-
     rows = con.execute(
         "SELECT day, tokens, cache_reads, cost_usd, turns, source, confidence "
-        "FROM usage_daily WHERE cost_usd > 0 ORDER BY day"
+        "FROM usage_daily WHERE cost_usd > 0 AND day >= ? ORDER BY day",
+        (since.isoformat() if since else "0000-01-01",)
     ).fetchall()
+
+    # project_weights() shells out to `git log` across every repo, so only pay
+    # for it when a non-measured day in range actually needs proxy weights.
+    needs_proxies = any(r[5] != "measured" for r in rows)
+    pw = project_weights() if needs_proxies else {}
+    amix = _anchor_project_mix()
+    now = datetime.now().isoformat(timespec="seconds")
 
     n_p = n_m = 0
     for ds, tokens, cache, cost, turns, source, conf in rows:
