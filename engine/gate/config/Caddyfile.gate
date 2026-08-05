@@ -2,9 +2,9 @@
 # QI Gate — public edge.  GENERATED FILE — DO NOT EDIT BY HAND.
 #   source:    C:\QIH\engine\gate\config\gate.json
 #   regenerate: python C:\QIH\engine\gate\gen_caddyfile.py
-#   generated: 2026-08-05 00:56:15
+#   generated: 2026-08-05 01:31:01
 #
-#   22 public hostnames: 14 protected, 5 mixed, 3 open
+#   22 public hostnames: 14 protected, 6 mixed, 2 open
 #
 #   Every Cloudflare tunnel points here. Caddy does the proxying
 #   (websockets/SSE/Gradio queues pass through untouched) and asks
@@ -509,8 +509,12 @@
 	}
 
 	# ── oc-line.quiddityinnovations.com  →  OpenClaw gateway (WSL)  [open]
-	#   PENDING VERIFICATION 2026-08-05 -- Node gateway inside WSL, routes not enumerated. Left
-	#   unchanged rather than risk breaking it overnight.
+	#   STILL OPEN 2026-08-05. Probed it: /, /health, /webhook, /line/webhook and /status all
+	#   return 200 while /api returns 404 -- that is a catch-all handler, so a path probe cannot
+	#   tell a real route from a fallback and an allow-list cannot be built safely. The gateway
+	#   may also dispatch on request body rather than path. It fronts live OpenClaw agents
+	#   (Tasuke, Kaze, Yubin, Sentry), so gating it on a guess risks breaking them. NEEDS a look
+	#   at the Node routing table inside WSL (~/.openclaw) before it can move to mixed.
 	@h20 host oc-line.quiddityinnovations.com
 	handle @h20 {
 		reverse_proxy 127.0.0.1:18789 {
@@ -519,14 +523,37 @@
 		}
 	}
 
-	# ── api.quiddam.com  →  MQ API  [open]
-	#   PENDING VERIFICATION 2026-08-05 -- service is not running, routes not enumerated.
-	#   Revisit before MQ goes live.
+	# ── api.quiddam.com  →  MQ API  [mixed]
+	#   Routes enumerated from C:\MQ\api\main.py (2026-08-05): only /health, /version and /info
+	#   exist -- there are NO webhooks, so nothing external needs to post here and the whole
+	#   surface can be gated. /health left open for uptime monitoring. Service was stopped when
+	#   this was applied, so the change carried no risk. Re-check if MQ later adds
+	#   Facebook/Instagram/WhatsApp callbacks, which would need listing here.
 	@h21 host api.quiddam.com
 	handle @h21 {
-		reverse_proxy 127.0.0.1:8500 {
-			header_up X-Forwarded-Proto https
-			header_up X-Forwarded-Host {http.request.host}
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		@h21_public path /health
+		handle @h21_public {
+			reverse_proxy 127.0.0.1:8500 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8500 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
 		}
 	}
 

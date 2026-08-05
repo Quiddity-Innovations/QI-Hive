@@ -311,12 +311,17 @@ Other Quiddity repositories should be reviewed for the same issue.
 
 ## 6. Residual risk
 
-1. **Four hosts remain `open`.** `connector` is a permanent, deliberate exception —
-   it carries its own bearer/capability auth and an MCP client cannot log in through
-   a browser. The other three (`claudevoice`, `oc-line`, `api.quiddam`) were left
-   **untouched on purpose**: their routes could not be enumerated, and silently
-   breaking a live LINE bot overnight was judged the worse risk. They are no worse
-   than before, but they are not yet fixed.
+1. **Two hosts remain `open`** (down from four — see §9).
+   - `connector.quiddityinnovations.com` — **permanent, deliberate exception.** It
+     carries its own bearer/capability auth and an MCP client cannot log in through a
+     browser.
+   - `oc-line.quiddityinnovations.com` — **still genuinely open.** Probing found `/`,
+     `/health`, `/webhook`, `/line/webhook` and `/status` all returning 200 while
+     `/api` returns 404: that is a catch-all handler, so a path probe cannot separate
+     real routes from a fallback, and the gateway may dispatch on request body rather
+     than path. It fronts live OpenClaw agents (Tasuke, Kaze, Yubin, Sentry), so
+     gating it on a guess risks breaking them. **Needs the Node routing table inside
+     WSL (`~/.openclaw`) read before it can move to `mixed`.**
 
 2. **Single factor.** One password now fronts the estate. The natural upgrade is
    **Cloudflare Access (Zero Trust)** in front of the tunnels — free to 50 users,
@@ -373,3 +378,39 @@ Other Quiddity repositories should be reviewed for the same issue.
 
 **Services**
 - `QI_Gate` — new, Automatic, `C:\QIH\engine\gate`, logs `C:\QIH\logs\qi_gate*.log`
+
+---
+
+## 9. Addendum — overnight continuation (2026-08-05, 01:00–01:35)
+
+Two of the four `open` hosts were closed after their routes were enumerated. Final
+state: **20 of 22 hostnames require a login** (14 `protected`, 6 `mixed`, 2 `open`).
+
+| Host | Was | Now | Basis |
+|---|---|---|---|
+| `claudevoice.quiddityinnovations.com` | open | **mixed** | Routes read from `line_bot.py`: `/line/webhook`, `/health`, `/audio/{f}`, `/media/{f}` are all that exist. The media paths stay public because LINE's servers fetch from them to deliver replies; both use `os.path.basename()`, so traversal is already blocked. Its FastAPI `/docs` is now behind the wall. |
+| `api.quiddam.com` | open | **mixed** | Routes read from `C:\MQ\api\main.py`: only `/health`, `/version`, `/info`. **No webhooks**, so nothing external needs to post here. `/health` left open for uptime monitoring. MQ was stopped, so the change carried no risk. |
+| `oc-line.quiddityinnovations.com` | open | **open** | Catch-all handler — see §6.1. Not safe to allow-list without reading the WSL routing table. |
+| `connector.quiddityinnovations.com` | open | **open** | Permanent exception — carries its own bearer auth. |
+
+### Procedural bug found and fixed
+
+`rollout_tunnels.py` repointed tunnels at `:9040` **without regenerating and
+reloading Caddy first**, so traffic could arrive at a policy Caddy had not loaded yet.
+This briefly left `claudevoice` proxying straight through unauthenticated after its
+mode changed; caught in verification within seconds. The script now reloads Caddy
+first and **aborts the rollout if the reload fails**, so the window cannot reopen.
+
+### First external traffic observed at the gate
+
+The access log recorded its first hits from outside the house — both **denied** at
+the login wall:
+
+| IP | Country | Path | Result |
+|---|---|---|---|
+| `43.164.1.211` | TH | `/` | denied |
+| `43.166.224.244` | US | `/` | denied |
+
+Both are Tencent Cloud ranges, consistent with the automated scanning in §2. **This is
+exactly the visibility that did not exist before** — under the old setup these would
+have reached the applications and left no record at all.
