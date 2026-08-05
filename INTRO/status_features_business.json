@@ -1,62 +1,56 @@
 [
   {
-    "category": "Dashboard Overview",
+    "category": "Mission Control & Dashboard",
     "features": [
-      {"name": "Project status cards", "description": "Each QI project shown as a status card: name, phase (complete/in_progress/backlog/new/retired), open task count, link to kanban board", "status": "live", "notes": "Reads status.json; 9 projects registered"},
-      {"name": "Claude usage strip", "description": "Today's token usage, spend, sessions, turns — plus 30-day cost total — shown at the top of every dashboard visit", "status": "live", "notes": "usage_stats.py parses ~/.claude/**/*.jsonl locally"},
-      {"name": "Agent team table", "description": "All registered Claude agents with their status (active/idle), default model, and scope", "status": "live", "notes": "Reads C:\\QIH\\hive\\Agents\\*/config.json"},
-      {"name": "Session log", "description": "Most recent QI Brain sessions shown in reverse order with summary", "status": "live", "notes": "From QI Brain API or status.json session_log fallback"},
-      {"name": "Task column badges", "description": "Backlog / In Progress / Review / Done counts at a glance with links to board and health check", "status": "live", "notes": ""}
+      {"name": "Single pane of glass", "description": "One web console at localhost:8600 covering every QI project — health, tasks, services, usage, docs, agents.", "status": "live", "notes": "FastAPI + AdminLTE, server-rendered, dark mode."},
+      {"name": "Mission Control board", "description": "Live monitoring view of the whole ecosystem — per-project phase, status, and last activity at a glance.", "status": "live", "notes": "Renamed from the old 'Hive' page; route /mission-control."},
+      {"name": "Ecosystem health check", "description": "Registry-driven liveness probe of every project: service state, port, git, doc freshness.", "status": "live", "notes": "30s TTL cache so page loads stay fast."},
+      {"name": "Kanban task board", "description": "Cross-project task board with drag-and-drop between columns and full create/edit/delete.", "status": "live", "notes": "SortableJS; tasks stored in data/tasks.json."},
+      {"name": "Project Status pages", "description": "Maia-style 7-tab Status page per project — including this one — driven by each project's INTRO folder.", "status": "live", "notes": "Renderer: engine/hive/dashboard/project_status.py."},
+      {"name": "QI Launchpad / Panel", "description": "Role-labelled tiles linking to every app's local and public (tunnel) URL; tunnel-aware.", "status": "live", "notes": "Links aggregated by link_collector.py."}
     ]
   },
   {
-    "category": "Health Check",
+    "category": "QI Brain / Knowledge",
     "features": [
-      {"name": "Service status per project", "description": "Each project's NSSM service is probed — running / stopped / not_found / n/a", "status": "live", "notes": "11 projects monitored as of 2026-04-19"},
-      {"name": "Port open check", "description": "API port checked for each project — green tick / red cross per project", "status": "live", "notes": ""},
-      {"name": "Git status", "description": "Branch name, last commit message (45 chars), uncommitted change count per project", "status": "live", "notes": ""},
-      {"name": "Documentation currency", "description": "Docs marked current / stale / missing per project", "status": "live", "notes": ""},
-      {"name": "Session summary presence", "description": "Whether a session summary docx exists for each project", "status": "live", "notes": ""},
-      {"name": "Action items callout", "description": "Projects with health issues surfaced in a warning callout at the top of the Health page", "status": "live", "notes": ""},
-      {"name": "Auto-refresh", "description": "Health page auto-reloads every 60 seconds", "status": "live", "notes": "JavaScript setTimeout 60s"}
+      {"name": "Durable ecosystem memory", "description": "Every decision, feature, session, and project-state change is recorded across all 24 projects and never lost between sessions.", "status": "live", "notes": "491 decisions, 394 features, 564 sessions, 239 states (data/qi_brain.db)."},
+      {"name": "Semantic search", "description": "Natural-language search across decisions, features, sessions, and documentation.", "status": "live", "notes": "ChromaDB; embeddings from local Ollama nomic-embed-text."},
+      {"name": "Documentation Brain", "description": "Ecosystem-wide doc index with full-text search, a TheBrain-style Plex graph, and split-view reader.", "status": "live", "notes": "921 docs indexed; harvested by doc_harvester.py."},
+      {"name": "Project context recall", "description": "On session start an agent gets the project's current state, recent decisions, and pending features in a token budget.", "status": "live", "notes": "qi.get_context() MCP tool."},
+      {"name": "Cross-project feature propagation", "description": "A pattern built in one project is evaluated for relevance to every other project and surfaced for adopt/adapt/skip.", "status": "partial", "notes": "Engine + 44 evaluations exist; propagation run on demand."},
+      {"name": "Unified activity headlines", "description": "Twitter-style chronological feed merging sessions, decisions, features, dispatches, compliance, and state changes.", "status": "live", "notes": "/api/headlines unions six tables."}
     ]
   },
   {
-    "category": "Kanban Task Board",
+    "category": "Agent Fabric",
     "features": [
-      {"name": "4-column kanban", "description": "Backlog → In Progress → Review → Done. Drag cards between columns with SortableJS.", "status": "live", "notes": "Columns persist to tasks.json via PATCH /api/tasks/:id"},
-      {"name": "Task cards", "description": "Each card shows title, description (first 80 chars), priority badge, agent icon, and project tag", "status": "live", "notes": "Agents: architect, builder, scout, scribe, ops, inspector, tester"},
-      {"name": "Add task", "description": "New task form: title, description, project, agent, priority. Creates entry in tasks.json.", "status": "live", "notes": "POST /api/tasks"},
-      {"name": "Delete task", "description": "Confirm-delete per card", "status": "live", "notes": "DELETE /api/tasks/:id"},
-      {"name": "Per-project filter", "description": "Filter the board to show only one project's tasks", "status": "live", "notes": "?project= query parameter"}
+      {"name": "Specialist sub-agent team", "description": "Eight role-specialised agents (architect, builder, inspector, ops, scout, scribe, tester, librarian) the main thread dispatches work to.", "status": "live", "notes": "Defined as Claude Code sub-agents; routed per DISPATCH_PROTOCOL.md."},
+      {"name": "Dispatch Protocol", "description": "A standing operating discipline mapping each task type to the right agent and model, with design->build->inspect->scribe workflows.", "status": "live", "notes": "Keeps Opus reasoning, Sonnet building, Haiku on triage/docs."},
+      {"name": "CoWork dispatch channel", "description": "Bi-directional task/proposal board where CoWork and agents post work and the owner (or Claude) approves, declines, or discusses.", "status": "live", "notes": "Inspector findings kept off the human queue; idempotent."},
+      {"name": "Auto-apply pipeline", "description": "Approved dispatches flow to a builder runner that prepares the change for review.", "status": "partial", "notes": "QI_HiveApply Phase 1 — inbox-fallback mode."},
+      {"name": "Agent growth loop", "description": "Agents log what worked and what to improve after each task, building a profile over time.", "status": "partial", "notes": "Tables + endpoints live; agent_growth_log not yet populated."},
+      {"name": "War Room", "description": "A shared multi-agent text channel where the owner, Claude, CoWork, and hive agents talk in one thread.", "status": "partial", "notes": "Stage 0 text-only; avatars + voice planned."}
     ]
   },
   {
-    "category": "LLM Usage Tracking",
+    "category": "Standards & Compliance",
     "features": [
-      {"name": "Today's usage summary", "description": "Tokens, cost, sessions, and turns for the current day", "status": "live", "notes": "usage_stats.today()"},
-      {"name": "30-day daily chart", "description": "Daily token and cost breakdown for the past 30 days", "status": "live", "notes": "usage_stats.daily(30); Actual / Local offload / Local+Batch series"},
-      {"name": "By project breakdown", "description": "Token usage and cost attributed per QI project", "status": "live", "notes": "usage_stats.by_project()"},
-      {"name": "By model breakdown", "description": "Token usage, cost, and savings per Claude model (Opus/Sonnet/Haiku)", "status": "live", "notes": "usage_stats.by_model(); per-model savings table; totals row"},
-      {"name": "Tier comparison", "description": "Side-by-side comparison of usage tiers (Actual vs local offload scenarios)", "status": "live", "notes": "Renamed tiers — no 'WHAT-IF' prefix (updated 2026-04-19)"}
+      {"name": "The Six Laws", "description": "An architectural constitution every QI project must honor — registry truth, the module contract, graceful degradation, contract-first APIs, current registry, owner override.", "status": "live", "notes": "QI_Architecture_Principles.md."},
+      {"name": "Compliance enforcement", "description": "The Inspector continuously audits every project against QI standards, auto-fixes safe issues, and files dispatches for the rest.", "status": "live", "notes": "Runs every 4h + nightly deep; 46k+ compliance-log rows."},
+      {"name": "One-command new project", "description": "Scaffolds a fully compliant project — registry entry, folders, CLAUDE.md, /health skeleton — in a single command.", "status": "live", "notes": "qi_new_project.py."},
+      {"name": "Compliance validator", "description": "On-demand checker that confirms a project meets the registry, port-block, naming, and endpoint rules.", "status": "live", "notes": "qi_validator.py --project <id>."},
+      {"name": "Compliance dashboard", "description": "A page summarising pass/fail/warn status across the ecosystem with a manual rescan button.", "status": "live", "notes": "/compliance + /api/compliance/*."}
     ]
   },
   {
-    "category": "Hive Intelligence (Brain)",
+    "category": "Service Operations",
     "features": [
-      {"name": "Brain connection status", "description": "Live badge showing whether QI Brain (port 9010) is online or offline", "status": "live", "notes": "brain_online() probe"},
-      {"name": "Ecosystem stats", "description": "Active projects, decisions logged, features tracked, sessions logged — from Brain DB with local fallbacks", "status": "live", "notes": "Numbers: 9 projects / 57 decisions / 21 features / 80 sessions (as of 2026-04-19)"},
-      {"name": "Agent profiles", "description": "Per-agent detail: status, model, scope, recent activity from Brain API", "status": "live", "notes": "get_agents() + get_agent_profile()"},
-      {"name": "Recent sessions", "description": "Last N Brain-logged sessions across all projects", "status": "live", "notes": "get_recent_sessions()"}
-    ]
-  },
-  {
-    "category": "Autonomous Service Control",
-    "features": [
-      {"name": "Elevation broker (QI_Elevate)", "description": "Any Claude session can restart, start, or stop NSSM services autonomously — no UAC prompt, no human in the loop", "status": "live", "notes": "from engine.common.qi_service import restart, start, stop"},
-      {"name": "gsudo credential cache", "description": "One UAC prompt per workday (8-hour cache). After that, all elevation is silent.", "status": "live", "notes": "gsudo CacheMode auto, CacheDuration 00:08:00"},
-      {"name": "Broker resilience", "description": "QI_Elevate auto-restarts on crash (NSSM AppExit=Restart). QI_ElevateWatchdog (Task Scheduler, SYSTEM, 1-min cadence) revives it if NSSM itself fails.", "status": "live", "notes": "Suicide-loop fix: stale-queue purge on startup for requests >5 min old"},
-      {"name": "Single-instance PID lock", "description": "Broker locks C:\\QIH\\logs\\elevation\\broker.lock to prevent orphan-broker race condition on rapid restarts", "status": "live", "notes": "os.kill(pid, 0) liveness check"}
+      {"name": "Autonomous service control", "description": "Any Claude session can restart, stop, or start any QI service without a UAC prompt blocking the loop.", "status": "live", "notes": "qi_service.py over the QI_Elevate broker."},
+      {"name": "Elevation broker", "description": "A LocalSystem daemon that runs only whitelisted admin commands dropped as JSON, solving UAC-in-the-loop.", "status": "live", "notes": "QI_Elevate; regex-bounded whitelist, no shell."},
+      {"name": "Service & tunnel registry", "description": "Single source of truth for every QI_ Windows service plus a symptom->log lookup table.", "status": "live", "notes": "QI_Service_Registry.md + QI_Scheduled_Tasks_Registry.md."},
+      {"name": "Static public tunnels", "description": "Each public app has a permanent subdomain on quiddityinnovations.com instead of a URL that changes every restart.", "status": "live", "notes": "Cloudflare named tunnels migrated 2026-06-20."},
+      {"name": "LLM usage & cost tracking", "description": "Per-day, per-project, per-model Claude Code cost and token breakdowns, including savings from local-LLM routing.", "status": "live", "notes": "usage_stats.py parses ~/.claude JSONL; no API key."},
+      {"name": "Live runtime config", "description": "Change log levels, theme, and elevation profiles from the dashboard without restarting services.", "status": "live", "notes": "/config page."}
     ]
   }
 ]
