@@ -162,9 +162,91 @@ log = get_logger("dashboard")
 # parsing if it is empty or unavailable.
 try:
     from engine.common import usage_ledger
+    from engine.common import usage_dimensions
 except Exception as _e:                                    # pragma: no cover
-    usage_ledger = None
+    usage_ledger = usage_dimensions = None
     log.warning(f"usage_ledger unavailable, falling back to live parse: {_e}")
+
+
+def _win(days: int):
+    """Trailing-N-day window as (start, end) local dates, inclusive."""
+    from datetime import date as _d, timedelta as _td
+    end = _d.today()
+    return end - _td(days=days - 1), end
+
+
+def usage_range(start, end):
+    """Window metrics, preferring the ledger so reconstructed history is
+    included. Falls back to live transcript parsing if the ledger is empty."""
+    if usage_ledger is not None:
+        try:
+            r = usage_ledger.range_stats(start, end)
+            if r.get("turns"):
+                return r
+        except Exception as e:
+            log.warning(f"usage_ledger.range_stats failed: {e}")
+    return usage_stats.range_stats(start, end)
+
+
+def usage_totals(days: int):
+    r = usage_range(*_win(days))
+    r.setdefault("days", days)
+    return r
+
+
+def usage_daily(days: int):
+    if usage_ledger is not None:
+        try:
+            rows = usage_ledger.daily_range(*_win(days))
+            if any(x["cost_usd"] for x in rows):
+                return rows
+        except Exception as e:
+            log.warning(f"usage_ledger.daily_range failed: {e}")
+    return usage_stats.daily(days)
+
+
+def usage_by_project(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.by_project(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.by_project failed: {e}")
+    return usage_stats.by_project(days)
+
+
+def usage_by_model(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.by_model(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.by_model failed: {e}")
+    return usage_stats.by_model(days)
+
+
+def usage_savings_by_project(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.savings_by_project(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.savings_by_project failed: {e}")
+    return usage_stats.savings_by_project(days)
+
+
+def usage_savings_by_model(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.savings_by_model(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.savings_by_model failed: {e}")
+    return usage_stats.savings_by_model(days)
 
 
 def usage_totals_since(start):
@@ -1240,8 +1322,8 @@ def render_dashboard() -> str:
         _q_start = _date(_today_d.year, (_q_num - 1) * 3 + 1, 1)
         _y_start = _date(_today_d.year, 1, 1)
         u_today = usage_stats.today()
-        u_week  = usage_stats.totals(7)
-        u_30    = usage_stats.totals(30)
+        u_week  = usage_totals(7)
+        u_30    = usage_totals(30)
         u_qtd   = usage_totals_since(_q_start)
         u_ytd   = usage_totals_since(_y_start)
         tokens_today   = _fmt_tok(u_today["tokens"])
@@ -5889,15 +5971,15 @@ def api_usage_daily(days: int = 30):
 
 @app.get("/api/usage/by_project")
 def api_usage_by_project(days: int = 30):
-    return JSONResponse({"days": days, "rows": usage_stats.by_project(days)})
+    return JSONResponse({"days": days, "rows": usage_by_project(days)})
 
 @app.get("/api/usage/by_model")
 def api_usage_by_model(days: int = 30):
-    return JSONResponse({"days": days, "rows": usage_stats.by_model(days)})
+    return JSONResponse({"days": days, "rows": usage_by_model(days)})
 
 @app.get("/api/usage/savings")
 def api_usage_savings(days: int = 30):
-    return JSONResponse(usage_stats.savings(days))
+    return JSONResponse(usage_totals(days))
 
 @app.get("/api/usage/savings/today")
 def api_usage_savings_today():
@@ -5905,7 +5987,7 @@ def api_usage_savings_today():
 
 @app.get("/api/usage/savings/by_model")
 def api_usage_savings_by_model(days: int = 30):
-    return JSONResponse({"days": days, "rows": usage_stats.savings_by_model(days)})
+    return JSONResponse({"days": days, "rows": usage_savings_by_model(days)})
 
 @app.get("/api/usage/range")
 def api_usage_range(start: str, end: str = ""):
@@ -5918,26 +6000,26 @@ def api_usage_range(start: str, end: str = ""):
         e = _d.fromisoformat(end) if end else s
     except (ValueError, TypeError):
         return JSONResponse({"error": "dates must be ISO yyyy-mm-dd"}, status_code=400)
-    return JSONResponse(usage_stats.range_stats(s, e))
+    return JSONResponse(usage_range(s, e))
 
 
 def render_usage() -> str:
     t = usage_stats.today()
-    t7 = usage_stats.totals(7)
-    t30 = usage_stats.totals(30)
+    t7 = usage_totals(7)
+    t30 = usage_totals(30)
     from datetime import date as _date
     _td = _date.today()
     _qn = (_td.month - 1) // 3 + 1
     t_qtd = usage_totals_since(_date(_td.year, (_qn - 1) * 3 + 1, 1))
     t_ytd = usage_totals_since(_date(_td.year, 1, 1))
-    daily = usage_stats.daily(30)
-    projects_sav = usage_stats.savings_by_project(30)
-    s_models = usage_stats.savings_by_model(30)
+    daily = usage_daily(30)
+    projects_sav = usage_savings_by_project(30)
+    s_models = usage_savings_by_model(30)
 
     # What-if optimization numbers
     s_today = usage_stats.savings_today()
-    s_7  = usage_stats.savings(7)
-    s_30 = usage_stats.savings(30)
+    s_7  = usage_totals(7)
+    s_30 = usage_totals(30)
 
     # Share of 30d spend that stays on Claude (Opus/Fable = 0% local-offload).
     # Drives the "why does Batch save more than Local" explainer — when this is

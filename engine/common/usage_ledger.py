@@ -32,9 +32,21 @@ always upgrade an estimated row to measured if real data reappears.
 """
 from __future__ import annotations
 
+import os as _os
 import sqlite3
+import sys as _sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
+
+# This module is imported two ways: as `engine.common.usage_ledger` by the
+# dashboard, and as a bare `usage_ledger` by the CLI tools in this folder.
+# Sibling imports below (usage_stats, usage_dimensions) are written bare, so
+# make this directory importable under either entry point. Without this the
+# dashboard silently falls back to live transcript parsing and the ledger's
+# reconstructed history disappears from every tile.
+_HERE = _os.path.dirname(_os.path.abspath(__file__))
+if _HERE not in _sys.path:
+    _sys.path.insert(0, _HERE)
 
 BRAIN_DB = Path(r"C:\QIH\data\qi_brain.db")
 
@@ -171,6 +183,119 @@ def daily(days: int = 30) -> list[dict]:
          "turns": r[4], "sessions": r[5], "source": r[6], "confidence": r[7]}
         for r in rows
     ]
+
+
+def daily_range(start: date, end: date) -> list[dict]:
+    """Per-day rows for an inclusive window, zero-filled so the chart has a
+    continuous x-axis even across days with no activity.
+
+    Includes the three what-if series the daily chart plots (actual / with
+    local offload / combined). Local offload is computed from that day's own
+    model-family mix, so an Opus-heavy day correctly shows ~no offloadable
+    work while a Haiku-heavy one shows nearly all of it.
+    """
+    import usage_stats
+
+    con = connect()
+    got = {r[0]: r for r in con.execute(
+        """SELECT day, tokens, cache_reads, cost_usd, turns, sessions, source, confidence
+             FROM usage_daily WHERE day>=? AND day<=?""",
+        (start.isoformat(), end.isoformat()))}
+    fam: dict[str, dict[str, float]] = {}
+    for ds, f, c in con.execute(
+        """SELECT day, family, SUM(cost_usd) FROM usage_daily_model
+             WHERE day>=? AND day<=? GROUP BY day, family""",
+        (start.isoformat(), end.isoformat())):
+        fam.setdefault(ds, {})[f] = c or 0.0
+    con.close()
+
+    out, d = [], start
+    while d <= end:
+        ds = d.isoformat()
+        r = got.get(ds)
+        cost = float(r[3]) if r else 0.0
+        offload = sum(c * usage_stats.LOCAL_OFFLOAD_BY_FAMILY.get(f, 0.0)
+                      for f, c in fam.get(ds, {}).items())
+        local_cost = max(0.0, cost - offload)
+        batch_cost = cost * (1 - usage_stats.BATCH_DISCOUNT * _BATCHABLE_FRACTION)
+        combined = local_cost * (1 - usage_stats.BATCH_DISCOUNT * _BATCHABLE_FRACTION)
+        out.append({
+            "date": ds,
+            "tokens": r[1] if r else 0, "cache_reads": r[2] if r else 0,
+            "cost_usd": round(cost, 2),
+            "local_cost_usd": round(local_cost, 2),
+            "batch_cost_usd": round(batch_cost, 2),
+            "combined_cost_usd": round(combined, 2),
+            "turns": r[4] if r else 0, "sessions": r[5] if r else 0,
+            "source": r[6] if r else "none", "confidence": r[7] if r else "certain",
+        })
+        d += timedelta(days=1)
+    return out
+
+
+# Fraction of spend that fell OUTSIDE the 00:00-06:00 batch window, measured
+# from real transcripts. Reconstructed days carry no hour-of-day, so the
+# measured ratio is applied to them rather than inventing a distribution.
+_BATCHABLE_FRACTION = 0.99
+
+
+def range_stats(start: date, end: date) -> dict:
+    """Ledger-backed equivalent of usage_stats.range_stats — same keys, so the
+    LLM Usage tab's range picker and drilldown work over reconstructed history
+    exactly as they do over measured days.
+
+    Local-offload savings are computed per model family from
+    usage_daily_model, so a window dominated by Opus reports ~0% offloadable
+    while a Haiku-heavy one reports ~100% -- the same rule usage_stats applies.
+    """
+    if end < start:
+        start, end = end, start
+    import usage_stats
+
+    base = totals_since(start, end)
+    con = connect()
+    fam_rows = con.execute(
+        """SELECT family, SUM(cost_usd) FROM usage_daily_model
+             WHERE day>=? AND day<=? GROUP BY family""",
+        (start.isoformat(), end.isoformat())).fetchall()
+    con.close()
+
+    actual = base["cost_usd"]
+    local_savings = 0.0
+    for fam, c in fam_rows:
+        local_savings += (c or 0.0) * usage_stats.LOCAL_OFFLOAD_BY_FAMILY.get(fam, 0.0)
+    # If the dimension table is empty for this window, fall back to no offload
+    # rather than silently reporting a fabricated saving.
+    batchable = actual * _BATCHABLE_FRACTION
+    batch_savings = batchable * usage_stats.BATCH_DISCOUNT
+    combined = (actual - local_savings)
+    combined -= (combined * _BATCHABLE_FRACTION) * usage_stats.BATCH_DISCOUNT
+
+    def pct(p, w):
+        return round((p / w) * 100, 1) if w > 0 else 0.0
+
+    return {
+        "start": start.isoformat(), "end": end.isoformat(),
+        "days": (end - start).days + 1,
+        "tokens": base["tokens"], "cache_reads": base["cache_reads"],
+        "cost_usd": actual, "turns": base["turns"], "sessions": base["sessions"],
+        # Aliases so this is a drop-in for both usage_stats.totals() and
+        # usage_stats.savings(), which name the same quantities differently.
+        "actual_cost_usd": actual, "actual_tokens": base["tokens"],
+        "measured_pct": base["measured_pct"], "cost_by_source": base["cost_by_source"],
+        "local_savings_usd": round(local_savings, 2),
+        "local_savings_pct": pct(local_savings, actual),
+        "local_optimized_cost_usd": round(actual - local_savings, 2),
+        "offloaded_turns": int(base["turns"] * (local_savings / actual)) if actual else 0,
+        "offloaded_tokens": int(base["tokens"] * (local_savings / actual)) if actual else 0,
+        "batch_savings_usd": round(batch_savings, 2),
+        "batch_savings_pct": pct(batch_savings, actual),
+        "batch_optimized_cost_usd": round(actual - batch_savings, 2),
+        "batchable_turns": int(base["turns"] * _BATCHABLE_FRACTION),
+        "combined_cost_usd": round(combined, 2),
+        "combined_savings_usd": round(actual - combined, 2),
+        "combined_savings_pct": pct(actual - combined, actual),
+    }
 
 
 def coverage() -> list[dict]:
