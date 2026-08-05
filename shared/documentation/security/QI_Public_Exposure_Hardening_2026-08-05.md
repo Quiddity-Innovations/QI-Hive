@@ -6,8 +6,8 @@ internet-exposed QI applications "with not so honourable intentions" and asked f
 password screen on every tunnelled application.
 **Performed by:** Claude (Claude Code), on the QI machine
 **Scope:** Every Cloudflare tunnel hostname in the QI estate
-**Outcome:** **20 of 22** public hostnames moved behind a single authenticated gate
-(14 `protected`, 6 `mixed`). 2 documented exceptions remain — see §6.1 and §9.
+**Outcome:** **21 of 22** public hostnames moved behind a single authenticated gate
+(14 `protected`, 7 `mixed`). **1** documented exception remains — see §6.1 and §9.
 
 ---
 
@@ -107,7 +107,7 @@ service. This is benign and should not be counted as an attack.
 | 18 | naya-line.quiddityinnovations.com | Naya webhook | 8002 | open | mixed |
 | 19 | connector.quiddityinnovations.com | QI Connector MCP | 9030 | bearer/capability | open *(by design)* |
 | 20 | claudevoice.quiddityinnovations.com | Claude Voice | 8721 | **open** | mixed *(see §9)* |
-| 21 | oc-line.quiddityinnovations.com | OpenClaw gateway | 18789 | open | **open — still unprotected** |
+| 21 | oc-line.quiddityinnovations.com | OpenClaw gateway | 18789 | **open** | mixed *(see §9)* |
 | 22 | api.quiddam.com | MQ API | 8500 | **open** | mixed *(see §9)* |
 
 ### Specifically notable
@@ -311,17 +311,11 @@ Other Quiddity repositories should be reviewed for the same issue.
 
 ## 6. Residual risk
 
-1. **Two hosts remain `open`** (down from four — see §9).
+1. **One host remains `open`** (down from four — see §9).
    - `connector.quiddityinnovations.com` — **permanent, deliberate exception.** It
-     carries its own bearer/capability auth and an MCP client cannot log in through a
-     browser.
-   - `oc-line.quiddityinnovations.com` — **still genuinely open.** Probing found `/`,
-     `/health`, `/webhook`, `/line/webhook` and `/status` all returning 200 while
-     `/api` returns 404: that is a catch-all handler, so a path probe cannot separate
-     real routes from a fallback, and the gateway may dispatch on request body rather
-     than path. It fronts live OpenClaw agents (Tasuke, Kaze, Yubin, Sentry), so
-     gating it on a guess risks breaking them. **Needs the Node routing table inside
-     WSL (`~/.openclaw`) read before it can move to `mixed`.**
+     carries its own bearer/capability auth (`qi_mcp_gateway.py`) and an MCP client
+     cannot log in through a browser, so a cookie wall would simply break it. This is
+     the correct end state, not an outstanding gap.
 
 2. **Single factor.** One password now fronts the estate. The natural upgrade is
    **Cloudflare Access (Zero Trust)** in front of the tunnels — free to 50 users,
@@ -414,3 +408,45 @@ the login wall:
 Both are Tencent Cloud ranges, consistent with the automated scanning in §2. **This is
 exactly the visibility that did not exist before** — under the old setup these would
 have reached the applications and left no record at all.
+
+---
+
+## 10. Addendum 2 — OpenClaw closed (2026-08-05, ~02:05)
+
+`oc-line.quiddityinnovations.com` moved `open` → `mixed`. **Final state: 21 of 22
+hostnames require a login; the only remaining exception is `connector`, by design.**
+
+### How the earlier "catch-all" conclusion was wrong
+
+§6.1 recorded that a path probe returned 200 for `/`, `/health`, `/webhook`,
+`/line/webhook` and `/status`, and concluded an allow-list could not be built safely.
+That conclusion was based on **status codes alone**, which was not enough evidence.
+
+Fingerprinting the **response bodies** settled it immediately:
+
+| Path | Status | Body |
+|---|---:|---|
+| `/health` | 200 | `{"ok":true,"status":"live"}` — real route |
+| `/line/webhook` | 200 / 400 on POST | `OK`; POST hits its own signature check — real route |
+| `/`, `/status`, `/webhook`, `/telegram/webhook`, `/events`, `/media/x`, `/zzz-nonsense-abc123` | 200 | **byte-identical SPA HTML** — single-page-app fallback |
+| `/api`, `/api/health`, `/assets/index.js` | 404 | real `Not Found` |
+
+So there was no catch-all API — just a **web UI served for any unmatched path**. Only
+two real endpoints exist.
+
+### What this means
+
+**That SPA fallback is the OpenClaw agent control panel, and it was reachable from
+the internet with no authentication** — alongside Tasuke, Kaze, Yubin and Sentry.
+It is arguably the second most serious exposure in this audit after the Hive
+dashboard, and it was nearly left open because a weaker diagnostic said "inconclusive".
+
+`/line/webhook` and `/health` stay public; being matched before `forward_auth`, the
+LINE callback survives a gate outage. Internal agents reach the gateway over
+localhost inside WSL, so gating the public hostname does not affect them — verified
+that `kaze.quiddityinnovations.com`, which shares the same tunnel, still gates
+correctly.
+
+**Lesson:** "the probe was inconclusive" is a reason to find a better probe, not a
+reason to leave something open. Status codes describe *whether* a handler replied;
+response bodies describe *which* handler replied.
