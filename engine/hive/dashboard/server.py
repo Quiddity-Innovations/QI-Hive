@@ -168,6 +168,119 @@ except Exception as _e:                                    # pragma: no cover
     log.warning(f"usage_ledger unavailable, falling back to live parse: {_e}")
 
 
+def merge_status_projects(projects: dict) -> dict:
+    """Collapse duplicate project entries in status.json into one row each.
+
+    status.json is written by two independent producers that key projects
+    differently:
+
+      * nightly_reconcile.regenerate_views keys by canonical registry id
+        ("maia") and carries the editorial fields — display_name, phase,
+        current_task, notes, ports.
+      * an external supervisor keys by display name ("Maia") and carries
+        health fields — git dirty state, severity, supervisor_findings, and
+        often a fresher last_activity.
+
+    Neither recognises the other's key, so 21 of 28 projects appeared twice on
+    the dashboard — once with a Progress bar and once showing "—", because
+    project_readiness.json is keyed canonically and never matched the
+    display-name row.
+
+    Merging here rather than rewriting status.json is deliberate: the
+    supervisor owns its keys and would simply recreate them, and other
+    consumers may still read them. This is presentation-layer reconciliation,
+    so it cannot lose data.
+
+    Identity is resolved on normalised `path` first — the strongest signal,
+    since both rows point at the same directory — falling back to a
+    normalised id. Path matching also catches pairs that id matching misses,
+    e.g. universal/QI-Universal and personalsong/PersonalSong Studio.
+    """
+    import re as _re
+
+    def _norm_path(v):
+        return _re.sub(r"[\\/]+$", "", str(v or "")).replace("/", "\\").upper()
+
+    def _norm_id(v):
+        return _re.sub(r"[^a-z0-9]", "", str(v or "").lower())
+
+    # Registry gives a canonical path for rows that carry an id but no path —
+    # without it, "retirementanalyzer" (no path) and "Retirement Analyzer"
+    # (path only) never meet.
+    reg_path: dict[str, str] = {}
+    try:
+        _reg = json.loads(Path(r"C:\QIH\ecosystem\qi_registry.json").read_text(encoding="utf-8"))
+        for _p in _reg.get("projects", []):
+            if _p.get("id") and _p.get("path"):
+                reg_path[_norm_id(_p["id"])] = _norm_path(_p["path"])
+    except Exception as e:
+        log.warning(f"merge_status_projects: registry unreadable: {e}")
+
+    # A project can be identified by any of several signals, and different
+    # producers supply different ones. Union rows that share ANY signal rather
+    # than committing to a single key.
+    parent: dict[str, str] = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    signals: dict[str, list[str]] = {}
+    for key, entry in projects.items():
+        if not isinstance(entry, dict):
+            continue
+        nid = _norm_id(entry.get("id") or key)
+        sig = [f"k:{_norm_id(key)}", f"i:{nid}"]
+        if entry.get("display_name"):
+            sig.append(f"k:{_norm_id(entry['display_name'])}")
+        path = _norm_path(entry.get("path")) or reg_path.get(nid, "")
+        if path:
+            sig.append(f"p:{path}")
+        signals[key] = sig
+        for s in sig[1:]:
+            union(sig[0], s)
+
+    groups: dict[str, list[tuple[str, dict]]] = {}
+    for key, entry in projects.items():
+        if key not in signals:
+            continue
+        groups.setdefault(find(signals[key][0]), []).append((key, entry))
+
+    # Fields the supervisor owns; copied onto the canonical row when absent.
+    HEALTH = ("git", "severity", "supervisor_findings")
+
+    merged: dict[str, dict] = {}
+    for members in groups.values():
+        # The canonical row is the one carrying editorial fields.
+        canonical = next(
+            (m for m in members if m[1].get("display_name") or m[1].get("phase")),
+            members[0])
+        key, base = canonical[0], dict(canonical[1])
+        for other_key, other in members:
+            if other_key == key:
+                continue
+            for f in HEALTH:
+                if f not in base and f in other:
+                    base[f] = other[f]
+            # last_activity: keep whichever producer saw activity most recently.
+            a, b = str(base.get("last_activity") or ""), str(other.get("last_activity") or "")
+            if b > a:
+                base["last_activity"] = other["last_activity"]
+            # Never let a merge drop a field nobody else supplied.
+            for f, v in other.items():
+                base.setdefault(f, v)
+        merged[key] = base
+    return merged
+
+
 def _win(days: int):
     """Trailing-N-day window as (start, end) local dates, inclusive."""
     from datetime import date as _d, timedelta as _td
@@ -1107,7 +1220,7 @@ def render_dashboard() -> str:
         "qi-purple": "#7e57c2",             # pre-POC
     }
     project_rows = ""
-    for name, p in status.get("projects", {}).items():
+    for name, p in merge_status_projects(status.get("projects", {})).items():
         st = p.get("status","unknown")
         # Case-insensitive lookup; unknown statuses fall through to INFO (blue),
         # never secondary (grey) which is reserved for retired/merged.
@@ -1116,16 +1229,35 @@ def render_dashboard() -> str:
         dotc = _dot_colors.get(color, "var(--bs-info)")
         pid  = p.get("id", name)
         open_tasks = sum(1 for t in tasks if t.get("project")==name and t.get("column")!="done")
-        _rd = readiness.get(name) or readiness.get(pid) or {}
+        # Readiness is keyed canonically (lowercase id). Some status.json rows
+        # are keyed by display name with no id at all, so a direct lookup
+        # missed them and rendered "—" despite the data existing.
+        _rk = __import__("re").sub(r"[^a-z0-9]", "", str(name).lower())
+        _rd = (readiness.get(name) or readiness.get(pid)
+               or next((v for k, v in readiness.items()
+                        if isinstance(v, dict)
+                        and __import__("re").sub(r"[^a-z0-9]", "", k.lower()) == _rk), None)
+               or {})
         _pct = _rd.get("pct")
         if isinstance(_pct, (int, float)):
+            _lbl = html.escape(str(_rd.get("label") or ""))
+            _note = html.escape(str(_rd.get("note") or ""))
+            _tip = " — ".join(x for x in (_lbl, _note) if x)
+            _derived = ' style="border-bottom:1px dotted var(--bs-border-color)"' if _rd.get("derived") else ""
             prog = (
-                f'<div class="progress flex-grow-1" style="height:5px;max-width:120px;">'
+                f'<div class="progress flex-grow-1" style="height:5px;max-width:120px;" title="{_tip}">'
                 f'<div class="progress-bar bg-secondary opacity-50" style="width:{_pct}%"></div></div>'
-                f'<small class="text-body-tertiary ms-2" style="font-family:Consolas,monospace">{_pct}%</small>'
+                f'<small class="text-body-tertiary ms-2"{_derived} '
+                f'style="font-family:Consolas,monospace" title="{_tip}">{_pct}%</small>'
             )
+        elif _rd.get("not_applicable"):
+            # Don't show a bare dash for something that will never have a
+            # percentage — say so, and carry the reason in the tooltip.
+            prog = (f'<small class="text-body-tertiary fst-italic" '
+                    f'title="{html.escape(str(_rd.get("note") or ""))}">n/a</small>')
         else:
-            prog = '<small class="text-body-tertiary">—</small>'
+            _why = html.escape(str(_rd.get("note") or "No readiness entry for this project."))
+            prog = f'<small class="text-body-tertiary" title="{_why}">—</small>'
         project_rows += f"""<tr>
           <td style="width:16px"><span class="d-inline-block rounded-circle" style="width:8px;height:8px;background:{dotc}" title="{st.replace("_"," ").title()}"></span></td>
           <td><a href="/project/{pid}" class="text-decoration-none fw-medium text-body">{p.get("display_name", name)}</a></td>
