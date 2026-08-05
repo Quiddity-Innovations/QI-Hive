@@ -2,8 +2,8 @@
 """Fill the gaps in project_readiness.json for projects the dashboard showed as "—".
 
 project_readiness.json is owner-set ("Edit freely; dashboard reads this live"),
-so this does NOT overwrite anything Renne already set. It only adds entries for
-projects that had none, and marks each as derived so it is obvious which
+so this does NOT overwrite anything the owner already set. It only adds entries
+for projects that had none, and marks each as derived so it is obvious which
 figures are a starting point rather than an owner judgement.
 
 Derivation: from the project's own status_features_dev.json —
