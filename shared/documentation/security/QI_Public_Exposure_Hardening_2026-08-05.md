@@ -6,8 +6,8 @@ internet-exposed QI applications "with not so honourable intentions" and asked f
 password screen on every tunnelled application.
 **Performed by:** Claude (Claude Code), on the QI machine
 **Scope:** Every Cloudflare tunnel hostname in the QI estate
-**Outcome:** 18 of 22 public hostnames moved behind a single authenticated gate.
-4 documented exceptions remain.
+**Outcome:** **20 of 22** public hostnames moved behind a single authenticated gate
+(14 `protected`, 6 `mixed`). 2 documented exceptions remain — see §6.1 and §9.
 
 ---
 
@@ -106,9 +106,9 @@ service. This is benign and should not be counted as an attack.
 | 17 | maia.quiddam.com | Maia API alias | 8001 | **open** | mixed |
 | 18 | naya-line.quiddityinnovations.com | Naya webhook | 8002 | open | mixed |
 | 19 | connector.quiddityinnovations.com | QI Connector MCP | 9030 | bearer/capability | open *(by design)* |
-| 20 | claudevoice.quiddityinnovations.com | Claude Voice | 8721 | open | open *(pending)* |
-| 21 | oc-line.quiddityinnovations.com | OpenClaw gateway | 18789 | open | open *(pending)* |
-| 22 | api.quiddam.com | MQ API | 8500 | open | open *(pending)* |
+| 20 | claudevoice.quiddityinnovations.com | Claude Voice | 8721 | **open** | mixed *(see §9)* |
+| 21 | oc-line.quiddityinnovations.com | OpenClaw gateway | 18789 | open | **open — still unprotected** |
+| 22 | api.quiddam.com | MQ API | 8500 | **open** | mixed *(see §9)* |
 
 ### Specifically notable
 

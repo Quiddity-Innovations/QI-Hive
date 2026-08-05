@@ -1,0 +1,14 @@
+{
+  "categories": [
+    {
+      "name": "Roadmap",
+      "priority": "medium",
+      "items": [
+        {
+          "title": "Capture PlayDeck's roadmap",
+          "detail": "Add high/medium/low items as planning progresses."
+        }
+      ]
+    }
+  ]
+}

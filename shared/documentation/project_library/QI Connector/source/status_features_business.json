@@ -1,0 +1,12 @@
+[
+  {
+    "category": "Core Capabilities",
+    "features": [
+      {
+        "name": "Registered in QI ecosystem",
+        "description": "Listed in qi_registry.json with port allocation, path, and status.",
+        "status": "live"
+      }
+    ]
+  }
+]

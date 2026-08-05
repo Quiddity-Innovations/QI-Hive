@@ -1,0 +1,80 @@
+{
+  "table": [
+    {
+      "layer": "Runtime",
+      "technology": "Python (CPython)",
+      "role": "Single implementation language for the MCP server and Brain proxy.",
+      "license": "PSF",
+      "version": "3.11+"
+    },
+    {
+      "layer": "Integration",
+      "technology": "MCP SDK / FastMCP",
+      "role": "Core MCP server exposing QI ecosystem tools (Brain, registry, health) over Streamable HTTP.",
+      "license": "MIT / Apache-2.0",
+      "version": ">=1.27.0"
+    },
+    {
+      "layer": "Web server",
+      "technology": "FastAPI",
+      "role": "Hosts the FastMCP ASGI app plus AuthGate wrapper and /health /version /info contract endpoints.",
+      "license": "MIT",
+      "version": ">=0.115.0"
+    },
+    {
+      "layer": "Web server",
+      "technology": "Uvicorn [standard]",
+      "role": "ASGI server for main.py on 127.0.0.1:9030.",
+      "license": "BSD",
+      "version": ">=0.30.0"
+    },
+    {
+      "layer": "HTTP client",
+      "technology": "httpx",
+      "role": "Proxies tool calls to QI Brain (localhost:9011) with graceful fallback when Brain is offline.",
+      "license": "BSD",
+      "version": ">=0.27.0"
+    },
+    {
+      "layer": "Validation",
+      "technology": "Pydantic",
+      "role": "Request/response models.",
+      "license": "MIT",
+      "version": ">=2.7.0"
+    },
+    {
+      "layer": "Docs",
+      "technology": "python-docx",
+      "role": "Doc generation utility for session summaries.",
+      "license": "MIT",
+      "version": ">=1.1.0"
+    },
+    {
+      "layer": "Service",
+      "technology": "NSSM (QI_ConnectorMCP)",
+      "role": "Runs the connector as a Windows service (C:\\QIH\\engine\\bin\\nssm.exe).",
+      "license": "Public domain",
+      "version": "2.24"
+    },
+    {
+      "layer": "Tunnel",
+      "technology": "Cloudflare Tunnel (cloudflared, QI_ConnectorTunnel)",
+      "role": "Publishes connector.quiddityinnovations.com to claude.ai / Claude Code.",
+      "license": "Apache-2.0",
+      "version": "named tunnel"
+    },
+    {
+      "layer": "Auth",
+      "technology": "stdlib crypto (hmac / secrets)",
+      "role": "Capability-URL auth for claude.ai + bearer tokens for Claude Code (AuthGate).",
+      "license": "PSF",
+      "version": "stdlib"
+    }
+  ],
+  "descriptions": [
+    {
+      "title": "Stack",
+      "body": "Remote MCP connector for Claude. Single service on 127.0.0.1:9030 behind a named Cloudflare tunnel (connector.quiddityinnovations.com). No UI port — the former Gradio ui/ scaffold (stale ports 8507/7847) was removed 2026-08-02."
+    }
+  ]
+}

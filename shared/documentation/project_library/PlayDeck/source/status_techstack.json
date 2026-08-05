@@ -1,0 +1,108 @@
+{
+  "table": [
+    {
+      "layer": "Runtime",
+      "technology": "Python (CPython)",
+      "role": "Implementation language for the API, browse tiers, history and tools.",
+      "license": "PSF",
+      "version": "3.11+"
+    },
+    {
+      "layer": "Web server",
+      "technology": "FastAPI",
+      "role": "HTTP API framework serving api/main.py routes on 127.0.0.1:8506.",
+      "license": "MIT",
+      "version": ">=0.115.0"
+    },
+    {
+      "layer": "Web server",
+      "technology": "Uvicorn [standard]",
+      "role": "ASGI server running the FastAPI app.",
+      "license": "BSD",
+      "version": ">=0.30.0"
+    },
+    {
+      "layer": "Validation",
+      "technology": "Pydantic",
+      "role": "API request/response models.",
+      "license": "MIT",
+      "version": ">=2.7.0"
+    },
+    {
+      "layer": "HTTP client",
+      "technology": "httpx",
+      "role": "Outbound client for thumbnails and stream proxying.",
+      "license": "BSD",
+      "version": ">=0.27.0"
+    },
+    {
+      "layer": "Media extraction",
+      "technology": "yt-dlp",
+      "role": "Tier-1 browse: extracts real stream URLs / metadata from tube sites for playback and downloads.",
+      "license": "Unlicense",
+      "version": ">=2025.1.1"
+    },
+    {
+      "layer": "Media extraction",
+      "technology": "curl_cffi",
+      "role": "TLS/browser-impersonation backend required by yt-dlp for Dailymotion and other guarded sites.",
+      "license": "MIT",
+      "version": ">=0.7.0"
+    },
+    {
+      "layer": "Media extraction",
+      "technology": "Playwright (+ Chromium)",
+      "role": "Tier-3 headless-render fallback for JS-only video-grid sites (browse.py); browsers staged to runtime/browsers for portable builds.",
+      "license": "Apache-2.0",
+      "version": "unpinned (PLAYWRIGHT_BROWSERS_PATH)"
+    },
+    {
+      "layer": "Frontend",
+      "technology": "hls.js (vendored)",
+      "role": "web/vendor/hls.min.js plays proxied HLS (.m3u8) streams in the browser.",
+      "license": "Apache-2.0",
+      "version": "vendored minified build"
+    },
+    {
+      "layer": "Media processing",
+      "technology": "FFmpeg / ffprobe",
+      "role": "Video join / re-encode / stream copy; staged into runtime/ffmpeg for portable builds.",
+      "license": "LGPL/GPL dual",
+      "version": "external binary (winget)"
+    },
+    {
+      "layer": "App storage",
+      "technology": "SQLite (stdlib sqlite3)",
+      "role": "history.py persists play history locally.",
+      "license": "Public domain",
+      "version": "stdlib"
+    },
+    {
+      "layer": "Config",
+      "technology": "python-dotenv",
+      "role": "Loads .env config values.",
+      "license": "BSD-3-Clause",
+      "version": ">=1.0.0"
+    },
+    {
+      "layer": "Docs",
+      "technology": "python-docx",
+      "role": "Session-summary .docx generation (tools/gen_session_summary.py).",
+      "license": "MIT",
+      "version": ">=1.1.0"
+    },
+    {
+      "layer": "Service",
+      "technology": "NSSM (vendored engine/bin/nssm.exe)",
+      "role": "Runs PlayDeck as a Windows service per QI convention.",
+      "license": "Public domain",
+      "version": "2.24"
+    }
+  ],
+  "descriptions": [
+    {
+      "title": "Stack",
+      "body": "Own video-player UI at C:\\PlayDeck (:8506). Three-tier browse: yt-dlp extraction, HTML scrape, Playwright headless render. Offline library + play history in SQLite. Known gotchas: JS-rendered homepages, blank.gif thumbnails, unknown-codec formats, logging-toggle needs a sole file handler."
+    }
+  ]
+}

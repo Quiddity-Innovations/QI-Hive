@@ -1,0 +1,23 @@
+{
+  "sections": [
+    {
+      "name": "Project Documentation",
+      "documents": [
+        {
+          "title": "Connector README",
+          "type": "Reference",
+          "location": "C:\\QIP\\Connector\\",
+          "file": "README.md",
+          "description": "Top-level overview of Connector."
+        },
+        {
+          "title": "QI Ecosystem Map",
+          "type": "Reference",
+          "location": "C:\\QIH\\ecosystem\\",
+          "file": "QI_Ecosystem_Map.md",
+          "description": "Where this project sits in the QI port/family map."
+        }
+      ]
+    }
+  ]
+}

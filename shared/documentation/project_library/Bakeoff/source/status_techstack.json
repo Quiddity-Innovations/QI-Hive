@@ -1,0 +1,59 @@
+{
+  "table": [
+    {
+      "layer": "Runtime",
+      "technology": "Python (CPython)",
+      "role": "Harness scripts (run_hermes.py / run_openclaw.py), scoring, audit-log parsing.",
+      "license": "PSF",
+      "version": "3.11+"
+    },
+    {
+      "layer": "Config",
+      "technology": "PyYAML",
+      "role": "Parses bakeoff.yaml (tasks, runners, rubric).",
+      "license": "MIT",
+      "version": "6.0.3"
+    },
+    {
+      "layer": "AI harness A",
+      "technology": "Hermes Agent",
+      "role": "Native-Windows agent harness under evaluation; one-shot runs via 'hermes -z'; home %LOCALAPPDATA%\\hermes; provider 'ollama'.",
+      "license": "Third-party",
+      "version": "external install"
+    },
+    {
+      "layer": "AI harness B",
+      "technology": "OpenClaw",
+      "role": "Second agent harness under evaluation; runs in WSL Ubuntu-24.04, invoked via 'openclaw agent'.",
+      "license": "Third-party",
+      "version": "2026.4.26"
+    },
+    {
+      "layer": "AI backend",
+      "technology": "Ollama",
+      "role": "Shared local model server both harnesses hit (hf.co/unsloth/gpt-oss-20b-GGUF) at 127.0.0.1:11434 — same brain, so the harness is the only variable.",
+      "license": "MIT",
+      "version": "local server"
+    },
+    {
+      "layer": "MCP tool",
+      "technology": "domain_mcp.py (RDAP via stdlib urllib)",
+      "role": "QI-created stdlib-only domain-registration lookup exposed as an MCP tool to both harnesses.",
+      "license": "Proprietary (QI)",
+      "version": "1.0"
+    },
+    {
+      "layer": "Host",
+      "technology": "WSL2 (Ubuntu-24.04)",
+      "role": "Hosts the OpenClaw install; run_openclaw.py crosses the Windows-WSL boundary via wsl.exe.",
+      "license": "OS component",
+      "version": "Ubuntu-24.04"
+    }
+  ],
+  "descriptions": [
+    {
+      "title": "Stack",
+      "body": "Pure-Python eval rig at C:\\QIP\\Bakeoff. No service, no port — run on demand. Same gpt-oss-20b brain on both sides; smoke test 10/10 (2026-07-06); Renne runs the full suite and decides."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+[
+  {
+    "category": "Codebase",
+    "features": [
+      {
+        "name": "Source tree",
+        "file": "C:\\PlayDeck",
+        "status": "live",
+        "detail": "Live source folder for the project."
+      }
+    ]
+  }
+]
