@@ -155,8 +155,9 @@
       "host": "claudevoice.quiddityinnovations.com",
       "upstream": "127.0.0.1:8721",
       "app": "Claude Voice (LINE webhook)",
-      "mode": "open",
-      "why": "PENDING VERIFICATION 2026-08-05 -- could not enumerate its routes, so it is left exactly as it was rather than risk breaking a live LINE bot overnight. Revisit and switch to mixed."
+      "mode": "mixed",
+      "public_paths": ["/line/webhook", "/health", "/audio/", "/media/"],
+      "note": "Routes enumerated from C:\\CLAUDE\\Claude Voice\\line_bot.py (2026-08-05): those four are all that exist. /audio/ and /media/ MUST stay public -- LINE's servers fetch media from those URLs to deliver it to users, so gating them would break voice and video replies. Both resolve with os.path.basename(), so path traversal is already blocked. Gating everything else buys per-request access logging and closes off any route added later."
     },
     {
       "host": "oc-line.quiddityinnovations.com",

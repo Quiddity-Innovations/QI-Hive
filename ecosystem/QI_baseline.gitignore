@@ -1,0 +1,42 @@
+# ───────────────────────────────────────────────────────────────────────────
+# QI Baseline .gitignore policy  (append to EVERY QI project's .gitignore)
+# Source of truth: C:\QIH\ecosystem\QI_baseline.gitignore
+# Rationale: the nightly sync scripts blanket-stage with .gitignore as the only
+# guard. These rules are the floor that keeps secrets out of every repo.
+# ───────────────────────────────────────────────────────────────────────────
+
+# --- Secrets directory (QI Standard) ---
+secrets/
+.secrets/
+
+# --- Env files ---
+.env
+*.env
+!*.env.template
+!*.env.example
+
+# --- Config / settings files that commonly hold tokens, PINs, keys ---
+# (commit a *.template / *.example instead)
+*config*.json
+*settings*.json
+!*config*.template.json
+!*settings*.template.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+!*.vscode/*.json
+app_config.json
+autopdf-settings.json
+credentials.json
+service_account*.json
+client_secret*.json
+token.json
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa
+id_ed25519
+
+# --- Local Claude / tooling state that can carry creds ---
+.claude/settings.local.json

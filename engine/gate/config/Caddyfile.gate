@@ -2,9 +2,9 @@
 # QI Gate — public edge.  GENERATED FILE — DO NOT EDIT BY HAND.
 #   source:    C:\QIH\engine\gate\config\gate.json
 #   regenerate: python C:\QIH\engine\gate\gen_caddyfile.py
-#   generated: 2026-08-05 00:40:20
+#   generated: 2026-08-05 00:56:15
 #
-#   22 public hostnames: 14 protected, 4 mixed, 4 open
+#   22 public hostnames: 14 protected, 5 mixed, 3 open
 #
 #   Every Cloudflare tunnel points here. Caddy does the proxying
 #   (websockets/SSE/Gradio queues pass through untouched) and asks
@@ -474,15 +474,37 @@
 		}
 	}
 
-	# ── claudevoice.quiddityinnovations.com  →  Claude Voice (LINE webhook)  [open]
-	#   PENDING VERIFICATION 2026-08-05 -- could not enumerate its routes, so it is left exactly
-	#   as it was rather than risk breaking a live LINE bot overnight. Revisit and switch to
-	#   mixed.
+	# ── claudevoice.quiddityinnovations.com  →  Claude Voice (LINE webhook)  [mixed]
+	#   Routes enumerated from C:\CLAUDE\Claude Voice\line_bot.py (2026-08-05): those four are
+	#   all that exist. /audio/ and /media/ MUST stay public -- LINE's servers fetch media from
+	#   those URLs to deliver it to users, so gating them would break voice and video replies.
+	#   Both resolve with os.path.basename(), so path traversal is already blocked. Gating
+	#   everything else buys per-request access logging and closes off any route added later.
 	@h19 host claudevoice.quiddityinnovations.com
 	handle @h19 {
-		reverse_proxy 127.0.0.1:8721 {
-			header_up X-Forwarded-Proto https
-			header_up X-Forwarded-Host {http.request.host}
+		handle /qi-auth/* {
+			reverse_proxy 127.0.0.1:9041 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		@h19_public path /line/webhook /health /audio/* /media/*
+		handle @h19_public {
+			reverse_proxy 127.0.0.1:8721 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+		handle {
+			forward_auth 127.0.0.1:9041 {
+				uri /qi-auth/verify
+				copy_headers X-Qi-User X-Qi-Role
+				header_up X-Forwarded-Proto https
+			}
+			reverse_proxy 127.0.0.1:8721 {
+				header_up X-Forwarded-Proto https
+				header_up X-Forwarded-Host {http.request.host}
+			}
 		}
 	}
 

@@ -102,6 +102,24 @@ def main():
     print(f"Tunnels needing a restart ({len(touched)}): {', '.join(touched) or '(none)'}")
 
     if restart and apply and touched:
+        # Reload Caddy FIRST. Repointing a tunnel to :9040 while Caddy is still
+        # running the previous policy sends live traffic to a rule that may not
+        # exist yet -- which on 2026-08-05 briefly left claudevoice proxying
+        # straight through unauthenticated. Regenerate + reload, then restart.
+        import subprocess
+        print("\nRegenerating and reloading Caddy…")
+        subprocess.run([sys.executable, str(GATE_DIR / "gen_caddyfile.py")],
+                       capture_output=True)
+        rc = subprocess.run(
+            [r"C:\QIH\engine\bin\caddy.exe", "reload",
+             "--config", r"C:\QIH\engine\proxy\Caddyfile"],
+            capture_output=True, text=True)
+        if rc.returncode != 0:
+            print(f"  !! caddy reload FAILED: {rc.stderr.strip()[:200]}")
+            print("     Aborting — not repointing tunnels at a stale policy.")
+            return
+        print("  OK  caddy reloaded")
+
         sys.path.insert(0, r"C:\QIH\engine\common")
         from qi_elevate_client import run_elevated
         print("\nRestarting…")

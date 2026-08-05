@@ -1,8 +1,9 @@
 {
   "_comment": "QI Scheduled-Task Window Policy. Single source of truth for which Windows scheduled tasks may pop a console window. Apply with: python C:\\QIH\\tools\\qi_task_window_manager.py --apply   |   Verify: ...--verify   |   Dry-run (default): ...(no flag). window_mode: 'hidden_user' (default, NO admin needed) = task still runs as you, but the window is suppressed: python.exe is swapped to pythonw.exe (windowless), and wsl/.bat/other console programs are wrapped in 'conhost.exe --headless' (Win11 headless host). Keeps full user profile (git creds, WSL, venvs). 'system' = re-home to SYSTEM/ServiceAccount (session 0, invisible) - loses user profile, needs admin to change, only for self-contained scripts. 'visible' = unwrap and restore normal interactive (debugging). enabled:false = Disable-ScheduledTask.",
   "account": "renne",
-  "managed_path_roots": ["C:\\QI", "C:\\QIH", "C:\\OC", "C:\\TUBESCOUT", "C:\\NAYA", "C:\\NEXUS"],
+  "managed_path_roots": ["C:\\QI", "C:\\QIH", "C:\\OC", "C:\\TUBESCOUT", "C:\\NAYA", "C:\\NEXUS", "C:\\CLAUDE"],
   "tasks": {
+    "QI_ClaudeVoiceMeeting_8AM": { "enabled": true, "window_mode": "hidden_user", "note": "conhost --headless cmd /c start_meeting_room.bat -> meeting room :8722, 08:00 daily. Uses .bat (NOT python.exe) so --apply won't pythonw-swap it and null stdout." },
     "QI_BrainBackfill":          { "enabled": true, "window_mode": "hidden_user", "note": "python.exe every 30 min -> the periodic offender" },
     "QI_TubeScout_AM":           { "enabled": true, "window_mode": "hidden_user", "note": "run_cycle.bat -> cmd window, 07:00 daily" },
     "QI_TubeScout_PM":           { "enabled": true, "window_mode": "hidden_user", "note": "run_cycle.bat -> cmd window, 19:00 daily" },

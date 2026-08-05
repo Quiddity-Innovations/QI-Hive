@@ -256,6 +256,59 @@ were already stopped before this work began** — not a regression.
 
 ---
 
+## 5b. Separate finding — the QI-Hive GitHub repository is PUBLIC
+
+Discovered while preparing to commit this work.
+
+`https://github.com/Quiddity-Innovations/QI-Hive` is **public**, with **797 files
+published**. Among them, the full internet-facing topology:
+
+| Published file | Public hostnames named |
+|---|---:|
+| `ecosystem/qi_registry.json` | 20 |
+| `ecosystem/QI_Service_Registry.md` | 17 |
+| `engine/tunnels/2_REGISTER_WEBHOOKS.bat` | 10 |
+| `engine/tunnels/RUN_ALL.bat` | 8 |
+| `shared/documentation/QI_Bot_Roster.md` | 7 |
+| `engine/hive/dashboard/static/links.json` | 5 |
+| `engine/tunnels/tunnels.json`, `static_urls.py`, `tunnel_manager.py`, others | 2 each |
+
+**This is a plausible answer to "how did anyone find my applications?"** Nobody had
+to guess hostnames — the complete inventory was published on GitHub, next to
+applications that required no password. Search engines and the many bots that scrape
+GitHub for infrastructure hostnames index exactly this.
+
+**Credential scan of the public tree: clean.** No API keys, tokens, JWTs, AWS keys,
+LINE channel secrets or Telegram bot tokens were found. The three pattern matches
+were prose ("password manager:") and a Python variable reference
+(`password=self.password`), not values.
+
+### Action taken
+
+**The commit for this work was deliberately NOT pushed.** It contains a precise map
+of what is exposed, which four hosts remain unauthenticated, and how the defence is
+built — a roadmap for an attacker if published. It is committed locally
+(`10564f4`) and held.
+
+Verified that `QI_NightlyGitSync` covers only `C:\AutoPDF`, `C:\PersonalSong` and
+`C:\M2V`, so **`C:\QIH` will not be auto-pushed**. The commit will stay local until
+the owner decides.
+
+### Decision required from the owner
+
+1. **Make `QI-Hive` private** (recommended — it is internal infrastructure, not a
+   product), then push; **or**
+2. **Keep it public** and first scrub hostnames/topology from the tracked files,
+   keeping this security document out of the repository entirely.
+
+Note that making the repo private does **not** unpublish what is already indexed;
+the hostnames should be considered permanently known. That is acceptable now that
+every one of them requires a login — which is precisely why the gate mattered.
+
+Other Quiddity repositories should be reviewed for the same issue.
+
+---
+
 ## 6. Residual risk
 
 1. **Four hosts remain `open`.** `connector` is a permanent, deliberate exception —
