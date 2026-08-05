@@ -153,6 +153,239 @@ from engine.common.qi_logger import get_logger, set_level, list_services
 from engine.common import usage_stats
 log = get_logger("dashboard")
 
+# ── Durable usage history ────────────────────────────────────────────────────
+# usage_stats is stateless: it re-parses ~/.claude/projects/**/*.jsonl on every
+# call, and Claude Code deletes those transcripts on a retention timer. That
+# silently truncated every long-horizon figure (QTD/YTD lost months of history
+# each time cleanup ran). usage_ledger is the persistent per-day store in
+# qi_brain.db; prefer it for calendar-aligned windows and fall back to live
+# parsing if it is empty or unavailable.
+try:
+    from engine.common import usage_ledger
+    from engine.common import usage_dimensions
+except Exception as _e:                                    # pragma: no cover
+    usage_ledger = usage_dimensions = None
+    log.warning(f"usage_ledger unavailable, falling back to live parse: {_e}")
+
+
+def merge_status_projects(projects: dict) -> dict:
+    """Collapse duplicate project entries in status.json into one row each.
+
+    status.json is written by two independent producers that key projects
+    differently:
+
+      * nightly_reconcile.regenerate_views keys by canonical registry id
+        ("maia") and carries the editorial fields — display_name, phase,
+        current_task, notes, ports.
+      * an external supervisor keys by display name ("Maia") and carries
+        health fields — git dirty state, severity, supervisor_findings, and
+        often a fresher last_activity.
+
+    Neither recognises the other's key, so 21 of 28 projects appeared twice on
+    the dashboard — once with a Progress bar and once showing "—", because
+    project_readiness.json is keyed canonically and never matched the
+    display-name row.
+
+    Merging here rather than rewriting status.json is deliberate: the
+    supervisor owns its keys and would simply recreate them, and other
+    consumers may still read them. This is presentation-layer reconciliation,
+    so it cannot lose data.
+
+    Identity is resolved on normalised `path` first — the strongest signal,
+    since both rows point at the same directory — falling back to a
+    normalised id. Path matching also catches pairs that id matching misses,
+    e.g. universal/QI-Universal and personalsong/PersonalSong Studio.
+    """
+    import re as _re
+
+    def _norm_path(v):
+        return _re.sub(r"[\\/]+$", "", str(v or "")).replace("/", "\\").upper()
+
+    def _norm_id(v):
+        return _re.sub(r"[^a-z0-9]", "", str(v or "").lower())
+
+    # Registry gives a canonical path for rows that carry an id but no path —
+    # without it, "retirementanalyzer" (no path) and "Retirement Analyzer"
+    # (path only) never meet.
+    reg_path: dict[str, str] = {}
+    try:
+        _reg = json.loads(Path(r"C:\QIH\ecosystem\qi_registry.json").read_text(encoding="utf-8"))
+        for _p in _reg.get("projects", []):
+            if _p.get("id") and _p.get("path"):
+                reg_path[_norm_id(_p["id"])] = _norm_path(_p["path"])
+    except Exception as e:
+        log.warning(f"merge_status_projects: registry unreadable: {e}")
+
+    # A project can be identified by any of several signals, and different
+    # producers supply different ones. Union rows that share ANY signal rather
+    # than committing to a single key.
+    parent: dict[str, str] = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    signals: dict[str, list[str]] = {}
+    for key, entry in projects.items():
+        if not isinstance(entry, dict):
+            continue
+        nid = _norm_id(entry.get("id") or key)
+        sig = [f"k:{_norm_id(key)}", f"i:{nid}"]
+        if entry.get("display_name"):
+            sig.append(f"k:{_norm_id(entry['display_name'])}")
+        path = _norm_path(entry.get("path")) or reg_path.get(nid, "")
+        if path:
+            sig.append(f"p:{path}")
+        signals[key] = sig
+        for s in sig[1:]:
+            union(sig[0], s)
+
+    groups: dict[str, list[tuple[str, dict]]] = {}
+    for key, entry in projects.items():
+        if key not in signals:
+            continue
+        groups.setdefault(find(signals[key][0]), []).append((key, entry))
+
+    # Fields the supervisor owns; copied onto the canonical row when absent.
+    HEALTH = ("git", "severity", "supervisor_findings")
+
+    merged: dict[str, dict] = {}
+    for members in groups.values():
+        # The canonical row is the one carrying editorial fields.
+        canonical = next(
+            (m for m in members if m[1].get("display_name") or m[1].get("phase")),
+            members[0])
+        key, base = canonical[0], dict(canonical[1])
+        for other_key, other in members:
+            if other_key == key:
+                continue
+            for f in HEALTH:
+                if f not in base and f in other:
+                    base[f] = other[f]
+            # last_activity: keep whichever producer saw activity most recently.
+            a, b = str(base.get("last_activity") or ""), str(other.get("last_activity") or "")
+            if b > a:
+                base["last_activity"] = other["last_activity"]
+            # Never let a merge drop a field nobody else supplied.
+            for f, v in other.items():
+                base.setdefault(f, v)
+        # Record every key that folded into this row. Task records reference
+        # projects by whichever label their creator used, so the Open count
+        # has to match on any alias — without this it silently undercounts
+        # (21 open tasks matched no row at all before this was added).
+        base["_aliases"] = sorted({m[0] for m in members}
+                                  | {str(m[1].get("id")) for m in members if m[1].get("id")}
+                                  | {str(m[1].get("display_name")) for m in members
+                                     if m[1].get("display_name")})
+        merged[key] = base
+    return merged
+
+
+def _win(days: int):
+    """Trailing-N-day window as (start, end) local dates, inclusive."""
+    from datetime import date as _d, timedelta as _td
+    end = _d.today()
+    return end - _td(days=days - 1), end
+
+
+def usage_range(start, end):
+    """Window metrics, preferring the ledger so reconstructed history is
+    included. Falls back to live transcript parsing if the ledger is empty."""
+    if usage_ledger is not None:
+        try:
+            r = usage_ledger.range_stats(start, end)
+            if r.get("turns"):
+                return r
+        except Exception as e:
+            log.warning(f"usage_ledger.range_stats failed: {e}")
+    return usage_stats.range_stats(start, end)
+
+
+def usage_totals(days: int):
+    r = usage_range(*_win(days))
+    r.setdefault("days", days)
+    return r
+
+
+def usage_daily(days: int):
+    if usage_ledger is not None:
+        try:
+            rows = usage_ledger.daily_range(*_win(days))
+            if any(x["cost_usd"] for x in rows):
+                return rows
+        except Exception as e:
+            log.warning(f"usage_ledger.daily_range failed: {e}")
+    return usage_stats.daily(days)
+
+
+def usage_by_project(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.by_project(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.by_project failed: {e}")
+    return usage_stats.by_project(days)
+
+
+def usage_by_model(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.by_model(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.by_model failed: {e}")
+    return usage_stats.by_model(days)
+
+
+def usage_savings_by_project(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.savings_by_project(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.savings_by_project failed: {e}")
+    return usage_stats.savings_by_project(days)
+
+
+def usage_savings_by_model(days: int):
+    if usage_dimensions is not None:
+        try:
+            rows = usage_dimensions.savings_by_model(*_win(days))
+            if rows:
+                return rows
+        except Exception as e:
+            log.warning(f"usage_dimensions.savings_by_model failed: {e}")
+    return usage_stats.savings_by_model(days)
+
+
+def usage_totals_since(start):
+    """Calendar-window totals, preferring the durable ledger.
+
+    Returns the usage_stats shape plus, when the ledger answered,
+    `cost_by_source` / `measured_pct` so the UI can show how much of the
+    figure is measured versus reconstructed.
+    """
+    if usage_ledger is not None:
+        try:
+            r = usage_ledger.totals_since(start)
+            if r.get("turns"):
+                return r
+        except Exception as e:
+            log.warning(f"usage_ledger.totals_since failed: {e}")
+    return usage_stats.totals_since(start)
+
 # ── Data helpers ─────────────────────────────────────────────────────────────
 
 def load_json(path: Path) -> dict:
@@ -995,7 +1228,7 @@ def render_dashboard() -> str:
         "qi-purple": "#7e57c2",             # pre-POC
     }
     project_rows = ""
-    for name, p in status.get("projects", {}).items():
+    for name, p in merge_status_projects(status.get("projects", {})).items():
         st = p.get("status","unknown")
         # Case-insensitive lookup; unknown statuses fall through to INFO (blue),
         # never secondary (grey) which is reserved for retired/merged.
@@ -1003,17 +1236,46 @@ def render_dashboard() -> str:
                                        ("info", "bi-question-circle"))
         dotc = _dot_colors.get(color, "var(--bs-info)")
         pid  = p.get("id", name)
-        open_tasks = sum(1 for t in tasks if t.get("project")==name and t.get("column")!="done")
-        _rd = readiness.get(name) or readiness.get(pid) or {}
+        # Match on any alias this row absorbed, case/punctuation-insensitively —
+        # tasks are labelled with whatever name their creator used ("FileHQ"
+        # vs "filehq"), and a literal match on the row key undercounts.
+        _alias_set = {__import__("re").sub(r"[^a-z0-9]", "", a.lower())
+                      for a in p.get("_aliases", [name])}
+        _alias_set.add(__import__("re").sub(r"[^a-z0-9]", "", str(pid).lower()))
+        open_tasks = sum(
+            1 for t in tasks
+            if t.get("column") != "done"
+            and __import__("re").sub(r"[^a-z0-9]", "", str(t.get("project", "")).lower())
+            in _alias_set)
+        # Readiness is keyed canonically (lowercase id). Some status.json rows
+        # are keyed by display name with no id at all, so a direct lookup
+        # missed them and rendered "—" despite the data existing.
+        _rk = __import__("re").sub(r"[^a-z0-9]", "", str(name).lower())
+        _rd = (readiness.get(name) or readiness.get(pid)
+               or next((v for k, v in readiness.items()
+                        if isinstance(v, dict)
+                        and __import__("re").sub(r"[^a-z0-9]", "", k.lower()) == _rk), None)
+               or {})
         _pct = _rd.get("pct")
         if isinstance(_pct, (int, float)):
+            _lbl = html.escape(str(_rd.get("label") or ""))
+            _note = html.escape(str(_rd.get("note") or ""))
+            _tip = " — ".join(x for x in (_lbl, _note) if x)
+            _derived = ' style="border-bottom:1px dotted var(--bs-border-color)"' if _rd.get("derived") else ""
             prog = (
-                f'<div class="progress flex-grow-1" style="height:5px;max-width:120px;">'
+                f'<div class="progress flex-grow-1" style="height:5px;max-width:120px;" title="{_tip}">'
                 f'<div class="progress-bar bg-secondary opacity-50" style="width:{_pct}%"></div></div>'
-                f'<small class="text-body-tertiary ms-2" style="font-family:Consolas,monospace">{_pct}%</small>'
+                f'<small class="text-body-tertiary ms-2"{_derived} '
+                f'style="font-family:Consolas,monospace" title="{_tip}">{_pct}%</small>'
             )
+        elif _rd.get("not_applicable"):
+            # Don't show a bare dash for something that will never have a
+            # percentage — say so, and carry the reason in the tooltip.
+            prog = (f'<small class="text-body-tertiary fst-italic" '
+                    f'title="{html.escape(str(_rd.get("note") or ""))}">n/a</small>')
         else:
-            prog = '<small class="text-body-tertiary">—</small>'
+            _why = html.escape(str(_rd.get("note") or "No readiness entry for this project."))
+            prog = f'<small class="text-body-tertiary" title="{_why}">—</small>'
         project_rows += f"""<tr>
           <td style="width:16px"><span class="d-inline-block rounded-circle" style="width:8px;height:8px;background:{dotc}" title="{st.replace("_"," ").title()}"></span></td>
           <td><a href="/project/{pid}" class="text-decoration-none fw-medium text-body">{p.get("display_name", name)}</a></td>
@@ -1210,10 +1472,10 @@ def render_dashboard() -> str:
         _q_start = _date(_today_d.year, (_q_num - 1) * 3 + 1, 1)
         _y_start = _date(_today_d.year, 1, 1)
         u_today = usage_stats.today()
-        u_week  = usage_stats.totals(7)
-        u_30    = usage_stats.totals(30)
-        u_qtd   = usage_stats.totals_since(_q_start)
-        u_ytd   = usage_stats.totals_since(_y_start)
+        u_week  = usage_totals(7)
+        u_30    = usage_totals(30)
+        u_qtd   = usage_totals_since(_q_start)
+        u_ytd   = usage_totals_since(_y_start)
         tokens_today   = _fmt_tok(u_today["tokens"])
         cost_today     = f'${u_today["cost_usd"]:,.2f}'
         sessions_today = u_today["sessions"]
@@ -1225,8 +1487,15 @@ def render_dashboard() -> str:
         sub_today = f'{turns_today} turns'
         sub_week  = f'{_fmt_tok(u_week["tokens"])} tok'
         sub_30    = f'{_fmt_tok(u_30["tokens"])} tok'
-        sub_qtd   = f'{_fmt_tok(u_qtd["tokens"])} tok'
-        sub_ytd   = f'{_fmt_tok(u_ytd["tokens"])} tok'
+        # Long-horizon tiles are served from the durable ledger, which mixes
+        # measured days with reconstructed ones (transcripts deleted before
+        # 2026-06-26 are gone for good). Surface that ratio rather than let a
+        # largely-modelled figure read as hard data.
+        def _prov(u):
+            pct = u.get("measured_pct")
+            return f' · {pct:.0f}% measured' if pct is not None else ''
+        sub_qtd   = f'{_fmt_tok(u_qtd["tokens"])} tok{_prov(u_qtd)}'
+        sub_ytd   = f'{_fmt_tok(u_ytd["tokens"])} tok{_prov(u_ytd)}'
         q_label   = f'Q{_q_num} to date'
     except Exception as e:
         tokens_today = cost_today = sessions_today = turns_today = "—"
@@ -5852,15 +6121,15 @@ def api_usage_daily(days: int = 30):
 
 @app.get("/api/usage/by_project")
 def api_usage_by_project(days: int = 30):
-    return JSONResponse({"days": days, "rows": usage_stats.by_project(days)})
+    return JSONResponse({"days": days, "rows": usage_by_project(days)})
 
 @app.get("/api/usage/by_model")
 def api_usage_by_model(days: int = 30):
-    return JSONResponse({"days": days, "rows": usage_stats.by_model(days)})
+    return JSONResponse({"days": days, "rows": usage_by_model(days)})
 
 @app.get("/api/usage/savings")
 def api_usage_savings(days: int = 30):
-    return JSONResponse(usage_stats.savings(days))
+    return JSONResponse(usage_totals(days))
 
 @app.get("/api/usage/savings/today")
 def api_usage_savings_today():
@@ -5868,7 +6137,7 @@ def api_usage_savings_today():
 
 @app.get("/api/usage/savings/by_model")
 def api_usage_savings_by_model(days: int = 30):
-    return JSONResponse({"days": days, "rows": usage_stats.savings_by_model(days)})
+    return JSONResponse({"days": days, "rows": usage_savings_by_model(days)})
 
 @app.get("/api/usage/range")
 def api_usage_range(start: str, end: str = ""):
@@ -5881,26 +6150,26 @@ def api_usage_range(start: str, end: str = ""):
         e = _d.fromisoformat(end) if end else s
     except (ValueError, TypeError):
         return JSONResponse({"error": "dates must be ISO yyyy-mm-dd"}, status_code=400)
-    return JSONResponse(usage_stats.range_stats(s, e))
+    return JSONResponse(usage_range(s, e))
 
 
 def render_usage() -> str:
     t = usage_stats.today()
-    t7 = usage_stats.totals(7)
-    t30 = usage_stats.totals(30)
+    t7 = usage_totals(7)
+    t30 = usage_totals(30)
     from datetime import date as _date
     _td = _date.today()
     _qn = (_td.month - 1) // 3 + 1
-    t_qtd = usage_stats.totals_since(_date(_td.year, (_qn - 1) * 3 + 1, 1))
-    t_ytd = usage_stats.totals_since(_date(_td.year, 1, 1))
-    daily = usage_stats.daily(30)
-    projects_sav = usage_stats.savings_by_project(30)
-    s_models = usage_stats.savings_by_model(30)
+    t_qtd = usage_totals_since(_date(_td.year, (_qn - 1) * 3 + 1, 1))
+    t_ytd = usage_totals_since(_date(_td.year, 1, 1))
+    daily = usage_daily(30)
+    projects_sav = usage_savings_by_project(30)
+    s_models = usage_savings_by_model(30)
 
     # What-if optimization numbers
     s_today = usage_stats.savings_today()
-    s_7  = usage_stats.savings(7)
-    s_30 = usage_stats.savings(30)
+    s_7  = usage_totals(7)
+    s_30 = usage_totals(30)
 
     # Share of 30d spend that stays on Claude (Opus/Fable = 0% local-offload).
     # Drives the "why does Batch save more than Local" explainer — when this is
