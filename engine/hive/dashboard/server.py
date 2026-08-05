@@ -277,6 +277,14 @@ def merge_status_projects(projects: dict) -> dict:
             # Never let a merge drop a field nobody else supplied.
             for f, v in other.items():
                 base.setdefault(f, v)
+        # Record every key that folded into this row. Task records reference
+        # projects by whichever label their creator used, so the Open count
+        # has to match on any alias — without this it silently undercounts
+        # (21 open tasks matched no row at all before this was added).
+        base["_aliases"] = sorted({m[0] for m in members}
+                                  | {str(m[1].get("id")) for m in members if m[1].get("id")}
+                                  | {str(m[1].get("display_name")) for m in members
+                                     if m[1].get("display_name")})
         merged[key] = base
     return merged
 
@@ -1228,7 +1236,17 @@ def render_dashboard() -> str:
                                        ("info", "bi-question-circle"))
         dotc = _dot_colors.get(color, "var(--bs-info)")
         pid  = p.get("id", name)
-        open_tasks = sum(1 for t in tasks if t.get("project")==name and t.get("column")!="done")
+        # Match on any alias this row absorbed, case/punctuation-insensitively —
+        # tasks are labelled with whatever name their creator used ("FileHQ"
+        # vs "filehq"), and a literal match on the row key undercounts.
+        _alias_set = {__import__("re").sub(r"[^a-z0-9]", "", a.lower())
+                      for a in p.get("_aliases", [name])}
+        _alias_set.add(__import__("re").sub(r"[^a-z0-9]", "", str(pid).lower()))
+        open_tasks = sum(
+            1 for t in tasks
+            if t.get("column") != "done"
+            and __import__("re").sub(r"[^a-z0-9]", "", str(t.get("project", "")).lower())
+            in _alias_set)
         # Readiness is keyed canonically (lowercase id). Some status.json rows
         # are keyed by display name with no id at all, so a direct lookup
         # missed them and rendered "—" despite the data existing.

@@ -338,7 +338,17 @@ def _tab_techstack(intro: Path) -> str:
     </table></div>"""
 
     dives = []
-    for d in data.get("descriptions", []):
+    _descs = data.get("descriptions", [])
+    # Tolerate a {name: text} mapping as well as the canonical list-of-dicts.
+    # A malformed file previously raised AttributeError here, which 500s the
+    # whole tab — strictly worse than rendering what can be understood.
+    if isinstance(_descs, dict):
+        _descs = [{"title": k, "body": v} for k, v in _descs.items()]
+    for d in _descs:
+        if isinstance(d, str):
+            d = {"title": "", "body": d}
+        elif not isinstance(d, dict):
+            continue
         # Tolerate both key conventions: title/body (standard) and technology/text (Maia)
         dive_title = d.get("title") or d.get("technology") or ""
         dive_body = d.get("body") or d.get("text") or ""
@@ -378,6 +388,63 @@ def _tab_docs(intro: Path) -> str:
     return "\n".join(blocks)
 
 
+def _tab_code(intro: Path) -> str:
+    """Code Explained tab — annotated source snippets mapped to features.
+
+    Reads status_code.json: {"intro": "...", "sections": [
+        {"category": "...", "snippets": [
+            {"title","feature","file","language","code","explanation"} ]} ]}
+    """
+    data = _read_json(intro, "status_code.json")
+    if data is None:
+        return _empty(
+            "status_code.json not found in " + str(intro) + " — add it to document "
+            "which part of the code implements each feature (code → feature)."
+        )
+    if isinstance(data, dict) and "_error" in data:
+        return _empty(data["_error"])
+
+    sections = data.get("sections", [])
+    total = sum(len(s.get("snippets", [])) for s in sections)
+    intro_txt = html.escape(data.get("intro", "") or "")
+    header = (
+        f"<div class='alert alert-info py-2'><i class='bi bi-braces'></i> "
+        f"<strong>Code &rarr; Feature.</strong> {total} annotated snippets across "
+        f"{len(sections)} areas, drawn from the project's actual source — each shows "
+        f"the code that creates a feature and explains what it does. {intro_txt}</div>"
+    )
+
+    blocks = []
+    for sec in sections:
+        snips = []
+        for s in sec.get("snippets", []):
+            lang = html.escape((s.get("language", "") or "").lower())
+            feature = html.escape(s.get("feature", "") or "")
+            feat_badge = (
+                f"<span class='badge bg-success-subtle text-success border border-success-subtle'>"
+                f"implements: {feature}</span>" if feature else ""
+            )
+            code = html.escape(s.get("code", "") or "")
+            snips.append(
+                f"<div class='mb-3 pb-3 border-bottom'>"
+                f"<div class='d-flex justify-content-between align-items-start flex-wrap gap-2'>"
+                f"<div><strong>{html.escape(s.get('title',''))}</strong> "
+                f"<code class='small text-muted'>{html.escape(s.get('file',''))}</code></div>"
+                f"<div>{feat_badge}</div></div>"
+                f"<pre style='background:#0f172a;color:#e2e8f0;padding:12px;border-radius:6px;"
+                f"overflow-x:auto;margin:.5rem 0 .35rem;font-size:12px;line-height:1.45'>"
+                f"<code class='language-{lang}'>{code}</code></pre>"
+                f"<div class='small'>{html.escape(s.get('explanation',''))}</div>"
+                f"</div>"
+            )
+        blocks.append(
+            f"<div class='card mb-3'><div class='card-header'><strong>"
+            f"{html.escape(sec.get('category',''))}</strong></div>"
+            f"<div class='card-body'>{''.join(snips)}</div></div>"
+        )
+    return header + "\n".join(blocks)
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _empty(msg: str) -> str:
@@ -404,7 +471,7 @@ def _render_md_table_row(line: str) -> str:
 
 # ── Main render ───────────────────────────────────────────────────────────────
 
-def render_project_status(pid: str, tab: str = "overview") -> tuple[str, str]:
+def render_project_status(pid: str, tab: str = "overview", embed: bool = False) -> tuple[str, str]:
     """Return (page_title, html_body) for /project/<pid>/status."""
     pid = pid.lower()
     entry = PROJECT_INTRO.get(pid)
@@ -450,14 +517,17 @@ def render_project_status(pid: str, tab: str = "overview") -> tuple[str, str]:
         ("blueprint", "bi-diagram-3",      "Overview & Blueprint"),
         ("business",  "bi-check2-square",  "Feature Status (Business)"),
         ("dev",       "bi-braces-asterisk","Feature Status (Dev)"),
+        ("code",      "bi-file-earmark-code","Code Explained"),
         ("future",    "bi-fire",           "Future Enhancements"),
         ("techstack", "bi-cpu",            "Technology Stack"),
         ("docs",      "bi-journal-text",   "Docs & Demo Guide"),
     ]
+    embed_qs = "&embed=1" if embed else ""
+    embed_q = "?embed=1" if embed else ""
     nav = "".join(
         f"<li class='nav-item'>"
         f"<a class='nav-link {'active' if t==tab else ''}' "
-        f"href='/project/{pid}/status?tab={t}'>"
+        f"href='/project/{pid}/status?tab={t}{embed_qs}'>"
         f"<i class='bi {icon}'></i> {label}</a></li>"
         for t, icon, label in tabs
     )
@@ -467,6 +537,7 @@ def render_project_status(pid: str, tab: str = "overview") -> tuple[str, str]:
         "blueprint": lambda: _tab_blueprint(intro, name),
         "business":  lambda: _tab_features_business(intro),
         "dev":       lambda: _tab_features_dev(intro),
+        "code":      lambda: _tab_code(intro),
         "future":    lambda: _tab_future(intro),
         "techstack": lambda: _tab_techstack(intro),
         "docs":      lambda: _tab_docs(intro),
@@ -479,7 +550,7 @@ def render_project_status(pid: str, tab: str = "overview") -> tuple[str, str]:
         active = " fw-bold text-primary" if p["pid"] == pid else ""
         ready = "" if p["ready"] else " text-muted"
         selector_links.append(
-            f"<a href='/project/{p['pid']}/status' class='me-3{active}{ready}'>"
+            f"<a href='/project/{p['pid']}/status{embed_q}' class='me-3{active}{ready}'>"
             f"{html.escape(p['name'])}</a>"
         )
     selector = (
@@ -489,12 +560,14 @@ def render_project_status(pid: str, tab: str = "overview") -> tuple[str, str]:
         "</div></div>"
     )
 
+    back_btn = ("" if embed else
+                f"<a href='/project/{pid}' class='btn btn-sm btn-outline-secondary'>"
+                f"<i class='bi bi-arrow-left'></i> Back to project overview</a>")
     page = f"""
     <div class='d-flex justify-content-between align-items-center mb-3'>
       <div><h3 class='mb-0'>{html.escape(name)} — Project Status</h3>
         <small class='text-muted'>Source: <code>{html.escape(str(intro))}</code></small></div>
-      <a href='/project/{pid}' class='btn btn-sm btn-outline-secondary'>
-        <i class='bi bi-arrow-left'></i> Back to project overview</a>
+      {back_btn}
     </div>
     {selector}
     <ul class='nav nav-tabs mb-3'>{nav}</ul>
