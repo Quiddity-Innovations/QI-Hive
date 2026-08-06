@@ -9,5 +9,52 @@
         "detail": "Live source folder for the project."
       }
     ]
+  },
+  {
+    "category": "Subjects & subscriptions",
+    "features": [
+      {
+        "name": "Subjects store + matcher",
+        "file": "C:\\PlayDeck\\api\\subjects.py",
+        "status": "live",
+        "detail": "data/subjects.json holds {name, keywords[], enabled}. Seeded with the same nine-subject vocabulary TubeScout uses. Word-boundary regex matching tolerant of the obvious inflections (nomad/nomads, retire/retired); a title hit scores double a channel-name hit."
+      },
+      {
+        "name": "Subscription feed aggregator",
+        "file": "C:\\PlayDeck\\api\\subs.py",
+        "status": "live",
+        "detail": "Per-host map of 'people I follow' pages for 11 platforms (YouTube /feed/subscriptions first-class). Background thread with per-site status, results interleaved round-robin and cached in data/subscriptions.json; every item tagged with matching subjects."
+      },
+      {
+        "name": "Subscribed-channel list",
+        "file": "C:\\PlayDeck\\api\\subs.py",
+        "status": "live",
+        "detail": "YouTube /feed/channels read with the saved cookies into data/subscription_channels.json — each channel becomes a one-click browse button."
+      },
+      {
+        "name": "Logged-in static scrape",
+        "file": "C:\\PlayDeck\\api\\browse.py",
+        "status": "live",
+        "detail": "fetch_html now sends the saved cookie file's cookies for the host. The scrape tier previously fetched anonymously, which made every logged-in listing page a sign-in prompt."
+      },
+      {
+        "name": "Alias suppression for feeds",
+        "file": "C:\\PlayDeck\\api\\browse.py",
+        "status": "live",
+        "detail": "discover(allow_aliases=False) keeps homepage substitutions out of subscription fetches, so a TikTok For You grid can never be presented as 'from people you follow'."
+      },
+      {
+        "name": "REST surface",
+        "file": "C:\\PlayDeck\\api\\main.py",
+        "status": "live",
+        "detail": "GET/POST/DELETE /api/subjects (+ /reset); GET /api/subs, /api/subs/status, /api/subs/sites, /api/subs/channels; POST /api/subs/refresh, /api/subs/channels."
+      },
+      {
+        "name": "Subs tab + Subjects settings",
+        "file": "C:\\PlayDeck\\web\\index.html",
+        "status": "live",
+        "detail": "The 📡 Subs pane has subject filter chips with counts, site and sort selectors, an on-subject-only toggle, a per-site pill row and background-job polling. Settings gains a Subjects editor. Browse and Subs share one card renderer."
+      }
+    ]
   }
 ]

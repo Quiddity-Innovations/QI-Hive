@@ -31,7 +31,7 @@ Every enrichment artifact is a plain file stored beside the schema, the whole pi
 | Application / report developer | Uses the FK-in / FK-out and diagram views to plan joins; recycles verified queries as few-shot examples. |
 | Compliance / security officer | Sets each profile's data policy (`local_only` / `cloud_metadata_only` / `cloud_with_agreement`), reviews the egress audit log, and locks regulated profiles. |
 | OnBase / ERP system owner | Imports OnBase `.expk` config or CSV/DDL exports to build a catalog of DocTypes and keyword definitions and confirm relationships. |
-| Quiddity operator (Renne) | Runs MapSnap as the `QI_MapSnap` service behind a named Cloudflare tunnel; manages profiles, users, and AI connections. |
+| Quiddity operator (the owner) | Runs MapSnap as the `QI_MapSnap` service behind a named Cloudflare tunnel; manages profiles, users, and AI connections. |
 
 ## Current Build Status (June 2026)
 
@@ -61,7 +61,7 @@ Every enrichment artifact is a plain file stored beside the schema, the whole pi
 
 MapSnap aims to make any enterprise database **born understood**. Connecting and extracting should automatically run the enrichment chain so that, minutes later, a non-expert can ask "where are the checks?" or "which tables hold student records?" and get a correct, join-aware answer — on any engine, with regulated data never leaving the building. The same stack, pointed at a new connection, becomes a new product: this is the genetic blueprint behind **CogniBase @ BU**.
 
-At Boston University, MapSnap is the **onboarding tool for the systems-of-record federation** (BU Library v2, Appendix A + Doc 18). Pointed at each structured source — SAP/BUworks, MyBU/Campus Solutions, CAMMS, StarRez and beyond — it reads the schema and **proposes canonical-key mappings** (e.g. "SAP vendor key ≡ canonical `PersonTaxID`"). Those proposals become **candidate Normalizers** that CogniBase consumes and a steward ratifies: MapSnap builds the ontology CogniBase governs. Together with AutoPDF the three form one governed pipeline — **capture (AutoPDF) → understand (MapSnap) → align → correlate (CogniBase).**
+I see companies adopting MapSnap as the **onboarding tool for their systems-of-record federation** — the front door through which every new source system enters the fabric. At Boston University I've deployed it on my own system and walked a handful of people through it. They genuinely found it interesting. My hope is that it eventually serves some departments at BU. Pointed at a structured source, MapSnap reads the schema and **proposes canonical-key mappings**. Those proposals become **candidate Normalizers** that CogniBase consumes and a steward ratifies: MapSnap builds the ontology CogniBase governs. Together with AutoPDF the three form one governed pipeline — **capture (AutoPDF) → understand (MapSnap) → align → correlate (CogniBase).**
 
 ## How the Knowledge Bundle Works
 

@@ -119,7 +119,7 @@
           "type": "Agent Profile",
           "location": "C:\\OC\\agents\\",
           "file": "TASUKE.md",
-          "description": "Orchestrator identity, role, authority model, and development protocol. The only agent Renne talks to directly."
+          "description": "Orchestrator identity, role, authority model, and development protocol. The only agent the owner talks to directly."
         },
         {
           "title": "Kaze — News & Digest",

@@ -25,7 +25,7 @@
     },
     {
       "title": "Two engines, one contract",
-      "body": "engine_py.py is the deep Fantasy-5 engine with N=42, PICK=5 baked in and a single rich draw store. lottery_general.py is the generalized engine: every function takes (N, k) and an optional bonus pool (Bn, b), with a PRESETS registry of real games and per-game draw stores. The split keeps the F5 app fast and faithful to Renne's original research while letting any other lottery reuse the same backtest / ledger / curated-builder ideas. Critically, Fantasy5/engine.js mirrors engine_py so the browser page runs offline, and mcp_server.py imports engine_py directly - so the math is identical across the server, the browser, and Claude Desktop."
+      "body": "engine_py.py is the deep Fantasy-5 engine with N=42, PICK=5 baked in and a single rich draw store. lottery_general.py is the generalized engine: every function takes (N, k) and an optional bonus pool (Bn, b), with a PRESETS registry of real games and per-game draw stores. The split keeps the F5 app fast and faithful to the owner's original research while letting any other lottery reuse the same backtest / ledger / curated-builder ideas. Critically, Fantasy5/engine.js mirrors engine_py so the browser page runs offline, and mcp_server.py imports engine_py directly - so the math is identical across the server, the browser, and Claude Desktop."
     },
     {
       "title": "The Brutal Ledger and its exact random control",

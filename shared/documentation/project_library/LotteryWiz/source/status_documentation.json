@@ -7,7 +7,7 @@
         {"title": "Fantasy 5 App README", "file": "README.md", "location": "C:\\Lottery Wiz\\Fantasy5\\", "type": "Markdown", "description": "Readme for the deep Fantasy 5 browser app (the / page)."},
         {"title": "Scratch Phase Design", "file": "SCRATCH_PHASE.md", "location": "C:\\Lottery Wiz\\", "type": "Markdown", "description": "Design notes for the scratch-off EV module: SQLite model, endpoints, UI, EV math and honest verdicts, and why scratch data is manual entry."},
         {"title": "Scratch Phase Notes", "file": "SCRATCH_PHASE.md", "location": "C:\\Lottery Wiz\\", "type": "Markdown", "description": "EV-per-ticket tracking from user-entered prize-remaining data; ranked board; spend/won ledger."},
-        {"title": "Research Source", "file": "Source\\", "location": "C:\\Lottery Wiz\\Lottery Wiz Documentation\\", "type": "Folder", "description": "Renne's original Fantasy 5 covering-design research that the engine is built from (the 48 documented sets, backtest of GA F5 draws, Appendix-A probability formulas)."}
+        {"title": "Research Source", "file": "Source\\", "location": "C:\\Lottery Wiz\\Lottery Wiz Documentation\\", "type": "Folder", "description": "the owner's original Fantasy 5 covering-design research that the engine is built from (the 48 documented sets, backtest of GA F5 draws, Appendix-A probability formulas)."}
       ]
     },
     {

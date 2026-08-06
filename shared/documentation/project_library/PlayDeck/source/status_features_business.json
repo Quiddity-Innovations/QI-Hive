@@ -6,6 +6,21 @@
         "name": "Registered in QI ecosystem",
         "description": "Listed in qi_registry.json with port allocation, path, and status.",
         "status": "live"
+      },
+      {
+        "name": "Subjects — say what you actually watch",
+        "description": "A personal interest list (AI, Travel, Retirement, …), each subject being a name plus the words that give it away in a title. Shares its vocabulary with TubeScout so both projects agree on what a subject means.",
+        "status": "live"
+      },
+      {
+        "name": "One feed for everything you subscribe to",
+        "description": "PlayDeck uses the logins you already saved to open each site's 'from the people I follow' page — YouTube subscriptions first — and lists what your channels posted, in one grid, filterable by subject with one click.",
+        "status": "live"
+      },
+      {
+        "name": "Honest about what it could not fetch",
+        "description": "Each site reports its own count; a failure names its cause instead of quietly substituting an algorithmic feed. Sites with no listable following page say so.",
+        "status": "live"
       }
     ]
   }

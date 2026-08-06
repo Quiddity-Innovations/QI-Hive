@@ -26,10 +26,10 @@
     "features": [
       {"name": "Specialist sub-agent team", "description": "Eight role-specialised agents (architect, builder, inspector, ops, scout, scribe, tester, librarian) the main thread dispatches work to.", "status": "live", "notes": "Defined as Claude Code sub-agents; routed per DISPATCH_PROTOCOL.md."},
       {"name": "Dispatch Protocol", "description": "A standing operating discipline mapping each task type to the right agent and model, with design->build->inspect->scribe workflows.", "status": "live", "notes": "Keeps Opus reasoning, Sonnet building, Haiku on triage/docs."},
-      {"name": "CoWork dispatch channel", "description": "Bi-directional task/proposal board where CoWork and agents post work and Renne (or Claude) approves, declines, or discusses.", "status": "live", "notes": "Inspector findings kept off the human queue; idempotent."},
+      {"name": "CoWork dispatch channel", "description": "Bi-directional task/proposal board where CoWork and agents post work and the owner (or Claude) approves, declines, or discusses.", "status": "live", "notes": "Inspector findings kept off the human queue; idempotent."},
       {"name": "Auto-apply pipeline", "description": "Approved dispatches flow to a builder runner that prepares the change for review.", "status": "partial", "notes": "QI_HiveApply Phase 1 — inbox-fallback mode."},
       {"name": "Agent growth loop", "description": "Agents log what worked and what to improve after each task, building a profile over time.", "status": "partial", "notes": "Tables + endpoints live; agent_growth_log not yet populated."},
-      {"name": "War Room", "description": "A shared multi-agent text channel where Renne, Claude, CoWork, and hive agents talk in one thread.", "status": "partial", "notes": "Stage 0 text-only; avatars + voice planned."}
+      {"name": "War Room", "description": "A shared multi-agent text channel where the owner, Claude, CoWork, and hive agents talk in one thread.", "status": "partial", "notes": "Stage 0 text-only; avatars + voice planned."}
     ]
   },
   {

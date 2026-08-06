@@ -49,7 +49,7 @@
     "category": "Persona Layers (maia/ · gate/ · identity/)",
     "features": [
       {"name": "maia/ expression layer", "file": "maia/{voice,memory,speech,face,conversation,longform}/__init__.py", "status": "planned", "detail": "Pre-wired empty packages (each just an __init__.py + README). voice = migrate Fumi's writing half; memory = the diary (to build); speech/face/conversation/longform = empty rooms for the evolved Maia. No logic yet."},
-      {"name": "gate/ Governor", "file": "gate/__init__.py + gate/README.md", "status": "planned", "detail": "Documented placeholder for the approval queue (draft -> Renne approves -> publish). To build in the first dev phase alongside the Fumi split. No code."},
+      {"name": "gate/ Governor", "file": "gate/__init__.py + gate/README.md", "status": "planned", "detail": "Documented placeholder for the approval queue (draft -> the owner approves -> publish). To build in the first dev phase alongside the Fumi split. No code."},
       {"name": "identity/ Kit", "file": "identity/manifest.json", "status": "partial", "detail": "Machine-readable identity manifest pointing to the soul (PERSONA_BIBLE.md) with face/voice_spoken/style all status='placeholder' (empty references, null seed/embedding). Created, not populated."}
     ]
   },

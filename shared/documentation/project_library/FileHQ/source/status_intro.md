@@ -45,7 +45,7 @@ taking up space on F:?", Naya queries the FileHQ index (read-only by default) an
 | Consumer | How they interact |
 |---|---|
 | **Naya (the bot)** | Primary consumer. Injects live FileHQ stats into its LLM prompt and answers file questions on LINE / Telegram / web — read-only by default. |
-| **Renne (owner)** | Triggers scans, reviews duplicate groups, approves clean-ups. Destructive actions need an explicit "you may proceed". |
+| **the owner (owner)** | Triggers scans, reviews duplicate groups, approves clean-ups. Destructive actions need an explicit "you may proceed". |
 | **FileHQ web dashboard** | A FastAPI + Jinja2 console (port 8000 standalone) with Dashboard, Duplicates, Explorer, Organizer, Tasks, History, Reports, Exceptions tabs. |
 | **QI ecosystem** | Exposes file scanning/indexing and a file-search API; can consume NEXUS for LLM-assisted file analysis. |
 

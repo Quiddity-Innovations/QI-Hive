@@ -46,7 +46,7 @@ produced locally by `nomic-embed-text` through Ollama, so the Brain costs nothin
 | **The 7 QI Hive agents** | Architect, Builder, Inspector, Scout, Scribe, Ops, Librarian register growth, heartbeats, and dispatches through the API |
 | **Sibling services (Maia · Naya · NEXUS)** | Registered as `agents`; can log features and read the ecosystem snapshot over REST |
 | **The QI Hive dashboard** | *Consumes* the Brain — Mission Control, the compliance board, and the War Room all read `:9011` (the Brain does not depend on the dashboard) |
-| **Renne (owner)** | Reviews pending feature evaluations and can override the Brain's recommendation (Law 6 — owner override) |
+| **the owner (owner)** | Reviews pending feature evaluations and can override the Brain's recommendation (Law 6 — owner override) |
 
 ## Current Build Status (June 2026)
 

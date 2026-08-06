@@ -34,7 +34,7 @@
       "priority": "medium",
       "items": [
         {"title": "Evaluate Whisper fallback at scale", "detail": "Whisper fallback is built and verified but off by default (downloads audio). Benchmark cost/quality on the ~38 caption-less videos and decide whether to enable it selectively for favorites/must-reads only."},
-        {"title": "Multi-language brief output", "detail": "Transcripts are fetched in en/pt/es/ja/fr but briefs are always English. Offer pt-BR briefs (Renne is Brazilian) by passing the target language into the NEXUS summary prompt."}
+        {"title": "Multi-language brief output", "detail": "Transcripts are fetched in en/pt/es/ja/fr but briefs are always English. Offer pt-BR briefs (the owner is Brazilian) by passing the target language into the NEXUS summary prompt."}
       ]
     },
     {

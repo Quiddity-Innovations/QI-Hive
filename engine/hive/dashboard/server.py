@@ -614,10 +614,74 @@ def _readme_block(page_id: str) -> str:
     </script>"""
 
 
-VALID_THEMES = {"dark", "light", "auto"}
+VALID_THEMES = {"penumbra", "light", "auto", "orange", "dark"}
+
+# QI theme -> Bootstrap base ('auto' has no entry — resolved client-side from
+# the OS). 'penumbra' is the original QI dark look (renamed 2026-08-06);
+# 'orange' and 'dark' are ports of the two major NEXUS themes and share the
+# NEXUS orange accent (#f97316) on a light / dark base respectively.
+_THEME_BASE   = {"penumbra": "dark", "light": "light", "orange": "light", "dark": "dark"}
+_THEME_ACCENT = {"orange": "orange", "dark": "orange"}
+QI_ACCENT_ORANGE = "#f97316"
+
+QI_ACCENT_CSS = """
+    /* ── QI accent themes (Orange / Dark — ported from NEXUS, 2026-08-06) ── */
+    html[data-qi-accent="orange"] {
+      --bs-primary:#f97316; --bs-primary-rgb:249,115,22;
+      --bs-link-color:#ea580c; --bs-link-hover-color:#c2410c;
+      --bs-link-color-rgb:234,88,12; --bs-link-hover-color-rgb:194,65,12;
+      --bs-focus-ring-color:rgba(249,115,22,.25);
+    }
+    html[data-qi-accent="orange"][data-bs-theme="dark"] {
+      --bs-link-color:#fb923c; --bs-link-hover-color:#f97316;
+      --bs-link-color-rgb:251,146,60; --bs-link-hover-color-rgb:249,115,22;
+    }
+    html[data-qi-accent="orange"] .btn-primary {
+      --bs-btn-bg:#f97316; --bs-btn-border-color:#f97316;
+      --bs-btn-hover-bg:#ea580c; --bs-btn-hover-border-color:#ea580c;
+      --bs-btn-active-bg:#c2410c; --bs-btn-active-border-color:#c2410c;
+      --bs-btn-disabled-bg:#fdba74; --bs-btn-disabled-border-color:#fdba74;
+    }
+    html[data-qi-accent="orange"] .btn-outline-primary {
+      --bs-btn-color:#ea580c; --bs-btn-border-color:#f97316;
+      --bs-btn-hover-bg:#f97316; --bs-btn-hover-border-color:#f97316;
+      --bs-btn-active-bg:#ea580c; --bs-btn-active-border-color:#ea580c;
+    }
+    html[data-qi-accent="orange"] .text-primary   { color:#f97316 !important; }
+    html[data-qi-accent="orange"] .bg-primary     { background-color:#f97316 !important; }
+    html[data-qi-accent="orange"] .border-primary { border-color:#f97316 !important; }
+    html[data-qi-accent="orange"] .app-sidebar .nav-link.active {
+      background-color:#f97316 !important; color:#fff !important;
+    }
+    html[data-qi-accent="orange"] .app-sidebar .nav-link.active .nav-icon { color:#fff !important; }
+    html[data-qi-accent="orange"] .nav-pills .nav-link.active { background-color:#f97316; color:#fff; }
+    html[data-qi-accent="orange"] .nav-tabs .nav-link.active  { color:#ea580c; }
+    html[data-qi-accent="orange"] .form-check-input:checked {
+      background-color:#f97316; border-color:#f97316;
+    }
+    html[data-qi-accent="orange"] input[type="checkbox"],
+    html[data-qi-accent="orange"] input[type="radio"],
+    html[data-qi-accent="orange"] input[type="range"] { accent-color:#f97316; }
+    html[data-qi-accent="orange"] .page-link { color:#ea580c; }
+    html[data-qi-accent="orange"] .dropdown-item.active { background-color:#f97316; }
+    html[data-qi-accent="orange"] .progress-bar { background-color:#f97316; }
+"""
 
 def _get_theme() -> str:
-    return _load_hive_config().get("theme", "dark")
+    cfg = _load_hive_config()
+    t = cfg.get("theme", "penumbra")
+    if t == "dark" and not cfg.get("theme_v2"):
+        # Pre-2026-08-06 configs: "dark" meant the original dark look, which
+        # is now called "penumbra" ("dark" is the NEXUS-style dark). Migrate
+        # once so the saved look does not silently change.
+        t = "penumbra"
+        try:
+            cfg["theme"] = t
+            cfg["theme_v2"] = True
+            _save_hive_config(cfg)
+        except Exception:
+            pass
+    return t if t in VALID_THEMES else "penumbra"
 
 def _get_header_lock() -> bool:
     """When True, each page's header area (top navbar + title/breadcrumb bar)
@@ -626,7 +690,9 @@ def _get_header_lock() -> bool:
     return bool(_load_hive_config().get("lock_header", True))
 
 def _theme_icon(theme: str) -> str:
-    return {"dark": "bi-moon-stars-fill", "light": "bi-sun-fill", "auto": "bi-circle-half"}.get(theme, "bi-circle-half")
+    return {"penumbra": "bi-moon-stars-fill", "light": "bi-sun-fill",
+            "auto": "bi-circle-half", "orange": "bi-brightness-high-fill",
+            "dark": "bi-moon-fill"}.get(theme, "bi-circle-half")
 
 
 def base_layout(title: str, content: str, active: str = "") -> str:
@@ -668,8 +734,12 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     now   = datetime.now().strftime("%Y-%m-%d %H:%M")
     theme = _get_theme()
     t_icon = _theme_icon(theme)
-    # 'auto' maps to no data-bs-theme (Bootstrap auto-detects from OS)
-    bs_theme_attr = f'data-bs-theme="{theme}"' if theme != "auto" else ""
+    t_icon_style = f' style="color:{QI_ACCENT_ORANGE}"' if theme in _THEME_ACCENT else ""
+    # QI theme -> Bootstrap base; 'auto' maps to no data-bs-theme (client resolves from OS)
+    _base = _THEME_BASE.get(theme)
+    bs_theme_attr = f'data-bs-theme="{_base}"' if _base else ""
+    _accent = _THEME_ACCENT.get(theme, "")
+    accent_attr = f'data-qi-accent="{_accent}"' if _accent else ""
     header_lock_cls = "lock-header" if _get_header_lock() else ""
     return f"""<!doctype html>
 <html lang="en">
@@ -747,22 +817,31 @@ def base_layout(title: str, content: str, active: str = "") -> str:
       .app-content canvas,
       .app-content pre              {{ max-width: 100%; height: auto; }}
     }}
+{QI_ACCENT_CSS}
   </style>
   <script>
     /* Resolve the theme onto <html> so EVERY component (incl. dropdowns/modals
        portaled to body) inherits it. 'auto' follows the OS and reacts live —
-       Bootstrap has no native 'auto', so we map it here. */
+       Bootstrap has no native 'auto', so we map it here. QI themes map to a
+       Bootstrap base plus an optional accent attribute (Orange/Dark = NEXUS
+       orange accent; Penumbra = the original QI dark). */
     (function(){{
       var t = "{theme}";
+      var BASE   = {{penumbra:'dark', dark:'dark', orange:'light', light:'light'}};
+      var ACCENT = {{orange:'orange', dark:'orange'}};
       var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-      function resolve(){{ return t === 'auto' ? (mq && mq.matches ? 'dark' : 'light') : t; }}
-      function apply(){{ document.documentElement.setAttribute('data-bs-theme', resolve()); }}
+      function resolve(){{ return t === 'auto' ? (mq && mq.matches ? 'dark' : 'light') : (BASE[t] || 'dark'); }}
+      function apply(){{
+        document.documentElement.setAttribute('data-bs-theme', resolve());
+        if (ACCENT[t]) document.documentElement.setAttribute('data-qi-accent', ACCENT[t]);
+        else document.documentElement.removeAttribute('data-qi-accent');
+      }}
       apply();
       if (t === 'auto' && mq && mq.addEventListener) mq.addEventListener('change', apply);
     }})();
   </script>
 </head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary {header_lock_cls}" {bs_theme_attr}>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary {header_lock_cls}" {bs_theme_attr} {accent_attr}>
 <div class="app-wrapper">
 
   <!-- Navbar -->
@@ -780,18 +859,25 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         <!-- Theme switcher -->
         <li class="nav-item dropdown">
           <a class="nav-link" href="#" data-bs-toggle="dropdown" title="Switch theme" id="themeToggle">
-            <i class="bi {t_icon}"></i>
+            <i class="bi {t_icon}"{t_icon_style}></i>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end" style="min-width:120px">
-            <li><a class="dropdown-item {'fw-bold' if theme=='dark' else ''}"
-                   href="#" onclick="setTheme('dark');return false;">
-              <i class="bi bi-moon-stars-fill me-2"></i>Dark</a></li>
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width:140px">
+            <li><a class="dropdown-item {'fw-bold' if theme=='penumbra' else ''}"
+                   href="#" onclick="setTheme('penumbra');return false;">
+              <i class="bi bi-moon-stars-fill me-2"></i>Penumbra</a></li>
             <li><a class="dropdown-item {'fw-bold' if theme=='light' else ''}"
                    href="#" onclick="setTheme('light');return false;">
               <i class="bi bi-sun-fill me-2"></i>Light</a></li>
             <li><a class="dropdown-item {'fw-bold' if theme=='auto' else ''}"
                    href="#" onclick="setTheme('auto');return false;">
               <i class="bi bi-circle-half me-2"></i>System</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item {'fw-bold' if theme=='orange' else ''}"
+                   href="#" onclick="setTheme('orange');return false;">
+              <i class="bi bi-brightness-high-fill me-2" style="color:{QI_ACCENT_ORANGE}"></i>Orange</a></li>
+            <li><a class="dropdown-item {'fw-bold' if theme=='dark' else ''}"
+                   href="#" onclick="setTheme('dark');return false;">
+              <i class="bi bi-moon-fill me-2" style="color:{QI_ACCENT_ORANGE}"></i>Dark</a></li>
           </ul>
         </li>
         <!-- Write-access unlock (needed for in-page saves through the tunnel) -->
@@ -5249,11 +5335,12 @@ def api_theme_get():
 @app.post("/api/theme")
 async def api_theme_set(request: Request):
     body  = await request.json()
-    theme = body.get("theme", "dark")
+    theme = body.get("theme", "penumbra")
     if theme not in VALID_THEMES:
         raise HTTPException(400, f"theme must be one of {sorted(VALID_THEMES)}")
     cfg = _load_hive_config()
     cfg["theme"] = theme
+    cfg["theme_v2"] = True  # post-rename value: "dark" now means the NEXUS-style dark
     _save_hive_config(cfg)
     return JSONResponse({"ok": True, "theme": theme})
 
@@ -5891,14 +5978,18 @@ from project_status import render_project_status, list_projects as _ps_list
 def _status_embed_html(title: str, body: str) -> str:
     """Minimal standalone page (no sidebar) for iframe embedding in the Library."""
     theme = _get_theme()
-    bs = f'data-bs-theme="{theme}"' if theme != "auto" else ""
-    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"/>'
+    _base = _THEME_BASE.get(theme)
+    bs = f'data-bs-theme="{_base}"' if _base else ""
+    _accent = _THEME_ACCENT.get(theme, "")
+    acc = f'data-qi-accent="{_accent}"' if _accent else ""
+    return (f'<!doctype html><html lang="en" {bs} {acc}><head><meta charset="utf-8"/>'
             f'<meta name="viewport" content="width=device-width,initial-scale=1"/>'
             f'<title>{html.escape(title)}</title>'
             f'<link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css"/>'
             f'<link rel="stylesheet" href="/static/css/adminlte.min.css"/>'
             f'<script src="/static/vendor/bootstrap.bundle.min.js"></script>'
-            f'</head><body class="bg-body" {bs}><div class="p-3">{body}</div></body></html>')
+            f'<style>{QI_ACCENT_CSS}</style>'
+            f'</head><body class="bg-body" {bs} {acc}><div class="p-3">{body}</div></body></html>')
 
 
 @app.get("/project/{pid}/status", response_class=HTMLResponse)

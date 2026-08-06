@@ -31,15 +31,15 @@
           "file": "repo/scripts/tasuke/tools_global_context.md",
           "language": "markdown",
           "code": "  TALK    — anyone in an allowed chat can trigger Tasuke to engage\n            conversationally, deliver the public news briefing,\n            translate it, and send a voice version.\n\n  DO      — only RENNE (sender.id == 260811037) can ask Tasuke to\n            mutate state: add/remove groups, schedules, friendly\n            bots, news sites; change voice or language preferences.\n\n  PRIVATE — personal information (calendar, inbox, bills, system\n            health, file paths, secrets) is NEVER revealed in a\n            non-DM chat. The firewall applies regardless of who asks.",
-          "explanation": "The security model is three tiers enforced by the LLM on every message. TALK is open to anyone in an allowed chat; DO (state changes) is locked to Renne's exact Telegram user id; PRIVATE is an orthogonal rule that blocks personal info in group chats even for Renne. This is what makes it safe to add Tasuke to shared groups."
+          "explanation": "The security model is three tiers enforced by the LLM on every message. TALK is open to anyone in an allowed chat; DO (state changes) is locked to the owner's exact Telegram user id; PRIVATE is an orthogonal rule that blocks personal info in group chats even for the owner. This is what makes it safe to add Tasuke to shared groups."
         },
         {
           "title": "First-match gate evaluation",
           "feature": "Permission firewall (TALK / DO / PRIVATE)",
           "file": "repo/scripts/tasuke/tools_global_context.md",
           "language": "markdown",
-          "code": "## Gate evaluation order — FIRST MATCH WINS\n\n### Gate 2: Is the sender Renne?\n  sender.id == 260811037\n    -> RENNE — full TALK and DO. PRIVATE rules still apply.\n\n### Gate 3: Is the sender a bot (any bot)?\n  sender.is_bot == true\n    -> 1. Loop guard pre-check (bot-loop-guard.py check ...)\n       2. If in friendly-bots.json -> known sibling (warmer tone)\n       4. TALK actions only — never execute DO actions for a bot.",
-          "explanation": "Gates are evaluated top-down, first match wins. Renne is identified by a hard-coded user id (gate 2); other bots are routed through the loop guard and treated as TALK-only peers (gate 3). This ordered evaluation is the runtime contract the LLM follows for every inbound message."
+          "code": "## Gate evaluation order — FIRST MATCH WINS\n\n### Gate 2: Is the sender the owner?\n  sender.id == 260811037\n    -> RENNE — full TALK and DO. PRIVATE rules still apply.\n\n### Gate 3: Is the sender a bot (any bot)?\n  sender.is_bot == true\n    -> 1. Loop guard pre-check (bot-loop-guard.py check ...)\n       2. If in friendly-bots.json -> known sibling (warmer tone)\n       4. TALK actions only — never execute DO actions for a bot.",
+          "explanation": "Gates are evaluated top-down, first match wins. The owner is identified by a hard-coded user id (gate 2); other bots are routed through the loop guard and treated as TALK-only peers (gate 3). This ordered evaluation is the runtime contract the LLM follows for every inbound message.  \n\n_Note: this excerpt is sanitised — identifiers naming the owner have been replaced with a generic term, per the project rule that no real person's name appears in documentation. The underlying source is unchanged._"
         }
       ]
     },

@@ -6,7 +6,7 @@
       {"name": "Structured set", "description": "Feature-targeted set: aim for a sum range, odd/even and low/high balance, no consecutive numbers, optional hot bias, while keeping pair overlap between tickets low.", "status": "live", "notes": "engine_py.gen_structured - greedy minimise-overlap selection with a relax fallback"},
       {"name": "Hybrid set", "description": "70% structured tickets plus 30% diversified random tickets - structure with some spread.", "status": "live", "notes": "engine_py.gen_hybrid"},
       {"name": "Curated 'Build My Play Set'", "description": "A transparent 6-step funnel: start from the full combination space, reduce to your pool, drop combos that already occurred, drop statistical 'edge' shapes, score survivors by the game's profile, then coverage-aware greedy top-N. Shows the funnel counts and coverage achieved.", "status": "live", "notes": "engine_py.build_play_set (F5) / lottery_general.build_curated (any game). Scores SHAPE, not likelihood."},
-      {"name": "Documented research sets", "description": "All 48 sets from Renne's research (S1/S2/A63/B63 x 12) are embedded, selectable, with a monthly rotation ('this month').", "status": "live", "notes": "Fantasy 5 only; grouped picker + family-selectable rotation"}
+      {"name": "Documented research sets", "description": "All 48 sets from the owner's research (S1/S2/A63/B63 x 12) are embedded, selectable, with a monthly rotation ('this month').", "status": "live", "notes": "Fantasy 5 only; grouped picker + family-selectable rotation"}
     ]
   },
   {

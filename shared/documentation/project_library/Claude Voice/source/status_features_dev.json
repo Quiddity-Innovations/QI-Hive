@@ -71,7 +71,7 @@
       {"name": "Meeting-room daily task", "file": "ClaudeVoice_Start_MeetingRoom.bat / setup_meeting_schedule.ps1", "status": "live", "detail": "QI_ClaudeVoiceMeeting_8AM runs the room at 08:00 via conhost --headless cmd /c (a .bat, not pythonw -> avoids the stdout-null crash). RunLevel Limited (no admin), Interactive, StartWhenAvailable, Hidden."},
       {"name": "Bridge health monitor", "file": "bridge_health.py", "status": "live", "detail": "Hourly QI_ClaudeVoiceBridgeCheck: verifies token present + kind (subscription-oauth vs api-key), claude CLI resolvable, brain wired to claude_cli, a LIVE probe ('BRIDGE OK') with latency, and the three /health endpoints. Writes data/bridge_health.json; alerts via Tasuke + BRIDGE_PENDING_REVIEW.json on failure."},
       {"name": "ffmpeg resolver (service-safe)", "file": "util.py :: ffmpeg() / ffprobe()", "status": "live", "detail": "Resolves ffmpeg/ffprobe via config dir -> PATH -> common install dirs -> WinGet packages glob, fixing the empty-PATH service account that silently dropped voice notes."},
-      {"name": "Spoken-only pronunciation + modality", "file": "pronounce.py :: apply() / modality.py :: choose()", "status": "live", "detail": "pronounce.apply rewrites speech only ('Renne'->'Renee', whole-word, case-preserving). modality.choose picks text/voice/video per turn from length + moment detection; cooldown-gated video."}
+      {"name": "Spoken-only pronunciation + modality", "file": "pronounce.py :: apply() / modality.py :: choose()", "status": "live", "detail": "pronounce.apply rewrites speech only ('the owner'->'Renee', whole-word, case-preserving). modality.choose picks text/voice/video per turn from length + moment detection; cooldown-gated video."}
     ]
   }
 ]

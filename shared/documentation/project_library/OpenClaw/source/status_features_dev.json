@@ -41,7 +41,7 @@
         "name": "Permission firewall + flows",
         "file": "repo/scripts/tasuke/tools_global_context.md",
         "status": "live",
-        "detail": "TALK/DO/PRIVATE gate evaluation (first match wins); sender.id==260811037 => Renne (DO). Language-matched refusal templates. Appended into TOOLS.md."
+        "detail": "TALK/DO/PRIVATE gate evaluation (first match wins); sender.id==260811037 => the owner (DO). Language-matched refusal templates. Appended into TOOLS.md."
       },
       {
         "name": "Slash-command router (fallback CLI)",

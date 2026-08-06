@@ -4,15 +4,15 @@
     "features": [
       {
         "name": "Single front door",
-        "description": "Renne talks to one agent (Tasuke) over Telegram/LINE; Tasuke delegates everything else.",
+        "description": "the owner talks to one agent (Tasuke) over Telegram/LINE; Tasuke delegates everything else.",
         "status": "live",
-        "notes": "Only agent Renne addresses directly. Telegram @HattoriTasukeBot."
+        "notes": "Only agent the owner addresses directly. Telegram @HattoriTasukeBot."
       },
       {
         "name": "Permission firewall (TALK / DO / PRIVATE)",
-        "description": "Anyone in an allowed chat can trigger conversational TALK actions; only Renne can trigger state-changing DO actions; private info is never revealed in group chats.",
+        "description": "Anyone in an allowed chat can trigger conversational TALK actions; only the owner can trigger state-changing DO actions; private info is never revealed in group chats.",
         "status": "live",
-        "notes": "First-match gate evaluation in TOOLS.md; sender.id == Renne for DO."
+        "notes": "First-match gate evaluation in TOOLS.md; sender.id == the owner for DO."
       },
       {
         "name": "Capabilities wired as text, not code",
@@ -80,7 +80,7 @@
       },
       {
         "name": "Hard authority guardrails",
-        "description": "Never authorises subscriptions, contracts, purchases, or consent on Renne's behalf — uncertain mail is escalated.",
+        "description": "Never authorises subscriptions, contracts, purchases, or consent on the owner's behalf — uncertain mail is escalated.",
         "status": "live",
         "notes": "Auto-reply only for approved message classes."
       },
@@ -103,7 +103,7 @@
       },
       {
         "name": "QI ecosystem health line",
-        "description": "Pulls QI Hive Brain status so Renne sees ecosystem health each morning.",
+        "description": "Pulls QI Hive Brain status so the owner sees ecosystem health each morning.",
         "status": "live",
         "notes": "Fixed 2026-06-15 to call Brain at :9011 (was dead 9010)."
       },
@@ -138,7 +138,7 @@
       },
       {
         "name": "Never pays anything",
-        "description": "Kakei only records; Renne marks bills paid manually.",
+        "description": "Kakei only records; the owner marks bills paid manually.",
         "status": "live",
         "notes": "Authority guardrail by design."
       }

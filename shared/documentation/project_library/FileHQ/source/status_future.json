@@ -15,7 +15,7 @@
       "items": [
         {"title": "Reconcile FileHQ port (8000 vs 8200)", "detail": "config.py / run.py / main.py bind 127.0.0.1:8000 and qi_registry.json records port 8000, but filehq_bridge.py calls http://127.0.0.1:8200 and FileHQ_Master_Status_Report.md claims 8200. Pick one, fix the bridge or the launcher, and update the registry + Service Registry so Naya reliably reaches the engine."},
         {"title": "Define the managed start/stop contract", "detail": "Document and codify exactly how Naya launches FileHQ (Naya_Control.bat option [8] / File Manager tab) and how is_running() health-checks it, so the engine is never silently offline when Naya needs it."},
-        {"title": "Phase 2 code absorption", "detail": "Registry family_notes: 'Phase 1 (bridge) complete. Phase 2 (code absorption) pending Renne approval.' Decide whether filehq/ stays a self-contained sub-package or is fully folded into Naya's modules + naya.db."}
+        {"title": "Phase 2 code absorption", "detail": "Registry family_notes: 'Phase 1 (bridge) complete. Phase 2 (code absorption) pending the owner approval.' Decide whether filehq/ stays a self-contained sub-package or is fully folded into Naya's modules + naya.db."}
       ]
     },
     {

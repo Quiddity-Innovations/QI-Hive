@@ -5,7 +5,7 @@
       "priority": "high",
       "items": [
         {"title": "Continuous drift watchdog service", "detail": "Promote supervisor.py from a run-on-demand script to an always-on QI_ scheduled task or NSSM service that scans on an interval and alerts (via Tasuke) the moment a project goes red. Today the scan only reflects the last manual run — DASHBOARD.md was last generated 2026-05-13."},
-        {"title": "Severity-gated escalation", "detail": "Wire red findings (service down, >5 dirty files, keepalive failures >=3) directly into a Tasuke notification + a calendar event, so a stopped production service (Maia/Naya/OpenClaw) pages Renne instead of waiting for the next session."},
+        {"title": "Severity-gated escalation", "detail": "Wire red findings (service down, >5 dirty files, keepalive failures >=3) directly into a Tasuke notification + a calendar event, so a stopped production service (Maia/Naya/OpenClaw) pages the owner instead of waiting for the next session."},
         {"title": "Auto-remediation for safe drift", "detail": "Extend the supervisor with optional safe auto-fixes mirroring the self-audit (commit-and-note for trivial untracked docs, restart a stopped QI_ service after confirming the port is actually dead) behind an --apply-safe flag and the decision gate."}
       ]
     },

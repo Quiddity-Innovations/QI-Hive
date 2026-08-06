@@ -13,7 +13,7 @@ QI Hive is four cooperating layers living under `C:\QIH\`:
 
 ## The Problem We Solve
 
-- Renne runs **24+ parallel projects** on one Windows machine — each with NSSM services, git repos, ports, logs, tunnels, and documentation. Remembering what is running, what broke, and what is next is cognitive overload that no single backlog can hold.
+- the owner runs **24+ parallel projects** on one Windows machine — each with NSSM services, git repos, ports, logs, tunnels, and documentation. Remembering what is running, what broke, and what is next is cognitive overload that no single backlog can hold.
 - **Knowledge evaporates between sessions.** Decisions made in one Claude session are forgotten in the next, and a pattern built in Maia never reaches Naya. The Brain makes memory durable and cross-project.
 - **Services crash and need an autonomous restart** — but Windows UAC prompts block any unattended loop. The elevation broker solves the UAC-in-the-loop problem.
 - **Projects drift from standards** silently — wrong ports, missing `/health`, stale registry entries. The Inspector enforces the Six Laws continuously instead of catching drift at demo time.
@@ -30,7 +30,7 @@ The contract between QI Hive and the leaf projects is the **registry** (`qi_regi
 
 | Role | How they interact |
 |---|---|
-| **Developer (Renne)** | Browser at `http://localhost:8600` — Mission Control, health, kanban, usage, compliance, Documentation Brain, War Room |
+| **Developer (the owner)** | Browser at `http://localhost:8600` — Mission Control, health, kanban, usage, compliance, Documentation Brain, War Room |
 | **Claude Code (main thread)** | The dispatcher — calls QI Brain MCP tools (`qi_get_context`, `qi_log_session`…) and dispatches the hive-* sub-agents per the Dispatch Protocol |
 | **Hive sub-agents** | architect / builder / inspector / ops / scout / scribe / tester / librarian — invoked via `Agent(subagent_type=hive-<role>)` |
 | **Every leaf project** | Registers in `qi_registry.json`, exposes `/health` + `/version` + `/info`, and pushes state to the Brain at session end |
@@ -92,7 +92,7 @@ The standing workflows (design → build → inspect → scribe) and anti-patter
 - **Law 3** — Independence with declared dependencies — every project runs alone; cross-project calls degrade gracefully.
 - **Law 4** — API contract first, implementation second; never break a contract without a migration.
 - **Law 5** — One registry, always current — update it before the code.
-- **Law 6** — Owner override + proactive best-practice surfacing — Renne's calls are final; agents must flag divergence from industry norms.
+- **Law 6** — Owner override + proactive best-practice surfacing — the owner's calls are final; agents must flag divergence from industry norms.
 
 ## Services & Tunnels
 

@@ -194,7 +194,7 @@
           "file": "engine\\hive\\dashboard\\server.py · POST /api/dispatch",
           "language": "python",
           "code": "@app.post(\"/api/dispatch\")\nasync def api_dispatch(request: Request):\n    body = await request.json()\n    msg_type   = body.get(\"type\", \"note\")\n    project_id = body.get(\"project_id\", \"unknown\")\n    source     = body.get(\"source\", \"cowork\")\n    result = {\"ok\": True, \"type\": msg_type, \"project_id\": project_id}\n    if msg_type in (\"brain_update\", \"state_update\", \"decision\", \"session\", \"scope_drop\"):\n        async with httpx.AsyncClient(timeout=10) as client:\n            r = await client.post(\"http://127.0.0.1:9011/api/inbox\",\n                                  json={**body, \"source\": source})\n            result[\"brain_response\"] = r.json()\n    elif msg_type == \"task_create\":\n        ...  # add a task card to the Hive board\n    return JSONResponse(result)",
-          "explanation": "The integration seam between CoWork (Claude Work) and the Hive. Incoming work orders are typed: brain_update/decision/session payloads are forwarded to the Brain's inbox at :9011, while task_create drops a card onto the Hive board. This is how the 4-way architecture (CoWork / Claude Code / Hive / Renne) actually exchanges work."
+          "explanation": "The integration seam between CoWork (Claude Work) and the Hive. Incoming work orders are typed: brain_update/decision/session payloads are forwarded to the Brain's inbox at :9011, while task_create drops a card onto the Hive board. This is how the 4-way architecture (CoWork / Claude Code / Hive / the owner) actually exchanges work."
         }
       ]
     }

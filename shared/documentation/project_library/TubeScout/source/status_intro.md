@@ -39,7 +39,7 @@ the pipeline can take the news page down.
 
 | Role | How they interact |
 |---|---|
-| **Renne (owner)** | Reads the news page, stars channels, mutes noise, tunes the pipeline and interests in Settings |
+| **the owner (owner)** | Reads the news page, stars channels, mutes noise, tunes the pipeline and interests in Settings |
 | **Public visitors** | Read the public news page + Kaze AI Digest at the TubeScout tunnel — no login, read-only |
 | **NEXUS Scout / Kaze** | Receives a curated OPML of AI/tech channels from TubeScout; folds YouTube items into Kaze's daily digest |
 | **QI Brain** | Receives implement-worthy videos (score ≥ threshold) as pending-feature candidates for the ecosystem |

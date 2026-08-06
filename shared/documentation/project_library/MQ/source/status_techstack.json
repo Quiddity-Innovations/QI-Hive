@@ -26,7 +26,7 @@
     },
     {
       "title": "The Hybrid coherence model (maia/ vs agents/)",
-      "body": "MQ's folder layout encodes one rule: anything the audience experiences AS Maia lives under maia/ and is branded with her name; anything that merely produces it stays in agents/ as invisible plumbing with poetic codenames (Kaze = perception, Fumi = publisher), Renne's boundaries become gate/ (the Governor), and identity is one identity/ kit. Today the working code all lives in agents/ and the maia/ + gate/ folders are pre-wired empty rooms. The first real development step is the 'Hybrid migration': split Fumi's writing half into maia/voice, build the gate/ approval queue, and build maia/memory — done together because the pipeline is being redesigned for four surfaces anyway, so it migrates once rather than twice."
+      "body": "MQ's folder layout encodes one rule: anything the audience experiences AS Maia lives under maia/ and is branded with her name; anything that merely produces it stays in agents/ as invisible plumbing with poetic codenames (Kaze = perception, Fumi = publisher), the owner's boundaries become gate/ (the Governor), and identity is one identity/ kit. Today the working code all lives in agents/ and the maia/ + gate/ folders are pre-wired empty rooms. The first real development step is the 'Hybrid migration': split Fumi's writing half into maia/voice, build the gate/ approval queue, and build maia/memory — done together because the pipeline is being redesigned for four surfaces anyway, so it migrates once rather than twice."
     },
     {
       "title": "Two-tier LLM with cloud-then-local failover",

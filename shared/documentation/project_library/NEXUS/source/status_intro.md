@@ -92,7 +92,7 @@ model's real reasoning capability, with mode-aware timeout multipliers (`core/in
 | Role | How they interact |
 |---|---|
 | **Developers / researchers** | `POST /synthesize` on the API (8010), or the Gradio console (7880) |
-| **Operators (Renne)** | Gradio UI: Orchestrator, Scout, Batch & Schedule, Expert Panel, Curate & Export, Bench, Settings, Help |
+| **Operators (the owner)** | Gradio UI: Orchestrator, Scout, Batch & Schedule, Expert Panel, Curate & Export, Bench, Settings, Help |
 | **QI ecosystem projects** | Maia, Naya, FileHQ, OpenClaw call `/synthesize`, `/scout/digest`, `/bench/recommend` |
 | **TubeScout** | Reuses Scout's topic engine to track YouTube channels (726+ and 1,365+ items in two topics) |
 | **Scout scheduler** | Autonomous — runs per-topic crawl→dedup→digest cycles on APScheduler intervals |

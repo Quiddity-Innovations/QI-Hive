@@ -17,7 +17,7 @@ ecosystem coherent.
 
 ## What problem it solves
 
-Renne runs a dozen-plus parallel QI projects that share a machine, ports, git, and a Brain. Left alone they drift:
+The owner runs a dozen-plus parallel QI projects that share a machine, ports, git, and a Brain. Left alone they drift:
 services stop, worktrees pile up, git goes uncommitted, sessions go unlogged, the Brain's memory falls out of sync
 with reality. Claude Manager is the antidote — it is where the watching, reconciling, and dispatching happen.
 
@@ -40,7 +40,7 @@ with reality. Claude Manager is the antidote — it is where the watching, recon
 
 | Role | How they interact |
 |---|---|
-| **Renne** | Owner. Runs sessions here; receives Tasuke LINE alerts; decides on audit gates |
+| **Owner** | Owner. Runs sessions here; receives Tasuke LINE alerts; decides on audit gates |
 | **Claude Code (main thread)** | The dispatcher — routes work to `hive-*` sub-agents per the Dispatch Protocol |
 | **Hive sub-agents** | architect / builder / inspector / ops / scout / scribe / tester / librarian |
 | **QI Brain & QI Hive** | Consumers — Manager writes reconciliation, sessions, and status into them |

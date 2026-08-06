@@ -9,8 +9,8 @@
           "feature": "Real Claude, for free (claude_cli backend)",
           "file": "backends.py :: stream_claude_cli()",
           "language": "python",
-          "code": "claude = cfg.get(\"bin\") or shutil.which(\"claude\")\nif not claude:\n    raise RuntimeError(\"claude CLI not found on PATH\")\nsystem = \"\\n\".join(m[\"content\"] for m in messages if m.get(\"role\") == \"system\")\nconvo = []\nfor m in messages:\n    if m.get(\"role\") == \"system\":\n        continue\n    who = \"Renne\" if m.get(\"role\") == \"user\" else \"Claude\"\n    convo.append(f\"{who}: {m['content']}\")\nprompt = \"\\n\".join(convo) if convo else \"(no message)\"\nargs = [claude, \"-p\", \"--output-format\", \"text\",\n        \"--no-session-persistence\", \"--model\", cfg.get(\"model\", \"sonnet\")]\nif system:\n    args += [\"--append-system-prompt\", system]\n# NOT --bare, because --bare forces ANTHROPIC_API_KEY and would bypass the free subscription token.\nproc = subprocess.run(args, input=prompt, capture_output=True, text=True,\n                      timeout=cfg.get(\"timeout\", 90), cwd=tempfile.gettempdir())",
-          "explanation": "This is the heart of the project. It spawns the local Claude Code CLI as a subprocess, passing the conversation over STDIN and the system prompt via --append-system-prompt. The cwd is a neutral temp dir so no project CLAUDE.md is auto-loaded each turn (speed). It deliberately avoids --bare because --bare would force the metered ANTHROPIC_API_KEY — instead it relies on the CLAUDE_CODE_OAUTH_TOKEN subscription token, which is what makes the real Claude FREE here."
+          "code": "claude = cfg.get(\"bin\") or shutil.which(\"claude\")\nif not claude:\n    raise RuntimeError(\"claude CLI not found on PATH\")\nsystem = \"\\n\".join(m[\"content\"] for m in messages if m.get(\"role\") == \"system\")\nconvo = []\nfor m in messages:\n    if m.get(\"role\") == \"system\":\n        continue\n    who = \"the owner\" if m.get(\"role\") == \"user\" else \"Claude\"\n    convo.append(f\"{who}: {m['content']}\")\nprompt = \"\\n\".join(convo) if convo else \"(no message)\"\nargs = [claude, \"-p\", \"--output-format\", \"text\",\n        \"--no-session-persistence\", \"--model\", cfg.get(\"model\", \"sonnet\")]\nif system:\n    args += [\"--append-system-prompt\", system]\n# NOT --bare, because --bare forces ANTHROPIC_API_KEY and would bypass the free subscription token.\nproc = subprocess.run(args, input=prompt, capture_output=True, text=True,\n                      timeout=cfg.get(\"timeout\", 90), cwd=tempfile.gettempdir())",
+          "explanation": "This is the heart of the project. It spawns the local Claude Code CLI as a subprocess, passing the conversation over STDIN and the system prompt via --append-system-prompt. The cwd is a neutral temp dir so no project CLAUDE.md is auto-loaded each turn (speed). It deliberately avoids --bare because --bare would force the metered ANTHROPIC_API_KEY — instead it relies on the CLAUDE_CODE_OAUTH_TOKEN subscription token, which is what makes the real Claude FREE here.  \n\n_Note: this excerpt is sanitised — identifiers naming the owner have been replaced with a generic term, per the project rule that no real person's name appears in documentation. The underlying source is unchanged._"
         },
         {
           "title": "Detect a broken/expired login and report honestly",
@@ -18,7 +18,7 @@
           "file": "backends.py :: stream_claude_cli()",
           "language": "python",
           "code": "blob = (proc.stdout or \"\") + (proc.stderr or \"\")\nif \"Not logged in\" in blob or \"/login\" in blob:\n    raise RuntimeError(\"claude CLI not authenticated for headless use — run `claude setup-token` \"\n                       \"(free, uses your subscription) and set CLAUDE_CODE_OAUTH_TOKEN\")\nout = (proc.stdout or \"\").strip()\nif not out:\n    raise RuntimeError(f\"claude CLI returned nothing (rc={proc.returncode}): {(proc.stderr or '')[:200]}\")\nyield out",
-          "explanation": "Rather than fail silently, the backend inspects the CLI output for the tell-tale 'Not logged in' / '/login' strings and raises a precise, actionable error telling Renne to re-run `claude setup-token`. This is exactly what the hourly health monitor surfaces — a stale subscription token is the single most likely failure of the free real-Claude path, so it gets named explicitly."
+          "explanation": "Rather than fail silently, the backend inspects the CLI output for the tell-tale 'Not logged in' / '/login' strings and raises a precise, actionable error telling the owner to re-run `claude setup-token`. This is exactly what the hourly health monitor surfaces — a stale subscription token is the single most likely failure of the free real-Claude path, so it gets named explicitly."
         },
         {
           "title": "Synchronous bridge round-trip (legacy file bus)",
@@ -54,8 +54,8 @@
           "feature": "Whisper hears 'Claude', not 'Cloud'",
           "file": "brain.py :: stt_hint()",
           "language": "python",
-          "code": "def stt_hint(cfg=None):\n    \"\"\"initial_prompt for faster-whisper that biases it to transcribe the brain names\n    CORRECTLY (so 'Claude' doesn't come out as 'Cloud').\"\"\"\n    names = \" and \".join(sorted(display_names(cfg)))\n    return f\"Renne is talking to his AI assistants {names}.\"",
-          "explanation": "Whisper frequently hears 'Claude' as 'Cloud'. Passing this sentence as the initial_prompt biases the decoder toward the actual brain names (Claude and Ronald), improving the odds that an address command is transcribed correctly. It is paired with homophone address_terms and a fuzzy fallback in the router for the cases Whisper still gets wrong."
+          "code": "def stt_hint(cfg=None):\n    \"\"\"initial_prompt for faster-whisper that biases it to transcribe the brain names\n    CORRECTLY (so 'Claude' doesn't come out as 'Cloud').\"\"\"\n    names = \" and \".join(sorted(display_names(cfg)))\n    return f\"the owner is talking to his AI assistants {names}.\"",
+          "explanation": "Whisper frequently hears 'Claude' as 'Cloud'. Passing this sentence as the initial_prompt biases the decoder toward the actual brain names (Claude and Ronald), improving the odds that an address command is transcribed correctly. It is paired with homophone address_terms and a fuzzy fallback in the router for the cases Whisper still gets wrong.  \n\n_Note: this excerpt is sanitised — identifiers naming the owner have been replaced with a generic term, per the project rule that no real person's name appears in documentation. The underlying source is unchanged._"
         }
       ]
     },
@@ -67,8 +67,8 @@
           "feature": "Claude speaks (MALE) — robust playback",
           "file": "speak.py :: speak_edge() / main()",
           "language": "python",
-          "code": "DEFAULT_EDGE = \"en-US-AndrewNeural\"   # Claude's voice is MALE\nPT_EDGE = \"pt-BR-AntonioNeural\"\n\ndef speak_edge(text, voice, rate=\"+0%\"):\n    import edge_tts\n    try:\n        import pronounce\n        text = pronounce.apply(text)  # spoken-only fixes (e.g. Renne -> Renee)\n    except Exception:\n        pass\n    path = os.path.join(tempfile.gettempdir(), \"claude_say.mp3\")\n    asyncio.run(edge_tts.Communicate(text, voice, rate=rate).save(path))\n    _play(path)\n# ... in main(): engine 'auto' -> edge if installed else sapi; on edge failure, fall back to SAPI.",
-          "explanation": "Claude's voice defaults to the warm MALE en-US-AndrewNeural (Antonio for Portuguese). The text is run through pronounce.apply for speech-only fixes, synthesised by Microsoft's free neural edge-tts, and played via ffplay. If edge-tts or the network is unavailable, main() falls back to offline Windows SAPI — so the PC can always talk, online or not."
+          "code": "DEFAULT_EDGE = \"en-US-AndrewNeural\"   # Claude's voice is MALE\nPT_EDGE = \"pt-BR-AntonioNeural\"\n\ndef speak_edge(text, voice, rate=\"+0%\"):\n    import edge_tts\n    try:\n        import pronounce\n        text = pronounce.apply(text)  # spoken-only fixes (e.g. The owner -> Renee)\n    except Exception:\n        pass\n    path = os.path.join(tempfile.gettempdir(), \"claude_say.mp3\")\n    asyncio.run(edge_tts.Communicate(text, voice, rate=rate).save(path))\n    _play(path)\n# ... in main(): engine 'auto' -> edge if installed else sapi; on edge failure, fall back to SAPI.",
+          "explanation": "Claude's voice defaults to the warm MALE en-US-AndrewNeural (Antonio for Portuguese). The text is run through pronounce.apply for speech-only fixes, synthesised by Microsoft's free neural edge-tts, and played via ffplay. If edge-tts or the network is unavailable, main() falls back to offline Windows SAPI — so the PC can always talk, online or not.  \n\n_Note: this excerpt is sanitised — identifiers naming the owner have been replaced with a generic term, per the project rule that no real person's name appears in documentation. The underlying source is unchanged._"
         },
         {
           "title": "Per-sentence streaming TTS + barge-in",
@@ -80,11 +80,11 @@
         },
         {
           "title": "Spoken-only pronunciation rewrite",
-          "feature": "Say 'Renee', print 'Renne'",
+          "feature": "Say 'Renee', print 'the owner'",
           "file": "pronounce.py :: apply()",
           "language": "python",
-          "code": "def apply(text, cfg=None):\n    \"\"\"Return text rewritten for SPEECH only (printing should use the original).\"\"\"\n    if not text:\n        return text\n    table = dict(DEFAULT)                       # {\"Renne\": \"Renee\", ...}\n    table.update((cfg or {}).get(\"voice\", {}).get(\"pronunciation\", {}) or {})\n    for word, say in table.items():\n        if not word or word.startswith(\"_\") or not isinstance(say, str):\n            continue\n        pattern = re.compile(r\"\\b\" + re.escape(word) + r\"\\b\", re.IGNORECASE)\n        text = pattern.sub(lambda m, s=say: _match_case(m.group(0), s), text)\n    return text",
-          "explanation": "Neural TTS would say 'Renne' wrong, so this whole-word, case-preserving substitution rewrites it to 'Renee' (ruh-NAY) in the audio only — the printed text is untouched. The map is merged from a built-in default plus config.json voice.pronunciation, so Renne can add new spoken fixes without touching code."
+          "code": "def apply(text, cfg=None):\n    \"\"\"Return text rewritten for SPEECH only (printing should use the original).\"\"\"\n    if not text:\n        return text\n    table = dict(DEFAULT)                       # {\"the owner\": \"Renee\", ...}\n    table.update((cfg or {}).get(\"voice\", {}).get(\"pronunciation\", {}) or {})\n    for word, say in table.items():\n        if not word or word.startswith(\"_\") or not isinstance(say, str):\n            continue\n        pattern = re.compile(r\"\\b\" + re.escape(word) + r\"\\b\", re.IGNORECASE)\n        text = pattern.sub(lambda m, s=say: _match_case(m.group(0), s), text)\n    return text",
+          "explanation": "Neural TTS would say 'the owner' wrong, so this whole-word, case-preserving substitution rewrites it to 'Renee' (ruh-NAY) in the audio only — the printed text is untouched. The map is merged from a built-in default plus config.json voice.pronunciation, so the owner can add new spoken fixes without touching code.  \n\n_Note: this excerpt is sanitised — identifiers naming the owner have been replaced with a generic term, per the project rule that no real person's name appears in documentation. The underlying source is unchanged._"
         }
       ]
     },
@@ -97,7 +97,7 @@
           "file": "brain.py :: _match_address()",
           "language": "python",
           "code": "raw = _strip_filler((text or \"\").strip())   # drop a leading 'hey'/'ok'/...\nlow = raw.lower()\nbest = None\nfor name, e in reg.items():\n    for term in e.get(\"address_terms\", []):   # incl. homophones: cloud, claud, clawed...\n        t = term.lower().strip()\n        if t and low.startswith(t):\n            after = raw[len(t):]\n            if after[:1] in (\"\", \" \", \",\", \".\", \":\", \";\", \"!\", \"?\", \"-\"):\n                if best is None or len(t) > best[2]:\n                    best = (name, after.lstrip(\" ,.:;!?-\").strip(), len(t))\nif best:\n    return best[0], best[1]\n# fuzzy fallback: first spoken token within edit-distance 1 of any term\n...",
-          "explanation": "Detects when Renne opens by naming a brain. It strips a leading filler word, matches the brain's address_terms (which deliberately include Whisper mishearings like 'cloud'/'claud'/'clawed'), and as a last resort accepts the first token within Levenshtein distance 1 of a name. This is what makes 'Claude, ...' reliably switch to the real Claude even when speech recognition is imperfect."
+          "explanation": "Detects when the owner opens by naming a brain. It strips a leading filler word, matches the brain's address_terms (which deliberately include Whisper mishearings like 'cloud'/'claud'/'clawed'), and as a last resort accepts the first token within Levenshtein distance 1 of a name. This is what makes 'Claude, ...' reliably switch to the real Claude even when speech recognition is imperfect."
         },
         {
           "title": "Resolve a turn: route, switch, or take-a-break",
@@ -112,16 +112,16 @@
           "feature": "The local stand-in never pretends to be Claude",
           "file": "config.json :: brains.registry.ronald.system_prompt",
           "language": "json",
-          "code": "\"ronald\": {\n  \"display_name\": \"Ronald\",\n  \"engine\": \"ollama\",\n  \"address_terms\": [\"ronald\", \"ronaldo\", \"ronnie\", \"ronold\", \"donald\"],\n  \"voice\": \"en-US-BrianNeural\",\n  \"system_prompt\": \"You are Ronald, Renne's LOCAL stand-in assistant running on his own PC (a small offline model). You are NOT Claude and must never claim to be Claude or 'the real Claude'. If asked who you are, say you are Ronald, the local helper... You have NO access to Renne's calendar, meetings, projects, files, schedule, or any live data... Never fabricate appointments, project status, or facts.\"\n}",
-          "explanation": "The fix for a real incident: a local model impersonating Claude invented a meeting 'at 10 AM' and a wrong project list. Splitting the local brain out as 'Ronald' with this explicit prompt means it admits what it is, refuses to invent Renne's data, and points him to the real Claude — so a small offline model can never masquerade as Claude again."
+          "code": "\"ronald\": {\n  \"display_name\": \"Ronald\",\n  \"engine\": \"ollama\",\n  \"address_terms\": [\"ronald\", \"ronaldo\", \"ronnie\", \"ronold\", \"donald\"],\n  \"voice\": \"en-US-BrianNeural\",\n  \"system_prompt\": \"You are Ronald, the owner's LOCAL stand-in assistant running on his own PC (a small offline model). You are NOT Claude and must never claim to be Claude or 'the real Claude'. If asked who you are, say you are Ronald, the local helper... You have NO access to the owner's calendar, meetings, projects, files, schedule, or any live data... Never fabricate appointments, project status, or facts.\"\n}",
+          "explanation": "The fix for a real incident: a local model impersonating Claude invented a meeting 'at 10 AM' and a wrong project list. Splitting the local brain out as 'Ronald' with this explicit prompt means it admits what it is, refuses to invent the owner's data, and points him to the real Claude — so a small offline model can never masquerade as Claude again.  \n\n_Note: this excerpt is sanitised — identifiers naming the owner have been replaced with a generic term, per the project rule that no real person's name appears in documentation. The underlying source is unchanged._"
         },
         {
           "title": "Honest 'not connected' instead of a faked answer",
           "feature": "No silent hand-off of real-Claude questions",
           "file": "brain.py :: converse()",
           "language": "python",
-          "code": "if r[\"engine\"] == \"bridge\":\n    text = _bridge_roundtrip(r[\"clean_text\"], bridge_timeout, channel, chat)\n    if text:\n        history.append({\"role\": \"user\", \"content\": r[\"clean_text\"]})\n        history.append({\"role\": \"assistant\", \"content\": text})\n        out[\"reply\"] = text; return out\n    # no live session answered. If the local fallback is OFF, stay as Claude and say so.\n    if not local_fallback_enabled(bcfg):\n        out[\"reply\"] = (\"I'm not connected through the bridge right now, Renne. \"\n                        \"Please try again in a moment.\")\n        return out",
-          "explanation": "When the real-Claude path can't be reached and fallback_to_local is false (the current config), the assistant says plainly that it isn't connected rather than letting the local model answer in Claude's name. Only if Renne explicitly enables the local fallback does it hand over — and then it states the hand-off honestly via a note."
+          "code": "if r[\"engine\"] == \"bridge\":\n    text = _bridge_roundtrip(r[\"clean_text\"], bridge_timeout, channel, chat)\n    if text:\n        history.append({\"role\": \"user\", \"content\": r[\"clean_text\"]})\n        history.append({\"role\": \"assistant\", \"content\": text})\n        out[\"reply\"] = text; return out\n    # no live session answered. If the local fallback is OFF, stay as Claude and say so.\n    if not local_fallback_enabled(bcfg):\n        out[\"reply\"] = (\"I'm not connected through the bridge right now, the owner. \"\n                        \"Please try again in a moment.\")\n        return out",
+          "explanation": "When the real-Claude path can't be reached and fallback_to_local is false (the current config), the assistant says plainly that it isn't connected rather than letting the local model answer in Claude's name. Only if the owner explicitly enables the local fallback does it hand over — and then it states the hand-off honestly via a note.  \n\n_Note: this excerpt is sanitised — identifiers naming the owner have been replaced with a generic term, per the project rule that no real person's name appears in documentation. The underlying source is unchanged._"
         }
       ]
     },
@@ -254,11 +254,11 @@
       "snippets": [
         {
           "title": "Hourly real-Claude live probe",
-          "feature": "Catch a dead subscription token before Renne does",
+          "feature": "Catch a dead subscription token before the owner does",
           "file": "bridge_health.py :: check()",
           "language": "python",
           "code": "tok = os.environ.get(\"CLAUDE_CODE_OAUTH_TOKEN\", \"\")\nres[\"checks\"][\"token_present\"] = bool(tok)\nres[\"checks\"][\"token_kind\"] = (\"subscription-oauth\" if tok.startswith(\"sk-ant-oat\")\n                               else (\"api-key\" if tok else \"missing\"))\n...\nt0 = time.time()\nout = \"\".join(backends.stream_claude_cli(\n    [{\"role\": \"system\", \"content\": \"You are a health probe. Answer in 3 words.\"},\n     {\"role\": \"user\", \"content\": PROBE_PROMPT}], {\"model\": \"sonnet\", \"timeout\": 75}))\nres[\"latency_s\"] = round(time.time() - t0, 1)\nres[\"checks\"][\"live_probe\"] = bool(out.strip())\nres[\"ok\"] = bool(res[\"checks\"].get(\"token_present\") and res[\"checks\"].get(\"brain_wired\")\n                 and res[\"checks\"].get(\"live_probe\"))",
-          "explanation": "Run hourly by QI_ClaudeVoiceBridgeCheck, this sends a tiny prompt through the real claude_cli backend and confirms a real reply (expecting 'BRIDGE OK') plus latency. It also classifies the token as subscription-oauth vs api-key vs missing. The result is written to data/bridge_health.json (served at :8720/bridge/health); on failure it drops BRIDGE_PENDING_REVIEW.json and notifies Renne via the Tasuke LINE notifier."
+          "explanation": "Run hourly by QI_ClaudeVoiceBridgeCheck, this sends a tiny prompt through the real claude_cli backend and confirms a real reply (expecting 'BRIDGE OK') plus latency. It also classifies the token as subscription-oauth vs api-key vs missing. The result is written to data/bridge_health.json (served at :8720/bridge/health); on failure it drops BRIDGE_PENDING_REVIEW.json and notifies the owner via the Tasuke LINE notifier."
         },
         {
           "title": "Service-safe ffmpeg resolution",
@@ -274,7 +274,7 @@
           "file": "ClaudeVoice_Start_MeetingRoom.bat",
           "language": "batch",
           "code": "cd /d \"C:\\CLAUDE\\Claude Voice\"\nif not exist \"LOGS\" mkdir \"LOGS\"\n\"C:\\1-AI\\APPS\\PYTHON\\python.exe\" meeting_server.py >> \"C:\\CLAUDE\\Claude Voice\\LOGS\\meeting_scheduled.log\" 2>&1",
-          "explanation": "Invoked daily at 08:00 by the QI_ClaudeVoiceMeeting_8AM task through conhost --headless cmd /c, so no console window pops on Renne's desktop. It runs python.exe directly (NOT pythonw, which crashed on null stdout) and appends all output to a log. The task uses RunLevel Limited (no admin) and StartWhenAvailable — Renne chose a scheduled task over a service for the room specifically."
+          "explanation": "Invoked daily at 08:00 by the QI_ClaudeVoiceMeeting_8AM task through conhost --headless cmd /c, so no console window pops on the owner's desktop. It runs python.exe directly (NOT pythonw, which crashed on null stdout) and appends all output to a log. The task uses RunLevel Limited (no admin) and StartWhenAvailable — the owner chose a scheduled task over a service for the room specifically."
         }
       ]
     }

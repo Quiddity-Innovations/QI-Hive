@@ -1,9 +1,9 @@
-# Naya — Renne's Private Personal AI + File Intelligence Assistant
+# Naya — the owner's Private Personal AI + File Intelligence Assistant
 
 ## What is Naya?
 
-Naya is a private, single-owner AI assistant built by **Quiddity Innovations** for Renne Santiago.
-Where Maia is a product for schools, Naya is a tool for one person: it lives on Renne's own machine,
+Naya is a private, single-owner AI assistant built by **Quiddity Innovations** for the owner.
+Where Maia is a product for schools, Naya is a tool for one person: it lives on the owner's own machine,
 answers questions in technical domains (AI/ML, physics, programming, networking, VMs, Docker, languages),
 and — uniquely — it can act on the local filesystem. Naya scans drives, finds duplicate and near-duplicate
 files, plans cleanups, generates reports, and schedules heavy jobs for off-hours.
@@ -19,7 +19,7 @@ and scheduling). The FileHQ project was merged into Naya on 2026-04-05 as the `f
 
 ## The Problem We Solve
 
-- Renne works across many disks and an enormous file collection — duplicates and clutter accumulate invisibly.
+- the owner works across many disks and an enormous file collection — duplicates and clutter accumulate invisibly.
 - "Where did my disk space go?" is hard to answer without a tool that actually scans and remembers.
 - A general chatbot can answer a physics or networking question, but it cannot reach into your filesystem,
   find the duplicates, and (with consent) clean them up.
@@ -43,10 +43,10 @@ about the models is hardcoded; the chain lives in the `llm_chain` table of `naya
 
 | Role | How they interact |
 |---|---|
-| **Renne (owner)** | Chats with Naya via the **@Naya_qi_bot** Telegram bot (long-poll, LAN-only) — asks questions, issues file commands, approves cleanups |
-| **Renne (operator)** | Uses the local **Gradio console** (port 7861) — Chat, File Manager, Naya Brain, Settings, Logs tabs |
+| **the owner (owner)** | Chats with Naya via the **@Naya_qi_bot** Telegram bot (long-poll, LAN-only) — asks questions, issues file commands, approves cleanups |
+| **the owner (operator)** | Uses the local **Gradio console** (port 7861) — Chat, File Manager, Naya Brain, Settings, Logs tabs |
 | **Sibling projects** | **Maia** may query Naya's API for file intelligence; **NEXUS** is called by Naya for multi-AI synthesis; **FileHQ** is absorbed as the file engine |
-| **Background watchers** | No human — disk-space monitor, USB watcher, and off-hours scheduler run inside the server and notify Renne via Telegram |
+| **Background watchers** | No human — disk-space monitor, USB watcher, and off-hours scheduler run inside the server and notify the owner via Telegram |
 
 ## Current Build Status (June 2026)
 

@@ -32,7 +32,7 @@ One law keeps the system coherent — *is this Maia, or is this machinery?*
 |---|---|---|
 | **Maia** (expression) | `maia/` | Everything the world experiences *as her*: voice (composer), memory (diary), speech, face, conversation, longform |
 | **Crew** (plumbing) | `agents/` | Invisible workers with poetic codenames: **Kaze** = perception (RSS senses) · **Fumi** = publisher (hands) · scheduler = heartbeat |
-| **Gate** (Governor) | `gate/` | Renne's boundary layer, made operational — draft to approve to publish |
+| **Gate** (Governor) | `gate/` | the owner's boundary layer, made operational — draft to approve to publish |
 | **Identity Kit** | `identity/` | One locked face · voice · style for consistent photos, video, TTS |
 | **Soul** | `docs/PERSONA_BIBLE.md` | The canonical voice document — Law 0 is Independence |
 

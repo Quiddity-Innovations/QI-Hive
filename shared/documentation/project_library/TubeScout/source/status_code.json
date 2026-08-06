@@ -155,7 +155,7 @@
           "file": "shared/score.py · log_feature_to_brain()",
           "language": "python",
           "code": "base = cfg.get(\"integration.brain_base\", \"http://127.0.0.1:9011\")\nr = httpx.post(f\"{base}/api/log_feature\", json={\n    \"source_project\": \"tubescout\",\n    \"name\": (video.get(\"headline\") or video.get(\"title\") or \"\")[:160],\n    \"description\": f\"[score {score:.0f}/10] {rationale}\\nTags: {tags}\\nVideo: {video.get('url')}\",\n    \"domain\": \"ai/youtube-scout\",\n    \"code_ref\": video.get(\"url\"),\n}, timeout=20)  # agent_id omitted -> Brain default 'claude' (FK-valid)\nr.raise_for_status()\nreturn True",
-          "explanation": "For ai_ml/software_dev videos, NEXUS rates 0–10 how worth-IMPLEMENTING the content is for Renne's own stack (SCORE/TAGS/RATIONALE). Anything ≥ the threshold (default 7.0) is POSTed to the QI Brain's pending-features queue — so a technique demoed on YouTube becomes a candidate the whole ecosystem can decide to adopt. 439 videos scored so far."
+          "explanation": "For ai_ml/software_dev videos, NEXUS rates 0–10 how worth-IMPLEMENTING the content is for the owner's own stack (SCORE/TAGS/RATIONALE). Anything ≥ the threshold (default 7.0) is POSTed to the QI Brain's pending-features queue — so a technique demoed on YouTube becomes a candidate the whole ecosystem can decide to adopt. 439 videos scored so far."
         }
       ]
     },
@@ -185,7 +185,7 @@
       "snippets": [
         {
           "title": "Interests config (editable in-app)",
-          "feature": "Renne's watch interests steer the recommender",
+          "feature": "the owner's watch interests steer the recommender",
           "file": "config/tubescout.json",
           "language": "json",
           "code": "{\n  \"interests\": [\"AI\", \"Travel\", \"Retirement\", \"DOAC\"],\n  \"sweep\": { \"times\": [\"07:00\", \"19:00\"], \"lookback_hours\": 14 },\n  \"scoring\": { \"implement_threshold\": 7.0, \"brain_autolog\": true },\n  \"dedup\": { \"threshold\": 0.55, \"window_hours\": 72 },\n  \"integration\": {\n    \"nexus_base\": \"http://127.0.0.1:8010\",\n    \"nexus_summary_providers\": [\"groq\", \"cloudflare\", \"gemini\"],\n    \"brain_base\": \"http://127.0.0.1:9011\"\n  }\n}",

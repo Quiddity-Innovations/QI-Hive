@@ -23,7 +23,7 @@ All secrets (API-Football key, OpenRouter key, shared-AI password) live **server
 
 | Role | How they interact |
 |---|---|
-| **The owner (Renne)** | Runs the proxy locally (or as the `QI_GamezProxy` service); full access to live data, config editor, and the shared AI ungated. |
+| **The owner (the owner)** | Runs the proxy locally (or as the `QI_GamezProxy` service); full access to live data, config editor, and the shared AI ungated. |
 | **Friends (via tunnel)** | Open `https://gamez.quiddityinnovations.com`; use the app and the shared AI behind an optional access code, or plug in their own key / local Ollama. |
 | **Portable-app users** | Run the bundled `.exe` — a native window that carries the proxy inside it; add their own key in Settings or use Ollama. |
 

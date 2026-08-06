@@ -46,6 +46,9 @@ SKIP_DIRS = {".git", "node_modules", "__pycache__", "venv", ".venv", "env",
 # noise against the live originals, so they are excluded from active search.
 # Matched against directory parts only (case-insensitive) — never filenames.
 ARCHIVE_DIRS = {"maia_archive", "_legacy_archive", "_archive", "rag_archive"}
+# Any directory part containing one of these substrings is also treated as an
+# archive (covers dated snapshots like project_library_BACKUP_2026-08-06).
+ARCHIVE_SUBSTRINGS = ("_backup", "backup_")
 STALE_TYPES = {"implementation_log", "meeting_minutes", "version_history"}
 STALE_DAYS = 45
 
@@ -207,7 +210,9 @@ def discover(projects: list[dict]) -> list[Path]:
                 continue  # Word temp-lock files, dotfiles
             if any(part in SKIP_DIRS for part in p.parts):
                 continue
-            if any(part.lower() in ARCHIVE_DIRS for part in p.parts):
+            if any(part.lower() in ARCHIVE_DIRS
+                   or any(s in part.lower() for s in ARCHIVE_SUBSTRINGS)
+                   for part in p.parts):
                 continue  # frozen snapshot copies — see ARCHIVE_DIRS
             key = _norm(p)
             if key in seen:

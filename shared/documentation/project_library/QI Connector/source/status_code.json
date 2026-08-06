@@ -1,0 +1,39 @@
+{
+  "intro": "QI Connector is a remote MCP server that exposes the QI ecosystem to Claude as a set of callable tools. It holds no data of its own — every tool is a thin, bounded proxy onto the Brain API or the registry, which is what keeps the public surface small and auditable.",
+  "sections": [
+    {
+      "category": "Authentication",
+      "snippets": [
+        {
+          "title": "Self-provisioning bearer + path tokens",
+          "feature": "Capability-URL access control",
+          "file": "main.py :: lines 54-66",
+          "language": "python",
+          "code": "def _load_or_create_token(fname: str) -> str:\n    f = ROOT / \"secrets\" / fname\n    f.parent.mkdir(exist_ok=True)\n    if f.exists():\n        return f.read_text(encoding=\"utf-8\").strip()\n    tok = pysecrets.token_urlsafe(32)\n    f.write_text(tok, encoding=\"utf-8\")\n    log.info(\"generated new token file %s\", fname)\n    return tok\n\n\nBEARER_TOKEN = _load_or_create_token(\"connector_token.txt\")\nPATH_TOKEN = _load_or_create_token(\"connector_path_token.txt\")",
+          "explanation": "Both tokens are generated once with secrets.token_urlsafe(32) and persisted under secrets/, so a fresh deployment secures itself with no manual key ceremony and no secret in source control. The path token is embedded in the connector URL, which makes that URL itself a credential — it must be treated as a password and rotated by deleting the token file and restarting."
+        }
+      ]
+    },
+    {
+      "category": "Brain Proxy",
+      "snippets": [
+        {
+          "title": "Single bounded call into the Brain API",
+          "feature": "Every tool is a thin proxy",
+          "file": "main.py :: lines 79-84",
+          "language": "python",
+          "code": "def _brain_post(path: str, payload: dict, timeout: float = 8.0) -> dict:\n    with httpx.Client(timeout=timeout) as c:\n        r = c.post(f\"{BRAIN}{path}\", json=payload)\n        r.raise_for_status()\n        return r.json()",
+          "explanation": "All Brain-backed tools funnel through this one helper: a short-timeout httpx POST that raises on any non-2xx. Centralising it means timeout and error behaviour are uniform across the whole tool surface rather than reimplemented per tool."
+        },
+        {
+          "title": "Response clipping",
+          "feature": "Bounded payloads back to the model",
+          "file": "main.py :: lines 74-78",
+          "language": "python",
+          "code": "def _clip(obj, limit: int = 20000) -> str:\n    s = json.dumps(obj, ensure_ascii=False, indent=1, default=str)\n    return s if len(s) <= limit else s[:limit] + \"\\n…[truncated]\"",
+          "explanation": "Tool results are clipped before being returned. An unbounded Brain response would otherwise flow straight into the model's context window and could blow it out in a single call."
+        }
+      ]
+    }
+  ]
+}

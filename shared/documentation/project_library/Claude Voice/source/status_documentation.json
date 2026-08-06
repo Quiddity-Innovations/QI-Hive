@@ -37,7 +37,7 @@
       "name": "Key Source — Helpers",
       "documents": [
         {"title": "Reply modality engine", "file": "modality.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Decides text vs voice vs video per reply from length + moment detection; cooldown-gated video; reusable across QI bots."},
-        {"title": "Spoken-only pronunciation", "file": "pronounce.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Rewrites speech only (printed text unchanged) — e.g. 'Renne' -> 'Renee'; map editable in config.json voice.pronunciation."},
+        {"title": "Spoken-only pronunciation", "file": "pronounce.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Rewrites speech only (printed text unchanged) — e.g. 'the owner' -> 'Renee'; map editable in config.json voice.pronunciation."},
         {"title": "ffmpeg/ffprobe resolver", "file": "util.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Service-safe ffmpeg resolution (config dir -> PATH -> common dirs -> WinGet glob) fixing the empty-PATH service account that dropped voice notes."},
         {"title": "Bridge health monitor", "file": "bridge_health.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Hourly probe of the real-Claude path (token, CLI, brain wiring, live reply + latency, /health endpoints) -> data/bridge_health.json; Tasuke alert + PENDING_REVIEW on failure."},
         {"title": "Avatar video builder", "file": "media.py", "location": "C:\\CLAUDE\\Claude Voice\\", "type": "Python", "description": "Builds the talking-avatar video (avatar image + Claude's voice) used by /video on LINE and Telegram."}

@@ -4,7 +4,7 @@
       "name": "War Room — Avatars & Voice (Phase N)",
       "priority": "high",
       "items": [
-        {"title": "Voice in/out for War Room agents", "detail": "Wire the dual-brain voice loops into the multi-agent thread so Renne can talk to the team, not just type. Stages 1-4 of Phase N build on the shipped Stage 0 text chat (warroom_messages)."},
+        {"title": "Voice in/out for War Room agents", "detail": "Wire the dual-brain voice loops into the multi-agent thread so the owner can talk to the team, not just type. Stages 1-4 of Phase N build on the shipped Stage 0 text chat (warroom_messages)."},
         {"title": "Agent avatars", "detail": "Give each hive-* agent and Claude/CoWork a visible presence (talking-head pipeline already exists in AvatarStudio) so the War Room reads as a room of collaborators."},
         {"title": "War Room as operations room", "detail": "Promote the War Room from a chat widget to the primary agentic operations surface — live agent presence, in-thread dispatch, and last-seen heartbeats already feeding it."}
       ]
@@ -49,7 +49,7 @@
       "name": "Integrations & Reach",
       "priority": "low",
       "items": [
-        {"title": "Claude Work 4-way integration", "detail": "Complete the CoWork/Claude Code/QI Hive/Renne architecture so CoWork sessions report and receive dispatches through the Brain seamlessly."},
+        {"title": "Claude Work 4-way integration", "detail": "Complete the CoWork/Claude Code/QI Hive/the owner architecture so CoWork sessions report and receive dispatches through the Brain seamlessly."},
         {"title": "OpenClaw / Kaze tighter coupling", "detail": "Surface OpenClaw agent (Kaze, Tasuke, etc.) activity in Mission Control and let dispatches reach the WSL agent fabric."},
         {"title": "Public status / health beacon", "detail": "Optional read-only public status page (per Law 2 contract endpoints) for at-a-glance ecosystem health from anywhere."}
       ]

@@ -1,0 +1,18 @@
+{
+  "intro": "PlayDeck is a local media browser and player built on FastAPI with yt-dlp and ffmpeg as external tools. Because those two are the things most likely to be missing or outdated on a given machine, the health surface is built around proving they are actually present rather than assuming it.",
+  "sections": [
+    {
+      "category": "Health & Diagnostics",
+      "snippets": [
+        {
+          "title": "Deep health probe",
+          "feature": "Dependency-aware health check",
+          "file": "main.py :: lines 95-109",
+          "language": "python",
+          "code": "@app.get(\"/api/health/deep\")\ndef health_deep():\n    try:\n        import yt_dlp\n        v = yt_dlp.version.__version__\n    except Exception as e:\n        v = f\"MISSING: {e}\"\n    return {\"status\": \"ok\", \"yt_dlp\": v, \"ffmpeg\": bool(L.tool(\"ffmpeg\") and os.path.isfile(L.tool(\"ffmpeg\"))),\n            \"render_available\": B.render_available(),\n            \"logging_enabled\": S.log_enabled(),\n            \"cached_streams\": len(_STREAMS), \"library_files\": len(_library_files()),\n            \"favorites\": len(S.load_favs()),\n            \"subjects\": len(SUBJ.enabled_subjects()),\n            \"subscription_items\": SUBS.status()[\"count\"]}",
+          "explanation": "The flat /health endpoint only proves the process is up. This deep probe additionally reports the resolved yt-dlp version, whether the ffmpeg binary actually exists on disk, and live counts for cached streams, library files, favourites and subscriptions. Importing yt-dlp inside a try/except means a missing dependency is reported as a diagnostic string rather than taking the endpoint down — the check still answers when the thing it checks is broken, which is exactly when you need it."
+        }
+      ]
+    }
+  ]
+}

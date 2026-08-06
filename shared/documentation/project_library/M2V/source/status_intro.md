@@ -47,7 +47,7 @@ The standalone track proved the *assembly* idea works; the service pipeline is t
 | Role | How they interact |
 |---|---|
 | **Musician / creator** | Uploads a track + lyrics, picks a visual style, optionally a reference photo, clicks Generate |
-| **Operator (Renne)** | Runs the local service, manages the GPU model cache, monitors render jobs |
+| **Operator (the owner)** | Runs the local service, manages the GPU model cache, monitors render jobs |
 | **QI ecosystem** | Other QI projects can call the `/health`, `/version`, `/info` contract endpoints |
 
 ## Current Build Status (June 2026)
