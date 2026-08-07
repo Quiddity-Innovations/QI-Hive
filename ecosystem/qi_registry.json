@@ -660,7 +660,7 @@
     {
       "id": "mapsnap",
       "name": "MapSnap",
-      "description": "Local-first schema-intelligence tool for ANY enterprise database set up as a profile (SQL Server, Oracle, PostgreSQL, MySQL, SQLite — e.g. Jenzabar EX, Hyland OnBase, SAP/BUworks). Live extract or CSV/DDL import builds schema.json; renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings, layered with a local AI that explains the schema and does NL→SQL. Egress guardrail keeps regulated data on-box. At BU it is the onboarding tool for the systems-of-record federation, proposing canonical-key mappings that become candidate Normalizers CogniBase governs. Original product; design ancestor of cognibase.",
+      "description": "Local-first schema-intelligence tool for ANY enterprise database set up as a profile (SQL Server, Oracle, PostgreSQL, MySQL, SQLite — e.g. Jenzabar EX, Hyland OnBase, SAP/BUworks). Live extract or CSV/DDL import builds schema.json; renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings, layered with a local AI that explains the schema and does NL→SQL. Egress guardrail keeps regulated data on-box. Demonstrated at BU on a personal system; the aim is for it to serve as the onboarding tool for a systems-of-record federation, proposing canonical-key mappings that become candidate Normalizers CogniBase governs. Original product; design ancestor of cognibase.",
       "path": "C:\\MapSnap",
       "github": "https://github.com/rennesan/mapsnap",
       "status": "active_stable",
@@ -1059,6 +1059,11 @@
           "current": 8722,
           "block": "8720-8729",
           "notes": "Claude's Meeting Room (meeting_server.py): multi-participant Zoom-style room HOSTED by Claude. People (browser) and other AGENTS (WebSocket /ws) join; live roster + shared transcript; Claude greets/facilitates/speaks. Browser mic -> Whisper STT (CPU) -> brain -> edge-tts -> audio-reactive host avatar. Loopback-only today (bind 0.0.0.0 or tunnel to admit remote participants). Brain shared with :8720 via data/brain_state.json. Supersedes the 1:1 webcall_server.py."
+        },
+        "voice_api": {
+          "current": 8725,
+          "block": "8720-8729",
+          "notes": "Shared voice HTTP API (/health /speak /transcribe /listen) - voice_service.py"
         }
       },
       "family_tier": "cousin",
