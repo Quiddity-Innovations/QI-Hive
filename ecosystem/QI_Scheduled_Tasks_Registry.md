@@ -106,6 +106,7 @@ All `hidden_user` tasks below are now windowless. `*` = required a one-time elev
 | OC-Sentry-Drift-Sunday-8PM | weekly Sun 20:00 | wsl `sentry-weekly-drift.sh` | hidden_user | conhost |
 | OC-ChatGPT-Keepalive | time trigger | `oc-chatgpt-keepalive.py` | hidden_user | already pythonw (silent) |
 | OC_WSL_KeepAlive * | time trigger | `keep-wsl-alive.ps1` | hidden_user | conhost (Highest) |
+| QI_McpConnectorGuard | every 5 min | `C:\QIH\engine	ools\ConnectorGuard\connector_guard.py` | hidden_user | conhost --headless in TR; reconciles Claude Desktop mcpServers vs connectors.json manifest; heartbeat in ConnectorGuard\logs |
 | QI_ComplianceFast | inspector fast cycle | `inspector --mode fast` | system | SYSTEM — already invisible |
 | QI_NightlyReconcile | nightly | `nightly_reconcile.py` | system | SYSTEM — already invisible |
 | **QI_DemoDayStartup** | **once 2026-06-26 07:30** | `C:\QIH\engine\tunnels\demo_day_startup.py` | hidden_user | conhost --headless; one-time demo-day kick. Starts all apps + tunnels, verifies every public URL, retries down ones, pushes pass/fail to Tasuke LINE. Runs Limited; `nssm start/restart` elevated via QI_Elevate broker. M2V (no NSSM svc) launched as a detached process. Safe to delete after the demo day. |

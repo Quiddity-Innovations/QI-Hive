@@ -78,3 +78,5 @@ engine/bin/*.exe
 
 # Library pre-restyle snapshots (local restore points, never committed)
 shared/documentation/project_library_BACKUP_*/
+# Claude Desktop config snapshots (machine-local, never publish)
+engine/tools/ConnectorGuard/backups/

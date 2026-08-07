@@ -1,29 +1,130 @@
 {
   "_comment": "QI Scheduled-Task Window Policy. Single source of truth for which Windows scheduled tasks may pop a console window. Apply with: python C:\\QIH\\tools\\qi_task_window_manager.py --apply   |   Verify: ...--verify   |   Dry-run (default): ...(no flag). window_mode: 'hidden_user' (default, NO admin needed) = task still runs as you, but the window is suppressed: python.exe is swapped to pythonw.exe (windowless), and wsl/.bat/other console programs are wrapped in 'conhost.exe --headless' (Win11 headless host). Keeps full user profile (git creds, WSL, venvs). 'system' = re-home to SYSTEM/ServiceAccount (session 0, invisible) - loses user profile, needs admin to change, only for self-contained scripts. 'visible' = unwrap and restore normal interactive (debugging). enabled:false = Disable-ScheduledTask.",
   "account": "renne",
-  "managed_path_roots": ["C:\\QI", "C:\\QIH", "C:\\OC", "C:\\TUBESCOUT", "C:\\NAYA", "C:\\NEXUS", "C:\\CLAUDE"],
+  "managed_path_roots": [
+    "C:\\QI",
+    "C:\\QIH",
+    "C:\\OC",
+    "C:\\TUBESCOUT",
+    "C:\\NAYA",
+    "C:\\NEXUS",
+    "C:\\CLAUDE"
+  ],
   "tasks": {
-    "QI_ClaudeVoiceMeeting_8AM": { "enabled": true, "window_mode": "hidden_user", "note": "conhost --headless cmd /c start_meeting_room.bat -> meeting room :8722, 08:00 daily. Uses .bat (NOT python.exe) so --apply won't pythonw-swap it and null stdout." },
-    "QI_BrainBackfill":          { "enabled": true, "window_mode": "hidden_user", "note": "python.exe every 30 min -> the periodic offender" },
-    "QI_TubeScout_AM":           { "enabled": true, "window_mode": "hidden_user", "note": "run_cycle.bat -> cmd window, 07:00 daily" },
-    "QI_TubeScout_PM":           { "enabled": true, "window_mode": "hidden_user", "note": "run_cycle.bat -> cmd window, 19:00 daily" },
-    "QI_NightlyGitSync":         { "enabled": true, "window_mode": "hidden_user", "note": "python.exe overnight; needs user git creds -> keep as user" },
-    "QI_Ollama_Watchdog":        { "enabled": true, "window_mode": "hidden_user", "note": "already pythonw (silent); S4U+Hidden hardens it" },
-    "MaiaNightlySync":           { "enabled": true, "window_mode": "hidden_user", "note": "python.exe overnight; git push needs user creds" },
-    "MaiaReconcile":             { "enabled": true, "window_mode": "hidden_user", "note": "python.exe 02:00" },
-    "MaiaRevertMiMo":            { "enabled": true, "window_mode": "hidden_user", "note": "python.exe 23:59" },
-    "OC-Asa-Briefing-7AM":       { "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe 07:00 -> wsl console flash" },
-    "OC-Kaze-Digest-6AM":        { "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe 06:00" },
-    "OC-Kaze-Digest-6PM":        { "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe 18:00" },
-    "OC-Kaze-AI-Digest-6AM":     { "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe 06:05" },
-    "OC-Kaze-AI-Digest-6PM":     { "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe 18:05" },
-    "OC-Yubin-Daily-8AM":        { "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe 08:00 (RunLevel Highest preserved)" },
-    "OC-Yubin-Daily-6PM":        { "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe 18:00 (RunLevel Highest preserved)" },
-    "OC-Kakei-Weekly-Sunday-7PM":{ "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe weekly Sun 19:00" },
-    "OC-Sentry-Drift-Sunday-8PM":{ "enabled": true, "window_mode": "hidden_user", "note": "wsl.exe weekly Sun 20:00" },
-    "OC-ChatGPT-Keepalive":      { "enabled": true, "window_mode": "hidden_user", "note": "already pythonw+Hidden; S4U hardens it" },
-    "OC_WSL_KeepAlive":          { "enabled": true, "window_mode": "hidden_user", "note": "powershell -WindowStyle Hidden; S4U makes it bulletproof (RunLevel Highest)" },
-    "QI_ComplianceFast":         { "enabled": true, "window_mode": "system",      "note": "already SYSTEM/session-0; leave as-is (needs elevation to change)" },
-    "QI_NightlyReconcile":       { "enabled": true, "window_mode": "system",      "note": "already SYSTEM/session-0; leave as-is (needs elevation to change)" }
+    "QI_ClaudeVoiceMeeting_8AM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "conhost --headless cmd /c start_meeting_room.bat -> meeting room :8722, 08:00 daily. Uses .bat (NOT python.exe) so --apply won't pythonw-swap it and null stdout."
+    },
+    "QI_BrainBackfill": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "python.exe every 30 min -> the periodic offender"
+    },
+    "QI_TubeScout_AM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "run_cycle.bat -> cmd window, 07:00 daily"
+    },
+    "QI_TubeScout_PM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "run_cycle.bat -> cmd window, 19:00 daily"
+    },
+    "QI_NightlyGitSync": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "python.exe overnight; needs user git creds -> keep as user"
+    },
+    "QI_Ollama_Watchdog": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "already pythonw (silent); S4U+Hidden hardens it"
+    },
+    "MaiaNightlySync": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "python.exe overnight; git push needs user creds"
+    },
+    "MaiaReconcile": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "python.exe 02:00"
+    },
+    "MaiaRevertMiMo": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "python.exe 23:59"
+    },
+    "OC-Asa-Briefing-7AM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe 07:00 -> wsl console flash"
+    },
+    "OC-Kaze-Digest-6AM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe 06:00"
+    },
+    "OC-Kaze-Digest-6PM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe 18:00"
+    },
+    "OC-Kaze-AI-Digest-6AM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe 06:05"
+    },
+    "OC-Kaze-AI-Digest-6PM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe 18:05"
+    },
+    "OC-Yubin-Daily-8AM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe 08:00 (RunLevel Highest preserved)"
+    },
+    "OC-Yubin-Daily-6PM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe 18:00 (RunLevel Highest preserved)"
+    },
+    "OC-Kakei-Weekly-Sunday-7PM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe weekly Sun 19:00"
+    },
+    "OC-Sentry-Drift-Sunday-8PM": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "wsl.exe weekly Sun 20:00"
+    },
+    "OC-ChatGPT-Keepalive": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "already pythonw+Hidden; S4U hardens it"
+    },
+    "OC_WSL_KeepAlive": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "powershell -WindowStyle Hidden; S4U makes it bulletproof (RunLevel Highest)"
+    },
+    "QI_ComplianceFast": {
+      "enabled": true,
+      "window_mode": "system",
+      "note": "already SYSTEM/session-0; leave as-is (needs elevation to change)"
+    },
+    "QI_NightlyReconcile": {
+      "enabled": true,
+      "window_mode": "system",
+      "note": "already SYSTEM/session-0; leave as-is (needs elevation to change)"
+    },
+    "QI_McpConnectorGuard": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "conhost --headless python connector_guard.py every 5 min -> keeps Claude Desktop mcpServers registered (qi-registry). TR already uses conhost directly."
+    }
   }
 }

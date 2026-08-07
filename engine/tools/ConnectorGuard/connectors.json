@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "Manifest of local MCP servers that must stay registered in Claude Desktop.",
+    "Source of truth consumed by connector_guard.py (5-min scheduled task",
+    "QI_McpConnectorGuard). Live-config entries NOT listed here are never touched.",
+    "Fields: enabled, command, args ({file:<path>} placeholder = replaced at",
+    "register time with that file's trimmed contents, so secrets live in exactly",
+    "one place), requires (all paths must exist or the entry is skipped this",
+    "cycle), note."
+  ],
+  "version": 1,
+  "connectors": {
+    "qi-registry": {
+      "enabled": true,
+      "command": "C:\\1-AI\\APPS\\PYTHON\\python.exe",
+      "args": ["C:\\QIH\\engine\\mcp\\qi_registry_mcp.py"],
+      "requires": [
+        "C:\\QIH\\engine\\mcp\\qi_registry_mcp.py",
+        "C:\\QIH\\ecosystem\\qi_registry.json"
+      ],
+      "note": "Pattern-1 stdio; reads qi_registry.json directly; works when all QI services are down"
+    }
+  }
+}
