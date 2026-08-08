@@ -1,19 +1,86 @@
 [
   {
-    "category": "Codebase",
+    "category": "Service & Entry Point",
     "features": [
-      {
-        "name": "Source tree",
-        "file": "C:\\QIH\\engine\\brain",
-        "status": "live",
-        "detail": "Live source folder for the project."
-      },
-      {
-        "name": "Component-level dev matrix",
-        "file": "INTRO/status_features_dev.json",
-        "status": "planned",
-        "detail": "Populate with module/file-level status entries."
-      }
+      {"name": "FastAPI app (:9011)", "file": "api.py :: app = FastAPI(...)", "status": "live", "detail": "Single app, title='QI Brain API', version='002'. All Brain logic lives here; MCP server is a thin client. CORS allow_origins=['*'] (local-only). Mounts poller + distiller at module import."},
+      {"name": "Health / version / info probes", "file": "api.py :: health() / version() / info()", "status": "live", "detail": "GET /health -> {status, service, port:9011, version}. /version reports build 2026-04-20. /info lists capabilities + endpoint count + /docs URL — used by qi_validator + uptime monitors."},
+      {"name": "Status dashboard endpoint", "file": "api.py :: status()", "status": "live", "detail": "GET /api/status aggregates active_projects, active_decisions (superseded_by IS NULL), features_logged, pending_reviews, sessions_logged, chroma_counts, providers_active."},
+      {"name": "QI_BrainAPI NSSM service", "file": "C:\\QIH\\ecosystem\\QI_Service_Registry.md", "status": "live", "detail": "Service QI_BrainAPI, binary C:\\1-AI\\APPS\\PYTHON\\python.exe, params C:\\QIH\\engine\\brain\\api.py, AppDirectory C:\\QIH, log C:\\QIH\\engine\\brain\\LOGS\\qi_brain_api.log. Port 9011 (9010 squatted by Logitech G HUB, moved 2026-05-14)."}
+    ]
+  },
+  {
+    "category": "MCP Server (12 tools)",
+    "features": [
+      {"name": "stdio JSON-RPC bridge", "file": "mcp.py :: main() / handle_request()", "status": "live", "detail": "JSON-RPC 2.0 over stdin/stdout. Handles initialize / tools/list / tools/call. ~150 LOC of forwarders — every tool call POST/GETs to BRAIN_API=http://localhost:9011. run_in_executor(sys.stdin.readline) avoids the Windows ProactorEventLoop pipe crash."},
+      {"name": "TOOLS definitions", "file": "mcp.py :: TOOLS[]", "status": "live", "detail": "12 inputSchema definitions returned on tools/list: qi_get_context, qi_log_decision, qi_log_feature, qi_get_pending_features, qi_decide_on_feature, qi_update_project_state, qi_search_memory, qi_log_session, qi_get_ecosystem_snapshot, qi_supersede_decision, qi_explain, qi_override_evaluation."},
+      {"name": "Tool dispatcher", "file": "mcp.py :: dispatch_tool()", "status": "live", "detail": "match/case router mapping each tool name to its FastAPI path. ConnectError -> -32000 'QI Brain API unreachable at :9011'. Unknown tool -> {ok:false}."}
+    ]
+  },
+  {
+    "category": "Core Memory API",
+    "features": [
+      {"name": "qi.get_context (ranked, budgeted)", "file": "api.py :: get_context() / POST /api/context", "status": "live", "detail": "Pulls latest project_state, then decisions WHERE superseded_by IS NULL AND (project_id=? OR scope IN ecosystem/global) AND recorded_at>=cutoff, ordered same-project-first. Accumulates _est_tokens until token_budget (default 2000, context_days 14)."},
+      {"name": "qi.log_decision", "file": "api.py :: log_decision() / POST /api/log_decision", "status": "live", "detail": "INSERT INTO decisions (tags as JSON), then await _memory().add_decision() to embed title+rationale into qi_decisions. Chroma failure is caught — DB write is authoritative. Returns decision_id."},
+      {"name": "qi.log_feature + propagate", "file": "api.py :: log_feature() / POST /api/log_feature", "status": "live", "detail": "INSERT INTO features, embed into qi_features. If propagate_now, calls feature_engine.propagate_feature(feature_id) to fan out evaluations across all other active projects."},
+      {"name": "qi.log_session", "file": "api.py :: log_session() / POST /api/log_session", "status": "live", "detail": "INSERT INTO session_log (files_changed as JSON array), embed title+summary into qi_sessions. Records decisions_made, features_logged, model_used, started_at."},
+      {"name": "qi.update_project_state", "file": "api.py :: update_project_state() / POST /api/update_project_state", "status": "live", "detail": "Append-only INSERT into project_state (phase, status, summary, blockers, next_steps). Latest row per project = current state."},
+      {"name": "qi.search_memory", "file": "api.py :: search_memory() / POST /api/search_memory", "status": "live", "detail": "Maps collection name (decisions|features|sessions|docs) -> Chroma collection, optional where={project_id}, delegates to MemoryStore.search(). Returns id/document/metadata/distance."}
+    ]
+  },
+  {
+    "category": "Governance & Explainability",
+    "features": [
+      {"name": "qi.supersede_decision (I-08)", "file": "api.py :: supersede_decision() / POST /api/supersede_decision", "status": "live", "detail": "Verifies both decision_ids exist, then UPDATE decisions SET superseded_by/superseded_at/superseded_reason. Superseded rows are excluded from get_context but stay queryable."},
+      {"name": "qi.explain (I-10)", "file": "api.py :: explain() / POST /api/explain", "status": "live", "detail": "subject_type decision|feature|session|project -> assembles a markdown writeup + citations. Decisions flag SUPERSEDED; features list every target's recommendation + relevance score."},
+      {"name": "qi.get_pending_features", "file": "api.py :: get_pending_features() / GET /api/pending_features", "status": "live", "detail": "JOIN feature_evaluations + features WHERE decided=0, ordered by relevance_score DESC. Optional target_project filter."},
+      {"name": "qi.decide_on_feature", "file": "api.py :: decide_feature() / POST /api/decide_feature", "status": "live", "detail": "UPDATE feature_evaluations SET decided=1, decided_at, decided_action (adopt|adapt|skip|discuss)."},
+      {"name": "qi.override_evaluation (I-14)", "file": "api.py :: override_evaluation() / POST /api/override_evaluation", "status": "partial", "detail": "INSERT INTO evaluation_overrides (Law 6 owner override). Endpoint live; 0 rows used so far."}
+    ]
+  },
+  {
+    "category": "Dual Store — DB + Vector",
+    "features": [
+      {"name": "open_brain_db (WAL helper)", "file": "core/db.py :: open_brain_db()", "status": "live", "detail": "Single connection factory every module uses. Applies PRAGMA journal_mode=WAL, synchronous=NORMAL, busy_timeout=5000, foreign_keys=ON per connection; row_factory=sqlite3.Row. DB_PATH = C:\\QIH\\data\\qi_brain.db (override via QI_BRAIN_DB env)."},
+      {"name": "Schema + init_db", "file": "core/schema.sql + core/db.py :: init_db()", "status": "live", "detail": "CREATE TABLE IF NOT EXISTS throughout + seed agents. init_db() splits on ';' and executes per-statement (executescript ignores PRAGMAs). 25 tables live; idempotent."},
+      {"name": "ChromaDB MemoryStore (4 collections)", "file": "core/memory_store.py :: MemoryStore", "status": "live", "detail": "PersistentClient at qi_memory/, get_or_create_collection with hnsw:space=cosine. Collections qi_decisions/qi_features/qi_sessions/qi_docs. add_*() upsert ids like decision_{id}; search() embeds query then col.query(n_results)."},
+      {"name": "Cross-process reload", "file": "api.py :: _reload_memory() / POST /api/admin/reload_memory", "status": "live", "detail": "Drops the cached MemoryStore so the next call re-reads Chroma from disk — fixes the stale in-memory HNSW segment after an out-of-process doc_harvester write."}
+    ]
+  },
+  {
+    "category": "LLM Providers (config-driven)",
+    "features": [
+      {"name": "ProviderFactory", "file": "core/providers/factory.py :: from_db() / get_by_role()", "status": "live", "detail": "Loads providers from llm_providers WHERE active=1. _TYPE_MAP routes provider_type -> class (ollama, nomic_embed). API keys resolved from api_key_env env var name, never stored. get_by_role('embed'|'eval'|'general'|'heavy')."},
+      {"name": "NomicEmbedProvider", "file": "core/providers/nomic_embed.py :: embed()", "status": "live", "detail": "768-dim vectors via Ollama /api/embeddings (model nomic-embed-text). generate() is disabled — embed-only. The sole embedder for all 4 Chroma collections."},
+      {"name": "OllamaProvider", "file": "core/providers/ollama.py :: generate()", "status": "live", "detail": "Local /api/generate (stream=False). _strip_think() removes <think>...</think> from reasoning models. Used by the feature engine for relevance evaluation (eval_model qwen3:8b)."},
+      {"name": "BrainProvider ABC", "file": "core/providers/base.py", "status": "live", "detail": "Abstract base + ProviderResponse dataclass. 5 active providers seeded in DB: ollama_qwen3_8b (eval), qwen3_4b + deepseek-r1:8b (general), gemma4:31b (heavy), nomic_embed_text (embed)."}
+    ]
+  },
+  {
+    "category": "Autonomy — Poller, Distiller, Inbox",
+    "features": [
+      {"name": "Background poller", "file": "poller.py :: start_poller() / run_poll_cycle()", "status": "live", "detail": "Daemon thread started at API import. Each cycle reads <project>/data/state.json + git log --since, processes inbox/*.json older than poll_min_file_age_s. Config in brain_config (poll_interval_s=300, poll_enabled=1). 18,718 cycles in poll_log."},
+      {"name": "Inbox ingest", "file": "api.py :: POST /api/inbox + GET /api/inbox/log", "status": "live", "detail": "File-based message drop at C:\\QIH\\engine\\brain\\inbox\\. Poller files each JSON message; brain_inbox_log records ingest history."},
+      {"name": "Distiller", "file": "distiller.py :: distill() + POST /api/distill", "status": "partial", "detail": "LLM summarization of raw notes into structured records (VALID_REASONS gate). Endpoint + /api/distill/history live; light real use."},
+      {"name": "Feature propagation engine", "file": "feature_engine.py :: propagate_feature() / propagate_all_pending()", "status": "live", "detail": "For each active project != source, builds an eval prompt (with last-5-eval history per target), calls eval_model, parses strict JSON {relevance_score, recommendation, reasoning, confidence}, one retry on bad JSON, INSERTs feature_evaluations + marks feature propagated."}
+    ]
+  },
+  {
+    "category": "Hive Ops & Documentation Brain",
+    "features": [
+      {"name": "Agent registry + growth", "file": "api.py :: /api/agents, /api/agent/growth, /api/agent/{id}/profile", "status": "live", "detail": "14 agents (claude, 7 hive sub-agents, maia/naya/nexus, system). agent_growth_log captures post-task learnings; profile endpoint aggregates growth + patterns."},
+      {"name": "Heartbeats + War Room", "file": "api.py :: /api/agent/heartbeat, /api/agents/last_seen, /api/warroom/message, /api/warroom/messages", "status": "live", "detail": "agent_heartbeats (1,643 rows) drives the War Room presence board; warroom_messages (11) is the persisted agent chat."},
+      {"name": "Dispatch pipeline", "file": "api.py :: /api/dispatch, /api/dispatches, /api/dispatch/{id}/inspector_verdict", "status": "live", "detail": "dispatches (2,873) carry status + apply_state; dispatch_runs (7) track builder log, inspector verdict, diff/worktree/commit for the autonomous build-review loop."},
+      {"name": "Compliance log", "file": "api.py :: /api/compliance/scan, /api/compliance/recent, /api/compliance/status", "status": "live", "detail": "compliance_log (46,654 rows) records Inspector findings: check_id, status, severity, auto_fixable, fix_action, linked dispatch_id."},
+      {"name": "Doc harvester + knowledge graph", "file": "doc_harvester.py :: harvest() / derive_edges()", "status": "live", "detail": "Discovers + classifies every .md/.docx in the ecosystem into docs (921 rows), derives typed edges into doc_relationships (2,203). Optional embed into qi_docs. Self-ensures tables; prune() drops vanished files. Migration migrations/2026_06_18_doc_index.sql."}
+    ]
+  },
+  {
+    "category": "Bootstrap & Migrations",
+    "features": [
+      {"name": "Idempotent bootstrap", "file": "bootstrap.py :: 10 @_step stages", "status": "live", "detail": "create_db -> seed_agents -> seed_providers -> seed_config -> seed_projects (from qi_registry) -> init_chroma -> ingest_docs -> ingest_summaries -> seed_decisions -> log_bootstrap. Each tracked in bootstrap_log (9 steps done); safe to re-run, --reset re-runs all."},
+      {"name": "SQL migrations", "file": "migrations/*.sql + run_migration.py", "status": "live", "detail": "Dated idempotent migrations: 2026_05_13_agent_heartbeats, 2026_05_13_auto_apply, 2026_06_18_doc_index, 2026_06_18_warroom_chat. Applied via run_migration.py."},
+      {"name": "Backup task", "file": "tools/backup.py + tools/install_backup_task.bat", "status": "live", "detail": "Scheduled SQLite backup of qi_brain.db; brain_config backup_enabled=true, backup_retain=30."},
+      {"name": "Smoke test", "file": "tests/test_smoke.py", "status": "live", "detail": "Pytest smoke check of the Brain API surface; part of the ecosystem SMOKE_TARGETS suite."}
     ]
   }
 ]

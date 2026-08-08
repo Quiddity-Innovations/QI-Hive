@@ -1,0 +1,832 @@
+{
+  "services": {
+    "QI_AutoPDF": "Stopped",
+    "QI_AutoPDFMCP": "Running",
+    "QI_AutoPDFTunnel": "Running",
+    "QI_BrainAPI": "Running",
+    "QI_Caddy": "Running",
+    "QI_ClaudeVoiceControl": "Running",
+    "QI_ClaudeVoiceLine": "Running",
+    "QI_ClaudeVoiceTelegram": "Running",
+    "QI_ClaudeVoiceTunnel": "Running",
+    "QI_CogniBase": "Running",
+    "QI_CogniBaseTunnel": "Running",
+    "QI_ConnectorMCP": "Running",
+    "QI_ConnectorTunnel": "Running",
+    "QI_CypherMinerTunnel": "Running",
+    "QI_CypherMinerUI": "Running",
+    "QI_Dashboard": "Running",
+    "QI_DashboardTunnel": "Running",
+    "QI_Elevate": "Running",
+    "QI_GamezProxy": "Running",
+    "QI_GamezQuantProxy": "Stopped",
+    "QI_GamezTunnel": "Running",
+    "QI_Gate": "Running",
+    "QI_Headroom": "Running",
+    "QI_HiveApply": "Running",
+    "QI_HiveIngest": "Running",
+    "QI_HiveInspectorDrain": "Running",
+    "QI_KazeConfigAPI": "Running",
+    "QI_KazeNewsTunnel": "Running",
+    "QI_LotteryWiz": "Running",
+    "QI_LotteryWizTunnel": "Running",
+    "QI_M2VTunnel": "Running",
+    "QI_MaiaBot": "Running",
+    "QI_MaiaDemoTunnel": "Stopped",
+    "QI_MaiaGradio": "Running",
+    "QI_MaiaQueueDrain": "Running",
+    "QI_MaiaTunnel": "Running",
+    "QI_MapSnap": "Running",
+    "QI_MapSnapBUSetup": "Stopped",
+    "QI_MapSnapMCP": "Running",
+    "QI_MapSnapMCPBU": "Running",
+    "QI_MapSnapTunnel": "Running",
+    "QI_MQTunnel": "Running",
+    "QI_NayaBot": "Running",
+    "QI_NayaGradio": "Running",
+    "QI_NayaTunnel": "Running",
+    "QI_NEXUS": "Running",
+    "QI_NexusMCP": "Running",
+    "QI_NEXUSTunnel": "Running",
+    "QI_PlayDeck": "Running",
+    "QI_RetirementAnalyzer": "Stopped",
+    "QI_TubeScout": "Running",
+    "QI_TubeScoutTunnel": "Running"
+  },
+  "ports": {
+    "80": {
+      "process": "caddy.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "135": {
+      "process": "svchost.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "139": {
+      "process": "System",
+      "scope": "loopback"
+    },
+    "443": {
+      "process": "caddy.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "445": {
+      "process": "System",
+      "scope": "ALL-INTERFACES"
+    },
+    "902": {
+      "process": "vmware-authd.exe",
+      "scope": "loopback"
+    },
+    "912": {
+      "process": "vmware-authd.exe",
+      "scope": "loopback"
+    },
+    "1042": {
+      "process": "asus_framework.exe",
+      "scope": "loopback"
+    },
+    "1043": {
+      "process": "asus_framework.exe",
+      "scope": "loopback"
+    },
+    "2019": {
+      "process": "caddy.exe",
+      "scope": "loopback"
+    },
+    "2179": {
+      "process": "vmms.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "5040": {
+      "process": "svchost.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "5357": {
+      "process": "System",
+      "scope": "ALL-INTERFACES"
+    },
+    "5985": {
+      "process": "System",
+      "scope": "ALL-INTERFACES"
+    },
+    "6969": {
+      "process": "System",
+      "scope": "loopback"
+    },
+    "7680": {
+      "process": "svchost.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "7842": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "7860": {
+      "process": "python.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "7861": {
+      "process": "python.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "7880": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8001": {
+      "process": "python.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "8002": {
+      "process": "python.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "8010": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8200": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8310": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8401": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8503": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8506": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8600": {
+      "process": "python.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "8650": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8651": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8652": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8701": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8710": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8720": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8721": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8722": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "8777": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "9010": {
+      "process": "lghub_agent.exe",
+      "scope": "loopback"
+    },
+    "9011": {
+      "process": "python.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "9012": {
+      "process": "ArmourySocketServer.exe",
+      "scope": "loopback"
+    },
+    "9013": {
+      "process": "ArmourySocketServer.exe",
+      "scope": "loopback"
+    },
+    "9020": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "9030": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "9040": {
+      "process": "caddy.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "9041": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "9180": {
+      "process": "lghub_updater.exe",
+      "scope": "loopback"
+    },
+    "9876": {
+      "process": "python.exe",
+      "scope": "loopback"
+    },
+    "11434": {
+      "process": "ollama.exe",
+      "scope": "loopback"
+    },
+    "13030": {
+      "process": "ROGLiveService.exe",
+      "scope": "loopback"
+    },
+    "13031": {
+      "process": "ArmouryCrate.Service.exe",
+      "scope": "loopback"
+    },
+    "13032": {
+      "process": "ArmouryCrate.Service.exe",
+      "scope": "loopback"
+    },
+    "20241": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "20242": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "20243": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "20244": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "20245": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "22112": {
+      "process": "ROGLiveService.exe",
+      "scope": "loopback"
+    },
+    "27015": {
+      "process": "AppleMobileDeviceProcess.exe",
+      "scope": "loopback"
+    },
+    "27036": {
+      "process": "steam.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "27060": {
+      "process": "steam.exe",
+      "scope": "loopback"
+    },
+    "27339": {
+      "process": "System",
+      "scope": "loopback"
+    },
+    "32400": {
+      "process": "Plex Media Server.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "32401": {
+      "process": "Plex Media Server.exe",
+      "scope": "loopback"
+    },
+    "32600": {
+      "process": "Plex Tuner Service.exe",
+      "scope": "loopback"
+    },
+    "36518": {
+      "process": "tailscaled.exe",
+      "scope": "loopback"
+    },
+    "42050": {
+      "process": "OneDrive.Sync.Service.exe",
+      "scope": "loopback"
+    },
+    "45654": {
+      "process": "lghub_agent.exe",
+      "scope": "loopback"
+    },
+    "47001": {
+      "process": "System",
+      "scope": "ALL-INTERFACES"
+    },
+    "49664": {
+      "process": "lsass.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "49665": {
+      "process": "wininit.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "49666": {
+      "process": "svchost.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "49667": {
+      "process": "svchost.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "49668": {
+      "process": "spoolsv.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "49669": {
+      "process": "jhi_service.exe",
+      "scope": "loopback"
+    },
+    "49830": {
+      "process": "services.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "50100": {
+      "process": "ArmouryCrate.Service.exe",
+      "scope": "loopback"
+    },
+    "50686": {
+      "process": "PlexScriptHost.exe",
+      "scope": "loopback"
+    },
+    "51100": {
+      "process": "ArmouryCrate.UserSessionHelper.exe",
+      "scope": "loopback"
+    },
+    "52350": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "54540": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "56092": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "56834": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "56931": {
+      "process": "tailscaled.exe",
+      "scope": "loopback"
+    },
+    "57648": {
+      "process": "llama-server.exe",
+      "scope": "loopback"
+    },
+    "59600": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "59613": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "59619": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "59627": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "59869": {
+      "process": "logioptionsplus_agent.exe",
+      "scope": "ALL-INTERFACES"
+    },
+    "62384": {
+      "process": "steam.exe",
+      "scope": "loopback"
+    },
+    "62386": {
+      "process": "steam.exe",
+      "scope": "loopback"
+    },
+    "62933": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "62947": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "62958": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "62988": {
+      "process": "cloudflared.exe",
+      "scope": "loopback"
+    },
+    "65350": {
+      "process": "ollama app.exe",
+      "scope": "loopback"
+    }
+  },
+  "tunnels": {
+    "qi-autopdf": [
+      {
+        "hostname": "autopdf.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-claudevoice": [
+      {
+        "hostname": "claudevoice.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-cognibase": [
+      {
+        "hostname": "cognibase.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-connector": [
+      {
+        "hostname": "connector.quiddityinnovations.com",
+        "service": "http://localhost:9030"
+      }
+    ],
+    "qi-cypherminer": [
+      {
+        "hostname": "cypher.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-gamez": [
+      {
+        "hostname": "worldcup.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-hive": [
+      {
+        "hostname": "hive.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-kaze": [
+      {
+        "hostname": "kaze.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      },
+      {
+        "hostname": "oc-line.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-lotterywiz": [
+      {
+        "hostname": "lottery.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-m2v": [],
+    "qi-maia": [
+      {
+        "hostname": "maia.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      },
+      {
+        "hostname": "maia-demo.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-mapsnap": [
+      {
+        "hostname": "mapsnap.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-mq": [
+      {
+        "hostname": "quiddam.com",
+        "service": "http://localhost:9040"
+      },
+      {
+        "hostname": "api.quiddam.com",
+        "service": "http://localhost:9040"
+      },
+      {
+        "hostname": "dev.quiddam.com",
+        "service": "http://localhost:9040"
+      },
+      {
+        "hostname": "maia.quiddam.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-naya": [
+      {
+        "hostname": "naya.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      },
+      {
+        "hostname": "naya-line.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-nexus": [
+      {
+        "hostname": "nexus.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ],
+    "qi-tubescout": [
+      {
+        "hostname": "tubescout.quiddityinnovations.com",
+        "service": "http://localhost:9040"
+      }
+    ]
+  },
+  "gate": {
+    "listen": 9040,
+    "auth": 9041,
+    "hosts": [
+      {
+        "host": "hive.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8600",
+        "app": "QI Hive Dashboard",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "cognibase.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8650",
+        "app": "CogniBase",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "mapsnap.quiddityinnovations.com",
+        "upstream": "127.0.0.1:9876",
+        "app": "MapSnap",
+        "mode": "mixed",
+        "public_paths": [
+          "/mcp"
+        ]
+      },
+      {
+        "host": "tubescout.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8503",
+        "app": "TubeScout",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "nexus.quiddityinnovations.com",
+        "upstream": "127.0.0.1:7880",
+        "app": "NEXUS Gradio UI",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "naya.quiddityinnovations.com",
+        "upstream": "127.0.0.1:7861",
+        "app": "Naya Gradio UI",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "lottery.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8777",
+        "app": "LotteryWiz",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "cypher.quiddityinnovations.com",
+        "upstream": "127.0.0.1:7842",
+        "app": "CypherMiner",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "worldcup.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8710",
+        "app": "Gamez / World Cup dashboard",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "m2v.quiddityinnovations.com",
+        "upstream": "127.0.0.1:7841",
+        "app": "M2V",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "autopdf.quiddityinnovations.com",
+        "upstream": "127.0.0.1:6969",
+        "app": "AutoPDF",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "maia-demo.quiddityinnovations.com",
+        "upstream": "127.0.0.1:7860",
+        "app": "Maia Gradio demo",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "kaze.quiddityinnovations.com",
+        "upstream": "127.0.0.1:18800",
+        "app": "Kaze (OpenClaw news)",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "quiddam.com",
+        "upstream": "127.0.0.1:7840",
+        "app": "Maia Quiddam UI",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "dev.quiddam.com",
+        "upstream": "127.0.0.1:7849",
+        "app": "Maia Quiddam dev",
+        "mode": "protected",
+        "public_paths": []
+      },
+      {
+        "host": "maia.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8001",
+        "app": "Maia API (LINE/Telegram/FB/WhatsApp)",
+        "mode": "mixed",
+        "public_paths": [
+          "/maia/",
+          "/health",
+          "/version"
+        ]
+      },
+      {
+        "host": "maia.quiddam.com",
+        "upstream": "127.0.0.1:8001",
+        "app": "Maia API (quiddam.com alias)",
+        "mode": "mixed",
+        "public_paths": [
+          "/maia/",
+          "/health",
+          "/version"
+        ]
+      },
+      {
+        "host": "naya-line.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8002",
+        "app": "Naya webhook",
+        "mode": "mixed",
+        "public_paths": [
+          "/webhook/",
+          "/health"
+        ]
+      },
+      {
+        "host": "connector.quiddityinnovations.com",
+        "upstream": "127.0.0.1:9030",
+        "app": "QI Connector (remote MCP)",
+        "mode": "open",
+        "public_paths": []
+      },
+      {
+        "host": "claudevoice.quiddityinnovations.com",
+        "upstream": "127.0.0.1:8721",
+        "app": "Claude Voice (LINE webhook)",
+        "mode": "mixed",
+        "public_paths": [
+          "/line/webhook",
+          "/health",
+          "/audio/",
+          "/media/"
+        ]
+      },
+      {
+        "host": "oc-line.quiddityinnovations.com",
+        "upstream": "127.0.0.1:18789",
+        "app": "OpenClaw gateway (WSL)",
+        "mode": "mixed",
+        "public_paths": [
+          "/line/webhook",
+          "/health"
+        ]
+      },
+      {
+        "host": "api.quiddam.com",
+        "upstream": "127.0.0.1:8500",
+        "app": "MQ API",
+        "mode": "mixed",
+        "public_paths": [
+          "/health"
+        ]
+      }
+    ]
+  },
+  "hub_usage": [
+    {
+      "app": "naya",
+      "calls": 48,
+      "ok": 48,
+      "avg_latency_ms": 2313.8958333333335,
+      "total_chars": 31271
+    },
+    {
+      "app": "unknown",
+      "calls": 14,
+      "ok": 13,
+      "avg_latency_ms": 1111.2857142857142,
+      "total_chars": 9596
+    },
+    {
+      "app": "RetirementAnalyzer",
+      "calls": 12,
+      "ok": 12,
+      "avg_latency_ms": 3696.4166666666665,
+      "total_chars": 13207
+    },
+    {
+      "app": "lotterywiz",
+      "calls": 7,
+      "ok": 7,
+      "avg_latency_ms": 2178.285714285714,
+      "total_chars": 7614
+    },
+    {
+      "app": "maia",
+      "calls": 6,
+      "ok": 6,
+      "avg_latency_ms": 1314.6666666666667,
+      "total_chars": 2952
+    },
+    {
+      "app": "compat-test",
+      "calls": 3,
+      "ok": 3,
+      "avg_latency_ms": 1177.0,
+      "total_chars": 69
+    },
+    {
+      "app": "qi-brain",
+      "calls": 2,
+      "ok": 2,
+      "avg_latency_ms": 1765.5,
+      "total_chars": 76
+    },
+    {
+      "app": "deploy-verify",
+      "calls": 1,
+      "ok": 1,
+      "avg_latency_ms": 297.0,
+      "total_chars": 23
+    },
+    {
+      "app": "easyflow",
+      "calls": 1,
+      "ok": 1,
+      "avg_latency_ms": 5156.0,
+      "total_chars": 23
+    },
+    {
+      "app": "openai-sdk-test",
+      "calls": 1,
+      "ok": 1,
+      "avg_latency_ms": 6562.0,
+      "total_chars": 32
+    },
+    {
+      "app": "stream-test",
+      "calls": 1,
+      "ok": 1,
+      "avg_latency_ms": 437.0,
+      "total_chars": 23
+    },
+    {
+      "app": "test-suite",
+      "calls": 1,
+      "ok": 1,
+      "avg_latency_ms": 827.0,
+      "total_chars": 32
+    }
+  ]
+}

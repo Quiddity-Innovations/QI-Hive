@@ -1,0 +1,406 @@
+{
+  "renames": [
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Line.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_line.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Meeting.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_meeting.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Realtime.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_realtime.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Telegram.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_telegram.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Webcall.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_webcall.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_BridgeHealth.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_bridge_health.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Start_MeetingRoom.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\start_meeting_room.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Install.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\install_service.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Install_Meeting.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\install_meeting_service.bat"
+    },
+    {
+      "from": "C:\\QI\\Maia_Restart_Bot.bat",
+      "to": "C:\\QI\\restart_maiabot.bat"
+    },
+    {
+      "from": "C:\\QI\\TOOLS\\Maia_Restart.bat",
+      "to": "C:\\QI\\TOOLS\\restart_maia.bat"
+    },
+    {
+      "from": "C:\\QI\\TOOLS\\Maia_Restart_TunnelUpdate.bat",
+      "to": "C:\\QI\\TOOLS\\restart_tunnel_and_update.bat"
+    },
+    {
+      "from": "C:\\QI\\Maia_Install.bat",
+      "to": "C:\\QI\\install_maia_services.bat"
+    },
+    {
+      "from": "C:\\QI\\Maia_Install_Watchdog.bat",
+      "to": "C:\\QI\\install_watchdog.bat"
+    },
+    {
+      "from": "C:\\QI\\TOOLS\\Maia_Setup.bat",
+      "to": "C:\\QI\\TOOLS\\setup_service.bat"
+    },
+    {
+      "from": "C:\\QI\\TOOLS\\Maia_Setup_NamedTunnel.bat",
+      "to": "C:\\QI\\TOOLS\\setup_named_tunnel.bat"
+    },
+    {
+      "from": "C:\\NEXUS\\NEXUS_Start.bat",
+      "to": "C:\\NEXUS\\Start_NEXUS.bat"
+    },
+    {
+      "from": "C:\\NEXUS\\NEXUS_Start_ScoutOnly.bat",
+      "to": "C:\\NEXUS\\Start_NEXUS_Scout_Only.bat"
+    },
+    {
+      "from": "C:\\NEXUS\\NEXUS_Install.bat",
+      "to": "C:\\NEXUS\\install_nexus_service.bat"
+    },
+    {
+      "from": "C:\\NEXUS\\NEXUS_Install_Tunnel.bat",
+      "to": "C:\\NEXUS\\install_nexus_tunnel.bat"
+    },
+    {
+      "from": "C:\\PersonalSong\\PersonalSong_Start_Queue.bat",
+      "to": "C:\\PersonalSong\\run_queue.bat"
+    },
+    {
+      "from": "C:\\PersonalSong\\PersonalSong_Start_Server.bat",
+      "to": "C:\\PersonalSong\\run_server.bat"
+    },
+    {
+      "from": "C:\\TUBESCOUT\\TubeScout_Start.bat",
+      "to": "C:\\TUBESCOUT\\Start_TubeScout.bat"
+    },
+    {
+      "from": "C:\\TUBESCOUT\\TubeScout_Start_Server.bat",
+      "to": "C:\\TUBESCOUT\\start_server.bat"
+    },
+    {
+      "from": "C:\\TUBESCOUT\\TubeScout_Run_Cycle.bat",
+      "to": "C:\\TUBESCOUT\\run_cycle.bat"
+    }
+  ],
+  "edits": [
+    {
+      "file": "c:\\claude\\claude voice\\Claude_Channels.md",
+      "from": "ClaudeVoice_Run_Line.bat",
+      "to": "run_line.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\HOW_TO_TALK_TO_CLAUDE.md",
+      "from": "ClaudeVoice_Run_Meeting.bat",
+      "to": "run_meeting.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\build_package.py",
+      "from": "ClaudeVoice_Run_Realtime.bat",
+      "to": "run_realtime.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\HOW_TO_TALK_TO_CLAUDE.md",
+      "from": "ClaudeVoice_Run_Realtime.bat",
+      "to": "run_realtime.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\VOICE.md",
+      "from": "ClaudeVoice_Run_Realtime.bat",
+      "to": "run_realtime.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_docs.py",
+      "from": "ClaudeVoice_Run_Realtime.bat",
+      "to": "run_realtime.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_summary.py",
+      "from": "ClaudeVoice_Run_Realtime.bat",
+      "to": "run_realtime.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\Claude_Channels.md",
+      "from": "ClaudeVoice_Run_Telegram.bat",
+      "to": "run_telegram.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\VOICE.md",
+      "from": "ClaudeVoice_Run_Telegram.bat",
+      "to": "run_telegram.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_eod_summary.py",
+      "from": "ClaudeVoice_Run_BridgeHealth.bat",
+      "to": "run_bridge_health.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\setup_meeting_schedule.ps1",
+      "from": "ClaudeVoice_Start_MeetingRoom.bat",
+      "to": "start_meeting_room.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\INTRO\\status_code.json",
+      "from": "ClaudeVoice_Start_MeetingRoom.bat",
+      "to": "start_meeting_room.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\INTRO\\status_documentation.json",
+      "from": "ClaudeVoice_Start_MeetingRoom.bat",
+      "to": "start_meeting_room.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\INTRO\\status_features_dev.json",
+      "from": "ClaudeVoice_Start_MeetingRoom.bat",
+      "to": "start_meeting_room.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\CHEATSHEET.md",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\Claude_Channels.md",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_close.py",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_dualbrain_summary.py",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_eod_summary.py",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_summary.py",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\INTRO\\status_documentation.json",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\INTRO\\status_features_dev.json",
+      "from": "ClaudeVoice_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\INTRO\\status_documentation.json",
+      "from": "ClaudeVoice_Install_Meeting.bat",
+      "to": "install_meeting_service.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Implementation Log.md",
+      "from": "Maia_Restart.bat",
+      "to": "restart_maia.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Meeting Minutes.md",
+      "from": "Maia_Restart.bat",
+      "to": "restart_maia.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_all_docs.py",
+      "from": "Maia_Restart.bat",
+      "to": "restart_maia.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_maia_docs.py",
+      "from": "Maia_Restart.bat",
+      "to": "restart_maia.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_meeting_minutes.py",
+      "from": "Maia_Restart.bat",
+      "to": "restart_maia.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_tech_doc.py",
+      "from": "Maia_Restart.bat",
+      "to": "restart_maia.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_user_guide.py",
+      "from": "Maia_Restart.bat",
+      "to": "restart_maia.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Implementation Log.md",
+      "from": "Maia_Restart_TunnelUpdate.bat",
+      "to": "restart_tunnel_and_update.bat"
+    },
+    {
+      "file": "c:\\qi\\Maia_Control.bat",
+      "from": "Maia_Install.bat",
+      "to": "install_maia_services.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\create_summary_2026_04_09.py",
+      "from": "Maia_Install.bat",
+      "to": "install_maia_services.bat"
+    },
+    {
+      "file": "c:\\qi\\install_watchdog.bat",
+      "from": "Maia_Install_Watchdog.bat",
+      "to": "install_watchdog.bat"
+    },
+    {
+      "file": "c:\\qi\\Maia_Control.bat",
+      "from": "Maia_Install_Watchdog.bat",
+      "to": "install_watchdog.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_control - (backup on 03-24-2026).bat",
+      "from": "Maia_Setup.bat",
+      "to": "setup_service.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Implementation Log.md",
+      "from": "Maia_Setup.bat",
+      "to": "setup_service.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Meeting Log.md",
+      "from": "Maia_Setup.bat",
+      "to": "setup_service.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_all_docs.py",
+      "from": "Maia_Setup.bat",
+      "to": "setup_service.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\setup_service.bat",
+      "from": "Maia_Setup.bat",
+      "to": "setup_service.bat"
+    },
+    {
+      "file": "c:\\qi\\MAIA_BUILD_QUEUE.md",
+      "from": "Maia_Setup_NamedTunnel.bat",
+      "to": "setup_named_tunnel.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\update_sunday_checklist.py",
+      "from": "Maia_Setup_NamedTunnel.bat",
+      "to": "setup_named_tunnel.bat"
+    },
+    {
+      "file": "c:\\nexus\\INSTALL.md",
+      "from": "NEXUS_Start.bat",
+      "to": "Start_NEXUS.bat"
+    },
+    {
+      "file": "c:\\nexus\\install.py",
+      "from": "NEXUS_Start.bat",
+      "to": "Start_NEXUS.bat"
+    },
+    {
+      "file": "c:\\nexus\\save_session_summary_2.py",
+      "from": "NEXUS_Start.bat",
+      "to": "Start_NEXUS.bat"
+    },
+    {
+      "file": "c:\\nexus\\save_session_summary_2.py",
+      "from": "NEXUS_Start_ScoutOnly.bat",
+      "to": "Start_NEXUS_Scout_Only.bat"
+    },
+    {
+      "file": "c:\\nexus\\NEXUS_Control.bat",
+      "from": "NEXUS_Install.bat",
+      "to": "install_nexus_service.bat"
+    },
+    {
+      "file": "c:\\nexus\\INTRO\\status_features_dev.json",
+      "from": "NEXUS_Install.bat",
+      "to": "install_nexus_service.bat"
+    },
+    {
+      "file": "c:\\nexus\\scripts\\reconcile_2026_05_13.py",
+      "from": "NEXUS_Install.bat",
+      "to": "install_nexus_service.bat"
+    },
+    {
+      "file": "c:\\nexus\\NEXUS_Control.bat",
+      "from": "NEXUS_Install_Tunnel.bat",
+      "to": "install_nexus_tunnel.bat"
+    },
+    {
+      "file": "c:\\personalsong\\make_summary4.py",
+      "from": "PersonalSong_Start_Queue.bat",
+      "to": "run_queue.bat"
+    },
+    {
+      "file": "c:\\personalsong\\run_queue.py",
+      "from": "PersonalSong_Start_Queue.bat",
+      "to": "run_queue.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_documentation.json",
+      "from": "PersonalSong_Start_Queue.bat",
+      "to": "run_queue.bat"
+    },
+    {
+      "file": "c:\\personalsong\\make_summary.py",
+      "from": "PersonalSong_Start_Server.bat",
+      "to": "run_server.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_documentation.json",
+      "from": "PersonalSong_Start_Server.bat",
+      "to": "run_server.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_features_dev.json",
+      "from": "PersonalSong_Start_Server.bat",
+      "to": "run_server.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_future.json",
+      "from": "PersonalSong_Start_Server.bat",
+      "to": "run_server.bat"
+    },
+    {
+      "file": "c:\\tubescout\\INTRO\\status_documentation.json",
+      "from": "TubeScout_Start.bat",
+      "to": "Start_TubeScout.bat"
+    },
+    {
+      "file": "c:\\tubescout\\INTRO\\status_documentation.json",
+      "from": "TubeScout_Start_Server.bat",
+      "to": "start_server.bat"
+    },
+    {
+      "file": "c:\\tubescout\\INTRO\\status_documentation.json",
+      "from": "TubeScout_Run_Cycle.bat",
+      "to": "run_cycle.bat"
+    }
+  ]
+}

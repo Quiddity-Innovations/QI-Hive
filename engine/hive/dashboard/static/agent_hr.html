@@ -1,0 +1,214 @@
+<style>
+  .qi-hr-wrap { font-family: 'Segoe UI', system-ui, sans-serif; }
+  .qi-hr-wrap .status { font-size:.8rem; color:#64748b; }
+  .qi-hr-wrap .toolbar { display:flex; gap:.5rem; align-items:center; margin-bottom:1rem; }
+  .qi-hr-wrap .toolbar button { background:#1e2535; color:#e2e8f0; border:1px solid #2a3348; border-radius:6px; padding:.4rem .8rem; font-size:.85rem; cursor:pointer; }
+  .qi-hr-wrap .toolbar button:hover { border-color:#4f8ef7; color:#4f8ef7; }
+  .qi-hr-wrap .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:.75rem; margin-bottom:1.5rem; }
+  .qi-hr-wrap .card-qi { background:#161b26; border:1px solid #2a3348; border-radius:8px; padding:.85rem 1rem; cursor:pointer; }
+  .qi-hr-wrap .card-qi:hover { border-color:#4f8ef7; }
+  .qi-hr-wrap .card-qi.selected { border-color:#4f8ef7; box-shadow: 0 0 0 1px #4f8ef7; }
+  .qi-hr-wrap .card-head { display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  .qi-hr-wrap .dot { width:.55rem; height:.55rem; border-radius:50%; flex:none; }
+  .qi-hr-wrap .dot.on  { background:#4ade80; box-shadow:0 0 6px #4ade80; }
+  .qi-hr-wrap .dot.off { background:#475569; }
+  .qi-hr-wrap .agent-name { font-weight:600; font-size:1rem; }
+  .qi-hr-wrap .badges { display:flex; gap:.35rem; margin-left:auto; flex-wrap:wrap; justify-content:flex-end; }
+  .qi-hr-wrap .badge-pill { font-size:.65rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em; padding:.15rem .5rem; border-radius:10px; }
+  .qi-hr-wrap .kind-hive       { background:#312e81; color:#c7d2fe; }
+  .qi-hr-wrap .kind-builtin    { background:#164e63; color:#a5f3fc; }
+  .qi-hr-wrap .kind-discovered { background:#78350f; color:#fde68a; }
+  .qi-hr-wrap .model-fable  { background:#4c1d95; color:#e9d5ff; }
+  .qi-hr-wrap .model-opus   { background:#7c2d12; color:#fed7aa; }
+  .qi-hr-wrap .model-sonnet { background:#065f46; color:#a7f3d0; }
+  .qi-hr-wrap .model-haiku  { background:#1e3a8a; color:#bfdbfe; }
+  .qi-hr-wrap .model-inherit,
+  .qi-hr-wrap .model-unknown { background:#334155; color:#cbd5e1; }
+  .qi-hr-wrap .desc { font-size:.78rem; color:#94a3b8; margin-bottom:.6rem; min-height:1rem; }
+  .qi-hr-wrap .metrics { display:flex; gap:1rem; font-size:.82rem; margin-bottom:.5rem; }
+  .qi-hr-wrap .metrics .m-val { font-weight:700; color:#e2e8f0; display:block; font-size:1rem; }
+  .qi-hr-wrap .metrics .m-lbl { color:#64748b; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; }
+  .qi-hr-wrap .recent { font-size:.75rem; color:#94a3b8; border-top:1px solid #2a3348; padding-top:.5rem; }
+  .qi-hr-wrap .recent .task { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qi-hr-wrap .last-active { font-size:.7rem; color:#64748b; margin-left:.35rem; }
+  .qi-hr-wrap table { width:100%; border-collapse:collapse; font-size:.83rem; }
+  .qi-hr-wrap th, .qi-hr-wrap td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid #2a3348; vertical-align:top; }
+  .qi-hr-wrap th { color:#94a3b8; font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; }
+  .qi-hr-wrap tr.error td { background: rgba(248,113,113,.08); }
+  .qi-hr-wrap .muted { color:#64748b; }
+  .qi-hr-wrap .empty-state { background:#161b26; border:1px dashed #2a3348; border-radius:8px; padding:2rem; text-align:center; color:#94a3b8; }
+  .qi-hr-wrap code { font-family: Consolas, monospace; font-size: .78rem; color:#94a3b8; }
+</style>
+
+<div class="qi-hr-wrap">
+<h1 class="mb-3">Agent HR <span class="status" id="updated"></span></h1>
+<p class="status mb-3">Roster and lifetime metrics for every QI Hive / Claude Code sub-agent — what they worked on, how long, how many tokens. New agents onboard themselves automatically the first time they run.
+<a href="/mission-control" class="ms-2"><i class="bi bi-broadcast-pin"></i> Live status &rarr; Mission Control</a></p>
+
+<div class="toolbar">
+  <button onclick="loadRoster()">Refresh</button>
+  <span class="status" id="summary"></span>
+</div>
+
+<div id="grid" class="grid"></div>
+
+<h2 style="font-size:1rem; margin:1.5rem 0 .75rem; color:#94a3b8;" id="assignments-title"></h2>
+<div id="assignments"></div>
+</div>
+
+<script>
+let selectedAgent = null;
+
+async function fetchJSON(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(path + ' returned ' + r.status);
+  return r.json();
+}
+
+function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Registry-aware project rendering: server resolves `project` (a filesystem
+// path, e.g. C:\CLAUDE) against qi_registry.json and hands back project_id
+// when it falls under a known project root. Link to that project's dashboard
+// page when resolved; otherwise render the raw path as plain text.
+function projectLink(project, projectId) {
+  if (!project) return '';
+  const label = escapeHTML(project);
+  return projectId ? `<a href="/project/${encodeURIComponent(projectId)}">${label}</a>` : label;
+}
+
+function modelClass(model) {
+  const m = (model || '').toLowerCase();
+  if (m.includes('fable')) return 'model-fable';
+  if (m.includes('opus')) return 'model-opus';
+  if (m.includes('sonnet')) return 'model-sonnet';
+  if (m.includes('haiku')) return 'model-haiku';
+  if (m === 'inherit') return 'model-inherit';
+  return 'model-unknown';
+}
+
+function isActive(lastActive) {
+  if (!lastActive) return false;
+  const t = Date.parse(lastActive);
+  if (isNaN(t)) return false;
+  return (Date.now() - t) < (7 * 24 * 3600 * 1000);
+}
+
+function timeAgo(iso) {
+  if (!iso) return 'never';
+  const t = Date.parse(iso);
+  if (isNaN(t)) return iso;
+  const diffMs = Date.now() - t;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+function renderGrid(agents) {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  for (const a of agents) {
+    const active = isActive(a.last_active);
+    const card = document.createElement('div');
+    card.className = 'card-qi' + (selectedAgent === a.name ? ' selected' : '');
+    card.onclick = () => showAgent(a.name);
+    const recentHtml = (a.recent_tasks || []).slice(0, 3).map(t =>
+      `<div class="task">&bull; ${escapeHTML(t.task_desc || '(no description)')} <span class="muted">— ${projectLink(t.project, t.project_id)}</span></div>`
+    ).join('') || '<div class="muted">No recorded runs yet.</div>';
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="dot ${active ? 'on' : 'off'}" title="${active ? 'active (run within 7 days)' : 'inactive'}"></span>
+        <span class="agent-name">${escapeHTML(a.name)}</span>
+        <div class="badges">
+          <span class="badge-pill kind-${escapeHTML(a.kind || 'discovered')}">${escapeHTML(a.kind || '?')}</span>
+          <span class="badge-pill ${modelClass(a.model)}">${escapeHTML(a.model || 'unknown')}</span>
+        </div>
+      </div>
+      <div class="desc">${escapeHTML((a.description || '').slice(0, 140))}</div>
+      <div class="metrics">
+        <div><span class="m-val">${a.runs}</span><span class="m-lbl">runs</span></div>
+        <div><span class="m-val">${a.tokens_k}k</span><span class="m-lbl">tokens</span></div>
+        <div><span class="m-val">${a.hours}h</span><span class="m-lbl">time</span></div>
+      </div>
+      <div class="recent">
+        ${recentHtml}
+        <div class="last-active">last active: ${timeAgo(a.last_active)}</div>
+      </div>
+    `;
+    g.appendChild(card);
+  }
+}
+
+function renderRuns(agent, rows) {
+  document.getElementById('assignments-title').textContent = `Recent assignments — ${agent} (last ${rows.length})`;
+  const el = document.getElementById('assignments');
+  if (!rows.length) { el.innerHTML = '<div class="muted">No recorded runs for this agent yet.</div>'; return; }
+  let html = '<table><thead><tr><th>When</th><th>Task</th><th>Project</th><th>Duration</th><th>Tokens</th><th>Outcome</th></tr></thead><tbody>';
+  for (const r of rows) {
+    const cls = r.outcome === 'error' ? 'error' : '';
+    const dur = r.duration_ms ? (r.duration_ms / 60000).toFixed(1) + 'm' : '—';
+    const tok = r.tokens != null ? r.tokens.toLocaleString() : '—';
+    html += `<tr class="${cls}">
+      <td><code>${(r.started_at||'').replace('T',' ').slice(0,19)}</code></td>
+      <td>${escapeHTML(r.task_desc || '(no description)')}</td>
+      <td>${projectLink(r.project, r.project_id)}</td>
+      <td>${dur}</td>
+      <td>${tok}</td>
+      <td>${escapeHTML(r.outcome || '')}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function showAgent(name) {
+  selectedAgent = name;
+  document.querySelectorAll('.card-qi').forEach(c => c.classList.remove('selected'));
+  try {
+    const r = await fetchJSON('/api/agent-hr/runs?agent=' + encodeURIComponent(name));
+    renderRuns(name, r.runs || []);
+    renderGrid(_lastAgents);
+    window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'});
+  } catch (e) {
+    document.getElementById('assignments').innerHTML = '<div class="muted">ERROR: ' + escapeHTML(e.message) + '</div>';
+  }
+}
+
+let _lastAgents = [];
+
+async function loadRoster() {
+  document.getElementById('updated').textContent = 'loading…';
+  try {
+    const s = await fetchJSON('/api/agent-hr');
+    if (!s.ok) {
+      document.getElementById('grid').innerHTML =
+        `<div class="empty-state">Agent HR database not found yet.<br><span class="muted">${escapeHTML(s.error || '')}</span></div>`;
+      document.getElementById('updated').textContent = '';
+      document.getElementById('summary').textContent = '';
+      return;
+    }
+    _lastAgents = s.agents || [];
+    if (!_lastAgents.length) {
+      document.getElementById('grid').innerHTML = '<div class="empty-state">No agents on the roster yet. Run agent_hr.py --seed to populate it.</div>';
+    } else {
+      renderGrid(_lastAgents);
+    }
+    const totalRuns = _lastAgents.reduce((n, a) => n + (a.runs || 0), 0);
+    const totalTok = _lastAgents.reduce((n, a) => n + (a.tokens || 0), 0);
+    document.getElementById('summary').textContent =
+      `${_lastAgents.length} agents · ${totalRuns} runs · ${(totalTok/1000).toFixed(1)}k tokens lifetime`;
+    document.getElementById('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    if (selectedAgent) showAgent(selectedAgent);
+  } catch (e) {
+    document.getElementById('updated').textContent = 'ERROR: ' + e.message;
+    document.getElementById('grid').innerHTML = `<div class="empty-state">Failed to load roster: ${escapeHTML(e.message)}</div>`;
+  }
+}
+
+loadRoster();
+setInterval(loadRoster, 30000);
+</script>

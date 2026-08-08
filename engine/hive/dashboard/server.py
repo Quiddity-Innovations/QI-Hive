@@ -714,6 +714,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("dispatch",  "/dispatch","bi-send-check",    "CoWork Dispatch"),
         ("brain",     "/brain",   "bi-cpu",           "QI Brain"),
         ("mission",   "/mission-control", "bi-broadcast-pin", "Mission Control"),
+        ("agent_hr",  "/agents",  "bi-person-badge",  "Agent HR"),
         ("warroom",   "/warroom", "bi-chat-dots",     "War Room"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
@@ -1590,6 +1591,28 @@ def render_dashboard() -> str:
         q_label = "Quarter"
         log.warning(f"usage_stats failed: {e}")
 
+    # Agent HR headline — active roster + this week's activity (read-only
+    # agent_hr.db; same DB the /agents page and /api/agent-hr read).
+    agent_hr_active = agent_hr_runs_week = agent_hr_tokens_week = "—"
+    try:
+        from datetime import timedelta as _hr_td
+        _hr_cutoff = (datetime.now() - _hr_td(days=7)).isoformat()
+        _hr_conn = _agent_hr_conn()
+        try:
+            agent_hr_active = _hr_conn.execute(
+                "SELECT COUNT(*) FROM agents WHERE last_active >= ?", (_hr_cutoff,)
+            ).fetchone()[0]
+            _hr_runs, _hr_tokens = _hr_conn.execute(
+                "SELECT COUNT(*), COALESCE(SUM(tokens),0) FROM runs WHERE started_at >= ?",
+                (_hr_cutoff,),
+            ).fetchone()
+            agent_hr_runs_week = _hr_runs
+            agent_hr_tokens_week = _fmt_tok(_hr_tokens)
+        finally:
+            _hr_conn.close()
+    except Exception as e:
+        log.warning(f"agent_hr summary failed: {e}")
+
     def _tile(label, value, href="/usage", sub=""):
         sub_html = (f'<div class="text-body-tertiary" style="font-size:.62rem;line-height:1.1">{sub}</div>'
                     if sub else '')
@@ -1632,6 +1655,32 @@ def render_dashboard() -> str:
             {_tile("Done", col_counts.get("done",0), "/board")}
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Agent HR headline — first-class landing tile, mirrors the bento cards above -->
+    <div class="row g-2 mb-3">
+      <div class="col-12">
+        <a href="/agents" class="text-decoration-none">
+          <div class="card border-0 bg-body-secondary">
+            <div class="card-body d-flex flex-wrap align-items-center gap-4 py-3 px-3">
+              <span class="text-body-secondary d-flex align-items-center gap-1" style="font-size:.75rem"><i class="bi bi-person-badge"></i> Agent HR</span>
+              <div class="d-flex align-items-baseline gap-1">
+                <div class="fw-medium text-body" style="font-size:1.5rem;line-height:1.05">{agent_hr_active}</div>
+                <div class="text-body-tertiary" style="font-size:.7rem">active agents</div>
+              </div>
+              <div class="d-flex align-items-baseline gap-1">
+                <div class="fw-medium text-body" style="font-size:1.5rem;line-height:1.05">{agent_hr_runs_week}</div>
+                <div class="text-body-tertiary" style="font-size:.7rem">runs this week</div>
+              </div>
+              <div class="d-flex align-items-baseline gap-1">
+                <div class="fw-medium text-body" style="font-size:1.5rem;line-height:1.05">{agent_hr_tokens_week}</div>
+                <div class="text-body-tertiary" style="font-size:.7rem">tokens this week</div>
+              </div>
+              <span class="ms-auto text-body-secondary" style="font-size:.72rem">Roster & recent assignments <i class="bi bi-arrow-right"></i></span>
+            </div>
+          </div>
+        </a>
       </div>
     </div>
 
@@ -7945,6 +7994,7 @@ def render_mission_control() -> str:
           Single-pane-of-glass across every QI agent, project, and dispatch in flight.
           Auto-refreshes every 30s.
           <a href="/warroom" class="ms-2"><i class="bi bi-chat-dots"></i> Open the War Room chat &rarr;</a>
+          <a href="/agents" class="ms-2"><i class="bi bi-person-badge"></i> Personnel files &rarr; Agent HR</a>
         </p>
       </div>
       <div>
@@ -8304,6 +8354,118 @@ def api_compliance_scan(req: _ComplianceScanReq):
                                 {"project_id": req.project_id, "mode": req.mode, "auto_fix": req.auto_fix},
                                 timeout=120.0)
     return JSONResponse(content=body, status_code=code)
+
+
+# ── Agent HR — roster + metrics for QI Hive / Claude Code sub-agents ───────────
+# Read-only against C:\QIH\engine\hive\agents\agent_hr.db (owned by agent_hr.py —
+# seeded/backfilled/ingested by the CLI + the SubagentStop hook, not by the
+# dashboard). Named /api/agent-hr* to avoid colliding with the existing
+# /api/agents endpoint (Brain agent-team roster used by Mission Control).
+
+_AGENT_HR_DB = r"C:\QIH\engine\hive\agents\agent_hr.db"
+
+
+def _agent_hr_conn():
+    import sqlite3
+    return sqlite3.connect(f"file:{Path(_AGENT_HR_DB).as_posix()}?mode=ro", uri=True, timeout=2.0)
+
+
+def _resolve_registry_project(path: str):
+    """Longest-prefix match of a `runs.project` filesystem path against
+    qi_registry.json project roots (same technique as doc_harvester.py /
+    subagent_stop.py). Returns the registry project id, or None if the path
+    doesn't fall under any registered project root — the caller renders those
+    as plain text rather than a dead `/project/<id>` link."""
+    if not path:
+        return None
+    import os
+    try:
+        reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    p_n = os.path.normcase(os.path.normpath(path))
+    best, best_len = None, -1
+    for proj in reg.get("projects", []):
+        root = proj.get("path") or ""
+        if not root:
+            continue
+        r_n = os.path.normcase(os.path.normpath(root))
+        if (p_n == r_n or p_n.startswith(r_n + os.sep)) and len(r_n) > best_len:
+            best, best_len = proj.get("id"), len(r_n)
+    return best
+
+
+@app.get("/api/agent-hr")
+def api_agent_hr():
+    if not Path(_AGENT_HR_DB).exists():
+        return JSONResponse({"ok": False, "error": "agent_hr.db not found — run agent_hr.py --seed", "agents": []})
+    try:
+        conn = _agent_hr_conn()
+        try:
+            agents = conn.execute(
+                "SELECT name, kind, model, description, first_seen, last_active, status FROM agents "
+                "ORDER BY (last_active IS NULL), last_active DESC, name ASC"
+            ).fetchall()
+            out = []
+            for name, kind, model, description, first_seen, last_active, status in agents:
+                agg = conn.execute(
+                    "SELECT COUNT(*), COALESCE(SUM(tokens),0), COALESCE(SUM(duration_ms),0) "
+                    "FROM runs WHERE agent = ?", (name,)
+                ).fetchone()
+                runs_count, tokens_sum, ms_sum = agg
+                recent = conn.execute(
+                    "SELECT task_desc, project, started_at FROM runs WHERE agent = ? "
+                    "ORDER BY started_at DESC LIMIT 3", (name,)
+                ).fetchall()
+                projects = conn.execute(
+                    "SELECT DISTINCT project FROM runs WHERE agent = ? AND project IS NOT NULL", (name,)
+                ).fetchall()
+                out.append({
+                    "name": name, "kind": kind, "model": model, "description": description,
+                    "first_seen": first_seen, "last_active": last_active, "status": status,
+                    "runs": runs_count,
+                    "tokens": tokens_sum,
+                    "tokens_k": round(tokens_sum / 1000, 1),
+                    "hours": round(ms_sum / 3600000, 2),
+                    "recent_tasks": [{"task_desc": t, "project": p, "project_id": _resolve_registry_project(p),
+                                       "started_at": s} for t, p, s in recent],
+                    "projects": [p for (p,) in projects],
+                })
+            return JSONResponse({"ok": True, "agents": out})
+        finally:
+            conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e), "agents": []}, status_code=503)
+
+
+@app.get("/api/agent-hr/runs")
+def api_agent_hr_runs(agent: str):
+    if not Path(_AGENT_HR_DB).exists():
+        return JSONResponse({"ok": False, "error": "agent_hr.db not found", "runs": []})
+    try:
+        conn = _agent_hr_conn()
+        try:
+            rows = conn.execute(
+                "SELECT project, task_desc, started_at, duration_ms, tokens, tool_uses, outcome, session_id "
+                "FROM runs WHERE agent = ? ORDER BY started_at DESC LIMIT 50", (agent,)
+            ).fetchall()
+            runs = [{
+                "project": p, "project_id": _resolve_registry_project(p), "task_desc": t,
+                "started_at": s, "duration_ms": d,
+                "tokens": tok, "tool_uses": tu, "outcome": o, "session_id": sid,
+            } for p, t, s, d, tok, tu, o, sid in rows]
+            return JSONResponse({"ok": True, "agent": agent, "runs": runs})
+        finally:
+            conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e), "runs": []}, status_code=503)
+
+
+@app.get("/agents", response_class=HTMLResponse)
+def agent_hr_page():
+    p = Path(__file__).parent / "static" / "agent_hr.html"
+    content = p.read_text(encoding="utf-8")
+    return base_layout("Agent HR", content, "agent_hr")
 
 
 # ── Brain reverse-proxy (tunnel parity) ──────────────────────────────────────

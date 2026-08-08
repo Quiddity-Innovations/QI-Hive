@@ -164,11 +164,17 @@ def ingest(path: Path) -> None:
             proj["last_activity"] = datetime.now().strftime("%Y-%m-%d")
             if event == "session_end" and payload.get("summary"):
                 proj.setdefault("recent_sessions", [])
-                proj["recent_sessions"].append({
+                new = {
                     "at": payload.get("timestamp", datetime.now().isoformat()),
                     "summary": payload["summary"],
                     "next_steps": payload.get("next_steps") or payload.get("next_suggested", []),
-                })
+                }
+                # Dedupe on append so the transcript backfiller can't pile up
+                # identical entries (the bug that produced 18-of-20 duplicates).
+                sig = (new["at"], (new["summary"] or "")[:80])
+                seen = {(s.get("at"), (s.get("summary") or "")[:80]) for s in proj["recent_sessions"]}
+                if sig not in seen:
+                    proj["recent_sessions"].append(new)
                 proj["recent_sessions"] = proj["recent_sessions"][-20:]
         save_status(s)
     except Exception as e:
@@ -184,15 +190,41 @@ def ingest(path: Path) -> None:
         log(f"[ARCHIVE ERROR] {type(e).__name__}: {e}")
 
 
+REFRESH_EVERY = 90  # seconds between live status refreshes (git + Brain merge)
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     log("QI Hive Ingester starting (status.json + qi_brain.db)")
     log(f"inbox: {INBOX}")
     log(f"brain_db: {BRAIN_DB}")
+
+    # Live status refresh — the real-time half. Without this the dashboard's
+    # project tiles + git activity only updated at the 02:30 nightly reconcile.
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from status_refresh import light_refresh
+    except Exception as e:
+        light_refresh = None
+        log(f"[REFRESH] live refresh unavailable: {type(e).__name__}: {e}")
+
+    last_refresh = 0.0
     while True:
         try:
             for p in sorted(INBOX.glob("*.json"), key=lambda x: x.stat().st_mtime):
                 ingest(p)
+
+            now = time.time()
+            if light_refresh and (now - last_refresh) >= REFRESH_EVERY:
+                try:
+                    stats = light_refresh()
+                    log(f"[REFRESH] status.json merged from Brain; "
+                        f"git_added={stats['git_added']} "
+                        f"projects={stats['projects_refreshed']}")
+                except Exception as e:
+                    log(f"[REFRESH ERROR] {type(e).__name__}: {e}")
+                last_refresh = now
+
             time.sleep(2)
         except KeyboardInterrupt:
             log("shutting down")

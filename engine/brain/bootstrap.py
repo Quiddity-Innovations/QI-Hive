@@ -32,8 +32,11 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 BRAIN_DIR    = Path(__file__).parent
-ECOSYSTEM    = Path(r"C:\UNIVERSAL\ECOSYSTEM")
-SUMMARIES    = Path(r"C:\UNIVERSAL\DOCUMENTATION\Session_Summaries")
+# Both moved in the 2026-04-22 UNIVERSAL -> QIH migration. The old paths were
+# left behind here, so seed_projects and ingest_docs had been silently skipping
+# (both guard on .exists()) ever since.
+ECOSYSTEM    = Path(r"C:\QIH\ecosystem")
+SUMMARIES    = Path(r"C:\QIH\shared\documentation\session_summaries")
 REGISTRY     = ECOSYSTEM / "qi_registry.json"
 
 sys.path.insert(0, str(BRAIN_DIR))

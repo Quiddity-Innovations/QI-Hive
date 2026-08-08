@@ -5,6 +5,9 @@ QI Gate — command-line administration.
     python gate_admin.py users                       list accounts
     python gate_admin.py adduser  <name> <pw> [role] create (role: admin|user)
     python gate_admin.py passwd   <name> <pw>        change a password
+    python gate_admin.py hosts    <name> [h1,h2|all] show/set which hosts a
+                                                     user may reach ("all" or
+                                                     no list = every host)
     python gate_admin.py disable  <name>             disable + kill sessions
     python gate_admin.py enable   <name>
     python gate_admin.py deluser  <name>
@@ -49,20 +52,56 @@ def cmd_users(_):
     if not users:
         print("(no accounts yet — the gate will show its first-run setup screen)")
         return
-    print(f"{'USER':<20} {'ROLE':<8} {'STATE':<10} {'LAST LOGIN':<20} CREATED")
+    print(f"{'USER':<20} {'ROLE':<8} {'STATE':<10} {'LAST LOGIN':<20} "
+          f"{'CREATED':<12} ACCESS")
     for u in users:
         state = "disabled" if u["disabled"] else "active"
         last = (u["last_login_at"] or "—")[:19].replace("T", " ")
+        hosts = u.get("allowed_hosts") or []
+        access = "all hosts" if not hosts else ", ".join(hosts)
         print(f"{u['username']:<20} {u['role']:<8} {state:<10} {last:<20} "
-              f"{u['created_at'][:10]}")
+              f"{u['created_at'][:10]:<12} {access}")
 
 
 def cmd_adduser(a):
     if len(a) < 2:
-        raise SystemExit("usage: adduser <name> <password> [admin|user]")
+        raise SystemExit(
+            "usage: adduser <name> <password> [admin|user] [host1,host2]\n"
+            "  a host list scopes the account to those sites only;\n"
+            "  omit it (or pass 'all') for estate-wide access")
     role = a[2] if len(a) > 2 else "user"
-    u = ga.create_user(a[0], a[1], role=role)
-    print(f"[OK] created {u['username']} (role={u['role']})")
+    hosts = a[3] if len(a) > 3 and a[3].lower() != "all" else ""
+    if hosts:
+        _warn_unknown_hosts(hosts)
+    u = ga.create_user(a[0], a[1], role=role, allowed_hosts=hosts)
+    scope = ", ".join(u["allowed_hosts"]) if u["allowed_hosts"] else "ALL hosts"
+    print(f"[OK] created {u['username']} (role={u['role']}) -> {scope}")
+
+
+def _warn_unknown_hosts(raw):
+    """A typo'd hostname silently locks the account out of everything, so say so."""
+    known = {h["host"].lower() for h in CFG.get("hosts", [])}
+    unknown = [h.strip() for h in raw.split(",")
+               if h.strip() and h.strip().lower() not in known]
+    if unknown:
+        print(f"[!!] not hosts this gate fronts: {', '.join(unknown)}")
+        print("     the account will NOT be able to reach them — check the spelling")
+
+
+def cmd_hosts(a):
+    if not a:
+        raise SystemExit("usage: hosts <name> [host1,host2 | all]")
+    u = _find(a[0])
+    if len(a) < 2:
+        cur = u.get("allowed_hosts") or []
+        print(f"{u['username']}: " + (", ".join(cur) if cur else "all hosts"))
+        return
+    raw = "" if a[1].lower() == "all" else a[1]
+    if raw:
+        _warn_unknown_hosts(raw)
+    hosts = ga.set_allowed_hosts(u["id"], raw)
+    print(f"[OK] {u['username']} -> " + (", ".join(hosts) if hosts else "ALL hosts"))
+    print("     takes effect on their next request; no re-login needed")
 
 
 def cmd_passwd(a):
@@ -193,6 +232,7 @@ def cmd_suspects(a):
 
 COMMANDS = {
     "users": cmd_users, "adduser": cmd_adduser, "passwd": cmd_passwd,
+    "hosts": cmd_hosts,
     "disable": cmd_disable, "enable": cmd_enable, "deluser": cmd_deluser,
     "sessions": cmd_sessions, "revoke": cmd_revoke, "revokeall": cmd_revokeall,
     "log": cmd_log, "suspects": cmd_suspects,

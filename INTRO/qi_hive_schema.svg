@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 780" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="fk" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#1f2d3d"/>
+    </marker>
+    <marker id="fk-amber" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1040" height="780" fill="#ffffff" rx="12"/>
+  <text x="520" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#1f2d3d">QI Brain — Database Schema (qi_brain.db)</text>
+  <text x="520" y="50" text-anchor="middle" font-size="12" fill="#64748b">Quiddity Innovations · Ecosystem Orchestration Hub · 2026</text>
+  <text x="520" y="67" text-anchor="middle" font-size="10" fill="#94a3b8">24 SQLite tables (WAL) at C:\QIH\data\qi_brain.db · live row counts · mirrored into 4 ChromaDB collections</text>
+
+  <!-- ══ LEGEND (top-right) ══ -->
+  <rect x="822" y="78" width="206" height="138" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="925" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="832" y="104" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="853" y="113" font-size="9" fill="#374151">Core / hub table</text>
+  <rect x="832" y="121" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="853" y="130" font-size="9" fill="#374151">Populated (rows &gt; 0)</text>
+  <rect x="832" y="138" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="853" y="147" font-size="9" fill="#374151">Low / event-driven</text>
+  <rect x="832" y="155" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="853" y="164" font-size="9" fill="#374151">Empty / reserved</text>
+  <line x1="832" y1="180" x2="850" y2="180" stroke="#1f2d3d" stroke-width="1.5" marker-end="url(#fk)"/>
+  <text x="856" y="184" font-size="9" fill="#374151">Foreign key reference</text>
+  <line x1="832" y1="198" x2="850" y2="198" stroke="#b8860b" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#fk-amber)"/>
+  <text x="856" y="202" font-size="9" fill="#374151">Vectorized → ChromaDB</text>
+
+  <!-- ══ HUB: projects ══ (core navy) -->
+  <rect x="24" y="92" width="234" height="118" rx="8" fill="#1f2d3d" stroke="#1f2d3d" stroke-width="2"/>
+  <text x="141" y="111" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">projects</text>
+  <text x="141" y="125" text-anchor="middle" font-size="8.5" fill="#9aa5b1">— the hub every record points to —</text>
+  <text x="36" y="141" font-size="8.5" fill="#e2e8f0">project_id  PK</text>
+  <text x="36" y="155" font-size="8.5" fill="#cbd5e1">display_name, tagline, path</text>
+  <text x="36" y="169" font-size="8.5" fill="#cbd5e1">api_port, ui_port</text>
+  <text x="36" y="183" font-size="8.5" fill="#cbd5e1">tier (backbone|project|tool), active</text>
+  <rect x="36" y="190" width="210" height="14" rx="4" fill="#2b3c4f"/>
+  <text x="141" y="200" text-anchor="middle" font-size="8.5" font-weight="600" fill="#eafaf0">24 rows</text>
+
+  <!-- agents (core navy) -->
+  <rect x="282" y="92" width="220" height="118" rx="8" fill="#1f2d3d" stroke="#1f2d3d" stroke-width="2"/>
+  <text x="392" y="111" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">agents</text>
+  <text x="392" y="125" text-anchor="middle" font-size="8.5" fill="#9aa5b1">— who logged each record —</text>
+  <text x="294" y="141" font-size="8.5" fill="#e2e8f0">agent_id  PK</text>
+  <text x="294" y="155" font-size="8.5" fill="#cbd5e1">display_name</text>
+  <text x="294" y="169" font-size="8.5" fill="#cbd5e1">agent_type (claude|maia|…|system)</text>
+  <text x="294" y="183" font-size="8.5" fill="#cbd5e1">active, created_at</text>
+  <rect x="294" y="190" width="196" height="14" rx="4" fill="#2b3c4f"/>
+  <text x="392" y="200" text-anchor="middle" font-size="8.5" font-weight="600" fill="#eafaf0">14 rows</text>
+
+  <!-- llm_providers -->
+  <rect x="526" y="92" width="220" height="118" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="636" y="111" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">llm_providers</text>
+  <text x="538" y="127" font-size="8.5" fill="#2e7d32">provider_id  PK</text>
+  <text x="538" y="141" font-size="8.5" fill="#2e7d32">provider_type, base_url</text>
+  <text x="538" y="155" font-size="8.5" fill="#2e7d32">model_name, role (eval|embed|…)</text>
+  <text x="538" y="169" font-size="8.5" fill="#2e7d32">api_key_env (name, never the key)</text>
+  <text x="538" y="183" font-size="8.5" fill="#2e7d32">timeout_s, max_tokens, active</text>
+  <rect x="538" y="190" width="196" height="14" rx="4" fill="#d6f0df"/>
+  <text x="636" y="200" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">5 rows</text>
+
+  <!-- brain_config -->
+  <rect x="770" y="240" width="246" height="92" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="893" y="259" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">brain_config</text>
+  <text x="782" y="275" font-size="8.5" fill="#2e7d32">key  PK, value</text>
+  <text x="782" y="289" font-size="8.5" fill="#2e7d32">description, updated_at</text>
+  <text x="782" y="303" font-size="8.5" fill="#256a2a">context_days, embed model, etc.</text>
+  <rect x="782" y="310" width="222" height="14" rx="4" fill="#d6f0df"/>
+  <text x="893" y="320" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">11 rows</text>
+
+  <!-- ══ ROW 2 — KNOWLEDGE TABLES ══ -->
+
+  <!-- decisions (vectorized) -->
+  <rect x="24" y="240" width="234" height="132" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="141" y="259" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">decisions</text>
+  <text x="36" y="275" font-size="8.5" fill="#2e7d32">decision_id  PK</text>
+  <text x="36" y="289" font-size="8.5" fill="#2e7d32">project_id → projects (FK)</text>
+  <text x="36" y="303" font-size="8.5" fill="#2e7d32">agent_id → agents (FK)</text>
+  <text x="36" y="317" font-size="8.5" fill="#2e7d32">title, rationale, impact_scope, tags</text>
+  <text x="36" y="331" font-size="8.5" fill="#2e7d32">superseded_by → decisions (self FK)</text>
+  <text x="36" y="345" font-size="8" fill="#256a2a">never deleted, only superseded</text>
+  <rect x="36" y="351" width="210" height="14" rx="4" fill="#d6f0df"/>
+  <text x="141" y="361" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">491 rows · → qi_decisions</text>
+
+  <!-- features (vectorized) -->
+  <rect x="282" y="240" width="220" height="132" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="392" y="259" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">features</text>
+  <text x="294" y="275" font-size="8.5" fill="#2e7d32">feature_id  PK</text>
+  <text x="294" y="289" font-size="8.5" fill="#2e7d32">source_project → projects (FK)</text>
+  <text x="294" y="303" font-size="8.5" fill="#2e7d32">logged_by_agent → agents (FK)</text>
+  <text x="294" y="317" font-size="8.5" fill="#2e7d32">name, description, domain</text>
+  <text x="294" y="331" font-size="8.5" fill="#2e7d32">code_ref, propagated</text>
+  <rect x="294" y="351" width="196" height="14" rx="4" fill="#d6f0df"/>
+  <text x="392" y="361" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">394 rows · → qi_features</text>
+
+  <!-- feature_evaluations -->
+  <rect x="526" y="240" width="220" height="132" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="636" y="259" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">feature_evaluations</text>
+  <text x="538" y="275" font-size="8.5" fill="#2e7d32">eval_id  PK</text>
+  <text x="538" y="289" font-size="8.5" fill="#2e7d32">feature_id → features (FK)</text>
+  <text x="538" y="303" font-size="8.5" fill="#2e7d32">target_project → projects (FK)</text>
+  <text x="538" y="317" font-size="8.5" fill="#2e7d32">relevance_score, recommendation</text>
+  <text x="538" y="331" font-size="8.5" fill="#2e7d32">reasoning, confidence, decided</text>
+  <rect x="538" y="351" width="196" height="14" rx="4" fill="#d6f0df"/>
+  <text x="636" y="361" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">44 rows</text>
+
+  <!-- ══ ROW 3 ══ -->
+
+  <!-- project_state -->
+  <rect x="24" y="402" width="234" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="141" y="421" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">project_state</text>
+  <text x="36" y="437" font-size="8.5" fill="#2e7d32">state_id  PK</text>
+  <text x="36" y="451" font-size="8.5" fill="#2e7d32">project_id → projects (FK)</text>
+  <text x="36" y="465" font-size="8.5" fill="#2e7d32">agent_id → agents (FK)</text>
+  <text x="36" y="479" font-size="8.5" fill="#2e7d32">phase, status, summary</text>
+  <text x="36" y="493" font-size="8.5" fill="#2e7d32">blockers, next_steps, recorded_at</text>
+  <rect x="36" y="500" width="210" height="14" rx="4" fill="#d6f0df"/>
+  <text x="141" y="510" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">239 rows (append-only history)</text>
+
+  <!-- session_log (vectorized) -->
+  <rect x="282" y="402" width="220" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="392" y="421" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">session_log</text>
+  <text x="294" y="437" font-size="8.5" fill="#2e7d32">session_id  PK</text>
+  <text x="294" y="451" font-size="8.5" fill="#2e7d32">project_id → projects (FK)</text>
+  <text x="294" y="465" font-size="8.5" fill="#2e7d32">agent_id → agents (FK)</text>
+  <text x="294" y="479" font-size="8.5" fill="#2e7d32">session_title, summary, files_changed</text>
+  <text x="294" y="493" font-size="8.5" fill="#2e7d32">next_steps, model_used, ended_at</text>
+  <rect x="294" y="500" width="196" height="14" rx="4" fill="#d6f0df"/>
+  <text x="392" y="510" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">564 rows · → qi_sessions</text>
+
+  <!-- docs (vectorized) -->
+  <rect x="526" y="402" width="220" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="636" y="421" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">docs</text>
+  <text x="538" y="437" font-size="8.5" fill="#2e7d32">doc_id  PK, project_id</text>
+  <text x="538" y="451" font-size="8.5" fill="#2e7d32">title, path, doc_type</text>
+  <text x="538" y="465" font-size="8.5" fill="#2e7d32">mtime, stale, hash</text>
+  <text x="538" y="479" font-size="8.5" fill="#2e7d32">(Documentation Brain index)</text>
+  <text x="538" y="493" font-size="8" fill="#256a2a">doc_relationships: 2,203 edges</text>
+  <rect x="538" y="500" width="196" height="14" rx="4" fill="#d6f0df"/>
+  <text x="636" y="510" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">921 rows · → qi_docs</text>
+
+  <!-- dispatches -->
+  <rect x="770" y="402" width="246" height="120" rx="8" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="893" y="421" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">dispatches</text>
+  <text x="782" y="437" font-size="8.5" fill="#2e7d32">dispatch_id  PK, project_id</text>
+  <text x="782" y="451" font-size="8.5" fill="#2e7d32">check_name, severity, status</text>
+  <text x="782" y="465" font-size="8.5" fill="#2e7d32">message, fix, inspector_verdict</text>
+  <text x="782" y="479" font-size="8.5" fill="#256a2a">dispatch_runs: 7 · heartbeats: 1,630</text>
+  <text x="782" y="493" font-size="8.5" fill="#256a2a">warroom_messages: 11</text>
+  <rect x="782" y="500" width="222" height="14" rx="4" fill="#d6f0df"/>
+  <text x="893" y="510" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1b5e20">2,873 rows</text>
+
+  <!-- ══ FK ARROWS ══ -->
+  <!-- decisions → projects -->
+  <line x1="141" y1="240" x2="141" y2="210" stroke="#1f2d3d" stroke-width="1.4" marker-end="url(#fk)"/>
+  <!-- features → agents -->
+  <line x1="392" y1="240" x2="392" y2="210" stroke="#1f2d3d" stroke-width="1.4" marker-end="url(#fk)"/>
+  <!-- feature_evaluations → features -->
+  <line x1="502" y1="306" x2="526" y2="306" stroke="#1f2d3d" stroke-width="1.4" marker-end="url(#fk)"/>
+  <!-- project_state → decisions stack (hub linkage up) -->
+  <line x1="141" y1="402" x2="141" y2="372" stroke="#1f2d3d" stroke-width="1.4" marker-end="url(#fk)"/>
+  <!-- session_log → features stack -->
+  <line x1="392" y1="402" x2="392" y2="372" stroke="#1f2d3d" stroke-width="1.4" marker-end="url(#fk)"/>
+  <!-- docs → feature_evaluations stack -->
+  <line x1="636" y1="402" x2="636" y2="372" stroke="#1f2d3d" stroke-width="1.4" marker-end="url(#fk)"/>
+
+  <!-- vectorization links (amber dashed to ChromaDB box) -->
+  <path d="M 258,300 H 270 V 600 H 300" fill="none" stroke="#b8860b" stroke-width="1.3" stroke-dasharray="4,2" marker-end="url(#fk-amber)"/>
+  <path d="M 392,522 V 600" fill="none" stroke="#b8860b" stroke-width="1.3" stroke-dasharray="4,2" marker-end="url(#fk-amber)"/>
+  <path d="M 636,522 V 600" fill="none" stroke="#b8860b" stroke-width="1.3" stroke-dasharray="4,2" marker-end="url(#fk-amber)"/>
+
+  <!-- ══ ChromaDB semantic layer ══ -->
+  <rect x="282" y="600" width="464" height="74" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="514" y="620" text-anchor="middle" font-size="12" font-weight="700" fill="#7c5e0a">ChromaDB semantic memory — engine\brain\qi_memory</text>
+  <text x="514" y="638" text-anchor="middle" font-size="9" fill="#b8860b">PersistentClient · cosine space · nomic-embed-text embeddings</text>
+  <text x="514" y="656" text-anchor="middle" font-size="9" font-weight="600" fill="#7c5e0a">qi_decisions · qi_features · qi_sessions · qi_docs</text>
+  <text x="514" y="669" text-anchor="middle" font-size="8" fill="#a17a12">SQL = source of truth; vectors = rebuildable search index</text>
+
+  <!-- ══ Operational / high-volume tables ══ -->
+  <rect x="24" y="552" width="234" height="122" rx="8" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="141" y="571" text-anchor="middle" font-size="11" font-weight="700" fill="#7c5e0a">Operational tables</text>
+  <text x="36" y="588" font-size="8.5" fill="#b8860b">compliance_log · 46,475 rows</text>
+  <text x="36" y="602" font-size="8.5" fill="#b8860b">poll_log · 18,706 rows</text>
+  <text x="36" y="616" font-size="8.5" fill="#b8860b">agent_heartbeats · 1,630 rows</text>
+  <text x="36" y="630" font-size="8.5" fill="#b8860b">bootstrap_log · 9</text>
+  <text x="36" y="644" font-size="8.5" fill="#b8860b">dispatch_runs · 7</text>
+  <text x="36" y="660" font-size="8" fill="#a17a12">high-volume telemetry &amp; idempotency</text>
+
+  <!-- empty / reserved -->
+  <rect x="770" y="552" width="246" height="122" rx="8" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="893" y="571" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Empty / reserved (0 rows)</text>
+  <text x="782" y="588" font-size="8.5" fill="#64748b">evaluation_overrides — Law 6 override</text>
+  <text x="782" y="602" font-size="8.5" fill="#64748b">archived_decisions · archived_features</text>
+  <text x="782" y="616" font-size="8.5" fill="#64748b">scope_drops · agent_growth_log</text>
+  <text x="782" y="630" font-size="8.5" fill="#64748b">brain_inbox_log</text>
+  <text x="782" y="650" font-size="8" fill="#94a3b8">defined &amp; ready; populated on first use</text>
+  <text x="782" y="663" font-size="8" fill="#94a3b8">+ sqlite_sequence (autoincrement bookkeeping)</text>
+
+  <text x="1020" y="700" text-anchor="end" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026 · qi_brain · counts captured 2026-06-24</text>
+</svg>

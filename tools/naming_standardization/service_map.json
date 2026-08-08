@@ -1,0 +1,25 @@
+{
+  "_comment": "QI NSSM per-product standardization. Each service is re-pointed from the shared C:\\QIH\\engine\\bin\\nssm.exe to a per-product copy whose embedded FileDescription names the product, so the UAC consent dialog identifies which product is being restarted. Copies live in C:\\QIH\\engine\\bin\\. Generated 2026-06-23.",
+  "bin_dir": "C:\\QIH\\engine\\bin",
+  "source_nssm": "C:\\QIH\\engine\\bin\\nssm.exe",
+  "products": [
+    { "exe": "Maia_NSSM.exe",        "file_description": "Maia Service Manager (QI)",          "services": ["QI_MaiaBot", "QI_MaiaTunnel", "QI_MaiaGradio", "QI_MaiaDemoTunnel"] },
+    { "exe": "Naya_NSSM.exe",        "file_description": "Naya Service Manager (QI)",          "services": ["QI_NayaBot", "QI_NayaGradio", "QI_NayaTunnel"] },
+    { "exe": "NEXUS_NSSM.exe",       "file_description": "NEXUS Service Manager (QI)",         "services": ["QI_NEXUS", "QI_NEXUSTunnel"] },
+    { "exe": "Brain_NSSM.exe",       "file_description": "Brain Service Manager (QI)",         "services": ["QI_BrainAPI"] },
+    { "exe": "Hive_NSSM.exe",        "file_description": "Hive Service Manager (QI)",          "services": ["QI_Dashboard", "QI_DashboardTunnel", "QI_HiveApply", "QI_HiveIngest", "QI_HiveInspectorDrain"] },
+    { "exe": "Elevate_NSSM.exe",     "file_description": "Elevate Broker Service Manager (QI)", "services": ["QI_Elevate"] },
+    { "exe": "ClaudeVoice_NSSM.exe", "file_description": "Claude Voice Service Manager (QI)",   "services": ["QI_ClaudeVoiceLine", "QI_ClaudeVoiceTelegram", "QI_ClaudeVoiceTunnel"] },
+    { "exe": "CogniBase_NSSM.exe",   "file_description": "CogniBase Service Manager (QI)",     "services": ["QI_CogniBase", "QI_CogniBaseTunnel"] },
+    { "exe": "CypherMiner_NSSM.exe", "file_description": "CypherMiner Service Manager (QI)",   "services": ["QI_CypherMinerTunnel", "QI_CypherMinerUI"] },
+    { "exe": "Gamez_NSSM.exe",       "file_description": "Gamez Service Manager (QI)",         "services": ["QI_GamezProxy", "QI_GamezTunnel"] },
+    { "exe": "Kaze_NSSM.exe",        "file_description": "Kaze Service Manager (QI)",          "services": ["QI_KazeConfigAPI", "QI_KazeNewsTunnel"] },
+    { "exe": "LotteryWiz_NSSM.exe",  "file_description": "LotteryWiz Service Manager (QI)",    "services": ["QI_LotteryWiz", "QI_LotteryWizTunnel"] },
+    { "exe": "MapSnap_NSSM.exe",     "file_description": "MapSnap Service Manager (QI)",       "services": ["QI_MapSnap", "QI_MapSnapTunnel"] },
+    { "exe": "AutoPDF_NSSM.exe",     "file_description": "AutoPDF Service Manager (QI)",       "services": ["QI_AutoPDF", "QI_AutoPDFTunnel"] },
+    { "exe": "TubeScout_NSSM.exe",   "file_description": "TubeScout Service Manager (QI)",     "services": ["QI_TubeScout", "QI_TubeScoutTunnel"] },
+    { "exe": "MQ_NSSM.exe",          "file_description": "MQ Service Manager (QI)",            "services": ["QI_MQTunnel"] },
+    { "exe": "M2V_NSSM.exe",         "file_description": "M2V Service Manager (QI)",           "services": ["QI_M2VTunnel"] },
+    { "exe": "Caddy_NSSM.exe",       "file_description": "Caddy Proxy Service Manager (QI)",   "services": ["QI_Caddy"] }
+  ]
+}

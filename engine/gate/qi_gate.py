@@ -280,6 +280,19 @@ async def verify(request: Request):
     token = ga.parse_cookie(request.headers.get("cookie", ""))
     user = ga.lookup_session(token) if token else None
     if user:
+        req_host = _req_host(request)
+        if not ga.user_may_access(user, req_host):
+            # Signed in, but not for THIS host. Must be a hard 403 -- bouncing
+            # them to /login would loop forever, because they already hold a
+            # perfectly valid session.
+            audit("deny", request, user=user["username"], role=user["role"],
+                  reason="host_not_allowed")
+            return _page(
+                title="Not available", status=403,
+                body=('<div class="sub">Your account does not have access to '
+                      f'<b>{escape(req_host or "this site")}</b>.<br><br>'
+                      'If you think this is a mistake, ask the administrator '
+                      'to widen your access.</div>'))
         return Response(status_code=200, headers={
             "X-Qi-User": user["username"],
             "X-Qi-Role": user["role"],

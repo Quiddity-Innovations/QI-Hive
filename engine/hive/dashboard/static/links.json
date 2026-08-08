@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-23T16:50:37.605883+00:00",
+  "generated_at": "2026-06-25T23:31:21.186928+00:00",
   "tunnels": [
     {
       "key": "hive",
@@ -38,6 +38,14 @@
       "label": "TubeScout",
       "port": 8503,
       "public_url": "https://tubescout.quiddityinnovations.com",
+      "source": "tunnels.json",
+      "updated_at": "static-named-tunnel"
+    },
+    {
+      "key": "gamez",
+      "label": "Gamez (WC2026)",
+      "port": 8710,
+      "public_url": "https://gamez.quiddityinnovations.com",
       "source": "tunnels.json",
       "updated_at": "static-named-tunnel"
     }

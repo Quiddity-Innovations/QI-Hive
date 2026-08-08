@@ -1,23 +1,47 @@
 {
   "categories": [
     {
-      "name": "Documentation",
+      "name": "Governance & Owner Override",
       "priority": "high",
       "items": [
-        {
-          "title": "Populate full INTRO content",
-          "detail": "Replace this seed with the real feature matrix, blueprint SVG, technology stack, and documentation index."
-        }
+        {"title": "Exercise the override path end-to-end", "detail": "evaluation_overrides + qi_override_evaluation are wired but unused (0 rows). Surface pending feature evaluations in the dashboard with a one-click owner override (Law 6), and confirm the override is honoured when get_context re-ranks recommendations."},
+        {"title": "Decision-code discipline", "detail": "decision_code (e.g. AD-013) is UNIQUE but optional and rarely set across the 491 decisions. Auto-assign sequential codes per scope so decisions are citable in docs and supersede chains are unambiguous."},
+        {"title": "Archive aging records", "detail": "archived_decisions / archived_features tables exist but are empty. Add a retention job that moves long-superseded decisions and skipped features into the archive so context queries stay fast as the ledger grows."}
       ]
     },
     {
-      "name": "Roadmap",
+      "name": "Release Hardening",
+      "priority": "high",
+      "items": [
+        {"title": "API authentication", "detail": "The Brain holds the whole ecosystem's decision history and runs with CORS allow_origins=['*']. It is safe only because it is local-only behind the QI service boundary. Add Bearer-token auth before any remote exposure."},
+        {"title": "Port allocation cleanup", "detail": "brain_config still records api_port=9010 and version=001 while the service actually runs on 9011 (build 002) after the Logitech G HUB squat. Reconcile the config rows + registry so there is one source of truth."},
+        {"title": "Per-caller rate limiting", "detail": "No throttling exists. A misbehaving agent could spam log_* or exhaust the local Ollama embedder. Add per-agent rate limits once auth identifies callers."}
+      ]
+    },
+    {
+      "name": "Memory Quality",
       "priority": "medium",
       "items": [
-        {
-          "title": "Capture this project's roadmap here",
-          "detail": "Add high / medium / low priority items as planning progresses."
-        }
+        {"title": "Backfill embeddings for legacy rows", "detail": "Decisions/features/sessions logged before a Chroma write succeeded (or while Chroma was down — embedding is best-effort) may be missing from the vector store. Add a reconcile pass that re-embeds any SQL row absent from its Chroma collection."},
+        {"title": "Re-rank context by relevance, not just recency", "detail": "get_context currently orders by same-project-first then recorded_at DESC. Blend in semantic similarity to the project's current phase so the briefing surfaces the most pertinent decisions, not merely the newest."},
+        {"title": "Confidence-weighted propagation", "detail": "feature_evaluations stores confidence + relevance_score but they are not yet used to auto-prioritise. Auto-adopt high-confidence/high-relevance recommendations and only queue the genuinely ambiguous ones for owner review."}
+      ]
+    },
+    {
+      "name": "Documentation Brain",
+      "priority": "medium",
+      "items": [
+        {"title": "Stale-doc enforcement loop", "detail": "docs.stale / stale_reason columns exist; wire the hive-librarian to flag docs whose content_hash drifted from their source code or that reference superseded decisions, and surface them on the compliance board."},
+        {"title": "Graph-aware search", "detail": "doc_relationships holds 2,203 typed edges (belongs_to/references/links_to/...). Extend search to traverse the graph — 'show me everything connected to this decision' — instead of returning isolated vector hits."}
+      ]
+    },
+    {
+      "name": "Operations & Observability",
+      "priority": "low",
+      "items": [
+        {"title": "Poll-log retention", "detail": "poll_log (18,718) and compliance_log (46,654) grow unbounded. Add a rolling retention/VACUUM policy so qi_brain.db stays lean."},
+        {"title": "Brain self-state in the ecosystem snapshot", "detail": "The Brain logs every other project's state but rarely logs its own. Have the poller record qi_brain's own project_state so the snapshot reflects the backbone too."},
+        {"title": "Richer /api/status for Mission Control", "detail": "Expose poller last-run, distiller queue depth, Chroma per-collection counts, and provider reachability in one endpoint for the QI Hive Mission Control board."}
       ]
     }
   ]

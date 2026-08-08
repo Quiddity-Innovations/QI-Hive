@@ -57,7 +57,7 @@ exact provider-id equality; match on the prefix before the first `/`.
 | **EasyFlow** | ✅ Ready (flip in UI) | Hub-first in extension chat + AI triage, falls back to configured provider | Extension Options → Settings → **"QI LLM Hub"** card → select "QI LLM Hub first" (reload extension once after update) |
 | **QIH Brain** | ✅ **LIVE** (cascade restart 2026-07-02 14:19) | `openai_hub` provider (`qi_llm_hub` row, active) — verified generating via hub | `qi_brain.db → llm_providers` (role ordering still prefers local ollama for 'general'; the hub provider is selectable by id) |
 | **CogniBase** | 🟡 Vendor available | `qi_llm_hub` vendor (openai_compatible) added to settings.json | CogniBase UI vendor selector, or `defaults.chat = "qi_llm_hub"` |
-| **Retirement Analyzer** | 🟡 Provider available | `qi_llm_hub` entry in `config/ai_providers.json` | Set `"active": "qi_llm_hub"` |
+| **Retirement Analyzer** | ✅ **LIVE + attribution** (X-QI-App: RetirementAnalyzer) | `qi_hub` entry (active) in `config/ai_providers.json`; shows "answered by <llm>" per reply; auto-falls back to local Ollama `gemma4:26b` if the hub is down | `config/ai_providers.json → "active"` / `"fallback"` |
 | **M2V** | ✅ **FLIPPED** (2026-07-02 PM) | Ollama-native shim | `config/m2v.json → ollama.url` (revert note inside) |
 | **PersonalSong** | ✅ **FLIPPED** (default; env `OLLAMA_BASE_URL` overrides) | Ollama-native shim | `routers/lyrics.py` default |
 | **Lottery Wiz** | ✅ **FLIPPED + verified live** (X-QI-App: lotterywiz) | Ollama-native shim | `server.py` default; env `OLLAMA_URL` overrides |

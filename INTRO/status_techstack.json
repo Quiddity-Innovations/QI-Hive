@@ -1,36 +1,62 @@
 {
   "table": [
-    {"layer": "Runtime Server", "technology": "FastAPI + Uvicorn", "role": "Dashboard server on port 8600 — all HTML pages and /api/tasks REST endpoints", "license": "Open source (MIT)", "version": "0.115+ (app version 3.0.0)"},
-    {"layer": "Runtime Server", "technology": "Python 3.11+", "role": "Primary language for all engine and dashboard code", "license": "Open source (PSF)", "version": "3.11"},
-    {"layer": "Runtime Server", "technology": "NSSM", "role": "Windows service manager — QI_Dashboard (port 8600), QI_HiveIngest, QI_Elevate, QI_ElevateWatchdog", "license": "Open source", "version": "2.24"},
-    {"layer": "UI Framework", "technology": "AdminLTE v4", "role": "Dashboard layout and component library (sidebar, cards, badges, tables)", "license": "Open source (MIT)", "version": "4.x"},
-    {"layer": "UI Framework", "technology": "Bootstrap 5", "role": "CSS utility framework underlying AdminLTE", "license": "Open source (MIT)", "version": "5.x"},
-    {"layer": "UI Framework", "technology": "Bootstrap Icons 1.13", "role": "Icon library used throughout the dashboard (bi-* classes)", "license": "Open source (MIT)", "version": "1.13.1"},
-    {"layer": "UI Framework", "technology": "SortableJS", "role": "Drag-and-drop kanban board — task cards draggable between columns", "license": "Open source (MIT)", "version": "1.15.0"},
-    {"layer": "UI Framework", "technology": "OverlayScrollbars", "role": "Custom scrollbar styling for the AdminLTE sidebar", "license": "Open source (MIT)", "version": "2.11.0"},
-    {"layer": "Intelligence", "technology": "QI Brain API (port 9010)", "role": "Ecosystem intelligence backend — agents, sessions, decisions, features, snapshots", "license": "Internal (QI)", "version": ""},
-    {"layer": "Intelligence", "technology": "usage_stats.py (local JSONL parser)", "role": "Claude Code cost tracking — parses ~/.claude/**/*.jsonl, no API required", "license": "Internal (QI)", "version": ""},
-    {"layer": "Elevation", "technology": "gsudo", "role": "Privilege elevation helper — 8-hour credential cache so UAC prompts happen once per workday", "license": "Open source (MIT)", "version": ""},
-    {"layer": "Elevation", "technology": "QI_Elevate broker + QI_ElevateWatchdog", "role": "Autonomous service control: any Claude session drops a JSON command → broker runs it as LocalSystem", "license": "Internal (QI)", "version": ""},
-    {"layer": "Data", "technology": "JSON files (status.json, tasks.json)", "role": "Project registry and kanban task store — file-based, no DB required for core dashboard", "license": "N/A", "version": ""},
-    {"layer": "Data", "technology": "Claude Code JSONL sessions (~/.claude/)", "role": "Source of LLM usage data — parsed by usage_stats.py for cost and token tracking", "license": "Anthropic proprietary format", "version": ""}
+    {"layer": "Language", "technology": "Python", "role": "Primary language for the Brain, dashboard, agent pipeline, and all engine code", "license": "PSF (open source)", "version": "3.11 (C:\\1-AI\\APPS\\PYTHON)"},
+    {"layer": "Web Framework", "technology": "FastAPI", "role": "Both the Hive Dashboard (:8600) and the QI Brain API (:9011)", "license": "MIT", "version": "0.115+"},
+    {"layer": "Web Framework", "technology": "Uvicorn", "role": "ASGI server hosting the FastAPI apps", "license": "BSD", "version": "0.30+"},
+    {"layer": "Web Framework", "technology": "Pydantic", "role": "Request/response models + validators (field_validator pid normalisation)", "license": "MIT", "version": "2.x"},
+    {"layer": "Dashboard UI", "technology": "AdminLTE", "role": "Layout + component library (sidebar, cards, badges, tables)", "license": "MIT", "version": "4.x"},
+    {"layer": "Dashboard UI", "technology": "Bootstrap", "role": "CSS utility framework underlying AdminLTE", "license": "MIT", "version": "5.x"},
+    {"layer": "Dashboard UI", "technology": "Bootstrap Icons", "role": "bi-* icon set used throughout the dashboard and the status tabs", "license": "MIT", "version": "1.13.1"},
+    {"layer": "Dashboard UI", "technology": "SortableJS", "role": "Drag-and-drop kanban board between columns", "license": "MIT", "version": "1.15.0"},
+    {"layer": "Knowledge Store", "technology": "SQLite", "role": "Brain catalog — 24 tables (decisions, features, sessions, docs, dispatches, compliance) in data/qi_brain.db", "license": "Public domain", "version": "3.x (WAL mode)"},
+    {"layer": "Knowledge Store", "technology": "ChromaDB", "role": "Vector store for semantic search over decisions/features/sessions/docs", "license": "Apache-2.0", "version": "0.5.x (PersistentClient)"},
+    {"layer": "AI / Embeddings", "technology": "Ollama (nomic-embed-text)", "role": "Local embedding model for the Chroma collections — no cloud API", "license": "Open source models", "version": "nomic-embed-text"},
+    {"layer": "AI / Reasoning", "technology": "Ollama (qwen3, deepseek-r1, gemma)", "role": "Local LLM providers for evaluation/distillation (feature propagation)", "license": "Open source models", "version": "qwen3:8b / :4b, deepseek-r1:8b, gemma"},
+    {"layer": "Agent Substrate", "technology": "Claude (Opus / Sonnet / Haiku)", "role": "The hive-* sub-agents run on tiered Claude models per the Dispatch Protocol", "license": "Anthropic (commercial)", "version": "Opus 4.x / Sonnet 4.x / Haiku 4.x"},
+    {"layer": "Agent Substrate", "technology": "Model Context Protocol (MCP)", "role": "qi-brain stdio server exposes 12 Brain tools to Claude Code", "license": "Open spec", "version": "JSON-RPC 2.0"},
+    {"layer": "Service Fabric", "technology": "NSSM", "role": "Runs every QI_ service (Dashboard, BrainAPI, Elevate, HiveIngest, HiveApply, InspectorDrain, tunnels)", "license": "Public domain", "version": "2.24 (engine/bin/nssm.exe)"},
+    {"layer": "Service Fabric", "technology": "QI_Elevate broker", "role": "LocalSystem daemon executing whitelisted admin commands for autonomous service control", "license": "Internal (QI)", "version": "engine/common/qi_elevate.py"},
+    {"layer": "Service Fabric", "technology": "Windows sc.exe", "role": "Preferred service start/stop (nssm OpenService access-denied workaround)", "license": "Microsoft (OS)", "version": "Windows 11"},
+    {"layer": "Networking", "technology": "Cloudflare Tunnel (cloudflared)", "role": "Static named tunnels — one permanent subdomain per app on quiddityinnovations.com", "license": "Proprietary (free tier)", "version": "named tunnels (migrated 2026-06-20)"},
+    {"layer": "Networking", "technology": "Caddy", "role": "LAN reverse proxy — qi.local front door with internal-CA HTTPS (QI_Caddy)", "license": "Apache-2.0", "version": "engine/bin/caddy.exe"},
+    {"layer": "Governance", "technology": "qi_registry.json", "role": "Single source of truth — ports, paths, statuses, contracts for 25 projects", "license": "Internal (QI)", "version": "schema in _meta"},
+    {"layer": "Governance", "technology": "qi_validator.py / qi_new_project.py", "role": "Compliance checker + compliant-project scaffolder enforcing the Six Laws", "license": "Internal (QI)", "version": "ecosystem/"},
+    {"layer": "Usage / Cost", "technology": "Claude Code JSONL parser", "role": "usage_stats.py reads ~/.claude/**/*.jsonl for cost/token tracking — no API key", "license": "Internal (QI)", "version": "engine/common/usage_stats.py"},
+    {"layer": "Persistence", "technology": "JSON state files", "role": "status.json / tasks.json — dashboard fallback + kanban store when Brain is offline", "license": "N/A", "version": "data/"},
+    {"layer": "Version Control", "technology": "Git + GitHub", "role": "Source at Quiddity-Innovations/QI-Hive; nightly auto-sync", "license": "GPL / proprietary", "version": "git"}
   ],
   "descriptions": [
     {
-      "title": "Server-rendered HTML, no SPA",
-      "body": "QI Hive Dashboard renders each page as a Python function that returns an HTML string. There is no React, no Vue, no client-side routing. This is intentional: the dashboard is a development tool, not a user-facing product. Server-rendered pages are simpler to maintain, easier to debug (view-source shows the real state), and work without a JavaScript build step. AdminLTE v4 provides the visual polish via CDN CSS/JS."
+      "title": "FastAPI dashboard — server-rendered, no SPA",
+      "body": "The Hive Dashboard (engine/hive/dashboard/server.py, ~7800 lines) renders each page as a Python function returning an HTML string — no React, no client-side router, no JS build step. This is intentional: the dashboard is an internal development/operations tool, not a customer product. Server-rendered pages are trivial to debug (view-source shows real state), and AdminLTE v4 over CDN supplies the visual polish. The same app serves the JSON REST API (/api/tasks, /api/health, /api/usage/*, /api/library/*) that the few interactive pages (kanban, Documentation Brain) call."
     },
     {
-      "title": "Elevation broker design",
-      "body": "The core problem: Claude Code sessions run as a normal user, but restarting NSSM services requires admin rights. Windows UAC prompts block autonomous loops. The solution is a three-piece system: gsudo caches admin credentials for 8 hours (one UAC per workday). The elevation broker (QI_Elevate) runs as LocalSystem via NSSM. Any Claude session drops a JSON command file into C:\\QIH\\commands\\pending\\, the broker picks it up and executes it. The whitelist regex ensures only pre-approved commands (nssm start/stop/restart for registered services) are accepted."
+      "title": "QI Brain — SQLite + ChromaDB knowledge substrate",
+      "body": "The Brain (engine/brain/api.py, :9011) keeps two stores in lockstep. SQLite (data/qi_brain.db, 24 tables) is the authoritative catalog of 491 decisions, 394 features, 564 sessions, 239 project-state snapshots, 921 docs, and 2203 doc relationships. ChromaDB (engine/brain/qi_memory/) holds the vector index for semantic search across four collections. Writes go to SQL first (durable) and embed best-effort — if Chroma or Ollama is down the row is still cataloged and re-embedded later. Because Chroma's PersistentClient isn't consistent across processes, POST /api/admin/reload_memory drops the cached store so out-of-process harvests are served fresh without a restart."
     },
     {
-      "title": "Usage stats — no API keys required",
-      "body": "Claude Code writes a JSONL session log for every conversation at ~/.claude/projects/**/*.jsonl. Each line is a JSON object with token counts per turn and model info. usage_stats.py reads these files directly — no Anthropic API call, no authentication. It applies the public token pricing table (Opus/Sonnet/Haiku input/output rates, plus cache token multipliers) to produce per-day, per-project, and per-model cost breakdowns. Results are cached in memory for 30 seconds to keep dashboard page loads fast."
+      "title": "NSSM service fabric + the elevation broker",
+      "body": "Every long-running QI piece is a Windows service prefixed QI_ and managed by a single standardized NSSM at engine/bin/nssm.exe. QI Hive owns QI_Dashboard, QI_BrainAPI, QI_Elevate, QI_HiveIngest, QI_HiveApply, QI_HiveInspectorDrain, and QI_DashboardTunnel. The hard problem is autonomy: Claude sessions run as a normal user but restarting a service needs admin, and UAC blocks unattended loops. The QI_Elevate broker runs as LocalSystem, watches commands/pending/*.json, and executes only regex-whitelisted commands (no shell, no expansion) — so qi_service.py can restart any service from any session with zero prompts. qi_service.py prefers sc.exe over nssm for start/stop after an OpenService access-denied discovery."
     },
     {
-      "title": "QI Brain vs local fallbacks",
-      "body": "QI Brain (port 9010) is the ecosystem intelligence layer. When Brain is online, the Hive page shows real counts: sessions logged, decisions recorded, features tracked. When Brain is offline, qi_brain_client.py falls back to local inference: project count from status.json, decision proxy from session summary .docx count in the shared folder, feature proxy from tasks.json task count, session count from usage_stats.sessions_log(). The fallback numbers are reasonable approximations — not exact — until the Brain backfill is complete."
+      "title": "Cloudflare named tunnels — permanent public URLs",
+      "body": "Before 2026-06-20 every public app used a quick tunnel whose *.trycloudflare.com URL changed on each restart — breaking the dashboard's link tiles and any saved webhook. The migration (engine/tunnels/migrate_named_tunnels.py, tunnels.json) moved every app to a static named tunnel on the new domain quiddityinnovations.com, one tunnel per product for fault isolation. The Hive itself lives at hive.quiddityinnovations.com. link_collector.py and static_urls.url_for_port() resolve each service's permanent URL from tunnels.json, with quick-tunnel log-tailing kept only as a fallback."
+    },
+    {
+      "title": "The sub-agent system + Dispatch Protocol",
+      "body": "QI Hive turns Claude Code into an eight-role team: architect (Opus, design only), builder (Sonnet, implementation), inspector (Sonnet, read-only review), ops/scout/scribe/tester (Haiku), and the librarian over the doc index. The agents are Claude Code sub-agents (.claude/agents/hive-*.md) invoked via Agent(subagent_type=hive-<role>). The main thread is the dispatcher — DISPATCH_PROTOCOL.md maps each task type to a role and codifies the design->build->inspect->scribe workflow and the anti-patterns (no architect reasoning in the main thread, never skip the inspector, honest agent attribution, one level of delegation deep). Model tiering keeps Opus tokens for reasoning and Haiku for triage."
+    },
+    {
+      "title": "The registry + the Six Laws (governance)",
+      "body": "qi_registry.json is the constitution's first law — the single source of truth for every project's port block, path, status, and integration contract (25 entries today). qi_validator.py checks a project against it; qi_new_project.py registers-then-scaffolds so no project is ever hand-built non-compliant. The Six Laws (QI_Architecture_Principles.md) bind all projects: registry truth, the /health+/version+/info module contract, independence with graceful degradation, contract-first APIs, an always-current registry, and Law 6 — owner override plus mandatory best-practice surfacing. The Inspector (engine/hive/inspector/inspector.py) enforces these continuously, auto-fixing safe drift and filing dispatches for the rest."
+    },
+    {
+      "title": "Documentation Brain — federated index + knowledge graph",
+      "body": "doc_harvester.py walks every documentation source across the ecosystem and catalogs each file into the docs table (921 rows) without moving it — storage stays federated. It derives typed edges into doc_relationships (2203) to build a TheBrain-style Plex graph linking docs, projects, decisions, features, and sessions, and embeds the text into the qi_docs Chroma collection for semantic search. The harvest is idempotent (content-hash skips), marks logs/minutes/version-history stale after 45 days, and excludes archive snapshots so duplicate-group noise never crowds live docs. The hive-librarian agent and the /library dashboard page are the retrieval front ends."
+    },
+    {
+      "title": "LLM usage tracking — no API keys required",
+      "body": "Claude Code writes a JSONL log for every conversation under ~/.claude/projects/**/*.jsonl, one JSON object per turn with token counts and model. usage_stats.py reads these files directly — no Anthropic API call, no auth — applies the public token pricing table (Opus/Sonnet/Haiku input/output plus cache-token multipliers), and produces per-day, per-project, and per-model cost breakdowns. It also computes the savings from routing work to local Ollama models instead of Claude. Results are cached briefly so dashboard page loads stay fast."
     }
   ]
 }

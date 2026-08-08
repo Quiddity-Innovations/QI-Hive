@@ -1,0 +1,592 @@
+{
+  "generated": "2026-06-23",
+  "note": "auto_safe=true -> rename + reference-rewrite automatically. risk!=[] -> needs explicit handling (task/hook/backup updated or skipped).",
+  "scheduled_task_bat_refs": {
+    "run_bridge_health.bat": [
+      "QI_ClaudeVoiceBridgeCheck"
+    ],
+    "start_meeting_room.bat": [
+      "QI_ClaudeVoiceMeeting_8AM"
+    ],
+    "run_cycle.bat": [
+      "QI_TubeScout_AM",
+      "QI_TubeScout_PM"
+    ]
+  },
+  "nssm_hook_bats": [],
+  "count_total": 53,
+  "count_auto_safe": 36,
+  "entries": [
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\run_realtime.bat",
+      "current": "run_realtime.bat",
+      "product": "ClaudeVoice",
+      "role": "Run",
+      "proposed": "ClaudeVoice_Run.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\say.bat",
+      "current": "say.bat",
+      "product": "ClaudeVoice",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\talk.bat",
+      "current": "talk.bat",
+      "product": "ClaudeVoice",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\install_meeting_service.bat",
+      "current": "install_meeting_service.bat",
+      "product": "ClaudeVoice",
+      "role": "Install",
+      "proposed": "ClaudeVoice_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\install_service.bat",
+      "current": "install_service.bat",
+      "product": "ClaudeVoice",
+      "role": "Install",
+      "proposed": "ClaudeVoice_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_bridge_health.bat",
+      "current": "run_bridge_health.bat",
+      "product": "ClaudeVoice",
+      "role": "Run",
+      "proposed": "ClaudeVoice_Run.bat",
+      "tasks": [
+        "QI_ClaudeVoiceBridgeCheck"
+      ],
+      "risk": [
+        "scheduled-task"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_control.bat",
+      "current": "run_control.bat",
+      "product": "ClaudeVoice",
+      "role": "Control",
+      "proposed": "ClaudeVoice_Control.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_line.bat",
+      "current": "run_line.bat",
+      "product": "ClaudeVoice",
+      "role": "Run",
+      "proposed": "ClaudeVoice_Run.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_meeting.bat",
+      "current": "run_meeting.bat",
+      "product": "ClaudeVoice",
+      "role": "Run",
+      "proposed": "ClaudeVoice_Run.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_realtime.bat",
+      "current": "run_realtime.bat",
+      "product": "ClaudeVoice",
+      "role": "Run",
+      "proposed": "ClaudeVoice_Run.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_server.bat",
+      "current": "run_server.bat",
+      "product": "ClaudeVoice",
+      "role": "Start",
+      "proposed": "ClaudeVoice_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_telegram.bat",
+      "current": "run_telegram.bat",
+      "product": "ClaudeVoice",
+      "role": "Run",
+      "proposed": "ClaudeVoice_Run.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_webcall.bat",
+      "current": "run_webcall.bat",
+      "product": "ClaudeVoice",
+      "role": "Run",
+      "proposed": "ClaudeVoice_Run.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\say.bat",
+      "current": "say.bat",
+      "product": "ClaudeVoice",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\start_meeting_room.bat",
+      "current": "start_meeting_room.bat",
+      "product": "ClaudeVoice",
+      "role": "Start",
+      "proposed": "ClaudeVoice_Start.bat",
+      "tasks": [
+        "QI_ClaudeVoiceMeeting_8AM"
+      ],
+      "risk": [
+        "scheduled-task"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\talk.bat",
+      "current": "talk.bat",
+      "product": "ClaudeVoice",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\CLAUDE\\Dashboard\\install_service.bat",
+      "current": "install_service.bat",
+      "product": "Hive",
+      "role": "Install",
+      "proposed": "Hive_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\CLAUDE\\Dashboard\\start_dashboard.bat",
+      "current": "start_dashboard.bat",
+      "product": "Hive",
+      "role": "Start",
+      "proposed": "Hive_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NAYA\\install_naya_watchdog.bat",
+      "current": "install_naya_watchdog.bat",
+      "product": "Naya",
+      "role": "Install",
+      "proposed": "Naya_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NAYA\\naya_control.bat",
+      "current": "naya_control.bat",
+      "product": "Naya",
+      "role": "Control",
+      "proposed": "Naya_Control.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NAYA\\start_naya.bat",
+      "current": "start_naya.bat",
+      "product": "Naya",
+      "role": "Start",
+      "proposed": "Naya_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NAYA\\tools\\Naya Folder Picker.bat",
+      "current": "Naya Folder Picker.bat",
+      "product": "Naya",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\NEXUS\\NEXUS_Setup.bat",
+      "current": "NEXUS_Setup.bat",
+      "product": "NEXUS",
+      "role": "Install",
+      "proposed": "NEXUS_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NEXUS\\Start_NEXUS.bat",
+      "current": "Start_NEXUS.bat",
+      "product": "NEXUS",
+      "role": "Start",
+      "proposed": "NEXUS_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NEXUS\\Start_NEXUS_Scout_Only.bat",
+      "current": "Start_NEXUS_Scout_Only.bat",
+      "product": "NEXUS",
+      "role": "Start",
+      "proposed": "NEXUS_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NEXUS\\fix_service_path.bat",
+      "current": "fix_service_path.bat",
+      "product": "NEXUS",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\NEXUS\\install_nexus_service.bat",
+      "current": "install_nexus_service.bat",
+      "product": "NEXUS",
+      "role": "Install",
+      "proposed": "NEXUS_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NEXUS\\install_nexus_tunnel.bat",
+      "current": "install_nexus_tunnel.bat",
+      "product": "NEXUS",
+      "role": "Install",
+      "proposed": "NEXUS_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NEXUS\\nexus_control.bat",
+      "current": "nexus_control.bat",
+      "product": "NEXUS",
+      "role": "Control",
+      "proposed": "NEXUS_Control.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\NEXUS\\restart_nexus.bat",
+      "current": "restart_nexus.bat",
+      "product": "NEXUS",
+      "role": "Restart",
+      "proposed": "NEXUS_Restart.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\PersonalSong\\install_service.bat",
+      "current": "install_service.bat",
+      "product": "PersonalSong",
+      "role": "Install",
+      "proposed": "PersonalSong_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\PersonalSong\\run_queue.bat",
+      "current": "run_queue.bat",
+      "product": "PersonalSong",
+      "role": "Start",
+      "proposed": "PersonalSong_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\PersonalSong\\run_server.bat",
+      "current": "run_server.bat",
+      "product": "PersonalSong",
+      "role": "Start",
+      "proposed": "PersonalSong_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\fix_logfile.bat",
+      "current": "fix_logfile.bat",
+      "product": "Maia",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\fix_nssm_logs.bat",
+      "current": "fix_nssm_logs.bat",
+      "product": "Maia",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\fix_tunnel_service.bat",
+      "current": "fix_tunnel_service.bat",
+      "product": "Maia",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\register_nightly_sync.bat",
+      "current": "register_nightly_sync.bat",
+      "product": "Maia",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\restart_maia.bat",
+      "current": "restart_maia.bat",
+      "product": "Maia",
+      "role": "Restart",
+      "proposed": "Maia_Restart.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\restart_tunnel_and_update.bat",
+      "current": "restart_tunnel_and_update.bat",
+      "product": "Maia",
+      "role": "Restart",
+      "proposed": "Maia_Restart.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\schedule_reconcile.bat",
+      "current": "schedule_reconcile.bat",
+      "product": "Maia",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\setup_named_tunnel.bat",
+      "current": "setup_named_tunnel.bat",
+      "product": "Maia",
+      "role": "Install",
+      "proposed": "Maia_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\setup_service.bat",
+      "current": "setup_service.bat",
+      "product": "Maia",
+      "role": "Install",
+      "proposed": "Maia_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\fix_service_path.bat",
+      "current": "fix_service_path.bat",
+      "product": "Maia",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\fix_tunnel_logpath.bat",
+      "current": "fix_tunnel_logpath.bat",
+      "product": "Maia",
+      "role": null,
+      "proposed": null,
+      "tasks": [],
+      "risk": [
+        "no-role/product"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\install_maia_services.bat",
+      "current": "install_maia_services.bat",
+      "product": "Maia",
+      "role": "Install",
+      "proposed": "Maia_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\install_watchdog.bat",
+      "current": "install_watchdog.bat",
+      "product": "Maia",
+      "role": "Install",
+      "proposed": "Maia_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\maia_control - (backup on 03-24-2026).bat",
+      "current": "maia_control - (backup on 03-24-2026).bat",
+      "product": "Maia",
+      "role": "Control",
+      "proposed": "Maia_Control.bat",
+      "tasks": [],
+      "risk": [
+        "backup-file"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\QI\\maia_control.bat",
+      "current": "maia_control.bat",
+      "product": "Maia",
+      "role": "Control",
+      "proposed": "Maia_Control.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\QI\\restart_maiabot.bat",
+      "current": "restart_maiabot.bat",
+      "product": "Maia",
+      "role": "Restart",
+      "proposed": "Maia_Restart.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\TUBESCOUT\\Start_TubeScout.bat",
+      "current": "Start_TubeScout.bat",
+      "product": "TubeScout",
+      "role": "Start",
+      "proposed": "TubeScout_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\TUBESCOUT\\install_service_admin.bat",
+      "current": "install_service_admin.bat",
+      "product": "TubeScout",
+      "role": "Install",
+      "proposed": "TubeScout_Install.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    },
+    {
+      "path": "C:\\TUBESCOUT\\run_cycle.bat",
+      "current": "run_cycle.bat",
+      "product": "TubeScout",
+      "role": "Start",
+      "proposed": "TubeScout_Start.bat",
+      "tasks": [
+        "QI_TubeScout_AM",
+        "QI_TubeScout_PM"
+      ],
+      "risk": [
+        "scheduled-task"
+      ],
+      "auto_safe": false
+    },
+    {
+      "path": "C:\\TUBESCOUT\\start_server.bat",
+      "current": "start_server.bat",
+      "product": "TubeScout",
+      "role": "Start",
+      "proposed": "TubeScout_Start.bat",
+      "tasks": [],
+      "risk": [],
+      "auto_safe": true
+    }
+  ]
+}

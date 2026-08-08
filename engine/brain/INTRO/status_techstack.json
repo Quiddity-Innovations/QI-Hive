@@ -1,24 +1,46 @@
 {
   "table": [
-    {
-      "layer": "Runtime",
-      "technology": "Python 3.11+",
-      "role": "Primary language (placeholder — confirm).",
-      "license": "Open source (PSF)",
-      "version": "3.11"
-    },
-    {
-      "layer": "Hosting",
-      "technology": "Local Windows",
-      "role": "Runs on the Quiddity dev machine at C:\\QIH\\engine\\brain.",
-      "license": "N/A",
-      "version": ""
-    }
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the API, MCP server, core stores, poller, distiller, feature engine, and doc harvester", "license": "PSF (open source)", "version": "3.11+"},
+    {"layer": "API Server", "technology": "FastAPI", "role": "REST API on port 9011 — 40+ endpoints: the 12 MCP-backed memory tools plus status, agents, heartbeats, war room, dispatch, compliance, poller, distiller, inbox", "license": "MIT", "version": ">=0.115"},
+    {"layer": "API Server", "technology": "Uvicorn", "role": "ASGI server running the FastAPI app as the QI_BrainAPI Windows service", "license": "BSD", "version": ">=0.30"},
+    {"layer": "API Server", "technology": "Pydantic", "role": "Request models + validation (GetContextRequest, LogDecisionRequest, ...); field_validator normalizes every project_id to lowercase_snake_case", "license": "MIT", "version": ">=2.7"},
+    {"layer": "MCP", "technology": "JSON-RPC 2.0 over stdio", "role": "mcp.py exposes 12 tools to Claude; thin stdin/stdout bridge forwarding to the FastAPI endpoints (no port)", "license": "MIT (spec)", "version": "protocol 2024-11-05"},
+    {"layer": "Database", "technology": "SQLite (qi_brain.db)", "role": "Source-of-truth store: 25 tables (decisions, features, sessions, project_state, docs, doc_relationships, dispatches, compliance_log, agents, ...)", "license": "Public domain", "version": "3.x (WAL mode)"},
+    {"layer": "Vector Store", "technology": "ChromaDB", "role": "Semantic memory: PersistentClient at qi_memory/, 4 collections (qi_decisions/qi_features/qi_sessions/qi_docs), cosine HNSW", "license": "Apache 2.0", "version": ">=0.5"},
+    {"layer": "Embeddings", "technology": "nomic-embed-text (via Ollama)", "role": "The only embedder — 768-dim vectors for every decision/feature/session/doc; local + free", "license": "Apache 2.0", "version": "nomic-embed-text"},
+    {"layer": "AI — Local", "technology": "Ollama", "role": "Local runtime hosting the embedder + evaluation models (qwen3:8b eval, qwen3:4b/deepseek-r1:8b general, gemma4:31b heavy); /api/generate + /api/embeddings", "license": "MIT", "version": "qwen3:8b / nomic-embed-text"},
+    {"layer": "Async / HTTP", "technology": "httpx", "role": "Async HTTP client — provider adapters call Ollama, the MCP bridge calls the FastAPI app", "license": "BSD", "version": ">=0.27"},
+    {"layer": "Async / HTTP", "technology": "asyncio", "role": "Async endpoints + the MCP stdio loop; run_in_executor avoids the Windows ProactorEventLoop pipe crash", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Background", "technology": "threading", "role": "Poller runs as a daemon thread started at API import; reads project state files + git on an interval", "license": "PSF (stdlib)", "version": "stdlib"},
+    {"layer": "Git", "technology": "git CLI (subprocess)", "role": "Poller shells out to git log --since to detect recent commits per project without an API push", "license": "GPLv2", "version": "system git"},
+    {"layer": "Documents", "technology": "python-docx", "role": "Doc harvester extracts text from .docx session summaries + project docs for indexing/embedding", "license": "MIT", "version": ">=1.1"},
+    {"layer": "Config", "technology": "qi_registry.json (QI ecosystem)", "role": "bootstrap seeds the projects table from the shared registry at C:\\QIH\\ecosystem; CORS/ports follow QI standards", "license": "Internal (QI)", "version": "ecosystem registry"},
+    {"layer": "Operations", "technology": "NSSM", "role": "QI_BrainAPI Windows service (AppDirectory C:\\QIH, runs api.py); standardized nssm.exe at C:\\QIH\\engine\\bin", "license": "Public domain", "version": "nssm 2.24"}
   ],
   "descriptions": [
     {
-      "title": "Stack details pending",
-      "body": "This is a seed entry. Replace with the real technology breakdown once the QI Brain stack is finalised."
+      "title": "Why two stores (SQLite + ChromaDB), not one",
+      "body": "The Brain keeps a relational store and a vector store deliberately, because they answer different questions. SQLite (qi_brain.db) is the source of truth: foreign-keyed, exact, auditable — 'what exactly did project X decide, and was it superseded?'. ChromaDB is the recall layer — 'have we ever dealt with anything like concurrent database writes?'. Every log_decision / log_feature / log_session first commits the SQL row (authoritative), then embeds a vectorized copy into the matching Chroma collection. The embed is wrapped in try/except and never blocks: if ChromaDB is down, the structured record still lands, and a future reconcile pass can re-embed it. This is why the SQL counts (491 decisions) are the trustworthy numbers and Chroma is treated as a rebuildable index."
+    },
+    {
+      "title": "The MCP server is intentionally dumb",
+      "body": "Per the project's own design rule (Supplement A I-01), ALL logic lives in api.py and mcp.py is ~150 lines of forwarders. The MCP server speaks JSON-RPC 2.0 over stdio, answers initialize/tools/list with 12 tool schemas, and on tools/call simply POSTs or GETs the matching FastAPI path on :9011. The payoff: the exact same 12 operations are available to a Claude session (via MCP) and to any other service (via plain REST), with one implementation. It also means the Brain can be restarted or upgraded without touching the MCP registration in claude.json — and a ConnectError surfaces as a clean 'Brain API unreachable at :9011' instead of a cryptic stack trace."
+    },
+    {
+      "title": "Token-budgeted context, ranked",
+      "body": "qi_get_context is the most-called tool and is built to fit a session's opening budget. It fetches the latest project_state, then decisions that are not superseded AND (belong to this project OR are ecosystem/global scope) AND are within context_days (14), ordered same-project-first then newest-first. It walks that list accumulating an estimated token cost and stops at token_budget (default 2000). The result is a briefing that prioritises what THIS project decided, folds in ecosystem-wide rulings that bind everyone, and never blows the context window — so a fresh agent is oriented in one call instead of re-reading docs by hand."
+    },
+    {
+      "title": "Config-driven providers — nothing hardcoded",
+      "body": "No model name or base_url appears in Brain source. The llm_providers table holds 5 active rows (qwen3:8b for eval, qwen3:4b + deepseek-r1:8b general, gemma4:31b heavy, nomic-embed-text for embeddings), each with a provider_type that ProviderFactory maps to a Python adapter class. API keys are referenced by the NAME of an env var (api_key_env), never stored as a value. get_by_role('embed') returns the embedder; the feature engine asks for the 'eval' role. Swapping the evaluation model is a single UPDATE, not a code change — and because the embedder is local nomic-embed-text via Ollama, the whole memory layer runs at zero marginal cost."
+    },
+    {
+      "title": "Stays current on its own (poller + inbox)",
+      "body": "The Brain does not depend on agents remembering to push. A daemon poller thread (started at API import) runs every poll_interval_s (300) and, for each registered project, reads its data/state.json and the output of git log --since the last check, and processes any JSON files dropped in inbox/ that are older than poll_min_file_age_s (so it never reads a half-written file). 18,718 poll cycles are logged. This makes the Brain eventually-consistent with reality even between sessions, and gives non-Claude tools a zero-API way to send the Brain a message: just write a file."
+    },
+    {
+      "title": "Feature propagation — a local LLM as relevance judge",
+      "body": "When a feature is logged with propagate_now (or via propagate_all_pending), feature_engine asks the local eval model (qwen3:8b) whether each OTHER active project should adopt/adapt/skip/discuss it. The prompt is fed the last 5 evaluations for that target as soft historical context (so recommendations stay consistent with how the project has decided before), and the model must return strict JSON {relevance_score, recommendation, reasoning, confidence}. Bad JSON triggers exactly one retry; a second failure falls back to a low-confidence 'discuss' so nothing is silently dropped. Results land in feature_evaluations for the owner to confirm — the machine proposes, the human disposes (Law 6)."
     }
   ]
 }

@@ -1,0 +1,155 @@
+{
+  "generated": "2026-06-23",
+  "tier": 2,
+  "renames": [
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_line.bat",
+      "current": "run_line.bat",
+      "new": "ClaudeVoice_Run_Line.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_meeting.bat",
+      "current": "run_meeting.bat",
+      "new": "ClaudeVoice_Run_Meeting.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_realtime.bat",
+      "current": "run_realtime.bat",
+      "new": "ClaudeVoice_Run_Realtime.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_telegram.bat",
+      "current": "run_telegram.bat",
+      "new": "ClaudeVoice_Run_Telegram.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_webcall.bat",
+      "current": "run_webcall.bat",
+      "new": "ClaudeVoice_Run_Webcall.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_bridge_health.bat",
+      "current": "run_bridge_health.bat",
+      "new": "ClaudeVoice_Run_BridgeHealth.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\start_meeting_room.bat",
+      "current": "start_meeting_room.bat",
+      "new": "ClaudeVoice_Start_MeetingRoom.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\install_service.bat",
+      "current": "install_service.bat",
+      "new": "ClaudeVoice_Install.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\install_meeting_service.bat",
+      "current": "install_meeting_service.bat",
+      "new": "ClaudeVoice_Install_Meeting.bat"
+    },
+    {
+      "path": "C:\\QI\\restart_maiabot.bat",
+      "current": "restart_maiabot.bat",
+      "new": "Maia_Restart_Bot.bat"
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\restart_maia.bat",
+      "current": "restart_maia.bat",
+      "new": "Maia_Restart.bat"
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\restart_tunnel_and_update.bat",
+      "current": "restart_tunnel_and_update.bat",
+      "new": "Maia_Restart_TunnelUpdate.bat"
+    },
+    {
+      "path": "C:\\QI\\install_maia_services.bat",
+      "current": "install_maia_services.bat",
+      "new": "Maia_Install.bat"
+    },
+    {
+      "path": "C:\\QI\\install_watchdog.bat",
+      "current": "install_watchdog.bat",
+      "new": "Maia_Install_Watchdog.bat"
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\setup_service.bat",
+      "current": "setup_service.bat",
+      "new": "Maia_Setup.bat"
+    },
+    {
+      "path": "C:\\QI\\TOOLS\\setup_named_tunnel.bat",
+      "current": "setup_named_tunnel.bat",
+      "new": "Maia_Setup_NamedTunnel.bat"
+    },
+    {
+      "path": "C:\\NEXUS\\Start_NEXUS.bat",
+      "current": "Start_NEXUS.bat",
+      "new": "NEXUS_Start.bat"
+    },
+    {
+      "path": "C:\\NEXUS\\Start_NEXUS_Scout_Only.bat",
+      "current": "Start_NEXUS_Scout_Only.bat",
+      "new": "NEXUS_Start_ScoutOnly.bat"
+    },
+    {
+      "path": "C:\\NEXUS\\install_nexus_service.bat",
+      "current": "install_nexus_service.bat",
+      "new": "NEXUS_Install.bat"
+    },
+    {
+      "path": "C:\\NEXUS\\install_nexus_tunnel.bat",
+      "current": "install_nexus_tunnel.bat",
+      "new": "NEXUS_Install_Tunnel.bat"
+    },
+    {
+      "path": "C:\\PersonalSong\\run_queue.bat",
+      "current": "run_queue.bat",
+      "new": "PersonalSong_Start_Queue.bat"
+    },
+    {
+      "path": "C:\\PersonalSong\\run_server.bat",
+      "current": "run_server.bat",
+      "new": "PersonalSong_Start_Server.bat"
+    },
+    {
+      "path": "C:\\TUBESCOUT\\Start_TubeScout.bat",
+      "current": "Start_TubeScout.bat",
+      "new": "TubeScout_Start.bat"
+    },
+    {
+      "path": "C:\\TUBESCOUT\\start_server.bat",
+      "current": "start_server.bat",
+      "new": "TubeScout_Start_Server.bat"
+    },
+    {
+      "path": "C:\\TUBESCOUT\\run_cycle.bat",
+      "current": "run_cycle.bat",
+      "new": "TubeScout_Run_Cycle.bat"
+    }
+  ],
+  "task_updates": [
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_bridge_health.bat",
+      "new": "ClaudeVoice_Run_BridgeHealth.bat",
+      "tasks": [
+        "QI_ClaudeVoiceBridgeCheck"
+      ]
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\start_meeting_room.bat",
+      "new": "ClaudeVoice_Start_MeetingRoom.bat",
+      "tasks": [
+        "QI_ClaudeVoiceMeeting_8AM"
+      ]
+    },
+    {
+      "path": "C:\\TUBESCOUT\\run_cycle.bat",
+      "new": "TubeScout_Run_Cycle.bat",
+      "tasks": [
+        "QI_TubeScout_AM",
+        "QI_TubeScout_PM"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnBase Licensing Probe</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --ink: #1b1f24;
+    --muted: #5c6773;
+    --line: #dfe3e8;
+    --accent: #2f6fdd;
+    --accent-ink: #ffffff;
+    --term-bg: #10141a;
+    --term-ink: #d7dee8;
+    --ok: #1f8a4c;
+    --warn: #b4690e;
+    --err: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c; --panel: #1c2027; --ink: #e6e9ee; --muted: #97a1ad;
+      --line: #2c323b; --accent: #5b93f0; --term-bg: #0c0f14; --term-ink: #d7dee8;
+      --ok: #4cc487; --warn: #e0a24a; --err: #ef7b6d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    background: var(--bg); color: var(--ink);
+    font: 15px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px 18px; margin-bottom: 16px;
+  }
+  label { display: block; font-size: 12px; text-transform: uppercase;
+          letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; max-width: 320px; padding: 8px 10px; font: 14px ui-monospace, Consolas, monospace;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--bg); color: var(--ink);
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  button {
+    font: 500 14px "Segoe UI", system-ui, sans-serif; cursor: pointer;
+    padding: 9px 16px; border-radius: 6px; border: 1px solid transparent;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .desc { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .desc code { font-family: ui-monospace, Consolas, monospace; }
+  #status { font-size: 13px; margin: 0 0 8px; color: var(--muted); min-height: 20px; }
+  #status.run { color: var(--warn); }
+  #status.ok  { color: var(--ok); }
+  #status.err { color: var(--err); }
+  pre#out {
+    background: var(--term-bg); color: var(--term-ink);
+    border-radius: 8px; padding: 14px 16px; margin: 0;
+    font: 12.5px/1.5 ui-monospace, Consolas, "Cascadia Mono", monospace;
+    white-space: pre; overflow-x: auto; min-height: 260px; max-height: 62vh;
+    overflow-y: auto;
+  }
+  .note {
+    font-size: 12.5px; color: var(--muted);
+    border-left: 3px solid var(--line); padding: 2px 0 2px 12px; margin-top: 14px;
+  }
+  .tabs { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; }
+  .tab {
+    background: transparent; color: var(--muted); border: 1px solid var(--line);
+    border-bottom-color: transparent; border-radius: 8px 8px 0 0;
+    padding: 9px 16px; font-size: 13.5px;
+  }
+  .tab.active {
+    background: var(--panel); color: var(--ink); font-weight: 600;
+    border-bottom-color: var(--panel); margin-bottom: -1px;
+  }
+  .banner {
+    border: 1px solid var(--line); border-top-left-radius: 0;
+    border-radius: 0 8px 8px 8px; background: var(--panel);
+    padding: 12px 16px; font-size: 12.5px; color: var(--muted);
+    margin-bottom: 16px; line-height: 1.6;
+  }
+  .banner strong { color: var(--ink); }
+  .banner.sql { border-left: 3px solid var(--ok); }
+  .banner.api { border-left: 3px solid var(--warn); }
+  .card.lock {
+    border-left: 3px solid var(--err); font-size: 13px;
+  }
+  .card.lock strong { color: var(--err); }
+  select {
+    padding: 8px 10px; font: 13.5px "Segoe UI", system-ui, sans-serif;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--bg); color: var(--ink); min-width: 260px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>OnBase Licensing Probe</h1>
+  <div class="sub">Two routes to the licensing question. They target <strong>different systems</strong> &mdash; read the banner on each tab.</div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" id="tabSql" role="tab" aria-selected="true">OnBase Licensing Probe (SQL)</button>
+    <button class="tab" id="tabApi" role="tab" aria-selected="false">OnBase Licensing Probe (API)</button>
+  </div>
+
+  <section id="paneSql">
+  <div class="banner sql">
+    <strong>Target:</strong> local VM <code>192.168.251.128</code> &rarr; SQL Server &rarr; database <code>Nautilus</code>, schema <code>hsi</code> &mdash; <strong>OnBase&nbsp;13</strong>.
+    Reads the database directly, bypassing OnBase entirely. Consumes no license seat.
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="host">Target host<span style="text-transform:none"> (ip or name, optional <code>,port</code>)</span></label>
+        <input type="text" id="host" value="192.168.251.128,1433" spellcheck="false">
+      </div>
+      <div class="btns">
+        <button id="b1">Run Probe 1</button>
+        <button id="b2">Run Probe 2</button>
+        <button id="bBoth" class="ghost">Run both</button>
+        <button id="bClear" class="ghost">Clear</button>
+      </div>
+    </div>
+    <div class="desc">
+      <strong>Probe 1</strong> &mdash; row counts across the licensing tables, full dumps of
+      <code>primarylic</code> / <code>secondarylic</code> / <code>licensedproduct</code> /
+      <code>licensedproductcontrol</code> / <code>licensecontrol</code>, non-PII columns of
+      <code>licensetable</code>, plus index and declared-type introspection.<br>
+      <strong>Probe 2</strong> &mdash; the full <code>systemtableex</code> row, every
+      <code>hsi</code> table matching <code>%lic%</code>/<code>%regist%</code> by row count,
+      <code>registeredusers</code> with machine identifiers masked, and the
+      <code>useraccount.licenseflag</code> distribution.
+    </div>
+    <div class="note">
+      Certificate and hash blobs are reported by length and prefix only &mdash; never dumped in full.
+      If the VM has been rebooted, VMware NAT may have moved it: change the host above rather than editing the scripts.
+    </div>
+  </div>
+  </section>
+
+  <section id="paneApi" hidden>
+  <div class="banner api" id="apiBannerLive">
+    <strong>Target:</strong> local VM <code>192.168.251.128:8088</code> &mdash; the guest-side Unity JSON
+    microservice (<code>poc\guest_unity_service.ps1</code>) fronting <strong>OnBase&nbsp;13</strong>.
+    Reads live through the Application Server, not the database. <strong>Live and enabled</strong> &mdash;
+    a successful run holds the guest's existing MANAGER session; it does not open a new one.
+  </div>
+  <div class="banner api" id="apiBannerBU" hidden>
+    <strong>Target:</strong> BU's Hyland Cloud, <strong>OnBase&nbsp;25</strong>, over the Unity Client SOAP
+    transport. <strong>Not the same system as the SQL tab</strong>, and not the same OnBase version as the
+    live option above.
+  </div>
+
+  <div class="card lock" id="apiLockBU" hidden>
+    <strong>Outbound connections to BU are disabled.</strong>
+    On 6&nbsp;Aug&nbsp;2026 every BU environment was set <code>"enabled": false</code>, and this page cannot
+    opt back in &mdash; the runner never sets <code>ONBASE_API_PROBE_ENABLE</code>. Re-enabling is a
+    deliberate act at a shell, requiring <em>both</em> gates to be opened by hand.
+    <div style="margin-top:8px">The button below runs <strong>local filesystem checks only</strong> against a BU selection and makes no network call of any kind.</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="apienv">Environment to probe</label>
+        <select id="apienv">
+          <option value="onbase13">onbase13 &mdash; OnBase 13 (Live POC) &mdash; LIVE</option>
+          <option value="test">test &mdash; BU TEST (obBUUT1) &mdash; locked</option>
+          <option value="dev">dev &mdash; BU DEV (obBUUT2) &mdash; locked</option>
+          <option value="ut3">ut3 &mdash; BU UT3 (obBUUT3) &mdash; locked</option>
+          <option value="prod">prod &mdash; BU PROD (obBU) &mdash; locked</option>
+        </select>
+      </div>
+      <div class="btns">
+        <button id="b3">Run probe</button>
+        <button id="bClear2" class="ghost">Clear</button>
+      </div>
+    </div>
+    <div class="desc" id="apiDescLive">
+      Confirms the Application Server actually grants a session (the licensing fact SQL cannot see),
+      lists the entitlement surface &mdash; which of the 17 configuration collections this account can
+      reach &mdash; and compares API vs SQL counts for document types, user accounts and user groups.
+      A gap between them is security trimming, not error: the API returns only what the account is
+      entitled to see.
+    </div>
+    <div class="desc" id="apiDescBU" hidden>
+      Reports each BU prerequisite independently: config readable, environment enabled or locked,
+      bridge binary present, Unity&nbsp;Client assemblies installed, credentials available.
+      When the API route cannot run, <em>which</em> prerequisite is missing is the whole answer.
+    </div>
+    <div class="note">
+      The OnBase 13 route reuses the guest's already-open MANAGER session, so running it does not
+      consume an additional seat. The BU route, if ever re-enabled, would consume a Unity Client seat
+      per call, stranded 20&ndash;60 minutes on an ungraceful kill.
+    </div>
+  </div>
+  </section>
+
+  <div class="card">
+    <p id="status">Idle.</p>
+    <pre id="out">Output appears here.</pre>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var out = document.getElementById('out');
+  var status = document.getElementById('status');
+  var hostEl = document.getElementById('host');
+  var buttons = ['b1', 'b2', 'bBoth', 'bClear', 'b3', 'bClear2'].map(function (id) {
+    return document.getElementById(id);
+  });
+
+  // Tabs
+  var tabSql = document.getElementById('tabSql');
+  var tabApi = document.getElementById('tabApi');
+  var paneSql = document.getElementById('paneSql');
+  var paneApi = document.getElementById('paneApi');
+
+  function selectTab(which) {
+    var sql = which === 'sql';
+    tabSql.classList.toggle('active', sql);
+    tabApi.classList.toggle('active', !sql);
+    tabSql.setAttribute('aria-selected', sql ? 'true' : 'false');
+    tabApi.setAttribute('aria-selected', sql ? 'false' : 'true');
+    paneSql.hidden = !sql;
+    paneApi.hidden = sql;
+  }
+  tabSql.onclick = function () { selectTab('sql'); };
+  tabApi.onclick = function () { selectTab('api'); };
+
+  var apiEnvEl = document.getElementById('apienv');
+  var apiBannerLive = document.getElementById('apiBannerLive');
+  var apiBannerBU = document.getElementById('apiBannerBU');
+  var apiLockBU = document.getElementById('apiLockBU');
+  var apiDescLive = document.getElementById('apiDescLive');
+  var apiDescBU = document.getElementById('apiDescBU');
+  var b3 = document.getElementById('b3');
+
+  function syncApiEnv() {
+    var live = apiEnvEl.value === 'onbase13';
+    apiBannerLive.hidden = !live;
+    apiBannerBU.hidden = live;
+    apiLockBU.hidden = live;
+    apiDescLive.hidden = !live;
+    apiDescBU.hidden = live;
+    b3.textContent = live ? 'Run probe' : 'Run preflight (no network)';
+  }
+  apiEnvEl.onchange = syncApiEnv;
+  syncApiEnv();
+
+  function setBusy(busy) {
+    buttons.forEach(function (b) { b.disabled = busy; });
+  }
+  function setStatus(text, cls) {
+    status.textContent = text;
+    status.className = cls || '';
+  }
+  function append(text) {
+    var atBottom = out.scrollTop + out.clientHeight >= out.scrollHeight - 30;
+    out.textContent += text;
+    if (atBottom) out.scrollTop = out.scrollHeight;
+  }
+
+  async function run(key, label) {
+    var qs = '/run?script=' + key
+           + '&host=' + encodeURIComponent(hostEl.value.trim())
+           + '&env=' + encodeURIComponent(document.getElementById('apienv').value);
+    append('\n===== ' + label + ' =====\n');
+    setStatus('Running ' + label + '…', 'run');
+
+    var res = await fetch(qs);
+    if (!res.ok) {
+      var msg = await res.text();
+      append('[error] ' + msg + '\n');
+      throw new Error(msg);
+    }
+    var reader = res.body.getReader();
+    var dec = new TextDecoder();
+    for (;;) {
+      var step = await reader.read();
+      if (step.done) break;
+      append(dec.decode(step.value, { stream: true }));
+    }
+  }
+
+  async function go(jobs) {
+    setBusy(true);
+    if (out.textContent === 'Output appears here.') out.textContent = '';
+    try {
+      for (var i = 0; i < jobs.length; i++) {
+        await run(jobs[i][0], jobs[i][1]);
+      }
+      setStatus('Finished.', 'ok');
+    } catch (e) {
+      setStatus('Failed: ' + e.message, 'err');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  document.getElementById('b1').onclick = function () { go([['1', 'Probe 1']]); };
+  document.getElementById('b2').onclick = function () { go([['2', 'Probe 2']]); };
+  document.getElementById('bBoth').onclick = function () {
+    go([['1', 'Probe 1'], ['2', 'Probe 2']]);
+  };
+  b3.onclick = function () {
+    var env = apiEnvEl.value;
+    go([['3', (env === 'onbase13' ? 'API probe (' : 'API preflight (') + env + ')']]);
+  };
+
+  function clearOut() { out.textContent = ''; setStatus('Idle.', ''); }
+  document.getElementById('bClear').onclick = clearOut;
+  document.getElementById('bClear2').onclick = clearOut;
+})();
+</script>
+</body>
+</html>

@@ -574,6 +574,11 @@
           "current": 6969,
           "recommended_block": "8700-8709",
           "notes": "Pre-registry — port 6969 chosen independently. Works correctly. Migration to 8700 block recommended only when adopting other ecosystem integrations."
+        },
+        "mcp": {
+          "current": 8701,
+          "block": "8700-8709",
+          "notes": "AutoPDF MCP Gateway (QI_AutoPDFMCP) - config-driven MCP server via C:\\AutoPDF\\tools\\qi_mcp_gateway.py + C:\\AutoPDF\\config\\mcp_gateway.json. Loopback-only and DISABLED by default; every tool is switched on individually. First port actually used from AutoPDF's allocated block (the app itself remains on pre-registry port 6969). Added 2026-08-07."
         }
       },
       "exposes": [
@@ -581,13 +586,14 @@
         "POST /api/template-test         (single PDF verification)",
         "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
         "POST /api/template-propose      (AI field proposal)",
-        "GET  /api/regex-library         (reusable patterns)"
+        "GET  /api/regex-library         (reusable patterns)",
+        "MCP :8701 - autopdf_status / autopdf_templates / autopdf_presets / autopdf_regex_library (metadata, on) + autopdf_list_pdfs / autopdf_extract / autopdf_index_preview (document content, off) + autopdf_run_workflow / autopdf_split (writes files, off). Each tool independently switchable; a disabled tool is never registered."
       ],
       "consumes": [
         "Local Ollama (optional) — Smart Mapping AI",
         "Bundled engines: Ghostscript, Poppler, Tesseract, Tabula, PDFtk, Liberica JRE"
       ],
-      "ecosystem_role": "Standalone tool. Can be called by Maia / NEXUS / FileHQ in the future to extract fields from user-supplied PDFs.",
+      "ecosystem_role": "Standalone tool, now also reachable BY AI clients through its MCP gateway (first inbound integration, 2026-08-07). Can still be called by Maia / NEXUS / FileHQ in the future to extract fields from user-supplied PDFs.",
       "loopback_only": true,
       "internet_exposed": false,
       "documentation": {
@@ -616,11 +622,25 @@
         "POST /api/template-test         (single PDF verification)",
         "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
         "POST /api/template-propose      (AI field proposal)",
-        "GET  /api/regex-library         (reusable patterns)"
+        "GET  /api/regex-library         (reusable patterns)",
+        "MCP :8701 - autopdf_status / autopdf_templates / autopdf_presets / autopdf_regex_library (metadata, on) + autopdf_list_pdfs / autopdf_extract / autopdf_index_preview (document content, off) + autopdf_run_workflow / autopdf_split (writes files, off). Each tool independently switchable; a disabled tool is never registered."
       ],
       "paths": {
         "logs": "C:\\AutoPDF\\Application\\LOGS"
-      }
+      },
+      "services": [
+        {
+          "name": "autopdf_mcp",
+          "nssm_name": "QI_AutoPDFMCP",
+          "path": "C:\\AutoPDF\\tools\\run_mcp_gateway.py",
+          "app_directory": "C:\\AutoPDF",
+          "port": 8701,
+          "start": "SERVICE_AUTO_START",
+          "logs": "C:\\AutoPDF\\Application\\LOGS\\mcp_gateway.log",
+          "register_with": "C:\\AutoPDF\\Application\\_register_mcp_service.ps1 (run elevated)",
+          "notes": "Needs no interactive desktop session (unlike AutoPDF itself, which requires one for Office COM + scanner drivers), so it runs as a real auto-start service. The 'enabled' flag in config\\mcp_gateway.json is the actual on/off switch - the process exits cleanly when false."
+        }
+      ]
     },
     {
       "id": "cognibase",

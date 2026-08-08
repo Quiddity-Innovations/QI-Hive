@@ -41,6 +41,7 @@ from __future__ import annotations
 import difflib
 import json
 import logging
+import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -64,13 +65,107 @@ def _norm_pid(pid: str) -> str:
 log = logging.getLogger("qi_brain.api")
 
 
-def _resolve_pid(conn, pid: str, field: str = "project_id") -> str:
+# ─────────────────────────────────────────────────────────────────────────────
+# Project registry sync
+#
+# qi_registry.json is the ecosystem's source of truth for which projects exist.
+# Brain's `projects` table is a mirror of it, and every write endpoint validates
+# project_id against that table. Before this sync existed the mirror was only
+# ever populated by bootstrap.py, so a newly registered project was rejected by
+# log_session / update_project_state / log_decision until someone re-ran
+# bootstrap by hand.
+# ─────────────────────────────────────────────────────────────────────────────
+
+REGISTRY_PATH = Path(
+    os.environ.get("QI_REGISTRY", r"C:\QIH\ecosystem\qi_registry.json")
+)
+
+
+def _registry_port(value: Any) -> Optional[int]:
+    """Pull a port out of a registry entry.
+
+    Shapes seen in the wild: 8506, {"current": 8506, "block": "8500-8599"},
+    and non-numeric placeholders like {"current": "stdio"} (headroom's MCP
+    transport). Anything that isn't an int becomes NULL rather than blowing up
+    the whole sync."""
+    if isinstance(value, dict):
+        value = value.get("current")
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _registry_projects() -> list[dict]:
+    """Read qi_registry.json, normalised to the `projects` table's columns."""
+    if not REGISTRY_PATH.exists():
+        log.warning("qi_registry.json not found at %s — project sync skipped", REGISTRY_PATH)
+        return []
+    try:
+        data = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:  # noqa: BLE001
+        log.warning("qi_registry.json unreadable (%s) — project sync skipped", exc)
+        return []
+
+    raw = data.get("projects", [])
+    if isinstance(raw, dict):  # registry has used both list and dict shapes
+        raw = [{"id": k, **v} for k, v in raw.items()]
+
+    out = []
+    for proj in raw:
+        pid = _norm_pid(proj.get("id") or proj.get("project_id") or "")
+        if not pid:
+            continue
+        ports = proj.get("ports") or {}
+        # The registry calls it family_tier ('backbone' | 'cousin' | 'sibling');
+        # Brain's tier column only distinguishes backbone from everything else.
+        tier = proj.get("tier") or (
+            "backbone" if proj.get("family_tier") == "backbone" else "project"
+        )
+        out.append({
+            "project_id":   pid,
+            "display_name": proj.get("name") or pid,
+            "tagline":      proj.get("description") or "",
+            "path":         proj.get("path") or "",
+            "api_port":     _registry_port(ports.get("api")),
+            "ui_port":      _registry_port(ports.get("ui")),
+            "tier":         tier,
+        })
+    return out
+
+
+def _sync_projects_from_registry(conn) -> list[str]:
+    """Insert any registry project missing from the projects table.
+
+    Insert-only by design: existing rows are never updated or deleted, so
+    Brain-side curation (hand-written taglines, tier promotions) survives, and
+    a project pulled out of the registry keeps its history intact. Returns the
+    ids actually added."""
+    added: list[str] = []
+    for proj in _registry_projects():
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO projects "
+            "  (project_id, display_name, tagline, path, api_port, ui_port, tier) "
+            "VALUES (:project_id, :display_name, :tagline, :path, :api_port, :ui_port, :tier)",
+            proj,
+        )
+        if cur.rowcount:
+            added.append(proj["project_id"])
+    if added:
+        conn.commit()
+        log.info("synced %d project(s) from qi_registry.json: %s", len(added), ", ".join(added))
+    return added
+
+
+def _resolve_pid(conn, pid: str, field: str = "project_id", _synced: bool = False) -> str:
     """Resolve a caller-supplied project id to one that actually exists in the
     projects table, so a typo can never reach the DB as a raw FOREIGN KEY 500.
 
     Resolution order:
       1. exact match after _norm_pid (case/whitespace/hyphen normalization)
       2. separator-insensitive match ('qihive' -> 'qi_hive') — deterministic, safe
+      3. re-sync from qi_registry.json and retry once — covers the project that
+         was registered in the ecosystem after Brain last synced
     Anything still unresolved raises HTTP 400 with the valid list + closest
     suggestions, instead of letting the INSERT blow up with an opaque
     IntegrityError that callers see as a generic 500."""
@@ -83,6 +178,11 @@ def _resolve_pid(conn, pid: str, field: str = "project_id") -> str:
     if canon:
         log.warning("auto-corrected %s '%s' -> '%s'", field, pid, canon)
         return canon
+    # Unknown here doesn't mean invalid — it may just be newer than our mirror.
+    # Pull the registry in and retry once before failing the caller. _synced
+    # bounds the recursion to a single extra pass.
+    if not _synced and _sync_projects_from_registry(conn):
+        return _resolve_pid(conn, pid, field, _synced=True)
     suggestions = difflib.get_close_matches(norm, known, n=3, cutoff=0.4)
     raise HTTPException(
         status_code=400,
@@ -531,14 +631,48 @@ async def search_memory(req: SearchMemoryRequest):
 @app.post("/api/admin/reload_memory")
 async def admin_reload_memory():
     """Force the API to re-read ChromaDB from disk (use after an out-of-process
-    doc_harvester run so the qi_docs index is served fresh without a restart)."""
+    doc_harvester run so the qi_docs index is served fresh without a restart).
+
+    Also re-reads qi_registry.json into the projects table — operators reached
+    for this endpoint expecting exactly that, and it used to silently return
+    ok:true while leaving an unknown project_id still unknown."""
     _reload_memory()
     counts = {}
     try:
         counts = _memory().collection_counts()
     except Exception:  # noqa: BLE001
         pass
-    return {"ok": True, "reloaded": True, "counts": counts}
+    added: list[str] = []
+    try:
+        with open_brain_db() as conn:
+            added = _sync_projects_from_registry(conn)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("reload_memory project sync failed: %s", exc)
+    return {"ok": True, "reloaded": True, "counts": counts, "projects_added": added}
+
+
+@app.post("/api/admin/sync_projects")
+async def admin_sync_projects():
+    """Mirror qi_registry.json into the projects table.
+
+    Idempotent and insert-only. Normally unnecessary — startup and the
+    unknown-project_id path both sync automatically — but useful to confirm the
+    registry and Brain agree, and to see exactly what Brain knows about."""
+    with open_brain_db() as conn:
+        added = _sync_projects_from_registry(conn)
+        known = sorted(r["project_id"] for r in conn.execute("SELECT project_id FROM projects"))
+    registry_ids = sorted(p["project_id"] for p in _registry_projects())
+    return {
+        "ok": True,
+        "registry": str(REGISTRY_PATH),
+        "registry_found": REGISTRY_PATH.exists(),
+        "added": added,
+        "project_count": len(known),
+        "valid_project_ids": known,
+        # Brain-only rows: in the table but no longer in the registry. Not an
+        # error (history is kept deliberately) — surfaced so drift is visible.
+        "not_in_registry": [p for p in known if p not in registry_ids],
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1472,6 +1606,13 @@ def _est_tokens(text: str) -> int:
 
 @app.on_event("startup")
 async def _startup():
+    # Mirror qi_registry.json into the projects table before serving traffic, so
+    # projects registered while Brain was down are accepted from the first call.
+    try:
+        with open_brain_db() as conn:
+            _sync_projects_from_registry(conn)
+    except Exception as exc:  # noqa: BLE001 — never let a sync failure block boot
+        log.warning("startup project sync failed: %s", exc)
     start_poller()
 
 

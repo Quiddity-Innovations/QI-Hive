@@ -78,6 +78,30 @@ def init_db() -> None:
                 ON login_failures(username, client_ip, failed_at);
             CREATE INDEX IF NOT EXISTS idx_sess_expiry ON sessions(expires_at);
         """)
+        # Added 2026-08-07: per-user host scoping. Empty/NULL means "every host
+        # we front", which is what every account created before this migration
+        # had implicitly -- so existing logins are unaffected.
+        cols = {r["name"] for r in c.execute("PRAGMA table_info(users)")}
+        if "allowed_hosts" not in cols:
+            c.execute("ALTER TABLE users ADD COLUMN allowed_hosts TEXT NOT NULL DEFAULT ''")
+
+
+def _parse_hosts(raw: str) -> list:
+    """'' / None -> [] (unrestricted). Otherwise a lowercased hostname list."""
+    if not raw:
+        return []
+    return [h.strip().lower() for h in str(raw).split(",") if h.strip()]
+
+
+def user_may_access(user: dict, host: str) -> bool:
+    """A user with no allowed_hosts reaches everything. Otherwise the requested
+    host must be named explicitly. Unknown/blank host fails closed for scoped
+    users -- we would rather deny than leak a host we could not identify."""
+    allowed = user.get("allowed_hosts") or []
+    if not allowed:
+        return True
+    h = (host or "").split(":")[0].strip().lower()
+    return bool(h) and h in allowed
 
 
 # ── password hashing ─────────────────────────────────────────────────────────
@@ -111,6 +135,8 @@ def _row_to_user(row: sqlite3.Row) -> dict:
         "must_change_pw": bool(row["must_change_pw"]),
         "created_at":     row["created_at"],
         "last_login_at":  row["last_login_at"],
+        "allowed_hosts":  _parse_hosts(
+            row["allowed_hosts"] if "allowed_hosts" in row.keys() else ""),
     }
 
 
@@ -135,7 +161,7 @@ def get_user(user_id: int) -> Optional[dict]:
 
 
 def create_user(username: str, password: str, role: str = "user",
-                must_change_pw: bool = False) -> dict:
+                must_change_pw: bool = False, allowed_hosts=None) -> dict:
     init_db()
     username = (username or "").strip()
     if not username:
@@ -145,18 +171,48 @@ def create_user(username: str, password: str, role: str = "user",
         raise ValueError("password must be at least 10 characters")
     if role not in ("admin", "user"):
         raise ValueError(f"unknown role: {role}")
+    hosts = _normalise_hosts(allowed_hosts)
+    if role == "admin" and hosts:
+        # An admin that cannot reach every host would be a trap: they manage
+        # accounts but could lock themselves out of the tool that does it.
+        raise ValueError("admin accounts cannot be host-scoped")
     with _conn() as c:
         try:
             cur = c.execute(
-                "INSERT INTO users(username,password_hash,role,must_change_pw,created_at)"
-                " VALUES(?,?,?,?,?)",
+                "INSERT INTO users(username,password_hash,role,must_change_pw,"
+                "created_at,allowed_hosts) VALUES(?,?,?,?,?,?)",
                 (username, hash_password(password), role,
                  1 if must_change_pw else 0,
-                 datetime.now(timezone.utc).isoformat()))
+                 datetime.now(timezone.utc).isoformat(), hosts))
             uid = cur.lastrowid
         except sqlite3.IntegrityError:
             raise ValueError(f"username already exists: {username}")
     return get_user(uid)
+
+
+def _normalise_hosts(allowed_hosts) -> str:
+    """Accepts a list or a comma string; returns the stored comma form."""
+    if not allowed_hosts:
+        return ""
+    if isinstance(allowed_hosts, str):
+        allowed_hosts = allowed_hosts.split(",")
+    return ",".join(sorted({h.strip().lower() for h in allowed_hosts if h.strip()}))
+
+
+def set_allowed_hosts(user_id: int, allowed_hosts) -> list:
+    """Re-scope a user. Passing nothing clears the scope (full access).
+    Existing sessions stay valid -- the check happens per request, so a
+    narrowed scope takes effect on the user's very next page load."""
+    init_db()
+    hosts = _normalise_hosts(allowed_hosts)
+    with _conn() as c:
+        row = c.execute("SELECT role FROM users WHERE id=?", (user_id,)).fetchone()
+        if row is None:
+            raise ValueError(f"no such user id: {user_id}")
+        if row["role"] == "admin" and hosts:
+            raise ValueError("admin accounts cannot be host-scoped")
+        c.execute("UPDATE users SET allowed_hosts=? WHERE id=?", (hosts, user_id))
+    return _parse_hosts(hosts)
 
 
 def set_password(user_id: int, password: str) -> None:

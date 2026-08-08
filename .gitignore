@@ -80,3 +80,6 @@ engine/bin/*.exe
 shared/documentation/project_library_BACKUP_*/
 # Claude Desktop config snapshots (machine-local, never publish)
 engine/tools/ConnectorGuard/backups/
+
+# BU employer material — NEVER commit (repo is public). Renne directive 2026-08-08.
+BU Administrative Backups/

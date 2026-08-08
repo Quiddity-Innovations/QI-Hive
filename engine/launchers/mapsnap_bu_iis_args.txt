@@ -1,0 +1,1 @@
+-DeployJson "C:\Users\renne\AppData\Local\Temp\claude\C--MapSnap\4af2cd91-e850-4bba-b901-499be72e43d7\scratchpad\deploy.rehearsal.json" -Uninstall

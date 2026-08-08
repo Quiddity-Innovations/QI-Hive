@@ -1,6 +1,14 @@
 # Quiddity Innovations — Ecosystem Map
 *Single source of truth for all QI projects*
-*Last updated: 2026-04-19 (All NSSM services renamed to QI_ prefix, NSSM binary standardized to C:\UNIVERSAL\dashboard\nssm.exe, QI_BrainAPI added)*
+*Last updated: 2026-08-07 — Cloudflare Tunnel section rewritten, NSSM binary path corrected
+to `C:\QIH\engine\bin\nssm.exe`, unwired Maia/Naya→NEXUS contracts marked, hub adoption status
+corrected against live usage. Connectivity split out to `QI_Connectivity_Map.md`.*
+
+> **Connectivity, endpoints and per-app integration live in
+> [`QI_Connectivity_Map.md`](QI_Connectivity_Map.md)** — public hosts, tunnel→gate→app
+> routing, internal ports, LLM Hub adoption with per-app fallback posture, and open
+> risks. Verified against the running machine, with a collector script to refresh it.
+> This file remains the family/taxonomy and project-profile view.
 
 ---
 
@@ -46,6 +54,7 @@
 | OpenClaw | Gateway | 18789 (WSL) | Node.js | — | Local+LAN | Active | rennesan (TBD) |
 | FileHQ | — | (merged→Naya) | — | — | N/A | Merged | — |
 | AutoPDF | HTTP | 6969 | PowerShell | — | **NO — loopback only** | Active Dev (Phase 2c) | TBD |
+| AutoPDF | MCP | 8701 | Python (FastMCP) | — | **NO — loopback only** | Active (opt-in, off by default) | TBD |
 | AkiyaScout | API | 8505 | FastAPI | — | **NO — planning** | New (spec/design) | TBD |
 | AkiyaScout | UI | 7845 | Gradio | — | **NO — planning** | New (spec/design) | TBD |
 
@@ -141,12 +150,14 @@ Fully absorbed into Naya (`C:\NAYA\filehq\`). `C:\FileHQ` deleted 2026-04-06.
 
 ### AutoPDF — `C:\AutoPDF` — *Standalone Tool / Cousin Candidate*
 Local PDF toolkit: convert / split / extract / catalog. Self-contained — bundles Ghostscript, Poppler, Tesseract, Tabula, PDFtk, JRE. Optional Ollama integration for Smart Mapping (template authoring + AI-extract fields).
-- **Ports:** HTTP :6969 (loopback only); recommended block 8700–8709 for future services
-- **Status:** Active Dev — Phase 2c complete (templates v2 + regex library + test automation)
+- **Ports:** HTTP :6969 (loopback only) · **MCP gateway :8701** (`QI_AutoPDFMCP`, loopback, opt-in — first port used from AutoPDF's own 8700–8709 block)
+- **Status:** Active Dev — Phase 2c complete (templates v2 + regex library + test automation); MCP gateway added 2026-08-07
 - **Path:** `C:\AutoPDF\` — moved here 2026-05-13 from `C:\Users\renne\Downloads\AUTOPDF\`. Fully portable: reads everything via relative paths, so no code edits were needed.
 - **Exposes:** Template-driven extraction (`/api/template-apply-batch`, `/api/template-test`, `/api/ai-chat`, `/api/regex-library`)
+- **Exposes (MCP :8701):** nine tools, each independently switchable in `config\mcp_gateway.json` — `autopdf_status` / `autopdf_templates` / `autopdf_presets` / `autopdf_regex_library` (metadata, on by default); `autopdf_list_pdfs` / `autopdf_extract` / `autopdf_index_preview` (real document content, off); `autopdf_run_workflow` / `autopdf_split` (writes files, off). A disabled tool is never registered, so it is absent from `tools/list` rather than refused. Uses the **shared** `qi_mcp_gateway.py` module — AutoPDF only adds an adapter, same as MapSnap.
 - **Consumes:** Local Ollama (optional) only — no other QI project at runtime
 - **Future:** Maia/NEXUS could call `/api/template-apply-batch` to extract fields from user-supplied PDFs. Workflow + Scheduler tabs already exist for ecosystem-level orchestration; integration with QI Hive's scheduler is a Phase 3 candidate.
+- **Note:** AutoPDF is the second project on the shared MCP gateway module (after MapSnap). The module's `ADAPTERS` registry is the extension point — adding NEXUS or Gamez is one adapter function each, no gateway changes.
 - **GitHub:** TBD (no remote yet)
 
 ---
@@ -189,9 +200,22 @@ All projects share `C:\QI\nssm.exe`. **Every service must have a unique name.**
 **Rule:** All NSSM services MUST be prefixed `QI_`. Format: `QI_<Project><Role>`. Never duplicate or reuse a service name. Check `QI_Service_Registry.md` before creating any new service.
 
 ### Cloudflare Tunnel
-- **Only Maia** has a Cloudflare Tunnel, because LINE/Telegram/Messenger need to reach in via webhooks.
-- All other projects use **outbound connections only** (long-polling, API calls to external services).
-- Never add a Cloudflare tunnel to Naya, NEXUS, or OC without a full architectural review — exposing the wrong service to the internet is a security risk.
+> **Rewritten 2026-08-07.** This section previously said "Only Maia has a Cloudflare
+> Tunnel" and "never add a tunnel to Naya, NEXUS or OC". Both were long out of date —
+> 16 named tunnels serve 21 public hostnames today. Full verified inventory:
+> **`QI_Connectivity_Map.md`**.
+
+- **16 named tunnels**, one per project, configs in `C:\QIH\engine\tunnels\configs\`.
+- **Every tunnel terminates at Caddy `:9040` (the QI Gate edge)** — not at the app.
+  Caddy routes by hostname and asks QI Gate `:9041` whether the caller may pass.
+  The single exception is `connector.quiddityinnovations.com`, which goes straight
+  to `:9030` and carries its own bearer token.
+- Adding a public hostname is a **`gate.json` edit + `gen_caddyfile.py` regeneration**,
+  never a hand-edited Caddyfile.
+- Apps stay on **loopback** and are reached only through the gate. Check the bind
+  before assuming this: five apps currently also listen on `0.0.0.0`, which lets the
+  LAN bypass the gate entirely (see `QI_Connectivity_Map.md` §6).
+- **Never tunnel NEXUS `:8010`** — it holds every provider API key for the ecosystem.
 
 ### Database Separation
 Each project has its own SQLite database. **Never share databases across projects.**
@@ -210,17 +234,22 @@ Each project has its own SQLite database. **Never share databases across project
 |---|---|---|---|
 | **Any QI tool** | **NEXUS** | **`POST /v1/chat/completions`** | **QI LLM Hub (added 2026-07-02): OpenAI-compatible gateway. base_url `http://127.0.0.1:8010/v1`, any api_key, model = provider id or `auto`. Send `X-QI-App: <project>` for usage attribution (`GET /hub/usage`). Keys live ONLY in NEXUS `secrets/nexus.env`. LAN-only — never tunnel this.** |
 | Any | NEXUS | `GET /v1/models` | List routable hub provider ids |
-| Maia | NEXUS | `POST /synthesize` | Multi-AI answer for complex questions |
-| Maia | NEXUS | `GET /scout/digest` | Show daily AI news to users |
-| Maia | NEXUS | `GET /bench/recommend` | Auto-select best LLM per task |
-| Naya | NEXUS | `POST /synthesize` | Multi-AI reasoning |
+| ~~Maia~~ | NEXUS | `POST /synthesize` | ⚠️ **PLANNED, NOT WIRED** (verified 2026-08-07) — `C:\QI\nexus_client.py` implements this but is imported nowhere |
+| ~~Maia~~ | NEXUS | `GET /scout/digest` | ⚠️ **PLANNED, NOT WIRED** — same client, never called |
+| ~~Maia~~ | NEXUS | `GET /bench/recommend` | ⚠️ **PLANNED, NOT WIRED** |
+| ~~Naya~~ | NEXUS | `POST /synthesize` | ⚠️ **PLANNED, NOT WIRED** |
 | Naya | FileHQ | `GET /files/search` | Personal file queries |
 | Any | NEXUS | `GET /providers` | Check which AIs are available |
 | TubeScout | PlayDeck | `GET http://127.0.0.1:8506/?play=<url>` | "▶ PlayDeck" on news cards (added 2026-08-04): deep link resolves + plays the video in PlayDeck. Buttons self-remove for non-localhost visitors, so the public tunnel page never shows dead links. |
 
 **Hub adoption pattern** (per tool, non-breaking): add config `llm_source: hub|direct` (or `llm_hub_enabled` bool) + `llm_hub_url`, default = current behavior; when enabled, try the hub first (`model: auto`) and fall through to the tool's existing direct path on any failure. The hub also speaks **Ollama-native** (`/api/tags`, `/api/chat`, `/api/generate`) so Ollama-based tools adopt it by changing one URL, and unknown model names route as `auto`.
 
-**Adoption status + full per-tool guide: `C:\QIH\docs\QI_LLM_Hub.md`.** Live 2026-07-02: Maia, Naya, Gamez/WC2026, TUBESCOUT (pre-dating). Ready-to-flip: EasyFlow (extension UI card), CogniBase + Retirement Analyzer (provider entries added), Brain (openai_hub provider), M2V/PersonalSong/LotteryWiz/MQ/MailBrain/MapSnap/AutoPDF/ClaudeVoice (one-URL flips via the Ollama shim).
+**Adoption status + full per-tool guide: `C:\QIH\docs\QI_LLM_Hub.md`.** Live 2026-07-02: Maia, Naya, Gamez/WC2026, TUBESCOUT (pre-dating). Ready-to-flip: EasyFlow (extension UI card), CogniBase (provider entry added), M2V/PersonalSong/MQ/MailBrain/MapSnap/AutoPDF/ClaudeVoice (one-URL flips via the Ollama shim).
+
+> **Verified 2026-08-07 against `GET /hub/usage`:** LotteryWiz (7 calls) and Retirement
+> Analyzer (12 calls) are **already live**, not "ready to flip". Per-app fallback posture —
+> which tools degrade gracefully when NEXUS is down and which hard-fail — is recorded in
+> **`QI_Connectivity_Map.md` §5**. LotteryWiz currently has **no** fallback.
 
 ---
 
@@ -232,8 +261,9 @@ Each project has its own SQLite database. **Never share databases across project
 | **LLM Chain** | Maia owns chain; NEXUS owns eval | All query NEXUS for LLM selection |
 | **Auth** | None — all local | Shared auth token when unified |
 | **Message Bus** | None | Redis Pub/Sub or SQLite queue |
-| **External Access** | Cloudflare Tunnel — **Maia ONLY**. All other projects are LAN-only. | Unified tunnel for all modules when ready |
-| **NSSM Services** | All services prefixed `QI_`. Standardized binary: `C:\UNIVERSAL\dashboard\nssm.exe`. Registry: `QI_Service_Registry.md`. | — |
+| **External Access** | 16 Cloudflare tunnels → 22 public hosts, all behind the QI Gate (Caddy `:9040` + auth `:9041`). Inventory: `QI_Connectivity_Map.md`. | Cloudflare Access (MFA) on every host — already live on `hive` |
+| **Auth** | QI Gate: one account fronts the estate, with per-host scoping (2026-08-07). `C:\QIH\engine\gate\README.md`. | MFA / SSO via Cloudflare Access |
+| **NSSM Services** | All services prefixed `QI_`. Standardized binary: `C:\QIH\engine\bin\nssm.exe`. Registry: `QI_Service_Registry.md`. | — |
 
 ---
 

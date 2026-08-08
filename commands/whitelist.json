@@ -2,6 +2,44 @@
   "_comment": "QI Elevation Broker — command whitelist. Only commands matching one of these rules are allowed to execute as SYSTEM. Patterns are regex. Each arg checked independently. Edit requires QI_Elevate service restart.",
   "rules": [
     {
+      "name": "nssm_set_application_cloudflared_tunnel",
+      "description": "Point a QI_*Tunnel service's executable at the cloudflared binary (named-tunnel migration, added 2026-06-20, authorized by Renne)",
+      "cmd": "nssm",
+      "arg_count_min": 4,
+      "arg_count_max": 4,
+      "args_regex": [
+        "^set$",
+        "^QI_[A-Za-z0-9_]+Tunnel$",
+        "^Application$",
+        "^C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared\\.exe$"
+      ]
+    },
+    {
+      "name": "nssm_set_appparams_cloudflared_named_tunnel",
+      "description": "AppParameters for a QI_*Tunnel: cloudflared NAMED tunnel run, config under C:\\QIH\\engine\\tunnels\\configs (added 2026-06-20)",
+      "cmd": "nssm",
+      "arg_count_min": 4,
+      "arg_count_max": 4,
+      "args_regex": [
+        "^set$",
+        "^QI_[A-Za-z0-9_]+Tunnel$",
+        "^AppParameters$",
+        "^tunnel --no-autoupdate --config C:\\\\QIH\\\\engine\\\\tunnels\\\\configs\\\\qi-[a-z0-9-]+\\.yml run qi-[a-z0-9-]+$"
+      ]
+    },
+    {
+      "name": "nssm_install_cloudflared_tunnel",
+      "description": "Install a new QI_*Tunnel service whose app is the cloudflared binary (added 2026-06-20)",
+      "cmd": "nssm",
+      "arg_count_min": 3,
+      "arg_count_max": 3,
+      "args_regex": [
+        "^install$",
+        "^QI_[A-Za-z0-9_]+Tunnel$",
+        "^C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared\\.exe$"
+      ]
+    },
+    {
       "name": "nssm_service_control",
       "description": "Start/stop/restart/query a QI_ service",
       "cmd": "nssm",
@@ -159,6 +197,17 @@
       "arg_count_max": 2,
       "args_regex": [
         "^cache$",
+        "^(on|off)$"
+      ]
+    },
+    {
+      "name": "powercfg_hibernate_toggle",
+      "description": "Toggle Windows hibernation on/off to free/restore hiberfil.sys (added 2026-08-08, authorized by Renne)",
+      "cmd": "powercfg",
+      "arg_count_min": 2,
+      "arg_count_max": 2,
+      "args_regex": [
+        "^-h$",
         "^(on|off)$"
       ]
     },

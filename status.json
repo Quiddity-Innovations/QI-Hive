@@ -1,17 +1,80 @@
 {
   "_meta": {
-    "generated": "2026-06-15 02:30:02",
+    "generated": "2026-06-18 02:30:01",
     "source": "nightly_reconcile.py"
   },
   "projects": {
+    "qi_hive": {
+      "phase": "Operations \u00e2\u20ac\u201d dispatch/compliance pipeline hardening",
+      "status": "active",
+      "summary": "CoWork Dispatch board cleaned: inspector flood stopped at the source (idempotent file_dispatch), 2,844 stale dispatches resolved, inspector/compliance separated from the human review queue, and Claude granted dispatch approval authority via tools/dispatch_admin.py. Board shows 0 pending of 0. Changes committed+pushed (336412c).",
+      "next_steps": "Confirm the next scheduled inspector run raises exactly one dispatch per live finding. Decide disposition for recurring findings per project. Consider auto-closing inspector dispatches when the underlying condition is remediated.",
+      "recorded_at": "2026-06-17 18:33:18",
+      "session_count": 61,
+      "last_session": "2026-06-18 03:54:05"
+    },
+    "avatarstudio": {
+      "phase": "v1 \u2014 secured + backed up",
+      "status": "active",
+      "summary": "Gradio talking-head pipeline on :7862. D-ID API key moved out of studio_config.json into gitignored secrets/avatarstudio.env (loaded via env/secret overlay; stripped on save). Key purged from the AvatarStudio private GitHub repo (history rewritten). Now git-backed at Quiddity-Innovations/AvatarStudio.",
+      "next_steps": "Renne: rotate D-ID key at dashboard, paste new value into secrets/avatarstudio.env. Optional: install QI_AvatarStudio service (DEMAND_START) via the master installer.",
+      "recorded_at": "2026-06-16 16:10:00",
+      "session_count": 2,
+      "last_session": "2026-06-16 16:10:00"
+    },
+    "tubescout": {
+      "phase": "MVP + refinements complete",
+      "status": "active",
+      "summary": "Overnight refinements done: page persists via no-admin Startup launcher (NSSM service wedged on SYSTEM account, corrected bat left); classification fixed (other 450->1 via YouTube topicCategories + ranking, new granular topics); cross-channel dedup live (10 dups->8 cross-covered, '+N also covered' on page); Whisper fallback built + verified (opt-in, off by default, live-stream guard); Brain test feature 304 removed. Page serving 353 deduped cards / 13 topics; 7am/7pm tasks Ready.",
+      "next_steps": "Optional: enable whisper.enabled for caption-less enrichment; run install_service_admin.bat as admin for real service+tunnel; narrow scout_export if Kaze gets too many YouTube items.",
+      "recorded_at": "2026-06-16 04:23:40",
+      "session_count": 4,
+      "last_session": "2026-06-16 03:46:21"
+    },
+    "fidelityanalyzer": {
+      "phase": "v1 - engine + API + UI live",
+      "status": "active",
+      "summary": "Scaffolded via qi_new_project.py (19/19 compliance). Built stdlib analysis engine (allocation, concentration/HHI, drift, rebalancing), FastAPI on 8504, Gradio UI on 7844, sample dataset. Verified /analyze on sample (11 positions, $210k). Registered in registry + Brain + dashboard.",
+      "next_steps": "Install QI_FidelityAnalyzer + QI_FidelityAnalyzerTunnel services; add PDF positions parsing; configurable target allocation in UI; first git commit + GitHub.",
+      "recorded_at": "2026-06-15 19:15:00",
+      "session_count": 2,
+      "last_session": "2026-06-15 23:14:00"
+    },
+    "lotterywiz": {
+      "phase": "v1 \u2014 live + public",
+      "status": "active",
+      "summary": "Fantasy 5 covering-design app live on :8777 as QI_LotteryWiz; public Cloudflare tunnel QI_LotteryWizTunnel installed as a persistent service 2026-06-15.",
+      "next_steps": "Add to nightly reconcile maps; consider git init + GitHub; named tunnel once domain is live.",
+      "recorded_at": "2026-06-15 18:30:00",
+      "session_count": 5,
+      "last_session": "2026-06-17 21:30:15"
+    },
+    "cypherminer": {
+      "phase": "Phase 1 \u2014 frontend + tunnel live",
+      "status": "active",
+      "summary": "Bilingual offline tools suite. Static frontend served on :7842 (QI_CypherMinerUI), API on :8502, public tunnel QI_CypherMinerTunnel live (2026-06-15). Registered in ecosystem registry; now registered in Brain.",
+      "next_steps": "Stand up a persistent API service for 8502; wire /health,/version,/info; git first commit.",
+      "recorded_at": "2026-06-15 18:30:00",
+      "session_count": 3,
+      "last_session": "2026-06-15 18:00:00"
+    },
+    "digitization": {
+      "phase": "v1 \u2014 tool + docs delivered",
+      "status": "active",
+      "summary": "BU Digitization Cost Comparison Tool (client-side HTML) built with technical documentation and user guide (2026-06-15). Lives under Downloads\\DIGITIZATION COSTS.",
+      "next_steps": "Migrate to C:\\ project folder per QI standards; git init; decide if it needs hosting/tunnel.",
+      "recorded_at": "2026-06-15 18:30:00",
+      "session_count": 1,
+      "last_session": "2026-06-15 17:00:00"
+    },
     "claude_manager": {
       "phase": "Operational",
       "status": "active",
       "summary": "Ecosystem fully booted + reconciled 2026-06-10..12. Drift watchdog live. 3 new GitHub remotes synced nightly.",
       "next_steps": "Named tunnels after domain purchase; monitor brain_drift checks",
       "recorded_at": "2026-06-12 08:45:00",
-      "session_count": 15,
-      "last_session": "2026-06-12 08:45:00"
+      "session_count": 17,
+      "last_session": "2026-06-16 04:19:38"
     },
     "maia": {
       "phase": "Phase 4 \u2014 production",
@@ -19,8 +82,8 @@
       "summary": "Bot :8001 + Gradio :7860 + tunnels live under NSSM. Last code work 2026-05-15 (BP overrides, sibling filter, topic propagation, Cloudflare primary).",
       "next_steps": "Multi-bot template engine + RAG (ChromaDB)",
       "recorded_at": "2026-06-10 10:45:00",
-      "session_count": 6,
-      "last_session": "2026-05-15 14:34:32"
+      "session_count": 7,
+      "last_session": "2026-06-16 23:06:38"
     },
     "naya": {
       "phase": "Phase 3 \u2014 bot + UI live",
@@ -37,8 +100,8 @@
       "summary": "API :8010 + UI :7880 + tunnel live. 7 providers wired, Scout digest live.",
       "next_steps": "Fix chain routing; Judge/Bench Phase 2",
       "recorded_at": "2026-06-10 10:45:00",
-      "session_count": 6,
-      "last_session": "2026-06-13 00:37:00"
+      "session_count": 7,
+      "last_session": "2026-06-16 23:47:00"
     },
     "openclaw": {
       "phase": "Phase 2 \u2014 agent expansion",
@@ -46,8 +109,8 @@
       "summary": "Agents live in WSL (Tasuke, Kaze, Yubin, Sentry, Asa, Koe, Kakei). Kaze Config API :8401. Keepalive service running.",
       "next_steps": "NotebookLM connection re-evaluation; Maia action routing",
       "recorded_at": "2026-06-10 10:45:00",
-      "session_count": 16,
-      "last_session": "2026-06-06 11:24:48"
+      "session_count": 17,
+      "last_session": "2026-06-16 03:15:26"
     },
     "mq": {
       "phase": "Phase 0 \u2014 scaffold",
@@ -94,23 +157,14 @@
       "session_count": 4,
       "last_session": "2026-04-20 01:16:39"
     },
-    "qi_hive": {
-      "phase": "Phase 3 \u2014 agentic operation",
-      "status": "active",
-      "summary": "Dashboard :8600 + tunnel, 7 hive agents, Inspector/Ingest/Apply/Elevate/InspectorDrain services all running. Scheduled tasks logging sessions daily.",
-      "next_steps": "Brain-drift watchdog check (added 2026-06-10); avatar pipeline Phase N",
-      "recorded_at": "2026-06-10 10:45:00",
-      "session_count": 51,
-      "last_session": "2026-06-14 13:07:05"
-    },
     "autopdf": {
       "phase": "Phase 2c \u2014 Smart Mapping",
       "status": "active",
       "summary": "Path standardized to C:\\AutoPDF (2026-05-13). Server on :6969 running. Git repo initialized 2026-06-10.",
       "next_steps": "Resume Phase 2c work; consider 8700-block migration",
       "recorded_at": "2026-06-10 10:45:00",
-      "session_count": 4,
-      "last_session": "2026-06-10 12:12:26"
+      "session_count": 10,
+      "last_session": "2026-06-18 04:05:40"
     },
     "cognibase": {
       "phase": "Pre-POC \u2014 Phase B core complete",
@@ -127,8 +181,8 @@
       "summary": "Schema browser :9876 running as QI_MapSnap service + QI_MapSnapTunnel (tunnel live \u2014 registry note stale).",
       "next_steps": ".expk reader verification follow-up",
       "recorded_at": "2026-06-10 10:45:00",
-      "session_count": 17,
-      "last_session": "2026-05-29 12:47:19"
+      "session_count": 20,
+      "last_session": "2026-06-17 17:17:48"
     },
     "personalsong": {
       "phase": "Working app",

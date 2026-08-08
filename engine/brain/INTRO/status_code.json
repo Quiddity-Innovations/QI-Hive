@@ -1,0 +1,224 @@
+{
+  "intro": "Excerpts copied from the live QI Brain source (C:\\QIH\\engine\\brain). Each shows the real code behind a capability and explains how it works. The Brain follows two rules visible throughout: all logic lives in api.py (the MCP server is a thin client), and nothing about the LLMs is hardcoded — providers live in the llm_providers table.",
+  "sections": [
+    {
+      "category": "Data Layer — Dual Store",
+      "snippets": [
+        {
+          "title": "The single WAL-mode connection factory",
+          "feature": "open_brain_db — every module's one way into qi_brain.db",
+          "file": "core/db.py · open_brain_db()",
+          "language": "python",
+          "code": "_THIS_DIR    = Path(__file__).parent                  # engine/brain/core/\n_PROJECT_DIR = _THIS_DIR.parent.parent.parent         # C:\\QIH\n_DATA_DIR    = _PROJECT_DIR / \"data\"\nDB_PATH      = Path(os.environ.get(\"QI_BRAIN_DB\", str(_DATA_DIR / \"qi_brain.db\")))\n\ndef open_brain_db(path: Path = DB_PATH) -> sqlite3.Connection:\n    conn = sqlite3.connect(str(path), check_same_thread=False)\n    conn.row_factory = sqlite3.Row\n    conn.execute(\"PRAGMA journal_mode = WAL\")\n    conn.execute(\"PRAGMA synchronous = NORMAL\")\n    conn.execute(\"PRAGMA busy_timeout = 5000\")\n    conn.execute(\"PRAGMA foreign_keys = ON\")\n    return conn",
+          "explanation": "Every module that touches the database goes through this one helper, so the critical PRAGMAs are applied on every connection: WAL journal mode (concurrent writers don't block readers), a 5-second busy timeout (so a brief lock retries instead of erroring), and foreign_keys ON (referential integrity is enforced, not advisory). The DB lives at C:\\QIH\\data\\qi_brain.db and can be redirected with the QI_BRAIN_DB env var for tests."
+        },
+        {
+          "title": "Schema DDL — the decisions ledger with supersede",
+          "feature": "Decision ledger that records why, by whom, and what replaced it",
+          "file": "core/schema.sql · decisions",
+          "language": "sql",
+          "code": "CREATE TABLE IF NOT EXISTS decisions (\n    decision_id      INTEGER PRIMARY KEY AUTOINCREMENT,\n    project_id       TEXT NOT NULL REFERENCES projects(project_id),\n    agent_id         TEXT NOT NULL DEFAULT 'claude' REFERENCES agents(agent_id),\n    decision_code    TEXT UNIQUE,   -- e.g. 'AD-001'\n    title            TEXT NOT NULL,\n    rationale        TEXT NOT NULL,\n    impact_scope     TEXT NOT NULL DEFAULT 'project',  -- project|ecosystem|global\n    tags             TEXT,          -- JSON array of strings\n    superseded_by    INTEGER REFERENCES decisions(decision_id),\n    superseded_at    TEXT,\n    superseded_reason TEXT,\n    recorded_at      TEXT NOT NULL DEFAULT (datetime('now'))\n);\nCREATE INDEX IF NOT EXISTS idx_decisions_active\n    ON decisions(superseded_by) WHERE superseded_by IS NULL;",
+          "explanation": "Decisions are append-only and self-referential: a reversed decision is never deleted — it gets a superseded_by pointer to the decision that replaced it, plus a reason. The partial index on superseded_by IS NULL makes 'give me the still-active decisions' fast, which is exactly what qi_get_context asks for. Every row records the agent_id that logged it and the impact_scope that controls how far the decision reaches."
+        },
+        {
+          "title": "ChromaDB collections with cosine similarity",
+          "feature": "Semantic memory store — 4 collections, local embeddings",
+          "file": "core/memory_store.py · MemoryStore",
+          "language": "python",
+          "code": "COL_DECISIONS = \"qi_decisions\"\nCOL_FEATURES  = \"qi_features\"\nCOL_SESSIONS  = \"qi_sessions\"\nCOL_DOCS      = \"qi_docs\"\n\nself._client = chromadb.PersistentClient(\n    path=str(chroma_path),\n    settings=Settings(anonymized_telemetry=False),\n)\n\ndef _get_col(self, name: str):\n    return self._client.get_or_create_collection(\n        name=name,\n        metadata={\"hnsw:space\": \"cosine\"},\n    )",
+          "explanation": "The vector half of the dual store. A persistent ChromaDB client at qi_memory/ holds four collections — one each for decisions, features, sessions and ecosystem docs — every one configured for cosine similarity (the right metric for normalized text embeddings). get_or_create_collection makes initialization idempotent, so the store self-heals if a collection is missing on boot."
+        },
+        {
+          "title": "Embed + upsert a decision",
+          "feature": "Vectorize text so it can be recalled by meaning",
+          "file": "core/memory_store.py · add_decision()",
+          "language": "python",
+          "code": "async def add_decision(self, decision_id, text, metadata=None):\n    vec = await self._embed(text)\n    col = self._get_col(COL_DECISIONS)\n    col.upsert(\n        ids=[f\"decision_{decision_id}\"],\n        embeddings=[vec],\n        documents=[text],\n        metadatas=[metadata or {}],\n    )\n\nasync def _embed(self, text: str) -> list[float]:\n    embedder = self._get_embedder()   # lazy: ProviderFactory.get_by_role('embed')\n    return await embedder.embed(text)",
+          "explanation": "Each decision is upserted under a stable id (decision_{id}) so re-logging overwrites rather than duplicating. The embedding vector comes from whatever provider holds the 'embed' role in the DB — currently local nomic-embed-text — resolved lazily on first use. Metadata (project_id, scope) rides along so searches can be filtered by project."
+        },
+        {
+          "title": "Semantic search across a collection",
+          "feature": "qi_search_memory — find anything by meaning, not keywords",
+          "file": "core/memory_store.py · search()",
+          "language": "python",
+          "code": "async def search(self, query, collection=COL_DECISIONS, n=5, where=None):\n    vec = await self._embed(query)\n    col = self._get_col(collection)\n    kwargs = {\"query_embeddings\": [vec], \"n_results\": n,\n              \"include\": [\"documents\", \"metadatas\", \"distances\"]}\n    if where:\n        kwargs[\"where\"] = where\n    results = col.query(**kwargs)\n    output = []\n    for i, doc_id in enumerate(results[\"ids\"][0]):\n        output.append({\n            \"id\":       doc_id,\n            \"document\": results[\"documents\"][0][i],\n            \"metadata\": results[\"metadatas\"][0][i],\n            \"distance\": results[\"distances\"][0][i],\n        })\n    return output",
+          "explanation": "The query string is embedded with the same model used for the stored documents, then ChromaDB returns the n closest by cosine distance. An optional where filter (e.g. {project_id: 'maia'}) scopes the search. The flat list of {id, document, metadata, distance} is what the qi_search_memory MCP tool hands back to a Claude session."
+        }
+      ]
+    },
+    {
+      "category": "API Surface (FastAPI :9011)",
+      "snippets": [
+        {
+          "title": "The app + open CORS for QI services",
+          "feature": "Single FastAPI app any QI project can call",
+          "file": "api.py · module scope",
+          "language": "python",
+          "code": "app = FastAPI(\n    title=\"QI Brain API\",\n    version=\"002\",\n    description=\"Shared knowledge substrate for the QI ecosystem\",\n)\n\n# CORS — allow all QI services\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=False,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)",
+          "explanation": "One app exposes the whole Brain on port 9011. CORS is wide-open because the Brain is deployed local-only behind the QI service boundary — any QI project (current or future) can call it from a browser with no per-project allow-listing. (Locking this down with auth is the headline release-hardening item before any remote exposure.)"
+        },
+        {
+          "title": "Health / version / info probes",
+          "feature": "Monitorable service — validator + uptime checks",
+          "file": "api.py · health() / info()",
+          "language": "python",
+          "code": "BRAIN_VERSION = \"002\"\nBRAIN_BUILD   = \"2026-04-20\"\n\n@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\", \"service\": \"qi_brain\", \"port\": 9011, \"version\": BRAIN_VERSION}\n\n@app.get(\"/info\")\nasync def info():\n    import sys, platform\n    return {\n        \"service\": \"qi_brain\", \"version\": BRAIN_VERSION, \"port\": 9011,\n        \"capabilities\": [\"memory_store\", \"decisions\", \"features\", \"sessions\",\n            \"ecosystem_snapshot\", \"feature_evaluation\", \"poller\",\n            \"distiller\", \"inbox\", \"dispatch\"],\n        \"endpoints_total\": len([r for r in app.routes if hasattr(r, \"path\")]),\n    }",
+          "explanation": "Standard QI service probes. /health is the cheap liveness check the QI_BrainAPI service monitor and qi_validator hit; /info advertises the Brain's capabilities and counts its own routes. These are why 'Brain API (:9011) down' has a one-line diagnosis in QI_Service_Registry.md."
+        },
+        {
+          "title": "Project-id resolution — typos never become 500s",
+          "feature": "Robust input handling for cross-project callers",
+          "file": "api.py · _resolve_pid()",
+          "language": "python",
+          "code": "def _resolve_pid(conn, pid, field=\"project_id\"):\n    norm = _norm_pid(pid)                 # lowercase, trim, _ for space/hyphen\n    known = [r[\"project_id\"] for r in conn.execute(\"SELECT project_id FROM projects\")]\n    if norm in known:\n        return norm\n    flat_map = {k.replace(\"_\", \"\"): k for k in known}\n    canon = flat_map.get(norm.replace(\"_\", \"\"))   # 'qihive' -> 'qi_hive'\n    if canon:\n        return canon\n    suggestions = difflib.get_close_matches(norm, known, n=3, cutoff=0.4)\n    raise HTTPException(status_code=400, detail={\n        \"error\": f\"unknown {field} '{pid}'\",\n        \"did_you_mean\": suggestions,\n        \"valid_project_ids\": sorted(known)})",
+          "explanation": "Because many different agents and services call the Brain, a mistyped project_id is inevitable. Rather than letting a bad id reach the DB and blow up as an opaque FOREIGN KEY 500, this resolver normalizes case/whitespace/hyphens, tries a separator-insensitive match, and as a last resort returns a clean HTTP 400 with did-you-mean suggestions and the full valid list. Every write endpoint runs through it."
+        },
+        {
+          "title": "log_decision — write-through to both stores",
+          "feature": "qi_log_decision MCP tool",
+          "file": "api.py · log_decision() / POST /api/log_decision",
+          "language": "python",
+          "code": "@app.post(\"/api/log_decision\")\nasync def log_decision(req: LogDecisionRequest):\n    tags_json = json.dumps(req.tags or [])\n    with open_brain_db() as conn:\n        req.project_id = _resolve_pid(conn, req.project_id)\n        cur = conn.execute(\n            \"\"\"INSERT INTO decisions\n                 (project_id, agent_id, decision_code, title, rationale, impact_scope, tags)\n               VALUES (?, ?, ?, ?, ?, ?, ?)\"\"\",\n            (req.project_id, req.agent_id, req.decision_code,\n             req.title, req.rationale, req.impact_scope, tags_json))\n        decision_id = cur.lastrowid\n        conn.commit()\n    try:\n        await _memory().add_decision(decision_id, f\"{req.title}\\n{req.rationale}\",\n            metadata={\"project_id\": req.project_id, \"scope\": req.impact_scope})\n    except Exception:\n        pass  # DB write succeeded; Chroma failure is non-fatal\n    return {\"ok\": True, \"decision_id\": decision_id}",
+          "explanation": "The canonical write pattern. The SQL INSERT is authoritative and committed first; only then is the title+rationale embedded into ChromaDB. The embed is wrapped in a bare except so that if the vector store is unavailable the structured record still lands — the Brain treats SQL as truth and Chroma as a rebuildable index. tags are stored as a JSON string in a single column."
+        },
+        {
+          "title": "get_context — ranked, token-budgeted briefing",
+          "feature": "qi_get_context — orient a fresh session in one call",
+          "file": "api.py · get_context() / POST /api/context",
+          "language": "python",
+          "code": "days = int(_cfg(\"context_days\", \"14\"))\ncutoff = (datetime.now() - timedelta(days=days)).isoformat()\n\ndecisions = conn.execute(\"\"\"\n    SELECT d.decision_id, d.decision_code, d.title, d.rationale,\n           d.impact_scope, d.tags, d.project_id, d.recorded_at\n    FROM decisions d\n    WHERE d.superseded_by IS NULL\n      AND (d.project_id = ? OR d.impact_scope IN ('ecosystem','global'))\n      AND d.recorded_at >= ?\n    ORDER BY\n        CASE WHEN d.project_id = ? THEN 0 ELSE 1 END,\n        d.recorded_at DESC\n    LIMIT 50\n\"\"\", (req.project_id, cutoff, req.project_id)).fetchall()",
+          "explanation": "The most-called tool. It selects only still-active decisions (superseded_by IS NULL) that either belong to the asking project OR carry ecosystem/global scope (rulings that bind everyone), inside a 14-day window. The ORDER BY puts the project's own decisions first, then newest-first. The caller then walks this list accumulating estimated tokens and stops at token_budget — so the briefing is relevant AND fits the context window."
+        }
+      ]
+    },
+    {
+      "category": "Governance & Explainability",
+      "snippets": [
+        {
+          "title": "supersede_decision — reverse without forgetting",
+          "feature": "qi_supersede_decision (Supplement A I-08)",
+          "file": "api.py · supersede_decision()",
+          "language": "python",
+          "code": "@app.post(\"/api/supersede_decision\")\nasync def supersede_decision(req: SupersedeDecisionRequest):\n    with open_brain_db() as conn:\n        old = conn.execute(\"SELECT decision_id FROM decisions WHERE decision_id=?\",\n                           (req.old_decision_id,)).fetchone()\n        new = conn.execute(\"SELECT decision_id FROM decisions WHERE decision_id=?\",\n                           (req.new_decision_id,)).fetchone()\n        if not old or not new:\n            raise HTTPException(status_code=404, detail=\"Decision not found\")\n        conn.execute(\"\"\"UPDATE decisions\n            SET superseded_by=?, superseded_at=?, superseded_reason=?\n            WHERE decision_id=?\"\"\",\n            (req.new_decision_id, datetime.now().isoformat(),\n             req.reason, req.old_decision_id))\n        conn.commit()\n    return {\"ok\": True}",
+          "explanation": "Reversing a decision is a link, not a delete. Both decisions are verified to exist, then the old one gets a superseded_by pointer, timestamp, and reason. The superseded decision immediately drops out of get_context (which filters superseded_by IS NULL) but stays fully queryable and explainable — so the history of how thinking changed is never lost."
+        },
+        {
+          "title": "explain — human-readable writeup with supersede flag",
+          "feature": "qi_explain — render any record as markdown",
+          "file": "api.py · explain()",
+          "language": "python",
+          "code": "md = (\n    f\"## Decision: {d.get('decision_code','#'+str(d['decision_id']))} — {d['title']}\\n\\n\"\n    f\"**Project:** `{d['project_id']}`  |  **Scope:** {d['impact_scope']}\\n\\n\"\n    f\"**Rationale:**\\n{d['rationale']}\\n\\n\"\n    f\"**Logged:** {d['recorded_at']}\")\nif d.get(\"superseded_by\"):\n    md += f\"\\n\\n⚠️ **SUPERSEDED** by decision #{d['superseded_by']}: {d.get('superseded_reason','')}\"\nreturn {\"ok\": True, \"markdown\": md, \"citations\": [d[\"decision_id\"]]}",
+          "explanation": "qi_explain turns a raw row into a readable briefing for a decision, feature, session or project. For decisions it surfaces the code, scope, rationale and a prominent SUPERSEDED warning if the decision was later reversed — so an agent reading it can never act on stale guidance without seeing that it was overturned. Citations point back to the source id."
+        }
+      ]
+    },
+    {
+      "category": "Feature Propagation Engine",
+      "snippets": [
+        {
+          "title": "Strict-JSON evaluation contract",
+          "feature": "Cross-project relevance judging with a local model",
+          "file": "feature_engine.py · _SYSTEM_PROMPT / _parse_eval_response()",
+          "language": "python",
+          "code": "_SYSTEM_PROMPT = (\n    \"You are evaluating whether a software feature from one project is relevant \"\n    \"to another. Output MUST be valid JSON matching this schema exactly:\\n\"\n    '{\"relevance_score\": float 0.0-1.0, \"recommendation\": \"adopt\"|\"adapt\"|\"skip\"|\"discuss\", '\n    '\"reasoning\": \"string max 200 chars\", \"confidence\": float 0.0-1.0}\\n'\n    \"Return ONLY the JSON object, no prose, no markdown, no code block.\")\n\ndef _parse_eval_response(raw):\n    cleaned = re.sub(r\"```(?:json)?\", \"\", raw).strip().strip(\"`\").strip()\n    try:\n        data = json.loads(cleaned)\n    except json.JSONDecodeError:\n        return None\n    score, rec = data.get(\"relevance_score\"), data.get(\"recommendation\")\n    if not isinstance(score, (int, float)) or rec not in (\"adopt\",\"adapt\",\"skip\",\"discuss\"):\n        return None\n    return data",
+          "explanation": "When a feature is logged, the engine asks the local eval model whether each other project should adopt/adapt/skip/discuss it. The prompt pins a strict JSON schema and the parser defends against the usual LLM noise — markdown fences, stray backticks — and validates the score type and the recommendation enum. Anything malformed returns None, which triggers exactly one retry before a safe fallback."
+        },
+        {
+          "title": "History-aware propagation across projects",
+          "feature": "Recommendations consistent with how a project decided before",
+          "file": "feature_engine.py · propagate_feature()",
+          "language": "python",
+          "code": "for target in target_projects:\n    with open_brain_db() as conn:\n        history_rows = conn.execute(\"\"\"\n            SELECT fe.recommendation, fe.reasoning, f.name as feature_name, f.domain\n            FROM feature_evaluations fe\n            JOIN features f ON f.feature_id = fe.feature_id\n            WHERE fe.target_project = ?\n            ORDER BY fe.evaluated_at DESC\n            LIMIT ?\"\"\", (target[\"project_id\"], MAX_HISTORY)).fetchall()\n    history = [dict(r) for r in history_rows]\n    eval_dict = await _evaluate_one(feature, source_project, target, eval_model, history)\n    results.append(eval_dict)\n# ... INSERT all results, then UPDATE features SET propagated = 1",
+          "explanation": "For every active project other than the source, the engine pulls that target's last MAX_HISTORY (5) evaluations and feeds them to the model as soft context, so its judgement stays consistent with how the project has actually decided in the past. All evaluations are written to feature_evaluations and the feature is marked propagated, ready for the owner to confirm in the pending-review queue."
+        }
+      ]
+    },
+    {
+      "category": "LLM Providers (config-driven)",
+      "snippets": [
+        {
+          "title": "Load a provider from the DB by role",
+          "feature": "Zero hardcoded model config",
+          "file": "core/providers/factory.py · get_by_role() / from_db()",
+          "language": "python",
+          "code": "@staticmethod\ndef get_by_role(role: str) -> BrainProvider:\n    with open_brain_db() as conn:\n        row = conn.execute(\n            \"SELECT provider_id FROM llm_providers WHERE role = ? AND active = 1 LIMIT 1\",\n            (role,)).fetchone()\n    if not row:\n        raise ProviderNotFoundError(f\"No active provider with role='{role}'.\")\n    return ProviderFactory.from_db(row[\"provider_id\"])\n\n_TYPE_MAP = {\n    \"ollama\":      OllamaProvider,\n    \"nomic_embed\": NomicEmbedProvider,\n}",
+          "explanation": "The Brain never names a model in code. Roles ('embed', 'eval', 'general', 'heavy') resolve to whatever provider row holds that role in the llm_providers table, and provider_type maps to a Python adapter class. Swapping the embedder or the evaluation model is a single UPDATE — and API keys are referenced by env-var NAME (api_key_env), never stored as a value."
+        },
+        {
+          "title": "Local embeddings via nomic-embed-text",
+          "feature": "Free, local 768-dim vectors",
+          "file": "core/providers/nomic_embed.py · embed()",
+          "language": "python",
+          "code": "async def embed(self, text: str) -> list[float]:\n    payload = {\"model\": self.model_name, \"prompt\": text}  # nomic-embed-text\n    async with httpx.AsyncClient(timeout=self.timeout_s) as client:\n        resp = await client.post(f\"{self.base_url}/api/embeddings\", json=payload)\n        resp.raise_for_status()\n        return resp.json()[\"embedding\"]",
+          "explanation": "Every vector in the four ChromaDB collections is produced here, by nomic-embed-text running locally through Ollama's /api/embeddings endpoint (768-dimensional output). Because it is local, the Brain's entire semantic-memory layer runs at zero marginal cost and with no external dependency or API key."
+        },
+        {
+          "title": "Strip the thinking, keep the answer",
+          "feature": "Clean output from local reasoning models",
+          "file": "core/providers/ollama.py · _strip_think() / generate()",
+          "language": "python",
+          "code": "_THINK_RE = re.compile(r\"<think>.*?</think>\", re.DOTALL | re.IGNORECASE)\n\ndef _strip_think(text: str) -> str:\n    return _THINK_RE.sub(\"\", text).strip()\n\n# inside generate():\nresp = await client.post(f\"{self.base_url}/api/generate\", json={\n    \"model\": self.model_name, \"prompt\": prompt, \"stream\": False,\n    \"options\": {\"num_predict\": max_tokens or self.max_tokens}})\ntext = _strip_think(resp.json().get(\"response\", \"\"))",
+          "explanation": "Reasoning models like deepseek-r1 and qwen3 emit a <think>...</think> chain-of-thought before their answer. The provider strips that block out before returning, so the feature engine's strict-JSON parser sees only the final JSON object — not the model's internal monologue."
+        }
+      ]
+    },
+    {
+      "category": "MCP Bridge",
+      "snippets": [
+        {
+          "title": "A tool definition (qi_log_decision)",
+          "feature": "12-tool MCP schema returned on tools/list",
+          "file": "mcp.py · TOOLS[]",
+          "language": "json",
+          "code": "{\n  \"name\": \"qi_log_decision\",\n  \"description\": \"Log an architectural or significant decision to the brain.\",\n  \"inputSchema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"project_id\":    {\"type\": \"string\"},\n      \"title\":         {\"type\": \"string\"},\n      \"rationale\":     {\"type\": \"string\"},\n      \"agent_id\":      {\"type\": \"string\", \"default\": \"claude\"},\n      \"decision_code\": {\"type\": \"string\", \"description\": \"Optional code e.g. AD-013\"},\n      \"impact_scope\":  {\"type\": \"string\", \"enum\": [\"project\",\"ecosystem\",\"global\"]},\n      \"tags\":          {\"type\": \"array\", \"items\": {\"type\": \"string\"}}\n    },\n    \"required\": [\"project_id\", \"title\", \"rationale\"]\n  }\n}",
+          "explanation": "This is one of the 12 entries in the TOOLS list the MCP server returns on tools/list. The inputSchema tells a Claude session exactly what arguments the tool takes, which are required, and which fields are enums — so the model can call qi_log_decision correctly without reading any Brain source."
+        },
+        {
+          "title": "match/case router to the FastAPI endpoints",
+          "feature": "Thin stdio-to-HTTP forwarding (Supplement A I-01)",
+          "file": "mcp.py · dispatch_tool()",
+          "language": "python",
+          "code": "async def dispatch_tool(name: str, args: dict) -> dict:\n    match name:\n        case \"qi_get_context\":          return await _post(\"/api/context\", args)\n        case \"qi_log_decision\":         return await _post(\"/api/log_decision\", args)\n        case \"qi_log_feature\":          return await _post(\"/api/log_feature\", args)\n        case \"qi_search_memory\":        return await _post(\"/api/search_memory\", args)\n        case \"qi_log_session\":          return await _post(\"/api/log_session\", args)\n        case \"qi_get_ecosystem_snapshot\": return await _get(\"/api/ecosystem_snapshot\")\n        case \"qi_supersede_decision\":   return await _post(\"/api/supersede_decision\", args)\n        case \"qi_explain\":              return await _post(\"/api/explain\", args)\n        case _:                          return {\"ok\": False, \"error\": f\"Unknown tool: {name}\"}",
+          "explanation": "The entire MCP server is a router like this: each tool name maps to a single HTTP call against the FastAPI app on :9011. Because no logic lives here, the Brain can be upgraded or restarted without changing the MCP registration, and the same operations are equally available to non-Claude callers over plain REST. A ConnectError surfaces as a clean 'Brain API unreachable at :9011' message."
+        },
+        {
+          "title": "Windows-safe stdio loop",
+          "feature": "JSON-RPC over stdin/stdout without the Proactor crash",
+          "file": "mcp.py · main()",
+          "language": "python",
+          "code": "loop = asyncio.get_event_loop()\nwhile True:\n    # run_in_executor avoids the Windows ProactorEventLoop connect_read_pipe crash\n    line = await loop.run_in_executor(None, sys.stdin.readline)\n    if not line:\n        break\n    line = line.strip()\n    if not line:\n        continue\n    req = json.loads(line)\n    response = await handle_request(req)\n    if response is not None:\n        _write(response)",
+          "explanation": "MCP speaks JSON-RPC 2.0 over stdio. On Windows, reading stdin directly with asyncio's Proactor loop crashes; routing the blocking sys.stdin.readline through run_in_executor sidesteps that bug. Notifications (like notifications/initialized) return None and produce no reply, per the MCP spec."
+        }
+      ]
+    },
+    {
+      "category": "Autonomy & Bootstrap",
+      "snippets": [
+        {
+          "title": "Idempotent bootstrap step decorator",
+          "feature": "Safe-to-re-run 10-step initialization",
+          "file": "bootstrap.py · _step()",
+          "language": "python",
+          "code": "def _step(name: str):\n    def decorator(fn):\n        async def wrapper(*args, **kwargs):\n            if _step_done(name):\n                print(f\"  [SKIP] {name} (already done)\")\n                return\n            print(f\"  [RUN ] {name} ...\")\n            _mark_step(name, \"running\")\n            try:\n                await fn(*args, **kwargs)\n                _mark_step(name, \"done\")\n            except Exception as exc:\n                _mark_step(name, \"failed\", str(exc))\n        return wrapper\n    return decorator",
+          "explanation": "Bootstrap is a 10-step pipeline (create DB, seed agents/providers/config/projects, init Chroma, ingest docs + summaries, seed decisions, log completion). Each step is wrapped so a completed step is skipped on re-run and its outcome is recorded in bootstrap_log. This makes setup safe to run repeatedly and makes a half-finished bootstrap resumable rather than destructive."
+        },
+        {
+          "title": "Document index migration (the knowledge graph)",
+          "feature": "Documentation Brain — catalog + typed edges",
+          "file": "migrations/2026_06_18_doc_index.sql",
+          "language": "sql",
+          "code": "CREATE TABLE IF NOT EXISTS doc_relationships (\n    rel_id     INTEGER PRIMARY KEY AUTOINCREMENT,\n    src_type   TEXT NOT NULL,   -- doc|project|decision|feature|session\n    src_id     TEXT NOT NULL,\n    edge_type  TEXT NOT NULL,   -- belongs_to|references|links_to|mentions|supersedes|describes\n    dst_type   TEXT NOT NULL,\n    dst_id     TEXT NOT NULL,\n    weight     REAL NOT NULL DEFAULT 1.0,\n    source     TEXT,            -- path|wikilink|mention|manual\n    created_at TEXT NOT NULL DEFAULT (datetime('now')),\n    UNIQUE(src_type, src_id, edge_type, dst_type, dst_id)\n);\nCREATE INDEX IF NOT EXISTS idx_rel_src ON doc_relationships(src_type, src_id);\nCREATE INDEX IF NOT EXISTS idx_rel_dst ON doc_relationships(dst_type, dst_id);",
+          "explanation": "The Documentation Brain turns the flat docs catalog (921 rows) into a graph. doc_relationships holds typed, weighted edges between docs, projects, decisions, features and sessions — belongs_to, references, mentions, supersedes. The UNIQUE constraint makes edge insertion idempotent, and the two indexes make both 'what does X link to?' and 'what links to X?' fast. 2,203 edges currently connect the ecosystem's documentation."
+        },
+        {
+          "title": "Poller configuration in the DB",
+          "feature": "Background poller — stays current without a push",
+          "file": "poller.py · module docstring + brain_config",
+          "language": "python",
+          "code": "INBOX_DIR = Path(r\"C:\\QIH\\engine\\brain\\inbox\")\n\n# Poll sources per project:\n#   <project_path>/data/state.json or status.json   — project state file\n#   <project_path>/data/tasks.json                  — task board (QI Hive only)\n#   git log --since=<last_check>                     — recent commits\n#\n# Configuration (brain_config table):\n#   poll_interval_s      — seconds between cycles (default 300)\n#   poll_min_file_age_s  — only process files older than this (default 60)\n#   poll_enabled         — '1' to run, '0' to pause (default 1)",
+          "explanation": "The poller is what keeps the Brain current between sessions. As a daemon thread it wakes every poll_interval_s (300), and for each registered project reads its state file and recent git commits, plus any JSON dropped in the inbox/ folder that is older than poll_min_file_age_s (the age check avoids reading a half-written file). All settings live in the brain_config table, so polling can be paused or retuned without a restart. 18,718 cycles are logged in poll_log."
+        }
+      ]
+    }
+  ]
+}

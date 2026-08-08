@@ -1,0 +1,8 @@
+{
+  "_doc": "Doc-freshness governance — imported from the BU laptop standards 2026-08-08 (BU_Documentation-Standard.md). Renne's directive: wired but NOT enforcing on the home machine — this is MY computer, security/policy hardening comes after functionality. Flip 'enforce' to true to make qi_doc_freshness.py exit non-zero on stale docs (for CI/inspector gating). BU/customer editions ship with enforce=true.",
+  "enforce": false,
+  "stale_after_days": 30,
+  "doc_globs": ["docs/*.md", "README.md", "*.md"],
+  "scan_roots": ["C:\\QIH", "C:\\QIP"],
+  "ignore_dirs": ["venv", ".venv", "node_modules", "__pycache__", ".git", "LOGS", "logs", "chroma"]
+}

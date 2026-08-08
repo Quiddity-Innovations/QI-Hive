@@ -1,0 +1,364 @@
+{
+  "renames": [
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Control.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_control.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Start.bat",
+      "to": "C:\\CLAUDE\\Claude Voice\\run_server.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Dashboard\\Hive_Install.bat",
+      "to": "C:\\CLAUDE\\Dashboard\\install_service.bat"
+    },
+    {
+      "from": "C:\\CLAUDE\\Dashboard\\Hive_Start.bat",
+      "to": "C:\\CLAUDE\\Dashboard\\start_dashboard.bat"
+    },
+    {
+      "from": "C:\\NAYA\\Naya_Install.bat",
+      "to": "C:\\NAYA\\install_naya_watchdog.bat"
+    },
+    {
+      "from": "C:\\NAYA\\Naya_Control.bat",
+      "to": "C:\\NAYA\\naya_control.bat"
+    },
+    {
+      "from": "C:\\NAYA\\Naya_Start.bat",
+      "to": "C:\\NAYA\\start_naya.bat"
+    },
+    {
+      "from": "C:\\NEXUS\\NEXUS_Control.bat",
+      "to": "C:\\NEXUS\\nexus_control.bat"
+    },
+    {
+      "from": "C:\\NEXUS\\NEXUS_Restart.bat",
+      "to": "C:\\NEXUS\\restart_nexus.bat"
+    },
+    {
+      "from": "C:\\PersonalSong\\PersonalSong_Install.bat",
+      "to": "C:\\PersonalSong\\install_service.bat"
+    },
+    {
+      "from": "C:\\QI\\Maia_Control.bat",
+      "to": "C:\\QI\\maia_control.bat"
+    },
+    {
+      "from": "C:\\TUBESCOUT\\TubeScout_Install.bat",
+      "to": "C:\\TUBESCOUT\\install_service_admin.bat"
+    }
+  ],
+  "edits": [
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_dualbrain_summary.py",
+      "from": "ClaudeVoice_Control.bat",
+      "to": "run_control.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\VOICE.md",
+      "from": "ClaudeVoice_Start.bat",
+      "to": "run_server.bat"
+    },
+    {
+      "file": "c:\\claude\\claude voice\\data\\make_summary.py",
+      "from": "ClaudeVoice_Start.bat",
+      "to": "run_server.bat"
+    },
+    {
+      "file": "c:\\naya\\naya_control.bat",
+      "from": "Naya_Install.bat",
+      "to": "install_naya_watchdog.bat"
+    },
+    {
+      "file": "c:\\naya\\CLAUDE.md",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\filehq_bridge.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\naya_server.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\filehq\\INTRO\\status_future.json",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\INTRO\\status_documentation.json",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\generate_naya_userguide.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\reconcile_20260513.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\register_telegram_chat_id.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\save_session_summary_20260408.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\save_session_summary_20260408c.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\update_naya_docs_20260406.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\update_naya_docs_20260407.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\update_naya_docs_20260407b.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\update_naya_docs_20260407c.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\naya\\tools\\write_session_summary_20260513.py",
+      "from": "Naya_Control.bat",
+      "to": "naya_control.bat"
+    },
+    {
+      "file": "c:\\nexus\\INSTALL.md",
+      "from": "NEXUS_Control.bat",
+      "to": "nexus_control.bat"
+    },
+    {
+      "file": "c:\\nexus\\install_nexus_tunnel.bat",
+      "from": "NEXUS_Control.bat",
+      "to": "nexus_control.bat"
+    },
+    {
+      "file": "c:\\nexus\\INTRO\\status_features_dev.json",
+      "from": "NEXUS_Control.bat",
+      "to": "nexus_control.bat"
+    },
+    {
+      "file": "c:\\nexus\\scripts\\reconcile_2026_05_13.py",
+      "from": "NEXUS_Control.bat",
+      "to": "nexus_control.bat"
+    },
+    {
+      "file": "c:\\nexus\\scripts\\reconcile_2026_05_13.py",
+      "from": "NEXUS_Restart.bat",
+      "to": "restart_nexus.bat"
+    },
+    {
+      "file": "c:\\nexus\\scripts\\save_docs_2026_04_06.py",
+      "from": "NEXUS_Restart.bat",
+      "to": "restart_nexus.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_code.json",
+      "from": "PersonalSong_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_documentation.json",
+      "from": "PersonalSong_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_features_dev.json",
+      "from": "PersonalSong_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\personalsong\\INTRO\\status_future.json",
+      "from": "PersonalSong_Install.bat",
+      "to": "install_service.bat"
+    },
+    {
+      "file": "c:\\qi\\CLAUDE.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\fix_bat_windows.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\install_maia_services.bat",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_control - (backup on 03-24-2026).bat",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_control.bat",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_control_panel.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_gradio.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_health.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_server.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_server_2026-03-29.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\maia_status.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Architecture Reference.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Bug Tracker.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Implementation Log.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Master Status Report.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Meeting Log.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Meeting Minutes.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Project Reference.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Claude Code - MO\\QUIDDITY_ENGINEERING_PRINCIPLES.md",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Extra Support Files\\build_status_pdf.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - Maia Extra Support Files\\create_cheatsheet.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\docs\\Quiddity Innovations - New Insights into Maia's Design (03-26-2026 and forward)\\Scenario Information and a few extra details.txt",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\INTRO\\status_features_dev.json",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\INTRO\\status_features_dev_v1.json",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_all_docs.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_maia_docs.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\build_version_history.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\create_summary_2026_04_08_loop2.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\save_nexus_summary.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\setup_service.bat",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\qi\\TOOLS\\update_docs_session8.py",
+      "from": "Maia_Control.bat",
+      "to": "maia_control.bat"
+    },
+    {
+      "file": "c:\\tubescout\\INTRO\\status_documentation.json",
+      "from": "TubeScout_Install.bat",
+      "to": "install_service_admin.bat"
+    },
+    {
+      "file": "c:\\tubescout\\tools\\session_wrap.py",
+      "from": "TubeScout_Install.bat",
+      "to": "install_service_admin.bat"
+    }
+  ]
+}

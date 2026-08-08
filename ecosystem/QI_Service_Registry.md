@@ -69,6 +69,7 @@
 | QIBrainAPI | QI_BrainAPI | ✅ 2026-04-19 | |
 | AutoPDF | QI_AutoPDF | ✅ 2026-06-15 | Web server 127.0.0.1:6969; AppDir C:\AutoPDF\Application; env AUTOPDF_NO_BROWSER=1 |
 | AutoPDFTunnel | QI_AutoPDFTunnel | ✅ 2026-06-15 | Cloudflare quick tunnel → :6969; URL in Application\status\tunnel.json; PIN-gated |
+| AutoPDFMCP | QI_AutoPDFMCP | ✅ 2026-08-07 | MCP gateway 127.0.0.1:8701; AppDir C:\AutoPDF; runs tools\run_mcp_gateway.py; SERVICE_AUTO_START. Tools + on/off live in C:\AutoPDF\config\mcp_gateway.json (Settings → AI & Connections). Register with `Application\_register_mcp_service.ps1` **elevated**. ⚠️ Free :8701 of any hand-started gateway first — see note below |
 
 ---
 
@@ -385,6 +386,8 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | Kaze news tunnel URL gone / can't view news on phone | QI_KazeNewsTunnel | Permanent URL: **https://kaze.quiddityinnovations.com** (named tunnel `qi-kaze`; also mirrored to `news-tunnel-url.txt`). Logs: `C:\QIH\engine\tunnels\LOGS\QI_KazeNewsTunnel.err.log` | `nssm status QI_KazeNewsTunnel` |
 | TubeScout (:8503) news page / API down | QI_TubeScout | `C:\TUBESCOUT\data\logs\service.log` | `nssm status QI_TubeScout` (AppDirectory must be `C:\TUBESCOUT`) |
 | TubeScout tunnel URL gone / not showing in Hive | QI_TubeScoutTunnel | Permanent URL: **https://tubescout.quiddityinnovations.com** (named tunnel `qi-tubescout`; no longer a random `trycloudflare.com`). | `nssm status QI_TubeScoutTunnel` |
+| Claude can't see AutoPDF tools / `autopdf` MCP disconnected | QI_AutoPDFMCP | `C:\AutoPDF\Application\LOGS\mcp_gateway.log` (+ `.err.log`) | `nssm status QI_AutoPDFMCP`, then `curl http://127.0.0.1:8701/health`. If the process exits immediately, `enabled` is `false` in `C:\AutoPDF\config\mcp_gateway.json` — that is the master switch, not a fault. A *missing* tool is usually switched off in that file's `tools` block (Settings → AI & Connections → Claude / MCP Access), not broken. Tools returning "AutoPDF unreachable" means the app itself (:6969) is down, not the gateway. |
+| QI_AutoPDFMCP stuck in **SERVICE_PAUSED** (health probe still returns 200!) | QI_AutoPDFMCP | `C:\AutoPDF\Application\LOGS\mcp_gateway.err.log` — look for `[Errno 10048] ... bind on address ('127.0.0.1', 8701)` | Something else already owns :8701 — almost always a gateway started by hand (`python tools\run_mcp_gateway.py`) during development. The service can't bind, NSSM retries, hits its restart throttle and parks at PAUSED. **The 200 from `/health` is that other process answering, not the service** — never treat a bare health probe as proof. Diagnose with `netstat -ano \| findstr :8701`, then check whether the listener's parent is `nssm.exe`; if it isn't, kill it and `nssm start QI_AutoPDFMCP`. First hit 2026-08-07; `_register_mcp_service.ps1` now frees the port itself and verifies listener parentage. |
 
 ---
 

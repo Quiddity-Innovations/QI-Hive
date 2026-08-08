@@ -1,57 +1,86 @@
 [
   {
-    "category": "Dashboard Routes",
+    "category": "Dashboard — Pages (server.py)",
     "features": [
-      {"name": "GET / — Dashboard", "file": "engine/hive/dashboard/server.py @/", "status": "live", "detail": "render_dashboard() — project cards, Claude usage strip (today + 30d), agent team table, session log, task column badges."},
-      {"name": "GET /hive — Hive page", "file": "server.py @/hive", "status": "live", "detail": "render_hive() — Brain connection badge, ecosystem stats (projects/decisions/features/sessions), agent profiles, recent sessions. Falls back to local JSON when Brain offline."},
-      {"name": "GET /health — Health check", "file": "server.py @/health", "status": "live", "detail": "render_health() — run_health_check() probe for all 11 projects. Table: service status, port open, git, docs, summary, health badge. Action items callout. Auto-reload every 60s."},
-      {"name": "GET /board — Kanban board", "file": "server.py @/board", "status": "live", "detail": "render_board(project_filter) — SortableJS kanban. 4 columns. Per-project filter. Add/delete task forms."},
-      {"name": "GET /usage — LLM usage", "file": "server.py @/usage", "status": "live", "detail": "Reads usage_stats. Today strip, daily chart (30d, 3 series), by-project table, by-model table with savings, totals row. Tier comparison."},
-      {"name": "GET /services — Services", "file": "server.py @/services", "status": "live", "detail": "Service management page. TBD — to be confirmed from full route audit."},
-      {"name": "GET /tasks — Scheduled Tasks", "file": "server.py @/tasks", "status": "live", "detail": "Scheduled tasks page. TBD — to be confirmed from full route audit."},
-      {"name": "GET /activity — Activity", "file": "server.py @/activity", "status": "live", "detail": "Activity feed page. TBD — to be confirmed from full route audit."},
-      {"name": "GET /logs — Logs", "file": "server.py @/logs", "status": "live", "detail": "Log viewer page. TBD — to be confirmed from full route audit."},
-      {"name": "GET /config — Config", "file": "server.py @/config", "status": "live", "detail": "Configuration page. TBD — to be confirmed from full route audit."},
-      {"name": "GET /guide — Guide", "file": "server.py @/guide", "status": "live", "detail": "Guide / onboarding page. TBD — to be confirmed from full route audit."},
-      {"name": "GET /project/{name} — Project detail", "file": "server.py @/project/{name}", "status": "live", "detail": "Per-project detail page. Linked from dashboard project cards."},
-      {"name": "POST|PATCH|DELETE /api/tasks*", "file": "server.py", "status": "live", "detail": "Task CRUD API. POST /api/tasks (create), PATCH /api/tasks/:id (move column), DELETE /api/tasks/:id. Persists to tasks.json."}
+      {"name": "Home / Mission Control", "file": "engine/hive/dashboard/server.py @ GET / , /mission-control", "status": "live", "detail": "Bento + status-table home; Mission Control monitoring board across all projects."},
+      {"name": "Project Status (7 tabs)", "file": "engine/hive/dashboard/project_status.py @ render_project_status()", "status": "live", "detail": "Overview/Blueprint/Business/Dev/Future/TechStack/Docs from each project's INTRO dir; route GET /project/{pid}/status."},
+      {"name": "Compliance page", "file": "server.py @ GET /compliance, /api/compliance/status|recent|scan", "status": "live", "detail": "Inspector pass/fail/warn summary + manual rescan trigger."},
+      {"name": "Documentation Brain UI", "file": "server.py @ GET /library, /api/library/search|graph|facets|file", "status": "live", "detail": "Full-text search, Plex graph, split-view reader; open/reveal endpoints for files on disk."},
+      {"name": "LLM Usage page", "file": "server.py @ GET /usage, /api/usage/today|daily|by_project|by_model|savings", "status": "live", "detail": "Cost/token breakdowns + local-LLM savings, computed by usage_stats.py."},
+      {"name": "War Room page", "file": "server.py @ GET /warroom, /warroom/messages, POST /warroom/send|ingest", "status": "partial", "detail": "Stage 0 multi-agent text chat; proxies to Brain warroom_messages."},
+      {"name": "CoWork Dispatch page", "file": "server.py @ GET /dispatch, POST /api/dispatch, /api/dispatch/{id}/review", "status": "live", "detail": "Approve/decline/discuss board; human queue separated from inspector volume."},
+      {"name": "Services / Tasks / Logs / Activity / Tunnels", "file": "server.py @ /services /tasks /logs /activity /tunnels /news", "status": "live", "detail": "NSSM status, scheduled tasks, log tail, activity stream, tunnel inventory, headlines."}
     ]
   },
   {
-    "category": "Engine — Common Modules",
+    "category": "Dashboard — REST API (server.py)",
     "features": [
-      {"name": "usage_stats.py — Claude cost tracking", "file": "engine/common/usage_stats.py", "status": "live", "detail": "Parses ~/.claude/projects/**/*.jsonl. No API keys — pure local. today() / daily(n) / by_project(n) / by_model(n) / totals(n) / sessions_log(days, limit). Model pricing: Opus $15/75 · Sonnet $3/15 · Haiku $0.80/4 per 1M tokens. Cache read at 10%, write at 125-200%. 30s in-memory cache."},
-      {"name": "qi_service.py — autonomous service control", "file": "engine/common/qi_service.py", "status": "live", "detail": "restart(service_name) / start() / stop() → bool. Routes through elevation broker (qi_elevate_client). Any Claude session can call this. from engine.common.qi_service import restart."},
-      {"name": "qi_elevate_client.py — broker interface", "file": "engine/common/qi_elevate_client.py", "status": "live", "detail": "Drops JSON command file into C:\\QIH\\commands\\pending\\. Waits for result file. Regex whitelist enforced in broker. Client side is fire-and-wait."},
-      {"name": "qi_elevate.py — elevation broker service", "file": "engine/common/qi_elevate.py", "status": "live", "detail": "NSSM service QI_Elevate (LocalSystem). Watches pending\\ folder. Executes whitelisted commands. Stale-queue purge on startup (>5 min). PID lock at logs/elevation/broker.lock. NSSM AppExit=Restart (3s, 1.5s throttle)."},
-      {"name": "qi_logger.py — shared logger", "file": "engine/common/qi_logger.py", "status": "live", "detail": "get_logger(service) — returns a named logger. set_level(), list_services(). Used by dashboard and all engine components."},
-      {"name": "hive_report.py — report helpers", "file": "engine/common/hive_report.py", "status": "live", "detail": "Report generation helpers for Hive page. TBD — to be confirmed from full module audit."}
+      {"name": "Task board CRUD", "file": "server.py @ /api/tasks (GET/POST), /api/tasks/{id} (PATCH/DELETE)", "status": "live", "detail": "Kanban backing store in data/tasks.json; SortableJS drives reorder."},
+      {"name": "Health aggregation", "file": "server.py @ /api/health , engine/hive/health_check.py run_health_check()", "status": "live", "detail": "Registry-driven; fans out sc/netstat/git; 30s TTL cache, threaded lock."},
+      {"name": "Contract endpoints", "file": "server.py @ /health, /version, /info, /api/status, /api/ping", "status": "live", "detail": "Law 2 module contract for the dashboard itself."},
+      {"name": "Tunnel URL resolution", "file": "server.py @ /api/tunnels ; link_collector.py", "status": "live", "detail": "Resolves permanent quiddityinnovations.com URLs via tunnels/static_urls.url_for_port()."},
+      {"name": "Elevation config API", "file": "server.py @ /api/config/gsudo* , /api/config/logging*", "status": "live", "detail": "Manage gsudo cache/profiles + live log levels from the UI."}
     ]
   },
   {
-    "category": "Brain Integration",
+    "category": "QI Brain — API (engine/brain/api.py, :9011)",
     "features": [
-      {"name": "brain_online() probe", "file": "engine/hive/dashboard/qi_brain_client.py", "status": "live", "detail": "HTTP GET to QI Brain (port 9010). Returns bool. Used by render_hive() for badge and conditional fallback logic."},
-      {"name": "get_ecosystem_snapshot()", "file": "qi_brain_client.py", "status": "live", "detail": "Returns Brain flat schema: active_projects, active_decisions, features_logged, sessions_logged. Falls back to local inference: status.json for projects, session_summary docx count for decisions, tasks.json length for features, usage_stats.sessions_log() for sessions."},
-      {"name": "get_agents() + get_agent_profile()", "file": "qi_brain_client.py", "status": "live", "detail": "Agent list and per-agent detail from Brain. Falls back to C:\\QIH\\hive\\Agents\\*/config.json."},
-      {"name": "get_recent_sessions()", "file": "qi_brain_client.py", "status": "live", "detail": "Recent logged sessions from Brain DB. Displayed in dashboard session log widget."},
-      {"name": "get_brain_status()", "file": "qi_brain_client.py", "status": "live", "detail": "Brain API status summary. Used by Hive page header."}
+      {"name": "12 MCP-backed endpoints", "file": "engine/brain/api.py (FastAPI app)", "status": "live", "detail": "/api/context, /log_decision, /log_feature, /log_session, /update_project_state, /search_memory, /ecosystem_snapshot, /explain, /supersede_decision, /decide_feature, /pending_features, /override_evaluation."},
+      {"name": "Project-id resolver", "file": "api.py @ _resolve_pid() / _norm_pid()", "status": "live", "detail": "Normalises + fuzzy-matches pids so a typo returns HTTP 400 with suggestions, never a raw FK 500."},
+      {"name": "Headlines union feed", "file": "api.py @ GET /api/headlines (_HEADLINES_SQL)", "status": "live", "detail": "UNION ALL across session_log, decisions, features, dispatches, compliance_log, project_state."},
+      {"name": "Agent heartbeats", "file": "api.py @ POST /api/agent/heartbeat, GET /api/agents/last_seen", "status": "live", "detail": "Per-agent last-seen for War Room Section 9; 1.6k+ rows."},
+      {"name": "Chroma reload hook", "file": "api.py @ POST /api/admin/reload_memory", "status": "live", "detail": "Drops cached MemoryStore so out-of-process harvests are served fresh without restart."},
+      {"name": "Contract endpoints", "file": "api.py @ /health, /version, /info", "status": "live", "detail": "Reports port 9011, build, capabilities, endpoint count."}
     ]
   },
   {
-    "category": "Health Check Engine",
+    "category": "QI Brain — Core & Storage",
     "features": [
-      {"name": "run_health_check() — 11-project probe", "file": "engine/hive/dashboard/health_check.py", "status": "live", "detail": "Checks: path exists on disk, NSSM service status (running/stopped/not_found), port open (TCP), git branch + uncommitted count + last commit, docs currency, session summary docx present. Returns dict per project with health: ok | warning | attention."},
-      {"name": "sync_tasks()", "file": "health_check.py", "status": "live", "detail": "Helper to synchronise task state. TBD — to be confirmed from module audit."}
+      {"name": "SQLite schema", "file": "engine/brain/core/schema.sql , core/db.py open_brain_db()", "status": "live", "detail": "24 tables in data/qi_brain.db: projects, decisions, features, sessions, project_state, dispatches, compliance_log, docs, doc_relationships, agents, etc."},
+      {"name": "ChromaDB memory store", "file": "engine/brain/core/memory_store.py (MemoryStore)", "status": "live", "detail": "Collections qi_decisions(474), qi_features(395), qi_sessions(93), qi_docs(921) in engine/brain/qi_memory/."},
+      {"name": "Provider factory", "file": "engine/brain/core/providers/factory.py , ollama.py, nomic_embed.py", "status": "live", "detail": "5 local providers (Ollama qwen3/deepseek-r1/gemma + nomic-embed) — no cloud API for the core loop."},
+      {"name": "MCP stdio bridge", "file": "engine/brain/mcp.py", "status": "live", "detail": "~150 LOC JSON-RPC stdio forwarder to :9011; registered in claude.json as qi-brain."},
+      {"name": "Background poller", "file": "engine/brain/poller.py (start_poller)", "status": "live", "detail": "Pulls each project's state.json/status.json + git log on a schedule; file inbox at engine/brain/inbox/."},
+      {"name": "Feature propagation engine", "file": "engine/brain/feature_engine.py , distiller.py", "status": "partial", "detail": "Scores a feature's relevance to other projects (adopt/adapt/skip); run on demand."}
     ]
   },
   {
-    "category": "Data Layer",
+    "category": "Documentation Brain (Librarian)",
     "features": [
-      {"name": "status.json — project registry", "file": "data/status.json", "status": "live", "detail": "Projects dict: {name: {status, current_task, notes}}. session_log array. Loaded by load_status(). Saved by save_json(STATUS_FILE, data)."},
-      {"name": "tasks.json — kanban task store", "file": "data/tasks.json", "status": "live", "detail": "tasks array: [{id (uuid), title, description, column, project, agent, priority}]. load_tasks() / save_tasks(). Mutated by /api/tasks CRUD endpoints."},
-      {"name": "Agents config (legacy)", "file": "hive/Agents/*/config.json", "status": "live", "detail": "Per-agent config.json in legacy agents folder (C:\\QIH\\hive\\Agents\\). Keys: status, model_default, scope. Folder stays for now; may migrate to Brain DB."},
-      {"name": "Static assets", "file": "engine/hive/dashboard/static/", "status": "live", "detail": "AdminLTE CSS (adminlte.min.css), Bootstrap Icons, SortableJS. Mounted at /static by FastAPI StaticFiles."}
+      {"name": "Doc harvester", "file": "engine/brain/doc_harvester.py", "status": "live", "detail": "Walks ecosystem doc sources, catalogs into docs table (921 rows), derives doc_relationships edges (2203), embeds into qi_docs."},
+      {"name": "Knowledge graph edges", "file": "data/qi_brain.db doc_relationships", "status": "live", "detail": "Typed edges (doc->project, doc->doc) powering the Plex graph; 2203 relationships."},
+      {"name": "Stale / archive handling", "file": "doc_harvester.py SKIP_DIRS / ARCHIVE_DIRS / STALE_TYPES", "status": "live", "detail": "Federated index (files stay put); marks logs/minutes/history stale after 45 days; excludes archive snapshots."}
+    ]
+  },
+  {
+    "category": "Agent Fabric & Dispatch Pipeline",
+    "features": [
+      {"name": "Eight hive sub-agents", "file": ".claude/agents/hive-*.md (architect, builder, inspector, ops, scout, scribe, tester, librarian)", "status": "live", "detail": "Frontmatter sets name/description/model/tools; dispatched via Agent(subagent_type=hive-<role>)."},
+      {"name": "Dispatch Protocol", "file": ".claude/agents/DISPATCH_PROTOCOL.md", "status": "live", "detail": "Trigger->agent table + workflows A/B/C + anti-patterns; main thread is the dispatcher."},
+      {"name": "Inspector (standards enforcer)", "file": "engine/hive/inspector/inspector.py", "status": "live", "detail": "fast/deep modes, auto-fix, files dispatches; writes compliance_log (46k+ rows)."},
+      {"name": "Auto-apply pipeline", "file": "engine/hive/apply/main.py , runner.py, dispatcher.py, mechanical_inspector.py", "status": "partial", "detail": "QI_HiveApply polls dispatch_runs every 10s; Phase 1 inbox-fallback; HALT kill switch."},
+      {"name": "Inspector auto-drain", "file": "engine/hive/inspect/main.py", "status": "live", "detail": "QI_HiveInspectorDrain — deterministic, no-LLM verdicts on pending_review envelopes every 60s."},
+      {"name": "Hive ingest worker", "file": "engine/hive/ingest/hive_ingest.py , status_refresh.py", "status": "live", "detail": "QI_HiveIngest — watches report inbox, forwards events into the Brain."}
+    ]
+  },
+  {
+    "category": "Service & Elevation Layer (engine/common)",
+    "features": [
+      {"name": "Elevation broker", "file": "engine/common/qi_elevate.py", "status": "live", "detail": "QI_Elevate LocalSystem daemon; watches commands/pending/*.json, runs whitelisted cmds, writes commands/completed/."},
+      {"name": "Elevate client + service helper", "file": "engine/common/qi_elevate_client.py , qi_service.py", "status": "live", "detail": "run_elevated(); prefers sc.exe over nssm for start/stop (OpenService access-denied workaround)."},
+      {"name": "Usage stats parser", "file": "engine/common/usage_stats.py", "status": "live", "detail": "Parses ~/.claude/**/*.jsonl, applies public token pricing, returns daily/project/model cost + savings."},
+      {"name": "Shared logger", "file": "engine/common/qi_logger.py", "status": "live", "detail": "Rotating-file logging used across services; config in config/logging.json."},
+      {"name": "War Room responders", "file": "engine/common/qi_warroom.py , qi_warroom_responder.py, qi_warroom_telegram.py", "status": "partial", "detail": "Posts/relays War Room messages; Telegram bridge + ingest from integrations/warroom_from_telegram.py."}
+    ]
+  },
+  {
+    "category": "Governance & Tooling (ecosystem/)",
+    "features": [
+      {"name": "Registry (source of truth)", "file": "ecosystem/qi_registry.json , qi_registry.py", "status": "live", "detail": "25 project entries + port_strategy + module_interface_contract + family_taxonomy; QI.cors_origins() helper."},
+      {"name": "Compliance validator", "file": "ecosystem/qi_validator.py", "status": "live", "detail": "Checks port block, /health, naming, secrets gitignore, registry currency per project."},
+      {"name": "New-project wizard", "file": "ecosystem/qi_new_project.py", "status": "live", "detail": "Registers first, scaffolds the QI standard layout, creates the FastAPI /health/version/info skeleton."},
+      {"name": "Caddy LAN reverse proxy", "file": "engine/proxy/Caddyfile , install_qi_caddy.bat", "status": "partial", "detail": "QI_Caddy — one qi.local front door (subdomain->port + local HTTPS); verified, install pending."},
+      {"name": "Static named tunnels", "file": "engine/tunnels/migrate_named_tunnels.py , tunnels.json, static_urls.py", "status": "live", "detail": "One named Cloudflare tunnel per product on quiddityinnovations.com; verify_named_tunnels.py."}
     ]
   }
 ]

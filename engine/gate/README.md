@@ -81,8 +81,13 @@ are LAN-only and intentionally stay unauthenticated.
 All commands run from `C:\QIH\engine\gate\tools\`.
 
 ```bash
-python gate_admin.py users                    # list accounts
+python gate_admin.py users                    # list accounts (shows each one's host scope)
 python gate_admin.py adduser <name> <pw> user # add someone (role: admin|user)
+python gate_admin.py adduser demo <pw> user maia-demo.quiddityinnovations.com
+                                              # ...scoped to a single site
+python gate_admin.py hosts   <name>           # show which hosts they may reach
+python gate_admin.py hosts   <name> a.com,b.com   # re-scope
+python gate_admin.py hosts   <name> all       # clear the scope (full access)
 python gate_admin.py passwd  <name> <pw>      # rotate a password (signs them out)
 python gate_admin.py disable <name>           # kill access + all their sessions
 python gate_admin.py sessions                 # who is signed in right now, from where
@@ -199,3 +204,23 @@ trade for having one auditable front door. Watch `QI_Caddy` accordingly.
    someone.
 5. **Rotate the bootstrap admin password.** The initial one was set over a
    chat session and should not stay in place long-term.
+
+## Per-host scoping (added 2026-08-07)
+
+Until 2026-08-07 any valid session reached every host the gate fronts — one
+login was all-or-nothing, which made "share just the Maia demo" impossible.
+
+Accounts now carry an `allowed_hosts` list:
+
+- **Empty = every host.** Every account created before this change is empty, so
+  nothing about existing access changed.
+- **Non-empty = only those hostnames**, matched exactly and case-insensitively.
+  Anything else returns **403** — deliberately not a redirect to the login page,
+  which would loop forever for someone who already holds a valid session.
+- **Admins cannot be scoped.** An admin who could not reach every host could
+  lock themselves out of the tool that fixes it.
+- Scope is re-read on every request, so widening or narrowing takes effect on
+  the user's next page load — no need to sign them out.
+
+A typo'd hostname silently scopes the account to nothing reachable, so
+`adduser` and `hosts` both warn when a name is not one the gate fronts.

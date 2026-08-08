@@ -1,0 +1,229 @@
+{% extends "base.html" %}{# AI-GENERATED BEGIN (Claude Code, 2026-06-20) #}
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+  <p class="muted m-0" style="flex:1;min-width:260px">
+    A live map of how BU Hive fits together — pages, config, the Confluence DB, OnBase &amp; SQL data
+    sources, projects, and the governance constraints it runs under. Pick the lens that suits you;
+    your choice is remembered on this device.
+  </p>
+  <div class="d-flex gap-2">
+    <span class="badge badge-soft">{{ node_count }} nodes</span>
+    <span class="badge badge-soft">{{ edge_count }} links</span>
+    <span class="badge badge-soft mono" title="Generated">{{ generated_at }}</span>
+  </div>
+</div>
+
+<!-- View-mode switcher (per-user, persisted in localStorage by bu-info-views.js) -->
+<div class="info-stage" id="infoStage">
+<div class="info-bar">
+  <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Information views">
+    <button class="vs-btn active" data-view="map"  title="Map — interactive plex (split view)"><i class="bi bi-diagram-3-fill"></i><span>Map</span></button>
+    <button class="vs-btn" data-view="mindmap"     title="Mind Map — big-picture tree from the hub"><i class="bi bi-bezier2"></i><span>Mind Map</span></button>
+    <button class="vs-btn" data-view="outline"     title="Outline — indented text hierarchy"><i class="bi bi-list-nested"></i><span>Outline</span></button>
+    <button class="vs-btn" data-view="cards"        title="Cards — filterable grid of nodes"><i class="bi bi-grid-3x3-gap"></i><span>Cards</span></button>
+    <button class="vs-btn" data-view="full"         title="Full Content — focus one node full-width"><i class="bi bi-card-text"></i><span>Full Content</span></button>
+  </div>
+  <div class="info-search" title="Search across the current view — Enter jumps to the first match">
+    <i class="bi bi-search"></i>
+    <input id="infoSearch" type="search" placeholder="Search nodes, files, docs…" autocomplete="off" aria-label="Search the Information view">
+    <button type="button" id="infoSearchClear" class="info-search-clear" title="Clear" hidden><i class="bi bi-x-lg"></i></button>
+    <button type="button" class="bu-mic bu-voice-only info-mic" data-target="#infoSearch" data-submit="enter"
+            aria-pressed="false" title="Search by voice — click, speak, click again to stop"><i class="bi bi-mic-fill"></i></button>
+  </div>
+  <button class="btn btn-sm btn-icon info-expand-btn" id="infoExpand" type="button" aria-pressed="false"
+          title="Expand this view — fill the screen (Esc to exit)"><i class="bi bi-arrows-fullscreen"></i> <span>Expand</span></button>
+  {% if user and user.role == 'admin' %}
+  <button class="btn btn-sm btn-scarlet" data-bs-toggle="modal" data-bs-target="#graphEditModal"
+          title="Add / edit / link map nodes"><i class="bi bi-pencil-square"></i> <span>Edit map</span></button>
+  {% endif %}
+</div>
+
+<!-- MAP (default) -->
+<div class="info-view" id="view-map">
+  <div class="graph-wrap">
+    <div class="graph-stage" id="graphStage" data-endpoint="/api/graph">
+      <div class="graph-toolbar">
+        <input class="graph-search" id="gSearch" placeholder="Find a node…" autocomplete="off">
+        <span class="spacer"></span>
+        <i class="bi bi-zoom-out muted" style="font-size:13px"></i>
+        <input type="range" class="zoom-slider" id="gZoom" min="0.3" max="3" step="0.01" value="1" title="Zoom" aria-label="Zoom">
+        <i class="bi bi-zoom-in muted" style="font-size:13px"></i>
+        <button class="btn btn-sm btn-icon" id="gFit" title="Fit to view"><i class="bi bi-arrows-fullscreen"></i></button>
+        <button class="btn btn-sm btn-icon" id="gReset" title="Reset focus"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button class="btn btn-sm btn-icon" id="gPhysics" title="Pause / resume physics"><i class="bi bi-pause-fill"></i></button>
+      </div>
+      <svg id="graphSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <!-- interactive legend / category filter, top-right under the toolbar -->
+      <div class="graph-legend-box" id="graphLegend">
+        <div class="glb-title"><span>Show on map</span>
+          <button type="button" class="glb-all" id="glbAll" title="Show all categories">all</button>
+        </div>
+        <div class="glb-hint">Row toggles · the dot picks its colour
+          <button type="button" class="glb-reset" id="glbResetColors" title="Reset colours to default">reset</button>
+        </div>
+        {% for c in categories %}
+        <div class="glb-row" data-cat="{{ c.key }}" role="button" tabindex="0" aria-pressed="true"
+             title="Show / hide {{ c.label }}">
+          <span class="glb-box"></span>
+          <input type="color" class="cat-color" data-cat="{{ c.key }}"
+                 title="Pick a colour for {{ c.label }}" aria-label="Colour for {{ c.label }}">
+          <span class="glb-label">{{ c.label }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="graph-detail" id="graphDetail">
+      <div class="gd-head">
+        <div class="gd-cat" id="gdCat" style="color:var(--bu-red)">BU HIVE CORE</div>
+        <div class="gd-title" id="gdTitle">BU Hive</div>
+      </div>
+      <div class="gd-body" id="gdBody">
+        <p>Click a node on the map to inspect it here. This panel shows what each piece is,
+        what it connects to, and a link to open the matching page where one exists.</p>
+        <p class="muted" style="font-size:12px">Colours are grouped by kind — see the legend on the map.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MIND MAP -->
+<div class="info-view" id="view-mindmap" hidden>
+  <div class="panel">
+    <div class="panel-head"><i class="bi bi-bezier2"></i> Mind map
+      <span class="head-actions">
+        <span class="muted" style="font-size:11px">scroll to zoom · drag to pan</span>
+        <button class="btn btn-sm btn-icon" id="mmZoomOut" title="Zoom out"><i class="bi bi-zoom-out"></i></button>
+        <input type="range" class="zoom-slider" id="mmZoom" min="0.2" max="4" step="0.01" value="1" title="Zoom" aria-label="Zoom">
+        <button class="btn btn-sm btn-icon" id="mmZoomIn" title="Zoom in"><i class="bi bi-zoom-in"></i></button>
+        <button class="btn btn-sm btn-icon" id="mmFit" title="Fit to view"><i class="bi bi-arrows-fullscreen"></i></button>
+      </span>
+    </div>
+    <div class="mindmap-stage" id="mindmapStage"><svg id="mindmapSvg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  </div>
+</div>
+
+<!-- OUTLINE -->
+<div class="info-view" id="view-outline" hidden>
+  <div class="panel">
+    <div class="panel-head"><i class="bi bi-list-nested"></i> Outline
+      <span class="head-actions">
+        <button class="btn btn-sm btn-icon" id="olExpand" title="Expand all"><i class="bi bi-arrows-expand"></i></button>
+        <button class="btn btn-sm btn-icon" id="olCollapse" title="Collapse all"><i class="bi bi-arrows-collapse"></i></button>
+      </span>
+    </div>
+    <div class="panel-pad"><div id="outlineRoot" class="outline"></div></div>
+  </div>
+</div>
+
+<!-- CARDS -->
+<div class="info-view" id="view-cards" hidden>
+  <div class="d-flex gap-2 flex-wrap mb-3" id="cardControls">
+    <div class="btn-group btn-group-sm" role="group" id="cardCats"></div>
+    <span class="spacer" style="flex:1"></span>
+    <select class="form-select form-select-sm" id="cardSort" style="max-width:180px">
+      <option value="cat">Sort: by category</option>
+      <option value="name">Sort: by name</option>
+      <option value="status">Sort: by status</option>
+    </select>
+  </div>
+  <div class="card-grid" id="cardGrid"></div>
+</div>
+
+<!-- FULL CONTENT -->
+<div class="info-view" id="view-full" hidden>
+  <div class="panel">
+    <div class="panel-head"><i class="bi bi-card-text"></i> Full content
+      <span class="head-actions" style="min-width:220px">
+        <select class="form-select form-select-sm" id="fullPick"></select>
+      </span>
+    </div>
+    <div class="panel-pad"><div id="fullBody" class="full-content md-body"></div></div>
+  </div>
+</div>
+</div><!-- /info-stage -->
+
+{% if user and user.role == 'admin' %}
+<!-- Graph editor (admin) -->
+<div class="modal fade" id="graphEditModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content ge-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-diagram-3"></i> Edit the map</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="geMsg"></div>
+
+        <section class="ge-sec">
+          <h6><i class="bi bi-plus-square"></i> Add a node</h6>
+          <div class="row g-2">
+            <div class="col-md-6"><label class="ge-lbl">Name</label><input id="geLabel" class="form-control form-control-sm"></div>
+            <div class="col-md-4"><label class="ge-lbl">Category</label><select id="geCat" class="form-select form-select-sm">{% for c in categories %}<option value="{{ c.key }}" {{ 'selected' if c.key == 'custom' else '' }}>{{ c.label }}</option>{% endfor %}</select></div>
+            <div class="col-md-2 d-flex align-items-end"><div class="form-check mb-1"><input class="form-check-input" type="checkbox" id="geAuto" checked><label class="form-check-label ge-lbl" for="geAuto">Auto-link</label></div></div>
+          </div>
+          <label class="ge-lbl mt-2">Detail</label>
+          <textarea id="geDetail" class="form-control form-control-sm" rows="2" placeholder="What is this? (searchable)"></textarea>
+          <label class="ge-lbl mt-2">Folder / document <span class="muted">— optional; browse the server for a file or folder</span></label>
+          <div class="d-flex gap-2">
+            <input id="gePath" class="form-control form-control-sm" placeholder="(none)" readonly>
+            <button class="btn btn-sm btn-icon" id="geBrowse" type="button"><i class="bi bi-folder2-open"></i> Browse</button>
+            <button class="btn btn-sm btn-icon" id="gePathClear" type="button" title="Clear"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div id="geBrowser" class="ge-browser" hidden></div>
+          <label class="ge-lbl mt-2">URL <span class="muted">— optional; a Confluence page, doc link or any external resource</span></label>
+          <div class="d-flex gap-2">
+            <input id="geUrl" class="form-control form-control-sm" placeholder="https://…">
+            <button class="btn btn-sm btn-icon" id="geUrlClear" type="button" title="Clear"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div class="row g-2 mt-1 align-items-end">
+            <div class="col-md-7"><label class="ge-lbl">Link to (optional)</label><select id="geLinkTo" class="form-select form-select-sm"><option value="">— none (independent) —</option></select></div>
+            <div class="col-md-5"><label class="ge-lbl">Direction</label><select id="geLinkDir" class="form-select form-select-sm"><option value="to">this → target</option><option value="from">target → this</option></select></div>
+          </div>
+          <button class="btn btn-sm btn-scarlet mt-2" id="geAdd" type="button"><i class="bi bi-plus-lg"></i> Add node</button>
+        </section>
+
+        <hr class="ge-hr">
+        <section class="ge-sec">
+          <h6><i class="bi bi-pencil"></i> Edit / delete a custom node</h6>
+          <select id="geNodeSel" class="form-select form-select-sm"><option value="">— select a custom node —</option></select>
+          <div id="geEditFields" hidden class="mt-2">
+            <div class="row g-2">
+              <div class="col-md-6"><label class="ge-lbl">Name</label><input id="geEditLabel" class="form-control form-control-sm"></div>
+              <div class="col-md-6"><label class="ge-lbl">Category</label><select id="geEditCat" class="form-select form-select-sm">{% for c in categories %}<option value="{{ c.key }}">{{ c.label }}</option>{% endfor %}</select></div>
+            </div>
+            <label class="ge-lbl mt-2">Detail</label><textarea id="geEditDetail" class="form-control form-control-sm" rows="2"></textarea>
+            <div class="row g-2">
+              <div class="col-md-6"><label class="ge-lbl mt-2">Folder / document</label><input id="geEditPath" class="form-control form-control-sm"></div>
+              <div class="col-md-6"><label class="ge-lbl mt-2">URL</label><input id="geEditUrl" class="form-control form-control-sm" placeholder="https://…"></div>
+            </div>
+            <div class="mt-2 d-flex gap-2">
+              <button class="btn btn-sm btn-scarlet" id="geSave" type="button"><i class="bi bi-check2"></i> Save</button>
+              <button class="btn btn-sm btn-icon" id="geDelete" type="button" style="color:#f85149"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+          </div>
+        </section>
+
+        <hr class="ge-hr">
+        <section class="ge-sec">
+          <h6><i class="bi bi-link-45deg"></i> Connect two nodes</h6>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5"><label class="ge-lbl">From</label><select id="geSrc" class="form-select form-select-sm"></select></div>
+            <div class="col-md-5"><label class="ge-lbl">To</label><select id="geTgt" class="form-select form-select-sm"></select></div>
+            <div class="col-md-2"><button class="btn btn-sm btn-scarlet w-100" id="geConnect" type="button"><i class="bi bi-link-45deg"></i> Link</button></div>
+          </div>
+          <label class="ge-lbl mt-2">Your links</label>
+          <div id="geEdgeList" class="ge-edge-list"><span class="muted" style="font-size:12px">None yet.</span></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script src="/static/js/bu-colors.js"></script>
+<script src="/static/js/bu-graph.js"></script>
+<script src="/static/js/bu-info-views.js"></script>
+<script src="/static/js/bu-voice.js"></script>
+{% if user and user.role == 'admin' %}<script src="/static/js/bu-graph-edit.js"></script>{% endif %}
+{% endblock %}{# AI-GENERATED END #}

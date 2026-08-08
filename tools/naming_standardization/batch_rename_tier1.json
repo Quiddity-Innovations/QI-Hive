@@ -1,0 +1,66 @@
+{
+  "generated": "2026-06-23",
+  "tier": 1,
+  "renames": [
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_control.bat",
+      "current": "run_control.bat",
+      "new": "ClaudeVoice_Control.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Claude Voice\\run_server.bat",
+      "current": "run_server.bat",
+      "new": "ClaudeVoice_Start.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Dashboard\\install_service.bat",
+      "current": "install_service.bat",
+      "new": "Hive_Install.bat"
+    },
+    {
+      "path": "C:\\CLAUDE\\Dashboard\\start_dashboard.bat",
+      "current": "start_dashboard.bat",
+      "new": "Hive_Start.bat"
+    },
+    {
+      "path": "C:\\NAYA\\install_naya_watchdog.bat",
+      "current": "install_naya_watchdog.bat",
+      "new": "Naya_Install.bat"
+    },
+    {
+      "path": "C:\\NAYA\\naya_control.bat",
+      "current": "naya_control.bat",
+      "new": "Naya_Control.bat"
+    },
+    {
+      "path": "C:\\NAYA\\start_naya.bat",
+      "current": "start_naya.bat",
+      "new": "Naya_Start.bat"
+    },
+    {
+      "path": "C:\\NEXUS\\nexus_control.bat",
+      "current": "nexus_control.bat",
+      "new": "NEXUS_Control.bat"
+    },
+    {
+      "path": "C:\\NEXUS\\restart_nexus.bat",
+      "current": "restart_nexus.bat",
+      "new": "NEXUS_Restart.bat"
+    },
+    {
+      "path": "C:\\PersonalSong\\install_service.bat",
+      "current": "install_service.bat",
+      "new": "PersonalSong_Install.bat"
+    },
+    {
+      "path": "C:\\QI\\maia_control.bat",
+      "current": "maia_control.bat",
+      "new": "Maia_Control.bat"
+    },
+    {
+      "path": "C:\\TUBESCOUT\\install_service_admin.bat",
+      "current": "install_service_admin.bat",
+      "new": "TubeScout_Install.bat"
+    }
+  ]
+}

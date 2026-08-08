@@ -1,0 +1,563 @@
+# AI-GENERATED BEGIN (Claude Code, 2026-08-08)
+"""QI Comfy MCP — Pattern-1 stdio server (stdlib only, zero dependencies).
+
+Drives a local ComfyUI instance over its HTTP API so ComfyUI can be operated
+by conversation: list what models are installed, run a pre-assembled workflow
+with a few parameters swapped, and collect the output files.
+
+Deliberately talks to ComfyUI's *API* and never imports or patches ComfyUI
+itself. ComfyUI updates (and the portable build replacing itself wholesale)
+therefore cannot break this server.
+
+Data sources:
+  http://127.0.0.1:8188      — ComfyUI HTTP API (override with COMFY_URL)
+  D:\\AI\\workflows           — saved API-format workflows (override COMFY_WORKFLOWS)
+
+Workflows must be exported from the ComfyUI UI with "Save (API Format)" —
+the editor's normal save format describes the canvas, not an executable graph,
+and cannot be queued.
+
+Registration (Claude Code / claude_desktop_config.json):
+  {"command": "<python.exe>", "args": ["C:\\QIH\\engine\\mcp\\qi_comfy_mcp.py"]}
+"""
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
+from pathlib import Path
+
+# Windows detail 1: MCP mandates UTF-8; Windows consoles default to cp1252, so a
+# single non-ASCII byte (a model filename with an accent, a prompt with an
+# em-dash) would raise mid-write and kill the server.
+for _stream in (sys.stdin, sys.stdout):
+    try:
+        _stream.reconfigure(encoding="utf-8", newline="\n")
+    except (AttributeError, ValueError):
+        pass
+
+# Windows detail 2: the client does not launch this script from its own folder,
+# so never rely on cwd — resolve every path absolutely.
+COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188").rstrip("/")
+WORKFLOW_DIR = Path(os.environ.get("COMFY_WORKFLOWS", r"D:\AI\workflows"))
+
+SUPPORTED_PROTOCOLS = {"2024-11-05", "2025-03-26", "2025-06-18"}
+DEFAULT_PROTOCOL = "2024-11-05"
+SERVER_INFO = {"name": "qi-comfy", "version": "1.0.0"}
+
+CLIENT_ID = uuid.uuid4().hex        # ComfyUI groups a session's jobs by this
+DEFAULT_WAIT = 300.0                # generation is slow; 5 min is a sane ceiling
+
+
+# ------------------------------------------------------------- http plumbing
+def _get(path: str, timeout: float = 30.0):
+    url = f"{COMFY_URL}{path}"
+    with urllib.request.urlopen(url, timeout=timeout) as r:
+        body = r.read()
+    ctype = "application/json"
+    try:
+        return json.loads(body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return {"_raw_bytes": len(body), "_content_type": ctype}
+
+
+def _post(path: str, payload: dict, timeout: float = 30.0):
+    req = urllib.request.Request(
+        f"{COMFY_URL}{path}",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        body = r.read()
+    try:
+        return json.loads(body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+
+
+def _reachable() -> tuple:
+    """(ok, detail) — every tool leads with this so the failure is legible."""
+    try:
+        stats = _get("/system_stats", timeout=8.0)
+        return True, stats
+    except urllib.error.URLError as exc:
+        return False, (f"ComfyUI is not answering on {COMFY_URL} ({exc.reason}). "
+                       f"Start it, or set COMFY_URL if it runs on another port.")
+    except Exception as exc:
+        return False, f"ComfyUI check failed: {exc}"
+
+
+# --------------------------------------------------------------- workflow io
+def _workflow_path(name: str) -> Path:
+    """Resolve a workflow name to a file, refusing anything outside the dir."""
+    stem = (name or "").strip()
+    if not stem:
+        raise ValueError("workflow name is empty")
+    if not stem.lower().endswith(".json"):
+        stem += ".json"
+    full = (WORKFLOW_DIR / stem).resolve()
+    if not str(full).startswith(str(WORKFLOW_DIR.resolve())):
+        raise ValueError("workflow name escapes the workflow directory")
+    if not full.is_file():
+        raise ValueError(f"no such workflow: {full.name}")
+    return full
+
+
+def _aliases(path: Path) -> dict:
+    """Optional <workflow>.params.json mapping friendly name -> [node, input]."""
+    side = path.with_suffix("").with_suffix(".params.json")
+    if not side.is_file():
+        side = path.parent / (path.stem + ".params.json")
+    if side.is_file():
+        try:
+            return json.loads(side.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
+    return {}
+
+
+def _targets(graph: dict) -> dict:
+    """Every settable input, as 'node.input' and 'Title.input' where titled."""
+    out = {}
+    for nid, node in graph.items():
+        if not isinstance(node, dict):
+            continue
+        title = ((node.get("_meta") or {}).get("title") or "").strip()
+        for key, val in (node.get("inputs") or {}).items():
+            if isinstance(val, list):
+                continue          # a wired link, not a literal — not settable
+            out[f"{nid}.{key}"] = val
+            if title:
+                out.setdefault(f"{title}.{key}", val)
+    return out
+
+
+def _apply(graph: dict, params: dict, alias: dict) -> list:
+    """Patch literal inputs. Returns a log of what actually changed."""
+    changed = []
+    for key, value in (params or {}).items():
+        node_id = input_name = None
+
+        if key in alias:                                  # friendly alias
+            node_id, input_name = alias[key][0], alias[key][1]
+        elif "." in key:
+            left, input_name = key.rsplit(".", 1)
+            if left in graph:                             # direct node id
+                node_id = left
+            else:                                         # match on node title
+                for nid, node in graph.items():
+                    meta = (node.get("_meta") or {}) if isinstance(node, dict) else {}
+                    if (meta.get("title") or "").strip() == left:
+                        node_id = nid
+                        break
+
+        if node_id is None or input_name is None:
+            raise ValueError(
+                f"cannot place parameter '{key}'. Use 'node_id.input', "
+                f"'Node Title.input', or an alias from the workflow's "
+                f".params.json. Call comfy_workflows for what this one accepts."
+            )
+        node = graph.get(node_id)
+        if not isinstance(node, dict) or input_name not in (node.get("inputs") or {}):
+            raise ValueError(f"node {node_id} has no input '{input_name}'")
+        if isinstance(node["inputs"][input_name], list):
+            raise ValueError(
+                f"{node_id}.{input_name} is wired to another node; "
+                f"it cannot be set to a literal"
+            )
+        changed.append({"node": node_id, "input": input_name,
+                        "from": node["inputs"][input_name], "to": value})
+        node["inputs"][input_name] = value
+    return changed
+
+
+def _outputs(history_entry: dict) -> list:
+    """Flatten a history record into downloadable file references."""
+    files = []
+    for node_id, out in (history_entry.get("outputs") or {}).items():
+        for kind in ("images", "gifs", "videos", "audio", "files"):
+            for item in (out.get(kind) or []):
+                if not isinstance(item, dict) or "filename" not in item:
+                    continue
+                q = urllib.parse.urlencode({
+                    "filename": item.get("filename", ""),
+                    "subfolder": item.get("subfolder", ""),
+                    "type": item.get("type", "output"),
+                })
+                files.append({
+                    "node": node_id,
+                    "kind": kind,
+                    "filename": item.get("filename"),
+                    "subfolder": item.get("subfolder", ""),
+                    "url": f"{COMFY_URL}/view?{q}",
+                })
+    return files
+
+
+# ------------------------------------------------------------------- tools
+def tool_comfy_status(args: dict) -> dict:
+    ok, detail = _reachable()
+    if not ok:
+        return {"reachable": False, "url": COMFY_URL, "error": detail}
+    sysinfo = (detail or {}).get("system", {})
+    devices = []
+    for d in (detail or {}).get("devices", []):
+        devices.append({
+            "name": d.get("name"),
+            "vram_total_gb": round((d.get("vram_total") or 0) / 1e9, 1),
+            "vram_free_gb": round((d.get("vram_free") or 0) / 1e9, 1),
+        })
+    queue = {}
+    try:
+        q = _get("/queue", timeout=8.0)
+        queue = {"running": len(q.get("queue_running") or []),
+                 "pending": len(q.get("queue_pending") or [])}
+    except Exception as exc:
+        queue = {"error": str(exc)}
+    return {
+        "reachable": True,
+        "url": COMFY_URL,
+        "comfyui_version": sysinfo.get("comfyui_version"),
+        "python": sysinfo.get("python_version", "").split()[0],
+        "pytorch": sysinfo.get("pytorch_version"),
+        "ram_free_gb": round((sysinfo.get("ram_free") or 0) / 1e9, 1),
+        "devices": devices,
+        "queue": queue,
+        "workflow_dir": str(WORKFLOW_DIR),
+        "workflow_dir_exists": WORKFLOW_DIR.is_dir(),
+    }
+
+
+def tool_comfy_models(args: dict) -> dict:
+    """What is actually installed, read from the live node schemas.
+
+    ComfyUI advertises installed files as the options of each loader's combo
+    input, so this reflects the real folders — including anything dropped in
+    while ComfyUI was running (it rescans on request).
+    """
+    ok, detail = _reachable()
+    if not ok:
+        return {"error": detail}
+    try:
+        info = _get("/object_info", timeout=60.0)
+    except Exception as exc:
+        return {"error": f"could not read node info: {exc}"}
+
+    wanted = {
+        "checkpoints": ("CheckpointLoaderSimple", "ckpt_name"),
+        "upscale_models": ("UpscaleModelLoader", "model_name"),
+        "loras": ("LoraLoader", "lora_name"),
+        "vae": ("VAELoader", "vae_name"),
+        "controlnet": ("ControlNetLoader", "control_net_name"),
+        "diffusion_models": ("UNETLoader", "unet_name"),
+        "clip_vision": ("CLIPVisionLoader", "clip_name"),
+        "frame_interpolation": ("FrameInterpolationModelLoader", "model_name"),
+    }
+    found, missing = {}, []
+    for label, (node, field) in wanted.items():
+        try:
+            opts = info[node]["input"]["required"][field][0]
+            opts = opts if isinstance(opts, list) else []
+        except (KeyError, IndexError, TypeError):
+            found[label] = {"available": None, "note": f"{node} not installed"}
+            continue
+        found[label] = {"count": len(opts), "available": opts[:60]}
+        if not opts:
+            missing.append(label)
+    filt = (args or {}).get("filter")
+    if filt:
+        low = str(filt).lower()
+        found = {k: v for k, v in found.items() if low in k.lower()}
+    return {"models": found, "empty_categories": missing, "node_count": len(info)}
+
+
+def tool_comfy_node_info(args: dict) -> dict:
+    ok, detail = _reachable()
+    if not ok:
+        return {"error": detail}
+    name = (args or {}).get("node")
+    try:
+        info = _get("/object_info", timeout=60.0)
+    except Exception as exc:
+        return {"error": f"could not read node info: {exc}"}
+    if not name:
+        return {"error": "give a node name", "hint": sorted(info)[:40]}
+    if name not in info:
+        low = name.lower()
+        near = [k for k in info if low in k.lower()][:25]
+        return {"error": f"no node named {name}", "similar": near}
+    node = info[name]
+    return {"node": name, "category": node.get("category"),
+            "input": node.get("input"), "output": node.get("output"),
+            "output_name": node.get("output_name")}
+
+
+def tool_comfy_workflows(args: dict) -> dict:
+    if not WORKFLOW_DIR.is_dir():
+        return {"error": f"no workflow directory at {WORKFLOW_DIR}",
+                "hint": "create it, or set COMFY_WORKFLOWS", "workflows": []}
+    items = []
+    for path in sorted(WORKFLOW_DIR.glob("*.json")):
+        if path.name.endswith(".params.json"):
+            continue
+        entry = {"name": path.stem, "file": str(path)}
+        try:
+            graph = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as exc:
+            entry["error"] = f"unreadable: {exc}"
+            items.append(entry)
+            continue
+        if not isinstance(graph, dict) or "nodes" in graph:
+            entry["error"] = ("this looks like an editor save, not an API "
+                              "export — re-save it with Save (API Format)")
+            items.append(entry)
+            continue
+        alias = _aliases(path)
+        entry["nodes"] = len(graph)
+        entry["aliases"] = alias or None
+        if (args or {}).get("detail"):
+            entry["settable"] = _targets(graph)
+        else:
+            entry["settable_count"] = len(_targets(graph))
+        items.append(entry)
+    return {"dir": str(WORKFLOW_DIR), "count": len(items), "workflows": items}
+
+
+def tool_comfy_run(args: dict) -> dict:
+    """Queue a workflow, optionally waiting for it, and report the outputs."""
+    ok, detail = _reachable()
+    if not ok:
+        return {"error": detail}
+    args = args or {}
+    try:
+        path = _workflow_path(args.get("workflow", ""))
+        graph = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(graph, dict) or "nodes" in graph:
+            return {"error": "that file is an editor save, not an API export. "
+                             "Re-save it from ComfyUI with Save (API Format)."}
+        changed = _apply(graph, args.get("params") or {}, _aliases(path))
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        return {"error": str(exc)}
+
+    try:
+        queued = _post("/prompt", {"prompt": graph, "client_id": CLIENT_ID}, timeout=60.0)
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", "replace")[:800]
+        return {"error": f"ComfyUI rejected the graph ({exc.code})", "detail": body,
+                "hint": "a required model may be missing — try comfy_models"}
+    except Exception as exc:
+        return {"error": f"queue failed: {exc}"}
+
+    prompt_id = queued.get("prompt_id")
+    if not prompt_id:
+        return {"error": "ComfyUI returned no prompt_id", "response": queued}
+    result = {"prompt_id": prompt_id, "workflow": path.stem, "applied": changed}
+
+    if not args.get("wait", True):
+        result["status"] = "queued"
+        return result
+
+    timeout = float(args.get("timeout") or DEFAULT_WAIT)
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            hist = _get(f"/history/{prompt_id}", timeout=15.0)
+        except Exception:
+            hist = {}
+        entry = (hist or {}).get(prompt_id)
+        if entry:
+            status = (entry.get("status") or {})
+            files = _outputs(entry)
+            result["status"] = status.get("status_str") or "done"
+            result["outputs"] = files
+            result["output_count"] = len(files)
+            if not files:
+                result["note"] = ("finished with no saved files — the workflow "
+                                  "may lack a Save/Combine node")
+            return result
+        time.sleep(1.5)
+
+    result["status"] = "still running"
+    result["note"] = (f"no result within {timeout:.0f}s. It may still finish — "
+                      f"call comfy_result with this prompt_id.")
+    return result
+
+
+def tool_comfy_result(args: dict) -> dict:
+    ok, detail = _reachable()
+    if not ok:
+        return {"error": detail}
+    prompt_id = (args or {}).get("prompt_id")
+    if not prompt_id:
+        return {"error": "give a prompt_id"}
+    try:
+        hist = _get(f"/history/{prompt_id}", timeout=20.0)
+    except Exception as exc:
+        return {"error": f"history lookup failed: {exc}"}
+    entry = (hist or {}).get(prompt_id)
+    if not entry:
+        return {"prompt_id": prompt_id, "status": "not finished (or unknown id)"}
+    files = _outputs(entry)
+    return {"prompt_id": prompt_id,
+            "status": (entry.get("status") or {}).get("status_str", "done"),
+            "output_count": len(files), "outputs": files}
+
+
+def tool_comfy_cancel(args: dict) -> dict:
+    ok, detail = _reachable()
+    if not ok:
+        return {"error": detail}
+    done = []
+    try:
+        _post("/interrupt", {}, timeout=10.0)
+        done.append("interrupted the running job")
+    except Exception as exc:
+        done.append(f"interrupt failed: {exc}")
+    if (args or {}).get("clear_queue"):
+        try:
+            _post("/queue", {"clear": True}, timeout=10.0)
+            done.append("cleared the pending queue")
+        except Exception as exc:
+            done.append(f"queue clear failed: {exc}")
+    return {"actions": done}
+
+
+TOOLS = {
+    "comfy_status": (
+        tool_comfy_status,
+        "Is ComfyUI up? Returns version, GPU and free VRAM, queue depth, and "
+        "where workflows are read from. Call this first when anything looks off.",
+        {"type": "object", "properties": {}},
+    ),
+    "comfy_models": (
+        tool_comfy_models,
+        "What models are actually installed, by category (checkpoints, "
+        "upscale_models, loras, vae, controlnet, diffusion_models, "
+        "frame_interpolation). Also reports which categories are empty.",
+        {"type": "object",
+         "properties": {"filter": {"type": "string",
+                                   "description": "substring over category names"}}},
+    ),
+    "comfy_node_info": (
+        tool_comfy_node_info,
+        "Inspect one node type's inputs and outputs — use when building or "
+        "repairing a workflow. Omit 'node' to get a sample of node names.",
+        {"type": "object", "properties": {"node": {"type": "string"}}},
+    ),
+    "comfy_workflows": (
+        tool_comfy_workflows,
+        "List saved API-format workflows, their aliases and how many inputs "
+        "can be set. Pass detail=true to see every settable input and value.",
+        {"type": "object", "properties": {"detail": {"type": "boolean"}}},
+    ),
+    "comfy_run": (
+        tool_comfy_run,
+        "Run a workflow with optional parameter overrides and return the output "
+        "files. Params are keyed 'node_id.input', 'Node Title.input', or an "
+        "alias. Set wait=false to queue without blocking.",
+        {"type": "object",
+         "properties": {
+             "workflow": {"type": "string", "description": "workflow name"},
+             "params": {"type": "object",
+                        "description": "overrides, e.g. {'6.text': 'a red car'}"},
+             "wait": {"type": "boolean", "description": "block for the result (default true)"},
+             "timeout": {"type": "number", "description": "seconds to wait (default 300)"},
+         },
+         "required": ["workflow"]},
+    ),
+    "comfy_result": (
+        tool_comfy_result,
+        "Fetch the outputs of a previously queued run by prompt_id.",
+        {"type": "object", "properties": {"prompt_id": {"type": "string"}},
+         "required": ["prompt_id"]},
+    ),
+    "comfy_cancel": (
+        tool_comfy_cancel,
+        "Interrupt the running job. Pass clear_queue=true to also drop pending "
+        "jobs.",
+        {"type": "object", "properties": {"clear_queue": {"type": "boolean"}}},
+    ),
+}
+
+
+# ------------------------------------------------------------------ protocol
+def _result(msg_id, result):
+    return {"jsonrpc": "2.0", "id": msg_id, "result": result}
+
+
+def _error(msg_id, code, message):
+    return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": code, "message": message}}
+
+
+def handle(msg: dict):
+    method = msg.get("method")
+    msg_id = msg.get("id")
+
+    if method == "initialize":
+        client_proto = (msg.get("params") or {}).get("protocolVersion")
+        proto = client_proto if client_proto in SUPPORTED_PROTOCOLS else DEFAULT_PROTOCOL
+        return _result(
+            msg_id,
+            {
+                "protocolVersion": proto,
+                "capabilities": {"tools": {"listChanged": False}},
+                "serverInfo": SERVER_INFO,
+            },
+        )
+
+    if method == "tools/list":
+        tools = [
+            {"name": name, "description": desc, "inputSchema": schema}
+            for name, (_fn, desc, schema) in TOOLS.items()
+        ]
+        return _result(msg_id, {"tools": tools})
+
+    if method == "tools/call":
+        params = msg.get("params") or {}
+        name = params.get("name")
+        if name not in TOOLS:
+            return _error(msg_id, -32602, f"unknown tool: {name}")
+        try:
+            payload = TOOLS[name][0](params.get("arguments") or {})
+            text = json.dumps(payload, ensure_ascii=False, indent=1)
+            return _result(msg_id, {"content": [{"type": "text", "text": text}]})
+        except Exception as exc:  # a tool bug must never kill the server
+            return _result(
+                msg_id,
+                {
+                    "content": [{"type": "text", "text": f"tool error: {exc}"}],
+                    "isError": True,
+                },
+            )
+
+    if method == "ping":
+        return _result(msg_id, {})
+
+    if msg_id is None:
+        return None  # notification (e.g. notifications/initialized) — no reply
+
+    return _error(msg_id, -32601, f"method not found: {method}")
+
+
+def main():
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            msg = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        reply = handle(msg)
+        if reply is not None:
+            sys.stdout.write(json.dumps(reply, ensure_ascii=False) + "\n")
+            sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    main()
+# AI-GENERATED END

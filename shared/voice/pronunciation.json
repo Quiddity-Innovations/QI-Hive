@@ -1,0 +1,9 @@
+{
+  "_comment": "QI canonical spoken-pronunciation map. Spoken-only: rewrites text before TTS, NEVER changes printed/displayed text. Whole-word, case-insensitive. Owner: Renne (Quiddity Innovations).",
+  "_owner_name_rule": "Renne is SPELLED 'Renne' but PRONOUNCED like the US name 'Renee' (ruh-NAY). Neural TTS says 'Renee' correctly, so we substitute it in audio only.",
+  "map": {
+    "Renne": "Renee",
+    "Renné": "Renee",
+    "Rene": "Renee"
+  }
+}

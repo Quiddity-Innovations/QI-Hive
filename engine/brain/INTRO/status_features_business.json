@@ -1,18 +1,57 @@
 [
   {
-    "category": "Core Capabilities",
+    "category": "Ecosystem Memory",
     "features": [
-      {
-        "name": "Project registered in QI ecosystem",
-        "description": "Listed in qi_registry.json with port allocation, path, and status.",
-        "status": "live"
-      },
-      {
-        "name": "Detailed feature matrix",
-        "description": "Per-feature business view — pending population.",
-        "status": "planned",
-        "notes": "Fill in by editing status_features_business.json in the INTRO folder."
-      }
+      {"name": "Session briefing on demand", "description": "Any project asks 'what is my current state and what should I know?' and gets back the latest project state, the most relevant recent decisions, and any pending reviews — trimmed to a token budget.", "status": "live", "notes": "qi_get_context; ranks same-project items first, then ecosystem-wide; default 2000-token budget, 14-day window"},
+      {"name": "Decision ledger", "description": "Every significant architectural or process decision is recorded with its rationale, who made it, and how widely it applies, so it can be recalled and never silently re-litigated.", "status": "live", "notes": "491 active decisions; scope = project | ecosystem | global"},
+      {"name": "Supersede, never delete", "description": "When a decision is reversed, the old one is marked superseded by the new one with a reason — the history stays intact and explainable.", "status": "live", "notes": "qi_supersede_decision; superseded decisions drop out of context but remain queryable"},
+      {"name": "Session history", "description": "Each working session is logged with a summary, what changed, how many decisions/features it produced, and the model used — a chronological record of the whole ecosystem's work.", "status": "live", "notes": "565 sessions logged across all projects"},
+      {"name": "Project state tracking", "description": "Every project's current phase, status, blockers and next steps are kept current, giving a one-glance view of where everything stands.", "status": "live", "notes": "239 state snapshots; status = active | paused | blocked | complete"}
+    ]
+  },
+  {
+    "category": "Cross-Project Intelligence",
+    "features": [
+      {"name": "Feature propagation engine", "description": "When a useful pattern is discovered in one project, the Brain automatically asks 'is this relevant to each other project?' and records an adopt / adapt / skip / discuss recommendation for each.", "status": "live", "notes": "Local qwen3:8b evaluates relevance per target project; 394 features, 44 evaluations recorded"},
+      {"name": "Pending-review queue", "description": "Recommendations the Brain makes are queued for the owner to confirm, so good ideas surface for a decision rather than being lost.", "status": "live", "notes": "qi_get_pending_features; 44 awaiting review"},
+      {"name": "Owner override (Law 6)", "description": "The owner can override any of the Brain's automated recommendations with their own call and a reason — the human decision is always final.", "status": "partial", "notes": "evaluation_overrides table + qi_override_evaluation wired; 0 used so far"},
+      {"name": "Learns from its own history", "description": "Each relevance evaluation is shown the last few decisions made for that target project, so its recommendations stay consistent with how that project has actually decided before.", "status": "live", "notes": "Last 5 evaluations injected as soft context per target"}
+    ]
+  },
+  {
+    "category": "Semantic Recall",
+    "features": [
+      {"name": "Search memory by meaning", "description": "Ask in plain English — 'have we dealt with concurrent database writes before?' — and the Brain returns the closest decisions, features, sessions or documents, even without matching keywords.", "status": "live", "notes": "qi_search_memory over 4 ChromaDB collections; cosine similarity"},
+      {"name": "Explain anything", "description": "Get a clean, readable writeup of any decision, feature, session or project — including its rationale, scope, and whether it was later superseded.", "status": "live", "notes": "qi_explain returns markdown + citations"},
+      {"name": "Free local embeddings", "description": "All semantic memory is built with a local embedding model, so search costs nothing to run and needs no external API.", "status": "live", "notes": "nomic-embed-text via Ollama; 768-dim vectors"}
+    ]
+  },
+  {
+    "category": "Always-Current (Autonomous)",
+    "features": [
+      {"name": "Background poller", "description": "The Brain reads each project's state file and recent git commits on a schedule, keeping itself up to date even when no one remembers to push an update.", "status": "live", "notes": "Every 300s; 18,718 poll cycles logged"},
+      {"name": "File inbox", "description": "Any tool or service can drop a JSON message in the Brain's inbox folder; the poller picks it up and files it, no API call required.", "status": "live", "notes": "C:\\QIH\\engine\\brain\\inbox\\*.json"},
+      {"name": "Documentation Brain", "description": "Every document across the ecosystem is catalogued and linked into a knowledge graph, so 'where is the doc on X?' has a single answer.", "status": "live", "notes": "921 docs indexed, 2,203 relationship edges; powers the hive-librarian agent"}
+    ]
+  },
+  {
+    "category": "Hive Operations",
+    "features": [
+      {"name": "Agent registry & heartbeats", "description": "Every QI agent — Claude, the 7 Hive sub-agents, and the sibling services — is registered, and the Brain tracks when each was last active.", "status": "live", "notes": "14 agents registered; 1,643 heartbeats; powers the War Room presence board"},
+      {"name": "Dispatch pipeline", "description": "Work items (build this, review that) flow through the Brain as dispatches with status, priority, and an apply-state, coordinating the Hive's autonomous build/review loop.", "status": "live", "notes": "2,873 dispatches; 7 dispatch runs tracked"},
+      {"name": "Compliance log", "description": "Every standards finding the Inspector raises across the ecosystem is recorded here with severity and whether it was auto-fixed.", "status": "live", "notes": "46,654 compliance-log rows"},
+      {"name": "Agent growth loop", "description": "Agents record what they learned after a task, building a profile of each agent's accumulated patterns over time.", "status": "live", "notes": "POST /api/agent/growth; surfaced via /api/agent/{id}/profile"},
+      {"name": "War Room chat", "description": "A shared message board where agents post to each other, persisted in the Brain so the conversation survives restarts.", "status": "live", "notes": "warroom_messages; 11 messages so far"}
+    ]
+  },
+  {
+    "category": "Service & Integration",
+    "features": [
+      {"name": "12-tool MCP server", "description": "The Brain exposes its whole capability set as 12 MCP tools any Claude session can call directly, with no code changes per project.", "status": "live", "notes": "mcp.py stdio bridge; registered globally in claude.json"},
+      {"name": "Plain REST API", "description": "Non-Claude callers get the same operations over standard HTTP, with health, version and info probes for monitoring.", "status": "live", "notes": "FastAPI on :9011; /health, /version, /info, /docs"},
+      {"name": "24/7 Windows service", "description": "Runs unattended as the QI_BrainAPI service so the ecosystem's memory is always available.", "status": "live", "notes": "NSSM QI_BrainAPI; AppDirectory C:\\QIH; logs to qi_brain_api.log"},
+      {"name": "Open CORS for QI services", "description": "Any QI project — current or future — can call the Brain from a browser without per-project allow-listing.", "status": "live", "notes": "CORS allow_origins=* (local-only deployment)"},
+      {"name": "Authentication & multi-user", "description": "Token auth and per-caller isolation for use beyond the local machine.", "status": "planned", "notes": "Currently local-only behind the QI service boundary; no auth layer yet"}
     ]
   }
 ]

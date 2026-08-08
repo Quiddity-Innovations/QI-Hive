@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-navy" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1f2d3d"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b8860b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1040" height="760" fill="#ffffff" rx="12"/>
+  <text x="520" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#1f2d3d">QI Hive — System Architecture</text>
+  <text x="520" y="50" text-anchor="middle" font-size="12" fill="#64748b">Quiddity Innovations · Ecosystem Orchestration Hub · 2026</text>
+  <text x="520" y="67" text-anchor="middle" font-size="10" fill="#94a3b8">The meta-platform: Brain (memory) · Dashboard (console) · Agent Fabric (action) · Governance (Six Laws &amp; Registry)</text>
+
+  <!-- ══ LEGEND (top-right) ══ -->
+  <rect x="812" y="78" width="216" height="170" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="920" y="96" text-anchor="middle" font-size="10" font-weight="700" fill="#1f2d3d">Legend</text>
+  <rect x="822" y="104" width="14" height="10" rx="2" fill="#eafaf0" stroke="#2e7d32"/>
+  <text x="843" y="113" font-size="9" fill="#374151">Live / running service</text>
+  <rect x="822" y="121" width="14" height="10" rx="2" fill="#fff8e6" stroke="#b8860b"/>
+  <text x="843" y="130" font-size="9" fill="#374151">Partial / built · pending</text>
+  <rect x="822" y="138" width="14" height="10" rx="2" fill="#f1f3f5" stroke="#9aa5b1"/>
+  <text x="843" y="147" font-size="9" fill="#374151">Planned</text>
+  <rect x="822" y="155" width="14" height="10" rx="2" fill="#fff1e6" stroke="#e8731c" stroke-dasharray="3,2"/>
+  <text x="843" y="164" font-size="9" fill="#374151">Caution / deprecated</text>
+  <rect x="822" y="172" width="14" height="10" rx="2" fill="#1f2d3d" stroke="#1f2d3d"/>
+  <text x="843" y="181" font-size="9" fill="#374151">Core platform component</text>
+  <line x1="822" y1="196" x2="840" y2="196" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+  <text x="846" y="200" font-size="9" fill="#374151">Data / control flow</text>
+  <line x1="822" y1="212" x2="840" y2="212" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <text x="846" y="216" font-size="9" fill="#374151">Tunnel / secure path</text>
+  <rect x="822" y="226" width="14" height="10" rx="2" fill="none" stroke="#64748b" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="846" y="235" font-size="9" fill="#374151">Layer / group boundary</text>
+
+  <!-- ══ BAND 1 — LEAF PROJECTS ══ -->
+  <rect x="12" y="78" width="788" height="92" rx="9" fill="none" stroke="#9aa5b1" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="24" y="96" font-size="11" font-weight="700" fill="#475569" letter-spacing="1">LEAF PROJECTS — 24 apps today, modules tomorrow</text>
+
+  <rect x="24" y="104" width="98" height="50" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="73" y="124" text-anchor="middle" font-size="11" font-weight="600" fill="#1b5e20">Maia</text>
+  <text x="73" y="139" text-anchor="middle" font-size="8" fill="#2e7d32">:8001 · :7860</text>
+
+  <rect x="130" y="104" width="98" height="50" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="179" y="124" text-anchor="middle" font-size="11" font-weight="600" fill="#1b5e20">Naya</text>
+  <text x="179" y="139" text-anchor="middle" font-size="8" fill="#2e7d32">:8002 · :7861</text>
+
+  <rect x="236" y="104" width="98" height="50" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="285" y="124" text-anchor="middle" font-size="11" font-weight="600" fill="#1b5e20">NEXUS</text>
+  <text x="285" y="139" text-anchor="middle" font-size="8" fill="#2e7d32">:8010 · :7880</text>
+
+  <rect x="342" y="104" width="98" height="50" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="391" y="124" text-anchor="middle" font-size="11" font-weight="600" fill="#7c5e0a">OpenClaw</text>
+  <text x="391" y="139" text-anchor="middle" font-size="8" fill="#b8860b">WSL gateway</text>
+
+  <rect x="448" y="104" width="98" height="50" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="497" y="124" text-anchor="middle" font-size="11" font-weight="600" fill="#1b5e20">EasyFlow</text>
+  <text x="497" y="139" text-anchor="middle" font-size="8" fill="#2e7d32">:8550</text>
+
+  <rect x="554" y="104" width="98" height="50" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="603" y="124" text-anchor="middle" font-size="11" font-weight="600" fill="#1b5e20">FileHQ</text>
+  <text x="603" y="139" text-anchor="middle" font-size="8" fill="#2e7d32">:8000</text>
+
+  <rect x="660" y="104" width="128" height="50" rx="7" fill="#f1f3f5" stroke="#9aa5b1" stroke-width="1.5"/>
+  <text x="724" y="124" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">+ TubeScout, MQ,</text>
+  <text x="724" y="139" text-anchor="middle" font-size="8" fill="#64748b">AutoPDF, MapSnap, CogniBase…</text>
+
+  <!-- ① flow: leaf projects → core (report sessions / read context) -->
+  <line x1="406" y1="170" x2="406" y2="196" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arr-navy)"/>
+  <text x="416" y="187" font-size="8.5" fill="#64748b">log sessions · get context · log decisions</text>
+
+  <!-- ══ BAND 2 — CORE ══ -->
+  <rect x="12" y="196" width="1016" height="186" rx="9" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="24" y="214" font-size="11" font-weight="700" fill="#1f2d3d" letter-spacing="1">CORE — QI Brain · Dashboard · Agent Fabric</text>
+
+  <!-- QI Brain (core navy) -->
+  <rect x="24" y="224" width="300" height="148" rx="9" fill="#1f2d3d" stroke="#1f2d3d" stroke-width="2"/>
+  <text x="174" y="245" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">QI Brain</text>
+  <text x="174" y="261" text-anchor="middle" font-size="9" fill="#cbd5e1">engine\brain\api.py · FastAPI · Port 9011</text>
+  <rect x="36" y="270" width="276" height="22" rx="5" fill="#2b3c4f"/>
+  <text x="174" y="285" text-anchor="middle" font-size="9" fill="#eafaf0">SQLite qi_brain.db — 24 tables · 491 decisions</text>
+  <rect x="36" y="296" width="276" height="22" rx="5" fill="#2b3c4f"/>
+  <text x="174" y="311" text-anchor="middle" font-size="9" fill="#eafaf0">ChromaDB — 4 collections (nomic-embed)</text>
+  <text x="174" y="334" text-anchor="middle" font-size="8.5" fill="#94a3b8">decisions · features · sessions · docs</text>
+  <text x="174" y="349" text-anchor="middle" font-size="8.5" fill="#94a3b8">get_context · log_decision · search_memory</text>
+  <text x="174" y="364" text-anchor="middle" font-size="8" fill="#7e8a99">MCP server (mcp.py) · poller · distiller · inbox</text>
+
+  <!-- Dashboard (core navy) -->
+  <rect x="338" y="224" width="300" height="148" rx="9" fill="#1f2d3d" stroke="#1f2d3d" stroke-width="2"/>
+  <text x="488" y="245" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">QI Dashboard</text>
+  <text x="488" y="261" text-anchor="middle" font-size="9" fill="#cbd5e1">engine\hive\dashboard\server.py · FastAPI · :8600</text>
+  <rect x="350" y="270" width="276" height="22" rx="5" fill="#2b3c4f"/>
+  <text x="488" y="285" text-anchor="middle" font-size="9" fill="#eafaf0">Mission Control · War Room · Compliance</text>
+  <rect x="350" y="296" width="276" height="22" rx="5" fill="#2b3c4f"/>
+  <text x="488" y="311" text-anchor="middle" font-size="9" fill="#eafaf0">Project Status · Documentation Library</text>
+  <text x="488" y="334" text-anchor="middle" font-size="8.5" fill="#94a3b8">tunnel_write_guard · no_store_html middleware</text>
+  <text x="488" y="349" text-anchor="middle" font-size="8.5" fill="#94a3b8">/api/dispatch ← CoWork · /health (HTML+JSON)</text>
+  <text x="488" y="364" text-anchor="middle" font-size="8" fill="#7e8a99">project_status.py renders these very pages</text>
+
+  <!-- Agent Fabric (core navy) -->
+  <rect x="652" y="224" width="300" height="148" rx="9" fill="#1f2d3d" stroke="#1f2d3d" stroke-width="2"/>
+  <text x="802" y="245" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Agent Fabric</text>
+  <text x="802" y="261" text-anchor="middle" font-size="9" fill="#cbd5e1">.claude\agents\hive-*.md · dispatch protocol</text>
+  <rect x="664" y="270" width="276" height="22" rx="5" fill="#2b3c4f"/>
+  <text x="802" y="285" text-anchor="middle" font-size="9" fill="#eafaf0">architect · builder · inspector · ops</text>
+  <rect x="664" y="296" width="276" height="22" rx="5" fill="#2b3c4f"/>
+  <text x="802" y="311" text-anchor="middle" font-size="9" fill="#eafaf0">scout · scribe · tester · librarian</text>
+  <text x="802" y="334" text-anchor="middle" font-size="8.5" fill="#94a3b8">Agent(subagent_type='hive-&lt;role&gt;')</text>
+  <text x="802" y="349" text-anchor="middle" font-size="8.5" fill="#94a3b8">Opus design · Sonnet build · Haiku ops</text>
+  <text x="802" y="364" text-anchor="middle" font-size="8" fill="#7e8a99">heartbeats + dispatches logged to Brain</text>
+
+  <!-- core ↔ core links -->
+  <line x1="324" y1="298" x2="338" y2="298" stroke="#1f2d3d" stroke-width="1.5" marker-end="url(#arr-navy)"/>
+  <line x1="638" y1="298" x2="652" y2="298" stroke="#1f2d3d" stroke-width="1.5" marker-end="url(#arr-navy)"/>
+
+  <!-- ② core → governance -->
+  <line x1="406" y1="382" x2="406" y2="406" stroke="#b8860b" stroke-width="1.8" marker-end="url(#arr-amber)"/>
+  <text x="416" y="398" font-size="8.5" fill="#64748b">validate · enforce standards</text>
+
+  <!-- ══ BAND 3 — GOVERNANCE ══ -->
+  <rect x="12" y="406" width="1016" height="116" rx="9" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="24" y="424" font-size="11" font-weight="700" fill="#7c5e0a" letter-spacing="1">GOVERNANCE — the constitution every project obeys</text>
+
+  <rect x="24" y="434" width="240" height="78" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="144" y="454" text-anchor="middle" font-size="11" font-weight="700" fill="#7c5e0a">Ecosystem Registry</text>
+  <text x="144" y="470" text-anchor="middle" font-size="8.5" fill="#b8860b">ecosystem\qi_registry.json + .py</text>
+  <text x="144" y="484" text-anchor="middle" font-size="8.5" fill="#b8860b">25 projects · ports · CORS · relations</text>
+  <text x="144" y="500" text-anchor="middle" font-size="8" fill="#a17a12">QI.port() · QI.cors_origins()</text>
+
+  <rect x="276" y="434" width="240" height="78" rx="7" fill="#fff8e6" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="396" y="454" text-anchor="middle" font-size="11" font-weight="700" fill="#7c5e0a">The Six Laws + Standards</text>
+  <text x="396" y="470" text-anchor="middle" font-size="8.5" fill="#b8860b">QI_Architecture_Principles.md</text>
+  <text x="396" y="484" text-anchor="middle" font-size="8.5" fill="#b8860b">QI_Standards.md · folders · naming</text>
+  <text x="396" y="500" text-anchor="middle" font-size="8" fill="#a17a12">Law 6 = Owner Override</text>
+
+  <rect x="528" y="434" width="240" height="78" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="648" y="454" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Inspector / Compliance</text>
+  <text x="648" y="470" text-anchor="middle" font-size="8.5" fill="#2e7d32">engine\hive\inspector\inspector.py</text>
+  <text x="648" y="484" text-anchor="middle" font-size="8.5" fill="#2e7d32">secrets scan · brain-drift · auto-fix</text>
+  <text x="648" y="500" text-anchor="middle" font-size="8" fill="#256a2a">every 4h + nightly deep · 46k log rows</text>
+
+  <rect x="780" y="434" width="236" height="78" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="898" y="454" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">qi_validator.py</text>
+  <text x="898" y="470" text-anchor="middle" font-size="8.5" fill="#2e7d32">compliance checker per project</text>
+  <text x="898" y="484" text-anchor="middle" font-size="8.5" fill="#2e7d32">--project &lt;id&gt; · pre-change gate</text>
+  <text x="898" y="500" text-anchor="middle" font-size="8" fill="#256a2a">qi_new_project.py scaffolds compliant</text>
+
+  <!-- ③ core → service/edge -->
+  <line x1="174" y1="372" x2="174" y2="406" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <line x1="488" y1="522" x2="488" y2="558" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+  <text x="498" y="548" font-size="8.5" fill="#64748b">runs on · elevated by · exposed via</text>
+
+  <!-- ══ BAND 4 — SERVICE / EDGE ══ -->
+  <rect x="12" y="558" width="1016" height="116" rx="9" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="24" y="576" font-size="11" font-weight="700" fill="#475569" letter-spacing="1">SERVICE &amp; EDGE — how it stays running and reachable</text>
+
+  <rect x="24" y="586" width="312" height="78" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="180" y="606" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">NSSM Service Fabric</text>
+  <text x="180" y="622" text-anchor="middle" font-size="8.5" fill="#2e7d32">engine\bin\nssm.exe · 11 QI_* services</text>
+  <text x="180" y="636" text-anchor="middle" font-size="8.5" fill="#2e7d32">QI_BrainAPI · QI_Dashboard · QI_HiveIngest</text>
+  <text x="180" y="651" text-anchor="middle" font-size="8" fill="#256a2a">QI_ prefix · AppDirectory · Description set</text>
+
+  <rect x="348" y="586" width="312" height="78" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="504" y="606" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">QI_Elevate Broker</text>
+  <text x="504" y="622" text-anchor="middle" font-size="8.5" fill="#2e7d32">engine\common\qi_elevate_client.py</text>
+  <text x="504" y="636" text-anchor="middle" font-size="8.5" fill="#2e7d32">run_elevated() · file-queue, no UAC</text>
+  <text x="504" y="651" text-anchor="middle" font-size="8" fill="#256a2a">C:\QIH\commands\ pending → completed</text>
+
+  <rect x="672" y="586" width="344" height="78" rx="7" fill="#eafaf0" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="844" y="606" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Cloudflare Tunnels</text>
+  <text x="844" y="622" text-anchor="middle" font-size="8.5" fill="#2e7d32">QI_DashboardTunnel + 9 more · HTTPS</text>
+  <text x="844" y="636" text-anchor="middle" font-size="8.5" fill="#2e7d32">no open inbound port · public read access</text>
+  <text x="844" y="651" text-anchor="middle" font-size="8" fill="#256a2a">writes gated by tunnel_write_guard token</text>
+
+  <text x="1020" y="692" text-anchor="end" font-size="8" fill="#94a3b8">Quiddity Innovations © 2026 · qi_hive · C:\QIH</text>
+</svg>
