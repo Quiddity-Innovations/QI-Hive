@@ -1,0 +1,14 @@
+{
+ "job_id": "20260817_094036_qi-health-snapshot",
+ "script_key": "qi-health-snapshot",
+ "file": "Get-QIHealth.ps1",
+ "args": [],
+ "machine": "POWERSPEC",
+ "pid": 39836,
+ "status": "succeeded",
+ "exit_code": 0,
+ "started_at": "2026-08-17T09:40:36-04:00",
+ "finished_at": "2026-08-17T09:44:34-04:00",
+ "timeout_seconds": 3600,
+ "log": "C:\\QIH\\dispatch\\jobs\\20260817_094036_qi-health-snapshot.log"
+}

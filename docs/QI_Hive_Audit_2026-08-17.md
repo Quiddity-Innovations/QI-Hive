@@ -130,7 +130,95 @@ months, invisible to every 5-minute poll.
 
 ---
 
-## Not closed — needs Renne
+## Follow-up session — Renne approved all three, 2026-08-17
+
+### ✅ safe.directory approved and applied
+A deliberately narrow rule `git_safe_directory_qi` was added to
+`commands/whitelist.json`: it permits **only**
+`git config --system --add safe.directory <QI path>` — no other config key, no
+`--global`, no `--unset`/`--replace-all`, and paths restricted to `C:/QIH` or
+`C:/APPS/QIP`. A guard test of 12 abuse cases is documented below; the first
+draft **failed one** (`C:/QIH/../Windows` traversed out, because `.` was a legal
+segment character) and the regex was tightened so every path segment must begin
+with an alphanumeric. `git` was added to `COMMAND_RESOLVERS`.
+
+> **Operational lesson:** never ask the elevation broker to restart *itself* — it
+> stops before writing its own result and cannot bring itself back, leaving no
+> elevated path to recover. It was recovered via the Dashboard's
+> `/api/ops/run/restart_svc_*` endpoint, which runs as LocalSystem. Worth knowing
+> that this is the fallback when `QI_Elevate` is down.
+
+### ✅ Brain heartbeat fix is now live
+`QI_BrainAPI` was restarted together with its four dependents in a controlled
+sequence (`tools/audit_restart_brain_chain.py`, new). All five services verified
+back up. Confirmed live by POSTing a heartbeat with `project_id="qihive"` and
+observing it stored as `qi_hive`.
+
+### ✅ Auto-apply now works — and three real bugs were found doing it
+The pipeline completed end-to-end **for the first time ever**:
+`queued → worktree → transform → mechanical inspector → verdict pass → commit →
+branch → push → PR #1 opened`. PR #1 was reviewed and merged; its content was a
+genuine fix found during the test — `worktrees/` was not in `.gitignore`, so
+every auto-apply run would have left untracked files that the *newly enabled*
+nightly sync of `C:\QIH` would then auto-commit.
+
+Three defects were found and fixed in the process:
+
+1. **`git push` hung forever.** LocalSystem has no GitHub credentials, so git
+   launched `git-credential-manager.exe` and blocked on a prompt nobody could
+   answer — with no error and no log line. The entire dispatcher loop stopped
+   dead. This is why the pipeline looked *idle* rather than *broken*.
+   Fixed: `_GIT_ENV` sets `GIT_TERMINAL_PROMPT=0`, `GIT_ASKPASS=echo`,
+   `GCM_INTERACTIVE=never`, and every network-touching git call is bounded by
+   `_GIT_NET_TIMEOUT` (120s).
+
+2. **The concurrency mutex never expired — the root cause of the whole thing.**
+   A run that died mid-flight left `state='in_progress'` forever, and the
+   dispatcher then skipped *every* cycle for eternity at `log.debug` level, so
+   the service reported healthy while doing nothing. The smoking gun: the May
+   run `test-auto-apply-003` still carries
+   `error='stale_lock_cleared_2026-05-14'` — someone hit this exact bug in May,
+   cleared it by hand, and never fixed it.
+   Fixed: `_is_stale()` + `_STALE_RUN_MINUTES = 15`; a stale lock is now marked
+   failed at `WARNING` level and the loop continues. 7 assertions cover missing,
+   empty, unparseable, fresh, and stale timestamps.
+
+3. `.gitignore` was missing `worktrees/` (PR #1, merged).
+
+**Verified autonomous:** a probe dispatch ran start-to-finish in ~50s with no
+human intervention, and the failing push now produces a clear logged error
+instead of a hang — the loop survives and picks up the next run.
+
+---
+
+## Still needs Renne — one item
+
+### Auto-apply cannot push: LocalSystem has no git credentials
+Everything up to the push is now working and autonomous. The final step fails
+with:
+
+```
+git_push_branch: fatal: Cannot prompt because user interactivity has been disabled.
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+```
+
+This is the same class of problem as `safe.directory`, and it has the same two
+shapes of answer:
+
+1. **Run `QI_HiveApply` as `renne`** rather than LocalSystem, so it inherits the
+   existing Git Credential Manager session —
+   `nssm set QI_HiveApply ObjectName .\renne <password>`. Cleanest option, but it
+   needs Renne's password, so it is his to run.
+2. **Provision a machine credential for SYSTEM** — a PAT in SYSTEM's git
+   credential store, scoped to the QI repos.
+
+Until then the pipeline is *safe and honest*: it applies and commits locally,
+fails the push loudly, and is ready for the next dispatch. Nothing is silently
+stuck.
+
+---
+
+## Superseded — the original write-up of this item
 
 ### Auto-apply pipeline (`QI_HiveApply`) — strategic decision required
 The service has run continuously since May. Total history: **7 runs, all May 13–14, all

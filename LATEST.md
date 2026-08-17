@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-17 09:01:03 (nightly reconciler)_
+_Auto-generated: 2026-08-17 11:28:42 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -27,7 +27,7 @@ _Auto-generated: 2026-08-17 09:01:03 (nightly reconciler)_
 | personalsong | Working app | active | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 191 | 2026-08-17 08:35:36 |
+| qi_hive | Dashboard UX polish | active | 193 | 2026-08-17 11:28:23 |
 | retirementanalyzer | v1 - engine + API + UI live | active | 7 | 2026-07-03 02:52:18 |
 | synvox | Phase 0 - Foundation (MatrAIx engine bootstrap) | active | 1 | 2026-08-16 20:57:20 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |

@@ -35,6 +35,11 @@ $env:UV_PYTHON_INSTALL_DIR = "C:\QIH\shared\uv\python"
 $env:UV_CACHE_DIR          = "C:\QIH\shared\uv\cache"
 $env:UV_TOOL_DIR           = "C:\QIH\shared\uv\tools"
 
+# PEP 540 UTF-8 mode - see the note in Setup-SynVox.ps1. Task files are read
+# without an explicit encoding upstream, so on a cp1252 host a curly quote in
+# a questionnaire kills the trial before any persona runs.
+$env:PYTHONUTF8 = "1"
+
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 function Write-Log {

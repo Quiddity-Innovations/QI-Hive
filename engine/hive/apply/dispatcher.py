@@ -8,9 +8,33 @@ enforce the global-mutex-of-one rule from the design doc.
 """
 import logging
 import sqlite3
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from runner import handle_run, _resolve_pending_reviews
+
+# How long a run may sit 'in_progress' before the concurrency guard treats it as
+# dead. Generous relative to a real run (which completes in seconds) but short
+# enough that a crash cannot wedge the loop for months. (2026-08-17 audit.)
+_STALE_RUN_MINUTES = 15
+
+
+def _is_stale(started_at: str | None) -> bool:
+    """True if `started_at` is missing or older than _STALE_RUN_MINUTES.
+
+    A missing/unparseable timestamp counts as stale: a run we cannot date is a
+    run we cannot trust to still be alive, and refusing to expire it is what
+    wedges the dispatcher.
+    """
+    if not started_at:
+        return True
+    text = str(started_at).strip().replace("T", " ").split(".")[0]
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+        try:
+            return datetime.now() - datetime.strptime(text, fmt) > timedelta(minutes=_STALE_RUN_MINUTES)
+        except ValueError:
+            continue
+    return True
 
 _DB_PATH  = Path(r"C:\QIH\data\qi_brain.db")
 _HALT     = Path(r"C:\QIH\engine\hive\apply\HALT")
@@ -39,12 +63,42 @@ def run_once() -> None:
         _resolve_pending_reviews(conn)
 
         # Step 2: Concurrency guard — only one active run at a time.
+        #
+        # The guard MUST expire. If a run dies mid-flight (process killed, git
+        # hung on a credential prompt, machine rebooted) its row stays
+        # 'in_progress' forever, and this mutex then skips every cycle for all
+        # eternity — at debug level, so the service looks healthy while doing
+        # nothing at all. That is precisely what happened: the May 2026 run
+        # test-auto-apply-003 still carries error='stale_lock_cleared_2026-05-14'
+        # from someone clearing this by hand, and the underlying bug was never
+        # fixed. It is the reason the pipeline appeared idle rather than broken.
+        # (2026-08-17 audit.)
         existing = conn.execute(
-            "SELECT 1 FROM dispatch_runs WHERE state='in_progress' LIMIT 1"
+            "SELECT id, dispatch_id, started_at FROM dispatch_runs "
+            "WHERE state='in_progress' ORDER BY id ASC LIMIT 1"
         ).fetchone()
         if existing:
-            log.debug("Concurrency mutex: run already in_progress — skipping cycle")
-            return
+            if _is_stale(existing["started_at"]):
+                log.warning(
+                    "Stale lock: run_id=%s dispatch_id=%s has been in_progress since %s "
+                    "(> %d min) — marking failed and continuing.",
+                    existing["id"], existing["dispatch_id"],
+                    existing["started_at"], _STALE_RUN_MINUTES,
+                )
+                conn.execute(
+                    "UPDATE dispatch_runs SET state='failed', finished_at=datetime('now'), "
+                    "error=? WHERE id=?",
+                    (f"stale_lock_expired_after_{_STALE_RUN_MINUTES}min", existing["id"]),
+                )
+                conn.execute(
+                    "UPDATE dispatches SET apply_state='failed' WHERE dispatch_id=?",
+                    (existing["dispatch_id"],),
+                )
+                conn.commit()
+                # Fall through: this cycle may now pick up the next queued run.
+            else:
+                log.debug("Concurrency mutex: run already in_progress — skipping cycle")
+                return
 
         row = conn.execute(
             "SELECT id, dispatch_id FROM dispatch_runs WHERE state='queued' ORDER BY id ASC LIMIT 1"

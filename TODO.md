@@ -19,22 +19,29 @@
 > Full write-up: [`docs/QI_Hive_Audit_2026-08-17.md`](docs/QI_Hive_Audit_2026-08-17.md).
 > 8 of 8 fixes executed; these three are policy/approval calls, not bugs.
 
-- [ ] 🔴 **Auto-apply pipeline — finish it or retire it.** `QI_HiveApply` has run since May
-      with **7 runs, all May test fixtures, all failed; zero real changes ever applied.**
-      Root cause now known: Hive services run as **LocalSystem**, repo is owned by `renne`,
-      so git refuses with *"dubious ownership"*. Fix needs
-      `git config --system --add safe.directory C:/QIH` — **not in `commands/whitelist.json`**,
-      and Claude will not widen a security whitelist unilaterally. Either approve that
-      addition and re-run the e2e, or stop the service. Idle, so no urgency — but decide.
+- [x] ✅ **Auto-apply — FIXED and working** (Renne approved 2026-08-17). Pipeline completed
+      end-to-end for the first time ever and opened PR #1, which was merged. Three real bugs
+      fixed along the way: git hung forever on a credential prompt (now `GIT_TERMINAL_PROMPT=0`
+      + 120s timeout); the concurrency mutex never expired so any crash wedged the loop
+      permanently and silently (now 15-min stale-lock timeout — this was the actual root cause,
+      and the May run still carries `stale_lock_cleared_2026-05-14` proving it was hit and
+      hand-cleared back then); and `worktrees/` was missing from `.gitignore`.
+      **Verified autonomous: ~50s start-to-finish, no human tick.**
+- [ ] 🔴 **Last mile: auto-apply cannot PUSH — LocalSystem has no git credentials.**
+      Everything up to the push works. The push fails cleanly (no longer hangs) with
+      *"Cannot prompt because user interactivity has been disabled"*. Two options, both yours:
+      **(a)** run the service as you — `nssm set QI_HiveApply ObjectName .\renne <password>` —
+      so it inherits your Git Credential Manager session (cleanest, needs your password);
+      or **(b)** provision a PAT in SYSTEM's credential store scoped to the QI repos.
+      Until then the pipeline commits locally, fails the push loudly, and stays unwedged.
 - [ ] 🔴 **17 registry repos sync nowhere.** The new `coverage_check()` in
       `nightly_git_sync.py` now reports them every run (warn-only). Enrolling them in
       nightly auto-commit is a policy call: akiyascout, avatarstudio, claude_manager,
       cognibase, connector, cypherminer, digitization, easyflow, gamez, lotterywiz,
       mapsnap, mq, naya, nexus, openclaw, retirementanalyzer, tubescout.
-- [ ] ⚪ **Brain heartbeat fix is staged but not live.** `engine/brain/api.py` now normalises
-      `project_id` on heartbeat write. `QI_BrainAPI` has 4 dependents (Maia, Naya, NEXUS,
-      Dashboard) and Maia serves public LINE traffic, so it was **not** cascade-restarted
-      for a telemetry fix. **Activates on the next Brain restart** — do it at a quiet moment.
+- [x] ✅ **Brain heartbeat fix is LIVE** (2026-08-17). `QI_BrainAPI` restarted with its 4
+      dependents via `tools/audit_restart_brain_chain.py`; all five verified back up.
+      Confirmed by POSTing `project_id="qihive"` and seeing it stored as `qi_hive`.
 - [ ] ⚪ **25 open dispatches**, mostly a newly surfaced class: `nssm_registry` — installed
       `QI_*` services missing from `qi_registry.json` (MapSnap family, NexusMCP, PlayDeck,
       RetirementAnalyzer, several tunnels). Plus true staleness for `mq` (133d),

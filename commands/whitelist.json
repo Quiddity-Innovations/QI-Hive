@@ -220,6 +220,20 @@
       "args_regex": [
         "^-k$"
       ]
+    },
+    {
+      "name": "git_safe_directory_qi",
+      "description": "Mark a QI repo as safe for git when it is accessed by a service account. QI Hive NSSM services run as LocalSystem while the repos are owned by 'renne', so git refuses every operation with 'detected dubious ownership' — this is what broke the auto-apply pipeline's worktree creation in May 2026. Deliberately scoped to `config --system --add safe.directory <QI path>`: it cannot set any other config key, cannot unset or replace values, and cannot touch paths outside C:/QIH or C:/APPS/QIP. Approved by Renne 2026-08-17. Path segments must begin with an alphanumeric so '..' traversal is impossible.",
+      "cmd": "git",
+      "arg_count_min": 5,
+      "arg_count_max": 5,
+      "args_regex": [
+        "^config$",
+        "^--system$",
+        "^--add$",
+        "^safe\\.directory$",
+        "^C:/(QIH|APPS/QIP)(/[A-Za-z0-9][A-Za-z0-9_.\\- ]*)*$"
+      ]
     }
   ]
 }

@@ -1,0 +1,34 @@
+{
+  "dispatch_id": "audit-auto2-d8607731",
+  "worktree_path": "C:\\QIH\\worktrees\\apply\\audit-auto2-d8607731",
+  "diff_text": "diff --git a/.gitignore b/.gitignore\nindex d0c454a..aee4771 100644\n--- a/.gitignore\n+++ b/.gitignore\n@@ -83,3 +83,4 @@ engine/tools/ConnectorGuard/backups/\n \n # BU employer material â€” NEVER commit (repo is public). Renne directive 2026-08-08.\n BU Administrative Backups/\n+# qi-apply autonomy probe 2\n",
+  "mechanical_pass": true,
+  "mechanical_checks": [
+    {
+      "file": "C:\\QIH\\worktrees\\apply\\audit-auto2-d8607731\\.gitignore",
+      "check": "py_syntax",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "C:\\QIH\\worktrees\\apply\\audit-auto2-d8607731\\.gitignore",
+      "check": "md_links",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "*",
+      "check": "git_diff_check",
+      "pass": true,
+      "error": null
+    },
+    {
+      "file": "*",
+      "check": "size_limits",
+      "pass": true,
+      "error": null
+    }
+  ],
+  "mechanical_errors": [],
+  "label": "mechanical_pass"
+}

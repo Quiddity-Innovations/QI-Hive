@@ -19,6 +19,7 @@ The HALT check lives in dispatcher.py before handle_run() is called.
 """
 import json
 import logging
+import os
 import sqlite3
 import subprocess
 import sys
@@ -60,7 +61,26 @@ _FORBIDDEN_PATHS = [
 log = logging.getLogger("hive_apply.runner")
 
 # LocalSystem runs this worker; repos are owned by Renne — git refuses without this.
+# (safe.directory is also set machine-wide via `git config --system` as of
+# 2026-08-17, so this flag is belt-and-braces rather than the sole mechanism.)
 _GIT = ["git", "-c", "safe.directory=*"]
+
+# Never let git block on an interactive credential prompt. LocalSystem has no
+# GitHub credentials, so `git push` launched git-credential-manager.exe and hung
+# FOREVER — the whole dispatcher loop stopped dead with no error and no log line,
+# which is why the pipeline looked "idle" rather than "broken" for months.
+# GIT_TERMINAL_PROMPT=0 + an empty askpass make git fail fast instead.
+# (2026-08-17 audit.)
+_GIT_ENV = {
+    **os.environ,
+    "GIT_TERMINAL_PROMPT": "0",
+    "GIT_ASKPASS": "echo",
+    "GCM_INTERACTIVE": "never",
+}
+
+# Any git call that touches the network must be bounded. A hang here is what took
+# the loop down; a timeout turns it into a logged, recoverable failure.
+_GIT_NET_TIMEOUT = 120
 
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
@@ -296,7 +316,8 @@ def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
     auto_merge = _project_flag(project_id, "auto_merge_approved_fixes", default=False)
 
     if auto_merge:
-        r = subprocess.run([*_GIT, "push"], cwd=worktree, capture_output=True, text=True)
+        r = subprocess.run([*_GIT, "push"], cwd=worktree, capture_output=True, text=True,
+                           env=_GIT_ENV, timeout=_GIT_NET_TIMEOUT)
         if r.returncode != 0:
             _mark_failed(run["id"], run["dispatch_id"], f"git_push: {r.stderr.strip()}")
             return
@@ -315,7 +336,8 @@ def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
             [*_GIT, "checkout", "-b", branch], cwd=worktree, capture_output=True, text=True
         )
         r = subprocess.run(
-            [*_GIT, "push", "-u", "origin", branch], cwd=worktree, capture_output=True, text=True
+            [*_GIT, "push", "-u", "origin", branch], cwd=worktree, capture_output=True, text=True,
+            env=_GIT_ENV, timeout=_GIT_NET_TIMEOUT,
         )
         if r.returncode != 0:
             _mark_failed(run["id"], run["dispatch_id"], f"git_push_branch: {r.stderr.strip()}")

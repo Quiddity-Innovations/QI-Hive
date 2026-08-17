@@ -68,6 +68,31 @@ if (Test-Path $Registry) {
     Write-Log "Registry not found at $Registry"
 }
 
+# ---------- Docker ----------
+# Reported here because the CLI being on PATH and the DAEMON being reachable are
+# different things, and they differ per principal: Docker Desktop runs its daemon
+# in the logged-in user's session, so a service account can hold the CLI and still
+# be unable to reach the engine pipe. SynVox's web/os-app task lanes depend on it.
+Write-Log ""
+Write-Log "--- Docker ---"
+Write-Log ("Running as       : {0}" -f [Security.Principal.WindowsIdentity]::GetCurrent().Name)
+$dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
+if (-not $dockerCmd) {
+    Write-Log "docker CLI       : NOT FOUND on this principal's PATH"
+} else {
+    Write-Log ("docker CLI       : {0}" -f $dockerCmd.Source)
+    $v = (& docker --version 2>&1) -join " "
+    Write-Log ("docker version   : {0}" -f $v)
+    $srv = (& docker version --format "{{.Server.Version}}" 2>&1) -join " "
+    if ($LASTEXITCODE -eq 0 -and $srv -notmatch "error|cannot find|refused") {
+        Write-Log ("daemon           : REACHABLE (server {0})" -f $srv.Trim())
+    } else {
+        Write-Log ("daemon           : UNREACHABLE - {0}" -f $srv.Trim())
+        Write-Log "                   Docker Desktop runs its daemon in the interactive user's session."
+    }
+    $global:LASTEXITCODE = 0
+}
+
 Write-Log ""
 Write-Log "Snapshot log: $SnapLog"
 Write-Log "===== end ====="

@@ -78,6 +78,11 @@ COMMAND_RESOLVERS = {
     "taskkill": r"C:\Windows\System32\taskkill.exe",
     "sc":       r"C:\Windows\System32\sc.exe",
     "gsudo":    r"C:\Program Files\gsudo\Current\gsudo.exe",
+    # Added 2026-08-17 (Renne-approved). Needed only so a QI repo can be marked
+    # safe.directory for the LocalSystem service account — see the tightly
+    # scoped git_safe_directory_qi rule in commands/whitelist.json, which is the
+    # ONLY git invocation this broker will ever run.
+    "git":      r"C:\Program Files\Git\cmd\git.exe",
 }
 
 

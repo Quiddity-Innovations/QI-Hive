@@ -33,6 +33,14 @@ $env:UV_PYTHON_INSTALL_DIR = "C:\QIH\shared\uv\python"
 $env:UV_CACHE_DIR          = "C:\QIH\shared\uv\cache"
 $env:UV_TOOL_DIR           = "C:\QIH\shared\uv\tools"
 New-Item -ItemType Directory -Force -Path $env:UV_PYTHON_INSTALL_DIR, $env:UV_CACHE_DIR, $env:UV_TOOL_DIR | Out-Null
+
+# PEP 540 UTF-8 mode. harbor/models/task/task.py calls .read_text() with no
+# encoding, so Python falls back to the OS ANSI codepage (cp1252 here) and any
+# task file containing a curly quote kills the trial with UnicodeDecodeError
+# before a single persona runs. That hits real Phase 1 survey tasks, not just
+# examples. Upstream patch 0002 is ready in C:\APPS\SynVox\upstream\; this is
+# the belt-and-braces version that works today and stays harmless afterwards.
+$env:PYTHONUTF8 = "1"
 $IsSystemAccount = ([Security.Principal.WindowsIdentity]::GetCurrent().User.Value -eq "S-1-5-18")
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null

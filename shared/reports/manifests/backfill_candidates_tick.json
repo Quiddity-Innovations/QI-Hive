@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-17T08:36:01",
+  "generated_at": "2026-08-17T11:06:01",
   "cutoff": "2026-08-15T00:00:00",
   "transcripts_scanned": 11,
   "transcripts_skipped_old": 98,
-  "transcripts_skipped_subagent": 63,
-  "brain_rows_in_window": 7,
+  "transcripts_skipped_subagent": 66,
+  "brain_rows_in_window": 9,
   "candidates": [
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--\\0ea3372e-c98a-43bc-b658-08be73173a2d.jsonl",
@@ -56,19 +56,28 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS\\443e1564-e2f0-4e49-9d42-c7bb8d52622c.jsonl",
       "cwd": "C:\\APPS",
       "first_ts": "2026-08-17T12:06:21.622Z",
-      "last_ts": "2026-08-17T12:33:26.295Z",
-      "user_prompts": 3,
-      "assistant_replies": 69,
+      "last_ts": "2026-08-17T12:44:33.641Z",
+      "user_prompts": 4,
+      "assistant_replies": 111,
       "files_touched": [
+        "C:\\APPS\\CogniBase\\k8s\\README.md",
+        "C:\\APPS\\CogniBase\\k8s\\cognibase-chroma.yaml",
+        "C:\\APPS\\CogniBase\\k8s\\cognibase-core.yaml",
+        "C:\\APPS\\CogniBase\\k8s\\cognibase-ingress.yaml",
+        "C:\\APPS\\CogniBase\\k8s\\kustomization.yaml",
+        "C:\\QIH\\ecosystem\\QI_Kubernetes_Standard.md",
+        "C:\\QIH\\shared\\documentation\\QI_BU_Kubernetes_Conversion_Plan.md",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS\\443e1564-e2f0-4e49-9d42-c7bb8d52622c\\scratchpad\\k8s_scan.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS\\443e1564-e2f0-4e49-9d42-c7bb8d52622c\\scratchpad\\make_summary.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS\\443e1564-e2f0-4e49-9d42-c7bb8d52622c\\tasks\\btojqvhk4.output"
       ],
       "first_prompt": "From all the applications on the APPS folder, which one would be a good candidate to be converted to Kubernetes?",
-      "last_prompt": "What about MapSnap? Or LotteryWiz?",
+      "last_prompt": "Let me explain something. BU is converting several applications to Kubernetes to leverage their AWS environment. I am asking because I want my applications on their BU Edition to be candidates at BU. to be used at BU. BU is currently lookin",
       "project_id": "unknown",
-      "mtime": "2026-08-17T08:33:26",
-      "size_bytes": 423706,
-      "likely_logged": false
+      "mtime": "2026-08-17T08:59:33",
+      "size_bytes": 729398,
+      "likely_logged": true,
+      "matched_via": "transcript_exact"
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Lottery-Wiz\\080b4e04-1410-4c47-8506-0bf2ed9704fb.jsonl",
@@ -170,9 +179,9 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-SynVox\\8c7a51a7-745d-4d54-8563-1ffa7d4853f3.jsonl",
       "cwd": "C:\\APPS\\SynVox",
       "first_ts": "2026-08-16T20:31:20.548Z",
-      "last_ts": "2026-08-17T12:26:52.085Z",
-      "user_prompts": 17,
-      "assistant_replies": 367,
+      "last_ts": "2026-08-17T14:56:20.446Z",
+      "user_prompts": 24,
+      "assistant_replies": 431,
       "files_touched": [
         "C:/APPS/QIP/Connector/CLAUDE.md",
         "C:/APPS/QIP/Connector/api/main.py",
@@ -181,6 +190,7 @@
         "C:/APPS/QIP/Connector/tools/executor_smoke_test.py",
         "C:/APPS/QIP/Connector/tools/smoke_test.py",
         "C:/APPS/SynVox/CLAUDE.md",
+        "C:/APPS/SynVox/Quiddity Innovations - SynVox Documentation/Technical Documentation/SynVox_Architecture_v1.md",
         "C:/APPS/SynVox/README.md",
         "C:/APPS/SynVox/Source_Seed/Install-QIExecutor.bat",
         "C:/APPS/SynVox/Source_Seed/QI_MatrAIx_Project_Plan.md",
@@ -202,14 +212,13 @@
         "C:/Users/renne/.claude/projects/C--APPS-SynVox/memory/persona-1m-dataset-notes.md",
         "C:/Users/renne/.claude/projects/C--APPS-SynVox/memory/powershell-script-encoding-trap.md",
         "C:/Users/renne/.claude/projects/C--APPS-SynVox/memory/qi-executor-runs-as-system.md",
-        "C:/Users/renne/.claude/projects/C--APPS-SynVox/memory/synvox-phase0-blockers.md",
-        "C:/Users/renne/.claude/projects/C--APPS-SynVox/memory/synvox-product-thesis.md"
+        "C:/Users/renne/.claude/projects/C--APPS-SynVox/memory/services-inherit-stale-path.md"
       ],
       "first_prompt": "<command-message>loop</command-message>\n<command-name>/loop</command-name>\n<command-args>Start with the SynVox_ClaudeCode_Handoff.md file inside the folder Source_Seed and check the other files as needed and develop the new product. Keep on",
-      "last_prompt": "<task-notification>\n<task-id>b9sqw63si</task-id>\n<tool-use-id>toolu_01Lz4gw338cJUxgRbgTCGcvb</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-SynVox\\8c7a51a7-745d-4d54-8563-1ffa7d4853f3\\tasks\\b9sqw63si.output</out",
+      "last_prompt": "1. Give me the steps to create the anthropic api key if you do not have it on record. - 2. Give me a prompt for me to start a fix for MapSnap to resolve the urgent issue. - 3. need better understanding of the ask here and what the options a",
       "project_id": "synvox",
-      "mtime": "2026-08-17T08:26:52",
-      "size_bytes": 2303174,
+      "mtime": "2026-08-17T10:56:20",
+      "size_bytes": 3946809,
       "likely_logged": true,
       "matched_via": "transcript_exact"
     },
@@ -217,22 +226,40 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\6accf4cb-b475-421a-b6b5-2ab25e371266.jsonl",
       "cwd": "C:\\QIH",
       "first_ts": "2026-08-17T12:25:08.114Z",
-      "last_ts": "2026-08-17T12:35:49.430Z",
-      "user_prompts": 1,
-      "assistant_replies": 85,
+      "last_ts": "2026-08-17T13:03:59.853Z",
+      "user_prompts": 3,
+      "assistant_replies": 319,
       "files_touched": [
+        "C:\\APPS\\CLAUDE",
+        "C:\\APPS\\CLAUDE\\supervisor\\supervisor.py",
+        "C:\\QIH",
+        "C:\\QIH\\TODO.md",
+        "C:\\QIH\\_archive\\legacy_hive_tree\\README.md",
+        "C:\\QIH\\docs\\QI_Hive_Audit_2026-08-17.md",
+        "C:\\QIH\\engine\\brain\\api.py",
+        "C:\\QIH\\engine\\hive\\dashboard\\server.py",
+        "C:\\QIH\\engine\\hive\\health_check.py",
+        "C:\\QIH\\engine\\hive\\ingest\\hive_ingest.py",
+        "C:\\QIH\\tools\\audit_drain_dispatches.py",
+        "C:\\QIH\\tools\\audit_fix_brain_ids.py",
+        "C:\\QIH\\tools\\audit_fix_gitignores.py",
+        "C:\\QIH\\tools\\audit_fix_status_ids.py",
+        "C:\\QIH\\tools\\nightly_git_sync.py",
+        "C:\\Users\\renne\\.claude\\projects\\C--QIH\\memory\\MEMORY.md",
+        "C:\\Users\\renne\\.claude\\projects\\C--QIH\\memory\\project_audit_2026-08-17.md",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\6accf4cb-b475-421a-b6b5-2ab25e371266\\scratchpad\\gen_summary.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\6accf4cb-b475-421a-b6b5-2ab25e371266\\scratchpad\\gen_summary2.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\6accf4cb-b475-421a-b6b5-2ab25e371266\\tasks\\b8e83ni7c.output"
       ],
       "first_prompt": "Perform an audit and full assessment of the QI Hive and give me a report on what is being really used as per design and what is simply there but, it is not working as the way it was planned to.",
-      "last_prompt": "Perform an audit and full assessment of the QI Hive and give me a report on what is being really used as per design and what is simply there but, it is not working as the way it was planned to.",
+      "last_prompt": "# /loop — schedule a recurring or self-paced prompt\n\nParse the input below into `[interval] <prompt…>` and schedule it.\n\n## Parsing (in priority order)\n\n1. **Leading token**: if the first whitespace-delimited token matches `^\\d+[smhd]$` (e.",
       "project_id": "qi_hive",
-      "mtime": "2026-08-17T08:35:49",
-      "size_bytes": 480098,
+      "mtime": "2026-08-17T09:18:59",
+      "size_bytes": 1431836,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-17 08:35:36",
-      "matched_brain_title": "Read-only audit of QI Hive: design vs reality. Observe layer..."
+      "matched_brain_started": "2026-08-17 09:03:30",
+      "matched_brain_title": "Executed all 8 audit fixes and shipped as commit 10ad0f0 (pu..."
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\e0a8246d-60e1-4640-9c03-8f1263f504a0.jsonl",
@@ -390,7 +417,7 @@
     }
   ],
   "summary": {
-    "needs_backfill": 6,
-    "already_logged": 5
+    "needs_backfill": 5,
+    "already_logged": 6
   }
 }
