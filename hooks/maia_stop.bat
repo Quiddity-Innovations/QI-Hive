@@ -1,2 +1,2 @@
 @echo off
-"C:\1-AI\APPS\PYTHON\python.exe" "C:\QIH\engine\common\session_stop.py" --project Maia --project-id maia
+"C:\Program Files\Python311\python.exe" "C:\QIH\engine\common\session_stop.py" --project Maia --project-id maia

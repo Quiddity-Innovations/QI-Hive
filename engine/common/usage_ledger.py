@@ -109,6 +109,23 @@ def upsert_day(con: sqlite3.Connection, day: date, *, tokens: int, cache_reads: 
     return True
 
 
+def max_day() -> date | None:
+    """Newest day present in the ledger, or None when it is empty.
+
+    Read paths use this as a staleness probe: every window helper prefers the
+    ledger whenever it holds ANY row for the window, so a ledger that has
+    stopped being snapshotted silently truncates 30d/QTD/YTD at this date
+    instead of falling back to live parsing. See `ensure_fresh` in
+    usage_snapshot_task.
+    """
+    con = connect()
+    try:
+        r = con.execute("SELECT MAX(day) FROM usage_daily").fetchone()[0]
+    finally:
+        con.close()
+    return date.fromisoformat(r) if r else None
+
+
 def snapshot(days: int = 45, verbose: bool = False) -> dict:
     """Persist the last `days` of MEASURED data from usage_stats into the
     ledger. This is the call that makes history durable — once a day has been

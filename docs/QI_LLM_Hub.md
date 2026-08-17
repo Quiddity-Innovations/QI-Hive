@@ -1,9 +1,9 @@
 # QI LLM Hub — User Guide
 
-*Created 2026-07-02 · Lives on NEXUS (`C:\NEXUS`, service `QI_NEXUS`, port 8010) · Status: POC, LAN-only*
+*Created 2026-07-02 · Lives on NEXUS (`C:\APPS\NEXUS`, service `QI_NEXUS`, port 8010) · Status: POC, LAN-only*
 
 The QI LLM Hub is the **single gateway for every QI tool that talks to an LLM**.
-Tools hold **zero API keys** — all keys live in `C:\NEXUS\secrets\nexus.env` (gitignored).
+Tools hold **zero API keys** — all keys live in `C:\APPS\NEXUS\secrets\nexus.env` (gitignored).
 The hub fronts NEXUS's **13-provider free fleet** (Cerebras, Groq ×2, Cloudflare ×3,
 Gemini, Mistral, OpenRouter, NVIDIA NIM ×2, local gemma4, OpenAI) with automatic fallback.
 
@@ -32,7 +32,7 @@ header   X-QI-App: <your-project-id>   ← so /hub/usage attributes your calls
 `http://localhost:11434` to `http://127.0.0.1:8010`. Nothing else.
 
 **Model routing rules:** a known provider id → that provider only. `auto` → the
-fastest-first chain (order in `C:\NEXUS\api\hub.py` `DEFAULT_AUTO_ORDER`, override
+fastest-first chain (order in `C:\APPS\NEXUS\api\hub.py` `DEFAULT_AUTO_ORDER`, override
 via `nexus.json → hub.auto_order`). **Any unknown model string → routed as `auto`**
 (so tools can keep sending their own model names like `qwen3:8b` or
 `deepseek/deepseek-r1:free`).
@@ -50,8 +50,8 @@ exact provider-id equality; match on the prefix before the first `/`.
 
 | Tool | Status | How it connects | Toggle location |
 |---|---|---|---|
-| **Maia** (C:\QI) | ✅ **LIVE** | Hub-first in `llm_chat`, falls back to own chain | Maia Settings UI → "QI LLM Hub Mode" (or `system.llm_hub_enabled` in maia.db) |
-| **Naya** (C:\NAYA) | ✅ **LIVE** | Hub-first in `_llm_call` (skipped for force_sonnet) | `system.llm_hub_enabled` in naya.db (not yet in its Settings UI) |
+| **Maia** (C:\APPS\QI) | ✅ **LIVE** | Hub-first in `llm_chat`, falls back to own chain | Maia Settings UI → "QI LLM Hub Mode" (or `system.llm_hub_enabled` in maia.db) |
+| **Naya** (C:\APPS\NAYA) | ✅ **LIVE** | Hub-first in `_llm_call` (skipped for force_sonnet) | `system.llm_hub_enabled` in naya.db (not yet in its Settings UI) |
 | **TUBESCOUT** | ✅ LIVE (pre-dates hub) | Calls NEXUS `/synthesize` directly | `config/tubescout.json → integration.nexus_base` |
 | **Gamez / WC2026** | ✅ **LIVE** | AI analyst proxy → hub | `proxy/config.json → openrouter_base` (delete the line to revert) |
 | **EasyFlow** | ✅ Ready (flip in UI) | Hub-first in extension chat + AI triage, falls back to configured provider | Extension Options → Settings → **"QI LLM Hub"** card → select "QI LLM Hub first" (reload extension once after update) |
@@ -78,7 +78,7 @@ direct path** — hub mode must never make a tool less reliable.
 ## 3. Caveats & rules
 
 - **LAN-only by default. Never tunnel port 8010 without auth.** Optional auth exists
-  (2026-07-02 PM): set `QI_HUB_TOKEN=<secret>` in `C:/NEXUS/secrets/nexus.env` and every
+  (2026-07-02 PM): set `QI_HUB_TOKEN=<secret>` in `C:/APPS/NEXUS/secrets/nexus.env` and every
   hub route then requires `X-QI-Token: <secret>` or `Authorization: Bearer <secret>`.
   Unset = open (current POC posture). Enable it before any external exposure.
 - **Shared quotas:** every tool draws from the same free tiers. Watch
@@ -87,7 +87,7 @@ direct path** — hub mode must never make a tool less reliable.
   account kills the free tier. **NVIDIA NIM:** the trial API logs prompts/outputs —
   keep confidential content on local `gemma4` or other channels.
 - **Streaming is emulated** (single chunk). Fine for chat UIs; not true token streaming.
-- **Key rotation:** edit `C:\NEXUS\secrets\nexus.env`, restart `QI_NEXUS`. That's it —
+- **Key rotation:** edit `C:\APPS\NEXUS\secrets\nexus.env`, restart `QI_NEXUS`. That's it —
   no tool needs touching.
 
 ## 4. Bench scorecard (2026-07-02, suite 1 — drives `auto` routing order)
@@ -114,7 +114,7 @@ order in the **Hub tab -> Auto Order** editor. Rebenchmark after fleet changes.
 | Symptom | Check |
 |---|---|
 | Tool gets connection refused | `curl http://127.0.0.1:8010/health` → restart `QI_NEXUS` (elevated) |
-| 502 "All candidate providers failed" | `GET /hub/usage` recent errors; `C:\NEXUS\LOGS\nexus_service.log` |
+| 502 "All candidate providers failed" | `GET /hub/usage` recent errors; `C:\APPS\NEXUS\LOGS\nexus_service.log` |
 | Slow responses | A provider in the auto chain is degraded; check dispatcher log; providers fall back automatically |
 | Who is burning quota? | `GET http://127.0.0.1:8010/hub/usage` → `per_app` |
 

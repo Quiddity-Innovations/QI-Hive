@@ -12,10 +12,10 @@ C:\<PROJECT_NAME_UPPERCASE>\
 
 | Project | Root |
 |---|---|
-| Maia | `C:\QI\` |
-| Naya | `C:\NAYA\` |
-| NEXUS | `C:\NEXUS\` |
-| OpenClaw | `C:\OC\` |
+| Maia | `C:\APPS\QI\` |
+| Naya | `C:\APPS\NAYA\` |
+| NEXUS | `C:\APPS\NEXUS\` |
+| OpenClaw | `C:\APPS\OC\` |
 | FileHQ | `C:\FileHQ\` |
 | Future | `C:\<NAME>\` |
 
@@ -125,6 +125,32 @@ See `qi_registry.json` for the definitive port registry.
 
 **Rule:** Before assigning any new port, check `qi_registry.json`.
 **Assign from your project's block.** Never pick a random available port.
+
+### 5.1 Intra-machine HTTP: use `127.0.0.1`, never `localhost`
+
+**Rule:** every service-to-service HTTP call on this machine must use
+`http://127.0.0.1:<port>`. Never `http://localhost:<port>`.
+
+**Why:** on this box, IPv6 loopback (`::1`) SYNs are silently **dropped**, not
+refused. Windows resolves `localhost` to `::1` first, and Python's `urllib` /
+`requests` try addresses **sequentially** — so a `localhost` URL burns its
+entire `timeout=` value before falling back to IPv4, on every single call.
+
+This is easy to misdiagnose. `curl` uses parallel Happy Eyeballs, so
+curl-testing the same URL looks fast and the delay appears to be in your
+application logic.
+
+Verified 2026-08-13: `socket.create_connection(('::1', 9011), timeout=2)` →
+`TimeoutError` after 2.007s; `('127.0.0.1', 9011)` → OK in 0.001s. Same on
+ports 11434 and 18800.
+
+**Real cost:** one `urlopen("http://localhost:8010/providers")` on the Hive
+dashboard's root page cost **2.0s on every page load** and made the NEXUS panel
+silently render an error row. Fixing the hostname took the page from 3.30s to
+0.10s.
+
+**Symptom to watch for:** an unexplained stall that is a suspiciously round
+multiple of a `timeout=` value. Check the hostname before suspecting your code.
 
 ---
 
@@ -246,9 +272,9 @@ Each project writes its tunnel log to its **own** LOGS directory:
 
 | Project | Tunnel log |
 |---|---|
-| Maia | `C:\QI\LOGS\tunnel_log.txt` |
-| Naya | `C:\NAYA\LOGS\naya_tunnel.log` |
-| NEXUS | `C:\NEXUS\LOGS\nexus_tunnel.log` |
+| Maia | `C:\APPS\QI\LOGS\tunnel_log.txt` |
+| Naya | `C:\APPS\NAYA\LOGS\naya_tunnel.log` |
+| NEXUS | `C:\APPS\NEXUS\LOGS\nexus_tunnel.log` |
 
 Never point two services at the same log file.
 

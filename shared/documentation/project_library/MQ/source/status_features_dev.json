@@ -3,7 +3,7 @@
     "category": "Entry Point & Service",
     "features": [
       {"name": "main.py — launcher", "file": "main.py :: start_api() / start_ui()", "status": "partial", "detail": "UTF-8 reconfigures stdout. Starts the FastAPI API (uvicorn) on 127.0.0.1:8500 in a daemon thread, then the Gradio UI on 7840 in the main thread. Logs to data/logs/mq.log. Booted manually once (2026-06-10) per mq.log; no persistent NSSM service registered."},
-      {"name": "Start_MQ.bat", "file": "Start_MQ.bat", "status": "live", "detail": "Convenience launcher: cd /d C:\\MQ then python main.py. Prints API :8500 / UI :7840. The only supported way to run MQ today (manual, foreground)."},
+      {"name": "Start_MQ.bat", "file": "Start_MQ.bat", "status": "live", "detail": "Convenience launcher: cd /d C:\\APPS\\MQ then python main.py. Prints API :8500 / UI :7840. The only supported way to run MQ today (manual, foreground)."},
       {"name": "Config loader", "file": "shared/config.py :: load_config() / get()", "status": "live", "detail": "Loads secrets/mq.env (python-dotenv) then config/mq.json into a module-level cache. get('dotted.path', default) accessor. Single source of runtime config for every agent."},
       {"name": "Runtime config", "file": "config/mq.json", "status": "live", "detail": "app/server/persona/content_streams/llm/kaze/fumi sections. Ports 8500/7840, LLM primary=@cf/qwen/qwen2.5-7b-instruct-fast with ollama qwen3:8b fallback, RSS source lists, posts/digests dir layout."}
     ]

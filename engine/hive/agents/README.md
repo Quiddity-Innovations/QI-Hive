@@ -52,7 +52,7 @@ roster didn't already know about).
 
 ### Three ways data gets in
 
-1. **`--seed`** — reads `C:\CLAUDE\.claude\agents\*.md` frontmatter (`name`,
+1. **`--seed`** — reads `C:\APPS\CLAUDE\.claude\agents\*.md` frontmatter (`name`,
    `model`, `description`) plus a small `BUILTIN_AGENTS` list, and
    `INSERT OR IGNORE`s each into `agents`. Never overwrites a curated row
    with noisy discovery data (that's why runs use `INSERT OR IGNORE` too —
@@ -100,7 +100,7 @@ vs. historical HR record) from different databases (`qi_brain.db` vs.
 
 ### Registry-aware project links
 
-`runs.project` is a raw filesystem path (e.g. `C:\CLAUDE`, `C:\QIH`) — the
+`runs.project` is a raw filesystem path (e.g. `C:\APPS\CLAUDE`, `C:\QIH`) — the
 `cwd` the sub-agent was dispatched from. Both API endpoints resolve that
 path against `C:\QIH\ecosystem\qi_registry.json` (`_resolve_registry_project`
 in `server.py`, longest-prefix match — same technique `doc_harvester.py` and

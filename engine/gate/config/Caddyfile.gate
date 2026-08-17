@@ -2,9 +2,9 @@
 # QI Gate — public edge.  GENERATED FILE — DO NOT EDIT BY HAND.
 #   source:    C:\QIH\engine\gate\config\gate.json
 #   regenerate: python C:\QIH\engine\gate\gen_caddyfile.py
-#   generated: 2026-08-05 02:07:48
+#   generated: 2026-08-16 16:22:09
 #
-#   22 public hostnames: 14 protected, 7 mixed, 1 open
+#   22 public hostnames: 13 protected, 7 mixed, 2 open
 #
 #   Every Cloudflare tunnel points here. Caddy does the proxying
 #   (websockets/SSE/Gradio queues pass through untouched) and asks
@@ -170,25 +170,17 @@
 		}
 	}
 
-	# ── lottery.quiddityinnovations.com  →  LotteryWiz  [protected]
+	# ── lottery.quiddityinnovations.com  →  LotteryWiz  [open]
+	#   DEMO SITE (2026-08-16): Cloudflare Access (one-time email PIN, policy: any email) is the
+	#   wall at the Cloudflare edge, so the gate cookie login would be a second wall that demo
+	#   visitors cannot pass. Owner-only edits inside the app are still protected by the
+	#   LotteryWiz owner key. Revert to 'protected' when the demo period ends or Cloudflare
+	#   Access is removed.
 	@h6 host lottery.quiddityinnovations.com
 	handle @h6 {
-		handle /qi-auth/* {
-			reverse_proxy 127.0.0.1:9041 {
-				header_up X-Forwarded-Proto https
-				header_up X-Forwarded-Host {http.request.host}
-			}
-		}
-		handle {
-			forward_auth 127.0.0.1:9041 {
-				uri /qi-auth/verify
-				copy_headers X-Qi-User X-Qi-Role
-				header_up X-Forwarded-Proto https
-			}
-			reverse_proxy 127.0.0.1:8777 {
-				header_up X-Forwarded-Proto https
-				header_up X-Forwarded-Host {http.request.host}
-			}
+		reverse_proxy 127.0.0.1:8777 {
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {http.request.host}
 		}
 	}
 
@@ -433,7 +425,8 @@
 	}
 
 	# ── naya-line.quiddityinnovations.com  →  Naya webhook  [mixed]
-	#   Routes confirmed in C:\NAYA\naya_server.py: /webhook/telegram, /webhook/peer-bridge.
+	#   Routes confirmed in C:\APPS\NAYA\naya_server.py: /webhook/telegram,
+	#   /webhook/peer-bridge.
 	@h17 host naya-line.quiddityinnovations.com
 	handle @h17 {
 		handle /qi-auth/* {
@@ -475,11 +468,12 @@
 	}
 
 	# ── claudevoice.quiddityinnovations.com  →  Claude Voice (LINE webhook)  [mixed]
-	#   Routes enumerated from C:\CLAUDE\Claude Voice\line_bot.py (2026-08-05): those four are
-	#   all that exist. /audio/ and /media/ MUST stay public -- LINE's servers fetch media from
-	#   those URLs to deliver it to users, so gating them would break voice and video replies.
-	#   Both resolve with os.path.basename(), so path traversal is already blocked. Gating
-	#   everything else buys per-request access logging and closes off any route added later.
+	#   Routes enumerated from C:\APPS\CLAUDE\Claude Voice\line_bot.py (2026-08-05): those four
+	#   are all that exist. /audio/ and /media/ MUST stay public -- LINE's servers fetch media
+	#   from those URLs to deliver it to users, so gating them would break voice and video
+	#   replies. Both resolve with os.path.basename(), so path traversal is already blocked.
+	#   Gating everything else buys per-request access logging and closes off any route added
+	#   later.
 	@h19 host claudevoice.quiddityinnovations.com
 	handle @h19 {
 		handle /qi-auth/* {
@@ -549,10 +543,10 @@
 	}
 
 	# ── api.quiddam.com  →  MQ API  [mixed]
-	#   Routes enumerated from C:\MQ\api\main.py (2026-08-05): only /health, /version and /info
-	#   exist -- there are NO webhooks, so nothing external needs to post here and the whole
-	#   surface can be gated. /health left open for uptime monitoring. Service was stopped when
-	#   this was applied, so the change carried no risk. Re-check if MQ later adds
+	#   Routes enumerated from C:\APPS\MQ\api\main.py (2026-08-05): only /health, /version and
+	#   /info exist -- there are NO webhooks, so nothing external needs to post here and the
+	#   whole surface can be gated. /health left open for uptime monitoring. Service was stopped
+	#   when this was applied, so the change carried no risk. Re-check if MQ later adds
 	#   Facebook/Instagram/WhatsApp callbacks, which would need listing here.
 	@h21 host api.quiddam.com
 	handle @h21 {

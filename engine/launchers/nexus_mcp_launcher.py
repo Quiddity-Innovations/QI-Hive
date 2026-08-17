@@ -10,4 +10,4 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from qi_mcp_gateway import main  # noqa: E402
 
-main(r"C:\NEXUS\config\mcp_gateway.json")
+main(r"C:\APPS\NEXUS\config\mcp_gateway.json")

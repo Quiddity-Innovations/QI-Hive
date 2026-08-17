@@ -40,11 +40,11 @@ URL_RE = re.compile(r"https://[a-z0-9\-]+\.trycloudflare\.com")
 SOURCES = [
     # key, label, kind, path, port_hint
     ("hive",       "QI Hive Dashboard", "json",  r"C:\QIH\engine\hive\tunnel\status\tunnel.json", 8600),
-    ("maia_api",   "Maia API",          "log",   r"C:\QI\LOGS\tunnel_log.txt",                    8001),
-    ("maia_ui",    "Maia UI (Gradio)",  "log",   r"C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt",        7860),
-    ("naya",       "Naya",              "log",   r"C:\NAYA\LOGS\naya_tunnel_log.txt",             7861),
-    ("tubescout",  "TubeScout",         "log",   r"C:\TUBESCOUT\data\logs\tunnel.log",            8503),
-    ("gamez",      "Gamez (WC2026)",    "log",   r"C:\Gamez\proxy\LOGS\tunnel_log.txt",           8710),
+    ("maia_api",   "Maia API",          "log",   r"C:\APPS\QI\LOGS\tunnel_log.txt",                    8001),
+    ("maia_ui",    "Maia UI (Gradio)",  "log",   r"C:\APPS\QI\LOGS\Maia_Gradio_Tunnel_Log.txt",        7860),
+    ("naya",       "Naya",              "log",   r"C:\APPS\NAYA\LOGS\naya_tunnel_log.txt",             7861),
+    ("tubescout",  "TubeScout",         "log",   r"C:\APPS\TUBESCOUT\data\logs\tunnel.log",            8503),
+    ("gamez",      "Gamez (WC2026)",    "log",   r"C:\APPS\Gamez\proxy\LOGS\tunnel_log.txt",           8710),
 ]
 
 

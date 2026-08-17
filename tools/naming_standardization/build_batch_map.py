@@ -12,14 +12,14 @@ OUT = r"C:\QIH\tools\naming_standardization\batch_map.json"
 
 # project root -> product label
 ROOTS = {
-    r"C:\QI": "Maia",
-    r"C:\NAYA": "Naya",
-    r"C:\NEXUS": "NEXUS",
-    r"C:\TUBESCOUT": "TubeScout",
-    r"C:\PersonalSong": "PersonalSong",
-    r"C:\CLAUDE\Claude Voice": "ClaudeVoice",
-    r"C:\CLAUDE\Dashboard": "Hive",
-    r"C:\EasyFlow": "EasyFlow",
+    r"C:\APPS\QI": "Maia",
+    r"C:\APPS\NAYA": "Naya",
+    r"C:\APPS\NEXUS": "NEXUS",
+    r"C:\APPS\TUBESCOUT": "TubeScout",
+    r"C:\APPS\PersonalSong": "PersonalSong",
+    r"C:\APPS\CLAUDE\Claude Voice": "ClaudeVoice",
+    r"C:\APPS\CLAUDE\Dashboard": "Hive",
+    r"C:\APPS\EasyFlow": "EasyFlow",
 }
 # folders we never touch
 EXCLUDE = ("\\.git", "worktree", "maia_archive", "node_modules", "\\.venv",

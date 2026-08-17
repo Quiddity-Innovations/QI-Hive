@@ -10,7 +10,7 @@ LIVE 2026-07-30 (service QI_ConnectorMCP + tunnel qi-connector) — QI Connector
 
 ## Where it lives
 
-- **Path:** `C:\QIP\Connector`
+- **Path:** `C:\APPS\QIP\Connector`
 - **Api port:** 9030 (MCP at /mcp)
 - **Ui port:** — (no UI)
 - **Family tier:** backbone

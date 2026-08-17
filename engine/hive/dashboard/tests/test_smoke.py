@@ -5,19 +5,25 @@ Smoke tests for QI Hive Dashboard (FastAPI, port 8600).
 Read-only contract checks only. No state-mutating endpoints are exercised.
 
 Run:
-    C:\\1-AI\\APPS\\PYTHON\\python.exe -m pytest C:\\QIH\\engine\\hive\\dashboard\\tests -v
+    C:\\Program Files\\Python311\\python.exe -m pytest C:\\QIH\\engine\\hive\\dashboard\\tests -v
 """
 import pytest
 import requests
 
 BASE = "http://127.0.0.1:8600"
 TIMEOUT = 3
+# The HTML pages render the whole dashboard (project table, agent roster, usage
+# tiles, per-project LLM inventory) and are far heavier than the JSON probes.
+# They are also the first thing touched after a QI_Dashboard restart, when no
+# cache is warm. Sharing the 3s JSON budget made test_root_dashboard fail cold
+# and pass warm; give the HTML its own headroom instead.
+HTML_TIMEOUT = 30
 
 
 def _service_up():
-    for path in ("/health", "/"):
+    for path, timeout in (("/health", TIMEOUT), ("/", HTML_TIMEOUT)):
         try:
-            r = requests.get(f"{BASE}{path}", timeout=TIMEOUT)
+            r = requests.get(f"{BASE}{path}", timeout=timeout)
             if r.status_code == 200:
                 return True
         except requests.RequestException:
@@ -31,8 +37,22 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _warm_root():
+    """Prime the root page before the assertions run.
+
+    Keeps first-request cost out of the individual tests' budgets so a slow
+    cold start shows up as a slow run, not a spurious failure. Errors are
+    swallowed deliberately — the real test should report them, not the fixture.
+    """
+    try:
+        requests.get(f"{BASE}/", timeout=HTML_TIMEOUT)
+    except requests.RequestException:
+        pass
+
+
 def test_root_dashboard():
-    r = requests.get(f"{BASE}/", timeout=TIMEOUT)
+    r = requests.get(f"{BASE}/", timeout=HTML_TIMEOUT)
     assert r.status_code == 200
 
 

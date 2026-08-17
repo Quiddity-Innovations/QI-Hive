@@ -87,4 +87,4 @@ see the brutal financial truth — with an AI that explains the math plainly and
 predict the draw.
 
 ---
-*This page is editable at `C:\Lottery Wiz\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\Lottery Wiz\INTRO\status_intro.md` — save and click Refresh to update.*

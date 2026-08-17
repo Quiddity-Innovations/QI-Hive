@@ -18,7 +18,7 @@ REM    aws ssm put-parameter --name /qi/maia/line_channel_secret ^
 REM        --type SecureString --value <SECRET> --overwrite
 REM ============================================================
 
-set DEPLOY=C:\QI\TOOLS\aws_relay\deploy_lambda.py
+set DEPLOY=C:\APPS\QI\TOOLS\aws_relay\deploy_lambda.py
 
 if not exist "%DEPLOY%" (
     echo [ERROR] Deploy script not found: %DEPLOY%

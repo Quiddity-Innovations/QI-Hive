@@ -2,13 +2,13 @@
   {
     "category": "Server & Runtime",
     "features": [
-      {"name": "Flask application server", "file": "naya_server.py", "status": "live", "detail": "Flask on port 8002, NSSM service QI_NayaBot (AppDirectory C:\\NAYA). Reconfigures stdout to UTF-8; rotating log at C:\\NAYA\\LOGS\\naya_log.txt (10 MB x 3). Imports naya_db FIRST so maia_db.DB_FILE is patched before any maia_* module loads."},
+      {"name": "Flask application server", "file": "naya_server.py", "status": "live", "detail": "Flask on port 8002, NSSM service QI_NayaBot (AppDirectory C:\\APPS\\NAYA). Reconfigures stdout to UTF-8; rotating log at C:\\APPS\\NAYA\\LOGS\\naya_log.txt (10 MB x 3). Imports naya_db FIRST so maia_db.DB_FILE is patched before any maia_* module loads."},
       {"name": "POST /ask", "file": "naya_server.py :: ask()", "status": "live", "detail": "Primary chat endpoint. JSON {message, conv_key?, user_id?}. Calls ask_naya(); saves both turns via db.save_message(); returns {response, conv_key, bot}."},
       {"name": "ask_naya() orchestrator", "file": "naya_server.py :: ask_naya()", "status": "live", "detail": "Turn pipeline: due-reminder injection -> help system -> permission/folder-access commands -> LLM intent extraction + action_router.dispatch() -> legacy keyword router (fallback) -> advisor/memory hooks -> NEXUS (if complex+enabled) -> free-form LLM via _llm_call()."},
       {"name": "GET /health, /status, /version, /info", "file": "naya_server.py", "status": "live", "detail": "/health basic liveness; /status returns bot identity + LLM chain labels; /version + /info present for QI ecosystem parity."},
       {"name": "POST /api/action", "file": "naya_server.py :: /api/action", "status": "live", "detail": "Direct, structured action entry point used by the Gradio File Manager — dispatches into naya_action_router.dispatch_action() without going through chat."},
       {"name": "Telegram long-poll thread", "file": "naya_server.py :: _telegram_polling() / start_telegram_polling()", "status": "live", "detail": "Daemon thread calling Telegram getUpdates with 30s long-poll, offset tracking, back-off on error. Restricts replies to naya.telegram_allowed_chat_ids. Janitors sibling-bot NO_OP status leaks. @Naya_qi_bot."},
-      {"name": "POST /webhook/peer-bridge", "file": "naya_server.py :: peer_bridge webhook", "status": "partial", "detail": "HMAC-signed HTTP bridge carrying messages between sibling bots (Tasuke/Maia/Naya) that share a Telegram chat — Telegram refuses direct bot-to-bot delivery. Config from C:\\QI\\shared-chats.json or the WSL OpenClaw bridge."},
+      {"name": "POST /webhook/peer-bridge", "file": "naya_server.py :: peer_bridge webhook", "status": "partial", "detail": "HMAC-signed HTTP bridge carrying messages between sibling bots (Tasuke/Maia/Naya) that share a Telegram chat — Telegram refuses direct bot-to-bot delivery. Config from C:\\APPS\\QI\\shared-chats.json or the WSL OpenClaw bridge."},
       {"name": "FileHQ engine auto-start", "file": "naya_server.py :: _start_filehq_engine() / _auto_start_filehq()", "status": "partial", "detail": "Lazily boots the merged FileHQ FastAPI app (filehq.main:app) via uvicorn on internal port 8200 in a daemon thread, the first time a file query needs it."}
     ]
   },
@@ -26,10 +26,10 @@
   {
     "category": "Shared Engine (reused from Maia)",
     "features": [
-      {"name": "DB redirect shim", "file": "naya_db.py", "status": "live", "detail": "Sets maia_db.DB_FILE = C:\\NAYA\\naya.db then re-exports all maia_db symbols (incl. private _conn). Adds Naya overrides save_message()/get_history() keyed on personal.history_enabled / history_limit. Must import before any maia_* module."},
-      {"name": "Context builder", "file": "maia_context.py (C:\\QI, reused)", "status": "live", "detail": "ctx_builder.build_context(user_id, bot_key='personal') assembles owner persona + facts + history into the system prompt — running against naya.db via the shim."},
-      {"name": "Language engine", "file": "maia_lang.py (C:\\QI, reused)", "status": "live", "detail": "detect_input_language() + build_language_instruction() — langdetect-based; non-English input gets a language directive prepended."},
-      {"name": "RAG (removed)", "file": "RAG_ARCHIVE\\ (was maia_rag)", "status": "partial", "detail": "maia_rag was removed from Naya's runtime (rag = None, _RAG_AVAILABLE = False) and archived under C:\\NAYA\\RAG_ARCHIVE\\ for Maia reference. No vector store is active in Naya."}
+      {"name": "DB redirect shim", "file": "naya_db.py", "status": "live", "detail": "Sets maia_db.DB_FILE = C:\\APPS\\NAYA\\naya.db then re-exports all maia_db symbols (incl. private _conn). Adds Naya overrides save_message()/get_history() keyed on personal.history_enabled / history_limit. Must import before any maia_* module."},
+      {"name": "Context builder", "file": "maia_context.py (C:\\APPS\\QI, reused)", "status": "live", "detail": "ctx_builder.build_context(user_id, bot_key='personal') assembles owner persona + facts + history into the system prompt — running against naya.db via the shim."},
+      {"name": "Language engine", "file": "maia_lang.py (C:\\APPS\\QI, reused)", "status": "live", "detail": "detect_input_language() + build_language_instruction() — langdetect-based; non-English input gets a language directive prepended."},
+      {"name": "RAG (removed)", "file": "RAG_ARCHIVE\\ (was maia_rag)", "status": "partial", "detail": "maia_rag was removed from Naya's runtime (rag = None, _RAG_AVAILABLE = False) and archived under C:\\APPS\\NAYA\\RAG_ARCHIVE\\ for Maia reference. No vector store is active in Naya."}
     ]
   },
   {
@@ -56,7 +56,7 @@
     "features": [
       {"name": "Deferral & scheduling", "file": "naya_deferral.py :: handle_chat() / store_last_action()", "status": "live", "detail": "Parses 'not now' / 'tonight' / 'daily at 2am'; saves deferred intents (naya_intents, status='deferred') and creates Windows Task Scheduler tasks under the Naya\\ prefix via schtasks."},
       {"name": "Background watchers", "file": "naya_watcher.py :: start_watchers() / disk_monitor_tick() / usb_watcher_tick()", "status": "live", "detail": "Three APScheduler-driven services inside the server: disk-space monitor (low_space_threshold_pct/_gb -> Telegram alert), USB watcher (~60s drive-letter poll), off-hours scheduler (quiet-hours + idle detection runs queued heavy jobs)."},
-      {"name": "Report generator", "file": "naya_reporter.py :: generate_report()", "status": "live", "detail": "Types: space / dupes / actions / deferred / full. Formats: md, txt, docx (python-docx), pdf (win32com else markdown). Saved to C:\\NAYA\\REPORTS\\."}
+      {"name": "Report generator", "file": "naya_reporter.py :: generate_report()", "status": "live", "detail": "Types: space / dupes / actions / deferred / full. Formats: md, txt, docx (python-docx), pdf (win32com else markdown). Saved to C:\\APPS\\NAYA\\REPORTS\\."}
     ]
   },
   {

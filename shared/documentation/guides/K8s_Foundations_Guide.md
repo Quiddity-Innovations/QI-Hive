@@ -11,10 +11,10 @@
 |---|---|---|
 | k3s cluster installed (`curl get.k3s.io \| sh`) | ✅ | node Ready in ~15 s |
 | Drainer image imported into cluster runtime | ✅ | `docker save … \| k3s ctr images import -` |
-| Deployment + CronJob manifests ([k8s/qi-relay.yaml](C:\QI\TOOLS\aws_relay\k8s\qi-relay.yaml)) | ✅ | applied to namespace `qi` |
+| Deployment + CronJob manifests ([k8s/qi-relay.yaml](C:\APPS\QI\TOOLS\aws_relay\k8s\qi-relay.yaml)) | ✅ | applied to namespace `qi` |
 | **Self-healing demo** | ✅ PASS | pod force-killed → replacement Running in **14 s**, zero human action |
-| CronJob `qi-queue-report` (every 15 min → `C:\QI\LOGS\queue_report_k8s.log`) | ✅ | the Task-Scheduler→CronJob conversion example |
-| Helm installed (v3.21) + **`qi-bot` chart** | ✅ | [helm/qi-bot/](C:\QI\TOOLS\aws_relay\helm\qi-bot\) |
+| CronJob `qi-queue-report` (every 15 min → `C:\APPS\QI\LOGS\queue_report_k8s.log`) | ✅ | the Task-Scheduler→CronJob conversion example |
+| Helm installed (v3.21) + **`qi-bot` chart** | ✅ | [helm/qi-bot/](C:\APPS\QI\TOOLS\aws_relay\helm\qi-bot\) |
 | **Two bots, one chart:** releases `maia` + `demobot` deployed side by side | ✅ | differ ONLY in values-*.yaml |
 | `maia-monitor` sidecar live in-cluster (queue depth + health watch) | ✅ | 1/1 Running |
 

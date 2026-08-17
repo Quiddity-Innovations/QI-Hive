@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live PersonalSong source (C:\\PersonalSong). Each shows the real code behind a capability and explains how it powers that feature. The creative core is local + free: Ollama for lyrics, ACE-Step for sung vocals, Demucs + Seed-VC for voice cloning, edge-tts for dedications. No model names or paths are guessed here — they are read straight from the files.",
+  "intro": "Excerpts copied from the live PersonalSong source (C:\\APPS\\PersonalSong). Each shows the real code behind a capability and explains how it powers that feature. The creative core is local + free: Ollama for lyrics, ACE-Step for sung vocals, Demucs + Seed-VC for voice cloning, edge-tts for dedications. No model names or paths are guessed here — they are read straight from the files.",
   "sections": [
     {
       "category": "Server & Startup",
@@ -241,7 +241,7 @@
           "feature": "Always-on background app",
           "file": "PersonalSong_Install.bat",
           "language": "bash",
-          "code": "set NSSM=C:\\QIH\\engine\\bin\\nssm.exe\nset APPDIR=C:\\PersonalSong\n\"%NSSM%\" install QI_PersonalSong \"C:\\PersonalSong\\.venv\\Scripts\\python.exe\" serve.py\n\"%NSSM%\" set QI_PersonalSong AppDirectory \"%APPDIR%\"\n\"%NSSM%\" set QI_PersonalSong Description \"PersonalSong Studio - local AI song generator web app :8088 (acestep in .venv).\"\n\"%NSSM%\" set QI_PersonalSong AppStdout \"%APPDIR%\\logs\\service.log\"\n\"%NSSM%\" start QI_PersonalSong",
+          "code": "set NSSM=C:\\QIH\\engine\\bin\\nssm.exe\nset APPDIR=C:\\APPS\\PersonalSong\n\"%NSSM%\" install QI_PersonalSong \"C:\\APPS\\PersonalSong\\.venv\\Scripts\\python.exe\" serve.py\n\"%NSSM%\" set QI_PersonalSong AppDirectory \"%APPDIR%\"\n\"%NSSM%\" set QI_PersonalSong Description \"PersonalSong Studio - local AI song generator web app :8088 (acestep in .venv).\"\n\"%NSSM%\" set QI_PersonalSong AppStdout \"%APPDIR%\\logs\\service.log\"\n\"%NSSM%\" start QI_PersonalSong",
           "explanation": "Registers the studio as a QI-standard NSSM Windows service (QI_ prefix, explicit AppDirectory + Description, rotating logs) running serve.py from the venv that has acestep, using the standardized nssm.exe at C:\\QIH\\engine\\bin. This is how the app stays available on the machine without a terminal open."
         }
       ]

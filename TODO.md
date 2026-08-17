@@ -15,16 +15,44 @@
 
 > Full per-agent metrics (runs, tokens, hours, history) land on the **Agent HR board → `http://127.0.0.1:8600/agents`** once hive-builder ships it; runs auto-record via the SubagentStop hook from then on.
 
+## 🔍 Audit 2026-08-17 — decisions waiting on Renne
+> Full write-up: [`docs/QI_Hive_Audit_2026-08-17.md`](docs/QI_Hive_Audit_2026-08-17.md).
+> 8 of 8 fixes executed; these three are policy/approval calls, not bugs.
+
+- [ ] 🔴 **Auto-apply pipeline — finish it or retire it.** `QI_HiveApply` has run since May
+      with **7 runs, all May test fixtures, all failed; zero real changes ever applied.**
+      Root cause now known: Hive services run as **LocalSystem**, repo is owned by `renne`,
+      so git refuses with *"dubious ownership"*. Fix needs
+      `git config --system --add safe.directory C:/QIH` — **not in `commands/whitelist.json`**,
+      and Claude will not widen a security whitelist unilaterally. Either approve that
+      addition and re-run the e2e, or stop the service. Idle, so no urgency — but decide.
+- [ ] 🔴 **17 registry repos sync nowhere.** The new `coverage_check()` in
+      `nightly_git_sync.py` now reports them every run (warn-only). Enrolling them in
+      nightly auto-commit is a policy call: akiyascout, avatarstudio, claude_manager,
+      cognibase, connector, cypherminer, digitization, easyflow, gamez, lotterywiz,
+      mapsnap, mq, naya, nexus, openclaw, retirementanalyzer, tubescout.
+- [ ] ⚪ **Brain heartbeat fix is staged but not live.** `engine/brain/api.py` now normalises
+      `project_id` on heartbeat write. `QI_BrainAPI` has 4 dependents (Maia, Naya, NEXUS,
+      Dashboard) and Maia serves public LINE traffic, so it was **not** cascade-restarted
+      for a telemetry fix. **Activates on the next Brain restart** — do it at a quiet moment.
+- [ ] ⚪ **25 open dispatches**, mostly a newly surfaced class: `nssm_registry` — installed
+      `QI_*` services missing from `qi_registry.json` (MapSnap family, NexusMCP, PlayDeck,
+      RetirementAnalyzer, several tunnels). Plus true staleness for `mq` (133d),
+      `personalsong` / `m2v` (60d) — mark those paused rather than active.
+
 ## 🔴 Renne — security console actions (Claude cannot do these)
 - [ ] **Revoke the Anthropic API key** (`_CREDENTIALS\Claude Token.txt`) — verified 2026-08-08: NOTHING on
       this machine uses it (Claude auth is OAuth; ClaudeVoice anthropic backend disabled, no key set). Check
       the console's *last-used* column first: never/stale → revoke; recent → the BU laptop uses it, reissue
-      there properly, then revoke. Renne conditionally agreed 2026-08-08.
+      there properly, then revoke. Renne conditionally agreed 2026-08-08. **Deferred to week of 2026-08-11 —
+      Renne's call, not urgent since nothing here depends on it.**
 - [ ] ~~Rotate MapSnap tokens~~ **Downgraded 2026-08-08**: hash-compare proves the quarantined BU tokens ≠ home's
       live tokens — they open nothing here. Just destroy them with `_CREDENTIALS` (item E); rotate on the BU
       side only if that deployment still runs.
 - [ ] **Judge the meeting transcript**: `...\ClaudeVoice BU-tenant items\meeting_1782146412.json` — test data or real BU meeting? (never opened)
-- [ ] **F:\ (ROG ESD-S1C)**: reseat cable into a motherboard port, run `chkdsk F: /f` — drive dropped writes on 2026-08-08; do not park data on it until proven
+- [x] **F:\ (ROG ESD-S1C)**: ✅ cable reseated + `chkdsk F: /f` run 2026-08-08 — **clean, zero problems found**
+      (32,256 file records, 0 bad records, "no further action required"). Points to a cable/port issue, not
+      drive failure. Recommend one successful write test before fully trusting it with important data again.
 - [ ] **Gut-check BU Hive / CogniBase app-code IP** (built on employer machine) before any reuse outside BU work
 
 ## 🟡 Claude — in progress
@@ -40,10 +68,10 @@
 ## 🛑 Pending approval — irreversible actions (Renne must say yes per item)
 | # | Item | Size | Consequence if deleted | Recoverable? |
 |---|---|---|---|---|
-| A | `C:\AutoPDF_Portable` | 1.4 GB | Current portable build gone | Yes — rebuildable from C:\AutoPDF, but it IS the latest build, so held for approval |
+| A | `C:\APPS\AutoPDF_Portable` | 1.4 GB | Current portable build gone | Yes — rebuildable from C:\APPS\AutoPDF, but it IS the latest build, so held for approval |
 | B | `D:\BU Laptop Files` (remainder) | 183 MB | The BU MapSnap merge SOURCE + ClaudeVoice originals + personal docs disappear | Partially — only delete AFTER the MapSnap feature merge is verified working |
 | C | `F:\BU Edition` + `F:\Server 2012 R2*` fragments | ~2 GB | Corrupt partial copies on the failing drive | Superseded by D:\ full copy — but drive needs chkdsk first; deleting from a failing volume can worsen it |
-| D | `C:\Server 2012 R2` (the parked VM) | 45 GB on C:\ | The ONLY copy of the 2012 R2 VM | Decision needed: move to D:\ (reversible, frees C:\) vs keep vs discard (you're building Server 2025) — moving recommended, discard needs explicit approval |
+| D | `C:\Server 2012 R2` (the OLD C:\ copy) | 45 GB | Renne moved the VM to `D:\VMs\Server_2012_R2_OB13` (2026-08-08) — verified byte-identical (.vmdk 38,927,990,784 bytes matches exactly). C:\ copy is now a stale duplicate. Also: `D:\VMs\Server_2012_R2_OB13_Original` is an empty leftover folder. | **Awaiting approval to delete both** — frees 45 GB on C:\ |
 | E | `_CREDENTIALS (rotate then destroy)` folder | small | Old tokens destroyed | Destroy ONLY after Renne rotates/revokes each credential |
 
 *(The 13-path stale-copy list running now was explicitly pre-approved and contains none of the above.)*

@@ -2,7 +2,7 @@
 """
 Nightly git sync for QI repos that have no per-project sync of their own.
 
-Mirrors what MaiaNightlySync does for C:\\QI, but generic: for each repo
+Mirrors what MaiaNightlySync does for C:\\APPS\\QI, but generic: for each repo
 below, stage everything (each repo's .gitignore is the safety boundary),
 commit if there are changes, and push to origin.
 
@@ -22,10 +22,17 @@ except Exception:  # pragma: no cover - gate must never silently vanish
     scan_staged = None
 
 REPOS = [
-    r"C:\AutoPDF",
-    r"C:\PersonalSong",
-    r"C:\M2V",
+    r"C:\QIH",            # the Hive itself — added 2026-08-17 (audit: was absent, 304 files unprotected)
+    r"C:\APPS\AutoPDF",
+    r"C:\APPS\PersonalSong",
+    r"C:\APPS\M2V",
 ]
+
+# Repos that carry their own dedicated sync task — deliberately NOT synced here,
+# so we don't double-commit. Used by the coverage check below.
+EXTERNALLY_SYNCED = {
+    r"C:\APPS\QI",        # MaiaNightlySync (12:30 AM)
+}
 
 LOG = Path(r"C:\QIH\logs\nightly_git_sync.log")
 LOG.parent.mkdir(parents=True, exist_ok=True)
@@ -83,6 +90,40 @@ def sync(repo: str):
         log(f"FAIL {repo}: push: {p.stderr.strip()[:200]}")
 
 
+def coverage_check():
+    """Warn about registry projects that are git repos but sync nowhere.
+
+    Added 2026-08-17. The audit found C:\\QIH missing from REPOS for months while
+    this task still reported success nightly. Never let that be silent again:
+    compare REPOS against qi_registry.json and log anything uncovered. This only
+    WARNS — it never auto-commits a repo the owner hasn't opted in.
+    """
+    reg = Path(r"C:\QIH\ecosystem\qi_registry.json")
+    if not reg.exists():
+        log("WARN coverage_check: qi_registry.json not found — skipped")
+        return
+    try:
+        import json
+        projects = json.loads(reg.read_text(encoding="utf-8")).get("projects", [])
+    except Exception as e:
+        log(f"WARN coverage_check: could not parse registry: {e}")
+        return
+    covered = {p.casefold().rstrip("\\") for p in REPOS} | {
+        p.casefold().rstrip("\\") for p in EXTERNALLY_SYNCED
+    }
+    uncovered = []
+    for p in projects:
+        path = (p.get("path") or "").rstrip("\\")
+        if not path or path.casefold() in covered:
+            continue
+        if Path(path, ".git").exists():
+            uncovered.append(f"{p.get('id')} ({path})")
+    if uncovered:
+        log(f"WARN {len(uncovered)} registry repo(s) sync nowhere: {', '.join(sorted(uncovered))}")
+    else:
+        log("coverage_check: every registry git repo is covered")
+
+
 if __name__ == "__main__":
     log("=== nightly git sync start ===")
     for r in REPOS:
@@ -90,4 +131,5 @@ if __name__ == "__main__":
             sync(r)
         except Exception as e:
             log(f"FAIL {r}: {type(e).__name__}: {e}")
+    coverage_check()
     log("=== nightly git sync done ===")

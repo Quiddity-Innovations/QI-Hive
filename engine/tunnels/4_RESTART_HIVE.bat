@@ -23,7 +23,7 @@ if %errorlevel% neq 0 (
 
 setlocal
 set NSSM=C:\QIH\engine\bin\nssm.exe
-set PY=C:\1-AI\APPS\PYTHON\python.exe
+set PY=C:\Program Files\Python311\python.exe
 if not exist "%PY%" set PY=python
 
 echo.

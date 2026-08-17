@@ -7,7 +7,7 @@
 # ============================================================================
 $ErrorActionPreference = 'Continue'
 $root   = 'C:\QIH\tools\naming_standardization'
-$py     = 'C:\1-AI\APPS\PYTHON\python.exe'
+$py     = 'C:\Program Files\Python311\python.exe'
 $stamp  = Get-Date -Format 'yyyyMMdd-HHmmss'
 $master = Join-Path $root "logs\FRIDAY_RUN_$stamp.log"
 function M($m){ $l="[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'),$m; Write-Host $l; Add-Content $master $l -Encoding UTF8 }
@@ -62,6 +62,6 @@ M "services running: $running / $total ; still on shared nssm.exe: $oldptr"
 $msg = "QI Naming Standardization (Friday) done. Services running $running/$total. " +
        "Still on shared nssm: $oldptr. NSSM now per-product (UAC popups name the product). " +
        "Batch Tier-1 launchers renamed. Log: FRIDAY_RUN_$stamp.log"
-try { & $py 'C:\CLAUDE\Tools\qi_tasuke_notify.py' $msg 2>&1 | ForEach-Object { M $_ } } catch { M "notify failed: $_" }
+try { & $py 'C:\APPS\CLAUDE\Tools\qi_tasuke_notify.py' $msg 2>&1 | ForEach-Object { M $_ } } catch { M "notify failed: $_" }
 
 M "########## DONE — log: $master ##########"

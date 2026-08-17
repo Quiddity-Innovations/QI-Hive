@@ -6,7 +6,7 @@
       "items": [
         {"title": "Install the service + named tunnel", "detail": "User action: run install_service.bat (UAC) so QI_LotteryWiz runs 24/7 instead of as a dev process, then provision the static named tunnel (migrate_named_tunnels.py --only qi-lotterywiz) so it lives at https://lottery.quiddityinnovations.com instead of a random quick-tunnel URL."},
         {"title": "Restart Claude Desktop for MCP", "detail": "mcp_server.py is registered with 11 tools but Claude Desktop must be restarted to load it. Until then the no-paid-API path ('Using lottery-wiz, generate a 63-ticket hot wheel and run the brutal ledger') is unavailable."},
-        {"title": "Set the owner key", "detail": "A key was auto-generated into C:\\Lottery Wiz\\.owner_key on first boot. Edit that file (or set LOTTERYWIZ_OWNER_KEY) to a chosen value so the owner-unlock link/password is memorable."}
+        {"title": "Set the owner key", "detail": "A key was auto-generated into C:\\APPS\\Lottery Wiz\\.owner_key on first boot. Edit that file (or set LOTTERYWIZ_OWNER_KEY) to a chosen value so the owner-unlock link/password is memorable."}
       ]
     },
     {

@@ -16,7 +16,7 @@
     {"layer": "AI - Desktop", "technology": "MCP (FastMCP)", "role": "mcp_server.py exposes 11 tools to Claude Desktop over stdio - drive Lottery Wiz on the subscription, no paid API", "license": "MIT", "version": "mcp.server.fastmcp"},
     {"layer": "Frontend", "technology": "Vanilla JS + HTML/CSS", "role": "Four self-contained browser apps; engine.js mirrors the Python F5 engine for offline use; shared gamebar.js + aidock.js (WizDock)", "license": "n/a (app code)", "version": "versioned ?v= assets"},
     {"layer": "Data sources", "technology": "data.ny.gov / Caixa / FDJ / community APIs", "role": "Official US (Socrata), Brazil (Caixa), France (FDJ open data) feeds + EuroMillions community API for live results + jackpots", "license": "Open data / official", "version": "live"},
-    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_LotteryWiz Windows service (AppDirectory C:\\Lottery Wiz, server.py, :8777) + QI_LotteryWizTunnel static named tunnel", "license": "Open source / Cloudflare", "version": "nssm"}
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_LotteryWiz Windows service (AppDirectory C:\\APPS\\Lottery Wiz, server.py, :8777) + QI_LotteryWizTunnel static named tunnel", "license": "Open source / Cloudflare", "version": "nssm"}
   ],
   "descriptions": [
     {

@@ -31,9 +31,9 @@
       "name": "Operations & QI Integration",
       "priority": "high",
       "items": [
-        {"title": "QI_AkiyaScout NSSM service + tunnel", "detail": "Register a QI_AkiyaScout NSSM service (prefix QI_, AppDirectory C:\\AkiyaScout, main.py, set Description) plus a QI_AkiyaScoutTunnel, and add both to C:\\QIH\\ecosystem\\QI_Service_Registry.md so the Scout runs 24/7 instead of via Start_AkiyaScout.bat."},
+        {"title": "QI_AkiyaScout NSSM service + tunnel", "detail": "Register a QI_AkiyaScout NSSM service (prefix QI_, AppDirectory C:\\APPS\\AkiyaScout, main.py, set Description) plus a QI_AkiyaScoutTunnel, and add both to C:\\QIH\\ecosystem\\QI_Service_Registry.md so the Scout runs 24/7 instead of via Start_AkiyaScout.bat."},
         {"title": "QI Brain logging", "detail": "Log Scout cycles, ingest stats, and significant decisions to the QI Brain (qi.log_session / qi.log_decision) for cross-project memory. integrates_with is currently empty in the registry."},
-        {"title": "QI Standards compliance audit", "detail": "Run qi_validator.py --project akiyascout. Reconcile the legacy C:\\QI\\ECOSYSTEM CORS import path in api/main.py with the migrated C:\\QIH\\ecosystem location, and confirm the 7-folder QI layout."}
+        {"title": "QI Standards compliance audit", "detail": "Run qi_validator.py --project akiyascout. Reconcile the legacy C:\\APPS\\QI\\ECOSYSTEM CORS import path in api/main.py with the migrated C:\\QIH\\ecosystem location, and confirm the 7-folder QI layout."}
       ]
     },
     {

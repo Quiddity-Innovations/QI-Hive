@@ -101,4 +101,4 @@ platform. They share the `schema.json` shape and browser HTML pattern but diverg
 risk profile — kept apart so the stable browser is insulated from the integration product's churn.
 
 ---
-*This page is editable at `C:\CogniBase\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\CogniBase\INTRO\status_intro.md` — save and click Refresh to update.*

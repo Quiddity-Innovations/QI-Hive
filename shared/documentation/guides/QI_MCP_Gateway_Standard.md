@@ -6,7 +6,7 @@
 
 One reusable module that turns any QI app's HTTP API into MCP tools for Claude. Two consumption modes, both config-driven:
 
-1. **Adapter in the QI Connector** (personal use, all Claude surfaces): add a section to `C:\QIP\Connector\config\connector.json` named after the adapter, `"enabled": true` → tools appear on Renne's claude.ai account. Restart `QI_ConnectorMCP`.
+1. **Adapter in the QI Connector** (personal use, all Claude surfaces): add a section to `C:\APPS\QIP\Connector\config\connector.json` named after the adapter, `"enabled": true` → tools appear on Renne's claude.ai account. Restart `QI_ConnectorMCP`.
 2. **Standalone gateway service** (shipped/LAN deployments): a `config\mcp_gateway.json` in the app's folder + a tiny launcher in `C:\QIH\engine\launchers\` + an NSSM service `QI_<App>MCP` (installable via QI_Elevate broker — launcher lives under C:\QIH which the whitelist allows).
 
 ## Config contract (per app)

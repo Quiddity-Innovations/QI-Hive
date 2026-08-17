@@ -20,7 +20,7 @@ CogniBase exposes its capabilities as **MCP tools** and **registers in BU's `mcp
 | `cognibase.federated_query` | Query Federator | sanctioned cross-source result (Document 8) |
 | `cognibase.list_doctypes` | schema/.expk | DocType inventory |
 
-A runnable scaffold exists (`C:\CogniBase\proposals\mcp_server.py`) wrapping the live retriever/query-engine/router.
+A runnable scaffold exists (`C:\APPS\CogniBase\proposals\mcp_server.py`) wrapping the live retriever/query-engine/router.
 
 ## 3. Where it runs (two-VPC)
 

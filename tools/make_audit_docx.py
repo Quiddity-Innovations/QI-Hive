@@ -103,12 +103,12 @@ for x in [
     r"C:\QIH\tools\secret_gate.py (new)",
     r"C:\QIH\tools\personalsong_remediate.py (new)",
     r"C:\QIH\tools\nightly_git_sync.py (patched — secret gate)",
-    r"C:\QI\TOOLS\maia_nightly_sync.py (patched — secret gate)",
+    r"C:\APPS\QI\TOOLS\maia_nightly_sync.py (patched — secret gate)",
     r"C:\QIH\ecosystem\QI_baseline.gitignore (new)",
     r"C:\QIH\logs\secret_audit\SECURITY_AUDIT_2026-06-16.md (report)",
     r"C:\QIH\logs\secret_audit\audit_latest.json / triage_latest.json (data)",
-    r"C:\PersonalSong\.gitignore + config\app_config.template.json (remediation)",
-    r"C:\QI\.git\config (PAT scrubbed)",
+    r"C:\APPS\PersonalSong\.gitignore + config\app_config.template.json (remediation)",
+    r"C:\APPS\QI\.git\config (PAT scrubbed)",
 ]:
     bullet(x)
 

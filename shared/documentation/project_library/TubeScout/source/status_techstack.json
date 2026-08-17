@@ -18,7 +18,7 @@
     {"layer": "AI Providers (via NEXUS)", "technology": "Groq · Cloudflare · Gemini · gemma4 (local)", "role": "Summary chain pinned to Groq→Cloudflare→Gemini; Discover reasoner defaults to Groq, switchable to fully-local gemma4", "license": "Free tier / local", "version": "see NEXUS providers.json"},
     {"layer": "Ecosystem (external)", "technology": "QI Brain (:9011) · NEXUS Scout/Kaze · QI Hive (:8600)", "role": "Brain receives implement-worthy features; Kaze digest consumes the curated OPML; Hive supplies the live NEXUS tunnel URL", "license": "QI internal", "version": "—"},
     {"layer": "Scheduling", "technology": "Windows Task Scheduler", "role": "QI_TubeScout_AM (07:00) + QI_TubeScout_PM (19:00) run shared.cycle daily; no in-process scheduler", "license": "OS", "version": "—"},
-    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_TubeScout Windows service (AppDirectory C:\\TUBESCOUT, uvicorn :8503) + QI_TubeScoutTunnel exposing it at tubescout.quiddityinnovations.com", "license": "Open source / Cloudflare", "version": "nssm 2.24"},
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_TubeScout Windows service (AppDirectory C:\\APPS\\TUBESCOUT, uvicorn :8503) + QI_TubeScoutTunnel exposing it at tubescout.quiddityinnovations.com", "license": "Open source / Cloudflare", "version": "nssm 2.24"},
     {"layer": "Elevation", "technology": "QI_Elevate broker", "role": "install_service.py registers the NSSM service through qi_elevate_client.run_elevated() (the QI standard for elevated ops)", "license": "QI internal", "version": "—"},
     {"layer": "Testing", "technology": "pytest + requests", "role": "Live HTTP smoke tests against :8503; skip cleanly when the service is offline", "license": "MIT / Apache 2.0", "version": "—"}
   ],
@@ -49,7 +49,7 @@
     },
     {
       "title": "Public page, owner controls, permanent link",
-      "body": "Reads (news, favorites, digest, settings views) are public; mutations are guarded centrally by the require_token_for_writes middleware, which enforces TUBESCOUT_PAGE_TOKEN on every POST/PUT/PATCH/DELETE when the token is set (open in local single-user mode). The page is served by the QI_TubeScout NSSM service (AppDirectory C:\\TUBESCOUT, corrected 2026-06-18) and exposed by QI_TubeScoutTunnel as a permanent named Cloudflare tunnel at tubescout.quiddityinnovations.com — no open inbound port on the machine. The 'pairs with NEXUS' link auto-resolves to NEXUS's local or tunnel URL depending on how TubeScout itself is being viewed."
+      "body": "Reads (news, favorites, digest, settings views) are public; mutations are guarded centrally by the require_token_for_writes middleware, which enforces TUBESCOUT_PAGE_TOKEN on every POST/PUT/PATCH/DELETE when the token is set (open in local single-user mode). The page is served by the QI_TubeScout NSSM service (AppDirectory C:\\APPS\\TUBESCOUT, corrected 2026-06-18) and exposed by QI_TubeScoutTunnel as a permanent named Cloudflare tunnel at tubescout.quiddityinnovations.com — no open inbound port on the machine. The 'pairs with NEXUS' link auto-resolves to NEXUS's local or tunnel URL depending on how TubeScout itself is being viewed."
     }
   ]
 }

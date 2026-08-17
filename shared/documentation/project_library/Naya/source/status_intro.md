@@ -9,7 +9,7 @@ and — uniquely — it can act on the local filesystem. Naya scans drives, find
 files, plans cleanups, generates reports, and schedules heavy jobs for off-hours.
 
 Naya is a **sibling of Maia**. It reuses Maia's proven engine (the same `maia_db`, `maia_context`, and
-`maia_lang` modules from `C:\QI`) but points them at its own database, runs its own LLM chain, and wears a
+`maia_lang` modules from `C:\APPS\QI`) but points them at its own database, runs its own LLM chain, and wears a
 personal persona. Naya is reached only through **Telegram** (long-poll, LAN-only) and a local **Gradio**
 console — there is no public chat surface.
 
@@ -100,11 +100,11 @@ Naya can reach into the filesystem, so safety is structural, not optional:
 
 ## Brain + Hands (Sibling of Maia)
 
-- **Shared engine** — `naya_db.py` patches `maia_db.DB_FILE` to `C:\NAYA\naya.db`, then re-exports every
+- **Shared engine** — `naya_db.py` patches `maia_db.DB_FILE` to `C:\APPS\NAYA\naya.db`, then re-exports every
   function, so Maia's battle-tested DB / context / language code runs unchanged against Naya's own data.
 - **Own data** — `naya.db` holds config, the LLM chain, and conversation history; `naya_brain.db` holds the
   file-intelligence data (scans, similarity groups, folder insights, intents, operations).
 - **Separate, never merged** — Maia can call Naya's API; Naya never becomes part of Maia's codebase.
 
 ---
-*This page is editable at `C:\NAYA\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\NAYA\INTRO\status_intro.md` — save and click Refresh to update.*

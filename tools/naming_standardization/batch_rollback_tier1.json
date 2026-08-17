@@ -1,52 +1,52 @@
 {
   "renames": [
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Control.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_control.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Control.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_control.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Start.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_server.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Start.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_server.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Dashboard\\Hive_Install.bat",
-      "to": "C:\\CLAUDE\\Dashboard\\install_service.bat"
+      "from": "C:\\APPS\\CLAUDE\\Dashboard\\Hive_Install.bat",
+      "to": "C:\\APPS\\CLAUDE\\Dashboard\\install_service.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Dashboard\\Hive_Start.bat",
-      "to": "C:\\CLAUDE\\Dashboard\\start_dashboard.bat"
+      "from": "C:\\APPS\\CLAUDE\\Dashboard\\Hive_Start.bat",
+      "to": "C:\\APPS\\CLAUDE\\Dashboard\\start_dashboard.bat"
     },
     {
-      "from": "C:\\NAYA\\Naya_Install.bat",
-      "to": "C:\\NAYA\\install_naya_watchdog.bat"
+      "from": "C:\\APPS\\NAYA\\Naya_Install.bat",
+      "to": "C:\\APPS\\NAYA\\install_naya_watchdog.bat"
     },
     {
-      "from": "C:\\NAYA\\Naya_Control.bat",
-      "to": "C:\\NAYA\\naya_control.bat"
+      "from": "C:\\APPS\\NAYA\\Naya_Control.bat",
+      "to": "C:\\APPS\\NAYA\\naya_control.bat"
     },
     {
-      "from": "C:\\NAYA\\Naya_Start.bat",
-      "to": "C:\\NAYA\\start_naya.bat"
+      "from": "C:\\APPS\\NAYA\\Naya_Start.bat",
+      "to": "C:\\APPS\\NAYA\\start_naya.bat"
     },
     {
-      "from": "C:\\NEXUS\\NEXUS_Control.bat",
-      "to": "C:\\NEXUS\\nexus_control.bat"
+      "from": "C:\\APPS\\NEXUS\\NEXUS_Control.bat",
+      "to": "C:\\APPS\\NEXUS\\nexus_control.bat"
     },
     {
-      "from": "C:\\NEXUS\\NEXUS_Restart.bat",
-      "to": "C:\\NEXUS\\restart_nexus.bat"
+      "from": "C:\\APPS\\NEXUS\\NEXUS_Restart.bat",
+      "to": "C:\\APPS\\NEXUS\\restart_nexus.bat"
     },
     {
-      "from": "C:\\PersonalSong\\PersonalSong_Install.bat",
-      "to": "C:\\PersonalSong\\install_service.bat"
+      "from": "C:\\APPS\\PersonalSong\\PersonalSong_Install.bat",
+      "to": "C:\\APPS\\PersonalSong\\install_service.bat"
     },
     {
-      "from": "C:\\QI\\Maia_Control.bat",
-      "to": "C:\\QI\\maia_control.bat"
+      "from": "C:\\APPS\\QI\\Maia_Control.bat",
+      "to": "C:\\APPS\\QI\\maia_control.bat"
     },
     {
-      "from": "C:\\TUBESCOUT\\TubeScout_Install.bat",
-      "to": "C:\\TUBESCOUT\\install_service_admin.bat"
+      "from": "C:\\APPS\\TUBESCOUT\\TubeScout_Install.bat",
+      "to": "C:\\APPS\\TUBESCOUT\\install_service_admin.bat"
     }
   ],
   "edits": [

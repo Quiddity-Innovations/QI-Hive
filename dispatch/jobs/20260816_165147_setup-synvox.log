@@ -1,0 +1,137 @@
+2026-08-16T16:51:47-04:00 [START] setup-synvox -> Setup-SynVox.ps1 args=[]
+?# : The term '?#' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At C:\QIH\dispatch\scripts\Setup-SynVox.ps1:1 char:1
++ ?# ============================================================
++ ~~
+    + CategoryInfo          : ObjectNotFound: (?#:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+2026-08-16 16:51:48 [INFO] ====================================================
+2026-08-16 16:51:48 [INFO]   SynVox Phase 0 bootstrap - MatrAIx engine
+2026-08-16 16:51:48 [INFO]   Machine: POWERSPEC   User: POWERSPEC$
+2026-08-16 16:51:48 [INFO]   Project: C:\APPS\SynVox
+2026-08-16 16:51:48 [INFO]   Master log: C:\APPS\SynVox\logs\synvox_phase0_20260816_165148.log
+2026-08-16 16:51:48 [INFO] ====================================================
+2026-08-16 16:51:48 [INFO] STEP START : Ensure Git
+2026-08-16 16:51:48 [INFO]     git version 2.55.0.windows.1
+2026-08-16 16:51:48 [OK  ] STEP SUCCESS : Ensure Git
+2026-08-16 16:51:48 [INFO] STEP START : Ensure uv
+2026-08-16 16:51:48 [INFO]     uv 0.12.5 (210d1f678 2026-08-14 x86_64-pc-windows-msvc)
+2026-08-16 16:51:48 [OK  ] STEP SUCCESS : Ensure uv
+2026-08-16 16:51:48 [INFO] STEP START : Ensure Python 3.12
+2026-08-16 16:51:48 [INFO]     Downloading cpython-3.12.14-windows-x86_64-none (download) (21.0MiB)
+2026-08-16 16:51:50 [INFO]      Downloaded cpython-3.12.14-windows-x86_64-none (download)
+2026-08-16 16:51:51 [INFO]     Installed Python 3.12.14 in 2.21s
+2026-08-16 16:51:51 [INFO]      + cpython-3.12.14-windows-x86_64-none
+2026-08-16 16:51:51 [INFO]     warning: Failed to install executable for cpython-3.12.14-windows-x86_64-none
+2026-08-16 16:51:51 [INFO]       Caused by: Executable already exists at `C:\WINDOWS\system32\config\systemprofile\.local\bin\python3.12.exe` but is not managed by uv; use `--force` to replace it
+2026-08-16 16:51:51 [INFO]     C:\QIH\shared\uv\python\cpython-3.12-windows-x86_64-none\python.exe
+2026-08-16 16:51:51 [OK  ] STEP SUCCESS : Ensure Python 3.12
+2026-08-16 16:51:51 [INFO] STEP START : Ensure Node.js 20+
+2026-08-16 16:51:51 [INFO] Found Node 24.14.1
+2026-08-16 16:51:51 [OK  ] STEP SUCCESS : Ensure Node.js 20+
+2026-08-16 16:51:51 [INFO] STEP START : Check Docker (check only - never installed by this script)
+2026-08-16 16:51:51 [WARN] Docker Desktop NOT installed (needs WSL2). Install from docker.com. Smoke test will be SKIPPED.
+2026-08-16 16:51:51 [OK  ] STEP SUCCESS : Check Docker (check only - never installed by this script)
+2026-08-16 16:51:51 [INFO] STEP START : Clone or update MatrAIx repo
+2026-08-16 16:51:51 [INFO] Repo already present - pulling
+2026-08-16 16:51:52 [INFO]     From https://github.com/MatrAIx-ai/MatrAIx-Persona-8B
+2026-08-16 16:51:52 [INFO]        0d1601f..2b27860  main       -> origin/main
+2026-08-16 16:51:52 [INFO]     Updating 0d1601f..2b27860
+2026-08-16 16:51:52 [INFO]     Fast-forward
+2026-08-16 16:51:52 [INFO]      .../src/components/cockpit/OsAppEvalCockpit.tsx    | 196 ++++++++-------------
+2026-08-16 16:51:52 [INFO]      .../src/components/cockpit/WebEvalCockpit.tsx      | 177 ++++++++-----------
+2026-08-16 16:51:52 [INFO]      2 files changed, 148 insertions(+), 225 deletions(-)
+2026-08-16 16:51:52 [OK  ] STEP SUCCESS : Clone or update MatrAIx repo
+2026-08-16 16:51:52 [INFO] STEP START : Create or repair uv venv (Python 3.12)
+2026-08-16 16:51:52 [INFO]     3.12.14 (main, Aug 14 2026, 15:40:22) [MSC v.1944 64 bit (AMD64)]
+2026-08-16 16:51:52 [INFO] Existing .venv is healthy - reusing it
+2026-08-16 16:52:04 [INFO] Granted BUILTIN\Users modify rights on C:\APPS\SynVox\engine\matraix\.venv (created as SYSTEM)
+2026-08-16 16:52:04 [OK  ] STEP SUCCESS : Create or repair uv venv (Python 3.12)
+2026-08-16 16:52:04 [INFO] STEP START : Install MatrAIx (editable) + test deps
+2026-08-16 16:52:05 [INFO]     Resolved 102 packages in 704ms
+2026-08-16 16:52:05 [INFO]        Building matraix @ file:///C:/APPS/SynVox/engine/matraix
+2026-08-16 16:52:06 [INFO]           Built matraix @ file:///C:/APPS/SynVox/engine/matraix
+2026-08-16 16:52:06 [INFO]     Prepared 1 package in 1.57s
+2026-08-16 16:52:06 [INFO]     Uninstalled 1 package in 1ms
+2026-08-16 16:52:06 [INFO]     Installed 1 package in 93ms
+2026-08-16 16:52:06 [INFO]      ~ matraix==0.1.0 (from file:///C:/APPS/SynVox/engine/matraix)
+2026-08-16 16:52:07 [INFO]     Resolved 14 packages in 174ms
+2026-08-16 16:52:07 [INFO]     Prepared 4 packages in 116ms
+2026-08-16 16:52:07 [INFO]     Installed 4 packages in 94ms
+2026-08-16 16:52:07 [INFO]      + iniconfig==2.3.0
+2026-08-16 16:52:07 [INFO]      + pluggy==1.6.0
+2026-08-16 16:52:07 [INFO]      + pytest==9.1.1
+2026-08-16 16:52:07 [INFO]      + pytest-asyncio==1.4.0
+2026-08-16 16:52:07 [OK  ] STEP SUCCESS : Install MatrAIx (editable) + test deps
+2026-08-16 16:52:07 [INFO] STEP START : Install workspace packages (playground, harbor-langsmith, rewardkit)
+2026-08-16 16:52:07 [INFO]     Resolved 2 packages in 6ms
+2026-08-16 16:52:07 [INFO]        Building playground @ file:///C:/APPS/SynVox/engine/matraix/packages/playground
+2026-08-16 16:52:08 [INFO]           Built playground @ file:///C:/APPS/SynVox/engine/matraix/packages/playground
+2026-08-16 16:52:08 [INFO]     Prepared 1 package in 955ms
+2026-08-16 16:52:08 [INFO]     Installed 1 package in 3ms
+2026-08-16 16:52:08 [INFO]      + playground==0.1.0 (from file:///C:/APPS/SynVox/engine/matraix/packages/playground)
+2026-08-16 16:52:08 [INFO]     Resolved 103 packages in 348ms
+2026-08-16 16:52:08 [INFO]        Building harbor-langsmith @ file:///C:/APPS/SynVox/engine/matraix/packages/harbor-langsmith
+2026-08-16 16:52:09 [INFO]           Built harbor-langsmith @ file:///C:/APPS/SynVox/engine/matraix/packages/harbor-langsmith
+2026-08-16 16:52:09 [INFO]     Prepared 1 package in 934ms
+2026-08-16 16:52:09 [INFO]     Installed 1 package in 6ms
+2026-08-16 16:52:09 [INFO]      + harbor-langsmith==0.1.1 (from file:///C:/APPS/SynVox/engine/matraix/packages/harbor-langsmith)
+2026-08-16 16:52:10 [INFO]     Resolved 57 packages in 27ms
+2026-08-16 16:52:10 [INFO]        Building harbor-rewardkit @ file:///C:/APPS/SynVox/engine/matraix/packages/rewardkit
+2026-08-16 16:52:10 [INFO]           Built harbor-rewardkit @ file:///C:/APPS/SynVox/engine/matraix/packages/rewardkit
+2026-08-16 16:52:11 [INFO]     Prepared 1 package in 948ms
+2026-08-16 16:52:11 [INFO]     Installed 1 package in 37ms
+2026-08-16 16:52:11 [INFO]      + harbor-rewardkit==0.1.4 (from file:///C:/APPS/SynVox/engine/matraix/packages/rewardkit)
+2026-08-16 16:52:11 [OK  ] STEP SUCCESS : Install workspace packages (playground, harbor-langsmith, rewardkit)
+2026-08-16 16:52:11 [INFO] STEP START : Install huggingface_hub[cli]
+2026-08-16 16:52:11 [INFO]     Checked 1 package in 6ms
+2026-08-16 16:52:11 [OK  ] STEP SUCCESS : Install huggingface_hub[cli]
+2026-08-16 16:52:11 [INFO] STEP START : Download Persona 1M dataset
+2026-08-16 16:52:11 [INFO]     [1m[31mError: Invalid value. 'charmap' codec can't encode character '\u2713' in position 5: character maps to <undefined>[0m
+2026-08-16 16:52:11 [INFO]     [90mHint: set HF_DEBUG=1 as environment variable for full traceback.[0m
+2026-08-16 16:52:11 [WARN] 'hf download' failed - retrying with legacy huggingface-cli
+2026-08-16 16:52:12 [INFO]     [33mWarning: `huggingface-cli` is deprecated and no longer works. Use `hf` instead.
+2026-08-16 16:52:12 [INFO]     [0m
+2026-08-16 16:52:12 [INFO]     [90mHint: `hf` is already installed! Use it directly.
+2026-08-16 16:52:12 [INFO]     [0m
+2026-08-16 16:52:12 [INFO]     [90mHint: Examples:
+2026-08-16 16:52:12 [INFO]       hf auth login
+2026-08-16 16:52:12 [INFO]       hf download unsloth/gemma-4-31B-it-GGUF
+2026-08-16 16:52:12 [INFO]       hf upload my-cool-model . .
+2026-08-16 16:52:12 [INFO]       hf models ls --search "gemma"
+2026-08-16 16:52:12 [INFO]       hf repos ls --format json
+2026-08-16 16:52:12 [INFO]       hf jobs run python:3.12 python -c 'print("Hello!")'
+2026-08-16 16:52:12 [INFO]       hf --help
+2026-08-16 16:52:12 [INFO]     [0m
+2026-08-16 16:52:12 [INFO] Persona dataset: 42 files, 6489.6 MB at C:\APPS\SynVox\engine\matraix\persona\datasets\matraix-persona-1m\release
+2026-08-16 16:52:12 [INFO] Granted BUILTIN\Users modify rights on C:\APPS\SynVox\engine\matraix\persona\datasets\matraix-persona-1m\release (created as SYSTEM)
+2026-08-16 16:52:12 [OK  ] STEP SUCCESS : Download Persona 1M dataset
+2026-08-16 16:52:12 [INFO] STEP START : Verify Persona 1M shards against manifest.json
+2026-08-16 16:52:12 [INFO] Shards: 10 of 10 present at the expected size (999,847 personas)
+2026-08-16 16:52:12 [OK  ] STEP SUCCESS : Verify Persona 1M shards against manifest.json
+2026-08-16 16:52:12 [WARN] SKIPPED smoke test: Docker not available.
+2026-08-16 16:52:12 [WARN] ANTHROPIC_API_KEY is not set. Before ANY real persona run:  setx ANTHROPIC_API_KEY "sk-ant-..."  - personal Quiddity Innovations key only, never a BU credential. No key is ever written into this script or the manifest.
+2026-08-16 16:52:33 [INFO] Granted BUILTIN\Users modify rights on C:\APPS\SynVox (created as SYSTEM)
+2026-08-16 16:52:33 [INFO] ===================== SUMMARY =====================
+2026-08-16 16:52:33 [INFO] git              : SUCCESS
+2026-08-16 16:52:33 [INFO] uv               : SUCCESS
+2026-08-16 16:52:33 [INFO] python312        : SUCCESS
+2026-08-16 16:52:33 [INFO] node             : SUCCESS
+2026-08-16 16:52:33 [INFO] docker           : SUCCESS
+2026-08-16 16:52:33 [INFO] clone            : SUCCESS
+2026-08-16 16:52:33 [INFO] venv             : SUCCESS
+2026-08-16 16:52:33 [INFO] deps_core        : SUCCESS
+2026-08-16 16:52:33 [INFO] deps_packages    : SUCCESS
+2026-08-16 16:52:33 [INFO] deps_hf          : SUCCESS
+2026-08-16 16:52:33 [INFO] persona1m        : SUCCESS
+2026-08-16 16:52:33 [INFO] verify           : SUCCESS
+2026-08-16 16:52:33 [INFO] smoke            : SKIPPED (no Docker)
+2026-08-16 16:52:33 [INFO] api_key          : NOT SET (reminder logged)
+2026-08-16 16:52:33 [INFO] Engine     : C:\APPS\SynVox\engine\matraix
+2026-08-16 16:52:33 [INFO] Personas   : C:\APPS\SynVox\engine\matraix\persona\datasets\matraix-persona-1m\release
+2026-08-16 16:52:33 [INFO] Master log : C:\APPS\SynVox\logs\synvox_phase0_20260816_165148.log
+2026-08-16 16:52:33 [INFO] Phase 0 ends at the free smoke test - no paid persona simulation is run by this script.
+2026-08-16 16:52:33 [INFO] Next (Phase 1): task 'qi-survey_nexus-pricing-tiers' - needs ANTHROPIC_API_KEY and costs ~$1-5.
+2026-08-16 16:52:33 [INFO] ====================================================

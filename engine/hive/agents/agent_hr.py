@@ -9,7 +9,7 @@ tokens it cost. Feeds the "Agent HR" page on the QI Hive dashboard (:8600).
 DB: C:\\QIH\\engine\\hive\\agents\\agent_hr.db (stdlib sqlite3 only).
 
 CLI:
-  --seed          read C:\\CLAUDE\\.claude\\agents\\*.md + built-ins -> agents table
+  --seed          read C:\\APPS\\CLAUDE\\.claude\\agents\\*.md + built-ins -> agents table
   --backfill      scan Claude Code transcripts for completed sub-agent runs
   --ingest-hook   read a SubagentStop hook JSON payload from stdin, record one run
   --report        print a roster summary table
@@ -27,7 +27,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8")
 
 DB_PATH        = r"C:\QIH\engine\hive\agents\agent_hr.db"
-AGENTS_MD_DIR  = r"C:\CLAUDE\.claude\agents"
+AGENTS_MD_DIR  = r"C:\APPS\CLAUDE\.claude\agents"
 TRANSCRIPTS_GLOB = r"C:\Users\renne\.claude\projects\*\*.jsonl"
 MAX_FILE_BYTES = 50 * 1024 * 1024
 TAIL_BYTES     = 2 * 1024 * 1024   # how far back --ingest-hook looks in a live transcript
@@ -158,7 +158,7 @@ def cmd_seed(conn):
 # ── transcript scanning (shared by --backfill and --ingest-hook) ───────────
 
 def decode_project_folder(folder_name):
-    """C--CLAUDE -> C:\\CLAUDE ; best-effort, only used when a line has no cwd."""
+    """C--CLAUDE -> C:\\APPS\\CLAUDE ; best-effort, only used when a line has no cwd."""
     parts = folder_name.split("--")
     if len(parts) >= 2 and len(parts[0]) == 1 and parts[0].isalpha():
         return parts[0] + ":\\" + "\\".join(parts[1:])

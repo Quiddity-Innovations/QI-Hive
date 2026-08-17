@@ -187,27 +187,27 @@ This guide. Rendered as HTML from `QI_Claude_Manager_Guide.md`.
 
 | Project | Path | Status | Description |
 |---|---|---|---|
-| **Maia** | C:\QI | Production | Multi-channel AI assistant (LINE, Telegram, Messenger, Instagram, WhatsApp) |
-| **Naya** | C:\NAYA | Active | Personal AI for Renne (Telegram, file scanning, physics/programming domains) |
-| **NEXUS** | C:\NEXUS | Active | AI orchestration backbone — multi-provider synthesis, news digest, LLM bench |
+| **Maia** | C:\APPS\QI | Production | Multi-channel AI assistant (LINE, Telegram, Messenger, Instagram, WhatsApp) |
+| **Naya** | C:\APPS\NAYA | Active | Personal AI for Renne (Telegram, file scanning, physics/programming domains) |
+| **NEXUS** | C:\APPS\NEXUS | Active | AI orchestration backbone — multi-provider synthesis, news digest, LLM bench |
 | **QI Hive** | C:\QIH | Active | Unified dashboard, 7 hive agents, Brain knowledge substrate |
 | **QI Brain** | C:\QIH\engine\brain | Active | Knowledge DB (SQLite + ChromaDB), 12-tool MCP server (:9011) |
-| **OpenClaw** | C:\OC | Production | Autonomous agent platform (Tasuke, Kaze, Yubin, Sentry, Koe — WSL2) |
-| **AutoPDF** | C:\AutoPDF | Active | PDF toolkit (split, extract, catalog, template matching, Smart Mapping) |
-| **EasyFlow** | C:\EasyFlow | Active | Email organization (Gmail tier-based inbox, Apps Script automation) |
-| **CogniBase** | C:\CogniBase | Pre-POC | OnBase vector integration + ad-hoc SQL reporting UI |
-| **MapSnap** | C:\MapSnap | Stable | Schema-intelligence tool for any enterprise DB profile — HTML browser + FK/ERD + local NL→SQL |
-| **M2V** | C:\M2V | New | Music-to-Video — AI music video generator from lyrics |
-| **PersonalSong** | C:\PersonalSong | Active | Song generator (ACE-Step vocals + Demucs/Seed-VC voice clone) |
-| **TubeScout** | C:\TUBESCOUT | Active | YouTube subscription intelligence (subs→news→Brain implement-scouting) |
-| **CypherMiner** | C:\CypherMiner | New | Crypto/encoding/math/text tools (bilingual EN/PT, offline) |
-| **LotteryWiz** | C:\Lottery Wiz | Active | Fantasy 5 covering design (FastAPI + .xlsx/.csv export) |
+| **OpenClaw** | C:\APPS\OC | Production | Autonomous agent platform (Tasuke, Kaze, Yubin, Sentry, Koe — WSL2) |
+| **AutoPDF** | C:\APPS\AutoPDF | Active | PDF toolkit (split, extract, catalog, template matching, Smart Mapping) |
+| **EasyFlow** | C:\APPS\EasyFlow | Active | Email organization (Gmail tier-based inbox, Apps Script automation) |
+| **CogniBase** | C:\APPS\CogniBase | Pre-POC | OnBase vector integration + ad-hoc SQL reporting UI |
+| **MapSnap** | C:\APPS\MapSnap | Stable | Schema-intelligence tool for any enterprise DB profile — HTML browser + FK/ERD + local NL→SQL |
+| **M2V** | C:\APPS\M2V | New | Music-to-Video — AI music video generator from lyrics |
+| **PersonalSong** | C:\APPS\PersonalSong | Active | Song generator (ACE-Step vocals + Demucs/Seed-VC voice clone) |
+| **TubeScout** | C:\APPS\TUBESCOUT | Active | YouTube subscription intelligence (subs→news→Brain implement-scouting) |
+| **CypherMiner** | C:\APPS\CypherMiner | New | Crypto/encoding/math/text tools (bilingual EN/PT, offline) |
+| **LotteryWiz** | C:\APPS\Lottery Wiz | Active | Fantasy 5 covering design (FastAPI + .xlsx/.csv export) |
 | **Digitization Cost Tool** | C:\Users\renne\Downloads\DIGITIZATION COSTS | Active | BU cost comparison calculator (static HTML, client-side) |
 | **RetirementAnalyzer** | C:\RetirementAnalyzer | Active | Retirement readiness + portfolio allocation/rebalancing from Fidelity exports (FastAPI + Gradio); formerly FidelityAnalyzer |
-| **AvatarStudio** | C:\1-AI\APPS\AvatarStudio | Active | Avatar video generation (TTS→bg removal→Hallo2/LivePortrait→lip-sync) |
-| **FileHQ** | C:\NAYA\filehq | Merged | ~~Standalone~~ — now embedded in Naya (file scanning engine) |
-| **MQ** | C:\MQ | New | Maia Quiddam — autonomous social media persona (FB/IG/WhatsApp) |
-| **Claude Manager** | C:\CLAUDE | Active | Meta/management workspace (session sync, Brain backfills, reconciliation) |
+| **AvatarStudio** | C:\APPS\AvatarStudio | Active | Avatar video generation (TTS→bg removal→Hallo2/LivePortrait→lip-sync) |
+| **FileHQ** | C:\APPS\NAYA\filehq | Merged | ~~Standalone~~ — now embedded in Naya (file scanning engine) |
+| **MQ** | C:\APPS\MQ | New | Maia Quiddam — autonomous social media persona (FB/IG/WhatsApp) |
+| **Claude Manager** | C:\APPS\CLAUDE | Active | Meta/management workspace (session sync, Brain backfills, reconciliation) |
 | **QI-Universal** | C:\QIH | Infrastructure | Shared tools (was C:\UNIVERSAL, migrated 2026-04-22) |
 
 **Total: 22 projects — 6 active production, 10 active development, 4 new, 1 deprecated, 1 merged.**
@@ -288,7 +288,7 @@ The broker is a Windows service that listens for elevation requests and executes
 | **Elevation broker** | `C:\QIH\engine\common\qi_elevate_client.py` |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
 | **Session summaries** | `C:\QIH\shared\documentation\session_summaries\` |
-| **Project logs** | Project-specific (e.g. `C:\QI\LOGS\`, `C:\NAYA\LOGS\`, `C:\QIH\logs\`) |
+| **Project logs** | Project-specific (e.g. `C:\APPS\QI\LOGS\`, `C:\APPS\NAYA\LOGS\`, `C:\QIH\logs\`) |
 
 ---
 
@@ -318,7 +318,7 @@ python C:\QIH\engine\hive\health_check.py
 ```bash
 sc query QI_MaiaBot
 nssm query QI_MaiaBot                  ← Full details
-type C:\QI\LOGS\maia_service_log.txt   ← View logs
+type C:\APPS\QI\LOGS\maia_service_log.txt   ← View logs
 ```
 
 ### Find Which Port Owns a Service
@@ -349,7 +349,7 @@ curl http://localhost:9011/health          ← Brain API
 ```bash
 # Option 1: Dashboard /logs tab
 # Option 2: Command line
-Get-Content C:\QI\LOGS\maia_service_log.txt -Tail 50 -Wait
+Get-Content C:\APPS\QI\LOGS\maia_service_log.txt -Tail 50 -Wait
 ```
 
 ### Restart All Services (after major config change)

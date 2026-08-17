@@ -75,7 +75,7 @@ It is **idempotent** — edit the JSON, re-run `--apply`, done.
 
 ## 3. Gotchas (learned 2026-06-18 — don't repeat these)
 
-- ❌ **Do not swap `python.exe` → `pythonw.exe`.** `pythonw` sets `sys.stdout = None`, so any script that prints/logs to stdout crashes (exit 1). Also venvs often lack `pythonw.exe` (e.g. `C:\QI\.venv\Scripts\` has none). Use `conhost --headless python.exe` instead — real binary, valid stdout, no window.
+- ❌ **Do not swap `python.exe` → `pythonw.exe`.** `pythonw` sets `sys.stdout = None`, so any script that prints/logs to stdout crashes (exit 1). Also venvs often lack `pythonw.exe` (e.g. `C:\APPS\QI\.venv\Scripts\` has none). Use `conhost --headless python.exe` instead — real binary, valid stdout, no window.
 - ⚠️ **`conhost --headless` does not propagate the child exit code.** Task Scheduler will always show `LastTaskResult = 0`, even on failure. This is fine because every task logs to its own file — **verify a run by checking the log timestamp, not LastTaskResult.**
 - ⚠️ **`RunLevel = Highest` tasks need admin even to enable/modify.** Apply those from an **elevated** PowerShell/Terminal. The `QI_Elevate` broker only whitelists `nssm`/`sc`/`taskkill` (not PowerShell), so this step cannot currently be brokered.
 
@@ -88,8 +88,9 @@ All `hidden_user` tasks below are now windowless. `*` = required a one-time elev
 | Task | Schedule | Runs | Mode | Status |
 |---|---|---|---|---|
 | **QI_BrainBackfill** | every 30 min | `brain_backfill_tick.py` | hidden_user | conhost — windowless |
-| QI_TubeScout_AM | daily 07:00 | `C:\TUBESCOUT\run_cycle.bat` | hidden_user | conhost+cmd |
-| QI_TubeScout_PM | daily 19:00 | `C:\TUBESCOUT\run_cycle.bat` | hidden_user | conhost+cmd |
+| **QI_UsageSnapshot** | every 30 min | `engine\common\usage_snapshot_task.py` | hidden_user | pythonw (silent). Added 2026-08-13. Snapshots `usage_daily` + per-project/per-model dimensions into `qi_brain.db`. Without it the LLM Usage 30d/QTD/YTD tiles truncate at the ledger's last day (YTD froze at $60,124 for 8 days). Log: `C:\QIH\logs\usage_snapshot.log` |
+| QI_TubeScout_AM | daily 07:00 | `C:\APPS\TUBESCOUT\run_cycle.bat` | hidden_user | conhost+cmd |
+| QI_TubeScout_PM | daily 19:00 | `C:\APPS\TUBESCOUT\run_cycle.bat` | hidden_user | conhost+cmd |
 | QI_NightlyGitSync | daily 00:35 | `nightly_git_sync.py` | hidden_user | conhost |
 | QI_Ollama_Watchdog | every 1 min | `ollama_watchdog.py` | hidden_user | already pythonw (silent) |
 | MaiaNightlySync | daily 21:00 | `maia_nightly_sync.py` | hidden_user | conhost |

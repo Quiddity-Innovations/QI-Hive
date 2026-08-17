@@ -3,56 +3,56 @@
     {
       "name": "Persona & Soul (the most developed part)",
       "documents": [
-        {"title": "Persona Bible", "file": "PERSONA_BIBLE.md", "location": "C:\\MQ\\docs\\", "type": "Markdown", "description": "The canonical soul document. Law 0 (Independence), the Governor, the name's meaning, biography draft, personality dials (warmth 8 / curiosity 10 / wit 6 / ...), passions, the four voices, the approval gate, the maturation arc, the 'never' list, and the open dials. Everything Maia says must trace back here."},
-        {"title": "Decision Log", "file": "DECISIONS.md", "location": "C:\\MQ\\docs\\", "type": "Markdown", "description": "Canonical record of persona + architecture decisions — 14 locked (D1-D14), draft proposals, and 6 open dials. Newest at top; pairs with the Persona Bible."},
-        {"title": "Architecture Blueprint", "file": "ARCHITECTURE.md", "location": "C:\\MQ\\docs\\Technical Documentation\\", "type": "Markdown", "description": "The Hybrid coherence model: maia/ (expression) vs agents/ (Crew) vs gate/ (Governor) vs identity/ (Kit), the publish flow for all four surfaces, the old->new code map, and the pre-wired seams for the evolved Maia."},
-        {"title": "Implementation Log — Persona Foundation", "file": "2026-06-20_persona-foundation.md", "location": "C:\\MQ\\docs\\Implementation Log\\", "type": "Markdown", "description": "The 2026-06-20 session log: established the independent-persona + Governor model, wrote the Bible/Decisions/Architecture, and laid the pre-wired skeleton. Lists the gaps found in the existing build vs the owner's vision."}
+        {"title": "Persona Bible", "file": "PERSONA_BIBLE.md", "location": "C:\\APPS\\MQ\\docs\\", "type": "Markdown", "description": "The canonical soul document. Law 0 (Independence), the Governor, the name's meaning, biography draft, personality dials (warmth 8 / curiosity 10 / wit 6 / ...), passions, the four voices, the approval gate, the maturation arc, the 'never' list, and the open dials. Everything Maia says must trace back here."},
+        {"title": "Decision Log", "file": "DECISIONS.md", "location": "C:\\APPS\\MQ\\docs\\", "type": "Markdown", "description": "Canonical record of persona + architecture decisions — 14 locked (D1-D14), draft proposals, and 6 open dials. Newest at top; pairs with the Persona Bible."},
+        {"title": "Architecture Blueprint", "file": "ARCHITECTURE.md", "location": "C:\\APPS\\MQ\\docs\\Technical Documentation\\", "type": "Markdown", "description": "The Hybrid coherence model: maia/ (expression) vs agents/ (Crew) vs gate/ (Governor) vs identity/ (Kit), the publish flow for all four surfaces, the old->new code map, and the pre-wired seams for the evolved Maia."},
+        {"title": "Implementation Log — Persona Foundation", "file": "2026-06-20_persona-foundation.md", "location": "C:\\APPS\\MQ\\docs\\Implementation Log\\", "type": "Markdown", "description": "The 2026-06-20 session log: established the independent-persona + Governor model, wrote the Bible/Decisions/Architecture, and laid the pre-wired skeleton. Lists the gaps found in the existing build vs the owner's vision."}
       ]
     },
     {
       "name": "Project Overview & Instructions",
       "documents": [
-        {"title": "Project Summary", "file": "SUMMARY.md", "location": "C:\\MQ\\", "type": "Markdown", "description": "Plain-language summary: Maia Quiddam as an independent persona (not a pen name), the invisible Governor, current state (not live, awaiting FB approval), path and ports."},
-        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\MQ\\", "type": "Markdown", "description": "Session-start protocol for MQ: what MQ is, the Hybrid architecture table, paths, ports (8500/7840), the quiddam.com static tunnel + ingress map, required secrets, and the parallel-projects 'do not break' table."},
-        {"title": "Fumi Agent Profile", "file": "FUMI.md", "location": "C:\\MQ\\", "type": "Markdown", "description": "Profile of the Fumi publisher agent: the Kaze->generate->post pipeline, content streams/pages/schedules, the two-tier LLM stack, persona prompts, required secrets, CLI usage, Task Scheduler jobs, and future extensions."},
-        {"title": "Docs Index", "file": "README.md", "location": "C:\\MQ\\docs\\", "type": "Markdown", "description": "Auto-generated documentation index (by migrate_docs.py) describing the QI project docs/ standard and current subfolder contents."}
+        {"title": "Project Summary", "file": "SUMMARY.md", "location": "C:\\APPS\\MQ\\", "type": "Markdown", "description": "Plain-language summary: Maia Quiddam as an independent persona (not a pen name), the invisible Governor, current state (not live, awaiting FB approval), path and ports."},
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\APPS\\MQ\\", "type": "Markdown", "description": "Session-start protocol for MQ: what MQ is, the Hybrid architecture table, paths, ports (8500/7840), the quiddam.com static tunnel + ingress map, required secrets, and the parallel-projects 'do not break' table."},
+        {"title": "Fumi Agent Profile", "file": "FUMI.md", "location": "C:\\APPS\\MQ\\", "type": "Markdown", "description": "Profile of the Fumi publisher agent: the Kaze->generate->post pipeline, content streams/pages/schedules, the two-tier LLM stack, persona prompts, required secrets, CLI usage, Task Scheduler jobs, and future extensions."},
+        {"title": "Docs Index", "file": "README.md", "location": "C:\\APPS\\MQ\\docs\\", "type": "Markdown", "description": "Auto-generated documentation index (by migrate_docs.py) describing the QI project docs/ standard and current subfolder contents."}
       ]
     },
     {
       "name": "Layer READMEs (the coherence map in place)",
       "documents": [
-        {"title": "Maia layer README", "file": "README.md", "location": "C:\\MQ\\maia\\", "type": "Markdown", "description": "Describes the persona-expression layer and the status of each module: voice (migrate from Fumi), memory (to build), and the pre-wired speech / face / conversation / longform empty rooms."},
-        {"title": "Gate README", "file": "README.md", "location": "C:\\MQ\\gate\\", "type": "Markdown", "description": "The Governor's desk — the planned draft -> approve -> publish queue that enforces Law 0. Status: to build (first dev phase)."},
-        {"title": "Identity Kit README", "file": "README.md", "location": "C:\\MQ\\identity\\", "type": "Markdown", "description": "The single source of identity truth — face / voice / style — that keeps every photo, video, and TTS clip recognisably the same Maia. Lock before generating any media."}
+        {"title": "Maia layer README", "file": "README.md", "location": "C:\\APPS\\MQ\\maia\\", "type": "Markdown", "description": "Describes the persona-expression layer and the status of each module: voice (migrate from Fumi), memory (to build), and the pre-wired speech / face / conversation / longform empty rooms."},
+        {"title": "Gate README", "file": "README.md", "location": "C:\\APPS\\MQ\\gate\\", "type": "Markdown", "description": "The Governor's desk — the planned draft -> approve -> publish queue that enforces Law 0. Status: to build (first dev phase)."},
+        {"title": "Identity Kit README", "file": "README.md", "location": "C:\\APPS\\MQ\\identity\\", "type": "Markdown", "description": "The single source of identity truth — face / voice / style — that keeps every photo, video, and TTS clip recognisably the same Maia. Lock before generating any media."}
       ]
     },
     {
       "name": "Configuration & Identity",
       "documents": [
-        {"title": "Runtime Config", "file": "mq.json", "location": "C:\\MQ\\config\\", "type": "JSON", "description": "Ports (8500/7840), persona block (name/handle/tone), content_streams (maia_page weekly / qi_page daily), the LLM chain (Cloudflare primary, Ollama fallback), Kaze RSS source lists per stream, and the Fumi posts/digests dir layout."},
-        {"title": "Identity Manifest", "file": "manifest.json", "location": "C:\\MQ\\identity\\", "type": "JSON", "description": "Machine-readable Identity Kit pointing to the soul (PERSONA_BIBLE.md), with face / voice_spoken / style all currently status='placeholder' (empty references, null seed/embedding)."},
-        {"title": "Secrets (template, not committed)", "file": "mq.env", "location": "C:\\MQ\\secrets\\", "type": "Env", "description": "Required keys: FB_PAGE_ID/FB_PAGE_ACCESS_TOKEN + QI_PAGE_ID/QI_PAGE_ACCESS_TOKEN, IG_USER_ID, CF_ACCOUNT_ID/CF_AI_TOKEN, OLLAMA_URL. Not yet populated (the launch blocker)."}
+        {"title": "Runtime Config", "file": "mq.json", "location": "C:\\APPS\\MQ\\config\\", "type": "JSON", "description": "Ports (8500/7840), persona block (name/handle/tone), content_streams (maia_page weekly / qi_page daily), the LLM chain (Cloudflare primary, Ollama fallback), Kaze RSS source lists per stream, and the Fumi posts/digests dir layout."},
+        {"title": "Identity Manifest", "file": "manifest.json", "location": "C:\\APPS\\MQ\\identity\\", "type": "JSON", "description": "Machine-readable Identity Kit pointing to the soul (PERSONA_BIBLE.md), with face / voice_spoken / style all currently status='placeholder' (empty references, null seed/embedding)."},
+        {"title": "Secrets (template, not committed)", "file": "mq.env", "location": "C:\\APPS\\MQ\\secrets\\", "type": "Env", "description": "Required keys: FB_PAGE_ID/FB_PAGE_ACCESS_TOKEN + QI_PAGE_ID/QI_PAGE_ACCESS_TOKEN, IG_USER_ID, CF_ACCOUNT_ID/CF_AI_TOKEN, OLLAMA_URL. Not yet populated (the launch blocker)."}
       ]
     },
     {
       "name": "Key Source",
       "documents": [
-        {"title": "Main Entry Point", "file": "main.py", "location": "C:\\MQ\\", "type": "Python", "description": "Launches the FastAPI API (:8500, daemon thread) + Gradio UI (:7840). Logs to data/logs/mq.log."},
-        {"title": "FastAPI App", "file": "main.py", "location": "C:\\MQ\\api\\", "type": "Python", "description": "QI Module Interface Contract endpoints: /health, /version, /info. CORS from qi_registry. No business endpoints yet."},
-        {"title": "Gradio UI", "file": "app.py", "location": "C:\\MQ\\ui\\", "type": "Python", "description": "Minimal Status + About shell that pings the API health endpoint."},
-        {"title": "Kaze — RSS scraper", "file": "kaze_mq.py", "location": "C:\\MQ\\agents\\kaze\\", "type": "Python", "description": "Perception: fetches travel/photo/AI RSS, dedupes, writes data/digests/*.json. Complete; never run."},
-        {"title": "Fumi — post generator", "file": "fumi_generate_post.py", "location": "C:\\MQ\\agents\\fumi\\", "type": "Python", "description": "Composer: digest -> persona prompt -> LLM (Cloudflare then Ollama) -> draft JSON. Complete; never run."},
-        {"title": "Fumi — Facebook publisher", "file": "fumi_post_facebook.py", "location": "C:\\MQ\\agents\\fumi\\", "type": "Python", "description": "Publisher: drafts -> Graph API v19.0 -> published/ or failed/. CLI with --dry-run. Blocked on credentials."},
-        {"title": "Fumi — scheduler", "file": "fumi_scheduler.py", "location": "C:\\MQ\\agents\\fumi\\", "type": "Python", "description": "Orchestrates the maia_weekly and qi_daily pipelines via subprocess; for Task Scheduler."},
-        {"title": "Config loader", "file": "config.py", "location": "C:\\MQ\\shared\\", "type": "Python", "description": "load_config() (secrets + config/mq.json, cached) and a dotted-path get() accessor."}
+        {"title": "Main Entry Point", "file": "main.py", "location": "C:\\APPS\\MQ\\", "type": "Python", "description": "Launches the FastAPI API (:8500, daemon thread) + Gradio UI (:7840). Logs to data/logs/mq.log."},
+        {"title": "FastAPI App", "file": "main.py", "location": "C:\\APPS\\MQ\\api\\", "type": "Python", "description": "QI Module Interface Contract endpoints: /health, /version, /info. CORS from qi_registry. No business endpoints yet."},
+        {"title": "Gradio UI", "file": "app.py", "location": "C:\\APPS\\MQ\\ui\\", "type": "Python", "description": "Minimal Status + About shell that pings the API health endpoint."},
+        {"title": "Kaze — RSS scraper", "file": "kaze_mq.py", "location": "C:\\APPS\\MQ\\agents\\kaze\\", "type": "Python", "description": "Perception: fetches travel/photo/AI RSS, dedupes, writes data/digests/*.json. Complete; never run."},
+        {"title": "Fumi — post generator", "file": "fumi_generate_post.py", "location": "C:\\APPS\\MQ\\agents\\fumi\\", "type": "Python", "description": "Composer: digest -> persona prompt -> LLM (Cloudflare then Ollama) -> draft JSON. Complete; never run."},
+        {"title": "Fumi — Facebook publisher", "file": "fumi_post_facebook.py", "location": "C:\\APPS\\MQ\\agents\\fumi\\", "type": "Python", "description": "Publisher: drafts -> Graph API v19.0 -> published/ or failed/. CLI with --dry-run. Blocked on credentials."},
+        {"title": "Fumi — scheduler", "file": "fumi_scheduler.py", "location": "C:\\APPS\\MQ\\agents\\fumi\\", "type": "Python", "description": "Orchestrates the maia_weekly and qi_daily pipelines via subprocess; for Task Scheduler."},
+        {"title": "Config loader", "file": "config.py", "location": "C:\\APPS\\MQ\\shared\\", "type": "Python", "description": "load_config() (secrets + config/mq.json, cached) and a dotted-path get() accessor."}
       ]
     },
     {
       "name": "Tooling, Tests & Ecosystem",
       "documents": [
-        {"title": "Live Smoke Test", "file": "test_smoke.py", "location": "C:\\MQ\\tests\\", "type": "Python", "description": "pytest checks of /health, /version, /info, /openapi.json against the live :8500 API; skips cleanly when the service is offline."},
-        {"title": "Task Scheduler Setup", "file": "setup_task_scheduler.py", "location": "C:\\MQ\\TOOLS\\", "type": "Python", "description": "Registers/removes/lists the FumiMaiaWeekly and FumiQIDaily schtasks jobs."},
-        {"title": "Session Summary Tool", "file": "create_session_summary.py", "location": "C:\\MQ\\TOOLS\\", "type": "Python", "description": "Generates session summary documents per QI documentation discipline."},
+        {"title": "Live Smoke Test", "file": "test_smoke.py", "location": "C:\\APPS\\MQ\\tests\\", "type": "Python", "description": "pytest checks of /health, /version, /info, /openapi.json against the live :8500 API; skips cleanly when the service is offline."},
+        {"title": "Task Scheduler Setup", "file": "setup_task_scheduler.py", "location": "C:\\APPS\\MQ\\TOOLS\\", "type": "Python", "description": "Registers/removes/lists the FumiMaiaWeekly and FumiQIDaily schtasks jobs."},
+        {"title": "Session Summary Tool", "file": "create_session_summary.py", "location": "C:\\APPS\\MQ\\TOOLS\\", "type": "Python", "description": "Generates session summary documents per QI documentation discipline."},
         {"title": "QI Ecosystem Registry (mq)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "MQ registry entry: id=mq, ports 8500/7840, family_tier=cousin, status=new (awaiting FB approval + Meta credentials), exposes /health /version /info."},
         {"title": "QI Service Registry (QI_MQTunnel)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entry for the static quiddam.com tunnel (QI_MQTunnel, tunnel qi-mq). The MQ app service itself is not yet registered."}
       ]

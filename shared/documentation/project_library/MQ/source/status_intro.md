@@ -15,7 +15,7 @@ To the world, Maia simply *is* a person with good judgment.
 
 - **Is** — a *persona platform*: the soul (Persona Bible), the publishing machinery (Kaze + Fumi),
   the approval gate (Governor), and one Identity Kit that keeps her face / voice / style coherent.
-- **Is not** — the Maia *product* (`C:\QI`). That Maia is the school-assistant platform Quiddity
+- **Is not** — the Maia *product* (`C:\APPS\QI`). That Maia is the school-assistant platform Quiddity
   builds and sells. Maia Quiddam is a persona Quiddity *publishes*. Different project, different home.
 
 ## The Name
@@ -88,4 +88,4 @@ the realism. The Persona Bible is shaped first; the machinery follows. One soul,
 behind a gate.
 
 ---
-*This page is editable at `C:\MQ\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\MQ\INTRO\status_intro.md` — save and click Refresh to update.*

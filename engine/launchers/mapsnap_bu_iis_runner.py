@@ -20,7 +20,7 @@ from pathlib import Path
 ARGS = Path(r"C:\QIH\engine\launchers\mapsnap_bu_iis_args.txt")
 LOG = Path(r"C:\QIH\logs\mapsnap_bu_iis_setup.log")
 MARK = Path(r"C:\QIH\logs\mapsnap_bu_iis_setup.done")
-SCRIPT = Path(r"C:\MapSnap\kit\setup_iis.ps1")
+SCRIPT = Path(r"C:\APPS\MapSnap\kit\setup_iis.ps1")
 PS = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 
 

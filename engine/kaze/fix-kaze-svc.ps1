@@ -1,15 +1,15 @@
 $nssm    = "C:\QIH\engine\bin\nssm.exe"
 $svc     = "QI_KazeConfigAPI"
-$python  = "C:\1-AI\APPS\PYTHON\python.exe"
-$script  = "C:\OC\repo\scripts\kaze\kaze-config-api.py"
-$logfile = "C:\OC\runtime\logs\agents\kaze\kaze-config-api.log"
+$python  = "C:\Program Files\Python311\python.exe"
+$script  = "C:\APPS\OC\repo\scripts\kaze\kaze-config-api.py"
+$logfile = "C:\APPS\OC\runtime\logs\agents\kaze\kaze-config-api.log"
 
-New-Item -ItemType Directory -Force "C:\OC\runtime\logs\agents\kaze" | Out-Null
+New-Item -ItemType Directory -Force "C:\APPS\OC\runtime\logs\agents\kaze" | Out-Null
 
 & $nssm stop   $svc 2>$null
 & $nssm set    $svc Application    $python
 & $nssm set    $svc AppParameters  $script
-& $nssm set    $svc AppDirectory   "C:\OC\repo\scripts\kaze"
+& $nssm set    $svc AppDirectory   "C:\APPS\OC\repo\scripts\kaze"
 & $nssm set    $svc AppThrottle    0
 & $nssm set    $svc AppStdout      $logfile
 & $nssm set    $svc AppStderr      $logfile

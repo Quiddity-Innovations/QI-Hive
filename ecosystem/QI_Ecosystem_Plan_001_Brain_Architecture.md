@@ -118,14 +118,14 @@ None of these can currently share knowledge or coordinate through a common subst
 
 | Project | Path | Port(s) | Status | Notes |
 |---|---|---|---|---|
-| Maia | `C:\QI` | 8001 (API), 7860 (Gradio) | active_production | Multi-channel AI: LINE/Telegram/Messenger. MaiaBot + MaiaTunnel + MaiaDemoTunnel via NSSM. |
-| NEXUS | `C:\NEXUS` | 8010 (API), 7880 (UI) | active_development | AI orchestration backbone. 10 provider adapters. Parallel + chain dispatch. |
-| Naya | `C:\NAYA` | 8002 (API), 7861 (UI) | active_development | Personal AI for Renne via Telegram. Absorbed FileHQ. LAN-only. |
-| EasyFlow | `C:\EasyFlow` | 8550 (local) | active_development | Chrome Extension + Flask local dashboard. Gmail API + Apps Script automation. |
-| OpenClaw | `C:\OC` | WSL | active_production | 6 autonomous agents. Tasuke, Kaze, Sentry, Yubin, Koe (Seiri cancelled). |
+| Maia | `C:\APPS\QI` | 8001 (API), 7860 (Gradio) | active_production | Multi-channel AI: LINE/Telegram/Messenger. MaiaBot + MaiaTunnel + MaiaDemoTunnel via NSSM. |
+| NEXUS | `C:\APPS\NEXUS` | 8010 (API), 7880 (UI) | active_development | AI orchestration backbone. 10 provider adapters. Parallel + chain dispatch. |
+| Naya | `C:\APPS\NAYA` | 8002 (API), 7861 (UI) | active_development | Personal AI for Renne via Telegram. Absorbed FileHQ. LAN-only. |
+| EasyFlow | `C:\APPS\EasyFlow` | 8550 (local) | active_development | Chrome Extension + Flask local dashboard. Gmail API + Apps Script automation. |
+| OpenClaw | `C:\APPS\OC` | WSL | active_production | 6 autonomous agents. Tasuke, Kaze, Sentry, Yubin, Koe (Seiri cancelled). |
 | QI Orchestrator | `C:\UNIVERSAL\dashboard` | 9000 | active_development | Multi-project management dashboard. 6-tab template per project. Cloudflare tunnel. |
-| MQ | `C:\MQ` | 8500 | active_development | Maia Quiddam — autonomous social media persona. |
-| FileHQ | `C:\NAYA\filehq` | 8000 | merged_into_naya | Merged into Naya as file engine module. |
+| MQ | `C:\APPS\MQ` | 8500 | active_development | Maia Quiddam — autonomous social media persona. |
+| FileHQ | `C:\APPS\NAYA\filehq` | 8000 | merged_into_naya | Merged into Naya as file engine module. |
 
 ### 3.2 Shared Infrastructure (Today)
 
@@ -146,7 +146,7 @@ None of these can currently share knowledge or coordinate through a common subst
 
 NEXUS has the best multi-LLM infrastructure in the ecosystem:
 - Abstract base class `NexusProvider` with clean `generate(prompt, system_prompt) → ProviderResponse` contract
-- One file per provider in `C:\NEXUS\core\providers\`
+- One file per provider in `C:\APPS\NEXUS\core\providers\`
 - Providers: Ollama, OpenAI (Codex), Gemini, Groq, Mistral, Grok, Cloudflare AI, Azure OpenAI, Anthropic Claude, AWS Bedrock, Generic OpenAI-compatible
 - Config loaded from `nexus.json` — no hardcoding
 - Three dispatch modes: parallel (asyncio.gather), chain (sequential improvement), stream (as_completed)
@@ -1117,32 +1117,32 @@ Scheduled for the morning of 2026-04-19. Completely independent of brain develop
 Active files (by project):
 | File | Project |
 |---|---|
-| `C:\QI\maia_control.bat` | Maia |
-| `C:\QI\install_maia_services.bat` | Maia |
-| `C:\QI\install_watchdog.bat` | Maia |
-| `C:\QI\TOOLS\setup_service.bat` | Maia |
-| `C:\QI\TOOLS\restart_tunnel_and_update.bat` | Maia |
-| `C:\QI\TOOLS\register_nightly_sync.bat` | Maia |
-| `C:\QI\TOOLS\fix_tunnel_service.bat` | Maia |
-| `C:\QI\TOOLS\fix_logfile.bat` | Maia |
-| `C:\QI\TOOLS\register_task.ps1` | Maia |
-| `C:\QI\TOOLS\build_tech_doc.py` | Maia |
-| `C:\QI\tunnel_watchdog.py` | Maia |
-| `C:\NEXUS\install_nexus_service.bat` | NEXUS |
-| `C:\NAYA\naya_control.bat` | Naya |
-| `C:\NAYA\naya_watchdog.py` | Naya |
-| `C:\NAYA\install_naya_watchdog.bat` | Naya |
-| `C:\NAYA\tools\install_naya_service.ps1` | Naya |
-| `C:\NAYA\tools\install_naya_gradio_service.ps1` | Naya |
-| `C:\NAYA\tools\fix_naya_service.ps1` | Naya |
-| `C:\NAYA\tools\fix_naya_gradio_service.ps1` | Naya |
-| `C:\NAYA\tools\migrate_services_to_naya.ps1` | Naya |
+| `C:\APPS\QI\maia_control.bat` | Maia |
+| `C:\APPS\QI\install_maia_services.bat` | Maia |
+| `C:\APPS\QI\install_watchdog.bat` | Maia |
+| `C:\APPS\QI\TOOLS\setup_service.bat` | Maia |
+| `C:\APPS\QI\TOOLS\restart_tunnel_and_update.bat` | Maia |
+| `C:\APPS\QI\TOOLS\register_nightly_sync.bat` | Maia |
+| `C:\APPS\QI\TOOLS\fix_tunnel_service.bat` | Maia |
+| `C:\APPS\QI\TOOLS\fix_logfile.bat` | Maia |
+| `C:\APPS\QI\TOOLS\register_task.ps1` | Maia |
+| `C:\APPS\QI\TOOLS\build_tech_doc.py` | Maia |
+| `C:\APPS\QI\tunnel_watchdog.py` | Maia |
+| `C:\APPS\NEXUS\install_nexus_service.bat` | NEXUS |
+| `C:\APPS\NAYA\naya_control.bat` | Naya |
+| `C:\APPS\NAYA\naya_watchdog.py` | Naya |
+| `C:\APPS\NAYA\install_naya_watchdog.bat` | Naya |
+| `C:\APPS\NAYA\tools\install_naya_service.ps1` | Naya |
+| `C:\APPS\NAYA\tools\install_naya_gradio_service.ps1` | Naya |
+| `C:\APPS\NAYA\tools\fix_naya_service.ps1` | Naya |
+| `C:\APPS\NAYA\tools\fix_naya_gradio_service.ps1` | Naya |
+| `C:\APPS\NAYA\tools\migrate_services_to_naya.ps1` | Naya |
 | `C:\UNIVERSAL\dashboard\install_service.bat` | Dashboard |
 | `C:\UNIVERSAL\dashboard\install_dashboard_tunnel_service.bat` | Dashboard |
 | `C:\UNIVERSAL\dashboard\fix_tunnel_service_python.bat` | Dashboard |
 | `C:\UNIVERSAL\dashboard\register_usage_task.py` | Dashboard |
 | `C:\UNIVERSAL\dashboard\install_task.py` | Dashboard |
-| `C:\CLAUDE\Tools\patch_mcp_config.py` | Claude |
+| `C:\APPS\CLAUDE\Tools\patch_mcp_config.py` | Claude |
 | `C:\Users\renne\.claude.json` | Claude MCP |
 | `C:\Users\renne\Downloads\.claude\settings.local.json` | Claude MCP |
 

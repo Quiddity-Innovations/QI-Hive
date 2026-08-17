@@ -3,7 +3,7 @@
 QI Brain — LLM Provider base class.
 
 Replicates the NEXUS provider pattern exactly (standalone copy, not imported).
-See: C:/NEXUS/core/providers/base.py for the original.
+See: C:/APPS/NEXUS/core/providers/base.py for the original.
 
 All brain providers must inherit from BrainProvider and implement generate().
 """

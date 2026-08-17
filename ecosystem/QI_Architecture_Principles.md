@@ -25,7 +25,7 @@ one module at a time.
 
 ### Law 1 — The Registry is the Source of Truth
 
-The file `C:\QI\ECOSYSTEM\qi_registry.json` is authoritative.
+The file `C:\APPS\QI\ECOSYSTEM\qi_registry.json` is authoritative.
 
 - Before assigning a port → check the registry
 - Before naming a folder → check the registry
@@ -103,7 +103,7 @@ Contracts are versioned and never broken without a migration path.
 `qi_registry.json` must be updated **before** the code is written, not after.
 
 When creating a new project or new service:
-1. Run `python C:\QI\ECOSYSTEM\qi_new_project.py` → it registers first, scaffolds second
+1. Run `python C:\APPS\QI\ECOSYSTEM\qi_new_project.py` → it registers first, scaffolds second
 2. Or manually add the entry to `qi_registry.json` before writing any code
 
 When changing a port or endpoint:
@@ -195,7 +195,7 @@ This is why Law 2 and Law 4 exist.
 ## Compliance Checklist (Run Before Every New Project or Major Change)
 
 ```
-python C:\QI\ECOSYSTEM\qi_validator.py --project <id>
+python C:\APPS\QI\ECOSYSTEM\qi_validator.py --project <id>
 ```
 
 Manual checklist:
@@ -218,7 +218,7 @@ Manual checklist:
 Run the wizard — it enforces everything above automatically:
 
 ```
-python C:\QI\ECOSYSTEM\qi_new_project.py
+python C:\APPS\QI\ECOSYSTEM\qi_new_project.py
 ```
 
 The wizard will:
@@ -251,6 +251,6 @@ The wizard will:
 
 ---
 
-*This document lives at `C:\QI\ECOSYSTEM\QI_Architecture_Principles.md`*
+*This document lives at `C:\APPS\QI\ECOSYSTEM\QI_Architecture_Principles.md`*
 *It is referenced by the global CLAUDE.md and every project's CLAUDE.md.*
 *It is the law. Update it when the law changes — never work around it.*

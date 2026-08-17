@@ -2,7 +2,7 @@
 """
 QI Gate — identity store (users, passwords, sessions).
 
-Deliberately modelled on C:\\MapSnap\\Application\\auth.py, which is the
+Deliberately modelled on C:\\APPS\\MapSnap\\Application\\auth.py, which is the
 strongest auth implementation in the QI ecosystem (pbkdf2-sha256 @ 200k
 iterations, opaque session tokens, last-admin guards). This module keeps the
 same crypto and session semantics but drops MapSnap's per-tab/feature RBAC —

@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.3" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>OpenClaw ChatGPT session monitor + keepalive â€” runs every 30 min</Description>
+    <URI>\OC-ChatGPT-Keepalive</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Author">
+      <UserId>S-1-5-21-1525812889-503226244-3974775965-1001</UserId>
+      <LogonType>InteractiveToken</LogonType>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT10M</ExecutionTimeLimit>
+    <Hidden>true</Hidden>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <Duration>PT10M</Duration>
+      <WaitTimeout>PT1H</WaitTimeout>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <TimeTrigger>
+      <StartBoundary>2026-04-06T19:09:32-04:00</StartBoundary>
+      <Repetition>
+        <Interval>PT30M</Interval>
+        <StopAtDurationEnd>true</StopAtDurationEnd>
+      </Repetition>
+    </TimeTrigger>
+  </Triggers>
+  <Actions Context="Author">
+    <Exec>
+      <Command>C:\1-AI\APPS\PYTHON\pythonw.exe</Command>
+      <Arguments>C:\OC\tools\oc-chatgpt-keepalive.py</Arguments>
+      <WorkingDirectory>C:\OC\tools</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>

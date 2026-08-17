@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live Claude Manager workspace (C:\\CLAUDE) and its companion hook scripts in C:\\Users\\renne\\.claude. Each shows the real code behind an orchestration, supervision, hook, or automation capability. Registry-driven throughout — paths and ports come from C:\\QIH\\ecosystem\\qi_registry.json, never hardcoded.",
+  "intro": "Excerpts copied from the live Claude Manager workspace (C:\\APPS\\CLAUDE) and its companion hook scripts in C:\\Users\\renne\\.claude. Each shows the real code behind an orchestration, supervision, hook, or automation capability. Registry-driven throughout — paths and ports come from C:\\QIH\\ecosystem\\qi_registry.json, never hardcoded.",
   "sections": [
     {
       "category": "Agent Fabric (.claude/agents/)",
@@ -88,8 +88,8 @@
           "feature": "Every session leaves a trace — correct project attribution",
           "file": "~/.claude/session_end.py :: infer_project()",
           "language": "python",
-          "code": "cwd_n = os.path.normcase(os.path.normpath(cwd))\nreg = json.loads(REGISTRY.read_text(encoding=\"utf-8\"))\nbest, best_len = None, 0\nfor proj in reg.get(\"projects\", []):\n    p_n = os.path.normcase(os.path.normpath(proj.get(\"path\") or \"\"))\n    if cwd_n == p_n or cwd_n.startswith(p_n + os.sep):\n        if len(p_n) > best_len:\n            best, best_len = proj.get(\"id\"), len(p_n)\nif best:\n    return best\n# Special case: Claude Manager worktrees live under C:\\CLAUDE\nif cwd_n.startswith(os.path.normcase(r\"C:\\CLAUDE\")):\n    return \"claude_manager\"",
-          "explanation": "Both inbox hooks decide which project a session belongs to by longest-prefix matching the current working directory against every registered project path (longest match wins, so C:\\NAYA\\filehq beats C:\\NAYA). Anything under C:\\CLAUDE — including ephemeral worktrees — falls through to claude_manager. This is what lets the SessionEnd stub be filed under the right project in qi_brain.db without Claude stating it."
+          "code": "cwd_n = os.path.normcase(os.path.normpath(cwd))\nreg = json.loads(REGISTRY.read_text(encoding=\"utf-8\"))\nbest, best_len = None, 0\nfor proj in reg.get(\"projects\", []):\n    p_n = os.path.normcase(os.path.normpath(proj.get(\"path\") or \"\"))\n    if cwd_n == p_n or cwd_n.startswith(p_n + os.sep):\n        if len(p_n) > best_len:\n            best, best_len = proj.get(\"id\"), len(p_n)\nif best:\n    return best\n# Special case: Claude Manager worktrees live under C:\\APPS\\CLAUDE\nif cwd_n.startswith(os.path.normcase(r\"C:\\APPS\\CLAUDE\")):\n    return \"claude_manager\"",
+          "explanation": "Both inbox hooks decide which project a session belongs to by longest-prefix matching the current working directory against every registered project path (longest match wins, so C:\\APPS\\NAYA\\filehq beats C:\\APPS\\NAYA). Anything under C:\\APPS\\CLAUDE — including ephemeral worktrees — falls through to claude_manager. This is what lets the SessionEnd stub be filed under the right project in qi_brain.db without Claude stating it."
         },
         {
           "title": "Normalising a sub-agent name to its Hive role",

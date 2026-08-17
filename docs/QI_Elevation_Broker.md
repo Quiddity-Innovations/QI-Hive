@@ -110,7 +110,7 @@ Rejected requests are logged with a reason and returned with `status: "denied"` 
 
 **Service-name scope.** All service-control rules require `^QI_[A-Za-z0-9_]+$` — so the broker cannot start/stop/restart system services outside the QI family (Windows Defender, etc.).
 
-**Path scope.** `nssm set AppDirectory/AppParameters` rules only allow paths under `C:\QIH` or `C:\QIP`.
+**Path scope.** `nssm set AppDirectory/AppParameters` rules only allow paths under `C:\QIH` or `C:\APPS\QIP`.
 
 ---
 
@@ -119,7 +119,7 @@ Rejected requests are logged with a reason and returned with `status: "denied"` 
 | Rule | Command | Scope |
 |---|---|---|
 | `nssm_service_control` | `nssm start|stop|restart|status|pause|continue QI_*` | Service lifecycle |
-| `nssm_set_appdir` | `nssm set QI_* AppDirectory C:\QIH\... or C:\QIP\...` | Repoint folder |
+| `nssm_set_appdir` | `nssm set QI_* AppDirectory C:\QIH\... or C:\APPS\QIP\...` | Repoint folder |
 | `nssm_set_appparams` | `nssm set QI_* AppParameters C:\QIH\...\*.py\|.bat` | Repoint script |
 | `nssm_set_description` | `nssm set QI_* Description <str ≤ 200>` | Update description |
 | `taskkill_by_pid` | `taskkill /PID <n> /F` | Force-kill by PID |

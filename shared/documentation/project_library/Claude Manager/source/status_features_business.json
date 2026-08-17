@@ -13,7 +13,7 @@
     "features": [
       {"name": "Cross-project health scan", "description": "One command walks every registered QI project and reports a red / yellow / green status for each, so the whole ecosystem's health is visible at a glance.", "status": "live", "notes": "supervisor.py reads qi_registry.json and inspects each project"},
       {"name": "Drift detection", "description": "Flags the small problems that compound: uncommitted git changes, stale commits, stopped services, scheduled tasks that failed, and keepalive failure files.", "status": "live", "notes": "git status + NSSM service state + scheduled-task results + *failure-state*.json scan"},
-      {"name": "Human dashboard", "description": "Produces a plain-language DASHBOARD.md with a summary line and a per-project findings table that the owner can read top to bottom.", "status": "live", "notes": "C:\\CLAUDE\\DASHBOARD.md, regenerated each run"},
+      {"name": "Human dashboard", "description": "Produces a plain-language DASHBOARD.md with a summary line and a per-project findings table that the owner can read top to bottom.", "status": "live", "notes": "C:\\APPS\\CLAUDE\\DASHBOARD.md, regenerated each run"},
       {"name": "Feeds the Hive Mission Control", "description": "The same scan updates the QI Hive dashboard's live status panels, so supervision shows up on the operational console too.", "status": "live", "notes": "writes C:\\QIH\\data\\status.json consumed by the Hive dashboard"}
     ]
   },

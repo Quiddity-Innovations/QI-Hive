@@ -34,7 +34,7 @@ from typing import Any
 
 # --- make the CogniBase Application package importable -----------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)                      # C:\CogniBase
+ROOT = os.path.dirname(HERE)                      # C:\APPS\CogniBase
 sys.path.insert(0, ROOT)
 
 try:

@@ -37,7 +37,7 @@ NOT_APPLICABLE = {
     "headroom": (
         "Readiness percentage is not applicable to Headroom. It is not a "
         "standalone QI application but a utility that lives inside Claude "
-        "Manager at C:\\CLAUDE\\Tools, so it has no INTRO folder, no service, "
+        "Manager at C:\\APPS\\CLAUDE\\Tools, so it has no INTRO folder, no service, "
         "no port allocation and no independent delivery milestone. Its status "
         "is carried by its parent project (claude_manager). If Headroom is "
         "ever promoted to a standalone project, register it in "

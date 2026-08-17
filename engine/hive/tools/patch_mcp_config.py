@@ -9,14 +9,14 @@ CONFIG_PATH = r"C:\Users\renne\.claude.json"
 NEW_SERVERS = {
     "sqlite-maia": {
         "type": "stdio",
-        "command": "C:/1-AI/APPS/PYTHON/Scripts/mcp-server-sqlite.exe",
-        "args": ["--db-path", "C:/QI/maia.db"],
+        "command": "C:/Program Files/Python311/Scripts/mcp-server-sqlite.exe",
+        "args": ["--db-path", "C:/APPS/QI/maia.db"],
         "env": {}
     },
     "sqlite-naya": {
         "type": "stdio",
-        "command": "C:/1-AI/APPS/PYTHON/Scripts/mcp-server-sqlite.exe",
-        "args": ["--db-path", "C:/NAYA/naya.db"],
+        "command": "C:/Program Files/Python311/Scripts/mcp-server-sqlite.exe",
+        "args": ["--db-path", "C:/APPS/NAYA/naya.db"],
         "env": {}
     },
     "git": {

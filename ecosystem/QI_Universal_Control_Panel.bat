@@ -33,10 +33,10 @@ echo            QI UNIVERSAL CONTROL PANEL
 echo  =====================================================
 echo.
 echo.
-echo   [1] Maia     ^(C:\QI^)
-echo   [2] Naya     ^(C:\NAYA^)
-echo   [3] NEXUS    ^(C:\NEXUS^)
-echo   [4] OC       ^(C:\OC^)
+echo   [1] Maia     ^(C:\APPS\QI^)
+echo   [2] Naya     ^(C:\APPS\NAYA^)
+echo   [3] NEXUS    ^(C:\APPS\NEXUS^)
+echo   [4] OC       ^(C:\APPS\OC^)
 echo   [5] ALL      ^(open all four^)
 echo.
 echo   [6] WEB PANEL ^(one browser tab for everything - recommended^)
@@ -57,26 +57,26 @@ if /i "%choice%"=="q" exit /b 0
 goto menu
 
 :maia
-wt.exe -w 0 new-tab -p "Command Prompt" --title "Maia"  -d "C:\QI"    "C:\QI\maia_control.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "Maia"  -d "C:\APPS\QI"    "C:\APPS\QI\maia_control.bat"
 goto menu
 
 :naya
-wt.exe -w 0 new-tab -p "Command Prompt" --title "Naya"  -d "C:\NAYA"  "C:\NAYA\naya_control.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "Naya"  -d "C:\APPS\NAYA"  "C:\APPS\NAYA\naya_control.bat"
 goto menu
 
 :nexus
-wt.exe -w 0 new-tab -p "Command Prompt" --title "NEXUS" -d "C:\NEXUS" "C:\NEXUS\nexus_control.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "NEXUS" -d "C:\APPS\NEXUS" "C:\APPS\NEXUS\nexus_control.bat"
 goto menu
 
 :oc
-wt.exe -w 0 new-tab -p "Command Prompt" --title "OC"    -d "C:\OC"    "C:\OC\OC_Control_Panel_v6.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "OC"    -d "C:\APPS\OC"    "C:\APPS\OC\OC_Control_Panel_v6.bat"
 goto menu
 
 :all
-wt.exe -w 0 new-tab -p "Command Prompt" --title "Maia"  -d "C:\QI"    "C:\QI\maia_control.bat"
-wt.exe -w 0 new-tab -p "Command Prompt" --title "Naya"  -d "C:\NAYA"  "C:\NAYA\naya_control.bat"
-wt.exe -w 0 new-tab -p "Command Prompt" --title "NEXUS" -d "C:\NEXUS" "C:\NEXUS\nexus_control.bat"
-wt.exe -w 0 new-tab -p "Command Prompt" --title "OC"    -d "C:\OC"    "C:\OC\OC_Control_Panel_v6.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "Maia"  -d "C:\APPS\QI"    "C:\APPS\QI\maia_control.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "Naya"  -d "C:\APPS\NAYA"  "C:\APPS\NAYA\naya_control.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "NEXUS" -d "C:\APPS\NEXUS" "C:\APPS\NEXUS\nexus_control.bat"
+wt.exe -w 0 new-tab -p "Command Prompt" --title "OC"    -d "C:\APPS\OC"    "C:\APPS\OC\OC_Control_Panel_v6.bat"
 goto menu
 
 :webpanel

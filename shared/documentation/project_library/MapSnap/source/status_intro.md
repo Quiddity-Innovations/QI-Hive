@@ -71,4 +71,4 @@ Each database is a **profile** under `Product/<name>/`. Beside its `schema.json`
 
 The `guardrail.py` control plane is the single chokepoint for every cloud call. Under the default `local_only` policy nothing leaves the machine. Under `cloud_metadata_only`, schema structure and type names may reach a cloud model, but row values, profiling samples, query results, and document content are stripped or masked — enforced in code, not by convention — and every decision is logged for audit. A profile carrying regulated column classifications can be locked so raising its policy requires an admin and a recorded agreement.
 
-*This page is editable at C:\MapSnap\INTRO\status_intro.md — save and click Refresh to update.*
+*This page is editable at C:\APPS\MapSnap\INTRO\status_intro.md — save and click Refresh to update.*

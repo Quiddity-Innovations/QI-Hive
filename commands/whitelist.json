@@ -52,7 +52,7 @@
     },
     {
       "name": "nssm_install_qi",
-      "description": "Install a new QI_ NSSM service. App must be python.exe under approved roots; script must be .py under C:\\QIH or C:\\QIP.",
+      "description": "Install a new QI_ NSSM service. App must be python.exe under approved roots; script must be .py under C:\\QIH or C:\\APPS\\QIP.",
       "cmd": "nssm",
       "arg_count_min": 4,
       "arg_count_max": 4,
@@ -65,7 +65,7 @@
     },
     {
       "name": "nssm_set_stdout_stderr",
-      "description": "Set AppStdout or AppStderr log path under C:\\QIH or C:\\QIP",
+      "description": "Set AppStdout or AppStderr log path under C:\\QIH or C:\\APPS\\QIP",
       "cmd": "nssm",
       "arg_count_min": 4,
       "arg_count_max": 4,
@@ -91,7 +91,7 @@
     },
     {
       "name": "nssm_set_appdir",
-      "description": "Repoint a QI_ service AppDirectory under C:\\QIH or C:\\QIP",
+      "description": "Repoint a QI_ service AppDirectory under C:\\QIH or C:\\APPS\\QIP",
       "cmd": "nssm",
       "arg_count_min": 4,
       "arg_count_max": 4,
@@ -104,7 +104,7 @@
     },
     {
       "name": "nssm_set_appparams",
-      "description": "Repoint a QI_ service AppParameters under C:\\QIH or C:\\QIP",
+      "description": "Repoint a QI_ service AppParameters under C:\\QIH or C:\\APPS\\QIP",
       "cmd": "nssm",
       "arg_count_min": 4,
       "arg_count_max": 4,

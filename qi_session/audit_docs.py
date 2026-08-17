@@ -9,12 +9,12 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 from pathlib import Path
 
 PROJECTS = [
-    {"name": "Maia",      "path": r"C:\QI\DOCUMENTATION"},
-    {"name": "Naya",      "path": r"C:\NAYA\DOCUMENTATION"},
-    {"name": "NEXUS",     "path": r"C:\NEXUS"},          # search whole project (docs in subdir)
-    {"name": "OpenClaw",  "path": r"C:\OC\DOCUMENTATION"},
-    {"name": "FileHQ",    "path": r"C:\NAYA\filehq\DOCUMENTATION"},
-    {"name": "EasyFlow",  "path": r"C:\EasyFlow\DOCUMENTATION"},
+    {"name": "Maia",      "path": r"C:\APPS\QI\DOCUMENTATION"},
+    {"name": "Naya",      "path": r"C:\APPS\NAYA\DOCUMENTATION"},
+    {"name": "NEXUS",     "path": r"C:\APPS\NEXUS"},          # search whole project (docs in subdir)
+    {"name": "OpenClaw",  "path": r"C:\APPS\OC\DOCUMENTATION"},
+    {"name": "FileHQ",    "path": r"C:\APPS\NAYA\filehq\DOCUMENTATION"},
+    {"name": "EasyFlow",  "path": r"C:\APPS\EasyFlow\DOCUMENTATION"},
     {"name": "Universal", "path": r"C:\UNIVERSAL\DOCUMENTATION"},
 ]
 

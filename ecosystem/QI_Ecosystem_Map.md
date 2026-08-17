@@ -57,6 +57,7 @@ corrected against live usage. Connectivity split out to `QI_Connectivity_Map.md`
 | AutoPDF | MCP | 8701 | Python (FastMCP) | — | **NO — loopback only** | Active (opt-in, off by default) | TBD |
 | AkiyaScout | API | 8505 | FastAPI | — | **NO — planning** | New (spec/design) | TBD |
 | AkiyaScout | UI | 7845 | Gradio | — | **NO — planning** | New (spec/design) | TBD |
+| ComfyUI | API + UI | 8740 | Python (aiohttp) | — | **NO — loopback only** | Active | TBD |
 
 ### Port Block Allocation (follow for all new services)
 
@@ -70,12 +71,31 @@ corrected against live usage. Connectivity split out to `QI_Connectivity_Map.md`
 | **8500–8509** | MQ | MQ API + future services |
 | **8550–8559** | EasyFlow | EasyFlow dashboard |
 | **8700–8709** | AutoPDF | AutoPDF + future AutoPDF microservices (extraction worker, scheduler agent) |
+| **8720–8729** | Claude Voice | realtime two-way voice |
+| **8730–8739** | Voice Studio | studio/batch voice rendering (panel currently on 7863) |
+| **8740–8749** | **ComfyUI** | generators + API (migrated here 2026-08-10) |
+| **8750–8759** | FilmForge | film orchestration (panel 7865; headless API split reserved) |
 | **7800–7809** | Maia | Maia UI variants |
 | **7810–7819** | Naya | Naya UI variants |
 | **7820–7829** | NEXUS | NEXUS UI variants |
 | **7830–7839** | OpenClaw | OC UI variants |
 
 > ⚠️ Ports 8001, 8002, 8010, 7860, 7861, 7880, **6969 (AutoPDF)** predate this registry. They work fine — do not change unless doing a deliberate migration.
+
+> ✅ **Resolved 2026-08-10 — ComfyUI migrated 8189 → 8740.** It had been sitting
+> inside **Maia's 8100–8199 block**, which the block rule forbids. 8740 opens the
+> **media/GPU band** directly above Claude Voice (8720–8729) and Voice Studio
+> (8730–8739), so the three GPU tenants are now contiguous.
+>
+> The port was referenced by four projects, so it was migrated in **one atomic
+> pass** (`D:\Dev\FilmForge\tools\migrate_comfy_port.py`) — 33 references across
+> 14 files: `Start_ComfyUI.bat`, `qi_comfy_mcp.py` (`COMFY_URL`),
+> `voicestudio.json`, `mediastudio.json`, FilmForge config + broker, this map,
+> the registry, and the ComfyUI docs. Backups kept as `*.bak-port8740`.
+>
+> **Never migrate it piecemeal.** A half-done change leaves `voice_studio`'s
+> `POST /free`, Media Studio's provider and Claude's MCP pointing at a dead
+> socket, each failing differently.
 
 ---
 
@@ -98,35 +118,35 @@ Each project is a future module. The relationship between them determines how ti
 
 ## Project Profiles
 
-### Maia — `C:\QI` — *Core*
+### Maia — `C:\APPS\QI` — *Core*
 The flagship AI assistant. Multi-channel (LINE, Telegram, Messenger, Instagram, WhatsApp).
 - **Exposes:** Multi-channel messaging, personality engine, LLM chain, group/user config
 - **Consumes:** NEXUS (synthesis, news, LLM recommendations)
 - **Future:** Receives agent capabilities from OpenClaw
 
-### NEXUS — `C:\NEXUS` — *Backbone*
+### NEXUS — `C:\APPS\NEXUS` — *Backbone*
 The AI intelligence engine. All projects call NEXUS for AI decisions.
 - **Exposes:** `/synthesize` (multi-AI), `/scout/digest` (news), `/bench/recommend` (LLM scoring)
 - **Consumes:** Nothing — it IS the AI backbone
 - **Future:** Becomes the AI Engine module in the unified app
 
-### Naya — `C:\NAYA` — *Sibling Candidate*
+### Naya — `C:\APPS\NAYA` — *Sibling Candidate*
 Renne's personal file management AI. Absorbed FileHQ as file engine. **Telegram-only interface** (`@Naya_qi_bot`).
-- **Database:** `C:\NAYA\naya.db` — completely separate from `maia.db`
+- **Database:** `C:\APPS\NAYA\naya.db` — completely separate from `maia.db`
 - **Service:** NSSM `QI_NayaBot` (auto-start, LAN-only — **NO Cloudflare tunnel**)
 - **Interface:** Telegram long-poll (outbound) — Renne only
 - **Exposes:** File scan/report via Telegram, domain reasoning (AI/physics/programming)
 - **Consumes:** FileHQ engine (internal), NEXUS (synthesis)
 - **Future:** Renne's unified personal AI + file intelligence
 
-### OpenClaw — `C:\OC` — *Cousin → Marriage Candidate with Maia*
+### OpenClaw — `C:\APPS\OC` — *Cousin → Marriage Candidate with Maia*
 Autonomous agent platform. Where Maia *responds*, OpenClaw *acts*.
 - **Exposes:** 5 active agents: Tasuke (orchestrator), Kaze (news), Yubin (email), Sentry (health), Koe (voice — planned)
 - **Cancelled:** Seiri (2026-04-05) — fully replaced by Naya+FileHQ
 - **Consumes:** Ollama/Cloudflare (LLMs), Maia (future action routing)
 - **Future:** Maia routes complex tasks to OpenClaw — conversation + action = full AI assistant
 
-### MQ — `C:\MQ` — *Cousin*
+### MQ — `C:\APPS\MQ` — *Cousin*
 Autonomous AI social media persona (Maia Quiddam). Facebook, Instagram, WhatsApp.
 - **GitHub:** Quiddity-Innovations/MQ (private)
 - **Ports:** API :8500, UI :7840
@@ -138,7 +158,7 @@ Universal tools shared across all QI projects. Not a product.
 - **Launcher:** `http://localhost:8650` — single-page dashboard linking all QI localhost URLs
 - **Exposes:** QI Launcher (one-click access to all project UIs and APIs)
 
-### EasyFlow — `C:\EasyFlow` — *Standalone Tool*
+### EasyFlow — `C:\APPS\EasyFlow` — *Standalone Tool*
 Email organization tool — tier-based inbox management with Gmail API + Apps Script automation.
 - **Ports:** Dashboard :8550 (local Flask app)
 - **Status:** Active development — rebrand from "Gmail & Beyond"
@@ -146,19 +166,36 @@ Email organization tool — tier-based inbox management with Gmail API + Apps Sc
 - **Future:** PyInstaller .exe packaging, Phase 2 Outlook/Teams/Planner integration
 
 ### FileHQ — `C:\FileHQ` *(MERGED → Naya)*
-Fully absorbed into Naya (`C:\NAYA\filehq\`). `C:\FileHQ` deleted 2026-04-06.
+Fully absorbed into Naya (`C:\APPS\NAYA\filehq\`). `C:\FileHQ` deleted 2026-04-06.
 
-### AutoPDF — `C:\AutoPDF` — *Standalone Tool / Cousin Candidate*
+### AutoPDF — `C:\APPS\AutoPDF` — *Standalone Tool / Cousin Candidate*
 Local PDF toolkit: convert / split / extract / catalog. Self-contained — bundles Ghostscript, Poppler, Tesseract, Tabula, PDFtk, JRE. Optional Ollama integration for Smart Mapping (template authoring + AI-extract fields).
 - **Ports:** HTTP :6969 (loopback only) · **MCP gateway :8701** (`QI_AutoPDFMCP`, loopback, opt-in — first port used from AutoPDF's own 8700–8709 block)
 - **Status:** Active Dev — Phase 2c complete (templates v2 + regex library + test automation); MCP gateway added 2026-08-07
-- **Path:** `C:\AutoPDF\` — moved here 2026-05-13 from `C:\Users\renne\Downloads\AUTOPDF\`. Fully portable: reads everything via relative paths, so no code edits were needed.
+- **Path:** `C:\APPS\AutoPDF\` — moved here 2026-05-13 from `C:\Users\renne\Downloads\AUTOPDF\`. Fully portable: reads everything via relative paths, so no code edits were needed.
 - **Exposes:** Template-driven extraction (`/api/template-apply-batch`, `/api/template-test`, `/api/ai-chat`, `/api/regex-library`)
 - **Exposes (MCP :8701):** nine tools, each independently switchable in `config\mcp_gateway.json` — `autopdf_status` / `autopdf_templates` / `autopdf_presets` / `autopdf_regex_library` (metadata, on by default); `autopdf_list_pdfs` / `autopdf_extract` / `autopdf_index_preview` (real document content, off); `autopdf_run_workflow` / `autopdf_split` (writes files, off). A disabled tool is never registered, so it is absent from `tools/list` rather than refused. Uses the **shared** `qi_mcp_gateway.py` module — AutoPDF only adds an adapter, same as MapSnap.
 - **Consumes:** Local Ollama (optional) only — no other QI project at runtime
 - **Future:** Maia/NEXUS could call `/api/template-apply-batch` to extract fields from user-supplied PDFs. Workflow + Scheduler tabs already exist for ecosystem-level orchestration; integration with QI Hive's scheduler is a Phase 3 candidate.
 - **Note:** AutoPDF is the second project on the shared MCP gateway module (after MapSnap). The module's `ADAPTERS` registry is the extension point — adding NEXUS or Gamez is one adapter function each, no gateway changes.
 - **GitHub:** TBD (no remote yet)
+
+### ComfyUI (QI Media Engine) — `D:\AI` — *Cousin / shared GPU utility*
+The only sanctioned image and video generator on this machine. Driven conversationally by Claude through the `qi-comfy` MCP server, and usable directly in its own web UI. Registered 2026-08-10 (the id `comfyui` was already referenced by `voice_studio` before any record existed).
+- **Ports:** :8740 API + web UI, loopback only. ⚠️ Inside Maia's 8100–8199 block — see the conflict note under Port Registry.
+- **Status:** Active. 14 workflows verified working 2026-08-10.
+- **Trigger discipline:** Claude generates **only** on an explicit `RENDER:` or `/comfy` message — never inferred from conversation. Rules in `D:\AI\CLAUDE.md`. SFW and NSFW both in scope; no real identifiable people, no minors.
+- **Video engines** (selection + defaults in `D:\AI\workflows\_video_backends.json`):
+  - **MiniMax-H3** — *default*. NVFP4 build (11.67 GB) + Qwen3-VL-32B encoder + 4-step Turbo LoRA. **1344×768 with stereo audio in ~75 s.** NVFP4 is a native op on the sm_120 Blackwell 5080; the int8 build (19.53 GB) does not fit 16.3 GB VRAM.
+  - **Wan 2.1** — 14B fp8 T2V + I2V-720P. 832×480, silent, ~335 s. Kept deliberately as an independent model family and fallback. Escalation ladder (fp16 encoder → kijai WanVideoWrapper) defined but not built, and must stay *switchable* rather than replacing what works.
+  - **MiniMax cloud** (Hailuo 03 API nodes) — installed, **disabled**, bills credits.
+- **Image engines:** Z-Image Turbo (8 s), SDXL (+ the only SDXL LoRA `nudify_xl_lite`), SD 1.5 (Realistic Vision 5.1, for the three SD 1.5 LoRAs), **Ideogram v4** — the only engine here that renders legible typography.
+- **LLM in-graph:** Gemma 4 runs *inside* ComfyUI via the native `TextGenerate` node (~15 tok/s) — captions a reference image and drives generation with no API key (`describe2img`).
+- **Exposes:** `POST /prompt`, `GET /history/{id}`, `GET /queue`, `GET /system_stats`, `GET /object_info`, `GET /view`, **`POST /free`** (VRAM release — already consumed by `voice_studio`)
+- **Deliberately NOT integrated:** in-graph Ollama or Cloudflare Workers AI nodes. NEXUS already reaches both with 14 providers; duplicating that inside ComfyUI would add moving parts for no gain.
+- **Workflows exist twice on purpose:** API format in `D:\AI\workflows\` (what Claude queues) and editor twins prefixed `QI - ` in the ComfyUI user folder (what Renne clicks). **They are copies, not links.**
+- **Docs:** `D:\AI\CLAUDE.md` · `CHEATSHEET.md` · `RENDER_TEMPLATES.md` · `HOW_TO_RUN_IT_YOURSELF.md`
+- **GitHub:** TBD (portable third-party app; only config and workflows are QI-owned)
 
 ---
 
@@ -183,7 +220,7 @@ When the time comes, all modules merge into the **QI Platform**:
 ## ⚠️ Ecosystem Safety Rules (Shared Infrastructure)
 
 ### NSSM Services
-All projects share `C:\QI\nssm.exe`. **Every service must have a unique name.**
+All projects share `C:\APPS\QI\nssm.exe`. **Every service must have a unique name.**
 
 | Service Name | Owner | What it runs |
 |---|---|---|
@@ -222,9 +259,9 @@ Each project has its own SQLite database. **Never share databases across project
 
 | Project | Database |
 |---|---|
-| Maia | `C:\QI\maia.db` |
-| Naya | `C:\NAYA\naya.db` |
-| NEXUS | `C:\NEXUS\nexus.db` |
+| Maia | `C:\APPS\QI\maia.db` |
+| Naya | `C:\APPS\NAYA\naya.db` |
+| NEXUS | `C:\APPS\NEXUS\nexus.db` |
 
 ---
 
@@ -234,7 +271,7 @@ Each project has its own SQLite database. **Never share databases across project
 |---|---|---|---|
 | **Any QI tool** | **NEXUS** | **`POST /v1/chat/completions`** | **QI LLM Hub (added 2026-07-02): OpenAI-compatible gateway. base_url `http://127.0.0.1:8010/v1`, any api_key, model = provider id or `auto`. Send `X-QI-App: <project>` for usage attribution (`GET /hub/usage`). Keys live ONLY in NEXUS `secrets/nexus.env`. LAN-only — never tunnel this.** |
 | Any | NEXUS | `GET /v1/models` | List routable hub provider ids |
-| ~~Maia~~ | NEXUS | `POST /synthesize` | ⚠️ **PLANNED, NOT WIRED** (verified 2026-08-07) — `C:\QI\nexus_client.py` implements this but is imported nowhere |
+| ~~Maia~~ | NEXUS | `POST /synthesize` | ⚠️ **PLANNED, NOT WIRED** (verified 2026-08-07) — `C:\APPS\QI\nexus_client.py` implements this but is imported nowhere |
 | ~~Maia~~ | NEXUS | `GET /scout/digest` | ⚠️ **PLANNED, NOT WIRED** — same client, never called |
 | ~~Maia~~ | NEXUS | `GET /bench/recommend` | ⚠️ **PLANNED, NOT WIRED** |
 | ~~Naya~~ | NEXUS | `POST /synthesize` | ⚠️ **PLANNED, NOT WIRED** |

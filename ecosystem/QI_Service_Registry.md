@@ -67,9 +67,9 @@
 | QIDashboard | QI_Dashboard | ✅ 2026-04-19 | Fixed AppDirectory bug |
 | QIDashboardTunnel | QI_DashboardTunnel | ✅ 2026-04-19 | Fixed python3→real Python path bug |
 | QIBrainAPI | QI_BrainAPI | ✅ 2026-04-19 | |
-| AutoPDF | QI_AutoPDF | ✅ 2026-06-15 | Web server 127.0.0.1:6969; AppDir C:\AutoPDF\Application; env AUTOPDF_NO_BROWSER=1 |
+| AutoPDF | QI_AutoPDF | ✅ 2026-06-15 | Web server 127.0.0.1:6969; AppDir C:\APPS\AutoPDF\Application; env AUTOPDF_NO_BROWSER=1 |
 | AutoPDFTunnel | QI_AutoPDFTunnel | ✅ 2026-06-15 | Cloudflare quick tunnel → :6969; URL in Application\status\tunnel.json; PIN-gated |
-| AutoPDFMCP | QI_AutoPDFMCP | ✅ 2026-08-07 | MCP gateway 127.0.0.1:8701; AppDir C:\AutoPDF; runs tools\run_mcp_gateway.py; SERVICE_AUTO_START. Tools + on/off live in C:\AutoPDF\config\mcp_gateway.json (Settings → AI & Connections). Register with `Application\_register_mcp_service.ps1` **elevated**. ⚠️ Free :8701 of any hand-started gateway first — see note below |
+| AutoPDFMCP | QI_AutoPDFMCP | ✅ 2026-08-07 | MCP gateway 127.0.0.1:8701; AppDir C:\APPS\AutoPDF; runs tools\run_mcp_gateway.py; SERVICE_AUTO_START. Tools + on/off live in C:\APPS\AutoPDF\config\mcp_gateway.json (Settings → AI & Connections). Register with `Application\_register_mcp_service.ps1` **elevated**. ⚠️ Free :8701 of any hand-started gateway first — see note below |
 
 ---
 
@@ -113,10 +113,10 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Description** | Maia AI assistant platform. FastAPI server handling LINE, Telegram and other channels. Ollama-powered multi-LLM chain. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `maia_server.py` |
-| **Working dir** | `C:\QI` |
+| **Working dir** | `C:\APPS\QI` |
 | **Port** | 8001 |
-| **Stdout log** | `C:\QI\LOGS\maia_service_log.txt` |
-| **Stderr log** | `C:\QI\LOGS\maia_error.txt` |
+| **Stdout log** | `C:\APPS\QI\LOGS\maia_service_log.txt` |
+| **Stderr log** | `C:\APPS\QI\LOGS\maia_error.txt` |
 | **Start type** | AUTO_START (delayed) |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` (standardized 2026-04-22) |
@@ -127,10 +127,10 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Display name** | QI_MaiaQueueDrain |
 | **Description** | QI Maia AWS relay queue drainer — polls SQS qi-maia-events.fifo and forwards LINE events to local maia_server (port 8001). Since cutover 2026-07-30, LINE webhooks flow LINE → AWS Lambda qi-maia-webhook → SQS → this drainer; messages survive machine downtime (4-day queue retention). |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
-| **Parameters** | `C:\QIH\engine\relay\maia_queue_drain_service.py` (shim → `C:\QI\TOOLS\aws_relay\queue_drainer.py`) |
+| **Parameters** | `C:\QIH\engine\relay\maia_queue_drain_service.py` (shim → `C:\APPS\QI\TOOLS\aws_relay\queue_drainer.py`) |
 | **Working dir** | `C:\QIH\engine\relay` |
 | **Port** | — (outbound long-poll to AWS SQS us-east-1) |
-| **Stdout/err log** | `C:\QIH\logs\maia_queue_drain.log` (drainer also logs to `C:\QI\LOGS\queue_drain_log.txt`) |
+| **Stdout/err log** | `C:\QIH\logs\maia_queue_drain.log` (drainer also logs to `C:\APPS\QI\LOGS\queue_drain_log.txt`) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem (AWS creds pinned to `C:\Users\renne\.aws\credentials` via env in drainer) |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
@@ -143,9 +143,9 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Description** | Cloudflare quick tunnel exposing Maia Bot (port 8001) to the internet for LINE/Telegram webhooks. |
 | **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
 | **Parameters** | `tunnel --url http://localhost:8001` |
-| **Working dir** | `C:\QI` |
-| **Stdout log** | `C:\QI\LOGS\tunnel_service_log.txt` |
-| **Stderr log** | `C:\QI\LOGS\tunnel_log.txt` |
+| **Working dir** | `C:\APPS\QI` |
+| **Stdout log** | `C:\APPS\QI\LOGS\tunnel_service_log.txt` |
+| **Stderr log** | `C:\APPS\QI\LOGS\tunnel_log.txt` |
 | **Start type** | AUTO_START (delayed) |
 | **Account** | LocalSystem |
 
@@ -157,7 +157,7 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
 | **Parameters** | `tunnel --url http://localhost:7860` |
 | **Working dir** | `C:\Program Files (x86)\cloudflared` |
-| **Stderr log** | `C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt` |
+| **Stderr log** | `C:\APPS\QI\LOGS\Maia_Gradio_Tunnel_Log.txt` |
 | **Start type** | DEMAND_START (manual) |
 | **Account** | LocalSystem |
 
@@ -168,10 +168,10 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Description** | Maia Gradio web UI on port 7860. Browser-based chat interface for Maia AI assistant. Auto-restart enabled. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `maia_gradio.py` |
-| **Working dir** | `C:\QI` |
+| **Working dir** | `C:\APPS\QI` |
 | **Port** | 7860 |
-| **Stdout log** | `C:\QI\LOGS\maia_gradio_service.log` (rotated at 5 MB) |
-| **Stderr log** | `C:\QI\LOGS\maia_gradio_error.log` (rotated at 5 MB) |
+| **Stdout log** | `C:\APPS\QI\LOGS\maia_gradio_service.log` (rotated at 5 MB) |
+| **Stderr log** | `C:\APPS\QI\LOGS\maia_gradio_error.log` (rotated at 5 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
@@ -184,11 +184,11 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Display name** | QI — Naya Bot Server |
 | **Description** | Naya personal AI assistant. Telegram bot + file management engine. FastAPI server on port 8002. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
-| **Parameters** | `C:\NAYA\naya_server.py` |
-| **Working dir** | `C:\NAYA` |
+| **Parameters** | `C:\APPS\NAYA\naya_server.py` |
+| **Working dir** | `C:\APPS\NAYA` |
 | **Port** | 8002 |
-| **Stdout log** | `C:\NAYA\LOGS\naya_service_log.txt` |
-| **Stderr log** | `C:\NAYA\LOGS\naya_error.txt` |
+| **Stdout log** | `C:\APPS\NAYA\LOGS\naya_service_log.txt` |
+| **Stderr log** | `C:\APPS\NAYA\LOGS\naya_error.txt` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 
@@ -198,11 +198,11 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Display name** | QI — Naya Gradio UI |
 | **Description** | Naya Gradio web interface on port 7861. Provides browser-based UI for Naya AI assistant. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
-| **Parameters** | `C:\NAYA\naya_gradio.py` |
-| **Working dir** | `C:\NAYA` |
+| **Parameters** | `C:\APPS\NAYA\naya_gradio.py` |
+| **Working dir** | `C:\APPS\NAYA` |
 | **Port** | 7861 |
-| **Stdout log** | `C:\NAYA\LOGS\naya_gradio_service.log` *(added 2026-05-13 — was empty)* |
-| **Stderr log** | `C:\NAYA\LOGS\naya_gradio_error.log` *(added 2026-05-13 — was empty)* |
+| **Stdout log** | `C:\APPS\NAYA\LOGS\naya_gradio_service.log` *(added 2026-05-13 — was empty)* |
+| **Stderr log** | `C:\APPS\NAYA\LOGS\naya_gradio_error.log` *(added 2026-05-13 — was empty)* |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 
@@ -212,11 +212,11 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Display name** | QI — NEXUS Scout Engine |
 | **Description** | Quiddity Innovations NEXUS: Neural Exchange and Unified Synthesis. Scout/digest engine with multi-provider LLM dispatch. API port 8010, UI port 7880. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
-| **Parameters** | `C:\NEXUS\main.py` |
-| **Working dir** | `C:\NEXUS` |
+| **Parameters** | `C:\APPS\NEXUS\main.py` |
+| **Working dir** | `C:\APPS\NEXUS` |
 | **Ports** | API 8010 · UI 7880 |
-| **Stdout log** | `C:\NEXUS\LOGS\nexus_service.log` |
-| **Stderr log** | `C:\NEXUS\LOGS\nexus_service_error.log` |
+| **Stdout log** | `C:\APPS\NEXUS\LOGS\nexus_service.log` |
+| **Stderr log** | `C:\APPS\NEXUS\LOGS\nexus_service_error.log` |
 | **Start type** | AUTO_START (delayed) |
 | **Account** | LocalSystem |
 
@@ -357,7 +357,7 @@ REM Restart a specific service (NSSM binary standardized 2026-04-22)
 C:\QIH\engine\bin\nssm.exe restart QI_MaiaBot
 
 REM Check logs
-type C:\QI\LOGS\maia_service_log.txt
+type C:\APPS\QI\LOGS\maia_service_log.txt
 type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 ```
 
@@ -367,13 +367,13 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 
 | Symptom | Service | Log file | First check |
 |---|---|---|---|
-| Maia not responding | QI_MaiaBot | `C:\QI\LOGS\maia_service_log.txt` | `nssm status QI_MaiaBot` |
-| Maia tunnel URL gone | QI_MaiaTunnel | `C:\QI\LOGS\tunnel_log.txt` | `nssm status QI_MaiaTunnel` |
-| Maia Gradio UI (:7860) down | QI_MaiaGradio | `C:\QI\LOGS\maia_gradio_error.log` | `nssm status QI_MaiaGradio` |
-| Maia Gradio demo down | QI_MaiaDemoTunnel | `C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt` | `nssm status QI_MaiaDemoTunnel` |
-| Naya not responding | QI_NayaBot | `C:\NAYA\LOGS\naya_service_log.txt` | `nssm status QI_NayaBot` |
-| Naya UI down | QI_NayaGradio | `C:\NAYA\LOGS\naya_gradio_error.log` | `nssm status QI_NayaGradio` |
-| NEXUS not running | QI_NEXUS | `C:\NEXUS\LOGS\nexus_service.log` | `nssm status QI_NEXUS` |
+| Maia not responding | QI_MaiaBot | `C:\APPS\QI\LOGS\maia_service_log.txt` | `nssm status QI_MaiaBot` |
+| Maia tunnel URL gone | QI_MaiaTunnel | `C:\APPS\QI\LOGS\tunnel_log.txt` | `nssm status QI_MaiaTunnel` |
+| Maia Gradio UI (:7860) down | QI_MaiaGradio | `C:\APPS\QI\LOGS\maia_gradio_error.log` | `nssm status QI_MaiaGradio` |
+| Maia Gradio demo down | QI_MaiaDemoTunnel | `C:\APPS\QI\LOGS\Maia_Gradio_Tunnel_Log.txt` | `nssm status QI_MaiaDemoTunnel` |
+| Naya not responding | QI_NayaBot | `C:\APPS\NAYA\LOGS\naya_service_log.txt` | `nssm status QI_NayaBot` |
+| Naya UI down | QI_NayaGradio | `C:\APPS\NAYA\LOGS\naya_gradio_error.log` | `nssm status QI_NayaGradio` |
+| NEXUS not running | QI_NEXUS | `C:\APPS\NEXUS\LOGS\nexus_service.log` | `nssm status QI_NEXUS` |
 | Dashboard (:8600) down | QI_Dashboard | `C:\QIH\engine\hive\dashboard\LOGS\dashboard.log` | `nssm status QI_Dashboard` |
 | Dashboard tunnel URL gone | QI_DashboardTunnel | `C:\QIH\engine\hive\tunnel\LOGS\tunnel_service.log` | `nssm status QI_DashboardTunnel` |
 | Brain API (:9011) down | QI_BrainAPI | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
@@ -382,12 +382,12 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | Hive ingest stalled | QI_HiveIngest | `C:\QIH\logs\hive\ingest_stderr.log` | `nssm status QI_HiveIngest` |
 | Auto-apply pipeline stalled / dispatches stuck in queued | QI_HiveApply | `C:\QIH\logs\hive_apply.log` | `nssm status QI_HiveApply`; check for HALT file |
 | Inspector inbox not draining / envelopes stuck in pending_review | QI_HiveInspectorDrain | `C:\QIH\logs\hive_inspector_drain.log` | `nssm status QI_HiveInspectorDrain`; check quarantine/ dir |
-| Kaze config UI down | QI_KazeConfigAPI | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` | `nssm status QI_KazeConfigAPI` |
+| Kaze config UI down | QI_KazeConfigAPI | `C:\APPS\OC\runtime\logs\agents\kaze\kaze-config-api.log` | `nssm status QI_KazeConfigAPI` |
 | Kaze news tunnel URL gone / can't view news on phone | QI_KazeNewsTunnel | Permanent URL: **https://kaze.quiddityinnovations.com** (named tunnel `qi-kaze`; also mirrored to `news-tunnel-url.txt`). Logs: `C:\QIH\engine\tunnels\LOGS\QI_KazeNewsTunnel.err.log` | `nssm status QI_KazeNewsTunnel` |
-| TubeScout (:8503) news page / API down | QI_TubeScout | `C:\TUBESCOUT\data\logs\service.log` | `nssm status QI_TubeScout` (AppDirectory must be `C:\TUBESCOUT`) |
+| TubeScout (:8503) news page / API down | QI_TubeScout | `C:\APPS\TUBESCOUT\data\logs\service.log` | `nssm status QI_TubeScout` (AppDirectory must be `C:\APPS\TUBESCOUT`) |
 | TubeScout tunnel URL gone / not showing in Hive | QI_TubeScoutTunnel | Permanent URL: **https://tubescout.quiddityinnovations.com** (named tunnel `qi-tubescout`; no longer a random `trycloudflare.com`). | `nssm status QI_TubeScoutTunnel` |
-| Claude can't see AutoPDF tools / `autopdf` MCP disconnected | QI_AutoPDFMCP | `C:\AutoPDF\Application\LOGS\mcp_gateway.log` (+ `.err.log`) | `nssm status QI_AutoPDFMCP`, then `curl http://127.0.0.1:8701/health`. If the process exits immediately, `enabled` is `false` in `C:\AutoPDF\config\mcp_gateway.json` — that is the master switch, not a fault. A *missing* tool is usually switched off in that file's `tools` block (Settings → AI & Connections → Claude / MCP Access), not broken. Tools returning "AutoPDF unreachable" means the app itself (:6969) is down, not the gateway. |
-| QI_AutoPDFMCP stuck in **SERVICE_PAUSED** (health probe still returns 200!) | QI_AutoPDFMCP | `C:\AutoPDF\Application\LOGS\mcp_gateway.err.log` — look for `[Errno 10048] ... bind on address ('127.0.0.1', 8701)` | Something else already owns :8701 — almost always a gateway started by hand (`python tools\run_mcp_gateway.py`) during development. The service can't bind, NSSM retries, hits its restart throttle and parks at PAUSED. **The 200 from `/health` is that other process answering, not the service** — never treat a bare health probe as proof. Diagnose with `netstat -ano \| findstr :8701`, then check whether the listener's parent is `nssm.exe`; if it isn't, kill it and `nssm start QI_AutoPDFMCP`. First hit 2026-08-07; `_register_mcp_service.ps1` now frees the port itself and verifies listener parentage. |
+| Claude can't see AutoPDF tools / `autopdf` MCP disconnected | QI_AutoPDFMCP | `C:\APPS\AutoPDF\Application\LOGS\mcp_gateway.log` (+ `.err.log`) | `nssm status QI_AutoPDFMCP`, then `curl http://127.0.0.1:8701/health`. If the process exits immediately, `enabled` is `false` in `C:\APPS\AutoPDF\config\mcp_gateway.json` — that is the master switch, not a fault. A *missing* tool is usually switched off in that file's `tools` block (Settings → AI & Connections → Claude / MCP Access), not broken. Tools returning "AutoPDF unreachable" means the app itself (:6969) is down, not the gateway. |
+| QI_AutoPDFMCP stuck in **SERVICE_PAUSED** (health probe still returns 200!) | QI_AutoPDFMCP | `C:\APPS\AutoPDF\Application\LOGS\mcp_gateway.err.log` — look for `[Errno 10048] ... bind on address ('127.0.0.1', 8701)` | Something else already owns :8701 — almost always a gateway started by hand (`python tools\run_mcp_gateway.py`) during development. The service can't bind, NSSM retries, hits its restart throttle and parks at PAUSED. **The 200 from `/health` is that other process answering, not the service** — never treat a bare health probe as proof. Diagnose with `netstat -ano \| findstr :8701`, then check whether the listener's parent is `nssm.exe`; if it isn't, kill it and `nssm start QI_AutoPDFMCP`. First hit 2026-08-07; `_register_mcp_service.ps1` now frees the port itself and verifies listener parentage. |
 
 ---
 
@@ -415,11 +415,11 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Display name** | QI - Kaze Config API |
 | **Description** | REST API for Kaze feed/policy configuration UI. Reads and writes kaze-feeds.json and kaze-source-policy.json. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
-| **Parameters** | `C:\OC\repo\scripts\kaze\kaze-config-api.py` |
-| **Working dir** | `C:\OC\repo\scripts\kaze` |
+| **Parameters** | `C:\APPS\OC\repo\scripts\kaze\kaze-config-api.py` |
+| **Working dir** | `C:\APPS\OC\repo\scripts\kaze` |
 | **Port** | 8401 |
-| **Stdout log** | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` |
-| **Stderr log** | `C:\OC\runtime\logs\agents\kaze\kaze-config-api.log` |
+| **Stdout log** | `C:\APPS\OC\runtime\logs\agents\kaze\kaze-config-api.log` |
+| **Stderr log** | `C:\APPS\OC\runtime\logs\agents\kaze\kaze-config-api.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
@@ -432,10 +432,10 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Description** | MapSnap schema-intelligence tool for any enterprise DB profile (SQL Server/Oracle/Postgres/MySQL/SQLite). Local Python HTTP server. Added by dashboard registry-driven launcher build. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `Application\server.py` |
-| **Working dir** | `C:\MapSnap` |
+| **Working dir** | `C:\APPS\MapSnap` |
 | **Port** | 9876 |
-| **Stdout log** | `C:\MapSnap\LOGS\QI_MapSnap.stdout.log` (rotated at 5 MB) |
-| **Stderr log** | `C:\MapSnap\LOGS\QI_MapSnap.stderr.log` (rotated at 5 MB) |
+| **Stdout log** | `C:\APPS\MapSnap\LOGS\QI_MapSnap.stdout.log` (rotated at 5 MB) |
+| **Stderr log** | `C:\APPS\MapSnap\LOGS\QI_MapSnap.stderr.log` (rotated at 5 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
@@ -446,16 +446,16 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 |---|---|
 | **Display name** | QI - CogniBase OnBase AI Platform |
 | **Description** | CogniBase FastAPI server. Local OnBase metadata mirror + vector store + report generation. Runs from project venv. |
-| **Binary** | `C:\CogniBase\.venv\Scripts\python.exe` |
+| **Binary** | `C:\APPS\CogniBase\.venv\Scripts\python.exe` |
 | **Parameters** | `-m uvicorn Application.server.app:app --host 127.0.0.1 --port 8650` |
-| **Working dir** | `C:\CogniBase` |
+| **Working dir** | `C:\APPS\CogniBase` |
 | **Port** | 8650 |
-| **Stdout log** | `C:\CogniBase\LOGS\QI_CogniBase.stdout.log` (rotated at 5 MB) |
-| **Stderr log** | `C:\CogniBase\LOGS\QI_CogniBase.stderr.log` (rotated at 5 MB) |
+| **Stdout log** | `C:\APPS\CogniBase\LOGS\QI_CogniBase.stdout.log` (rotated at 5 MB) |
+| **Stderr log** | `C:\APPS\CogniBase\LOGS\QI_CogniBase.stderr.log` (rotated at 5 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
-| **Setup note** | Requires `sqlglot` in venv. Run `C:\CogniBase\.venv\Scripts\pip.exe install -r requirements.txt` if dependencies drift. |
+| **Setup note** | Requires `sqlglot` in venv. Run `C:\APPS\CogniBase\.venv\Scripts\pip.exe install -r requirements.txt` if dependencies drift. |
 | **Added** | 2026-05-13 |
 
 ### QI_NayaTunnel
@@ -467,8 +467,8 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Parameters** | `tunnel --url http://localhost:7861` |
 | **Working dir** | `C:\Program Files (x86)\cloudflared` |
 | **Port** | 7861 (proxied) |
-| **Stdout log** | `C:\NAYA\LOGS\QI_NayaTunnel.stdout.log` |
-| **Stderr log** | `C:\NAYA\LOGS\QI_NayaTunnel.stderr.log` |
+| **Stdout log** | `C:\APPS\NAYA\LOGS\QI_NayaTunnel.stdout.log` |
+| **Stderr log** | `C:\APPS\NAYA\LOGS\QI_NayaTunnel.stderr.log` |
 | **Start type** | AUTO_START |
 | **Added** | 2026-05-13 |
 
@@ -481,8 +481,8 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Parameters** | `tunnel --url http://localhost:7880` |
 | **Working dir** | `C:\Program Files (x86)\cloudflared` |
 | **Port** | 7880 (proxied) |
-| **Stdout log** | `C:\NEXUS\LOGS\QI_NEXUSTunnel.stdout.log` |
-| **Stderr log** | `C:\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log` |
+| **Stdout log** | `C:\APPS\NEXUS\LOGS\QI_NEXUSTunnel.stdout.log` |
+| **Stderr log** | `C:\APPS\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log` |
 | **Start type** | AUTO_START |
 | **Added** | 2026-05-13 |
 
@@ -495,8 +495,8 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Parameters** | `tunnel --url http://localhost:8650` |
 | **Working dir** | `C:\Program Files (x86)\cloudflared` |
 | **Port** | 8650 (proxied) |
-| **Stdout log** | `C:\CogniBase\LOGS\QI_CogniBaseTunnel.stdout.log` |
-| **Stderr log** | `C:\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log` |
+| **Stdout log** | `C:\APPS\CogniBase\LOGS\QI_CogniBaseTunnel.stdout.log` |
+| **Stderr log** | `C:\APPS\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log` |
 | **Start type** | AUTO_START |
 | **Added** | 2026-05-13 |
 
@@ -509,8 +509,8 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Parameters** | `tunnel --url http://localhost:9876` |
 | **Working dir** | `C:\Program Files (x86)\cloudflared` |
 | **Port** | 9876 (proxied) |
-| **Stdout log** | `C:\MapSnap\LOGS\QI_MapSnapTunnel.stdout.log` |
-| **Stderr log** | `C:\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log` |
+| **Stdout log** | `C:\APPS\MapSnap\LOGS\QI_MapSnapTunnel.stdout.log` |
+| **Stderr log** | `C:\APPS\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log` |
 | **Start type** | AUTO_START |
 | **Status** | ✅ Live as of 2026-05-13 (reinstalled via gsudo + NSSM) |
 | **Added** | 2026-04-24, reinstalled 2026-05-13 |
@@ -521,12 +521,12 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Display name** | QI Lottery Wiz (Fantasy 5) |
 | **Description** | Lottery Wiz — Fantasy 5 covering-design app (FastAPI). Generators, backtest, Brutal Ledger, AI dock, draw updates. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
-| **Parameters** | `C:\Lottery Wiz\server.py` |
-| **Working dir** | `C:\Lottery Wiz` |
+| **Parameters** | `C:\APPS\Lottery Wiz\server.py` |
+| **Working dir** | `C:\APPS\Lottery Wiz` |
 | **Port** | 8777 |
-| **Stdout/Stderr log** | `C:\Lottery Wiz\LOGS\service.log` |
+| **Stdout/Stderr log** | `C:\APPS\Lottery Wiz\LOGS\service.log` |
 | **Start type** | AUTO_START |
-| **Install** | `C:\Lottery Wiz\install_service.bat` (self-elevating) · remove via `uninstall_service.bat` |
+| **Install** | `C:\APPS\Lottery Wiz\install_service.bat` (self-elevating) · remove via `uninstall_service.bat` |
 | **Status** | ⏳ Pending install (run install_service.bat as admin) — added 2026-06-14 |
 | **Added** | 2026-06-14 |
 
@@ -552,12 +552,12 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Display name** | QI - CypherMiner UI (static build, port 7842) |
 | **Description** | Serves the CypherMiner production build (dist) on port 7842 for the Cloudflare tunnel. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
-| **Parameters** | `-m http.server 7842 --bind 127.0.0.1 --directory C:\CypherMiner\frontend\dist` |
-| **Working dir** | `C:\CypherMiner` |
+| **Parameters** | `-m http.server 7842 --bind 127.0.0.1 --directory C:\APPS\CypherMiner\frontend\dist` |
+| **Working dir** | `C:\APPS\CypherMiner` |
 | **Port** | 7842 |
-| **Stdout/Stderr log** | `C:\CypherMiner\LOGS\ui_service.log` |
+| **Stdout/Stderr log** | `C:\APPS\CypherMiner\LOGS\ui_service.log` |
 | **Start type** | AUTO_START |
-| **Install** | `C:\CypherMiner\TOOLS\setup_services.ps1` (run elevated; idempotent) |
+| **Install** | `C:\APPS\CypherMiner\TOOLS\setup_services.ps1` (run elevated; idempotent) |
 | **Status** | ✅ Live as of 2026-06-15 |
 | **Added** | 2026-06-15 |
 
@@ -583,15 +583,15 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Display name** | QI Kaze News Tunnel |
 | **Description** | Cloudflare quick tunnel exposing the Kaze news page (OC dashboard localhost:18800, routes `/ai-digest/` + `/news-digest/` — "Prepared via Kaze \| By Maia Quiddam") for phone/remote viewing. Part of OpenClaw. |
 | **Binary** | `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe` (wrapper → cloudflared) |
-| **Parameters** | `-NoProfile -ExecutionPolicy Bypass -File C:\OC\scripts\tunnel\kaze-news-tunnel.ps1` |
-| **Working dir** | `C:\OC` |
+| **Parameters** | `-NoProfile -ExecutionPolicy Bypass -File C:\APPS\OC\scripts\tunnel\kaze-news-tunnel.ps1` |
+| **Working dir** | `C:\APPS\OC` |
 | **Exposes port** | 18800 (OC dashboard / Kaze digest, served from WSL) |
-| **Stdout/Stderr log** | `C:\OC\runtime\logs\tunnel\service.out.log` / `service.err.log` (cloudflared output: `kaze-news-tunnel.out.log` / `.err.log`) |
-| **Current public URL** | `C:\OC\runtime\dashboard\news-tunnel-url.txt` + redirect page `news-tunnel.html` |
+| **Stdout/Stderr log** | `C:\APPS\OC\runtime\logs\tunnel\service.out.log` / `service.err.log` (cloudflared output: `kaze-news-tunnel.out.log` / `.err.log`) |
+| **Current public URL** | `C:\APPS\OC\runtime\dashboard\news-tunnel-url.txt` + redirect page `news-tunnel.html` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
-| **Install** | `C:\OC\scripts\tunnel\install-kaze-news-tunnel.bat` (run elevated) |
+| **Install** | `C:\APPS\OC\scripts\tunnel\install-kaze-news-tunnel.bat` (run elevated) |
 | **Note** | Quick tunnel → URL changes on each (re)start. Wrapper captures the new URL, writes it to `news-tunnel-url.txt` + `news-tunnel.html`, and pushes it to Telegram (Kaze's bot) on every start. For a stable custom hostname, switch to a named tunnel + a domain on the Cloudflare account. |
 | **Status** | ✅ Live as of 2026-06-17 |
 | **Added** | 2026-06-17 |
@@ -603,14 +603,14 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Description** | TubeScout - YouTube subscription news page + API (port 8503). |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `-m uvicorn api.main:app --host 127.0.0.1 --port 8503 --log-level warning` |
-| **Working dir** | `C:\TUBESCOUT` |
+| **Working dir** | `C:\APPS\TUBESCOUT` |
 | **Port** | 8503 |
-| **Stdout/Stderr log** | `C:\TUBESCOUT\data\logs\service.log` |
+| **Stdout/Stderr log** | `C:\APPS\TUBESCOUT\data\logs\service.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
-| **Install** | `C:\TUBESCOUT\tools\fix_services.ps1` (run elevated via gsudo; idempotent) |
-| **Note** | Reinstalled 2026-06-18 — **AppDirectory was wrong** (`C:\1-AI\APPS\PYTHON`), so `api.main` could not be imported and the service sat PAUSED. Corrected to `C:\TUBESCOUT`. The old logon-Startup `QI_TubeScout_Server.vbs` was disabled to stop a second uvicorn competing for :8503. |
+| **Install** | `C:\APPS\TUBESCOUT\tools\fix_services.ps1` (run elevated via gsudo; idempotent) |
+| **Note** | Reinstalled 2026-06-18 — **AppDirectory was wrong** (`C:\1-AI\APPS\PYTHON`), so `api.main` could not be imported and the service sat PAUSED. Corrected to `C:\APPS\TUBESCOUT`. The old logon-Startup `QI_TubeScout_Server.vbs` was disabled to stop a second uvicorn competing for :8503. |
 | **Status** | ✅ Live as of 2026-06-18 — health `{"status":"ok"}` |
 | **Added** | 2026-06-18 |
 
@@ -640,14 +640,14 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Description** | WC2026 betting dashboard data proxy + scoring + AI/Kalshi relay. Serves the app at http://localhost:8710/. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `server.py` |
-| **Working dir** | `C:\Gamez\proxy` |
+| **Working dir** | `C:\APPS\Gamez\proxy` |
 | **Port** | 8710 (Gamez block 8710-8719) |
-| **Stdout/Stderr log** | `C:\Gamez\proxy\LOGS\gamez_proxy_service.log` |
+| **Stdout/Stderr log** | `C:\APPS\Gamez\proxy\LOGS\gamez_proxy_service.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
-| **Install** | `C:\Gamez\proxy\install_service.bat` (double-click; self-elevates via UAC). Uninstall: `uninstall_service.bat`. |
-| **Note** | Proxy also serves WC2026.html at `/` so the app runs same-origin (no file:// CORS). Shares the OpenRouter key from `C:\QI\maia.db`. |
+| **Install** | `C:\APPS\Gamez\proxy\install_service.bat` (double-click; self-elevates via UAC). Uninstall: `uninstall_service.bat`. |
+| **Note** | Proxy also serves WC2026.html at `/` so the app runs same-origin (no file:// CORS). Shares the OpenRouter key from `C:\APPS\QI\maia.db`. |
 | **Status** | Registry entry added 2026-06-19; service install pending an elevated run of install_service.bat |
 | **Added** | 2026-06-19 |
 
@@ -658,13 +658,13 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Description** | WC2026 private 'Quant' AI persona side-service (Mr. Hyde). Serves /quant-persona on 127.0.0.1:8712 so the public proxy relays it ONLY while this service runs. The public face stays the sanitized 'Analyst' when this is stopped. |
 | **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
 | **Parameters** | `hyde_service.py` |
-| **Working dir** | `C:\Gamez\proxy` |
+| **Working dir** | `C:\APPS\Gamez\proxy` |
 | **Port** | 8712 (Gamez block 8710-8719; localhost-only, no tunnel) |
-| **Stdout/Stderr log** | `C:\Gamez\proxy\LOGS\hyde_service.log` |
+| **Stdout/Stderr log** | `C:\APPS\Gamez\proxy\LOGS\hyde_service.log` |
 | **Start type** | DEMAND_START (manual — OFF by default; this is the Hyde access switch) |
 | **Account** | LocalSystem |
 | **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
-| **Install** | `C:\Gamez\proxy\install_hyde_service.bat` (double-click; self-elevates via UAC). On/off: `start_hyde.bat` / `stop_hyde.bat`. No-service alternative: `run_hyde.bat`. |
+| **Install** | `C:\APPS\Gamez\proxy\install_hyde_service.bat` (double-click; self-elevates via UAC). On/off: `start_hyde.bat` / `stop_hyde.bat`. No-service alternative: `run_hyde.bat`. |
 | **Note** | The Jekyll/Hyde switch: typing `hyde` in the app fetches this persona via the public proxy's `/persona?mode=hyde`; stop this service and that 503s, so the public Analyst is the only reachable persona. Same public name (worldcup:8710); no new tunnel/hostname. |
 | **Status** | Registry entry added 2026-06-27; service install pending an elevated run of install_hyde_service.bat |
 | **Added** | 2026-06-27 |
@@ -697,7 +697,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
 | **Parameters** | `tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-m2v.yml run qi-m2v` |
 | **Working dir** | `C:\QIH\engine\tunnels` |
-| **Exposes port** | 7841 (M2V — NOT an NSSM service; launched via `C:\M2V\Start_M2V.bat` / `.venv\Scripts\python.exe main.py`) |
+| **Exposes port** | 7841 (M2V — NOT an NSSM service; launched via `C:\APPS\M2V\Start_M2V.bat` / `.venv\Scripts\python.exe main.py`) |
 | **Stdout/Stderr log** | `C:\QIH\engine\tunnels\LOGS\QI_M2VTunnel.{out,err}.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
@@ -708,28 +708,28 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 ### Claude Voice family (QI_ClaudeVoiceLine · QI_ClaudeVoiceTelegram · QI_ClaudeVoiceTunnel · QI_ClaudeVoiceControl)
 | Field | Value |
 |---|---|
-| **Project** | Claude Voice — `C:\CLAUDE\Claude Voice` (registry id `claude_voice`, port block 8720–8729) |
-| **QI_ClaudeVoiceLine** | LINE webhook bridge (text+voice) on **127.0.0.1:8721** — `python line_bot.py`, AppDir = project root, log `C:\CLAUDE\Claude Voice\LOGS\line_service.log` |
+| **Project** | Claude Voice — `C:\APPS\CLAUDE\Claude Voice` (registry id `claude_voice`, port block 8720–8729) |
+| **QI_ClaudeVoiceLine** | LINE webhook bridge (text+voice) on **127.0.0.1:8721** — `python line_bot.py`, AppDir = project root, log `C:\APPS\CLAUDE\Claude Voice\LOGS\line_service.log` |
 | **QI_ClaudeVoiceTelegram** | Telegram bridge, outbound long-poll only (no port) — `python telegram_bot.py`, log `...\LOGS\telegram_service.log` |
 | **QI_ClaudeVoiceTunnel** | STATIC NAMED tunnel `qi-claudevoice` → **https://claudevoice.quiddityinnovations.com** → :8721; config `C:\QIH\engine\tunnels\configs\qi-claudevoice.yml` |
 | **QI_ClaudeVoiceControl** | Brain control API + config UI on **127.0.0.1:8720** (loopback only, NEVER tunneled). Installed **2026-07-28** via QI_Elevate broker: whitelist requires the entry script under `C:\QIH`, so it runs launcher `C:\QIH\engine\launchers\claudevoice_control_launcher.py` (chdir + runpy → `server.py`). Log `C:\QIH\logs\claudevoice_control.log` |
 | **Related tasks** | `QI_ClaudeVoiceMeeting_8AM` (meeting room :8722, daily 08:00) · `QI_ClaudeVoiceBridgeCheck` (hourly bridge health → `data/bridge_health.json`) — see `QI_Scheduled_Tasks_Registry.md` |
 | **Health** | `http://localhost:8720/health` · `http://localhost:8720/bridge/health` · `https://claudevoice.quiddityinnovations.com/health` |
 | **Start type** | all AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` |
-| **Install** | `C:\CLAUDE\Claude Voice\ClaudeVoice_Install.bat` (elevated) — or per-service via QI_Elevate broker |
+| **Install** | `C:\APPS\CLAUDE\Claude Voice\ClaudeVoice_Install.bat` (elevated) — or per-service via QI_Elevate broker |
 | **Added** | Line/Telegram/Tunnel 2026-06-20 · Control 2026-07-28 (registry entry backfilled 2026-07-28) |
 
 ### QI Connector family (QI_ConnectorMCP · QI_ConnectorTunnel)
 | Field | Value |
 |---|---|
-| **Project** | QI Connector — `C:\QIP\Connector` (registry id `connector`, port 9030, QI Hive infra block 9000-9099) |
-| **QI_ConnectorMCP** | Remote MCP server (custom Claude connector) on **127.0.0.1:9030** — `C:\1-AI\APPS\PYTHON\python.exe C:\QIP\Connector\api\main.py`, AppDir `C:\QIP\Connector`, logs `C:\QIP\Connector\data\logs\service_std{out,err}.log` + app log `connector.log` |
+| **Project** | QI Connector — `C:\APPS\QIP\Connector` (registry id `connector`, port 9030, QI Hive infra block 9000-9099) |
+| **QI_ConnectorMCP** | Remote MCP server (custom Claude connector) on **127.0.0.1:9030** — `C:\1-AI\APPS\PYTHON\python.exe C:\APPS\QIP\Connector\api\main.py`, AppDir `C:\APPS\QIP\Connector`, logs `C:\APPS\QIP\Connector\data\logs\service_std{out,err}.log` + app log `connector.log` |
 | **QI_ConnectorTunnel** | STATIC NAMED tunnel `qi-connector` → **https://connector.quiddityinnovations.com** → :9030; config `C:\QIH\engine\tunnels\configs\qi-connector.yml` |
 | **Purpose** | One custom connector for Claude on ALL surfaces (claude.ai web/mobile, Desktop, Claude Code) instead of per-machine MCP config. Tools: Brain memory/context/decisions, registry lookup, service status, public URLs |
-| **Auth** | `/mcp` = bearer token; `/c/<path-token>/mcp` = capability URL (claude.ai). Secrets in `C:\QIP\Connector\secrets\` (gitignored). 401 without token |
+| **Auth** | `/mcp` = bearer token; `/c/<path-token>/mcp` = capability URL (claude.ai). Secrets in `C:\APPS\QIP\Connector\secrets\` (gitignored). 401 without token |
 | **Health** | `http://localhost:9030/health` · `https://connector.quiddityinnovations.com/health` |
 | **Symptom lookup** | Public URL dead → QI_ConnectorTunnel; 401 with saved token → token file regenerated, re-copy from secrets\CONNECTOR_URLS.txt; "Brain API unreachable" in tool results → QI_BrainAPI :9011 down (registry tools still work) |
-| **Smoke test** | `python C:\QIP\Connector\tools\smoke_test.py [public-url]` |
+| **Smoke test** | `python C:\APPS\QIP\Connector\tools\smoke_test.py [public-url]` |
 | **Docs** | `C:\QIH\shared\documentation\guides\QI_Connector_Guide.md` |
 | **Start type** | both AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` |
 | **Added** | 2026-07-30 — installed entirely via QI_Elevate broker (first service proving the `nssm_install_qi` whitelist rule) |
@@ -737,11 +737,11 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 ### QI_MapSnapMCP (MapSnap MCP Gateway — Phase 2)
 | Field | Value |
 |---|---|
-| **Project** | MapSnap — `C:\MapSnap` (registry id `mapsnap`); gateway port **8651** (MapSnap family block) |
-| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_mcp_launcher.py` → reusable `C:\QIH\engine\common\qi_mcp_gateway.py` with config `C:\MapSnap\config\mcp_gateway.json` |
+| **Project** | MapSnap — `C:\APPS\MapSnap` (registry id `mapsnap`); gateway port **8651** (MapSnap family block) |
+| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_mcp_launcher.py` → reusable `C:\QIH\engine\common\qi_mcp_gateway.py` with config `C:\APPS\MapSnap\config\mcp_gateway.json` |
 | **Purpose** | Standalone MCP server for MapSnap (profiles/schema/ask; table_data via config flag). Config-driven: enabled/bind/port/auth/tools are all settings. BU mode = bind LAN in config |
-| **Auth (inbound)** | bearer + capability URL; tokens in `C:\MapSnap\config\secrets\` |
-| **Auth (to MapSnap)** | service token — `C:\MapSnap\Application\service_tokens.json` entry `qi_gateway` (viewer role); MapSnap validates via `auth.service_token_from_header` |
+| **Auth (inbound)** | bearer + capability URL; tokens in `C:\APPS\MapSnap\config\secrets\` |
+| **Auth (to MapSnap)** | service token — `C:\APPS\MapSnap\Application\service_tokens.json` entry `qi_gateway` (viewer role); MapSnap validates via `auth.service_token_from_header` |
 | **Logs** | `C:\QIH\logs\mapsnap_mcp.log` / `.err.log` |
 | **Health** | `http://127.0.0.1:8651/health` |
 | **Start type** | AUTO_START · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
@@ -750,10 +750,10 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 ### QI_MapSnapMCPBU (MapSnap BU Edition MCP Gateway)
 | Field | Value |
 |---|---|
-| **Project** | MapSnap BU Edition — `C:\MapSnap` (registry id `mapsnap`); gateway port **8652** (MapSnap family block; 8651 = main gateway, untouched) |
-| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_mcp_bu_launcher.py` → SHIPPED `C:\MapSnap\tools\qi_mcp_gateway.py` (relative-path + deploy.json support) with config `C:\MapSnap\config\mcp_gateway_bu.json` (bind/port from `config\deploy.json`) |
+| **Project** | MapSnap BU Edition — `C:\APPS\MapSnap` (registry id `mapsnap`); gateway port **8652** (MapSnap family block; 8651 = main gateway, untouched) |
+| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_mcp_bu_launcher.py` → SHIPPED `C:\APPS\MapSnap\tools\qi_mcp_gateway.py` (relative-path + deploy.json support) with config `C:\APPS\MapSnap\config\mcp_gateway_bu.json` (bind/port from `config\deploy.json`) |
 | **Purpose** | BU Edition MCP gateway: tools profiles/schema/ask, **table_data OFF** (egress guardrail). Loopback-only in both deploy modes. Used by the BU Claude account |
-| **Auth (inbound)** | bearer only; tokens in `C:\MapSnap\config\secrets_bu\` |
+| **Auth (inbound)** | bearer only; tokens in `C:\APPS\MapSnap\config\secrets_bu\` |
 | **Auth (to MapSnap)** | service token — `service_tokens.json` entry `bu_mcp_gateway` (viewer); kill-switch: set its `enabled:false` (no restart) |
 | **Logs** | `C:\QIH\logs\qi_mapsnap_mcp_bu.log` / `.err.log` |
 | **Health** | `http://127.0.0.1:8652/health` |
@@ -764,7 +764,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | Field | Value |
 |---|---|
 | **Project** | MapSnap BU Edition — dev-machine utility only (NOT shipped) |
-| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_bu_iis_runner.py` → executes `C:\MapSnap\kit\setup_iis.ps1` elevated with args from `C:\QIH\engine\launchers\mapsnap_bu_iis_args.txt` |
+| **Runs** | `C:\1-AI\APPS\PYTHON\python.exe C:\QIH\engine\launchers\mapsnap_bu_iis_runner.py` → executes `C:\APPS\MapSnap\kit\setup_iis.ps1` elevated with args from `C:\QIH\engine\launchers\mapsnap_bu_iis_args.txt` |
 | **Purpose** | Runs the BU kit's IIS setup/uninstall elevated (SYSTEM) without UAC. Trigger: touch/write the args file, then start/restart the service; read `C:\QIH\logs\mapsnap_bu_iis_setup.log`, then stop the service. Runs once per args-file change (marker: `mapsnap_bu_iis_setup.done`), then idles |
 | **Logs** | `C:\QIH\logs\mapsnap_bu_iis_setup.log` (script output) · `qi_mapsnap_bu_setup_svc.log` (service) |
 | **Start type** | **DEMAND_START** (never auto-runs) · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |

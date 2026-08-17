@@ -1,13 +1,13 @@
 # QI Hermes Leverage Playbook
 
 **Quiddity Innovations · 2026-07-06 · Owner: Renne Santiago**
-**Decision context:** Hermes-vs-OpenClaw bake-off (smoke 10/10, `C:\QIP\Bakeoff`) → verdict **coexist / cherry-pick**. OpenClaw stays the channel-facing multi-agent fabric; Hermes becomes the **scripted intelligence lane** (fast, stateless `hermes -z` in pipelines).
+**Decision context:** Hermes-vs-OpenClaw bake-off (smoke 10/10, `C:\APPS\QIP\Bakeoff`) → verdict **coexist / cherry-pick**. OpenClaw stays the channel-facing multi-agent fabric; Hermes becomes the **scripted intelligence lane** (fast, stateless `hermes -z` in pipelines).
 
 ---
 
 ## 📊 Full bake-off results (2026-07-07) — same gpt-oss-20b brain both sides
 
-Full report: `C:\QIP\Bakeoff\results\RESULTS_2026-07-07.md`. Data valid after fixing a Hermes-runner locator bug (it had silently returned empty → false zeros) and re-running the Hermes half.
+Full report: `C:\APPS\QIP\Bakeoff\results\RESULTS_2026-07-07.md`. Data valid after fixing a Hermes-runner locator bug (it had silently returned empty → false zeros) and re-running the Hermes half.
 
 | Task | Hermes | OpenClaw |
 |---|---|---|
@@ -92,15 +92,15 @@ Bake-off and Ask-Hermes are `-t`-scoped, so this trim never affected them.
 | Hermes skills (learning) | `%LOCALAPPDATA%\hermes\skills\` |
 | Hermes session logs | `%LOCALAPPDATA%\hermes\logs\`, `sessions\` |
 | Hermes health | `hermes doctor` |
-| Bake-off rig | `C:\QIP\Bakeoff` — `bakeoff.py`, `bakeoff.yaml`, `setup_bakeoff.ps1 -Mode Install|Verify|Undo` |
-| One master log | `C:\QIP\Bakeoff\logs\bakeoff_master.log` |
-| Tool-use audit trail | `C:\QIP\Bakeoff\logs\domain_mcp_calls.log` (one JSON line per REAL tool call) |
-| Results | `C:\QIP\Bakeoff\results\results.csv` / `.json` |
+| Bake-off rig | `C:\APPS\QIP\Bakeoff` — `bakeoff.py`, `bakeoff.yaml`, `setup_bakeoff.ps1 -Mode Install|Verify|Undo` |
+| One master log | `C:\APPS\QIP\Bakeoff\logs\bakeoff_master.log` |
+| Tool-use audit trail | `C:\APPS\QIP\Bakeoff\logs\domain_mcp_calls.log` (one JSON line per REAL tool call) |
+| Results | `C:\APPS\QIP\Bakeoff\results\results.csv` / `.json` |
 | Batch runner | `C:\Users\renne\AppData\Local\hermes\hermes-agent\batch_runner.py` (config examples: `datagen-config-examples\` next to it) |
 | **Ask-Hermes helper** | `C:\QIH\tools\Ask-Hermes.ps1` — scoped NL query to Brain / Maia-DB / domain (auto-picks the right model) |
 | Brain MCP server | `C:\QIH\engine\brain\mcp.py` (API on `:9011`) |
-| Maia DB MCP | `C:\1-AI\APPS\PYTHON\Scripts\mcp-server-sqlite.exe --db-path C:\QI\maia.db` |
-| Self-audit lane | `C:\CLAUDE\Tools\qi_self_audit.py` + `Run-Monthly-SelfAudit.ps1`, task `QI_ClaudeSelfAudit` (last Friday 09:00) |
+| Maia DB MCP | `C:\1-AI\APPS\PYTHON\Scripts\mcp-server-sqlite.exe --db-path C:\APPS\QI\maia.db` |
+| Self-audit lane | `C:\APPS\CLAUDE\Tools\qi_self_audit.py` + `Run-Monthly-SelfAudit.ps1`, task `QI_ClaudeSelfAudit` (last Friday 09:00) |
 | OpenClaw (untouched) | WSL Ubuntu-24.04 → `openclaw …`; bake-off session id `qi-bakeoff` |
 | Ollama | `http://127.0.0.1:11434` (`ollama list`) |
 
@@ -109,7 +109,7 @@ Bake-off and Ask-Hermes are `-t`-scoped, so this trim never affected them.
 ## Step 1 — Run the full bake-off and score it (first, before expanding anything)
 
 ```powershell
-cd C:\QIP\Bakeoff
+cd C:\APPS\QIP\Bakeoff
 .venv\Scripts\python.exe bakeoff.py          # all 3 tasks × repeats, both runners (~30–45 min)
 ```
 
@@ -144,7 +144,7 @@ Start with the monthly self-audit (best candidate: repetitive, text-in/text-out,
 **Pattern — Hermes composes, OpenClaw/Tasuke still delivers:**
 
 ```powershell
-# Inside Run-Monthly-SelfAudit.ps1 (C:\CLAUDE\Tools), after findings are collected:
+# Inside Run-Monthly-SelfAudit.ps1 (C:\APPS\CLAUDE\Tools), after findings are collected:
 $findings = Get-Content C:\QIH\logs\selfaudit_findings.txt -Raw
 $digest = & hermes -z "You are the QI ops analyst. Summarize these self-audit findings, rank by risk (high/med/low), and flag anything NEW versus a typical month. Max 15 lines, plain text:`n$findings"
 # hand $digest to the existing Tasuke LINE push — delivery path unchanged
@@ -165,7 +165,7 @@ Brain + Maia-DB are **already registered** (see the "Configured 2026-07-06" sect
 
 ```powershell
 echo Y | hermes mcp add brain   --command C:\1-AI\APPS\PYTHON\python.exe --args C:\QIH\engine\brain\mcp.py
-echo Y | hermes mcp add maia-db --command C:\1-AI\APPS\PYTHON\Scripts\mcp-server-sqlite.exe --args --db-path C:\QI\maia.db
+echo Y | hermes mcp add maia-db --command C:\1-AI\APPS\PYTHON\Scripts\mcp-server-sqlite.exe --args --db-path C:\APPS\QI\maia.db
 hermes mcp list        # domain (bake-off) + brain + maia-db, all ✓ enabled
 ```
 
@@ -200,7 +200,7 @@ Schedule via Task Scheduler in the overnight window; log to one file per job (QI
 
 ## Step 6 — Expansion protocol: measure before promoting
 
-Before Hermes takes over ANY new lane, add that lane as a task in `C:\QIP\Bakeoff\bakeoff.yaml` and run it — the rig is a permanent measurement instrument, not a one-shot:
+Before Hermes takes over ANY new lane, add that lane as a task in `C:\APPS\QIP\Bakeoff\bakeoff.yaml` and run it — the rig is a permanent measurement instrument, not a one-shot:
 
 ```yaml
   - id: selfaudit_digest            # example new task
@@ -242,4 +242,4 @@ Before Hermes takes over ANY new lane, add that lane as a task in `C:\QIP\Bakeof
 | 5 | Step 5: one overnight batch trial | Job log shows completion in the GPU window |
 | 7 | Step 2: skills check + verdict | `skills\` inspected; decide lane #2 or hold |
 
-**Rollback at any point:** `powershell -ExecutionPolicy Bypass -File C:\QIP\Bakeoff\setup_bakeoff.ps1 -Mode Undo` — removes Hermes + venv + project, leaves OpenClaw exactly as it was.
+**Rollback at any point:** `powershell -ExecutionPolicy Bypass -File C:\APPS\QIP\Bakeoff\setup_bakeoff.ps1 -Mode Undo` — removes Hermes + venv + project, leaves OpenClaw exactly as it was.

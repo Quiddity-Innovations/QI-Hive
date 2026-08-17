@@ -38,9 +38,9 @@ hooks:
 | project_id | Path | Purpose |
 |---|---|---|
 | autopdf | C:\Users\renne\Downloads\AUTOPDF | PDF toolkit on :6969, local-only, Smart Mapping AI via Ollama |
-| cognibase | C:\CogniBase | OnBase mirror + AI correlation (M18/M25/Portability shipped) |
-| mapsnap | C:\MapSnap | Jenzabar schema browser on :9876 |
-| mq | C:\MQ | Maia Quiddam — Phase 0 scaffolding, blocked on Meta credentials |
+| cognibase | C:\APPS\CogniBase | OnBase mirror + AI correlation (M18/M25/Portability shipped) |
+| mapsnap | C:\APPS\MapSnap | Jenzabar schema browser on :9876 |
+| mq | C:\APPS\MQ | Maia Quiddam — Phase 0 scaffolding, blocked on Meta credentials |
 | qi_hive | C:\QIH | Explicit self-entry for the orchestration layer |
 
 ### 4. Three new NSSM services registered

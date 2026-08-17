@@ -26,7 +26,11 @@ from pathlib import Path
 # Windows detail 1: MCP mandates UTF-8; Windows consoles default to cp1252, so a
 # single non-ASCII byte (an em-dash in a project name — this registry has many)
 # would raise mid-write and kill the server.
-for _stream in (sys.stdin, sys.stdout):
+# stderr is in this list too (added 2026-08-09 with the _log() diagnostics
+# below): it defaults to cp1252 on Windows, so a single em-dash in a log line
+# is written as byte 0x97 and every UTF-8 reader of the log — including
+# Claude Desktop's capture — fails to decode it.
+for _stream in (sys.stdin, sys.stdout, sys.stderr):
     try:
         _stream.reconfigure(encoding="utf-8", newline="\n")
     except (AttributeError, ValueError):
@@ -284,19 +288,72 @@ def handle(msg: dict):
     return _error(msg_id, -32601, f"method not found: {method}")
 
 
+def _log(text: str) -> None:
+    """
+    Diagnostics go to stderr, which Claude Desktop captures into
+    %APPDATA%\\Claude\\logs\\mcp-server-qi-registry.log.
+
+    Added 2026-08-09 after a silent disconnect: the server had run cleanly for
+    five hours, then stdin closed and the process exited with no output at all,
+    leaving Desktop's generic "Server disconnected" toast as the only evidence.
+    Desktop's own log even prompts for this ("add output to stderr ... and it
+    will appear in this log").
+
+    Never write diagnostics to stdout — that channel carries JSON-RPC frames and
+    any stray text corrupts the protocol.
+    """
+    try:
+        print(f"[qi-registry] {text}", file=sys.stderr, flush=True)
+    except Exception:
+        pass
+
+
 def main():
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            msg = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        reply = handle(msg)
-        if reply is not None:
-            sys.stdout.write(json.dumps(reply, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
+    # Log lines stay ASCII-only: belt and braces alongside the stderr
+    # reconfigure above, so diagnostics survive even if reconfigure() failed.
+    _log(f"started: python={sys.executable} registry={REGISTRY_JSON}")
+    handled = 0
+    try:
+        for line in sys.stdin:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                msg = json.loads(line)
+            except json.JSONDecodeError:
+                _log(f"skipped unparseable line ({len(line)} chars)")
+                continue
+            try:
+                reply = handle(msg)
+            except Exception as exc:
+                # handle() already guards tool bodies; this catches protocol-level
+                # bugs so one bad frame can't take the whole server down.
+                _log(f"handle() raised on method={msg.get('method')!r}: "
+                     f"{type(exc).__name__}: {exc}")
+                if msg.get("id") is not None:
+                    reply = _error(msg.get("id"), -32603, f"internal error: {exc}")
+                else:
+                    continue
+            if reply is not None:
+                try:
+                    sys.stdout.write(json.dumps(reply, ensure_ascii=False, default=str) + "\n")
+                    sys.stdout.flush()
+                except Exception as exc:
+                    _log(f"FATAL: cannot write to stdout ({type(exc).__name__}: {exc}) - "
+                         f"client is gone, exiting")
+                    return
+            handled += 1
+    except KeyboardInterrupt:
+        _log("interrupted")
+    except Exception as exc:
+        _log(f"FATAL: read loop crashed: {type(exc).__name__}: {exc}")
+        raise
+    finally:
+        # A clean exit here means stdin reached EOF: the client closed the pipe.
+        # Normal on shutdown, and also what a dropped transport looks like.
+        # Claude Desktop does NOT relaunch a stdio server — fully quit and
+        # reopen Desktop to respawn it.
+        _log(f"stdin closed after {handled} message(s) - exiting")
 
 
 if __name__ == "__main__":

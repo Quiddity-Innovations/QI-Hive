@@ -1,0 +1,388 @@
+2026-08-16T19:45:28-04:00 [START] setup-synvox -> Setup-SynVox.ps1 args=[]
+??# : The term '??#' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At C:\QIH\dispatch\scripts\Setup-SynVox.ps1:1 char:1
++ ??# ============================================================
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (??#:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+2026-08-16 19:45:29 [INFO] ====================================================
+2026-08-16 19:45:29 [INFO]   SynVox Phase 0 bootstrap - MatrAIx engine
+2026-08-16 19:45:29 [INFO]   Machine: POWERSPEC   User: POWERSPEC$
+2026-08-16 19:45:29 [INFO]   Project: C:\APPS\SynVox
+2026-08-16 19:45:29 [INFO]   Master log: C:\APPS\SynVox\logs\synvox_phase0_20260816_194529.log
+2026-08-16 19:45:29 [INFO] ====================================================
+2026-08-16 19:45:29 [INFO] STEP START : Ensure Git
+2026-08-16 19:45:29 [INFO]     git version 2.55.0.windows.1
+2026-08-16 19:45:29 [OK  ] STEP SUCCESS : Ensure Git
+2026-08-16 19:45:29 [INFO] STEP START : Ensure uv
+2026-08-16 19:45:32 [INFO]     uv 0.12.5 (210d1f678 2026-08-14 x86_64-pc-windows-msvc)
+2026-08-16 19:45:32 [OK  ] STEP SUCCESS : Ensure uv
+2026-08-16 19:45:32 [INFO] STEP START : Ensure Python 3.12
+2026-08-16 19:45:32 [INFO]     warning: Failed to install executable for cpython-3.12.14-windows-x86_64-none
+2026-08-16 19:45:32 [INFO]       Caused by: Executable already exists at `C:\WINDOWS\system32\config\systemprofile\.local\bin\python3.12.exe` but is not managed by uv; use `--force` to replace it
+2026-08-16 19:45:32 [INFO]     C:\QIH\shared\uv\python\cpython-3.12-windows-x86_64-none\python.exe
+2026-08-16 19:45:32 [OK  ] STEP SUCCESS : Ensure Python 3.12
+2026-08-16 19:45:32 [INFO] STEP START : Ensure Node.js 20+
+2026-08-16 19:45:32 [INFO] Found Node 24.14.1
+2026-08-16 19:45:32 [OK  ] STEP SUCCESS : Ensure Node.js 20+
+2026-08-16 19:45:32 [INFO] STEP START : Check Docker (check only - never installed by this script)
+2026-08-16 19:45:32 [WARN] Docker Desktop NOT installed (needs WSL2). Install from docker.com. Smoke test will be SKIPPED.
+2026-08-16 19:45:32 [OK  ] STEP SUCCESS : Check Docker (check only - never installed by this script)
+2026-08-16 19:45:32 [INFO] STEP START : Clone or update MatrAIx repo
+2026-08-16 19:45:32 [INFO] Repo already present - pulling
+2026-08-16 19:45:33 [INFO]     From https://github.com/MatrAIx-ai/MatrAIx-Persona-8B
+2026-08-16 19:45:33 [INFO]        2b27860..e4b80ae  main       -> origin/main
+2026-08-16 19:45:33 [INFO]      * [new branch]      docs/readme-two-lane-smoke -> origin/docs/readme-two-lane-smoke
+2026-08-16 19:45:33 [INFO]      * [new branch]      docs/readme-two-lane-smoke-v2 -> origin/docs/readme-two-lane-smoke-v2
+2026-08-16 19:45:33 [INFO]     Updating 2b27860..e4b80ae
+2026-08-16 19:45:33 [INFO]     Fast-forward
+2026-08-16 19:45:33 [INFO]      .gitignore                                         |    7 +
+2026-08-16 19:45:33 [INFO]      README.md                                          |   34 +-
+2026-08-16 19:45:33 [INFO]      .../backend/service/harbor_job_service.py          |   19 +-
+2026-08-16 19:45:33 [INFO]      .../backend/service/harbor_trial_debrief.py        |   68 +-
+2026-08-16 19:45:33 [INFO]      .../playground/backend/service/llm_usage_view.py   |  197 ++++
+2026-08-16 19:45:33 [INFO]      .../playground/backend/service/report_pdf.py       |   36 +
+2026-08-16 19:45:33 [INFO]      .../playground/backend/service/survey_types.py     |    6 +-
+2026-08-16 19:45:33 [INFO]      .../backend/tests/test_harbor_chat_eval.py         |   12 +-
+2026-08-16 19:45:33 [INFO]      .../backend/tests/test_harbor_trial_debrief.py     |   57 ++
+2026-08-16 19:45:33 [INFO]      .../backend/tests/test_llm_usage_view.py           |   87 ++
+2026-08-16 19:45:33 [INFO]      .../playground/backend/tests/test_report_pdf.py    |   17 +
+2026-08-16 19:45:33 [INFO]      .../frontend/src/components/HarborJobDetail.tsx    |   58 +-
+2026-08-16 19:45:33 [INFO]      .../frontend/src/components/RunDetail.tsx          |   21 +-
+2026-08-16 19:45:33 [INFO]      .../frontend/src/components/runsShared.tsx         |    2 +
+2026-08-16 19:45:33 [INFO]      .../frontend/src/lib/exportBatchReportPdf.ts       |    4 +
+2026-08-16 19:45:33 [INFO]      .../playground/frontend/src/lib/llmUsage.ts        |  181 ++++
+2026-08-16 19:45:33 [INFO]      application/scripts/generate_application_job.py    |   60 +-
+2026-08-16 19:45:33 [INFO]      apps/viewer/app/routes/home.tsx                    |    4 +-
+2026-08-16 19:45:33 [INFO]      apps/viewer/app/routes/task.tsx                    |    2 +-
+2026-08-16 19:45:33 [INFO]      apps/viewer/app/routes/trial.tsx                   |    2 +-
+2026-08-16 19:45:33 [INFO]      docs/application/README.md                         |    2 +-
+2026-08-16 19:45:33 [INFO]      docs/application/task-guide.md                     |   10 +-
+2026-08-16 19:45:33 [INFO]      docs/configuration.md                              |   26 +-
+2026-08-16 19:45:33 [INFO]      docs/environment/README.md                         |    5 +-
+2026-08-16 19:45:33 [INFO]      docs/environment/agents.md                         |    6 +-
+2026-08-16 19:45:33 [INFO]      docs/environment/large-scale-runs.md               |    2 +-
+2026-08-16 19:45:33 [INFO]      docs/environment/runtime.md                        |    2 +-
+2026-08-16 19:45:33 [INFO]      docs/environment/web-interaction.md                |   16 +-
+2026-08-16 19:45:33 [INFO]      docs/i18n/README.es.md                             |   18 +-
+2026-08-16 19:45:33 [INFO]      docs/i18n/README.ja.md                             |   17 +-
+2026-08-16 19:45:33 [INFO]      docs/i18n/README.ko.md                             |   17 +-
+2026-08-16 19:45:33 [INFO]      docs/i18n/README.pt-BR.md                          |   18 +-
+2026-08-16 19:45:33 [INFO]      docs/i18n/README.zh-CN.md                          |   17 +-
+2026-08-16 19:45:33 [INFO]      docs/i18n/README.zh-TW.md                          |   17 +-
+2026-08-16 19:45:33 [INFO]      docs/packages.md                                   |    6 +-
+2026-08-16 19:45:33 [INFO]      docs/persona/README.md                             |    2 +-
+2026-08-16 19:45:33 [INFO]      docs/quickstart.md                                 |  107 +-
+2026-08-16 19:45:33 [INFO]      .../agents/matraix/agents/persona/json_survey.py   |   17 +-
+2026-08-16 19:45:33 [INFO]      .../agents/matraix/agents/persona/user_sim.py      |    7 +-
+2026-08-16 19:45:33 [INFO]      packages/playground/src/playground/budget.py       |  102 ++
+2026-08-16 19:45:33 [INFO]      .../playground/src/playground/harbor/chat_eval.py  |    4 +
+2026-08-16 19:45:33 [INFO]      .../src/playground/inprocess/survey_eval.py        |   26 +-
+2026-08-16 19:45:33 [INFO]      packages/playground/src/playground/llm_usage.py    |  281 +++++
+2026-08-16 19:45:33 [INFO]      packages/playground/src/playground/model_client.py |   13 +-
+2026-08-16 19:45:33 [INFO]      .../playground/src/playground/openai_client.py     |   13 +-
+2026-08-16 19:45:33 [INFO]      .../src/playground/self_report_runtime.py          |   27 +-
+2026-08-16 19:45:33 [INFO]      .../src/playground/tests/test_openai_client.py     |   21 +
+2026-08-16 19:45:33 [INFO]      packages/playground/src/playground/types.py        |    6 +-
+2026-08-16 19:45:33 [INFO]      .../playground/src/playground/user_sim/runner.py   |   60 +-
+2026-08-16 19:45:33 [INFO]      .../src/playground/user_sim/self_report.py         |   26 +-
+2026-08-16 19:45:33 [INFO]      .../src/playground/user_sim/tool_client.py         |   33 +-
+2026-08-16 19:45:33 [INFO]      .../existing_data/manifests/ndhs_ph_2022.json      |   13 +
+2026-08-16 19:45:33 [INFO]      .../existing_data/manifests/psa_census_puf.json    |   12 +
+2026-08-16 19:45:33 [INFO]      .../manifests/wvs_wave7_philippines.json           |   12 +
+2026-08-16 19:45:33 [INFO]      .../existing_data/philippines/DOWNLOAD_RUNBOOK.md  |  172 ++++
+2026-08-16 19:45:33 [INFO]      .../philippines/persona_strategy.json              |   27 +
+2026-08-16 19:45:33 [INFO]      .../existing_data/philippines/targets_ph.json      |   78 ++
+2026-08-16 19:45:33 [INFO]      persona/curation/existing_data/raw/.gitkeep        |    0
+2026-08-16 19:45:33 [INFO]      .../samples/philippines/ndhs_ph_sample.jsonl       |    3 +
+2026-08-16 19:45:33 [INFO]      .../samples/philippines/psa_ph_sample.jsonl        |    3 +
+2026-08-16 19:45:33 [INFO]      .../samples/philippines/wvs_ph_sample.jsonl        |    3 +
+2026-08-16 19:45:33 [INFO]      .../existing_data/scripts/crosswalk_engine.py      |   59 +-
+2026-08-16 19:45:33 [INFO]      .../existing_data/scripts/crosswalks/ndhs_ph.py    |  617 +++++++++++
+2026-08-16 19:45:33 [INFO]      .../existing_data/scripts/crosswalks/psa_ph.py     |  635 ++++++++++++
+2026-08-16 19:45:33 [INFO]      .../existing_data/scripts/crosswalks/wvs_ph.py     |  714 +++++++++++++
+2026-08-16 19:45:33 [INFO]      .../existing_data/scripts/derive_targets_ph.py     |  184 ++++
+2026-08-16 19:45:33 [INFO]      .../existing_data/scripts/fetch_sources.py         |    3 +
+2026-08-16 19:45:33 [INFO]      .../existing_data/scripts/microdata_to_jsonl.py    |  408 ++++++++
+2026-08-16 19:45:33 [INFO]      pyproject.toml                                     |    1 +
+2026-08-16 19:45:33 [INFO]      src/matraix/cli.py                                 |  374 +++++++
+2026-08-16 19:45:33 [INFO]      src/matraix/job_results.py                         | 1071 ++++++++++++++++++++
+2026-08-16 19:45:33 [INFO]      src/matraix/launch_env.py                          |   75 ++
+2026-08-16 19:45:33 [INFO]      src/matraix/provider_credentials.py                |   78 ++
+2026-08-16 19:45:33 [INFO]      src/matraix/smoke.py                               |  427 ++++++++
+2026-08-16 19:45:33 [INFO]      .../environment/test_harbor_runtime_foundation.py  |    1 +
+2026-08-16 19:45:33 [INFO]      .../existing_data/test_philippines_crosswalks.py   |  186 ++++
+2026-08-16 19:45:33 [INFO]      .../application/test_generate_application_job.py   |    9 +
+2026-08-16 19:45:33 [INFO]      tests/unit/matraix/test_job_results.py             |  305 ++++++
+2026-08-16 19:45:33 [INFO]      tests/unit/matraix/test_launch_env.py              |   67 ++
+2026-08-16 19:45:33 [INFO]      tests/unit/matraix/test_matraix_cli.py             |  265 +++++
+2026-08-16 19:45:33 [INFO]      tests/unit/matraix/test_provider_credentials.py    |   34 +
+2026-08-16 19:45:33 [INFO]      tests/unit/matraix/test_smoke.py                   |   69 ++
+2026-08-16 19:45:33 [INFO]      .../unit/playground_core/test_llm_usage_budget.py  |  119 +++
+2026-08-16 19:45:33 [INFO]      83 files changed, 7636 insertions(+), 186 deletions(-)
+2026-08-16 19:45:33 [INFO]      create mode 100644 application/playground/backend/service/llm_usage_view.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 application/playground/backend/tests/test_llm_usage_view.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 application/playground/frontend/src/lib/llmUsage.ts
+2026-08-16 19:45:33 [INFO]      create mode 100644 packages/playground/src/playground/budget.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 packages/playground/src/playground/llm_usage.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/manifests/ndhs_ph_2022.json
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/manifests/psa_census_puf.json
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/manifests/wvs_wave7_philippines.json
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/philippines/DOWNLOAD_RUNBOOK.md
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/philippines/persona_strategy.json
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/philippines/targets_ph.json
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/raw/.gitkeep
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/samples/philippines/ndhs_ph_sample.jsonl
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/samples/philippines/psa_ph_sample.jsonl
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/samples/philippines/wvs_ph_sample.jsonl
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/scripts/crosswalks/ndhs_ph.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/scripts/crosswalks/psa_ph.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/scripts/crosswalks/wvs_ph.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/scripts/derive_targets_ph.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 persona/curation/existing_data/scripts/microdata_to_jsonl.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 src/matraix/cli.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 src/matraix/job_results.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 src/matraix/launch_env.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 src/matraix/provider_credentials.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 src/matraix/smoke.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 tests/persona/curation/existing_data/test_philippines_crosswalks.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 tests/unit/matraix/test_job_results.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 tests/unit/matraix/test_launch_env.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 tests/unit/matraix/test_matraix_cli.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 tests/unit/matraix/test_provider_credentials.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 tests/unit/matraix/test_smoke.py
+2026-08-16 19:45:33 [INFO]      create mode 100644 tests/unit/playground_core/test_llm_usage_budget.py
+2026-08-16 19:45:33 [OK  ] STEP SUCCESS : Clone or update MatrAIx repo
+2026-08-16 19:45:33 [INFO] STEP START : Create or repair uv venv (Python 3.12)
+2026-08-16 19:45:34 [INFO]     No Python at '"C:\Users\renne\AppData\Roaming\uv\python\cpython-3.12.13-windows-x86_64-none\python.exe'
+2026-08-16 19:45:34 [WARN] Existing .venv cannot run (broken interpreter link) - recreating with --clear
+2026-08-16 19:45:34 [INFO]     Using CPython 3.12.14
+2026-08-16 19:45:34 [INFO]     Creating virtual environment at: .venv
+2026-08-16 19:45:36 [INFO]     Activate with: .venv\Scripts\activate
+2026-08-16 19:45:36 [INFO] Granted BUILTIN\Users modify rights on C:\APPS\SynVox\engine\matraix\.venv (created as SYSTEM)
+2026-08-16 19:45:36 [OK  ] STEP SUCCESS : Create or repair uv venv (Python 3.12)
+2026-08-16 19:45:36 [INFO] STEP START : Sync MatrAIx project environment from uv.lock
+2026-08-16 19:45:36 [INFO]     Resolved 215 packages in 1ms
+2026-08-16 19:45:36 [INFO]        Building matraix @ file:///C:/APPS/SynVox/engine/matraix
+2026-08-16 19:45:37 [INFO]     Downloading claude-agent-sdk (72.0MiB)
+2026-08-16 19:45:37 [INFO]     Downloading pygments (1.2MiB)
+2026-08-16 19:45:37 [INFO]     Downloading openai (1.3MiB)
+2026-08-16 19:45:37 [INFO]     Downloading pandas (9.3MiB)
+2026-08-16 19:45:37 [INFO]     Downloading pyarrow (26.1MiB)
+2026-08-16 19:45:37 [INFO]     Downloading hf-xet (3.8MiB)
+2026-08-16 19:45:37 [INFO]     Downloading pydantic-core (2.0MiB)
+2026-08-16 19:45:37 [INFO]     Downloading pywin32 (6.6MiB)
+2026-08-16 19:45:37 [INFO]     Downloading ruff (11.4MiB)
+2026-08-16 19:45:37 [INFO]     Downloading numpy (11.8MiB)
+2026-08-16 19:45:37 [INFO]     Downloading tokenizers (2.6MiB)
+2026-08-16 19:45:37 [INFO]     Downloading litellm (15.8MiB)
+2026-08-16 19:45:37 [INFO]     Downloading scipy (34.9MiB)
+2026-08-16 19:45:37 [INFO]     Downloading cryptography (3.6MiB)
+2026-08-16 19:45:39 [INFO]      Downloaded pydantic-core
+2026-08-16 19:45:39 [INFO]      Downloaded pygments
+2026-08-16 19:45:40 [INFO]      Downloaded tokenizers
+2026-08-16 19:45:40 [INFO]      Downloaded hf-xet
+2026-08-16 19:45:40 [INFO]      Downloaded cryptography
+2026-08-16 19:45:41 [INFO]      Downloaded pywin32
+2026-08-16 19:45:41 [INFO]      Downloaded openai
+2026-08-16 19:45:42 [INFO]      Downloaded pandas
+2026-08-16 19:45:43 [INFO]      Downloaded ruff
+2026-08-16 19:45:43 [INFO]      Downloaded numpy
+2026-08-16 19:45:44 [INFO]           Built matraix @ file:///C:/APPS/SynVox/engine/matraix
+2026-08-16 19:45:44 [INFO]      Downloaded litellm
+2026-08-16 19:45:45 [INFO]      Downloaded pyarrow
+2026-08-16 19:45:45 [INFO]      Downloaded scipy
+2026-08-16 19:45:46 [INFO]      Downloaded claude-agent-sdk
+2026-08-16 19:45:46 [INFO]     Prepared 102 packages in 9.74s
+2026-08-16 19:45:48 [INFO]     Installed 102 packages in 2.27s
+2026-08-16 19:45:48 [INFO]      + aiohappyeyeballs==2.6.2
+2026-08-16 19:45:48 [INFO]      + aiohttp==3.14.1
+2026-08-16 19:45:48 [INFO]      + aiosignal==1.4.0
+2026-08-16 19:45:48 [INFO]      + annotated-doc==0.0.4
+2026-08-16 19:45:48 [INFO]      + annotated-types==0.7.0
+2026-08-16 19:45:48 [INFO]      + anyio==4.14.1
+2026-08-16 19:45:48 [INFO]      + attrs==26.1.0
+2026-08-16 19:45:48 [INFO]      + certifi==2026.6.17
+2026-08-16 19:45:48 [INFO]      + cffi==2.0.0
+2026-08-16 19:45:48 [INFO]      + charset-normalizer==3.4.7
+2026-08-16 19:45:48 [INFO]      + claude-agent-sdk==0.2.110
+2026-08-16 19:45:48 [INFO]      + click==8.4.2
+2026-08-16 19:45:48 [INFO]      + colorama==0.4.6
+2026-08-16 19:45:48 [INFO]      + cryptography==49.0.0
+2026-08-16 19:45:48 [INFO]      + datasets==5.0.0
+2026-08-16 19:45:48 [INFO]      + datasketch==2.0.0
+2026-08-16 19:45:48 [INFO]      + deprecation==2.1.0
+2026-08-16 19:45:48 [INFO]      + dill==0.4.1
+2026-08-16 19:45:48 [INFO]      + dirhash==0.5.0
+2026-08-16 19:45:48 [INFO]      + distro==1.9.0
+2026-08-16 19:45:48 [INFO]      + fastapi==0.138.2
+2026-08-16 19:45:48 [INFO]      + fastuuid==0.14.0
+2026-08-16 19:45:48 [INFO]      + filelock==3.29.4
+2026-08-16 19:45:48 [INFO]      + frozenlist==1.8.0
+2026-08-16 19:45:48 [INFO]      + fsspec==2026.4.0
+2026-08-16 19:45:48 [INFO]      + h11==0.16.0
+2026-08-16 19:45:48 [INFO]      + h2==4.3.0
+2026-08-16 19:45:48 [INFO]      + hf-xet==1.5.1
+2026-08-16 19:45:48 [INFO]      + hpack==4.2.0
+2026-08-16 19:45:48 [INFO]      + httpcore==1.0.9
+2026-08-16 19:45:48 [INFO]      + httpx==0.28.1
+2026-08-16 19:45:48 [INFO]      + httpx-sse==0.4.3
+2026-08-16 19:45:48 [INFO]      + huggingface-hub==1.21.0
+2026-08-16 19:45:48 [INFO]      + hyperframe==6.1.0
+2026-08-16 19:45:48 [INFO]      + idna==3.18
+2026-08-16 19:45:49 [INFO]      + importlib-metadata==8.9.0
+2026-08-16 19:45:49 [INFO]      + jinja2==3.1.6
+2026-08-16 19:45:49 [INFO]      + jiter==0.16.0
+2026-08-16 19:45:49 [INFO]      + jsonschema==4.26.0
+2026-08-16 19:45:49 [INFO]      + jsonschema-specifications==2025.9.1
+2026-08-16 19:45:49 [INFO]      + litellm==1.90.1
+2026-08-16 19:45:49 [INFO]      + markdown-it-py==4.2.0
+2026-08-16 19:45:49 [INFO]      + markupsafe==3.0.3
+2026-08-16 19:45:49 [INFO]      + matraix==0.1.0 (from file:///C:/APPS/SynVox/engine/matraix)
+2026-08-16 19:45:49 [INFO]      + mcp==1.28.1
+2026-08-16 19:45:49 [INFO]      + mdurl==0.1.2
+2026-08-16 19:45:49 [INFO]      + multidict==6.7.1
+2026-08-16 19:45:49 [INFO]      + multiprocess==0.70.19
+2026-08-16 19:45:49 [INFO]      + numpy==2.5.0
+2026-08-16 19:45:49 [INFO]      + openai==2.44.0
+2026-08-16 19:45:49 [INFO]      + packaging==26.2
+2026-08-16 19:45:49 [INFO]      + pandas==3.0.3
+2026-08-16 19:45:49 [INFO]      + pathspec==1.1.1
+2026-08-16 19:45:49 [INFO]      + postgrest==2.31.0
+2026-08-16 19:45:49 [INFO]      + propcache==0.5.2
+2026-08-16 19:45:49 [INFO]      + pyarrow==24.0.0
+2026-08-16 19:45:49 [INFO]      + pycparser==3.0
+2026-08-16 19:45:49 [INFO]      + pydantic==2.13.4
+2026-08-16 19:45:49 [INFO]      + pydantic-core==2.46.4
+2026-08-16 19:45:49 [INFO]      + pydantic-settings==2.14.2
+2026-08-16 19:45:49 [INFO]      + pygments==2.20.0
+2026-08-16 19:45:49 [INFO]      + pyjwt==2.13.0
+2026-08-16 19:45:49 [INFO]      + python-dateutil==2.9.0.post0
+2026-08-16 19:45:49 [INFO]      + python-dotenv==1.2.2
+2026-08-16 19:45:49 [INFO]      + python-multipart==0.0.32
+2026-08-16 19:45:49 [INFO]      + pywin32==312
+2026-08-16 19:45:49 [INFO]      + pyyaml==6.0.3
+2026-08-16 19:45:49 [INFO]      + realtime==2.31.0
+2026-08-16 19:45:49 [INFO]      + referencing==0.37.0
+2026-08-16 19:45:49 [INFO]      + regex==2026.6.28
+2026-08-16 19:45:49 [INFO]      + requests==2.34.2
+2026-08-16 19:45:49 [INFO]      + rich==15.0.0
+2026-08-16 19:45:49 [INFO]      + rpds-py==2026.6.3
+2026-08-16 19:45:49 [INFO]      + ruff==0.15.20
+2026-08-16 19:45:49 [INFO]      + scantree==0.0.4
+2026-08-16 19:45:49 [INFO]      + scipy==1.18.0
+2026-08-16 19:45:49 [INFO]      + shellingham==1.5.4
+2026-08-16 19:45:49 [INFO]      + shortuuid==1.0.13
+2026-08-16 19:45:49 [INFO]      + six==1.17.0
+2026-08-16 19:45:49 [INFO]      + sniffio==1.3.1
+2026-08-16 19:45:49 [INFO]      + sse-starlette==3.4.5
+2026-08-16 19:45:49 [INFO]      + starlette==1.3.1
+2026-08-16 19:45:49 [INFO]      + storage3==2.31.0
+2026-08-16 19:45:49 [INFO]      + strenum==0.4.15
+2026-08-16 19:45:49 [INFO]      + supabase==2.31.0
+2026-08-16 19:45:49 [INFO]      + supabase-auth==2.31.0
+2026-08-16 19:45:49 [INFO]      + supabase-functions==2.31.0
+2026-08-16 19:45:49 [INFO]      + tenacity==9.1.4
+2026-08-16 19:45:49 [INFO]      + tiktoken==0.13.0
+2026-08-16 19:45:49 [INFO]      + tokenizers==0.22.2
+2026-08-16 19:45:49 [INFO]      + toml==0.10.2
+2026-08-16 19:45:49 [INFO]      + tqdm==4.68.3
+2026-08-16 19:45:49 [INFO]      + typer==0.25.1
+2026-08-16 19:45:49 [INFO]      + typing-extensions==4.15.0
+2026-08-16 19:45:49 [INFO]      + typing-inspection==0.4.2
+2026-08-16 19:45:49 [INFO]      + tzdata==2026.2
+2026-08-16 19:45:49 [INFO]      + urllib3==2.7.0
+2026-08-16 19:45:49 [INFO]      + uvicorn==0.49.0
+2026-08-16 19:45:49 [INFO]      + websockets==15.0.1
+2026-08-16 19:45:49 [INFO]      + xxhash==3.8.0
+2026-08-16 19:45:49 [INFO]      + yarl==1.24.2
+2026-08-16 19:45:49 [INFO]      + zipp==4.1.0
+2026-08-16 19:45:49 [OK  ] STEP SUCCESS : Sync MatrAIx project environment from uv.lock
+2026-08-16 19:45:49 [INFO] STEP START : Install undeclared extras (best effort - see verify_env)
+2026-08-16 19:45:49 [INFO]     Resolved 2 packages in 94ms
+2026-08-16 19:45:49 [INFO]        Building playground @ file:///C:/APPS/SynVox/engine/matraix/packages/playground
+2026-08-16 19:45:50 [INFO]           Built playground @ file:///C:/APPS/SynVox/engine/matraix/packages/playground
+2026-08-16 19:45:50 [INFO]     Prepared 1 package in 961ms
+2026-08-16 19:45:50 [INFO]     Installed 1 package in 3ms
+2026-08-16 19:45:50 [INFO]      + playground==0.1.0 (from file:///C:/APPS/SynVox/engine/matraix/packages/playground)
+2026-08-16 19:45:51 [INFO]     Resolved 103 packages in 461ms
+2026-08-16 19:45:51 [INFO]        Building harbor-langsmith @ file:///C:/APPS/SynVox/engine/matraix/packages/harbor-langsmith
+2026-08-16 19:45:52 [INFO]           Built harbor-langsmith @ file:///C:/APPS/SynVox/engine/matraix/packages/harbor-langsmith
+2026-08-16 19:45:52 [INFO]     Prepared 1 package in 879ms
+2026-08-16 19:45:52 [INFO]     Installed 1 package in 3ms
+2026-08-16 19:45:52 [INFO]      + harbor-langsmith==0.1.1 (from file:///C:/APPS/SynVox/engine/matraix/packages/harbor-langsmith)
+2026-08-16 19:45:52 [INFO]     Resolved 57 packages in 17ms
+2026-08-16 19:45:52 [INFO]        Building harbor-rewardkit @ file:///C:/APPS/SynVox/engine/matraix/packages/rewardkit
+2026-08-16 19:45:53 [INFO]           Built harbor-rewardkit @ file:///C:/APPS/SynVox/engine/matraix/packages/rewardkit
+2026-08-16 19:45:53 [INFO]     Prepared 1 package in 954ms
+2026-08-16 19:45:53 [INFO]     Installed 1 package in 39ms
+2026-08-16 19:45:53 [INFO]      + harbor-rewardkit==0.1.4 (from file:///C:/APPS/SynVox/engine/matraix/packages/rewardkit)
+2026-08-16 19:45:53 [INFO]     Resolved 27 packages in 318ms
+2026-08-16 19:45:54 [INFO]     Installed 4 packages in 170ms
+2026-08-16 19:45:54 [INFO]      + iniconfig==2.3.0
+2026-08-16 19:45:54 [INFO]      + pluggy==1.6.0
+2026-08-16 19:45:54 [INFO]      + pytest==9.1.1
+2026-08-16 19:45:54 [INFO]      + pytest-asyncio==1.4.0
+2026-08-16 19:45:54 [INFO]     warning: The package `huggingface-hub==1.21.0` does not have an extra named `cli`
+2026-08-16 19:45:54 [OK  ] STEP SUCCESS : Install undeclared extras (best effort - see verify_env)
+2026-08-16 19:45:54 [INFO] STEP START : Verify the environment by importing what we depend on
+2026-08-16 19:45:54 [INFO]   import harbor             OK
+2026-08-16 19:45:54 [INFO]   import matraix            OK
+2026-08-16 19:45:54 [INFO]   import httpx              OK
+2026-08-16 19:45:54 [INFO]   import huggingface_hub    OK
+2026-08-16 19:45:55 [INFO]   import pyarrow            OK
+2026-08-16 19:45:55 [INFO]   import playground         OK
+2026-08-16 19:45:56 [INFO]   import pytest             OK
+2026-08-16 19:45:56 [INFO] Undeclared extras (pytest, playground) do not survive a plain 'uv run' - it re-syncs to uv.lock.
+2026-08-16 19:45:56 [INFO] Run the engine test suite with an ephemeral overlay instead:
+2026-08-16 19:45:56 [INFO]   uv run --with pytest --with pytest-asyncio --with httpx python -m pytest -q
+2026-08-16 19:45:56 [OK  ] STEP SUCCESS : Verify the environment by importing what we depend on
+2026-08-16 19:45:56 [INFO] STEP START : Download Persona 1M dataset
+2026-08-16 19:45:58 [INFO]     [1m[31mError: Invalid value. 'charmap' codec can't encode character '\u2713' in position 5: character maps to <undefined>[0m
+2026-08-16 19:45:58 [INFO]     [90mHint: set HF_DEBUG=1 as environment variable for full traceback.[0m
+2026-08-16 19:45:58 [WARN] 'hf download' failed - retrying with legacy huggingface-cli
+2026-08-16 19:45:58 [INFO]     [33mWarning: `huggingface-cli` is deprecated and no longer works. Use `hf` instead.
+2026-08-16 19:45:58 [INFO]     [0m
+2026-08-16 19:45:58 [INFO]     [90mHint: `hf` is already installed! Use it directly.
+2026-08-16 19:45:58 [INFO]     [0m
+2026-08-16 19:45:58 [INFO]     [90mHint: Examples:
+2026-08-16 19:45:58 [INFO]       hf auth login
+2026-08-16 19:45:58 [INFO]       hf download unsloth/gemma-4-31B-it-GGUF
+2026-08-16 19:45:58 [INFO]       hf upload my-cool-model . .
+2026-08-16 19:45:58 [INFO]       hf models ls --search "gemma"
+2026-08-16 19:45:58 [INFO]       hf repos ls --format json
+2026-08-16 19:45:58 [INFO]       hf jobs run python:3.12 python -c 'print("Hello!")'
+2026-08-16 19:45:58 [INFO]       hf --help
+2026-08-16 19:45:58 [INFO]     [0m
+2026-08-16 19:45:58 [INFO] Persona dataset: 42 files, 6489.6 MB at C:\APPS\SynVox\engine\matraix\persona\datasets\matraix-persona-1m\release
+2026-08-16 19:45:58 [INFO] Granted BUILTIN\Users modify rights on C:\APPS\SynVox\engine\matraix\persona\datasets\matraix-persona-1m\release (created as SYSTEM)
+2026-08-16 19:45:58 [OK  ] STEP SUCCESS : Download Persona 1M dataset
+2026-08-16 19:45:58 [INFO] STEP START : Verify Persona 1M shards against manifest.json
+2026-08-16 19:45:58 [INFO] Shards: 10 of 10 present at the expected size (999,847 personas)
+2026-08-16 19:45:58 [OK  ] STEP SUCCESS : Verify Persona 1M shards against manifest.json
+2026-08-16 19:45:58 [WARN] SKIPPED smoke test: Docker not available.
+2026-08-16 19:45:58 [WARN] ANTHROPIC_API_KEY is not set. Before ANY real persona run:  setx ANTHROPIC_API_KEY "sk-ant-..."  - personal Quiddity Innovations key only, never a BU credential. No key is ever written into this script or the manifest.
+2026-08-16 19:46:10 [INFO] Granted BUILTIN\Users modify rights on C:\APPS\SynVox (created as SYSTEM)
+2026-08-16 19:46:10 [INFO] ===================== SUMMARY =====================
+2026-08-16 19:46:10 [INFO] git              : SUCCESS
+2026-08-16 19:46:10 [INFO] uv               : SUCCESS
+2026-08-16 19:46:10 [INFO] python312        : SUCCESS
+2026-08-16 19:46:10 [INFO] node             : SUCCESS
+2026-08-16 19:46:10 [INFO] docker           : SUCCESS
+2026-08-16 19:46:10 [INFO] clone            : SUCCESS
+2026-08-16 19:46:10 [INFO] venv             : SUCCESS
+2026-08-16 19:46:10 [INFO] deps_core        : SUCCESS
+2026-08-16 19:46:10 [INFO] deps_extras      : SUCCESS
+2026-08-16 19:46:10 [INFO] verify_env       : SUCCESS
+2026-08-16 19:46:10 [INFO] persona1m        : SUCCESS
+2026-08-16 19:46:10 [INFO] verify           : SUCCESS
+2026-08-16 19:46:10 [INFO] smoke            : SKIPPED (no Docker)
+2026-08-16 19:46:10 [INFO] api_key          : NOT SET (reminder logged)
+2026-08-16 19:46:10 [INFO] Engine     : C:\APPS\SynVox\engine\matraix
+2026-08-16 19:46:10 [INFO] Personas   : C:\APPS\SynVox\engine\matraix\persona\datasets\matraix-persona-1m\release
+2026-08-16 19:46:10 [INFO] Master log : C:\APPS\SynVox\logs\synvox_phase0_20260816_194529.log
+2026-08-16 19:46:10 [INFO] Phase 0 ends at the free smoke test - no paid persona simulation is run by this script.
+2026-08-16 19:46:10 [INFO] Next (Phase 1): task 'qi-survey_nexus-pricing-tiers' - needs ANTHROPIC_API_KEY and costs ~$1-5.
+2026-08-16 19:46:10 [INFO] ====================================================

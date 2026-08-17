@@ -1,0 +1,749 @@
+﻿### QI_AutoPDF
+C:\QIH\engine\bin\nssm.exe install QI_AutoPDF C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF AppParameters "-NoProfile -ExecutionPolicy Bypass -File C:\AutoPDF\Application\AutoPDF-Server.ps1"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF AppDirectory C:\AutoPDF\Application
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF AppEnvironmentExtra :AUTOPDF_NO_BROWSER=1
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF AppStdout C:\AutoPDF\Application\LOGS\service_stdout.log
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF AppStderr C:\AutoPDF\Application\LOGS\service_stderr.log
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF Description "AutoPDF local PDF toolkit web server on 127.0.0.1:6969. QI desktop tool."
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF DisplayName "QI AutoPDF (PDF toolkit web server)"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF Start SERVICE_DEMAND_START
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDF Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_AutoPDFMCP
+C:\QIH\engine\bin\nssm.exe install QI_AutoPDFMCP C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP AppParameters C:\AutoPDF\tools\run_mcp_gateway.py
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP AppDirectory C:\AutoPDF
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP AppStdout C:\AutoPDF\Application\LOGS\mcp_gateway.log
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP AppStderr C:\AutoPDF\Application\LOGS\mcp_gateway.err.log
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP Description ^"AutoPDF MCP gateway on 127.0.0.1:8701 - exposes AutoPDF to Claude and other MCP clients. Tools and on/off are controlled by C:^\AutoPDF^\config^\mcp_gateway.json (Settings ^> AI ^& Connections ^> Claude / MCP Access).^"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP DisplayName "QI AutoPDF MCP Gateway"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFMCP Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_AutoPDFTunnel
+C:\QIH\engine\bin\nssm.exe install QI_AutoPDFTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-autopdf.yml run qi-autopdf"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_AutoPDFTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_AutoPDFTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel Description "QI static Cloudflare tunnel 'qi-autopdf' for AutoPDF ? autopdf.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel DisplayName "QI AutoPDF Tunnel (Cloudflare)"
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_AutoPDFTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_BrainAPI
+C:\QIH\engine\bin\nssm.exe install QI_BrainAPI C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppParameters C:\QIH\engine\brain\api.py
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppDirectory C:\QIH
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppStdout C:\QIH\engine\brain\LOGS\qi_brain_api.log
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppStderr C:\QIH\engine\brain\LOGS\qi_brain_api.log
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI AppRotateBytes 10485760
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI Description "QI Brain ?╟÷ hive nervous system (SQLite + ChromaDB + MCP). Port 9010."
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI DisplayName "QI - Brain API"
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_BrainAPI Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_Caddy
+C:\QIH\engine\bin\nssm.exe install QI_Caddy C:\QIH\engine\bin\caddy.exe
+C:\QIH\engine\bin\nssm.exe set QI_Caddy AppParameters "run --config C:\QIH\engine\proxy\Caddyfile"
+C:\QIH\engine\bin\nssm.exe set QI_Caddy AppDirectory C:\QIH\engine\bin
+C:\QIH\engine\bin\nssm.exe set QI_Caddy AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_Caddy DisplayName QI_Caddy
+C:\QIH\engine\bin\nssm.exe set QI_Caddy ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_Caddy Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_Caddy Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_ClaudeVoiceControl
+C:\QIH\engine\bin\nssm.exe install QI_ClaudeVoiceControl C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl AppParameters C:\QIH\engine\launchers\claudevoice_control_launcher.py
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl AppDirectory C:\QIH\engine\launchers
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl AppStdout C:\QIH\logs\claudevoice_control.log
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl AppStderr C:\QIH\logs\claudevoice_control.log
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl Description "Claude Voice - brain control API + config UI on :8720 (loopback only, launcher under C:\QIH)"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl DisplayName QI_ClaudeVoiceControl
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceControl Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_ClaudeVoiceLine
+C:\QIH\engine\bin\nssm.exe install QI_ClaudeVoiceLine C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine AppParameters line_bot.py
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine AppDirectory "C:\CLAUDE\Claude Voice"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine AppStdout "C:\CLAUDE\Claude Voice\LOGS\line_service.log"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine AppStderr "C:\CLAUDE\Claude Voice\LOGS\line_service.log"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine Description "Claude Voice - LINE bridge (text + voice) on :8721"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine DisplayName QI_ClaudeVoiceLine
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceLine Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_ClaudeVoiceTelegram
+C:\QIH\engine\bin\nssm.exe install QI_ClaudeVoiceTelegram C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram AppParameters telegram_bot.py
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram AppDirectory "C:\CLAUDE\Claude Voice"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram AppStdout "C:\CLAUDE\Claude Voice\LOGS\telegram_service.log"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram AppStderr "C:\CLAUDE\Claude Voice\LOGS\telegram_service.log"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram Description "Claude Voice - Telegram bridge (text + voice)"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram DisplayName QI_ClaudeVoiceTelegram
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTelegram Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_ClaudeVoiceTunnel
+C:\QIH\engine\bin\nssm.exe install QI_ClaudeVoiceTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-claudevoice.yml run qi-claudevoice"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_ClaudeVoiceTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_ClaudeVoiceTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel Description "QI static Cloudflare tunnel 'qi-claudevoice' for Claude Voice ? claudevoice.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel DisplayName QI_ClaudeVoiceTunnel
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_ClaudeVoiceTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_CogniBase
+C:\QIH\engine\bin\nssm.exe install QI_CogniBase C:\CogniBase\.venv\Scripts\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase AppParameters "-m uvicorn Application.server.app:app --host 127.0.0.1 --port 8650"
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase AppDirectory C:\CogniBase
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase AppStdout C:\CogniBase\LOGS\QI_CogniBase.stdout.log
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase AppStderr C:\CogniBase\LOGS\QI_CogniBase.stderr.log
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase Description "QI CogniBase - OnBase AI platform FastAPI server (port 8650)."
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase DisplayName QI_CogniBase
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_CogniBase Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_CogniBaseTunnel
+C:\QIH\engine\bin\nssm.exe install QI_CogniBaseTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-cognibase.yml run qi-cognibase"
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_CogniBaseTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_CogniBaseTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel Description "QI static Cloudflare tunnel 'qi-cognibase' for CogniBase ? cognibase.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel DisplayName QI_CogniBaseTunnel
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_CogniBaseTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_ConnectorMCP
+C:\QIH\engine\bin\nssm.exe install QI_ConnectorMCP C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP AppParameters C:\QIP\Connector\api\main.py
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP AppDirectory C:\QIP\Connector
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP AppStdout C:\QIP\Connector\data\logs\service_stdout.log
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP AppStderr C:\QIP\Connector\data\logs\service_stderr.log
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP Description "QI Connector - remote MCP server for Claude (Streamable HTTP :9030). Quiddity Innovations."
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP DisplayName QI_ConnectorMCP
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorMCP Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_ConnectorTunnel
+C:\QIH\engine\bin\nssm.exe install QI_ConnectorTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-connector.yml run qi-connector"
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_ConnectorTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_ConnectorTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel Description "QI static Cloudflare tunnel 'qi-connector' for QI Connector (remote MCP for Claude) ? connector.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel DisplayName QI_ConnectorTunnel
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_ConnectorTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_CypherMinerTunnel
+C:\QIH\engine\bin\nssm.exe install QI_CypherMinerTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-cypherminer.yml run qi-cypherminer"
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_CypherMinerTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_CypherMinerTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel Description "QI static Cloudflare tunnel 'qi-cypherminer' for CypherMiner ? cypher.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel DisplayName "QI - CypherMiner Cloudflare Tunnel"
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_CypherMinerUI
+C:\QIH\engine\bin\nssm.exe install QI_CypherMinerUI C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI AppParameters "-m http.server 7842 --bind 127.0.0.1 --directory C:\CypherMiner\frontend\dist"
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI AppDirectory C:\CypherMiner
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI AppStdout C:\CypherMiner\LOGS\ui_service.log
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI AppStderr C:\CypherMiner\LOGS\ui_service.log
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI Description "QI - serves the CypherMiner production build (dist) on port 7842 for the Cloudflare tunnel."
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI DisplayName "QI - CypherMiner UI (static build, port 7842)"
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_CypherMinerUI Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_Dashboard
+C:\QIH\engine\bin\nssm.exe install QI_Dashboard C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppParameters C:\QIH\engine\hive\dashboard\server.py
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppDirectory C:\QIH
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppRestartDelay 3000
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppStdout C:\QIH\engine\hive\dashboard\LOGS\dashboard.log
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppStderr C:\QIH\engine\hive\dashboard\LOGS\dashboard_error.log
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard AppRotateBytes 10485760
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard DependOnService :QI_BrainAPI
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard Description "QI Hive Dashboard ?╟÷ agent orchestration UI. Port 8600."
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard DisplayName "QI - Orchestrator Dashboard"
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_Dashboard Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_DashboardTunnel
+C:\QIH\engine\bin\nssm.exe install QI_DashboardTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-hive.yml run qi-hive"
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_DashboardTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_DashboardTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel Description "QI static Cloudflare tunnel 'qi-hive' for Hive Dashboard ? hive.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel DisplayName "QI - Dashboard Cloudflare Tunnel"
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_DashboardTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_Elevate
+C:\QIH\engine\bin\nssm.exe install QI_Elevate C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppParameters C:\QIH\engine\common\qi_elevate.py
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppDirectory C:\QIH\engine\common
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppRestartDelay 3000
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppStdout C:\QIH\logs\elevation\broker_stdout.log
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppStderr C:\QIH\logs\elevation\broker_stderr.log
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_Elevate AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_Elevate Description "QI Elevation Broker ?╟÷ executes whitelisted commands as SYSTEM on behalf of QI agents (see C:\QIH\docs\QI_Elevation_Broker.md)"
+C:\QIH\engine\bin\nssm.exe set QI_Elevate DisplayName QI_Elevate
+C:\QIH\engine\bin\nssm.exe set QI_Elevate ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_Elevate Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_Elevate Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_GamezProxy
+C:\QIH\engine\bin\nssm.exe install QI_GamezProxy C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy AppParameters server.py
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy AppDirectory C:\Gamez\proxy
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy AppStdout C:\Gamez\proxy\LOGS\gamez_proxy_service.log
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy AppStderr C:\Gamez\proxy\LOGS\gamez_proxy_service.log
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy AppRotateBytes 5000000
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy Description "WC2026 betting dashboard data proxy + scoring + AI/Kalshi relay. Serves the app at http://localhost:8710/. Gamez port block 8710-8719."
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy DisplayName "QI Gamez Proxy (WC2026)"
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_GamezProxy Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_GamezQuantProxy
+C:\QIH\engine\bin\nssm.exe install QI_GamezQuantProxy C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy AppParameters hyde_service.py
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy AppDirectory C:\Gamez\proxy
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy AppStdout C:\Gamez\proxy\LOGS\hyde_service.log
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy AppStderr C:\Gamez\proxy\LOGS\hyde_service.log
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy AppRotateBytes 5000000
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy Description "WC2026 private 'Quant' AI persona side-service (Mr. Hyde). Serves /quant-persona on 127.0.0.1:8712 so the public proxy can relay it ONLY while this service runs. Manual start; off by default. Gamez block 8710-8719."
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy DisplayName "QI Gamez Quant (Hyde) Service"
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy Start SERVICE_DEMAND_START
+C:\QIH\engine\bin\nssm.exe set QI_GamezQuantProxy Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_GamezTunnel
+C:\QIH\engine\bin\nssm.exe install QI_GamezTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-gamez.yml run qi-gamez"
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_GamezTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_GamezTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel Description "QI static Cloudflare tunnel 'qi-gamez' for Gamez ? gamez.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel DisplayName QI_GamezTunnel
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_GamezTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_Gate
+C:\QIH\engine\bin\nssm.exe install QI_Gate C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_Gate AppParameters C:\QIH\engine\gate\qi_gate.py
+C:\QIH\engine\bin\nssm.exe set QI_Gate AppDirectory C:\QIH\engine\gate
+C:\QIH\engine\bin\nssm.exe set QI_Gate AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_Gate AppStdout C:\QIH\logs\qi_gate.log
+C:\QIH\engine\bin\nssm.exe set QI_Gate AppStderr C:\QIH\logs\qi_gate.err.log
+C:\QIH\engine\bin\nssm.exe set QI_Gate Description "QI Gate - authentication wall in front of every internet-exposed QI application. Caddy (:9040) proxies public tunnels and asks this service (:9041) whether the caller is signed in."
+C:\QIH\engine\bin\nssm.exe set QI_Gate DisplayName QI_Gate
+C:\QIH\engine\bin\nssm.exe set QI_Gate ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_Gate Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_Gate Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_Headroom
+C:\QIH\engine\bin\nssm.exe install QI_Headroom C:\CLAUDE\Tools\headroom_env\Scripts\headroom.exe
+C:\QIH\engine\bin\nssm.exe set QI_Headroom AppParameters "proxy --port 9020"
+C:\QIH\engine\bin\nssm.exe set QI_Headroom AppDirectory C:\CLAUDE\Tools
+C:\QIH\engine\bin\nssm.exe set QI_Headroom AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_Headroom AppEnvironmentExtra :OPENAI_API_BASE=http://localhost:11434/v1
+C:\QIH\engine\bin\nssm.exe set QI_Headroom AppStdout C:\CLAUDE\Tools\headroom_env\logs\stdout.log
+C:\QIH\engine\bin\nssm.exe set QI_Headroom AppStderr C:\CLAUDE\Tools\headroom_env\logs\stderr.log
+C:\QIH\engine\bin\nssm.exe set QI_Headroom Description ^"QI Headroom - LLM context compression proxy (:9020 -^> Ollama :11434, isolated venv)^"
+C:\QIH\engine\bin\nssm.exe set QI_Headroom DisplayName QI_Headroom
+C:\QIH\engine\bin\nssm.exe set QI_Headroom ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_Headroom Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_Headroom Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_HiveApply
+C:\QIH\engine\bin\nssm.exe install QI_HiveApply C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply AppParameters C:\QIH\engine\hive\apply\main.py
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply AppDirectory C:\QIH\engine\hive\apply
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply AppStdout C:\QIH\logs\hive_apply.log
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply AppStderr C:\QIH\logs\hive_apply.log
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply Description "QI Hive auto-apply pipeline for approved CoWork dispatches"
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply DisplayName QI_HiveApply
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_HiveApply Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_HiveIngest
+C:\QIH\engine\bin\nssm.exe install QI_HiveIngest C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppParameters C:\QIH\engine\hive\ingest\hive_ingest.py
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppDirectory C:\QIH\engine\hive\ingest
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppRestartDelay 3000
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppStdout C:\QIH\logs\hive\ingest_stdout.log
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppStderr C:\QIH\logs\hive\ingest_stderr.log
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest Description "QI Hive Ingester ?╟÷ absorbs agent reports from shared\reports\inbox into status.json (see C:\QIH\docs\QI_Hive_Reporting.md)"
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest DisplayName QI_HiveIngest
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_HiveIngest Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_HiveInspectorDrain
+C:\QIH\engine\bin\nssm.exe install QI_HiveInspectorDrain C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain AppParameters C:\QIH\engine\hive\inspect\main.py
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain AppDirectory C:\QIH\engine\hive\inspect
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain AppStdout C:\QIH\logs\hive_inspector_drain.log
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain AppStderr C:\QIH\logs\hive_inspector_drain.log
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain Description "QI Hive deterministic inspector verdict drain"
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain DisplayName QI_HiveInspectorDrain
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_HiveInspectorDrain Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_KazeConfigAPI
+C:\QIH\engine\bin\nssm.exe install QI_KazeConfigAPI C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppParameters C:\OC\repo\scripts\kaze\kaze-config-api.py
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppDirectory C:\OC\repo\scripts\kaze
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppStdout C:\OC\runtime\logs\agents\kaze\kaze-config-api.log
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppStderr C:\OC\runtime\logs\agents\kaze\kaze-config-api.log
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppThrottle 0
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI AppRotateBytes 5000000
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI Description "QI - Kaze Config API (port 8401)"
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI DisplayName QI_KazeConfigAPI
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_KazeConfigAPI Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_KazeNewsTunnel
+C:\QIH\engine\bin\nssm.exe install QI_KazeNewsTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-kaze.yml run qi-kaze"
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_KazeNewsTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppStdoutCreationDisposition 2
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_KazeNewsTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppStderrCreationDisposition 2
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel AppThrottle 10000
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel Description "QI static Cloudflare tunnel 'qi-kaze' for Kaze (OpenClaw) ? kaze.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel DisplayName "QI Kaze News Tunnel"
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_KazeNewsTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_LotteryWiz
+C:\QIH\engine\bin\nssm.exe install QI_LotteryWiz C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppParameters server.py
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppDirectory "C:\Lottery Wiz"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppStdout "C:\Lottery Wiz\LOGS\service.log"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppStderr "C:\Lottery Wiz\LOGS\service.log"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppThrottle 5000
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz AppRotateBytes 1048576
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz Description "Lottery Wiz - Fantasy 5 covering-design app (FastAPI on http://localhost:8777)"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz DisplayName "QI Lottery Wiz (Fantasy 5)"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWiz Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_LotteryWizTunnel
+C:\QIH\engine\bin\nssm.exe install QI_LotteryWizTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-lotterywiz.yml run qi-lotterywiz"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_LotteryWizTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_LotteryWizTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppThrottle 5000
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel AppRotateBytes 1048576
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel Description "QI static Cloudflare tunnel 'qi-lotterywiz' for LotteryWiz ? lottery.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel DisplayName "QI Lottery Wiz Cloudflare Tunnel"
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_LotteryWizTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_M2VTunnel
+C:\QIH\engine\bin\nssm.exe install QI_M2VTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-m2v.yml run qi-m2v"
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_M2VTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_M2VTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel DisplayName QI_M2VTunnel
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_M2VTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MaiaBot
+C:\QIH\engine\bin\nssm.exe install QI_MaiaBot C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppParameters maia_server.py
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppDirectory C:\QI
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppStdout C:\QI\LOGS\maia_service_log.txt
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppStderr C:\QI\LOGS\maia_error.txt
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot AppRotateBytes 10485760
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot DependOnService :QI_BrainAPI
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot Description "Maia AI assistant platform. FastAPI server handling LINE, Telegram and other channels. Ollama-powered multi-LLM chain. Port: 8001."
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot DisplayName "QI - Maia Bot Server"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot Start SERVICE_DELAYED_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MaiaBot Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MaiaDemoTunnel
+C:\QIH\engine\bin\nssm.exe install QI_MaiaDemoTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel AppParameters "tunnel --protocol http2 --url http://localhost:7860"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel AppDirectory "C:\Program Files (x86)\cloudflared"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel AppStdout C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel AppStderr C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel Description "Cloudflare quick tunnel exposing Maia Gradio demo UI (port 7860) for demonstrations and testing. Start manually when needed."
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel DisplayName "QI - Maia Demo Tunnel (Gradio)"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel Start SERVICE_DISABLED
+C:\QIH\engine\bin\nssm.exe set QI_MaiaDemoTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MaiaGradio
+C:\QIH\engine\bin\nssm.exe install QI_MaiaGradio C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppParameters maia_gradio.py
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppDirectory C:\QI
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppStdout C:\QI\LOGS\maia_gradio_service.log
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppStderr C:\QI\LOGS\maia_gradio_error.log
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppThrottle 10000
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppRotateOnline 1
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio Description "QI - Maia Gradio web UI on port 7860. Browser-based chat interface for Maia AI assistant. Auto-restart enabled."
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio DisplayName "QI - Maia Gradio UI"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MaiaGradio Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MaiaQueueDrain
+C:\QIH\engine\bin\nssm.exe install QI_MaiaQueueDrain C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain AppParameters C:\QIH\engine\relay\maia_queue_drain_service.py
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain AppDirectory C:\QIH\engine\relay
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain AppStdout C:\QIH\logs\maia_queue_drain.log
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain AppStderr C:\QIH\logs\maia_queue_drain.log
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain Description "QI Maia AWS relay queue drainer - polls SQS qi-maia-events.fifo and forwards LINE events to local maia_server (port 8001)"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain DisplayName QI_MaiaQueueDrain
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MaiaQueueDrain Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MaiaTunnel
+C:\QIH\engine\bin\nssm.exe install QI_MaiaTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-maia.yml run qi-maia"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_MaiaTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_MaiaTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel Description "QI static Cloudflare tunnel 'qi-maia' for Maia ? maia.quiddityinnovations.com, maia-demo.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel DisplayName "QI - Maia Cloudflare Tunnel (Production)"
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MaiaTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MapSnap
+C:\QIH\engine\bin\nssm.exe install QI_MapSnap C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap AppParameters Application\server.py
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap AppDirectory C:\MapSnap
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap AppStdout C:\MapSnap\LOGS\QI_MapSnap.stdout.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap AppStderr C:\MapSnap\LOGS\QI_MapSnap.stderr.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap Description "QI MapSnap - Jenzabar schema browser (port 9876)."
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap DisplayName QI_MapSnap
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MapSnap Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MapSnapBUSetup
+C:\QIH\engine\bin\nssm.exe install QI_MapSnapBUSetup C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup AppParameters C:\QIH\engine\launchers\mapsnap_bu_iis_runner.py
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup AppDirectory C:\QIH\engine\launchers
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup AppStdout C:\QIH\logs\qi_mapsnap_bu_setup_svc.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup AppStderr C:\QIH\logs\qi_mapsnap_bu_setup_svc.err.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup Description "MapSnap BU elevated setup runner: executes C:\MapSnap\kit\setup_iis.ps1 with args from mapsnap_bu_iis_args.txt when (re)started. DEMAND_START - start manually, stop after reading the log."
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup DisplayName QI_MapSnapBUSetup
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup Start SERVICE_DEMAND_START
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapBUSetup Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MapSnapMCP
+C:\QIH\engine\bin\nssm.exe install QI_MapSnapMCP C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP AppParameters C:\QIH\engine\launchers\mapsnap_mcp_launcher.py
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP AppDirectory C:\QIH\engine\launchers
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP AppStdout C:\QIH\logs\mapsnap_mcp.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP AppStderr C:\QIH\logs\mapsnap_mcp.err.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP Description "MapSnap MCP Gateway (Phase 2) - config-driven MCP server :8651 via qi_mcp_gateway. Quiddity Innovations."
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP DisplayName QI_MapSnapMCP
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCP Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MapSnapMCPBU
+C:\QIH\engine\bin\nssm.exe install QI_MapSnapMCPBU C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU AppParameters C:\QIH\engine\launchers\mapsnap_mcp_bu_launcher.py
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU AppDirectory C:\QIH\engine\launchers
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU AppStdout C:\QIH\logs\qi_mapsnap_mcp_bu.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU AppStderr C:\QIH\logs\qi_mapsnap_mcp_bu.err.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU Description "MapSnap BU Edition MCP gateway (loopback :8652, tools profiles/schema/ask, table_data OFF). Config: C:\MapSnap\config\mcp_gateway_bu.json + deploy.json"
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU DisplayName QI_MapSnapMCPBU
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapMCPBU Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MapSnapTunnel
+C:\QIH\engine\bin\nssm.exe install QI_MapSnapTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-mapsnap.yml run qi-mapsnap"
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_MapSnapTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_MapSnapTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel Description "QI static Cloudflare tunnel 'qi-mapsnap' for MapSnap ? mapsnap.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel DisplayName QI_MapSnapTunnel
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MapSnapTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_MQTunnel
+C:\QIH\engine\bin\nssm.exe install QI_MQTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-mq.yml run qi-mq"
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_MQTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_MQTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel Description "QI static Cloudflare tunnel 'qi-mq' for Maia Quiddam ? quiddam.com, api.quiddam.com, dev.quiddam.com, maia.quiddam.com"
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel DisplayName QI_MQTunnel
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_MQTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_NayaBot
+C:\QIH\engine\bin\nssm.exe install QI_NayaBot C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppParameters C:\NAYA\naya_server.py
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppDirectory C:\NAYA
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppStdout C:\NAYA\LOGS\naya_service_log.txt
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppStderr C:\NAYA\LOGS\naya_error.txt
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot AppRotateBytes 10485760
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot DependOnService :QI_BrainAPI
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot Description "Naya personal AI assistant. Telegram bot + file management engine. FastAPI server on port 8002."
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot DisplayName "QI - Naya Bot Server"
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_NayaBot Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_NayaGradio
+C:\QIH\engine\bin\nssm.exe install QI_NayaGradio C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio AppParameters C:\NAYA\naya_gradio.py
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio AppDirectory C:\NAYA
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio AppStdout C:\NAYA\LOGS\naya_gradio_service.log
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio AppStderr C:\NAYA\LOGS\naya_gradio_error.log
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio Description "Naya Gradio web interface on port 7861. Browser-based UI for Naya AI assistant."
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio DisplayName "QI - Naya Gradio UI"
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_NayaGradio Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_NayaTunnel
+C:\QIH\engine\bin\nssm.exe install QI_NayaTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-naya.yml run qi-naya"
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_NayaTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_NayaTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel Description "QI static Cloudflare tunnel 'qi-naya' for Naya ? naya.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel DisplayName QI_NayaTunnel
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_NayaTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_NEXUS
+C:\QIH\engine\bin\nssm.exe install QI_NEXUS C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppParameters C:\NEXUS\main.py
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppDirectory C:\NEXUS
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppRestartDelay 5000
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppStdout C:\NEXUS\LOGS\nexus_service.log
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppStderr C:\NEXUS\LOGS\nexus_service_error.log
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS AppRotateBytes 10485760
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS DependOnService :QI_BrainAPI
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS Description "Quiddity Innovations NEXUS: Neural Exchange and Unified Synthesis. Scout/digest engine with multi-provider LLM dispatch. API port 8010, UI port 7880."
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS DisplayName "QI - NEXUS Scout Engine"
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS Start SERVICE_DELAYED_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_NEXUS Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_NexusMCP
+C:\QIH\engine\bin\nssm.exe install QI_NexusMCP C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP AppParameters C:\QIH\engine\launchers\nexus_mcp_launcher.py
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP AppDirectory C:\QIH\engine\launchers
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP AppStdout C:\QIH\logs\nexus_mcp.log
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP AppStderr C:\QIH\logs\nexus_mcp.err.log
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP Description "NEXUS MCP Gateway - config-driven MCP server :8310 via qi_mcp_gateway. Quiddity Innovations."
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP DisplayName QI_NexusMCP
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_NexusMCP Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_NEXUSTunnel
+C:\QIH\engine\bin\nssm.exe install QI_NEXUSTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-nexus.yml run qi-nexus"
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_NEXUSTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_NEXUSTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel AppRotateBytes 5242880
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel Description "QI static Cloudflare tunnel 'qi-nexus' for NEXUS ? nexus.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel DisplayName QI_NEXUSTunnel
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_NEXUSTunnel Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_PlayDeck
+C:\QIH\engine\bin\nssm.exe install QI_PlayDeck C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck AppParameters C:\PlayDeck\main.py
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck AppDirectory C:\PlayDeck
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck AppStdout C:\PlayDeck\data\logs\service_out.log
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck AppStderr C:\PlayDeck\data\logs\service_err.log
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck AppRotateBytes 5000000
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck Description "PlayDeck - personal hybrid video player (browse, stream, offline library) on http://localhost:8506 - Quiddity Innovations"
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck DisplayName "QI PlayDeck"
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_PlayDeck Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_RetirementAnalyzer
+C:\QIH\engine\bin\nssm.exe install QI_RetirementAnalyzer C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppParameters main.py
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppDirectory C:\RetirementAnalyzer
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppStdout C:\RetirementAnalyzer\logs\service.log
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppStderr C:\RetirementAnalyzer\logs\service.log
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppThrottle 5000
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppRotateFiles 1
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer AppRotateBytes 1048576
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer Description "Retirement Analyzer - FastAPI :8504 + Gradio UI :7844 (single process)."
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer DisplayName QI_RetirementAnalyzer
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer Start SERVICE_DEMAND_START
+C:\QIH\engine\bin\nssm.exe set QI_RetirementAnalyzer Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_TubeScout
+C:\QIH\engine\bin\nssm.exe install QI_TubeScout C:\1-AI\APPS\PYTHON\python.exe
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout AppParameters "-m uvicorn api.main:app --host 127.0.0.1 --port 8503 --log-level warning"
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout AppDirectory C:\TUBESCOUT
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout AppStdout C:\TUBESCOUT\data\logs\service.log
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout AppStderr C:\TUBESCOUT\data\logs\service.log
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout AppThrottle 5000
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout Description "TubeScout - YouTube subscription news page + API (port 8503)"
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout DisplayName QI_TubeScout
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_TubeScout Type SERVICE_WIN32_OWN_PROCESS
+
+### QI_TubeScoutTunnel
+C:\QIH\engine\bin\nssm.exe install QI_TubeScoutTunnel "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel AppParameters "tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-tubescout.yml run qi-tubescout"
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel AppDirectory C:\QIH\engine\tunnels
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel AppExit Default Restart
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel AppStdout C:\QIH\engine\tunnels\LOGS\QI_TubeScoutTunnel.out.log
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel AppStderr C:\QIH\engine\tunnels\LOGS\QI_TubeScoutTunnel.err.log
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel Description "QI static Cloudflare tunnel 'qi-tubescout' for TubeScout ? tubescout.quiddityinnovations.com"
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel DisplayName QI_TubeScoutTunnel
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel ObjectName LocalSystem
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel Start SERVICE_AUTO_START
+C:\QIH\engine\bin\nssm.exe set QI_TubeScoutTunnel Type SERVICE_WIN32_OWN_PROCESS
+

@@ -1,0 +1,14 @@
+{
+ "job_id": "20260816_165147_setup-synvox",
+ "script_key": "setup-synvox",
+ "file": "Setup-SynVox.ps1",
+ "args": [],
+ "machine": "POWERSPEC",
+ "pid": 50648,
+ "status": "succeeded",
+ "exit_code": 0,
+ "started_at": "2026-08-16T16:51:47-04:00",
+ "finished_at": "2026-08-16T16:52:33-04:00",
+ "timeout_seconds": 3600,
+ "log": "C:\\QIH\\dispatch\\jobs\\20260816_165147_setup-synvox.log"
+}

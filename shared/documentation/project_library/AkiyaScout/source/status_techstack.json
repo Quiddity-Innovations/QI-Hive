@@ -18,7 +18,7 @@
     {"layer": "Email", "technology": "smtplib (stdlib)", "role": "Optional local SMTP digest delivery (off by default; needs SMTP_PASSWORD env)", "license": "PSF (stdlib)", "version": "stdlib"},
     {"layer": "Documents", "technology": "python-docx", "role": "Generates project documentation (implementation log, meeting minutes, version history .docx)", "license": "MIT", "version": ">=1.1"},
     {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads DEEPL_API_KEY / SMTP_PASSWORD from secrets env; static config in config/akiyascout.json, runtime config in the DB settings table", "license": "BSD", "version": ">=1.0"},
-    {"layer": "Operations", "technology": "Console batch (Start_AkiyaScout.bat)", "role": "Current launcher — cd C:\\AkiyaScout && python main.py. NSSM QI_AkiyaScout service is planned, not yet registered", "license": "n/a", "version": "n/a"}
+    {"layer": "Operations", "technology": "Console batch (Start_AkiyaScout.bat)", "role": "Current launcher — cd C:\\APPS\\AkiyaScout && python main.py. NSSM QI_AkiyaScout service is planned, not yet registered", "license": "n/a", "version": "n/a"}
   ],
   "descriptions": [
     {

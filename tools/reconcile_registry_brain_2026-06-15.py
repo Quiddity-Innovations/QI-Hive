@@ -24,7 +24,7 @@ if ts and "tubescout" not in brain_ids:
     ui  = ports.get("ui", {}).get("current")
     cur.execute("INSERT INTO projects (project_id,display_name,tagline,path,api_port,ui_port,tier,active,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
         ("tubescout", ts.get("name", "TubeScout"),
-         (ts.get("description") or "TubeScout")[:120], ts.get("path", r"C:\TUBESCOUT"),
+         (ts.get("description") or "TubeScout")[:120], ts.get("path", r"C:\APPS\TUBESCOUT"),
          api, ui, "project", 1, TS))
     cur.execute("INSERT INTO project_state (project_id,agent_id,phase,status,summary,blockers,next_steps,recorded_at) VALUES (?,?,?,?,?,?,?,?)",
         ("tubescout", "claude", "registered", "active",
@@ -42,7 +42,7 @@ else:
 if "claude_manager" not in reg_by_id:
     row = cur.execute("SELECT display_name, path FROM projects WHERE project_id='claude_manager'").fetchone()
     name = (row[0] if row else "Claude Manager")
-    path = (row[1] if row and row[1] else r"C:\CLAUDE")
+    path = (row[1] if row and row[1] else r"C:\APPS\CLAUDE")
     reg["projects"].append({
         "id": "claude_manager",
         "name": name,

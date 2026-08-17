@@ -31,7 +31,7 @@
       {"name": "Recycle-bin-first deletes", "description": "Deletions go to the Windows recycle bin by default. Permanent deletion happens only on explicit consent.", "status": "live", "notes": "send2trash; permanent delete is opt-in"},
       {"name": "Undo", "description": "Naya moves files to a TRASH folder and logs every batch, so the last operation can be fully reversed.", "status": "live", "notes": "naya_executor.undo_last() / undo_batch(); operations logged in naya_brain.db"},
       {"name": "Never deletes the keep copy", "description": "When clearing duplicates, Naya always preserves one copy of each group (the oldest).", "status": "live", "notes": "naya_executor never removes is_oldest member"},
-      {"name": "Reports in any format", "description": "Generate a space, duplicates, actions, deferred, or full report as PDF, Word, Markdown, or plain text.", "status": "live", "notes": "naya_reporter.generate_report; saved to C:\\NAYA\\REPORTS\\"}
+      {"name": "Reports in any format", "description": "Generate a space, duplicates, actions, deferred, or full report as PDF, Word, Markdown, or plain text.", "status": "live", "notes": "naya_reporter.generate_report; saved to C:\\APPS\\NAYA\\REPORTS\\"}
     ]
   },
   {

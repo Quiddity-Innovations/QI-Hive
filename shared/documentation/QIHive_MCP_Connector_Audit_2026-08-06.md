@@ -43,7 +43,7 @@ Every local Desktop entry is another thing the guard must protect (the Desktop-d
 | # | Finding | Detail |
 |---|---|---|
 | F1 | rennesan/mapsnap is NOT an MCP connector | It is the private GitHub repository for MapSnap (github.com/rennesan/mapsnap). The owner/repo format is the giveaway: it is the GitHub integration listing the repo. It grants Claude access to the repo's code only — it does not expose MapSnap's database tools. No Claude Code plugin by that name exists locally (only the official Anthropic marketplace is installed). |
-| F2 | Plaintext sa password in ONBASE13_POC connection profile | C:\MapSnap\Product\ONBASE13_POC\.mapsnap_conn.json embeds the sa password in plaintext inside the dsn string (in addition to the structured fields). Local, gitignored, POC VM — low risk — but remember it is there if the folder is ever zipped or shared. Value intentionally not reproduced in this document. |
+| F2 | Plaintext sa password in ONBASE13_POC connection profile | C:\APPS\MapSnap\Product\ONBASE13_POC\.mapsnap_conn.json embeds the sa password in plaintext inside the dsn string (in addition to the structured fields). Local, gitignored, POC VM — low risk — but remember it is there if the folder is ever zipped or shared. Value intentionally not reproduced in this document. |
 | F3 | MapSnap service bearer token in .claude.json | C:\Users\renne\.claude.json stores the MapSnap bearer service token in plaintext. Normal placement for MCP config, scoped to localhost only, revocable via the service_tokens.json hot-reload kill-switch. |
 | F4 | Unpushed commits on CLAUDE-MANAGER master | At audit time, master was ahead of origin by 5 commits with a heavily modified working tree belonging to other workstreams. Left untouched — push is Renne's call. |
 

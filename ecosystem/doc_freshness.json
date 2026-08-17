@@ -3,6 +3,6 @@
   "enforce": false,
   "stale_after_days": 30,
   "doc_globs": ["docs/*.md", "README.md", "*.md"],
-  "scan_roots": ["C:\\QIH", "C:\\QIP"],
+  "scan_roots": ["C:\\QIH", "C:\\APPS\\QIP"],
   "ignore_dirs": ["venv", ".venv", "node_modules", "__pycache__", ".git", "LOGS", "logs", "chroma"]
 }

@@ -170,9 +170,9 @@ pydantic>=2.7.0
 ## READ BEFORE ACTING
 This is the {name} project. You are operating inside the QI ecosystem.
 Before any structural change (ports, folders, configs, new files), read:
-- `C:\\QI\\ECOSYSTEM\\QI_Standards.md` — all naming/folder/code conventions
-- `C:\\QI\\ECOSYSTEM\\qi_registry.json` — all ports and project relationships
-- `C:\\QI\\ECOSYSTEM\\QI_Architecture_Principles.md` — the governing law
+- `C:\\APPS\\QI\\ECOSYSTEM\\QI_Standards.md` — all naming/folder/code conventions
+- `C:\\APPS\\QI\\ECOSYSTEM\\qi_registry.json` — all ports and project relationships
+- `C:\\APPS\\QI\\ECOSYSTEM\\QI_Architecture_Principles.md` — the governing law
 
 ## What {name} Is
 {description}
@@ -243,7 +243,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
-    sys.path.insert(0, r"C:\\QI\\ECOSYSTEM")
+    sys.path.insert(0, r"C:\\APPS\\QI\\ECOSYSTEM")
     from qi_registry import QI
     _cors = QI.cors_origins()
 except Exception:
@@ -270,7 +270,7 @@ async def version():
 @app.get("/info")
 async def info():
     try:
-        sys.path.insert(0, r"C:\\QI\\ECOSYSTEM")
+        sys.path.insert(0, r"C:\\APPS\\QI\\ECOSYSTEM")
         from qi_registry import QI
         return QI.project("{project_id}")
     except Exception:

@@ -3,65 +3,65 @@
     {
       "name": "Project Overview & Status",
       "documents": [
-        {"title": "Naya Master Status Report", "file": "Naya_Master_Status_Report.md", "location": "C:\\NAYA\\docs\\", "type": "Markdown", "description": "Single-page status overview: version, ports, services, feature status table, pending work, key files."},
-        {"title": "Project Summary", "file": "SUMMARY.md", "location": "C:\\NAYA\\", "type": "Markdown", "description": "Plain-language summary: what Naya does, the personal-assistant analogy, ports, tech stack, and the key 'not part of Maia' distinction."},
-        {"title": "Documentation Index (README)", "file": "README.md", "location": "C:\\NAYA\\docs\\", "type": "Markdown", "description": "Auto-generated index of everything in the docs folder (migrate_docs.py, 2026-05-09)."},
-        {"title": "Naya Next Priorities", "file": "Naya_Next_Priorities.md", "location": "C:\\NAYA\\docs\\", "type": "Markdown", "description": "Roadmap, bug tracker, and the Clusters A/B/C feature plan (similarity / deferral / reporting) used during active development."},
-        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\NAYA\\", "type": "Markdown", "description": "Session-start protocol, what Naya is, the Naya<->Maia sibling relationship, paths, ports (8002 / 7861 / 8200 internal), key files, and the Naya_Control.bat menu. Note: some ecosystem paths still reference the pre-migration C:\\UNIVERSAL\\ECOSYSTEM."}
+        {"title": "Naya Master Status Report", "file": "Naya_Master_Status_Report.md", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Markdown", "description": "Single-page status overview: version, ports, services, feature status table, pending work, key files."},
+        {"title": "Project Summary", "file": "SUMMARY.md", "location": "C:\\APPS\\NAYA\\", "type": "Markdown", "description": "Plain-language summary: what Naya does, the personal-assistant analogy, ports, tech stack, and the key 'not part of Maia' distinction."},
+        {"title": "Documentation Index (README)", "file": "README.md", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Markdown", "description": "Auto-generated index of everything in the docs folder (migrate_docs.py, 2026-05-09)."},
+        {"title": "Naya Next Priorities", "file": "Naya_Next_Priorities.md", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Markdown", "description": "Roadmap, bug tracker, and the Clusters A/B/C feature plan (similarity / deferral / reporting) used during active development."},
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\APPS\\NAYA\\", "type": "Markdown", "description": "Session-start protocol, what Naya is, the Naya<->Maia sibling relationship, paths, ports (8002 / 7861 / 8200 internal), key files, and the Naya_Control.bat menu. Note: some ecosystem paths still reference the pre-migration C:\\UNIVERSAL\\ECOSYSTEM."}
       ]
     },
     {
       "name": "User & Reference Guides",
       "documents": [
-        {"title": "Naya User Guide v1", "file": "Naya_User_Guide_v1.docx", "location": "C:\\NAYA\\docs\\", "type": "Word Document", "description": "End-user walkthrough of chatting with Naya and using the file-management commands."},
-        {"title": "Naya Cheatsheet — 30 Commands", "file": "Naya_Cheatsheet_30_Commands.docx", "location": "C:\\NAYA\\docs\\", "type": "Word Document", "description": "Quick-reference card of the most common chat/Telegram commands (scan, find largest, report, schedule, undo, approve...)."},
-        {"title": "FileHQ Merger Evaluation", "file": "Naya_FileHQ_Merger_Evaluation.docx", "location": "C:\\NAYA\\docs\\", "type": "Word Document", "description": "The analysis behind absorbing FileHQ into Naya as the filehq/ file engine (merged 2026-04-05)."}
+        {"title": "Naya User Guide v1", "file": "Naya_User_Guide_v1.docx", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Word Document", "description": "End-user walkthrough of chatting with Naya and using the file-management commands."},
+        {"title": "Naya Cheatsheet — 30 Commands", "file": "Naya_Cheatsheet_30_Commands.docx", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Word Document", "description": "Quick-reference card of the most common chat/Telegram commands (scan, find largest, report, schedule, undo, approve...)."},
+        {"title": "FileHQ Merger Evaluation", "file": "Naya_FileHQ_Merger_Evaluation.docx", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Word Document", "description": "The analysis behind absorbing FileHQ into Naya as the filehq/ file engine (merged 2026-04-05)."}
       ]
     },
     {
       "name": "Logs, Minutes & History",
       "documents": [
-        {"title": "Naya Implementation Log", "file": "Naya_Implementation_Log.docx", "location": "C:\\NAYA\\docs\\", "type": "Word Document", "description": "Chronological build history of what was created, fixed, and decided across sessions."},
-        {"title": "Naya Meeting Minutes", "file": "Naya_Meeting_Minutes.docx", "location": "C:\\NAYA\\docs\\", "type": "Word Document", "description": "Session-by-session decisions and next steps."},
-        {"title": "Naya Version History", "file": "Naya_Version_History.md", "location": "C:\\NAYA\\docs\\", "type": "Markdown", "description": "Version changelog: v0.1 (2026-03-28) initial build; v0.2 (2026-04-19) QI_ service naming + central Python path."},
-        {"title": "Session Summaries", "file": "Session Summaries\\", "location": "C:\\NAYA\\docs\\", "type": "Folder", "description": "Dated .docx session summaries (Naya_Summary_YYYY-MM-DD_HHMM.docx)."}
+        {"title": "Naya Implementation Log", "file": "Naya_Implementation_Log.docx", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Word Document", "description": "Chronological build history of what was created, fixed, and decided across sessions."},
+        {"title": "Naya Meeting Minutes", "file": "Naya_Meeting_Minutes.docx", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Word Document", "description": "Session-by-session decisions and next steps."},
+        {"title": "Naya Version History", "file": "Naya_Version_History.md", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Markdown", "description": "Version changelog: v0.1 (2026-03-28) initial build; v0.2 (2026-04-19) QI_ service naming + central Python path."},
+        {"title": "Session Summaries", "file": "Session Summaries\\", "location": "C:\\APPS\\NAYA\\docs\\", "type": "Folder", "description": "Dated .docx session summaries (Naya_Summary_YYYY-MM-DD_HHMM.docx)."}
       ]
     },
     {
       "name": "Key Source — Server & Routing",
       "documents": [
-        {"title": "Main Server", "file": "naya_server.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Flask server on port 8002. ask_naya() turn pipeline, _llm_call() chain, _try_nexus_synthesize(), Telegram long-poll, peer-bridge webhook, FileHQ auto-start. Loads every Naya module optionally (graceful if missing)."},
-        {"title": "DB Redirect Shim", "file": "naya_db.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Patches maia_db.DB_FILE to C:\\NAYA\\naya.db then re-exports all maia_db symbols; adds save_message()/get_history() overrides. Must import before any maia_* module."},
-        {"title": "LLM Intent Extractor", "file": "naya_llm_intent.py", "location": "C:\\NAYA\\", "type": "Python", "description": "LLM-first structured intent extraction with the ~25-action schema (ACTIONS) and the classifier system prompt. PRIMARY router."},
-        {"title": "Action Router", "file": "naya_action_router.py", "location": "C:\\NAYA\\", "type": "Python", "description": "dispatch() / dispatch_action() map intents to permission-gated handlers; compound chain_action support; one handler set for chat, Telegram and the File Manager."},
-        {"title": "Legacy Intent Router", "file": "naya_intent_router.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Keyword/regex router used only as a fallback when LLM intent extraction fails."},
-        {"title": "Gradio Console", "file": "naya_gradio.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Gradio UI on port 7861 — Chat, File Manager, Naya Brain, Settings, Logs tabs (Knowledge Base tab commented out)."}
+        {"title": "Main Server", "file": "naya_server.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Flask server on port 8002. ask_naya() turn pipeline, _llm_call() chain, _try_nexus_synthesize(), Telegram long-poll, peer-bridge webhook, FileHQ auto-start. Loads every Naya module optionally (graceful if missing)."},
+        {"title": "DB Redirect Shim", "file": "naya_db.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Patches maia_db.DB_FILE to C:\\APPS\\NAYA\\naya.db then re-exports all maia_db symbols; adds save_message()/get_history() overrides. Must import before any maia_* module."},
+        {"title": "LLM Intent Extractor", "file": "naya_llm_intent.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "LLM-first structured intent extraction with the ~25-action schema (ACTIONS) and the classifier system prompt. PRIMARY router."},
+        {"title": "Action Router", "file": "naya_action_router.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "dispatch() / dispatch_action() map intents to permission-gated handlers; compound chain_action support; one handler set for chat, Telegram and the File Manager."},
+        {"title": "Legacy Intent Router", "file": "naya_intent_router.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Keyword/regex router used only as a fallback when LLM intent extraction fails."},
+        {"title": "Gradio Console", "file": "naya_gradio.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Gradio UI on port 7861 — Chat, File Manager, Naya Brain, Settings, Logs tabs (Knowledge Base tab commented out)."}
       ]
     },
     {
       "name": "Key Source — File Intelligence",
       "documents": [
-        {"title": "Scanner", "file": "naya_scanner.py", "location": "C:\\NAYA\\", "type": "Python", "description": "SHA-256 exact-duplicate scanner (4-phase) + difflib fuzzy-name scanner + USB cross-reference; background, cancellable; writes naya_brain.db."},
-        {"title": "Advisor", "file": "naya_advisor.py", "location": "C:\\NAYA\\", "type": "Python", "description": "analyze_storage() + cleanup plan create/approve/execute; recycle-bin-first via send2trash; FileHQ index queries for dupes and old-large files."},
-        {"title": "Memory", "file": "naya_memory.py", "location": "C:\\NAYA\\", "type": "Python", "description": "folder_insight() (read-only FileHQ index, 24h cache), capture_intent(), reminder_message() for proactive reminders."},
-        {"title": "Executor", "file": "naya_executor.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Phase-3 safe-delete: moves non-keep members to NAYA_TRASH, logs batches, undo_last()/undo_batch(); requires file_delete_approved."},
-        {"title": "Deferral", "file": "naya_deferral.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Chat-driven deferral + natural-language scheduling; creates Windows Task Scheduler tasks under the Naya\\ prefix."},
-        {"title": "Watcher", "file": "naya_watcher.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Disk-space monitor, USB watcher, and off-hours scheduler (APScheduler) started by start_watchers()."},
-        {"title": "Reporter", "file": "naya_reporter.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Report generation in md/txt/docx/pdf; types space/dupes/actions/deferred/full; saved to C:\\NAYA\\REPORTS\\."},
-        {"title": "FileHQ Bridge", "file": "filehq_bridge.py", "location": "C:\\NAYA\\", "type": "Python", "description": "HTTP client to the merged FileHQ engine (port 8200): scan trigger, stats, error sanitisation, pre-flight health check."}
+        {"title": "Scanner", "file": "naya_scanner.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "SHA-256 exact-duplicate scanner (4-phase) + difflib fuzzy-name scanner + USB cross-reference; background, cancellable; writes naya_brain.db."},
+        {"title": "Advisor", "file": "naya_advisor.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "analyze_storage() + cleanup plan create/approve/execute; recycle-bin-first via send2trash; FileHQ index queries for dupes and old-large files."},
+        {"title": "Memory", "file": "naya_memory.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "folder_insight() (read-only FileHQ index, 24h cache), capture_intent(), reminder_message() for proactive reminders."},
+        {"title": "Executor", "file": "naya_executor.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Phase-3 safe-delete: moves non-keep members to NAYA_TRASH, logs batches, undo_last()/undo_batch(); requires file_delete_approved."},
+        {"title": "Deferral", "file": "naya_deferral.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Chat-driven deferral + natural-language scheduling; creates Windows Task Scheduler tasks under the Naya\\ prefix."},
+        {"title": "Watcher", "file": "naya_watcher.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Disk-space monitor, USB watcher, and off-hours scheduler (APScheduler) started by start_watchers()."},
+        {"title": "Reporter", "file": "naya_reporter.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Report generation in md/txt/docx/pdf; types space/dupes/actions/deferred/full; saved to C:\\APPS\\NAYA\\REPORTS\\."},
+        {"title": "FileHQ Bridge", "file": "filehq_bridge.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "HTTP client to the merged FileHQ engine (port 8200): scan trigger, stats, error sanitisation, pre-flight health check."}
       ]
     },
     {
       "name": "Data, Config & Ecosystem",
       "documents": [
-        {"title": "Control-plane DB", "file": "naya.db", "location": "C:\\NAYA\\", "type": "SQLite", "description": "Maia-schema database (via the shim): config (93 keys), llm_chain (8 models), conversations (690), subjects (67). ~900 KB."},
-        {"title": "File-intelligence DB", "file": "naya_brain.db", "location": "C:\\NAYA\\", "type": "SQLite", "description": "Scanner/advisor/memory store: naya_scans (178), naya_similarity_groups (~2.7M), folder insights, intents, operations, drives, settings. ~2.3 GB."},
-        {"title": "Secrets", "file": "naya.env / naya-line.env", "location": "C:\\NAYA\\secrets\\", "type": "Env", "description": "Telegram token, Anthropic + OpenRouter keys, LINE creds. Loaded via python-dotenv at startup. Gitignored."},
-        {"title": "Service Control", "file": "Naya_Control.bat", "location": "C:\\NAYA\\", "type": "Batch", "description": "Start/stop/restart/status menu for QI_NayaBot and QI_NayaGradio."},
+        {"title": "Control-plane DB", "file": "naya.db", "location": "C:\\APPS\\NAYA\\", "type": "SQLite", "description": "Maia-schema database (via the shim): config (93 keys), llm_chain (8 models), conversations (690), subjects (67). ~900 KB."},
+        {"title": "File-intelligence DB", "file": "naya_brain.db", "location": "C:\\APPS\\NAYA\\", "type": "SQLite", "description": "Scanner/advisor/memory store: naya_scans (178), naya_similarity_groups (~2.7M), folder insights, intents, operations, drives, settings. ~2.3 GB."},
+        {"title": "Secrets", "file": "naya.env / naya-line.env", "location": "C:\\APPS\\NAYA\\secrets\\", "type": "Env", "description": "Telegram token, Anthropic + OpenRouter keys, LINE creds. Loaded via python-dotenv at startup. Gitignored."},
+        {"title": "Service Control", "file": "Naya_Control.bat", "location": "C:\\APPS\\NAYA\\", "type": "Batch", "description": "Start/stop/restart/status menu for QI_NayaBot and QI_NayaGradio."},
         {"title": "QI Service Registry (Naya)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entries: QI_NayaBot (8002), QI_NayaGradio (7861), QI_NayaTunnel (Cloudflare, UI demos only)."},
         {"title": "QI Ecosystem Registry (naya)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "Naya registry entry: status=paused, ports 8002/7861, family_tier=sibling_candidate, Telegram-only, LAN-only, integrates_with filehq/nexus/maia."},
         {"title": "Project Memory Index", "file": "MEMORY.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--NAYA\\memory\\", "type": "Markdown", "description": "Claude's persistent memory index for Naya (+ linked files: naya_build_status, filehq_merger, naya_maia_separation, universal_session_protocol)."},
-        {"title": "Smoke Test", "file": "test_smoke.py", "location": "C:\\NAYA\\tests\\", "type": "Python", "description": "Quick liveness check for the Naya server."}
+        {"title": "Smoke Test", "file": "test_smoke.py", "location": "C:\\APPS\\NAYA\\tests\\", "type": "Python", "description": "Quick liveness check for the Naya server."}
       ]
     }
   ]

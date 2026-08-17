@@ -1,0 +1,495 @@
+========================================================================
+C: ROOT FOLDERS  (candidates for C:\APPS)
+========================================================================
+       C:\1-AI
+  git  C:\AkiyaScout
+       C:\ARCHIVE
+  git  C:\AutoPDF
+       C:\AutoPDF_Portable
+  git  C:\CLAUDE
+  git  C:\CogniBase
+  git  C:\CypherMiner
+  git  C:\EasyFlow
+  git  C:\Gamez
+       C:\GOOSE
+       C:\inetpub
+  git  C:\Lottery Wiz
+  git  C:\M2V
+  git  C:\MailBrain
+  git  C:\MapSnap
+  git  C:\MQ
+  git  C:\NAYA
+  git  C:\NEXUS
+  git  C:\OC
+  git  C:\PersonalSong
+  git  C:\PlayDeck
+       C:\Plex
+       C:\POWERSPEC - G484 DRIVERS
+  git  C:\QI
+       C:\QIB
+  git  C:\QIH
+       C:\QIP
+  git  C:\Retirement Analyzer
+       C:\SCRIPTS
+       C:\Server 2012 R2
+  git  C:\TUBESCOUT
+       C:\VLCDaemon
+
+  total: 33 folders
+
+========================================================================
+NSSM SERVICES — paths that must be rewritten
+========================================================================
+
+  QI_AutoPDF  (start: SERVICE_DEMAND_START)
+      Application    C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+      AppDirectory   C:\AutoPDF\Application
+      AppParameters  -NoProfile -ExecutionPolicy Bypass -File C:\AutoPDF\Application\AutoPDF-Server.ps1
+      AppStdout      C:\AutoPDF\Application\LOGS\service_stdout.log
+      AppStderr      C:\AutoPDF\Application\LOGS\service_stderr.log
+
+  QI_AutoPDFMCP  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\AutoPDF
+      AppParameters  C:\AutoPDF\tools\run_mcp_gateway.py
+      AppStdout      C:\AutoPDF\Application\LOGS\mcp_gateway.log
+      AppStderr      C:\AutoPDF\Application\LOGS\mcp_gateway.err.log
+
+  QI_AutoPDFTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-autopdf.yml run qi-autopdf
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_AutoPDFTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_AutoPDFTunnel.err.log
+
+  QI_BrainAPI  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH
+      AppParameters  C:\QIH\engine\brain\api.py
+      AppStdout      C:\QIH\engine\brain\LOGS\qi_brain_api.log
+      AppStderr      C:\QIH\engine\brain\LOGS\qi_brain_api.log
+
+  QI_Caddy  (start: SERVICE_AUTO_START)
+      Application    C:\QIH\engine\bin\caddy.exe
+      AppDirectory   C:\QIH\engine\bin
+      AppParameters  run --config C:\QIH\engine\proxy\Caddyfile
+
+  QI_ClaudeVoiceControl  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\launchers
+      AppParameters  C:\QIH\engine\launchers\claudevoice_control_launcher.py
+      AppStdout      C:\QIH\logs\claudevoice_control.log
+      AppStderr      C:\QIH\logs\claudevoice_control.log
+
+  QI_ClaudeVoiceLine  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\CLAUDE\Claude Voice
+      AppParameters  line_bot.py
+      AppStdout      C:\CLAUDE\Claude Voice\LOGS\line_service.log
+      AppStderr      C:\CLAUDE\Claude Voice\LOGS\line_service.log
+
+  QI_ClaudeVoiceTelegram  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\CLAUDE\Claude Voice
+      AppParameters  telegram_bot.py
+      AppStdout      C:\CLAUDE\Claude Voice\LOGS\telegram_service.log
+      AppStderr      C:\CLAUDE\Claude Voice\LOGS\telegram_service.log
+
+  QI_ClaudeVoiceTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-claudevoice.yml run qi-claudevoice
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_ClaudeVoiceTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_ClaudeVoiceTunnel.err.log
+
+  QI_CogniBase  (start: SERVICE_AUTO_START)
+      Application    C:\CogniBase\.venv\Scripts\python.exe
+      AppDirectory   C:\CogniBase
+      AppParameters  -m uvicorn Application.server.app:app --host 127.0.0.1 --port 8650
+      AppStdout      C:\CogniBase\LOGS\QI_CogniBase.stdout.log
+      AppStderr      C:\CogniBase\LOGS\QI_CogniBase.stderr.log
+
+  QI_CogniBaseTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-cognibase.yml run qi-cognibase
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_CogniBaseTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_CogniBaseTunnel.err.log
+
+  QI_ConnectorMCP  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIP\Connector
+      AppParameters  C:\QIP\Connector\api\main.py
+      AppStdout      C:\QIP\Connector\data\logs\service_stdout.log
+      AppStderr      C:\QIP\Connector\data\logs\service_stderr.log
+
+  QI_ConnectorTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-connector.yml run qi-connector
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_ConnectorTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_ConnectorTunnel.err.log
+
+  QI_CypherMinerTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-cypherminer.yml run qi-cypherminer
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_CypherMinerTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_CypherMinerTunnel.err.log
+
+  QI_CypherMinerUI  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\CypherMiner
+      AppParameters  -m http.server 7842 --bind 127.0.0.1 --directory C:\CypherMiner\frontend\dist
+      AppStdout      C:\CypherMiner\LOGS\ui_service.log
+      AppStderr      C:\CypherMiner\LOGS\ui_service.log
+
+  QI_Dashboard  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH
+      AppParameters  C:\QIH\engine\hive\dashboard\server.py
+      AppStdout      C:\QIH\engine\hive\dashboard\LOGS\dashboard.log
+      AppStderr      C:\QIH\engine\hive\dashboard\LOGS\dashboard_error.log
+
+  QI_DashboardTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-hive.yml run qi-hive
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_DashboardTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_DashboardTunnel.err.log
+
+  QI_Elevate  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\common
+      AppParameters  C:\QIH\engine\common\qi_elevate.py
+      AppStdout      C:\QIH\logs\elevation\broker_stdout.log
+      AppStderr      C:\QIH\logs\elevation\broker_stderr.log
+
+  QI_GamezProxy  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\Gamez\proxy
+      AppParameters  server.py
+      AppStdout      C:\Gamez\proxy\LOGS\gamez_proxy_service.log
+      AppStderr      C:\Gamez\proxy\LOGS\gamez_proxy_service.log
+
+  QI_GamezQuantProxy  (start: SERVICE_DEMAND_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\Gamez\proxy
+      AppParameters  hyde_service.py
+      AppStdout      C:\Gamez\proxy\LOGS\hyde_service.log
+      AppStderr      C:\Gamez\proxy\LOGS\hyde_service.log
+
+  QI_GamezTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-gamez.yml run qi-gamez
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_GamezTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_GamezTunnel.err.log
+
+  QI_Gate  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\gate
+      AppParameters  C:\QIH\engine\gate\qi_gate.py
+      AppStdout      C:\QIH\logs\qi_gate.log
+      AppStderr      C:\QIH\logs\qi_gate.err.log
+
+  QI_Headroom  (start: SERVICE_AUTO_START)
+      Application    C:\CLAUDE\Tools\headroom_env\Scripts\headroom.exe
+      AppDirectory   C:\CLAUDE\Tools
+      AppParameters  proxy --port 9020
+      AppStdout      C:\CLAUDE\Tools\headroom_env\logs\stdout.log
+      AppStderr      C:\CLAUDE\Tools\headroom_env\logs\stderr.log
+
+  QI_HiveApply  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\hive\apply
+      AppParameters  C:\QIH\engine\hive\apply\main.py
+      AppStdout      C:\QIH\logs\hive_apply.log
+      AppStderr      C:\QIH\logs\hive_apply.log
+
+  QI_HiveIngest  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\hive\ingest
+      AppParameters  C:\QIH\engine\hive\ingest\hive_ingest.py
+      AppStdout      C:\QIH\logs\hive\ingest_stdout.log
+      AppStderr      C:\QIH\logs\hive\ingest_stderr.log
+
+  QI_HiveInspectorDrain  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\hive\inspect
+      AppParameters  C:\QIH\engine\hive\inspect\main.py
+      AppStdout      C:\QIH\logs\hive_inspector_drain.log
+      AppStderr      C:\QIH\logs\hive_inspector_drain.log
+
+  QI_KazeConfigAPI  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\OC\repo\scripts\kaze
+      AppParameters  C:\OC\repo\scripts\kaze\kaze-config-api.py
+      AppStdout      C:\OC\runtime\logs\agents\kaze\kaze-config-api.log
+      AppStderr      C:\OC\runtime\logs\agents\kaze\kaze-config-api.log
+
+  QI_KazeNewsTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-kaze.yml run qi-kaze
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_KazeNewsTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_KazeNewsTunnel.err.log
+
+  QI_LotteryWiz  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\Lottery Wiz
+      AppParameters  server.py
+      AppStdout      C:\Lottery Wiz\LOGS\service.log
+      AppStderr      C:\Lottery Wiz\LOGS\service.log
+
+  QI_LotteryWizTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-lotterywiz.yml run qi-lotterywiz
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_LotteryWizTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_LotteryWizTunnel.err.log
+
+  QI_M2VTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-m2v.yml run qi-m2v
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_M2VTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_M2VTunnel.err.log
+
+  QI_MaiaBot  (start: SERVICE_DELAYED_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QI
+      AppParameters  maia_server.py
+      AppStdout      C:\QI\LOGS\maia_service_log.txt
+      AppStderr      C:\QI\LOGS\maia_error.txt
+
+  QI_MaiaDemoTunnel  (start: SERVICE_DISABLED)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\Program Files (x86)\cloudflared
+      AppParameters  tunnel --protocol http2 --url http://localhost:7860
+      AppStdout      C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt
+      AppStderr      C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt
+
+  QI_MaiaGradio  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QI
+      AppParameters  maia_gradio.py
+      AppStdout      C:\QI\LOGS\maia_gradio_service.log
+      AppStderr      C:\QI\LOGS\maia_gradio_error.log
+
+  QI_MaiaQueueDrain  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\relay
+      AppParameters  C:\QIH\engine\relay\maia_queue_drain_service.py
+      AppStdout      C:\QIH\logs\maia_queue_drain.log
+      AppStderr      C:\QIH\logs\maia_queue_drain.log
+
+  QI_MaiaTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-maia.yml run qi-maia
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_MaiaTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_MaiaTunnel.err.log
+
+  QI_MapSnap  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\MapSnap
+      AppParameters  Application\server.py
+      AppStdout      C:\MapSnap\LOGS\QI_MapSnap.stdout.log
+      AppStderr      C:\MapSnap\LOGS\QI_MapSnap.stderr.log
+
+  QI_MapSnapBUSetup  (start: SERVICE_DEMAND_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\launchers
+      AppParameters  C:\QIH\engine\launchers\mapsnap_bu_iis_runner.py
+      AppStdout      C:\QIH\logs\qi_mapsnap_bu_setup_svc.log
+      AppStderr      C:\QIH\logs\qi_mapsnap_bu_setup_svc.err.log
+
+  QI_MapSnapMCP  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\launchers
+      AppParameters  C:\QIH\engine\launchers\mapsnap_mcp_launcher.py
+      AppStdout      C:\QIH\logs\mapsnap_mcp.log
+      AppStderr      C:\QIH\logs\mapsnap_mcp.err.log
+
+  QI_MapSnapMCPBU  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\launchers
+      AppParameters  C:\QIH\engine\launchers\mapsnap_mcp_bu_launcher.py
+      AppStdout      C:\QIH\logs\qi_mapsnap_mcp_bu.log
+      AppStderr      C:\QIH\logs\qi_mapsnap_mcp_bu.err.log
+
+  QI_MapSnapTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-mapsnap.yml run qi-mapsnap
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_MapSnapTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_MapSnapTunnel.err.log
+
+  QI_MQTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-mq.yml run qi-mq
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_MQTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_MQTunnel.err.log
+
+  QI_NayaBot  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\NAYA
+      AppParameters  C:\NAYA\naya_server.py
+      AppStdout      C:\NAYA\LOGS\naya_service_log.txt
+      AppStderr      C:\NAYA\LOGS\naya_error.txt
+
+  QI_NayaGradio  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\NAYA
+      AppParameters  C:\NAYA\naya_gradio.py
+      AppStdout      C:\NAYA\LOGS\naya_gradio_service.log
+      AppStderr      C:\NAYA\LOGS\naya_gradio_error.log
+
+  QI_NayaTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-naya.yml run qi-naya
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_NayaTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_NayaTunnel.err.log
+
+  QI_NEXUS  (start: SERVICE_DELAYED_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\NEXUS
+      AppParameters  C:\NEXUS\main.py
+      AppStdout      C:\NEXUS\LOGS\nexus_service.log
+      AppStderr      C:\NEXUS\LOGS\nexus_service_error.log
+
+  QI_NexusMCP  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\QIH\engine\launchers
+      AppParameters  C:\QIH\engine\launchers\nexus_mcp_launcher.py
+      AppStdout      C:\QIH\logs\nexus_mcp.log
+      AppStderr      C:\QIH\logs\nexus_mcp.err.log
+
+  QI_NEXUSTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-nexus.yml run qi-nexus
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_NEXUSTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_NEXUSTunnel.err.log
+
+  QI_PlayDeck  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\PlayDeck
+      AppParameters  C:\PlayDeck\main.py
+      AppStdout      C:\PlayDeck\data\logs\service_out.log
+      AppStderr      C:\PlayDeck\data\logs\service_err.log
+
+  QI_RetirementAnalyzer  (start: SERVICE_DEMAND_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\RetirementAnalyzer
+      AppParameters  main.py
+      AppStdout      C:\RetirementAnalyzer\logs\service.log
+      AppStderr      C:\RetirementAnalyzer\logs\service.log
+
+  QI_TubeScout  (start: SERVICE_AUTO_START)
+      Application    C:\1-AI\APPS\PYTHON\python.exe
+      AppDirectory   C:\TUBESCOUT
+      AppParameters  -m uvicorn api.main:app --host 127.0.0.1 --port 8503 --log-level warning
+      AppStdout      C:\TUBESCOUT\data\logs\service.log
+      AppStderr      C:\TUBESCOUT\data\logs\service.log
+
+  QI_TubeScoutTunnel  (start: SERVICE_AUTO_START)
+      Application    C:\Program Files (x86)\cloudflared\cloudflared.exe
+      AppDirectory   C:\QIH\engine\tunnels
+      AppParameters  tunnel --no-autoupdate --config C:\QIH\engine\tunnels\configs\qi-tubescout.yml run qi-tubescout
+      AppStdout      C:\QIH\engine\tunnels\LOGS\QI_TubeScoutTunnel.out.log
+      AppStderr      C:\QIH\engine\tunnels\LOGS\QI_TubeScoutTunnel.err.log
+
+========================================================================
+QI REGISTRY — project paths
+========================================================================
+  filehq                 C:\NAYA\filehq
+  maia                   C:\QI
+  naya                   C:\NAYA
+  nexus                  C:\NEXUS
+  openclaw               C:\OC
+  mq                     C:\MQ
+  easyflow               C:\EasyFlow
+  universal              C:\QIH
+  qi_brain               C:\QIH\engine\brain
+  qi_hive                C:\QIH
+  autopdf                C:\AutoPDF
+  cognibase              C:\CogniBase
+  mapsnap                C:\MapSnap
+  m2v                    C:\M2V
+  personalsong           C:\PersonalSong
+  cypherminer            C:\CypherMiner
+  lotterywiz             C:\Lottery Wiz
+  digitization           C:\Users\renne\Downloads\DIGITIZATION COSTS
+  tubescout              C:\TUBESCOUT
+  retirementanalyzer     C:\Retirement Analyzer
+  avatarstudio           C:\1-AI\APPS\AvatarStudio
+  claude_manager         C:\CLAUDE
+  gamez                  C:\Gamez
+  claude_voice           C:\CLAUDE\Claude Voice
+  akiyascout             C:\AkiyaScout
+  headroom               C:\CLAUDE\Tools
+  playdeck               C:\PlayDeck
+  connector              C:\QIP\Connector
+
+========================================================================
+MCP SERVERS (~/.claude.json)
+========================================================================
+  claude-peers     C:/Users/renne/.bun/bin/bun.exe
+                     args: C:/Users/renne/.bun/install/global/node_modules/claude-peers/src/server.ts
+  git              C:/Users/renne/AppData/Roaming/npm/git-mcp-server.cmd
+  qi-brain         C:/1-AI/APPS/PYTHON/python.exe
+                     args: C:/QIH/engine/brain/mcp.py
+  mapsnap          http://127.0.0.1:8651/mcp
+  qi-registry      C:\1-AI\APPS\PYTHON\python.exe
+                     args: C:\QIH\engine\mcp\qi_registry_mcp.py
+  autopdf          http://127.0.0.1:8701/mcp
+
+========================================================================
+DOC / CONFIG FILES REFERENCING MOVING PATHS
+========================================================================
+   18 refs  C:\AkiyaScout\CLAUDE.md
+           C:\1-AI, C:\AkiyaScout, C:\AutoPDF, C:\CLAUDE, C:\CogniBase, C:\CypherMiner
+    2 refs  C:\AutoPDF\CLAUDE.md
+           C:\AutoPDF, C:\QI
+   12 refs  C:\CypherMiner\CLAUDE.md
+           C:\AutoPDF, C:\CogniBase, C:\CypherMiner, C:\EasyFlow, C:\M2V, C:\MQ
+    2 refs  C:\Gamez\CLAUDE.md
+           C:\Gamez, C:\QI
+   10 refs  C:\M2V\CLAUDE.md
+           C:\AutoPDF, C:\CogniBase, C:\EasyFlow, C:\M2V, C:\MQ, C:\MapSnap
+    5 refs  C:\MQ\CLAUDE.md
+           C:\MQ, C:\NAYA, C:\NEXUS, C:\OC, C:\QI
+    4 refs  C:\NAYA\CLAUDE.md
+           C:\NAYA, C:\NEXUS, C:\OC, C:\QI
+    4 refs  C:\NEXUS\CLAUDE.md
+           C:\NAYA, C:\NEXUS, C:\OC, C:\QI
+    4 refs  C:\OC\CLAUDE.md
+           C:\NAYA, C:\NEXUS, C:\OC, C:\QI
+   20 refs  C:\PlayDeck\CLAUDE.md
+           C:\1-AI, C:\AkiyaScout, C:\AutoPDF, C:\CLAUDE, C:\CogniBase, C:\CypherMiner
+    4 refs  C:\QI\CLAUDE.md
+           C:\NAYA, C:\NEXUS, C:\OC, C:\QI
+   14 refs  C:\Retirement Analyzer\CLAUDE.md
+           C:\AutoPDF, C:\CogniBase, C:\CypherMiner, C:\EasyFlow, C:\Lottery Wiz, C:\M2V
+   14 refs  C:\TUBESCOUT\CLAUDE.md
+           C:\AutoPDF, C:\CogniBase, C:\CypherMiner, C:\EasyFlow, C:\Lottery Wiz, C:\M2V
+    7 refs  C:\QIH\ecosystem\QI_Ecosystem_Map.md
+           C:\AutoPDF, C:\EasyFlow, C:\MQ, C:\NAYA, C:\NEXUS, C:\OC
+   15 refs  C:\QIH\ecosystem\QI_Service_Registry.md
+           C:\1-AI, C:\AutoPDF, C:\CLAUDE, C:\CogniBase, C:\CypherMiner, C:\Gamez
+    4 refs  C:\QIH\ecosystem\QI_Standards.md
+           C:\NAYA, C:\NEXUS, C:\OC, C:\QI
+
+========================================================================
+SCHEDULED TASKS pointing into C:\ project folders
+========================================================================
+  OC-ChatGPT-Keepalive: C:\1-AI\APPS\PYTHON\pythonw.exe C:\OC\tools\oc-chatgpt-keepalive.py
+  Opera GX scheduled assistant Autoupdate 1764884872: C:\Users\renne\AppData\Local\Programs\Opera GX\autoupdate\opera_autoupdate.exe --scheduledtask --productiscomponent --installdir="C:\Users\
+  Opera GX scheduled Autoupdate 1764884870: C:\Users\renne\AppData\Local\Programs\Opera GX\autoupdate\opera_autoupdate.exe --scheduledtask $(Arg0)
+  QI_ComplianceFast: C:\1-AI\APPS\PYTHON\python.exe -m inspector.inspector --mode fast
+  QI_GamezAIPin: C:\1-AI\APPS\PYTHON\python.exe C:\Gamez\proxy\set_ai_pin.py 696969
+  QI_NightlyReconcile: C:\1-AI\APPS\PYTHON\python.exe C:\QIH\tools\nightly_reconcile.py

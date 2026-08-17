@@ -25,7 +25,7 @@ if %errorlevel% neq 0 (
 
 setlocal
 set TUN=C:\QIH\engine\tunnels
-set PY=C:\1-AI\APPS\PYTHON\python.exe
+set PY=C:\Program Files\Python311\python.exe
 if not exist "%PY%" set PY=python
 set CERT=%USERPROFILE%\.cloudflared\cert.pem
 

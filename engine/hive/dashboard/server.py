@@ -84,7 +84,11 @@ async def no_store_html(request: Request, call_next):
 _PROJECT_DIR = Path(__file__).parent.parent.parent.parent  # C:\QIH
 STATUS_FILE  = _PROJECT_DIR / "data" / "status.json"
 TASKS_FILE   = _PROJECT_DIR / "data" / "tasks.json"
-AGENTS_DIR   = _PROJECT_DIR / "hive" / "Agents"  # legacy agents folder — stays for now
+# Legacy per-agent config folder. This has not existed since the UNIVERSAL->QIH
+# migration; load_agents() returns {} and is now only a fallback enricher for the
+# Brain-backed agent table. The authoritative agent registry is qi_brain.db.
+# (2026-08-17 audit — /api/agents was serving {} because of this dead path.)
+AGENTS_DIR   = _PROJECT_DIR / "hive" / "Agents"
 BRAIN_DB     = _PROJECT_DIR / "data" / "qi_brain.db"
 
 def _brain_db_query(sql: str, params: tuple = ()) -> list[dict]:
@@ -163,8 +167,9 @@ log = get_logger("dashboard")
 try:
     from engine.common import usage_ledger
     from engine.common import usage_dimensions
+    from engine.common import usage_snapshot_task
 except Exception as _e:                                    # pragma: no cover
-    usage_ledger = usage_dimensions = None
+    usage_ledger = usage_dimensions = usage_snapshot_task = None
     log.warning(f"usage_ledger unavailable, falling back to live parse: {_e}")
 
 
@@ -296,13 +301,57 @@ def _win(days: int):
     return end - _td(days=days - 1), end
 
 
+def _ensure_usage_fresh():
+    """Repair a stale ledger before any usage read.
+
+    Every helper below prefers the ledger whenever it holds ANY row for the
+    requested window. That makes a stale ledger far worse than an empty one:
+    an empty window falls back to live parsing and is correct, while a
+    partially-covered window silently truncates at the ledger's last day. That
+    is exactly how YTD froze at $60,124 for the eight days after 2026-08-05 —
+    and how 30d came to read LOWER than 7d, because only the 7d window was
+    empty enough to trigger the fallback.
+
+    Keeping the ledger current is the fix. The snapshot runs on a background
+    thread (throttled to once per 5 min) so it never adds to this request's
+    latency — see `usage_snapshot_task.ensure_fresh`. The scheduled task
+    `QI_UsageSnapshot` is the primary guarantee; this is the safety net for
+    when it has not run yet.
+    """
+    if usage_snapshot_task is None:
+        return
+    if usage_snapshot_task.ensure_fresh():
+        log.info("usage ledger refresh started in background")
+
+
+def _warn_if_truncating(start, end):
+    """Log when the ledger cannot cover a window it is about to answer for.
+
+    `_ensure_usage_fresh` should prevent this, so reaching here means the
+    snapshot is failing. Without this line the symptom is invisible: the tile
+    just quietly reports a smaller number.
+    """
+    if usage_ledger is None:
+        return
+    try:
+        m = usage_ledger.max_day()
+        if m is not None and m < end:
+            log.warning(
+                f"usage ledger only covers through {m} but window ends {end} — "
+                f"figures for this window are truncated; check QI_UsageSnapshot")
+    except Exception:
+        pass
+
+
 def usage_range(start, end):
     """Window metrics, preferring the ledger so reconstructed history is
     included. Falls back to live transcript parsing if the ledger is empty."""
+    _ensure_usage_fresh()
     if usage_ledger is not None:
         try:
             r = usage_ledger.range_stats(start, end)
             if r.get("turns"):
+                _warn_if_truncating(start, end)
                 return r
         except Exception as e:
             log.warning(f"usage_ledger.range_stats failed: {e}")
@@ -316,6 +365,7 @@ def usage_totals(days: int):
 
 
 def usage_daily(days: int):
+    _ensure_usage_fresh()
     if usage_ledger is not None:
         try:
             rows = usage_ledger.daily_range(*_win(days))
@@ -327,6 +377,7 @@ def usage_daily(days: int):
 
 
 def usage_by_project(days: int):
+    _ensure_usage_fresh()
     if usage_dimensions is not None:
         try:
             rows = usage_dimensions.by_project(*_win(days))
@@ -338,6 +389,7 @@ def usage_by_project(days: int):
 
 
 def usage_by_model(days: int):
+    _ensure_usage_fresh()
     if usage_dimensions is not None:
         try:
             rows = usage_dimensions.by_model(*_win(days))
@@ -349,6 +401,7 @@ def usage_by_model(days: int):
 
 
 def usage_savings_by_project(days: int):
+    _ensure_usage_fresh()
     if usage_dimensions is not None:
         try:
             rows = usage_dimensions.savings_by_project(*_win(days))
@@ -360,6 +413,7 @@ def usage_savings_by_project(days: int):
 
 
 def usage_savings_by_model(days: int):
+    _ensure_usage_fresh()
     if usage_dimensions is not None:
         try:
             rows = usage_dimensions.savings_by_model(*_win(days))
@@ -377,10 +431,13 @@ def usage_totals_since(start):
     `cost_by_source` / `measured_pct` so the UI can show how much of the
     figure is measured versus reconstructed.
     """
+    _ensure_usage_fresh()
     if usage_ledger is not None:
         try:
             r = usage_ledger.totals_since(start)
             if r.get("turns"):
+                from datetime import date as _d
+                _warn_if_truncating(start, _d.today())
                 return r
         except Exception as e:
             log.warning(f"usage_ledger.totals_since failed: {e}")
@@ -698,6 +755,7 @@ def _theme_icon(theme: str) -> str:
 def base_layout(title: str, content: str, active: str = "") -> str:
     nav_items = [
         ("dashboard", "/",        "bi-speedometer2",  "Dashboard"),
+        ("voice",     "/voice",   "bi-mic",           "Claude Voice"),
         ("launcher",  "/launcher","bi-grid-3x3-gap",  "Launcher"),
         ("tunnels",   "/tunnels", "bi-globe2",        "Tunnels"),
         ("hive",      "/hive",    "bi-hexagon",       "The Hive"),
@@ -709,6 +767,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("ops",       "/ops",     "bi-wrench-adjustable",   "Ops"),
         ("tasks",     "/tasks",   "bi-calendar-event",      "Scheduled Tasks"),
         ("usage",     "/usage",   "bi-graph-up-arrow","LLM Usage"),
+        ("effort",    "/effort",  "bi-stopwatch",     "Effort Ledger"),
         ("news",      "/news",    "bi-newspaper",     "Headlines"),
         ("activity",  "/activity","bi-activity",      "Activity"),
         ("dispatch",  "/dispatch","bi-send-check",    "CoWork Dispatch"),
@@ -1047,7 +1106,7 @@ def _get_agent_activity_overrides() -> dict:
 
     # Maia: conversations grouped by conv_key (each conv_key = one chat thread)
     try:
-        c = sqlite3.connect("file:C:/QI/maia.db?mode=ro", uri=True, timeout=2.0)
+        c = sqlite3.connect("file:C:/APPS/QI/maia.db?mode=ro", uri=True, timeout=2.0)
         try:
             total_convs = c.execute("SELECT COUNT(DISTINCT conv_key) FROM conversations").fetchone()[0]
             last_ts = c.execute("SELECT MAX(ts) FROM conversations").fetchone()[0]
@@ -1056,7 +1115,7 @@ def _get_agent_activity_overrides() -> dict:
                 "count": total_convs,
                 "last_seen": last_ts,
                 "label": f"{total_convs} conv · {msgs_7d} msgs 7d",
-                "source": "C:/QI/maia.db conversations",
+                "source": "C:/APPS/QI/maia.db conversations",
                 "unit": "conversations",
             }
         finally:
@@ -1066,7 +1125,7 @@ def _get_agent_activity_overrides() -> dict:
 
     # Naya: same shape
     try:
-        c = sqlite3.connect("file:C:/NAYA/naya.db?mode=ro", uri=True, timeout=2.0)
+        c = sqlite3.connect("file:C:/APPS/NAYA/naya.db?mode=ro", uri=True, timeout=2.0)
         try:
             total_convs = c.execute("SELECT COUNT(DISTINCT conv_key) FROM conversations").fetchone()[0]
             last_ts = c.execute("SELECT MAX(ts) FROM conversations").fetchone()[0]
@@ -1075,7 +1134,7 @@ def _get_agent_activity_overrides() -> dict:
                 "count": total_convs,
                 "last_seen": last_ts,
                 "label": f"{total_convs} conv · {msgs_7d} msgs 7d",
-                "source": "C:/NAYA/naya.db conversations",
+                "source": "C:/APPS/NAYA/naya.db conversations",
                 "unit": "conversations",
             }
         finally:
@@ -1085,7 +1144,7 @@ def _get_agent_activity_overrides() -> dict:
 
     # NEXUS: scout digests + synthesis sessions
     try:
-        c = sqlite3.connect("file:C:/NEXUS/nexus.db?mode=ro", uri=True, timeout=2.0)
+        c = sqlite3.connect("file:C:/APPS/NEXUS/nexus.db?mode=ro", uri=True, timeout=2.0)
         try:
             digests = c.execute("SELECT COUNT(*) FROM scout_digests").fetchone()[0]
             sessions = c.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
@@ -1096,7 +1155,7 @@ def _get_agent_activity_overrides() -> dict:
                 "count": digests + sessions,
                 "last_seen": last,
                 "label": f"{digests} digests · {sessions} synth",
-                "source": "C:/NEXUS/nexus.db",
+                "source": "C:/APPS/NEXUS/nexus.db",
                 "unit": "digests + sessions",
             }
         finally:
@@ -1106,7 +1165,7 @@ def _get_agent_activity_overrides() -> dict:
 
     # OpenClaw: count log files per known agent folder + latest mtime
     try:
-        oc_logs = Path(r"C:\OC\runtime\logs\agents")
+        oc_logs = Path(r"C:\APPS\OC\runtime\logs\agents")
         if oc_logs.exists():
             total_logs = 0
             latest = None
@@ -1124,7 +1183,7 @@ def _get_agent_activity_overrides() -> dict:
                 "count": total_logs,
                 "last_seen": last_str,
                 "label": f"{total_logs} agent log files",
-                "source": "C:/OC/runtime/logs/agents",
+                "source": "C:/APPS/OC/runtime/logs/agents",
                 "unit": "log files",
             }
     except Exception:
@@ -1132,14 +1191,25 @@ def _get_agent_activity_overrides() -> dict:
 
     return overrides
 
+# Project LLM inventory is near-static config (a few read-only DB/JSON reads
+# plus one NEXUS probe), but it is rendered on the root page, so every single
+# dashboard load paid for it. Cache it briefly: a model list that is up to a
+# minute stale is harmless, a slow root page is not.
+_project_llms_cache = {"data": [], "ts": 0.0}
+_PROJECT_LLMS_TTL = 60.0   # seconds
+
+
 def _get_project_llms() -> list[dict]:
     """Read each project's Ollama model usage from its own config.
     Returns list of {project, models: [{name, role, notes}], source}."""
-    import sqlite3
+    import sqlite3, time as _time
+    if (_time.time() - _project_llms_cache["ts"] < _PROJECT_LLMS_TTL
+            and _project_llms_cache["data"]):
+        return _project_llms_cache["data"]
     out = []
 
     # Maia + Naya: both have llm_chain tables with the same schema
-    for proj, db_path in [("Maia", r"C:\QI\maia.db"), ("Naya", r"C:\NAYA\naya.db")]:
+    for proj, db_path in [("Maia", r"C:\APPS\QI\maia.db"), ("Naya", r"C:\APPS\NAYA\naya.db")]:
         try:
             c = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True, timeout=2.0)
             try:
@@ -1161,20 +1231,25 @@ def _get_project_llms() -> list[dict]:
     # NEXUS: hits /providers; specific models come from the running router config
     try:
         import urllib.request, json as _j
-        with urllib.request.urlopen("http://localhost:8010/providers", timeout=2.0) as r:
+        # 127.0.0.1, never "localhost". On this box localhost resolves to ::1
+        # first and IPv6 loopback SYNs are dropped rather than refused, so
+        # urllib — which tries addresses sequentially, unlike curl's parallel
+        # Happy Eyeballs — burned the full timeout before falling back to IPv4.
+        # NEXUS binds 127.0.0.1 only, so this cost 2s on every dashboard load.
+        with urllib.request.urlopen("http://127.0.0.1:8010/providers", timeout=2.0) as r:
             prov = _j.loads(r.read().decode('utf-8')).get("providers", [])
         models = []
         if "ollama" in prov:
             models.append({"name": "ollama (provider configured)", "role": "router", "notes": "specific models chosen per request"})
         if "gemma4" in prov:
             models.append({"name": "gemma4:* (provider alias)", "role": "router", "notes": ""})
-        out.append({"project": "NEXUS", "source": "http://localhost:8010/providers", "models": models})
+        out.append({"project": "NEXUS", "source": "http://127.0.0.1:8010/providers", "models": models})
     except Exception as e:
         out.append({"project": "NEXUS", "source": "API", "models": [], "error": str(e)})
 
     # CogniBase: settings.json → vendors[id=ollama]
     try:
-        cb_cfg = json.loads(Path(r"C:\CogniBase\Settings\settings.json").read_text(encoding="utf-8"))
+        cb_cfg = json.loads(Path(r"C:\APPS\CogniBase\Settings\settings.json").read_text(encoding="utf-8"))
         ollama_vendors = [v for v in cb_cfg.get("vendors", []) if "ollama" in (v.get("id") or "").lower()]
         models = []
         for v in ollama_vendors:
@@ -1183,32 +1258,33 @@ def _get_project_llms() -> list[dict]:
                 models.append({"name": m, "role": v.get("id"), "notes": active})
             if not v.get("models_chat"):
                 models.append({"name": f"({v.get('id')}: no models defined)", "role": v.get("id"), "notes": active})
-        out.append({"project": "CogniBase", "source": r"C:\CogniBase\Settings\settings.json", "models": models})
+        out.append({"project": "CogniBase", "source": r"C:\APPS\CogniBase\Settings\settings.json", "models": models})
     except Exception as e:
         out.append({"project": "CogniBase", "source": "settings.json", "models": [], "error": str(e)})
 
     # AutoPDF: autopdf-settings.json
     try:
-        ap = json.loads(Path(r"C:\AutoPDF\Application\autopdf-settings.json").read_text(encoding="utf-8"))
+        ap = json.loads(Path(r"C:\APPS\AutoPDF\Application\autopdf-settings.json").read_text(encoding="utf-8"))
         m = ap.get("ollamaModel")
         models = [{"name": m, "role": "smart-mapping", "notes": "AI template authoring + field extract"}] if m else []
-        out.append({"project": "AutoPDF", "source": r"C:\AutoPDF\Application\autopdf-settings.json", "models": models})
+        out.append({"project": "AutoPDF", "source": r"C:\APPS\AutoPDF\Application\autopdf-settings.json", "models": models})
     except Exception as e:
         out.append({"project": "AutoPDF", "source": "settings", "models": [], "error": str(e)})
 
     # OpenClaw: documented in OC repo (router fallback + vision). Hardcoded from repo docs.
-    out.append({"project": "OpenClaw", "source": r"C:\OC\repo\agents (docs)", "models": [
+    out.append({"project": "OpenClaw", "source": r"C:\APPS\OC\repo\agents (docs)", "models": [
         {"name": "qwen3:8b",      "role": "kaze-router-fallback", "notes": "activates when Cloudflare Workers AI fails"},
         {"name": "qwen3-vl:8b",   "role": "vision (default)",     "notes": "Playwright NLM element location, fast"},
         {"name": "qwen3-vl:32b",  "role": "vision (--accurate)",  "notes": "slower, excellent accuracy"},
     ]})
 
     # MapSnap: confirmed no LLM usage (static schema browser)
-    out.append({"project": "MapSnap", "source": r"C:\MapSnap (no LLM)", "models": []})
+    out.append({"project": "MapSnap", "source": r"C:\APPS\MapSnap (no LLM)", "models": []})
 
     # EasyFlow: no Ollama usage detected in source
-    out.append({"project": "EasyFlow", "source": r"C:\EasyFlow (Gmail tooling, no LLM)", "models": []})
+    out.append({"project": "EasyFlow", "source": r"C:\APPS\EasyFlow (Gmail tooling, no LLM)", "models": []})
 
+    _project_llms_cache.update({"data": out, "ts": _time.time()})
     return out
 
 def render_project_llms() -> str:
@@ -2653,27 +2729,27 @@ KNOWN_TUNNELS = [
     {"port": 6969, "label": "AutoPDF",
      "json": r"C:\AUTOPDF\Application\status\tunnel.json"},
     {"port": 8001, "label": "Maia API",
-     "log":  r"C:\QI\LOGS\tunnel_log.txt"},
+     "log":  r"C:\APPS\QI\LOGS\tunnel_log.txt"},
     {"port": 7860, "label": "Maia Demo (Gradio)",
-     "log":  r"C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt"},
+     "log":  r"C:\APPS\QI\LOGS\Maia_Gradio_Tunnel_Log.txt"},
     {"port": 7861, "label": "Naya UI",
-     "log":  r"C:\NAYA\LOGS\QI_NayaTunnel.stderr.log"},
+     "log":  r"C:\APPS\NAYA\LOGS\QI_NayaTunnel.stderr.log"},
     {"port": 7880, "label": "NEXUS UI",
-     "log":  r"C:\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log"},
+     "log":  r"C:\APPS\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log"},
     {"port": 8650, "label": "CogniBase",
-     "log":  r"C:\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log"},
+     "log":  r"C:\APPS\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log"},
     {"port": 9876, "label": "MapSnap",
-     "log":  r"C:\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log"},
+     "log":  r"C:\APPS\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log"},
     {"port": 8777, "label": "LotteryWiz",
-     "log":  r"C:\Lottery Wiz\LOGS\tunnel.log"},
+     "log":  r"C:\APPS\Lottery Wiz\LOGS\tunnel.log"},
     {"port": 7842, "label": "CypherMiner",
-     "log":  r"C:\CypherMiner\LOGS\tunnel.log"},
+     "log":  r"C:\APPS\CypherMiner\LOGS\tunnel.log"},
     {"port": 7841, "label": "M2V",
-     "log":  r"C:\M2V\logs\tunnel.log"},
+     "log":  r"C:\APPS\M2V\logs\tunnel.log"},
     {"port": 8503, "label": "TubeScout",
-     "log":  r"C:\TUBESCOUT\data\logs\tunnel.log"},
+     "log":  r"C:\APPS\TUBESCOUT\data\logs\tunnel.log"},
     {"port": 8710, "label": "Gamez (WC2026)",
-     "log":  r"C:\Gamez\proxy\LOGS\tunnel_log.txt"},
+     "log":  r"C:\APPS\Gamez\proxy\LOGS\tunnel_log.txt"},
 ]
 
 def _get_tunnels() -> dict[int, dict]:
@@ -2823,10 +2899,10 @@ def render_launcher(via_tunnel: bool = False) -> str:
             "name": "Kaze News Tunnel", "badge": "", "type_tag": "Service",
             "desc": "Public Cloudflare tunnel for the Kaze news digest — viewable anywhere, "
                     "including phone. Public link rotates per restart and is pushed to Telegram.",
-            "path": "QI_KazeNewsTunnel · C:\\OC", "strip": "type-service", "is_tool": False,
+            "path": "QI_KazeNewsTunnel · C:\\APPS\\OC", "strip": "type-service", "is_tool": False,
             "local": [("News (local) :18800", "http://localhost:18800/ai-digest/", 18800)],
             "extra_links": [("⛅ Public link ↗",
-                             "file:///C:/OC/runtime/dashboard/news-tunnel.html", "tunnel")],
+                             "file:///C:/APPS/OC/runtime/dashboard/news-tunnel.html", "tunnel")],
             "github": "",
         }),
         ("Local Infrastructure", {
@@ -3225,6 +3301,180 @@ function tnCopy(btn){
             + live_html + off_html
             + '<script>' + js + '</script></div>')
 
+EFFORT_DB = Path(r"C:\QIH\data\effort\effort_ledger.db")
+EFFORT_ENGINE = Path(r"C:\QIH\engine\effort")
+
+
+def render_effort() -> str:
+    """Effort Ledger summary. Degrades to a notice if the ledger is absent --
+    this page must never take the dashboard down."""
+    if not EFFORT_DB.exists():
+        return ('<div class="alert alert-warning">Effort ledger not found at '
+                f'<code>{EFFORT_DB}</code>. Run '
+                '<code>python qi_effort_ledger.py --backfill</code>.</div>')
+    try:
+        import sqlite3
+        import sys as _sys
+        if str(EFFORT_ENGINE) not in _sys.path:
+            _sys.path.insert(0, str(EFFORT_ENGINE))
+        from qi_effort_ledger import (union_buckets, governance,
+                                      MIXED_PROVENANCE, verify_chain)
+        con = sqlite3.connect(f"file:{EFFORT_DB}?mode=ro", uri=True)
+
+        u = union_buckets(con)
+        tot = u["_total"] / 60.0
+        bus = u.get("business", 0) / 60.0
+        off = (u.get("after_hours", 0) + u.get("early_morning", 0)
+               + u.get("weekend", 0) + u.get("holiday", 0)) / 60.0
+        ux = union_buckets(con, exclude=MIXED_PROVENANCE)
+        xt = ux["_total"] / 60.0
+        xo = (ux.get("after_hours", 0) + ux.get("early_morning", 0)
+              + ux.get("weekend", 0) + ux.get("holiday", 0)) / 60.0
+
+        rng = con.execute(
+            "SELECT MIN(day_local), MAX(day_local) FROM events").fetchone()
+        tk = con.execute(
+            "SELECT SUM(tok_out), SUM(cost_usd) FROM events").fetchone()
+        seal = con.execute("SELECT day_local, hash, created_at FROM ledger "
+                           "ORDER BY seq DESC LIMIT 1").fetchone()
+        ok, chain_msg = verify_chain(con)
+
+        per = con.execute("""
+            SELECT project, SUM(minutes)/60.0, SUM(min_business)/60.0,
+                   (SUM(min_after_hours)+SUM(min_early_morning)
+                    +SUM(min_weekend)+SUM(min_holiday))/60.0
+            FROM sessions GROUP BY project ORDER BY 2 DESC""").fetchall()
+        con.close()
+    except Exception as exc:                      # never break the dashboard
+        return ('<div class="alert alert-danger">Effort ledger unavailable: '
+                f'{html.escape(str(exc))}</div>')
+
+    def card(label, value, sub, colour):
+        return f"""<div class="col-md-3">
+          <div class="card border-{colour} h-100"><div class="card-body">
+            <div class="text-muted small text-uppercase">{label}</div>
+            <div class="display-6 fw-bold">{value}</div>
+            <div class="small text-muted">{sub}</div>
+          </div></div></div>"""
+
+    pct = (off / tot * 100) if tot else 0
+    cards = ('<div class="row g-3 mb-4">'
+             + card("Elapsed hours", f"{tot:.1f}",
+                    f"{rng[0]} → {rng[1]}", "secondary")
+             + card("Business hours", f"{bus:.1f}",
+                    "weekdays 08:00–17:30", "info")
+             + card("Off-hours", f"{off:.1f}",
+                    "evenings · weekends · holidays", "success")
+             + card("Off-hours share", f"{pct:.1f}%",
+                    f"{xo / xt * 100 if xt else 0:.1f}% excl. mixed", "success")
+             + '</div>')
+
+    roll = {}
+    for p, t, b, o in per:
+        a = roll.setdefault(governance(p), [0.0, 0.0, 0.0, 0])
+        a[0] += t
+        a[1] += b
+        a[2] += o
+        a[3] += 1
+    badge = {"Shared with BU": "warning", "Mixed provenance": "danger",
+             "Personal": "success", "Employer work": "secondary"}
+    grows = ""
+    for g in ["Shared with BU", "Mixed provenance", "Personal",
+              "Employer work"]:
+        if g not in roll:
+            continue
+        a = roll[g]
+        grows += (f'<tr><td><span class="badge text-bg-{badge[g]}">{g}</span>'
+                  f'</td><td>{a[3]}</td><td>{a[0]:.1f}</td><td>{a[1]:.1f}</td>'
+                  f'<td>{a[2]:.1f}</td>'
+                  f'<td>{(a[2] / a[0] * 100) if a[0] else 0:.0f}%</td></tr>')
+
+    prows = ""
+    for p, t, b, o in per:
+        if t < 0.25:
+            continue
+        g = governance(p)
+        prows += (f'<tr><td>{html.escape(p)}</td>'
+                  f'<td><span class="badge text-bg-{badge[g]}">{g}</span></td>'
+                  f'<td>{t:.1f}</td><td>{b:.1f}</td><td>{o:.1f}</td>'
+                  f'<td>{(o / t * 100) if t else 0:.0f}%</td></tr>')
+
+    chain_cls = "success" if ok else "danger"
+    seal_html = (f'sealed {seal[0]} · <code>{seal[1][:16]}…</code> · '
+                 f'{seal[2]}' if seal else 'no ledger entries yet')
+
+    return f"""
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="bi bi-stopwatch"></i> Effort Ledger</h4>
+      <span class="badge text-bg-{chain_cls}">chain: {html.escape(chain_msg)}</span>
+    </div>
+    <p class="text-muted small">Elapsed hours count concurrent work on several
+    projects once. Per-project hours below are attributed and therefore sum to
+    more than elapsed time. Governance values are owner-declared.</p>
+    {cards}
+    <div class="card mb-4"><div class="card-header">Governance roll-up</div>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Governance</th><th>Projects</th><th>Attributed h</th>
+        <th>Business h</th><th>Off-hours h</th><th>Off %</th></tr></thead>
+        <tbody>{grows}</tbody></table></div>
+    <div class="card mb-4"><div class="card-header">By project</div>
+      <div style="max-height:520px;overflow:auto">
+      <table class="table table-sm table-striped mb-0">
+        <thead class="sticky-top bg-light"><tr><th>Project</th>
+        <th>Governance</th><th>Attributed h</th><th>Business h</th>
+        <th>Off-hours h</th><th>Off %</th></tr></thead>
+        <tbody>{prows}</tbody></table></div></div>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="card h-100"><div class="card-body">
+        <h6>Compute</h6>
+        <div>{(tk[0] or 0):,} tokens generated</div>
+        <div class="text-muted small">US${(tk[1] or 0):,.2f} replacement cost
+        at list rates — not an amount paid</div>
+      </div></div></div>
+      <div class="col-md-6"><div class="card h-100"><div class="card-body">
+        <h6>Latest sealed entry</h6>
+        <div class="small">{seal_html}</div>
+        <div class="text-muted small mt-2">Collected nightly 23:50 by
+        QI_EffortLedger_Daily</div>
+      </div></div></div>
+    </div>"""
+
+
+@app.get("/effort", response_class=HTMLResponse)
+def effort_page():
+    return base_layout("Effort Ledger", render_effort(), "effort")
+
+
+@app.get("/api/effort")
+def api_effort():
+    if not EFFORT_DB.exists():
+        return JSONResponse({"available": False}, status_code=503)
+    try:
+        import sqlite3
+        import sys as _sys
+        if str(EFFORT_ENGINE) not in _sys.path:
+            _sys.path.insert(0, str(EFFORT_ENGINE))
+        from qi_effort_ledger import union_buckets, verify_chain
+        con = sqlite3.connect(f"file:{EFFORT_DB}?mode=ro", uri=True)
+        u = union_buckets(con)
+        ok, msg = verify_chain(con)
+        con.close()
+        tot = u["_total"] / 60.0
+        off = (u.get("after_hours", 0) + u.get("early_morning", 0)
+               + u.get("weekend", 0) + u.get("holiday", 0)) / 60.0
+        return JSONResponse({
+            "available": True,
+            "elapsed_hours": round(tot, 1),
+            "business_hours": round(u.get("business", 0) / 60.0, 1),
+            "off_hours": round(off, 1),
+            "off_hours_pct": round(off / tot * 100, 1) if tot else 0,
+            "chain_ok": ok, "chain": msg,
+        })
+    except Exception as exc:
+        return JSONResponse({"available": False, "error": str(exc)},
+                            status_code=500)
+
+
 @app.get("/tunnels", response_class=HTMLResponse)
 def tunnels_page():
     return base_layout("Tunnels", render_tunnels(), "tunnels")
@@ -3354,7 +3604,9 @@ def api_library_search(q: str = "", project: str = "", doc_type: str = "",
             body = _j.dumps({"query": q, "collection": "docs",
                              "n": max(limit * 2, 40)}).encode("utf-8")
             req = urllib.request.Request(
-                "http://localhost:9011/api/search_memory", data=body,
+                # 127.0.0.1, not "localhost" — see _get_project_llms: an IPv6
+                # loopback attempt stalls for the full timeout (8s here).
+                "http://127.0.0.1:9011/api/search_memory", data=body,
                 headers={"Content-Type": "application/json"}, method="POST")
             with urllib.request.urlopen(req, timeout=8) as r:
                 data = _j.loads(r.read().decode("utf-8"))
@@ -4026,13 +4278,62 @@ def api_scout_digest():
 
 @app.get("/api/agents")
 def api_agents():
-    return JSONResponse(load_agents())
+    # Serve the authoritative Brain-backed roster. This used to return
+    # load_agents(), which reads a legacy folder that has not existed since the
+    # UNIVERSAL->QIH migration — so the endpoint served {} while /api/brain/agents
+    # returned all 15 agents. Legacy folder configs, if ever restored, are merged
+    # in as enrichment only. (2026-08-17 audit.)
+    agents = get_agents()
+    legacy = load_agents()
+    if legacy:
+        by_id = {str(a.get("agent_id", "")).lower(): a for a in agents}
+        for name, cfg in legacy.items():
+            target = by_id.get(name.lower())
+            if target:
+                for k, v in (cfg or {}).items():
+                    target.setdefault(k, v)
+    return JSONResponse({"agents": agents, "brain_online": brain_online()})
 
 @app.get("/api/health")
 def api_health():
-    data = run_health_check()
-    sync_tasks(data)   # keep board in sync with reality
-    return JSONResponse(data)
+    # Serve cached data and never recompute or sync on the request path. This
+    # endpoint used to call run_health_check() + sync_tasks() inline; with a cold
+    # cache that fan-out exceeded 30s and the request simply timed out.
+    # _board_sync_loop() (every 300s) owns both the refresh and the board sync.
+    # (2026-08-17 audit.)
+    from health_check import cached_health_check
+    data = cached_health_check()
+    if data is not None:
+        return JSONResponse(data)
+    # Cold cache — the dashboard restarted and _board_sync_loop()'s first pass
+    # (~45s of service/git probes) has not finished. Never block a request on it:
+    # warm in the background and tell the caller we're still warming, so the page
+    # can render a placeholder instead of hanging until the client times out.
+    _warm_health_async()
+    return JSONResponse({}, headers={"X-QI-Health": "warming"})
+
+
+_health_warm_started = False
+
+
+def _warm_health_async():
+    """Kick off one background health computation; subsequent calls are no-ops."""
+    import threading
+    global _health_warm_started
+    if _health_warm_started:
+        return
+    _health_warm_started = True
+
+    def _run():
+        global _health_warm_started
+        try:
+            sync_tasks(run_health_check())
+        except Exception as e:
+            log.warning("health warm failed: %s", e)
+        finally:
+            _health_warm_started = False
+
+    threading.Thread(target=_run, daemon=True, name="qi-health-warm").start()
 
 # ── API: Tasks ────────────────────────────────────────────────────────────────
 
@@ -4107,15 +4408,34 @@ async def _board_sync_loop():
             log.warning("board sync loop error: %s", e)
         await _asyncio.sleep(300)  # 5 minutes
 
+async def _usage_cache_warm_loop():
+    """Keep usage_stats' 30s event cache hot so no visitor pays to rebuild it.
+
+    usage_stats._iter_events() re-parses ~33k jsonl events (~1.9s) whenever its
+    30s TTL lapses. Since people arrive at the dashboard more than 30s apart,
+    the first request after an idle gap was paying that rebuild — the root page
+    measured ~2.3s cold vs ~0.2s warm. Refreshing on a timer instead of on read
+    moves the cost off the request path without making the numbers any staler:
+    the cache is module-level, so this shares it with every request handler.
+    """
+    while True:
+        try:
+            await _asyncio.to_thread(lambda: usage_stats._iter_events(force=True))
+        except Exception as e:
+            log.warning("usage cache warm loop error: %s", e)
+        await _asyncio.sleep(25)   # under usage_stats._TTL (30s) so it never expires
+
 @app.on_event("startup")
 async def _start_board_sync():
-    # Run one sync immediately so the board is fresh within seconds of restart.
-    try:
-        from health_check import run_health_check, sync_tasks as _sync_tasks
-        _sync_tasks(run_health_check())
-    except Exception as e:
-        log.warning("board startup sync error: %s", e)
+    # The board sync used to run synchronously here so it would be fresh within
+    # seconds of a restart. But run_health_check() probes every QI service, and
+    # blocking on it delayed the uvicorn bind by ~47s — the whole dashboard was
+    # down for that long on every restart. _board_sync_loop()'s first iteration
+    # already performs exactly this sync, on a thread, with no leading sleep, so
+    # the board is still fresh within moments of startup; it just no longer
+    # holds the port hostage while it waits on other services.
     _asyncio.create_task(_board_sync_loop())
+    _asyncio.create_task(_usage_cache_warm_loop())
     # War Room responder — agents actually reply (via NEXUS local LLM, not Claude).
     try:
         from engine.common.qi_warroom_responder import start_in_thread as _wr_start
@@ -4137,7 +4457,7 @@ TESTS_RESULTS = Path(r"C:\Claude\Tests\results\latest.json")
 TESTS_RUNNER  = Path(r"C:\Claude\Tests\run_tests.py")
 
 HIVE_CONFIG        = _PROJECT_DIR / "data" / "hive_config.json"
-_EF_WORKTREE       = Path(r"C:\EasyFlow\tester_builds\beta_unpacked")
+_EF_WORKTREE       = Path(r"C:\APPS\EasyFlow\tester_builds\beta_unpacked")
 EASYFLOW_MANIFEST  = _EF_WORKTREE / "manifest.json"
 EASYFLOW_TESTS_DIR = _EF_WORKTREE / "tests"
 
@@ -8546,53 +8866,53 @@ OPS_ACTIONS = {
     },
     "supervisor": {
         "label": "Run Supervisor",
-        "desc":  "Full ecosystem drift scan — regenerates C:\\CLAUDE\\DASHBOARD.md, report.json and the Hive status feed. Takes a few minutes (walks every project, services + scheduled tasks).",
+        "desc":  "Full ecosystem drift scan — regenerates C:\\APPS\\CLAUDE\\DASHBOARD.md, report.json and the Hive status feed. Takes a few minutes (walks every project, services + scheduled tasks).",
         "icon":  "bi-radar", "group": "Monitoring", "confirm": False, "timeout": 1800,
-        "cmd":   [_OPS_PY, r"C:\CLAUDE\supervisor\supervisor.py"],
+        "cmd":   [_OPS_PY, r"C:\APPS\CLAUDE\supervisor\supervisor.py"],
     },
     "snapshots": {
         "label": "Refresh Brain Snapshots",
-        "desc":  "Runs gen_latest.py — rebuilds C:\\CLAUDE\\status.json and Session Summaries\\LATEST.md from QI Brain (:9011, falls back to :9010).",
+        "desc":  "Runs gen_latest.py — rebuilds C:\\APPS\\CLAUDE\\status.json and Session Summaries\\LATEST.md from QI Brain (:9011, falls back to :9010).",
         "icon":  "bi-arrow-repeat", "group": "Monitoring", "confirm": False, "timeout": 120,
-        "cmd":   [_OPS_PY, r"C:\CLAUDE\gen_latest.py"],
+        "cmd":   [_OPS_PY, r"C:\APPS\CLAUDE\gen_latest.py"],
     },
     "self_audit": {
         "label": "Self-Audit (report only)",
         "desc":  "qi_self_audit.py without --apply-safe — reports orphaned processes, stale worktrees, config bloat. Read-only.",
         "icon":  "bi-clipboard-check", "group": "Monitoring", "confirm": False, "timeout": 900,
-        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\qi_self_audit.py"],
+        "cmd":   [_OPS_PY, r"C:\APPS\CLAUDE\Tools\qi_self_audit.py"],
     },
     "self_audit_apply": {
         "label": "Self-Audit + Safe Fixes",
         "desc":  "qi_self_audit.py --apply-safe — also auto-fixes the safe items (kills orphans, prunes clean worktrees, trims .claude.json bloat).",
         "icon":  "bi-tools", "group": "Maintenance", "confirm": True, "timeout": 900,
-        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\qi_self_audit.py", "--apply-safe"],
+        "cmd":   [_OPS_PY, r"C:\APPS\CLAUDE\Tools\qi_self_audit.py", "--apply-safe"],
     },
     "lock_scan": {
         "label": "Claude Lock Scan",
         "desc":  "claude_restart_guard.ps1 -Scan — read-only report of Claude/MCP processes holding locks on the install. Does not kill anything.",
         "icon":  "bi-search", "group": "Maintenance", "confirm": False, "timeout": 300,
         "cmd":   ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
-                  "-File", r"C:\CLAUDE\Tools\claude_restart_guard.ps1", "-Scan"],
+                  "-File", r"C:\APPS\CLAUDE\Tools\claude_restart_guard.ps1", "-Scan"],
     },
     "maia_restart": {
         "label": "Restart Maia Services",
         "desc":  "maia_restart_services.py — bounces QI MaiaTunnel + MaiaBot via sc.exe (needs the one-time service-rights grant; no admin prompt).",
         "icon":  "bi-bootstrap-reboot", "group": "Services", "confirm": True, "timeout": 300,
-        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\maia_restart_services.py"],
+        "cmd":   [_OPS_PY, r"C:\APPS\CLAUDE\Tools\maia_restart_services.py"],
     },
     "voice_bridge_health": {
         "label": "Claude Voice Bridge Health",
         "desc":  "bridge_health.py — checks the Claude Voice services/bridge and writes data\\bridge_health.json.",
         "icon":  "bi-mic", "group": "Services", "confirm": False, "timeout": 300,
-        "cmd":   [_OPS_PY, r"C:\CLAUDE\Claude Voice\bridge_health.py"],
-        "cwd":   r"C:\CLAUDE\Claude Voice",
+        "cmd":   [_OPS_PY, r"C:\APPS\CLAUDE\Claude Voice\bridge_health.py"],
+        "cwd":   r"C:\APPS\CLAUDE\Claude Voice",
     },
     "tasuke_test": {
         "label": "Test Tasuke Notification",
         "desc":  "Sends a test push through the Tasuke LINE channel. NOTE: broadcast — every follower of the Tasuke OA receives it.",
         "icon":  "bi-bell", "group": "Services", "confirm": True, "timeout": 60,
-        "cmd":   [_OPS_PY, r"C:\CLAUDE\Tools\qi_tasuke_notify.py",
+        "cmd":   [_OPS_PY, r"C:\APPS\CLAUDE\Tools\qi_tasuke_notify.py",
                   "Test notification from the QI Hive Ops panel."],
     },
     "restart_dashboard": {
@@ -8618,7 +8938,7 @@ OPS_ACTIONS = {
                   "$p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue; "
                   "if ($p) { Write-Output ':9020 proxy: LISTENING (pid ' + ($p | Select-Object -First 1 -ExpandProperty OwningProcess) + ')' } "
                   "else { Write-Output ':9020 proxy: NOT RUNNING' }; "
-                  "& 'C:\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' doctor"],
+                  "& 'C:\\APPS\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' doctor"],
     },
     "headroom_proxy_start": {
         "label": "Start Headroom Proxy",
@@ -8626,7 +8946,7 @@ OPS_ACTIONS = {
         "icon":  "bi-play-circle", "group": "Headroom", "confirm": False, "timeout": 60,
         "cmd":   ["powershell.exe", "-NoProfile", "-Command",
                   "$env:OPENAI_API_BASE='http://localhost:11434/v1'; "
-                  "Start-Process -FilePath 'C:\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' "
+                  "Start-Process -FilePath 'C:\\APPS\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' "
                   "-ArgumentList 'proxy','--port','9020' -WindowStyle Hidden; "
                   "Start-Sleep 3; "
                   "$p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue; "
@@ -9249,6 +9569,540 @@ def render_ops() -> str:
     </script>"""
 
 
+# ── Claude Voice panel ───────────────────────────────────────────────────────
+# Claude Voice's moving parts (mic loop, bridge responder, session trigger,
+# floating buttons, tray icon) are detached desktop processes tracked in
+# pidfiles, not listeners on a port — so /services and /ops (which control
+# components by port) can't see or drive them. Ported 2026-08-08 from BU
+# Hive's Ops -> "Voice & assistant" tab (app/voiceops.py + ops.html in
+# C:\QIH\BU Administrative Backups\BU Hive (control plane)\, 2026-08-06 —
+# the only surviving full copy after D:\BU Edition\AI\BU Hive was cleaned up
+# the same day). Same design; reads qi_registry.json (id "claude_voice")
+# instead of BU's own registry module, and renders with QI Hive's own
+# card/badge idiom instead of BU's .panel/.dot CSS.
+
+_VOICE_NO_WINDOW = 0x08000000  # CREATE_NO_WINDOW
+
+VOICE_ACTIONS: dict = {
+    # verb -> (argv relative to the project, human label)
+    "trigger_on":  (["session_watch.py", "start"], "Session trigger enabled"),
+    "trigger_off": (["session_watch.py", "stop"], "Session trigger disabled"),
+    "voice_up":    (["session_watch.py", "up"], "Voice stack started"),
+    "voice_down":  (["session_watch.py", "down"], "Voice stack stopped"),
+    "greet_now":   (["session_watch.py", "--greet"], "Morning brief on its way"),
+    "mic_on":      (["voice_mic.py", "--on"], "Microphone listening"),
+    "mic_off":     (["voice_mic.py", "--off"], "Microphone stopped"),
+    "buttons_on":  (["voice_button.py", "--show"], "Floating buttons shown"),
+    "buttons_off": (["voice_button.py", "--hide"], "Floating buttons hidden"),
+    "tray_on":     (["voice_tray.py", "--show"], "Tray icon shown"),
+    "tray_off":    (["voice_tray.py", "--quit"], "Tray icon removed"),
+    "brief_speak": (["morning_brief.py", "--fresh", "--speak"], "Morning brief spoken"),
+    "brief_test":  (["morning_brief.py", "--fresh"], "Morning brief preview"),
+}
+_VOICE_SLOW = {"brief_speak", "brief_test"}  # network + a Claude call; must not block the request
+
+
+def _voice_home() -> Path | None:
+    try:
+        reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    for p in reg.get("projects", []):
+        if p.get("id") == "claude_voice":
+            path = p.get("path")
+            return Path(path) if path and Path(path).is_dir() else None
+    return None
+
+
+def _voice_python(base: Path) -> Path:
+    exe = base / ".venv" / "Scripts" / "python.exe"
+    return exe if exe.exists() else Path("python")
+
+
+def _voice_read_json(path: Path, default):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return default
+
+
+def _voice_pid_alive(pid) -> bool:
+    if not pid:
+        return False
+    try:
+        import psutil  # optional; falls back to tasklist below
+        return psutil.pid_exists(int(pid))
+    except Exception:
+        pass
+    try:
+        out = subprocess.run(["tasklist", "/FI", f"PID eq {int(pid)}", "/NH", "/FO", "CSV"],
+                             capture_output=True, text=True, timeout=5,
+                             creationflags=_VOICE_NO_WINDOW).stdout
+        return str(int(pid)) in (out or "")
+    except Exception:
+        return False
+
+
+def _voice_pidfile(path: Path) -> int | None:
+    """A bare-integer pidfile (the tray and floating buttons both use this form)."""
+    try:
+        return int(path.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return None
+
+
+def _voice_startup_lnk(name: str) -> bool:
+    import os
+    appdata = os.environ.get("APPDATA")
+    if not appdata:
+        return False
+    return (Path(appdata) / "Microsoft/Windows/Start Menu/Programs/Startup" / name).exists()
+
+
+def _voice_desktop_running() -> bool | None:
+    """Is Claude Desktop up? None when the probe itself failed, so the UI can say
+    'unknown' instead of asserting a state it doesn't have."""
+    try:
+        out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq Claude.exe", "/NH", "/FO", "CSV"],
+                             capture_output=True, text=True, timeout=8,
+                             creationflags=_VOICE_NO_WINDOW).stdout
+    except Exception:
+        return None
+    return "claude.exe" in (out or "").lower()
+
+
+def _voice_age(ts: float) -> str:
+    import time as _time
+    mins = max(0, int((_time.time() - ts) / 60))
+    if mins < 1:
+        return "just now"
+    if mins < 60:
+        return f"{mins} min ago"
+    return f"{mins // 60}h {mins % 60}m ago"
+
+
+def _voice_speech_trace(base: Path) -> dict:
+    """Today's speech events, and specifically whether anything was said twice
+    (the echo detector — see voiceops.py's original docstring for the incident
+    this caught: two processes voicing the same morning brief seconds apart)."""
+    from collections import defaultdict
+    path = base / "data" / "speech_trace.jsonl"
+    today = datetime.now().strftime("%Y-%m-%d")
+    events, played = [], defaultdict(list)
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines()[-4000:]:
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not r.get("ts", "").startswith(today):
+                continue
+            events.append(r)
+            if r.get("event") == "played":
+                played[r.get("sha8")].append(r)
+    except OSError:
+        return {"available": False}
+    dupes = [{"opening": rows[0].get("opening", ""), "count": len(rows),
+              "pids": [r.get("pid") for r in rows]}
+             for rows in played.values() if len(rows) > 1]
+    suppressed = sum(1 for r in events if r.get("event") == "suppressed")
+    return {
+        "available": True,
+        "spoken": sum(len(v) for v in played.values()),
+        "suppressed": suppressed,
+        "dupes": dupes,
+        "ok": not dupes,
+    }
+
+
+def voice_state() -> dict:
+    """Everything the Claude Voice panel needs, read straight from Claude
+    Voice's own files. No subprocess, so rendering the page costs nothing and
+    can't hang on a wedged child."""
+    base = _voice_home()
+    if not base:
+        return {"available": False,
+                "why": "Claude Voice isn't registered in qi_registry.json (id "
+                       "\"claude_voice\"), or its folder is missing on this machine."}
+
+    cfg = _voice_read_json(base / "config.json", {})
+    pids = _voice_read_json(base / "data" / "control_pids.json", {})
+    auto = cfg.get("automation", {})
+    brief_cfg = cfg.get("morning_brief", {})
+    trig = cfg.get("session_trigger", {})
+
+    realtime = _voice_pid_alive(pids.get("realtime"))
+    responder = _voice_pid_alive(pids.get("responder"))
+    watcher = _voice_pid_alive(pids.get("session"))
+    desktop = _voice_desktop_running()
+    brain = cfg.get("brain_mode", "bridge")
+
+    sess_dir = base / "data" / "claude_sessions"
+    code_sessions = len(list(sess_dir.glob("*.json"))) if sess_dir.is_dir() else 0
+
+    greet_mark = _voice_read_json(base / "data" / "last_greeting.json", {})
+    greeted = greet_mark.get("date") == datetime.now().strftime("%Y-%m-%d")
+
+    if not realtime:
+        listening = ("Not listening", "down", "The mic loop is stopped — nothing will hear you.")
+    elif brain == "bridge" and not responder:
+        listening = ("Listening, but nothing answers", "idle",
+                     "Bridge mode needs the responder; without it questions hang and time out.")
+    else:
+        listening = ("Listening and ready", "up", "Say \u201cMorning, Claude\u201d for the daily brief.")
+
+    cache = _voice_read_json(base / "data" / "morning_brief_cache.json", {})
+    cached_at = cache.get("at")
+
+    return {
+        "available": True,
+        "home": str(base),
+        "headline": {"text": listening[0], "status": listening[1], "detail": listening[2]},
+        "desktop_open": desktop,
+        "trigger": {
+            "watcher": watcher,
+            "code_sessions": code_sessions,
+            "signals": ([f"{code_sessions} Claude Code session{'s' if code_sessions != 1 else ''}"]
+                       if code_sessions else []) + (["Claude Desktop"] if desktop else []),
+        },
+        "greeted_today": greeted,
+        "speech": _voice_speech_trace(base),
+        "desktop": {
+            "buttons": _voice_pid_alive(_voice_pidfile(base / "data" / "voice_button.pid")),
+            "buttons_autostart": _voice_startup_lnk("Claude Voice Button.lnk"),
+            "tray": _voice_pid_alive(_voice_pidfile(base / "data" / "voice_tray.pid")),
+            "tray_autostart": _voice_startup_lnk("Claude Voice Tray.lnk"),
+        },
+        "services": [
+            {"key": "realtime", "name": "Microphone loop", "up": realtime,
+             "detail": "Records, transcribes and answers what you say.",
+             "on": "mic_on", "off": "mic_off"},
+            {"key": "responder", "name": "Claude responder", "up": responder,
+             "detail": "Answers questions in bridge mode. Without it, nothing replies.",
+             "on": "voice_up", "off": None},
+        ],
+        "brain": {
+            "mode": brain,
+            "ok": brain != "bridge" or responder,
+            "detail": ("Real Claude via the Claude Code CLI" if brain == "bridge" and responder
+                       else "Bridge mode with NO responder — nothing will reply" if brain == "bridge"
+                       else brain),
+        },
+        "reply_mode": auto.get("mic_reply_mode", "always"),
+        "brief": {
+            "enabled": bool(brief_cfg.get("enabled", True)),
+            "phrasing": brief_cfg.get("phrasing", "claude"),
+            "cities": [c.get("name") for c in brief_cfg.get("weather", [])],
+            "sections": list((brief_cfg.get("news") or {}).keys()),
+            "cached": _voice_age(cached_at) if cached_at else None,
+            "ttl_min": brief_cfg.get("cache_ttl_min", 30),
+        },
+    }
+
+
+def voice_run(verb: str) -> tuple[bool, str]:
+    """Perform one allowlisted action. Never raises — this is a control surface.
+    The client sends a verb from a fixed vocabulary, never a command, so this
+    can't become arbitrary execution."""
+    if verb not in VOICE_ACTIONS:
+        return False, f"Unknown voice action '{verb}'."
+    base = _voice_home()
+    if not base:
+        return False, "Claude Voice is not available on this machine."
+    argv, label = VOICE_ACTIONS[verb]
+    cmd = [str(_voice_python(base)), *argv]
+    try:
+        if verb in _VOICE_SLOW:
+            if verb == "brief_speak":
+                # Fire and forget: a fresh brief takes ~25s, which would hold the request.
+                subprocess.Popen(cmd, cwd=str(base), stdin=subprocess.DEVNULL,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 close_fds=True, creationflags=0x00000008 | _VOICE_NO_WINDOW)
+                return True, "Building the brief now \u2014 it'll speak in about 25 seconds."
+            proc = subprocess.run(cmd, cwd=str(base), capture_output=True, text=True,
+                                  timeout=90, creationflags=_VOICE_NO_WINDOW)
+            text = (proc.stdout or "").strip()
+            return (bool(text), text or "The brief came back empty — check the log.")
+        proc = subprocess.run(cmd, cwd=str(base), capture_output=True, text=True,
+                              timeout=30, creationflags=_VOICE_NO_WINDOW)
+    except subprocess.TimeoutExpired:
+        return False, f"{label}: timed out."
+    except (OSError, ValueError) as exc:
+        return False, f"Could not run {verb}: {exc}"
+    if proc.returncode != 0:
+        return False, f"{verb} failed: {(proc.stderr or '').strip()[:200]}"
+    return True, label
+
+
+def _voice_dot(status: str) -> str:
+    color = {"up": "success", "idle": "warning", "down": "danger"}.get(status, "secondary")
+    return f'<i class="bi bi-circle-fill text-{color} me-1" style="font-size:.6rem"></i>'
+
+
+def _voice_badge(text: str, kind: str = "secondary") -> str:
+    return f'<span class="badge text-bg-{kind} me-1">{html.escape(str(text))}</span>'
+
+
+def render_voice() -> str:
+    v = voice_state()
+
+    if not v.get("available"):
+        return f"""
+        <div class="callout callout-info mb-3">
+          <i class="bi bi-info-circle me-2"></i>Claude Voice's mic loop, responder, session
+          trigger, floating buttons and tray icon are detached desktop processes — they hold
+          no port, so <a href="/services">Services</a> and <a href="/ops">Ops</a> can't see or
+          drive them. This panel talks to them directly.
+        </div>
+        <div class="alert alert-secondary">{html.escape(v.get("why", "Claude Voice is unavailable."))}</div>"""
+
+    hl = v["headline"]
+    desktop_txt = "Unknown" if v["desktop_open"] is None else ("Open" if v["desktop_open"] else "Closed")
+    trig_up = v["trigger"]["watcher"]
+
+    signals_html = "".join(_voice_badge(s) for s in v["trigger"]["signals"]) \
+        or _voice_badge("no Claude session open")
+    greeted_badge = _voice_badge("greeted today" if v["greeted_today"] else "not greeted yet today")
+
+    trig_btn = (
+        f'<button class="btn btn-sm btn-outline-danger" onclick="voiceRun(\'trigger_off\',false)">'
+        f'<i class="bi bi-pause-fill"></i> Disarm</button>' if trig_up else
+        f'<button class="btn btn-sm btn-primary" onclick="voiceRun(\'trigger_on\',false)">'
+        f'<i class="bi bi-shield-check"></i> Arm trigger</button>'
+    )
+
+    svc_rows = ""
+    for svc in v["services"]:
+        dot = _voice_dot("up" if svc["up"] else "down")
+        if not svc["up"] and svc["on"]:
+            btn = (f'<button class="btn btn-sm btn-primary" onclick="voiceRun(\'{svc["on"]}\',false)">'
+                   f'<i class="bi bi-play-fill"></i> Start</button>')
+        elif svc["up"] and svc["off"]:
+            btn = (f'<button class="btn btn-sm btn-outline-danger" onclick="voiceRun(\'{svc["off"]}\',false)">'
+                   f'<i class="bi bi-stop-fill"></i> Stop</button>')
+        else:
+            btn = ""
+        svc_rows += f"""
+        <tr>
+          <td style="width:1%">{dot}</td>
+          <td><strong>{html.escape(svc["name"])}</strong><div class="text-muted small">{html.escape(svc["detail"])}</div></td>
+          <td>{"Running" if svc["up"] else "Stopped"}</td>
+          <td style="width:1%;white-space:nowrap">{btn}</td>
+        </tr>"""
+
+    if v["desktop"]["buttons"]:
+        buttons_btn = ('<button class="btn btn-sm btn-outline-danger" onclick="voiceRun(\'buttons_off\',false)">'
+                       '<i class="bi bi-eye-slash"></i> Hide</button>')
+    else:
+        buttons_btn = ('<button class="btn btn-sm btn-primary" onclick="voiceRun(\'buttons_on\',false)">'
+                       '<i class="bi bi-eye"></i> Show</button>')
+    if v["desktop"]["tray"]:
+        tray_btn = ('<button class="btn btn-sm btn-outline-danger" '
+                    'onclick="voiceRun(\'tray_off\',true,\'Remove the tray icon? It is what arms the mic after a reboot.\')">'
+                    '<i class="bi bi-x-lg"></i> Remove</button>')
+    else:
+        tray_btn = ('<button class="btn btn-sm btn-primary" onclick="voiceRun(\'tray_on\',false)">'
+                    '<i class="bi bi-app-indicator"></i> Show</button>')
+
+    desktop_rows = f"""
+        <tr>
+          <td style="width:1%">{_voice_dot("up" if v["desktop"]["buttons"] else "down")}</td>
+          <td><strong>Floating buttons</strong>
+            <div class="text-muted small">The draggable mic and speaker pills on the desktop.
+              {_voice_badge("starts with Windows" if v["desktop"]["buttons_autostart"] else "will NOT return after a reboot")}</div>
+          </td>
+          <td>{"Showing" if v["desktop"]["buttons"] else "Hidden"}</td>
+          <td style="width:1%;white-space:nowrap">{buttons_btn}</td>
+        </tr>
+        <tr>
+          <td style="width:1%">{_voice_dot("up" if v["desktop"]["tray"] else "down")}</td>
+          <td><strong>Tray icon</strong>
+            <div class="text-muted small">The speaker glyph in the taskbar — also what starts
+              the trigger after a reboot.
+              {_voice_badge("starts with Windows" if v["desktop"]["tray_autostart"] else "will NOT return after a reboot")}</div>
+          </td>
+          <td>{"Showing" if v["desktop"]["tray"] else "Hidden"}</td>
+          <td style="width:1%;white-space:nowrap">{tray_btn}</td>
+        </tr>"""
+
+    speech = v["speech"]
+    speech_html = ""
+    if speech.get("available"):
+        dupe_badges = "".join(
+            f'<span class="badge text-bg-danger me-1" title="pids {", ".join(str(p) for p in d["pids"])}">'
+            f'voiced {d["count"]}\u00d7: {html.escape(d["opening"][:34])}\u2026</span>'
+            for d in speech["dupes"])
+        speech_html = f"""
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-soundwave me-2"></i>Speech trace <span class="text-muted small">— the echo detector</span></span>
+            <span>{_voice_dot("up" if speech["ok"] else "down")}{"No echo" if speech["ok"] else "Echo detected"}</span>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small mb-2">Every attempt to speak today, with the process that made it and a
+              hash of what was said. <strong>Voiced twice</strong> should always be zero.</p>
+            {_voice_badge(f'{speech["spoken"]} spoken today')}
+            {_voice_badge(f'{speech["suppressed"]} duplicates blocked')}
+            {dupe_badges}
+          </div>
+        </div>"""
+
+    brief = v["brief"]
+    brief_facts = (_voice_badge(" \u00b7 ".join(brief["cities"]) or "no cities configured")
+                   + _voice_badge(" \u00b7 ".join(brief["sections"]) or "no sections configured")
+                   + _voice_badge("written fresh by Claude" if brief["phrasing"] == "claude" else "fixed template"))
+    if brief["cached"]:
+        brief_facts += _voice_badge(f'cached {brief["cached"]}')
+
+    return f"""
+    <div class="callout callout-info mb-3">
+      <i class="bi bi-info-circle me-2"></i>Claude Voice's mic loop, responder, session trigger,
+      floating buttons and tray icon are detached desktop processes — they hold no port, so
+      <a href="/services">Services</a> and <a href="/ops">Ops</a> can't see or drive them. This
+      panel talks to them directly (ported from BU Hive's Ops → Voice &amp; assistant tab).
+    </div>
+
+    <div id="voice-flash" class="mb-3" style="display:none"></div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4"><div class="card h-100"><div class="card-body">
+        <div class="text-muted small">Talking to Claude</div>
+        <div class="fw-bold mt-1">{_voice_dot(hl["status"])}{html.escape(hl["text"])}</div>
+        <div class="text-muted small mt-1">{html.escape(hl["detail"])}</div>
+      </div></div></div>
+      <div class="col-md-4"><div class="card h-100"><div class="card-body">
+        <div class="text-muted small">Claude Desktop</div>
+        <div class="fw-bold mt-1">{desktop_txt}</div>
+      </div></div></div>
+      <div class="col-md-4"><div class="card h-100"><div class="card-body">
+        <div class="text-muted small">Brain</div>
+        <div class="fw-bold mt-1">{_voice_dot("up" if v["brain"]["ok"] else "down")}<span class="text-uppercase">{html.escape(v["brain"]["mode"])}</span></div>
+        <div class="text-muted small mt-1">{html.escape(v["brain"]["detail"])}</div>
+      </div></div></div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-shield-check me-2"></i>Claude session trigger</span>
+        <span>{_voice_dot("up" if trig_up else "down")}{"Armed" if trig_up else "Not running"}</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-2">Opening Claude anywhere — a Claude Code session or Claude
+          Desktop — turns the microphone and spoken replies on and speaks the morning brief once a
+          day; closing everything stands it back down. Signals are redundant on purpose.</p>
+        {signals_html}{greeted_badge}
+      </div>
+      <div class="card-footer">{trig_btn}</div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-mic me-2"></i>Voice services</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0"><tbody>{svc_rows}</tbody></table>
+      </div>
+      <div class="card-footer d-flex gap-2">
+        <button class="btn btn-sm btn-primary" onclick="voiceRun('voice_up',false)">
+          <i class="bi bi-play-circle"></i> Start listening</button>
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="voiceRun('voice_down',true,'Stop the microphone loop and the responder?')">
+          <i class="bi bi-stop-circle"></i> Stop</button>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-display me-2"></i>On-screen controls</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0"><tbody>{desktop_rows}</tbody></table>
+      </div>
+    </div>
+
+    {speech_html}
+
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-body-text me-2"></i>Morning brief</span>
+        <span>{_voice_dot("up" if brief["enabled"] else "idle")}{"Enabled" if brief["enabled"] else "Off"}</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-2">Speaks itself once a day when you open Claude. Say
+          "Morning, Claude" any time to hear it again.</p>
+        {brief_facts}
+      </div>
+      <div class="card-footer d-flex gap-2 flex-wrap">
+        <button class="btn btn-sm btn-primary" onclick="voiceRun('brief_speak',false)"
+                title="Builds a fresh brief and speaks it aloud">
+          <i class="bi bi-volume-up"></i> Speak it now</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="voiceRun('greet_now',false)"
+                title="Re-run today's greeting, ignoring the once-a-day guard">
+          <i class="bi bi-arrow-repeat"></i> Re-greet</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="voiceRun('brief_test',false)"
+                title="Builds a fresh brief and shows the text, silently">
+          <i class="bi bi-eye"></i> Preview text</button>
+      </div>
+      <div class="card-body border-top" id="voice-preview" style="display:none">
+        <div class="text-muted small mb-1">Preview — not spoken</div>
+        <div id="voice-preview-text" style="white-space:pre-wrap"></div>
+      </div>
+    </div>
+
+    <script>
+    function voiceToast(ok, msg, sticky) {{
+      const el = document.getElementById('voice-flash');
+      el.className = 'alert ' + (ok ? 'alert-success' : 'alert-danger');
+      el.textContent = msg;
+      el.style.display = '';
+      // Errors stay on screen — only a confirmed success is safe to auto-clear
+      // via reload. Silently reloading past an error is what made failures
+      // (e.g. the tunnel write-token gate) look like the button did nothing.
+      if (ok && !sticky) setTimeout(() => location.reload(), 900);
+    }}
+    function voiceRun(verb, needsConfirm, confirmMsg) {{
+      if (needsConfirm && !confirm(confirmMsg || 'Are you sure?')) return;
+      fetch('/api/voice/run/' + verb, {{method: 'POST'}})
+        .then(r => r.json().catch(() => ({{}})).then(data => ({{status: r.status, ok: r.ok, data: data}})))
+        .then(res => {{
+          if (!res.ok) {{
+            // Two shapes can land here: the tunnel write-token guard
+            // ({{status:"error", error:...}}) and FastAPI's own 404/500
+            // ({{detail:...}}). Neither is this endpoint's own {{ok,message}}.
+            const why = res.data.error || res.data.detail
+              || ('HTTP ' + res.status);
+            const hint = res.status === 403
+              ? ' — click the lock icon (top right) and enter the write token from C:\\\\QIH\\\\secrets\\\\dashboard_write_token.txt'
+              : '';
+            voiceToast(false, why + hint, true);
+            return;
+          }}
+          if (verb === 'brief_test') {{
+            document.getElementById('voice-preview-text').textContent = res.data.message;
+            document.getElementById('voice-preview').style.display = '';
+            return;
+          }}
+          voiceToast(res.data.ok, res.data.message, !res.data.ok);
+        }})
+        .catch(err => voiceToast(false, 'Request failed: ' + err, true));
+    }}
+    </script>"""
+
+
+@app.get("/api/voice/state")
+def api_voice_state():
+    return JSONResponse(voice_state())
+
+
+@app.post("/api/voice/run/{verb}")
+def api_voice_run(verb: str):
+    if verb not in VOICE_ACTIONS:
+        raise HTTPException(404, f"Unknown voice action: {verb}")
+    ok, message = voice_run(verb)
+    return JSONResponse({"ok": ok, "message": message})
+
+
+@app.get("/voice", response_class=HTMLResponse)
+def voice_page():
+    return base_layout("Claude Voice", render_voice(), "voice")
+
+
 @app.get("/ops", response_class=HTMLResponse)
 def ops_page():
     return base_layout("Ops Control Panel", render_ops(), "ops")
@@ -9258,4 +10112,9 @@ def ops_page():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="0.0.0.0", port=8600, reload=False)
+    # Loopback only (2026-08-08). Public access is via the Cloudflare tunnel ->
+    # QI Gate (Caddy :9040) at hive.quiddityinnovations.com, which also sits behind
+    # Cloudflare Access. Binding 0.0.0.0 published the dashboard — ecosystem snapshot,
+    # service control and Brain data — to the whole LAN with NO authentication of any
+    # kind, since this app has no login of its own.
+    uvicorn.run("server:app", host="127.0.0.1", port=8600, reload=False)

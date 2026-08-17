@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live FileHQ source (C:\\NAYA\\filehq) and the Naya integration bridge (C:\\NAYA\\filehq_bridge.py). Each snippet is real code that implements a capability. FileHQ is read-first by design: only the dedup/organize executors mutate disk, and the Naya bridge additionally gates those behind explicit owner approval.",
+  "intro": "Excerpts copied from the live FileHQ source (C:\\APPS\\NAYA\\filehq) and the Naya integration bridge (C:\\APPS\\NAYA\\filehq_bridge.py). Each snippet is real code that implements a capability. FileHQ is read-first by design: only the dedup/organize executors mutate disk, and the Naya bridge additionally gates those behind explicit owner approval.",
   "sections": [
     {
       "category": "Database Connection (filehq.db)",
@@ -138,7 +138,7 @@
         {
           "title": "Read-only direct DB connection",
           "feature": "Fast, safe stats for chat answers (no HTTP)",
-          "file": "C:\\NAYA\\filehq_bridge.py :: _db_conn() / db_search_files()",
+          "file": "C:\\APPS\\NAYA\\filehq_bridge.py :: _db_conn() / db_search_files()",
           "language": "python",
           "code": "FILEHQ_DB = os.path.join(os.path.dirname(__file__), \"filehq\", \"db\", \"filehq.db\")\n\ndef _db_conn():\n    if not os.path.exists(FILEHQ_DB):\n        return None\n    conn = sqlite3.connect(f\"file:{FILEHQ_DB}?mode=ro\", uri=True,\n                           check_same_thread=False)\n    conn.row_factory = sqlite3.Row\n    return conn\n\ndef db_search_files(query, limit=20):\n    conn = _db_conn()\n    rows = conn.execute(\n        \"SELECT path, size_bytes, category, extension FROM files \"\n        \"WHERE filename LIKE '%' || ? || '%' ORDER BY size_bytes DESC LIMIT ?\",\n        (query, limit)).fetchall()\n    return [dict(r) for r in rows]",
           "explanation": "For conversational reporting, Naya skips HTTP and opens the FileHQ database directly in READ-ONLY mode (?mode=ro). This is the literal meaning of 'Naya consumes FileHQ read-only': the bridge can count files, find the largest files, and search by name without any risk of mutating the catalogue. Anything that changes state still goes through the API, where the approval guards live."
@@ -146,7 +146,7 @@
         {
           "title": "Inject live FileHQ data into Naya's prompt",
           "feature": "Plain-language file answers grounded in real data",
-          "file": "C:\\NAYA\\filehq_bridge.py :: build_context_for_prompt()",
+          "file": "C:\\APPS\\NAYA\\filehq_bridge.py :: build_context_for_prompt()",
           "language": "python",
           "code": "def build_context_for_prompt(message):\n    if not is_filehq_question(message):\n        return \"\"\n    if not is_running():\n        return (\"\\n\\n[FILEHQ STATUS]\\nFileHQ is OFFLINE...\\n\"\n                \"INSTRUCTION: Tell the user FileHQ is not running...\")\n    parts = [\"\\n\\n[FILEHQ CONTEXT - live data from FileHQ]\"]\n    stats = get_stats()\n    if \"error\" not in stats:\n        parts.append(f\"Total indexed files: {stats.get('total_files')}\")\n    dedup = get_dedup_summary()\n    cats = db_category_breakdown()\n    drives = db_drive_usage()\n    # ... top categories, drive usage, active jobs, last scan ...\n    return \"\\n\".join(parts)",
           "explanation": "When a user asks Naya a file question, the bridge first checks is_filehq_question() (keyword match), then is_running(). If live, it assembles a context block — total files, duplicate summary, top categories, drive usage, active jobs, last scan — and injects it into Naya's system prompt so the LLM answers from real numbers, not guesses. If FileHQ is offline it instructs the LLM to tell the user how to start it rather than claim it 'can't access files'."
@@ -154,7 +154,7 @@
         {
           "title": "Approval gate on destructive ops",
           "feature": "File moves/deletes require explicit owner consent",
-          "file": "C:\\NAYA\\filehq_bridge.py :: execute_dedup()",
+          "file": "C:\\APPS\\NAYA\\filehq_bridge.py :: execute_dedup()",
           "language": "python",
           "code": "def execute_dedup(group_id=None, action=None, dry_run=True,\n                  move_to=None, approved=False):\n    if not approved and not dry_run:\n        return {\n            \"error\": \"BLOCKED - execute_dedup requires explicit approval...\",\n            \"hint\": \"You must say 'you may proceed' before duplicates are deleted.\"\n        }\n    body = {\"dry_run\": dry_run}\n    if not dry_run:\n        log.warning(f\"FileHQ dedup/execute triggered (real): group={group_id}\")\n    return _post(\"/api/dedup/execute\", body, timeout=TIMEOUT_LONG)",
           "explanation": "The safety contract between Naya and FileHQ. Any real (non-dry-run) destructive call is BLOCKED unless approved=True, which the assistant sets only after the owner explicitly says 'you may proceed' in the same message. execute_organize() applies the identical guard. Reads are always allowed; mutations are gated and logged."

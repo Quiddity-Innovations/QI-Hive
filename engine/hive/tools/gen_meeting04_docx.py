@@ -58,7 +58,7 @@ h1("🔄 Next Up — Claude S5: Claude Manager: Fix MCP + First Real Queries")
 numbered("Open Claude Code from C:\\Claude root — confirm all 5 MCPs load and stay stable")
 numbered("Run OpenSpace search_skills on fetch-ai-news, git-commit, session-summary")
 numbered("First real sqlite-maia MCP query: list_tables → read bots, config, conversations")
-numbered("First real git MCP use: git_log on C:\\QI via mcp__git__git_log")
+numbered("First real git MCP use: git_log on C:\\APPS\\QI via mcp__git__git_log")
 numbered("NEXUS installer weekend test prep — target 2026-04-12: wipe DB/cache, run wizard")
 
 # ── 4. In Development ─────────────────────────────────────────────────────────
@@ -94,13 +94,13 @@ rows = [
     (r"C:\Claude\Tests\test_dashboard_api.py", "CLAUDE-MANAGER", "Added /api/ping test — 10/10 passing"),
     (r"C:\Claude\status.json", "CLAUDE-MANAGER", "Updated with Meeting 04 results"),
     (r"C:\Claude\Session Summaries\LATEST.md", "CLAUDE-MANAGER", "Updated for Meeting 05 handoff"),
-    (r"C:\QI\maia_gradio.py", "Maia", "Committed + pushed"),
-    (r"C:\QI\maia_i18n.py", "Maia", "Committed + pushed"),
-    (r"C:\QI\maia_server.py", "Maia", "Committed + pushed"),
-    (r"C:\QI\knowledge\nexus_curated.jsonl", "Maia", "RAG seed data (8 entries) committed"),
-    (r"C:\NEXUS\.gitignore", "NEXUS", "API keys + LOGS/ + data/ ignored"),
-    (r"C:\OC\keep-wsl-alive.ps1", "OC", "Updated + pushed"),
-    (r"C:\OC\oc-watchdog.sh", "OC", "Added + pushed"),
+    (r"C:\APPS\QI\maia_gradio.py", "Maia", "Committed + pushed"),
+    (r"C:\APPS\QI\maia_i18n.py", "Maia", "Committed + pushed"),
+    (r"C:\APPS\QI\maia_server.py", "Maia", "Committed + pushed"),
+    (r"C:\APPS\QI\knowledge\nexus_curated.jsonl", "Maia", "RAG seed data (8 entries) committed"),
+    (r"C:\APPS\NEXUS\.gitignore", "NEXUS", "API keys + LOGS/ + data/ ignored"),
+    (r"C:\APPS\OC\keep-wsl-alive.ps1", "OC", "Updated + pushed"),
+    (r"C:\APPS\OC\oc-watchdog.sh", "OC", "Added + pushed"),
     ("Memory files (3 project dirs)", "All Projects", "Session naming convention saved"),
 ]
 

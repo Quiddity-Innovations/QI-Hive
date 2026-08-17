@@ -30,7 +30,9 @@ for i in range(1, 21):
     time.sleep(2)
     p = pid_on_9011()
     try:
-        with urllib.request.urlopen("http://localhost:9011/health", timeout=3) as resp:
+        # 127.0.0.1, not "localhost": ::1 is dropped rather than refused on
+        # this box, so a localhost URL burns the full timeout every attempt.
+        with urllib.request.urlopen("http://127.0.0.1:9011/health", timeout=3) as resp:
             body = resp.read().decode("utf-8")
         if p and p != old_pid:
             new_pid = p
@@ -45,7 +47,7 @@ print("\nnew worker PID:", new_pid, "(changed)" if new_pid and new_pid != old_pi
 # Confirm the running process now uses the live inbox path via /api/status poller info
 for ep in ("/api/status", "/health"):
     try:
-        with urllib.request.urlopen(f"http://localhost:9011{ep}", timeout=4) as resp:
+        with urllib.request.urlopen(f"http://127.0.0.1:9011{ep}", timeout=4) as resp:
             print(f"\n{ep}:", resp.read().decode("utf-8")[:400])
     except Exception:
         pass

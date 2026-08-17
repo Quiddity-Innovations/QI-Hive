@@ -33,7 +33,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-MAPSNAP_ROOT = Path(os.environ.get("MAPSNAP_ROOT", r"C:\MapSnap"))
+MAPSNAP_ROOT = Path(os.environ.get("MAPSNAP_ROOT", r"C:\APPS\MapSnap"))
 PROFILE_DIR = MAPSNAP_ROOT / "Product" / "ONBASE13_POC"
 CONN_FILE = PROFILE_DIR / ".mapsnap_conn.json"
 ENV_FILE = MAPSNAP_ROOT / "config" / "onbase_environments.json"

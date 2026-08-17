@@ -48,16 +48,16 @@ PROJECT_PREFIX = {
 }
 
 GIT_PROJECTS = {
-    'cognibase': r'C:\CogniBase', 'mapsnap': r'C:\MapSnap',
-    'autopdf': r'C:\AutoPDF',
-    'easyflow': r'C:\EasyFlow', 'maia': r'C:\QI', 'naya': r'C:\NAYA',
-    'nexus': r'C:\NEXUS', 'mq': r'C:\MQ', 'qi_hive': r'C:\QIH',
-    'personalsong': r'C:\PersonalSong', 'm2v': r'C:\M2V',
-    'claude_manager': r'C:\CLAUDE',
-    'cypherminer': r'C:\CypherMiner',
+    'cognibase': r'C:\APPS\CogniBase', 'mapsnap': r'C:\APPS\MapSnap',
+    'autopdf': r'C:\APPS\AutoPDF',
+    'easyflow': r'C:\APPS\EasyFlow', 'maia': r'C:\APPS\QI', 'naya': r'C:\APPS\NAYA',
+    'nexus': r'C:\APPS\NEXUS', 'mq': r'C:\APPS\MQ', 'qi_hive': r'C:\QIH',
+    'personalsong': r'C:\APPS\PersonalSong', 'm2v': r'C:\APPS\M2V',
+    'claude_manager': r'C:\APPS\CLAUDE',
+    'cypherminer': r'C:\APPS\CypherMiner',
     'fidelityanalyzer': r'C:\FidelityAnalyzer',
     'avatarstudio': r'C:\1-AI\APPS\AvatarStudio',
-    'tubescout': r'C:\TUBESCOUT',
+    'tubescout': r'C:\APPS\TUBESCOUT',
 }
 
 # Brain stamps summaries with provenance markers ("[auto:state_file] ",

@@ -6,8 +6,8 @@
 ## Already built (dormant, $0)
 | Piece | Where |
 |---|---|
-| 5-rung provider adapter chain (desktop-tunnel → Workers AI → OpenRouter → Gemini/Groq → honest static fallback) | [C:\QI\TOOLS\aws_relay\cloud_brain\providers.py](C:\QI\TOOLS\aws_relay\cloud_brain\providers.py) |
-| Brain Lambda (queue-poll → chain → LINE push → DynamoDB memory) | [C:\QI\TOOLS\aws_relay\cloud_brain\brain_lambda.py](C:\QI\TOOLS\aws_relay\cloud_brain\brain_lambda.py) |
+| 5-rung provider adapter chain (desktop-tunnel → Workers AI → OpenRouter → Gemini/Groq → honest static fallback) | [C:\APPS\QI\TOOLS\aws_relay\cloud_brain\providers.py](C:\APPS\QI\TOOLS\aws_relay\cloud_brain\providers.py) |
+| Brain Lambda (queue-poll → chain → LINE push → DynamoDB memory) | [C:\APPS\QI\TOOLS\aws_relay\cloud_brain\brain_lambda.py](C:\APPS\QI\TOOLS\aws_relay\cloud_brain\brain_lambda.py) |
 | Conversation store `qi-bot-conversations` (DynamoDB, on-demand, always-free 25 GB) | AWS |
 | SSM key slots (all `PENDING_RENNE`): `/qi/llm/openrouter_key`, `gemini_key`, `groq_key`, `cf_workers_ai_token`, `desktop_ollama_url` | AWS SSM |
 | Privacy default wired: `LOCAL_ONLY=1` → third-party rungs are skipped even if keys exist | code |

@@ -90,4 +90,4 @@ Portuguese sounds Portuguese, not an English line read by a Brazilian voice.
 - The service is registered as **loopback-only / not internet-exposed**.
 
 ---
-*This page is editable at `C:\PersonalSong\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\PersonalSong\INTRO\status_intro.md` — save and click Refresh to update.*

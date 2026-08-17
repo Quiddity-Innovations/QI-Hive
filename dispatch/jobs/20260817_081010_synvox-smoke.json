@@ -1,0 +1,14 @@
+{
+ "job_id": "20260817_081010_synvox-smoke",
+ "script_key": "synvox-smoke",
+ "file": "Test-SynVoxSmoke.ps1",
+ "args": [],
+ "machine": "POWERSPEC",
+ "pid": 28380,
+ "status": "succeeded",
+ "exit_code": 0,
+ "started_at": "2026-08-17T08:10:10-04:00",
+ "finished_at": "2026-08-17T08:10:15-04:00",
+ "timeout_seconds": 3600,
+ "log": "C:\\QIH\\dispatch\\jobs\\20260817_081010_synvox-smoke.log"
+}

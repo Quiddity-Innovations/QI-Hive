@@ -47,17 +47,17 @@ URL_RE = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com", re.I)
 TUNNELS = {
     "maia": {
         "host": "maia",
-        "type": "log", "glob": r"C:\QI\LOGS\tunnel_log*.txt",
+        "type": "log", "glob": r"C:\APPS\QI\LOGS\tunnel_log*.txt",
         "label": "Maia public (LINE/Telegram webhooks → :8001)",
     },
     "naya": {
         "host": "naya",
-        "type": "log", "path": r"C:\NAYA\LOGS\QI_NayaTunnel.stderr.log",
+        "type": "log", "path": r"C:\APPS\NAYA\LOGS\QI_NayaTunnel.stderr.log",
         "label": "Naya UI tunnel (→ :7861)",
     },
     "nexus": {
         "host": "nexus",
-        "type": "log", "path": r"C:\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log",
+        "type": "log", "path": r"C:\APPS\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log",
         "label": "NEXUS UI tunnel (→ :7880)",
     },
     "dashboard": {
@@ -67,38 +67,38 @@ TUNNELS = {
     },
     "autopdf": {
         "host": "autopdf",
-        "type": "json", "path": r"C:\AutoPDF\Application\status\tunnel.json",
+        "type": "json", "path": r"C:\APPS\AutoPDF\Application\status\tunnel.json",
         "label": "AutoPDF demo tunnel (→ :6969, PIN gated)",
     },
     "cognibase": {
         "host": "cognibase",
-        "type": "log", "path": r"C:\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log",
+        "type": "log", "path": r"C:\APPS\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log",
         "label": "CogniBase tunnel (→ :8650)",
     },
     "mapsnap": {
         "host": "mapsnap",
-        "type": "log", "path": r"C:\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log",
+        "type": "log", "path": r"C:\APPS\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log",
         "label": "MapSnap tunnel (→ :9876)",
     },
     "cypherminer": {
         "host": "cypher",
-        "type": "log", "path": r"C:\CypherMiner\LOGS\tunnel.log",
+        "type": "log", "path": r"C:\APPS\CypherMiner\LOGS\tunnel.log",
         "label": "CypherMiner tunnel (→ :7842)",
     },
     "lotterywiz": {
         "host": "lottery",
-        "type": "log", "path": r"C:\Lottery Wiz\LOGS\tunnel.log",
+        "type": "log", "path": r"C:\APPS\Lottery Wiz\LOGS\tunnel.log",
         "label": "LotteryWiz tunnel (→ :8777)",
     },
     "tubescout": {
         "host": "tubescout",
-        "type": "log", "path": r"C:\TUBESCOUT\data\logs\tunnel.log",
+        "type": "log", "path": r"C:\APPS\TUBESCOUT\data\logs\tunnel.log",
         "label": "TubeScout tunnel (→ :8503)",
         "note_if_absent": "service has no logfile yet — run the elevated nssm fix, then restart",
     },
     "kaze": {
         "host": "kaze",
-        "type": "redirect", "path": r"C:\OC\runtime\dashboard\news-tunnel.html",
+        "type": "redirect", "path": r"C:\APPS\OC\runtime\dashboard\news-tunnel.html",
         "label": "Kaze news digest (→ :18800)",
     },
 }

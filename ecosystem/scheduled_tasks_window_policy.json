@@ -2,13 +2,13 @@
   "_comment": "QI Scheduled-Task Window Policy. Single source of truth for which Windows scheduled tasks may pop a console window. Apply with: python C:\\QIH\\tools\\qi_task_window_manager.py --apply   |   Verify: ...--verify   |   Dry-run (default): ...(no flag). window_mode: 'hidden_user' (default, NO admin needed) = task still runs as you, but the window is suppressed: python.exe is swapped to pythonw.exe (windowless), and wsl/.bat/other console programs are wrapped in 'conhost.exe --headless' (Win11 headless host). Keeps full user profile (git creds, WSL, venvs). 'system' = re-home to SYSTEM/ServiceAccount (session 0, invisible) - loses user profile, needs admin to change, only for self-contained scripts. 'visible' = unwrap and restore normal interactive (debugging). enabled:false = Disable-ScheduledTask.",
   "account": "renne",
   "managed_path_roots": [
-    "C:\\QI",
+    "C:\\APPS\\QI",
     "C:\\QIH",
-    "C:\\OC",
-    "C:\\TUBESCOUT",
-    "C:\\NAYA",
-    "C:\\NEXUS",
-    "C:\\CLAUDE"
+    "C:\\APPS\\OC",
+    "C:\\APPS\\TUBESCOUT",
+    "C:\\APPS\\NAYA",
+    "C:\\APPS\\NEXUS",
+    "C:\\APPS\\CLAUDE"
   ],
   "tasks": {
     "QI_ClaudeVoiceMeeting_8AM": {
@@ -20,6 +20,11 @@
       "enabled": true,
       "window_mode": "hidden_user",
       "note": "python.exe every 30 min -> the periodic offender"
+    },
+    "QI_UsageSnapshot": {
+      "enabled": true,
+      "window_mode": "hidden_user",
+      "note": "Registered pythonw.exe every 30 min (already windowless, --apply is a no-op). Snapshots usage_daily + per-project/per-model dimensions into qi_brain.db. Keeps the LLM Usage 30d/QTD/YTD tiles from truncating at the ledger's last day. Log: C:\\QIH\\logs\\usage_snapshot.log. NOTE the script guards sys.stdout being None -- pythonw has no stdout and a bare print() there exits 1."
     },
     "QI_TubeScout_AM": {
       "enabled": true,

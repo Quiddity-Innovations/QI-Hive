@@ -8,36 +8,36 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 # (path, new_name, [scheduled tasks whose Arguments reference this bat])
 ENTRIES = [
-    # --- Claude Voice (C:\CLAUDE\Claude Voice) ---
-    (r"C:\CLAUDE\Claude Voice\run_line.bat",            "ClaudeVoice_Run_Line.bat",        []),
-    (r"C:\CLAUDE\Claude Voice\run_meeting.bat",         "ClaudeVoice_Run_Meeting.bat",     []),
-    (r"C:\CLAUDE\Claude Voice\run_realtime.bat",        "ClaudeVoice_Run_Realtime.bat",    []),
-    (r"C:\CLAUDE\Claude Voice\run_telegram.bat",        "ClaudeVoice_Run_Telegram.bat",    []),
-    (r"C:\CLAUDE\Claude Voice\run_webcall.bat",         "ClaudeVoice_Run_Webcall.bat",     []),
-    (r"C:\CLAUDE\Claude Voice\run_bridge_health.bat",   "ClaudeVoice_Run_BridgeHealth.bat", ["QI_ClaudeVoiceBridgeCheck"]),
-    (r"C:\CLAUDE\Claude Voice\start_meeting_room.bat",  "ClaudeVoice_Start_MeetingRoom.bat", ["QI_ClaudeVoiceMeeting_8AM"]),
-    (r"C:\CLAUDE\Claude Voice\install_service.bat",     "ClaudeVoice_Install.bat",         []),
-    (r"C:\CLAUDE\Claude Voice\install_meeting_service.bat", "ClaudeVoice_Install_Meeting.bat", []),
-    # --- Maia (C:\QI and C:\QI\TOOLS) ---
-    (r"C:\QI\restart_maiabot.bat",                      "Maia_Restart_Bot.bat",            []),
-    (r"C:\QI\TOOLS\restart_maia.bat",                   "Maia_Restart.bat",                []),
-    (r"C:\QI\TOOLS\restart_tunnel_and_update.bat",      "Maia_Restart_TunnelUpdate.bat",   []),
-    (r"C:\QI\install_maia_services.bat",                "Maia_Install.bat",                []),
-    (r"C:\QI\install_watchdog.bat",                     "Maia_Install_Watchdog.bat",       []),
-    (r"C:\QI\TOOLS\setup_service.bat",                  "Maia_Setup.bat",                  []),
-    (r"C:\QI\TOOLS\setup_named_tunnel.bat",             "Maia_Setup_NamedTunnel.bat",      []),
-    # --- NEXUS (C:\NEXUS) ---
-    (r"C:\NEXUS\Start_NEXUS.bat",                       "NEXUS_Start.bat",                 []),
-    (r"C:\NEXUS\Start_NEXUS_Scout_Only.bat",            "NEXUS_Start_ScoutOnly.bat",       []),
-    (r"C:\NEXUS\install_nexus_service.bat",             "NEXUS_Install.bat",               []),
-    (r"C:\NEXUS\install_nexus_tunnel.bat",              "NEXUS_Install_Tunnel.bat",        []),
-    # --- PersonalSong (C:\PersonalSong) ---
-    (r"C:\PersonalSong\run_queue.bat",                  "PersonalSong_Start_Queue.bat",    []),
-    (r"C:\PersonalSong\run_server.bat",                 "PersonalSong_Start_Server.bat",   []),
-    # --- TubeScout (C:\TUBESCOUT) ---
-    (r"C:\TUBESCOUT\Start_TubeScout.bat",               "TubeScout_Start.bat",             []),
-    (r"C:\TUBESCOUT\start_server.bat",                  "TubeScout_Start_Server.bat",      []),
-    (r"C:\TUBESCOUT\run_cycle.bat",                     "TubeScout_Run_Cycle.bat",         ["QI_TubeScout_AM", "QI_TubeScout_PM"]),
+    # --- Claude Voice (C:\APPS\CLAUDE\Claude Voice) ---
+    (r"C:\APPS\CLAUDE\Claude Voice\run_line.bat",            "ClaudeVoice_Run_Line.bat",        []),
+    (r"C:\APPS\CLAUDE\Claude Voice\run_meeting.bat",         "ClaudeVoice_Run_Meeting.bat",     []),
+    (r"C:\APPS\CLAUDE\Claude Voice\run_realtime.bat",        "ClaudeVoice_Run_Realtime.bat",    []),
+    (r"C:\APPS\CLAUDE\Claude Voice\run_telegram.bat",        "ClaudeVoice_Run_Telegram.bat",    []),
+    (r"C:\APPS\CLAUDE\Claude Voice\run_webcall.bat",         "ClaudeVoice_Run_Webcall.bat",     []),
+    (r"C:\APPS\CLAUDE\Claude Voice\run_bridge_health.bat",   "ClaudeVoice_Run_BridgeHealth.bat", ["QI_ClaudeVoiceBridgeCheck"]),
+    (r"C:\APPS\CLAUDE\Claude Voice\start_meeting_room.bat",  "ClaudeVoice_Start_MeetingRoom.bat", ["QI_ClaudeVoiceMeeting_8AM"]),
+    (r"C:\APPS\CLAUDE\Claude Voice\install_service.bat",     "ClaudeVoice_Install.bat",         []),
+    (r"C:\APPS\CLAUDE\Claude Voice\install_meeting_service.bat", "ClaudeVoice_Install_Meeting.bat", []),
+    # --- Maia (C:\APPS\QI and C:\APPS\QI\TOOLS) ---
+    (r"C:\APPS\QI\restart_maiabot.bat",                      "Maia_Restart_Bot.bat",            []),
+    (r"C:\APPS\QI\TOOLS\restart_maia.bat",                   "Maia_Restart.bat",                []),
+    (r"C:\APPS\QI\TOOLS\restart_tunnel_and_update.bat",      "Maia_Restart_TunnelUpdate.bat",   []),
+    (r"C:\APPS\QI\install_maia_services.bat",                "Maia_Install.bat",                []),
+    (r"C:\APPS\QI\install_watchdog.bat",                     "Maia_Install_Watchdog.bat",       []),
+    (r"C:\APPS\QI\TOOLS\setup_service.bat",                  "Maia_Setup.bat",                  []),
+    (r"C:\APPS\QI\TOOLS\setup_named_tunnel.bat",             "Maia_Setup_NamedTunnel.bat",      []),
+    # --- NEXUS (C:\APPS\NEXUS) ---
+    (r"C:\APPS\NEXUS\Start_NEXUS.bat",                       "NEXUS_Start.bat",                 []),
+    (r"C:\APPS\NEXUS\Start_NEXUS_Scout_Only.bat",            "NEXUS_Start_ScoutOnly.bat",       []),
+    (r"C:\APPS\NEXUS\install_nexus_service.bat",             "NEXUS_Install.bat",               []),
+    (r"C:\APPS\NEXUS\install_nexus_tunnel.bat",              "NEXUS_Install_Tunnel.bat",        []),
+    # --- PersonalSong (C:\APPS\PersonalSong) ---
+    (r"C:\APPS\PersonalSong\run_queue.bat",                  "PersonalSong_Start_Queue.bat",    []),
+    (r"C:\APPS\PersonalSong\run_server.bat",                 "PersonalSong_Start_Server.bat",   []),
+    # --- TubeScout (C:\APPS\TUBESCOUT) ---
+    (r"C:\APPS\TUBESCOUT\Start_TubeScout.bat",               "TubeScout_Start.bat",             []),
+    (r"C:\APPS\TUBESCOUT\start_server.bat",                  "TubeScout_Start_Server.bat",      []),
+    (r"C:\APPS\TUBESCOUT\run_cycle.bat",                     "TubeScout_Run_Cycle.bat",         ["QI_TubeScout_AM", "QI_TubeScout_PM"]),
 ]
 
 renames, tasks, problems = [], [], []

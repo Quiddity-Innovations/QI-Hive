@@ -18,7 +18,7 @@ Everything below is built, verified, committed to git, and idle-safe at $0. Reus
 | Lambda `qi-maia-webhook` + public Function URL (LINE signature verification) | AWS | ✅ live, verified 3/3 tests |
 | Secret `/qi/maia/line_channel_secret` | AWS SSM (SecureString) | ✅ stored |
 | IAM role `qi-maia-webhook-role` (3-permission least privilege) | AWS | ✅ live |
-| Relay code + idempotent full-Part-2 deploy script | `C:\QI\TOOLS\aws_relay\` | ✅ committed (QI repo) |
+| Relay code + idempotent full-Part-2 deploy script | `C:\APPS\QI\TOOLS\aws_relay\` | ✅ committed (QI repo) |
 | Setup guide Parts 0–2 + gotchas log + component BOM | `guides\AWS_Free_Tier_Setup_Guide.md` | ✅ committed (QIH repo) |
 | Automation bats: step 1.7 admin grant, Part 2 one-shot deploy | `guides\AWS_Setup_*.bat` + `qi_role_policy.json` | ✅ committed |
 | Vision docs: poly-cloud blueprint incl. Track C | `guides\Free_PolyCloud_Blueprint.md` | ✅ committed |

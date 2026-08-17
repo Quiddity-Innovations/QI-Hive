@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live CypherMiner source (C:\\CypherMiner). Each shows the real code behind a capability and explains how it powers that feature. The 59 tools are pure client-side TypeScript — no AI, no server, no network calls; the only Python is an optional FastAPI backend that implements the QI module contract.",
+  "intro": "Excerpts copied from the live CypherMiner source (C:\\APPS\\CypherMiner). Each shows the real code behind a capability and explains how it powers that feature. The 59 tools are pure client-side TypeScript — no AI, no server, no network calls; the only Python is an optional FastAPI backend that implements the QI module contract.",
   "sections": [
     {
       "category": "Core — The Tool Contract & Registry",
@@ -180,7 +180,7 @@
           "feature": "Health/version/info so QI Hive can monitor it",
           "file": "api/main.py",
           "language": "python",
-          "code": "try:\n    sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8502\", \"http://localhost:7842\"]\n\napp = FastAPI(title=\"CypherMiner API\",\n    description=\"Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools — Quiddity Innovations\",\n    version=\"0.1.0\")\napp.add_middleware(CORSMiddleware, allow_origins=_cors, allow_methods=[\"GET\", \"POST\"], allow_headers=[\"*\"])\n\n@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\"}\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"cypherminer\", \"version\": \"0.1.0\", \"status\": \"development\"}",
+          "code": "try:\n    sys.path.insert(0, r\"C:\\APPS\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8502\", \"http://localhost:7842\"]\n\napp = FastAPI(title=\"CypherMiner API\",\n    description=\"Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools — Quiddity Innovations\",\n    version=\"0.1.0\")\napp.add_middleware(CORSMiddleware, allow_origins=_cors, allow_methods=[\"GET\", \"POST\"], allow_headers=[\"*\"])\n\n@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\"}\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"cypherminer\", \"version\": \"0.1.0\", \"status\": \"development\"}",
           "explanation": "The optional Python backend on port 8502. It implements the three QI module-contract endpoints so QI Hive Mission Control can monitor CypherMiner like every other ecosystem project, and reads CORS origins from the shared QI registry (with a safe localhost fallback) rather than hardcoding them. The 59 tools don't need this server at all — it's reserved for future heavy/data tools that genuinely can't run client-side."
         },
         {

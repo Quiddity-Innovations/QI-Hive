@@ -41,8 +41,12 @@ for _stream in (sys.stdin, sys.stdout):
 
 # Windows detail 2: the client does not launch this script from its own folder,
 # so never rely on cwd — resolve every path absolutely.
-COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188").rstrip("/")
+# 8740, not ComfyUI's default 8188: the QI install runs on a non-default port
+# so it can never collide with another ComfyUI someone starts by hand.
+COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8740").rstrip("/")
 WORKFLOW_DIR = Path(os.environ.get("COMFY_WORKFLOWS", r"D:\AI\workflows"))
+COMFY_ROOT = Path(os.environ.get("COMFY_ROOT",
+                                 r"D:\AI\ComfyUI_windows_portable\ComfyUI"))
 
 SUPPORTED_PROTOCOLS = {"2024-11-05", "2025-03-26", "2025-06-18"}
 DEFAULT_PROTOCOL = "2024-11-05"
@@ -260,11 +264,23 @@ def tool_comfy_models(args: dict) -> dict:
     found, missing = {}, []
     for label, (node, field) in wanted.items():
         try:
-            opts = info[node]["input"]["required"][field][0]
-            opts = opts if isinstance(opts, list) else []
+            spec = info[node]["input"]["required"][field]
         except (KeyError, IndexError, TypeError):
             found[label] = {"available": None, "note": f"{node} not installed"}
             continue
+        # Two shapes in the wild: the classic [[...names...], {...}] and the V3
+        # schema's ["COMBO", {"options": [...names...]}]. Reading [0] blindly
+        # yields the literal string "COMBO" and silently reports nothing.
+        opts = []
+        try:
+            head = spec[0]
+            if isinstance(head, list):
+                opts = head
+            elif isinstance(spec[1], dict):
+                opts = spec[1].get("options") or []
+        except (IndexError, TypeError):
+            opts = []
+        opts = [o for o in opts if isinstance(o, str)]
         found[label] = {"count": len(opts), "available": opts[:60]}
         if not opts:
             missing.append(label)
@@ -325,6 +341,160 @@ def tool_comfy_workflows(args: dict) -> dict:
             entry["settable_count"] = len(_targets(graph))
         items.append(entry)
     return {"dir": str(WORKFLOW_DIR), "count": len(items), "workflows": items}
+
+
+def _combo_options(spec) -> list:
+    """Pull the choices out of an input schema, in either shape ComfyUI uses."""
+    try:
+        head = spec[0]
+    except (IndexError, TypeError):
+        return []
+    if isinstance(head, list):
+        return [o for o in head if isinstance(o, str)]
+    if head == "COMBO" and len(spec) > 1 and isinstance(spec[1], dict):
+        return [o for o in (spec[1].get("options") or []) if isinstance(o, str)]
+    return []
+
+
+def _node_source_map() -> dict:
+    """Best-effort node -> repo map from ComfyUI-Manager's cached catalogue.
+
+    Only a convenience: when it isn't there, missing nodes are still reported,
+    just without a suggested source.
+    """
+    try:
+        cands = list((COMFY_ROOT / "user").rglob("*extension-node-map.json"))
+    except OSError:
+        return {}
+    for path in cands:
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        out = {}
+        for repo, payload in raw.items():
+            names = payload[0] if isinstance(payload, list) and payload else []
+            for n in names if isinstance(names, list) else []:
+                out.setdefault(n, repo)
+        if out:
+            return out
+    return {}
+
+
+def tool_comfy_workflow_check(args: dict) -> dict:
+    """Tell me what a workflow needs that this install hasn't got.
+
+    Answers the "I downloaded a workflow, make it work" question: which node
+    types are missing (and which repo supplies them), and which model files it
+    references that aren't on disk.
+    """
+    ok, detail = _reachable()
+    if not ok:
+        return {"error": detail}
+    args = args or {}
+    name = args.get("workflow", "")
+    try:
+        path = _workflow_path(name)
+        graph = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        return {"error": str(exc)}
+    if not isinstance(graph, dict) or "nodes" in graph:
+        return {"error": "that file is an editor save, not an API export. "
+                         "Re-save it from ComfyUI with Save (API Format) — the "
+                         "editor format cannot be queued.",
+                "workflow": path.stem}
+    try:
+        info = _get("/object_info", timeout=60.0)
+    except Exception as exc:
+        return {"error": f"could not read node info: {exc}"}
+
+    sources = _node_source_map()
+    missing_nodes, missing_models, bad_values = [], [], []
+    missing_inputs = []
+    used = set()
+
+    for nid, node in graph.items():
+        if not isinstance(node, dict):
+            continue
+        ct = node.get("class_type")
+        if not ct:
+            continue
+        used.add(ct)
+        if ct not in info:
+            entry = {"node_id": nid, "class_type": ct}
+            if ct in sources:
+                entry["provided_by"] = sources[ct]
+            missing_nodes.append(entry)
+            continue
+        required = (info[ct].get("input") or {}).get("required") or {}
+        schema = {}
+        schema.update(required)
+        schema.update((info[ct].get("input") or {}).get("optional") or {})
+
+        # A node can reference only installed things and still be rejected, if
+        # the graph simply omits a required field — workflows exported from an
+        # older ComfyUI lose fields that were added since. ComfyUI does not
+        # fill these in, so the omission has to be caught here.
+        supplied = set((node.get("inputs") or {}).keys())
+        for field, spec in required.items():
+            if field in supplied:
+                continue
+            dflt = None
+            if isinstance(spec, list) and len(spec) > 1 and isinstance(spec[1], dict):
+                dflt = spec[1].get("default")
+            missing_inputs.append({"node_id": nid, "class_type": ct,
+                                   "input": field, "suggested_default": dflt})
+
+        for field, value in (node.get("inputs") or {}).items():
+            if isinstance(value, list) or not isinstance(value, str):
+                continue          # wired link, or not a selectable name
+            opts = _combo_options(schema.get(field))
+            if not opts:
+                # No choices at all: either a free-text field (fine) or a model
+                # folder that is completely empty (not fine). Only the latter
+                # has a combo declared for it.
+                spec = schema.get(field)
+                declared_combo = isinstance(spec, list) and (
+                    spec and (spec[0] == "COMBO" or isinstance(spec[0], list)))
+                if declared_combo and value:
+                    missing_models.append({"node_id": nid, "class_type": ct,
+                                           "input": field, "wants": value,
+                                           "note": "no files installed for this input"})
+                continue
+            if value not in opts:
+                rec = {"node_id": nid, "class_type": ct, "input": field,
+                       "wants": value, "installed": opts[:8]}
+                # A short list of non-filename choices is an enum, not a model.
+                looks_like_file = any("." in o for o in opts[:8])
+                (missing_models if looks_like_file else bad_values).append(rec)
+
+    ready = not (missing_nodes or missing_models or bad_values or missing_inputs)
+    out = {
+        "workflow": path.stem,
+        "ready_to_run": ready,
+        "nodes_used": len(used),
+        "missing_nodes": missing_nodes,
+        "missing_models": missing_models,
+        "missing_required_inputs": missing_inputs,
+        "invalid_values": bad_values,
+    }
+    if ready:
+        out["summary"] = "everything this workflow needs is installed"
+    else:
+        bits = []
+        if missing_nodes:
+            bits.append(f"{len(missing_nodes)} node type(s) not installed")
+        if missing_models:
+            bits.append(f"{len(missing_models)} model file(s) missing")
+        if missing_inputs:
+            bits.append(f"{len(missing_inputs)} required input(s) absent from the graph")
+        if bad_values:
+            bits.append(f"{len(bad_values)} input value(s) not valid here")
+        out["summary"] = "; ".join(bits)
+        if not sources and missing_nodes:
+            out["note"] = ("ComfyUI-Manager's catalogue was not found, so no "
+                           "source repo could be suggested for missing nodes")
+    return out
 
 
 def tool_comfy_run(args: dict) -> dict:
@@ -453,6 +623,16 @@ TOOLS = {
         "List saved API-format workflows, their aliases and how many inputs "
         "can be set. Pass detail=true to see every settable input and value.",
         {"type": "object", "properties": {"detail": {"type": "boolean"}}},
+    ),
+    "comfy_workflow_check": (
+        tool_comfy_workflow_check,
+        "Check whether a workflow can actually run here: reports node types "
+        "that are not installed (with the repo that provides them, when known) "
+        "and model files it references that are not on disk. Use this first "
+        "whenever a new workflow is added.",
+        {"type": "object",
+         "properties": {"workflow": {"type": "string", "description": "workflow name"}},
+         "required": ["workflow"]},
     ),
     "comfy_run": (
         tool_comfy_run,

@@ -3,50 +3,50 @@
     {
       "name": "Project Documentation",
       "documents": [
-        {"title": "FileHQ Master Status Report", "file": "FileHQ_Master_Status_Report.md", "location": "C:\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Single-page status of FileHQ as a Naya module. Note: this file lists port 8200; the engine code and qi_registry record port 8000 — a known discrepancy to reconcile."},
-        {"title": "FileHQ Implementation Log", "file": "FileHQ_Implementation_Log.md", "location": "C:\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Chronological build history of the scanner, hasher, dedup, organizer, and the merge into Naya."},
-        {"title": "FileHQ Meeting Minutes", "file": "FileHQ_Meeting_Minutes.md", "location": "C:\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Session-by-session decisions, including the decision to merge FileHQ into Naya."},
-        {"title": "FileHQ Version History", "file": "FileHQ_Version_History.md", "location": "C:\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Version changelog. App version 0.1.0; DB schema_version 1."}
+        {"title": "FileHQ Master Status Report", "file": "FileHQ_Master_Status_Report.md", "location": "C:\\APPS\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Single-page status of FileHQ as a Naya module. Note: this file lists port 8200; the engine code and qi_registry record port 8000 — a known discrepancy to reconcile."},
+        {"title": "FileHQ Implementation Log", "file": "FileHQ_Implementation_Log.md", "location": "C:\\APPS\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Chronological build history of the scanner, hasher, dedup, organizer, and the merge into Naya."},
+        {"title": "FileHQ Meeting Minutes", "file": "FileHQ_Meeting_Minutes.md", "location": "C:\\APPS\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Session-by-session decisions, including the decision to merge FileHQ into Naya."},
+        {"title": "FileHQ Version History", "file": "FileHQ_Version_History.md", "location": "C:\\APPS\\NAYA\\filehq\\DOCUMENTATION\\", "type": "Markdown", "description": "Version changelog. App version 0.1.0; DB schema_version 1."}
       ]
     },
     {
       "name": "Key Source — Engine",
       "documents": [
-        {"title": "FastAPI app + routes", "file": "main.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "FastAPI(title='FileHQ', version='0.1.0'); 50+ /api/* endpoints, Jinja2 dashboard, threaded background jobs guarded by _job_lock/_active_jobs, APScheduler wiring."},
-        {"title": "Standalone launcher", "file": "run.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "uvicorn.run('app.main:app', host=127.0.0.1, port=8000, reload=True). Pre-merge entry point; in merged mode FileHQ is launched by Naya."},
-        {"title": "Database layer", "file": "database.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "get_connection() (WAL, FK on, busy_timeout), init_db() schema (8 app tables), _run_migrations() (review_action, batch_id), get_db_stats() aggregator."},
-        {"title": "Scanner", "file": "scanner.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "scan_directory() incremental os.walk indexer with SKIP_DIRS/SKIP_FILES; get_file_tree() for the Explorer."},
-        {"title": "Categorizer", "file": "categorizer.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "get_category() extension->category; get_archive_era() FORWARD/BACKWARD; batched categorize_files()."},
-        {"title": "Hasher", "file": "hasher.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "xxhash64 partial + full; hash_candidates() three-phase size->partial->full pipeline; get_hash_progress()."},
-        {"title": "Duplicate detection", "file": "dedup.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "find_duplicates() builds duplicate_groups/members; review/action workflow; execute_dedup_actions() (dry-run-safe delete/move/rename)."}
+        {"title": "FastAPI app + routes", "file": "main.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "FastAPI(title='FileHQ', version='0.1.0'); 50+ /api/* endpoints, Jinja2 dashboard, threaded background jobs guarded by _job_lock/_active_jobs, APScheduler wiring."},
+        {"title": "Standalone launcher", "file": "run.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "uvicorn.run('app.main:app', host=127.0.0.1, port=8000, reload=True). Pre-merge entry point; in merged mode FileHQ is launched by Naya."},
+        {"title": "Database layer", "file": "database.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "get_connection() (WAL, FK on, busy_timeout), init_db() schema (8 app tables), _run_migrations() (review_action, batch_id), get_db_stats() aggregator."},
+        {"title": "Scanner", "file": "scanner.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "scan_directory() incremental os.walk indexer with SKIP_DIRS/SKIP_FILES; get_file_tree() for the Explorer."},
+        {"title": "Categorizer", "file": "categorizer.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "get_category() extension->category; get_archive_era() FORWARD/BACKWARD; batched categorize_files()."},
+        {"title": "Hasher", "file": "hasher.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "xxhash64 partial + full; hash_candidates() three-phase size->partial->full pipeline; get_hash_progress()."},
+        {"title": "Duplicate detection", "file": "dedup.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "find_duplicates() builds duplicate_groups/members; review/action workflow; execute_dedup_actions() (dry-run-safe delete/move/rename)."}
       ]
     },
     {
       "name": "Key Source — Organizer & Maintenance",
       "documents": [
-        {"title": "Structure manager", "file": "structure.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "Canonical ARCHIVE folder tree (UNIT_RELATIVE_PATHS) create/validate/preview; Python port of ARCHIVE-ControlPanel.ps1."},
-        {"title": "Move planner", "file": "planner.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "compute_target() / build_plan() — resolves ARCHIVE destinations by category + era; dry-run safe, reads DB only."},
-        {"title": "Plan executor", "file": "executor.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "execute_plan() carries out moves with a batch_id, logs to operations with undo_path; get_organize_history()/get_undo_batches()."},
-        {"title": "Undo", "file": "undo.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "undo_batch() reverses a batch of logged operations."},
-        {"title": "Maintenance", "file": "maintenance.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "VACUUM/ANALYZE, purge missing/resolved/old records, health_report() with recommendations; safe-only criteria."},
-        {"title": "Config", "file": "config.py", "location": "C:\\NAYA\\filehq\\", "type": "Python", "description": "DEFAULT_CONFIG + config/config.yaml deep-merge; primary_drive overridden from naya.db personal.default_scan_drive."}
+        {"title": "Structure manager", "file": "structure.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "Canonical ARCHIVE folder tree (UNIT_RELATIVE_PATHS) create/validate/preview; Python port of ARCHIVE-ControlPanel.ps1."},
+        {"title": "Move planner", "file": "planner.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "compute_target() / build_plan() — resolves ARCHIVE destinations by category + era; dry-run safe, reads DB only."},
+        {"title": "Plan executor", "file": "executor.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "execute_plan() carries out moves with a batch_id, logs to operations with undo_path; get_organize_history()/get_undo_batches()."},
+        {"title": "Undo", "file": "undo.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "undo_batch() reverses a batch of logged operations."},
+        {"title": "Maintenance", "file": "maintenance.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "VACUUM/ANALYZE, purge missing/resolved/old records, health_report() with recommendations; safe-only criteria."},
+        {"title": "Config", "file": "config.py", "location": "C:\\APPS\\NAYA\\filehq\\", "type": "Python", "description": "DEFAULT_CONFIG + config/config.yaml deep-merge; primary_drive overridden from naya.db personal.default_scan_drive."}
       ]
     },
     {
       "name": "Configuration & Data",
       "documents": [
-        {"title": "Runtime config", "file": "config.yaml", "location": "C:\\NAYA\\filehq\\config\\", "type": "YAML", "description": "app (name/version/host/port 8000), archive (primary_drive, forward_year 2020), scanner skip rules, 8 category extension maps, scheduler intervals (scan 24h / dedup 168h)."},
-        {"title": "FileHQ database", "file": "filehq.db", "location": "C:\\NAYA\\filehq\\db\\", "type": "SQLite", "description": "The catalogue: ~2,858,834 files, 694 duplicate_groups, 1,618 duplicate_members, 26 scans, 1 exception, schema_version 1 (created 2026-06-23). WAL mode, foreign keys on."},
-        {"title": "Web templates", "file": "*.html (11 files)", "location": "C:\\NAYA\\filehq\\web\\templates\\", "type": "Jinja2 HTML", "description": "dashboard, duplicates, explorer, organizer, tasks, history, reports, reports_print, exceptions, settings, structure, base."}
+        {"title": "Runtime config", "file": "config.yaml", "location": "C:\\APPS\\NAYA\\filehq\\config\\", "type": "YAML", "description": "app (name/version/host/port 8000), archive (primary_drive, forward_year 2020), scanner skip rules, 8 category extension maps, scheduler intervals (scan 24h / dedup 168h)."},
+        {"title": "FileHQ database", "file": "filehq.db", "location": "C:\\APPS\\NAYA\\filehq\\db\\", "type": "SQLite", "description": "The catalogue: ~2,858,834 files, 694 duplicate_groups, 1,618 duplicate_members, 26 scans, 1 exception, schema_version 1 (created 2026-06-23). WAL mode, foreign keys on."},
+        {"title": "Web templates", "file": "*.html (11 files)", "location": "C:\\APPS\\NAYA\\filehq\\web\\templates\\", "type": "Jinja2 HTML", "description": "dashboard, duplicates, explorer, organizer, tasks, history, reports, reports_print, exceptions, settings, structure, base."}
       ]
     },
     {
       "name": "Integration & Ecosystem",
       "documents": [
-        {"title": "Naya <-> FileHQ bridge", "file": "filehq_bridge.py", "location": "C:\\NAYA\\", "type": "Python", "description": "Wraps all FileHQ endpoints (HTTP to 127.0.0.1:8200) + read-only direct-DB queries; intent/action detection; build_context_for_prompt() injects live data into Naya's LLM prompt; telegram_file_command(); approval-gated destructive ops."},
-        {"title": "QI Ecosystem Registry (filehq)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "id=filehq, status=merged_into_naya, path C:\\NAYA\\filehq, original_path C:\\FileHQ, port 8000 (block 8000-8099), family_tier=cousin, integrates_with naya/maia, consumes nexus."},
+        {"title": "Naya <-> FileHQ bridge", "file": "filehq_bridge.py", "location": "C:\\APPS\\NAYA\\", "type": "Python", "description": "Wraps all FileHQ endpoints (HTTP to 127.0.0.1:8200) + read-only direct-DB queries; intent/action detection; build_context_for_prompt() injects live data into Naya's LLM prompt; telegram_file_command(); approval-gated destructive ops."},
+        {"title": "QI Ecosystem Registry (filehq)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "id=filehq, status=merged_into_naya, path C:\\APPS\\NAYA\\filehq, original_path C:\\FileHQ, port 8000 (block 8000-8099), family_tier=cousin, integrates_with naya/maia, consumes nexus."},
         {"title": "QI Ecosystem Map", "file": "QI_Ecosystem_Map.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Port table, family map, and integration contracts placing FileHQ within the QI ecosystem."},
-        {"title": "QI Service Registry", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM service list. FileHQ has no standalone QI_* service — it is started by Naya (see the QI_NayaBot entry, AppDirectory C:\\NAYA)."}
+        {"title": "QI Service Registry", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM service list. FileHQ has no standalone QI_* service — it is started by Naya (see the QI_NayaBot entry, AppDirectory C:\\APPS\\NAYA)."}
       ]
     }
   ]

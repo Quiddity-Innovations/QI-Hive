@@ -74,4 +74,4 @@ Claude Voice is in **active development**. The voice surfaces and the free real-
 The destination is not a chatbot but a **voice dispatch console**: the owner speaks an instruction, the system classifies it as conversation or a work order, files it as a **QI Hive dispatch**, executes it with `claude -p` + the Hive's seven agents (free via subscription), and reports back by voice. The natural-conversation and Zoom-like surfaces are rebuilt on **LiveKit** — one Claude agent that hears, speaks, and eventually sees a shared screen, behind one config panel.
 
 ---
-*This page is editable at C:\CLAUDE\Claude Voice\INTRO\status_intro.md — save and click Refresh to update.*
+*This page is editable at C:\APPS\CLAUDE\Claude Voice\INTRO\status_intro.md — save and click Refresh to update.*

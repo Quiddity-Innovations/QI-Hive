@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live Gamez source (C:\\Gamez). Each shows the real code behind a capability and explains what it does. Keys live server-side (config.json / maia.db) or in the browser's localStorage — never hardcoded in WC2026.html. The betting math has a fixed, documented shape and the scoring is an openly-explained heuristic, not a prediction.",
+  "intro": "Excerpts copied from the live Gamez source (C:\\APPS\\Gamez). Each shows the real code behind a capability and explains what it does. Keys live server-side (config.json / maia.db) or in the browser's localStorage — never hardcoded in WC2026.html. The betting math has a fixed, documented shape and the scoring is an openly-explained heuristic, not a prediction.",
   "sections": [
     {
       "category": "Proxy — App Hosting & Endpoints (FastAPI :8710)",
@@ -154,7 +154,7 @@
           "feature": "Reuse the ecosystem's one key, never hardcoded",
           "file": "proxy/server.py :: load_openrouter_key()",
           "language": "python",
-          "code": "def load_openrouter_key():\n    \"\"\"OpenRouter key, server-side only. config.json wins; else read the same\n    source MapSnap uses (Maia's DB) so WC2026 shares the one key.\"\"\"\n    k = (CFG.get(\"openrouter_api_key\") or \"\").strip()\n    if k:\n        return k\n    for db in [r\"C:\\QI\\maia.db\"]:\n        try:\n            row = sqlite3.connect(db).execute(\n                \"SELECT value FROM config WHERE key='system.openrouter_api_key'\").fetchone()\n            if row and row[0]:\n                return row[0].strip()\n        except Exception:\n            pass\n    return \"\"",
+          "code": "def load_openrouter_key():\n    \"\"\"OpenRouter key, server-side only. config.json wins; else read the same\n    source MapSnap uses (Maia's DB) so WC2026 shares the one key.\"\"\"\n    k = (CFG.get(\"openrouter_api_key\") or \"\").strip()\n    if k:\n        return k\n    for db in [r\"C:\\APPS\\QI\\maia.db\"]:\n        try:\n            row = sqlite3.connect(db).execute(\n                \"SELECT value FROM config WHERE key='system.openrouter_api_key'\").fetchone()\n            if row and row[0]:\n                return row[0].strip()\n        except Exception:\n            pass\n    return \"\"",
           "explanation": "Gamez doesn't manage its own AI key. config.json wins if set (used for portable builds given to a friend), but on the owner's machine it's left blank and the proxy reads the shared system.openrouter_api_key straight out of Maia's maia.db — the same pattern MapSnap uses — so the whole ecosystem shares one free-tier key with nothing duplicated."
         },
         {

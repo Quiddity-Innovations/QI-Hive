@@ -97,10 +97,17 @@ def main() -> None:
         "overwritten by estimates.",
         "usage_reconstruct.py / usage_backfill.py — activity-proxy model and one-shot "
         "historical backfill (2026-01-01 onward).",
-        "usage_snapshot_task.py wired into the Claude Code SessionEnd hook — every "
-        "session now persists its day while the transcript still exists.",
+        "usage_snapshot_task.py run by the QI_UsageSnapshot scheduled task (daily "
+        "00:05, repeating every 30 min) — each day is persisted while its transcript "
+        "still exists. Corrected 2026-08-13: this bullet previously claimed the "
+        "script was wired into the Claude Code SessionEnd hook. It never was — "
+        "~/.claude/session_end.py does not call it — so nothing ran it between "
+        "2026-08-05 and 2026-08-13 and YTD froze at $60,124 against a real $70,126.",
         "server.py — QTD/YTD tiles read the ledger (with live-parse fallback) and "
-        "display a '% measured' provenance badge.",
+        "display a '% measured' provenance badge. All seven usage read paths call "
+        "usage_snapshot_task.ensure_fresh() as a safety net, since they prefer the "
+        "ledger whenever it holds ANY row for a window and so a stale ledger "
+        "truncates silently rather than falling back.",
         "101 MB of surviving transcripts archived to "
         "C:\\QIH\\data\\usage_archive\\jsonl_snapshot_2026-08-05\\.",
     ]:

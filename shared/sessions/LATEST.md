@@ -83,7 +83,7 @@ This will:
 - `/logs` page: tail viewer, filter by service + level, auto-refresh
 - Per-project detail page (`/project/{id}`): services, logs slice, recent sessions, restart buttons
 - `qi_brain_mcp.py` path fixes + `tools/port_audit.py`
-- Archive `C:\CLAUDE`, delete `C:\UNIVERSAL\qi_brain`
+- Archive `C:\APPS\CLAUDE`, delete `C:\UNIVERSAL\qi_brain`
 
 **Session 04 — Token & cost tracking**
 - `data/usage.db` with `token_usage(agent_id, model, input_tokens, output_tokens, cost_usd, session_id, ts)`
@@ -103,7 +103,7 @@ This will:
 - Live streaming logs in side panel
 - Kanban cards drag to/from agents
 
-**Session 07+ — Maia migration** to `C:\QIP\Maia` under QI Project Standard
+**Session 07+ — Maia migration** to `C:\APPS\QIP\Maia` under QI Project Standard
 
 ---
 
@@ -113,10 +113,10 @@ This will:
 2. **Switch services to project-local nssm.exe** — requires remove + reinstall; currently they still use the central `C:\UNIVERSAL\dashboard\nssm.exe`
 3. **Update `qi_brain_mcp.py` paths** — still references `C:\UNIVERSAL\qi_brain` in a few places; switch to `C:\QIH\data\qi_brain.db`
 4. **Port audit tool** — `tools/port_audit.py` to flag services bound to wrong/unregistered ports
-5. **Delete old folders** — `C:\CLAUDE` and `C:\UNIVERSAL\qi_brain` (archive first to `C:\ARCHIVE\`)
+5. **Delete old folders** — `C:\APPS\CLAUDE` and `C:\UNIVERSAL\qi_brain` (archive first to `C:\ARCHIVE\`)
 6. **qi_validator update** — extend to check the 7-folder standard compliance
 7. **Decide fate of `NayaTunnel` / `NEXUSTunnel`** — rename to `QI_` prefix or remove
-8. **Begin Maia migration** — first project to move to `C:\QIP\Maia` under the new standard
+8. **Begin Maia migration** — first project to move to `C:\APPS\QIP\Maia` under the new standard
 
 ---
 
@@ -128,9 +128,9 @@ This will:
 | `C:\UNIVERSAL` | Legacy shared folder | Staying — other projects still write here |
 | `C:\UNIVERSAL\ECOSYSTEM` | Cross-project registry | Mirrored to `C:\QIH\ecosystem\` — delete after pointer updates |
 | `C:\UNIVERSAL\qi_brain` | Old brain location | To delete in Session 03 after verification |
-| `C:\CLAUDE` | Old dashboard | To archive + delete in Session 03 |
-| `C:\QIP` | Future home for Maia, NEXUS, Naya, OC, EasyFlow | Not yet populated |
-| `C:\QI` → `C:\QIB` | QI Business (brand/legal/admin) | After all projects moved |
+| `C:\APPS\CLAUDE` | Old dashboard | To archive + delete in Session 03 |
+| `C:\APPS\QIP` | Future home for Maia, NEXUS, Naya, OC, EasyFlow | Not yet populated |
+| `C:\APPS\QI` → `C:\QIB` | QI Business (brand/legal/admin) | After all projects moved |
 
 ---
 
@@ -140,4 +140,4 @@ Open a new Claude Code session from C:\QIH and say:
 
   Start QI Hive Session 03. Read LATEST.md at `C:\QIH\shared\sessions\LATEST.md`
   and `C:\QIH\data\status.json`. First task: run `finalize_migration.bat`
-  as admin, verify services, then begin Maia migration to `C:\QIP\Maia`.
+  as admin, verify services, then begin Maia migration to `C:\APPS\QIP\Maia`.

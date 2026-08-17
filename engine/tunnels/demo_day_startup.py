@@ -26,7 +26,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 TUNNELS_JSON = os.path.join(HERE, "tunnels.json")
 NSSM = r"C:\QIH\engine\bin\nssm.exe"
-NOTIFY = r"C:\CLAUDE\Tools\qi_tasuke_notify.py"
+NOTIFY = r"C:\APPS\CLAUDE\Tools\qi_tasuke_notify.py"
 PYTHON = sys.executable
 LOG_DIR = os.path.join(HERE, "LOGS")
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -71,11 +71,11 @@ PORT_TO_APP = {
 EXTRA_APPS = ["QI_BrainAPI", "QI_KazeConfigAPI"]
 
 # Apps that have a tunnel but NO NSSM service — launched directly, detached, as the
-# task's (non-elevated) user. M2V's files live under C:\M2V (outside QIH/QIP) so the
+# task's (non-elevated) user. M2V's files live under C:\APPS\M2V (outside QIH/QIP) so the
 # elevation broker can't service-install it; we just start its process if the port is dead.
 NON_SERVICE_APPS = [
     {"name": "M2V", "port": 7841,
-     "exe": r"C:\M2V\.venv\Scripts\python.exe", "args": ["main.py"], "cwd": r"C:\M2V"},
+     "exe": r"C:\APPS\M2V\.venv\Scripts\python.exe", "args": ["main.py"], "cwd": r"C:\APPS\M2V"},
 ]
 
 log_lines = []

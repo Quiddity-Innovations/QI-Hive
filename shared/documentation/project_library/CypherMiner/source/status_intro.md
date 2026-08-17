@@ -97,4 +97,4 @@ languages and de-pluralises / normalises accents so everyday Portuguese or Engli
 reaches the right tool. Switching language re-renders instantly with no reload.
 
 ---
-*This page is editable at `C:\CypherMiner\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\CypherMiner\INTRO\status_intro.md` — save and click Refresh to update.*

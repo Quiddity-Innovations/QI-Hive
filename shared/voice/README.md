@@ -14,4 +14,4 @@ audio_text = pronounce.apply(text)   # synth audio_text; print/display the ORIGI
 ```
 Portable/offline apps may copy `pronounce.py` + `pronunciation.json` next to their code.
 
-Reference implementation: `C:\CLAUDE\Claude Voice` (speak.py, realtime.py, telegram_bot.py all use it).
+Reference implementation: `C:\APPS\CLAUDE\Claude Voice` (speak.py, realtime.py, telegram_bot.py all use it).

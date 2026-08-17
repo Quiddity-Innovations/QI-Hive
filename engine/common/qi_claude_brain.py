@@ -13,7 +13,7 @@ An adopting app stores in ITS OWN settings:
   "claude_cli": {
     "enabled": true,
     "bin": "C:\\Users\\renne\\.local\\bin\\claude.exe",   // optional; PATH otherwise
-    "env_file": "C:\\CLAUDE\\Claude Voice\\secrets\\claude_voice.env",
+    "env_file": "C:\\APPS\\CLAUDE\\Claude Voice\\secrets\\claude_voice.env",
     "timeout": 150
   },
   "claude_profiles": [                      // one chat-picker entry per profile

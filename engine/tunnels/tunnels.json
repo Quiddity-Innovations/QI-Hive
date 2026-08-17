@@ -131,7 +131,7 @@
       "name": "qi-kaze",
       "product": "Kaze (OpenClaw)",
       "service": "QI_KazeNewsTunnel",
-      "url_file": "C:\\OC\\runtime\\dashboard\\news-tunnel-url.txt",
+      "url_file": "C:\\APPS\\OC\\runtime\\dashboard\\news-tunnel-url.txt",
       "url_file_kind": "plain",
       "ingress": [
         {

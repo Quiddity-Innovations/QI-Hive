@@ -17,7 +17,7 @@ sys.path.insert(0, r"C:\QIH\engine\common")
 from qi_elevate_client import run_elevated  # noqa: E402
 
 SERVICE = "QI_Gate"
-PYTHON = r"C:\1-AI\APPS\PYTHON\python.exe"
+PYTHON = r"C:\Program Files\Python311\python.exe"
 SCRIPT = r"C:\QIH\engine\gate\qi_gate.py"
 APPDIR = r"C:\QIH\engine\gate"
 DESC = ("QI Gate - authentication wall in front of every internet-exposed QI "

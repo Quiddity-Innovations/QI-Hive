@@ -59,10 +59,10 @@ The open bug tracked in `project_bu_server_mapsnap.md` is **fixed — and home's
 |---|---|
 | `AI\MapSnapV3` (Jul 31) | Bug present — original nested gate |
 | `MapSnap` BU (Aug 5) | Minimal patch: gate forced to `if(true)`, structure unchanged |
-| **Home `C:\MapSnap` (Aug 2, commits `056e028`, `ac23a42`)** | **Rewritten into four independent provider blocks** (Ollama / OpenRouter / Direct API / Claude) with graduated status messages |
+| **Home `C:\APPS\MapSnap` (Aug 2, commits `056e028`, `ac23a42`)** | **Rewritten into four independent provider blocks** (Ollama / OpenRouter / Direct API / Claude) with graduated status messages |
 
 **Do not port BU's patch.** If anything, BU should receive home's version. The memory note
-saying "do NOT patch C:\MapSnap meanwhile" can now be closed out.
+saying "do NOT patch C:\APPS\MapSnap meanwhile" can now be closed out.
 
 Home is also **ahead** of BU on: Independent AI Connections board, multi-model-per-provider for
 direct APIs, wider provider list (Groq, Mistral, DeepSeek, Qwen, Kimi, GLM, MiniMax), and newer
@@ -82,7 +82,7 @@ ONBASE UT1/UT2 schema data (Aug 7 vs Aug 3). **A merge must not overwrite these.
 | 4 | `improve_ddl_schema.py` (4-pass DDL coverage-gap fixer) | Generic DDL post-processor |
 | 5 | Schema group/sort visual editor, Ops tab, `_brainGet`/`_brainSet` | Generic UI + QI Brain plumbing |
 
-### 5.2 Claude Voice capabilities absent at home (verified: none of these exist in `C:\CLAUDE\Claude Voice`)
+### 5.2 Claude Voice capabilities absent at home (verified: none of these exist in `C:\APPS\CLAUDE\Claude Voice`)
 
 | Item | Capability gap it closes |
 |---|---|
@@ -172,7 +172,7 @@ the merge is done.
 ## 8. Recommended order of operations
 
 1. **Revoke the Anthropic key** in `AI\INFO\Claude Token.txt`; rotate the MapSnap tokens.
-2. **Merge the MapSnap row-egress security fix** into `C:\MapSnap` (§3) and restart `QI_MapSnapMCP`.
+2. **Merge the MapSnap row-egress security fix** into `C:\APPS\MapSnap` (§3) and restart `QI_MapSnapMCP`.
 3. Decide on `meeting_1782146412.json` and the `BU Hive\app` IP question (§6).
 4. Merge the remaining MapSnap features (§5.1), reconciling against home's newer work.
 5. Import the Claude Voice capabilities (§5.2) with ports remapped into 8720–8729.

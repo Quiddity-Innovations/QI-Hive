@@ -71,7 +71,7 @@
   {
     "category": "Operations",
     "features": [
-      {"name": "QI_LotteryWiz NSSM service", "file": "install_service.bat / restart_service.bat / uninstall_service.bat", "status": "partial", "detail": "Self-elevating NSSM install: service QI_LotteryWiz, AppDirectory C:\\Lottery Wiz, runs server.py, port 8777, auto-start, logs to LOGS\\service.log. Registered in QI_Service_Registry.md. User must run install_service.bat (UAC) to make it permanent; backend edits need restart_service.bat."},
+      {"name": "QI_LotteryWiz NSSM service", "file": "install_service.bat / restart_service.bat / uninstall_service.bat", "status": "partial", "detail": "Self-elevating NSSM install: service QI_LotteryWiz, AppDirectory C:\\APPS\\Lottery Wiz, runs server.py, port 8777, auto-start, logs to LOGS\\service.log. Registered in QI_Service_Registry.md. User must run install_service.bat (UAC) to make it permanent; backend edits need restart_service.bat."},
       {"name": "QI_LotteryWizTunnel", "file": "install_tunnel.bat / tunnel.bat / tunnel_url.bat / uninstall_tunnel.bat", "status": "partial", "detail": "NSSM cloudflared tunnel exposing localhost:8777. Registry targets the static named tunnel at https://lottery.quiddityinnovations.com; quick-tunnel scripts (tunnel.bat / tunnel_url.bat) work without admin in the interim."}
     ]
   }

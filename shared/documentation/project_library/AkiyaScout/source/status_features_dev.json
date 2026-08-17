@@ -3,7 +3,7 @@
     "category": "Entry Point & Service",
     "features": [
       {"name": "main.py — process launcher", "file": "main.py :: bootstrap_if_empty / start_api / start_scheduler / start_ui", "status": "live", "detail": "UTF-8 reconfigures stdout. init_db(), seeds demo data on first empty run, starts the APScheduler background scheduler, runs the FastAPI API (8505) on a daemon thread, then serves the Gradio UI (7845) on the main thread. Logs to data/logs/akiyascout.log."},
-      {"name": "Start_AkiyaScout.bat", "file": "Start_AkiyaScout.bat", "status": "live", "detail": "Console launcher: cd C:\\AkiyaScout && python main.py. No NSSM service registered yet (QI_AkiyaScout is planned)."},
+      {"name": "Start_AkiyaScout.bat", "file": "Start_AkiyaScout.bat", "status": "live", "detail": "Console launcher: cd C:\\APPS\\AkiyaScout && python main.py. No NSSM service registered yet (QI_AkiyaScout is planned)."},
       {"name": "Config loader", "file": "shared/config.py + config/akiyascout.json", "status": "live", "detail": "App name/version, server ports (api 8505 / ui 7845 / host 127.0.0.1), logging level + dir. Runtime settings (rates, intervals, flags) live in the DB settings table, not here."}
     ]
   },

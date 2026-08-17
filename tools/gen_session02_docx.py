@@ -49,8 +49,8 @@ next_items = [
     "Switch services to project-local nssm.exe (remove + reinstall)",
     "Update qi_brain_mcp.py to use C:\\QIH\\data\\qi_brain.db",
     "Build tools/port_audit.py to flag services on wrong ports",
-    "Delete C:\\UNIVERSAL\\qi_brain and archive C:\\CLAUDE",
-    "Begin Maia migration to C:\\QIP\\Maia under QI Project Standard",
+    "Delete C:\\UNIVERSAL\\qi_brain and archive C:\\APPS\\CLAUDE",
+    "Begin Maia migration to C:\\APPS\\QIP\\Maia under QI Project Standard",
 ]
 for it in next_items:
     doc.add_paragraph(it, style="List Bullet")
@@ -67,8 +67,8 @@ for it in [
 # Future
 doc.add_heading("🌅 Future Enhancements", level=1)
 for it in [
-    "Project migration pipeline — move Maia, NEXUS, Naya, OC, EasyFlow, FileHQ one at a time to C:\\QIP",
-    "Rename C:\\QI → C:\\QIB (QI Business) after all projects moved",
+    "Project migration pipeline — move Maia, NEXUS, Naya, OC, EasyFlow, FileHQ one at a time to C:\\APPS\\QIP",
+    "Rename C:\\APPS\\QI → C:\\QIB (QI Business) after all projects moved",
     "Bee Dance — cross-agent pattern sharing via qi_brain.features table",
     "Inter-project event bus for hive-wide coordination",
 ]:

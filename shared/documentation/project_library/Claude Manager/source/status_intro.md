@@ -7,7 +7,7 @@ automation layer that *drives* the QI ecosystem from the Claude side. It is a me
 or run on a port. Instead it is the place from which every other QI project is governed, reconciled, audited, and
 remembered.
 
-It lives at `C:\CLAUDE` and is registered in the ecosystem as `claude_manager`, family tier **backbone**, with the
+It lives at `C:\APPS\CLAUDE` and is registered in the ecosystem as `claude_manager`, family tier **backbone**, with the
 explicit note: *"Management/meta workspace that operates ON the ecosystem rather than being a deployed app."*
 
 This is deliberately distinct from **QI Hive** (`C:\QIH`) — the Hive's engine, dashboard (port 8600) and Brain API
@@ -31,10 +31,10 @@ with reality. Claude Manager is the antidote — it is where the watching, recon
 
 | Layer | What it is | Where |
 |---|---|---|
-| **Agent fabric** | 8 `hive-*` sub-agent definitions + the Dispatch Protocol | `C:\CLAUDE\.claude\agents\` |
-| **Supervisor** | Cross-project drift scanner → DASHBOARD.md + report.json + Hive status.json | `C:\CLAUDE\supervisor\supervisor.py` |
-| **Hooks** | SessionEnd + SubagentStop wired in project settings; SessionStart context injection (global) | `C:\CLAUDE\.claude\settings.json` + `~\.claude\*.py` |
-| **Automation / Tools** | Restart guard, monthly self-audit, Brain reconciliation, Tasuke notify, migrations | `C:\CLAUDE\Tools\` |
+| **Agent fabric** | 8 `hive-*` sub-agent definitions + the Dispatch Protocol | `C:\APPS\CLAUDE\.claude\agents\` |
+| **Supervisor** | Cross-project drift scanner → DASHBOARD.md + report.json + Hive status.json | `C:\APPS\CLAUDE\supervisor\supervisor.py` |
+| **Hooks** | SessionEnd + SubagentStop wired in project settings; SessionStart context injection (global) | `C:\APPS\CLAUDE\.claude\settings.json` + `~\.claude\*.py` |
+| **Automation / Tools** | Restart guard, monthly self-audit, Brain reconciliation, Tasuke notify, migrations | `C:\APPS\CLAUDE\Tools\` |
 
 ## Who uses it
 
@@ -76,4 +76,4 @@ review → inspector, ops → ops, research → scout, docs → scribe, tests �
 The main thread orchestrates; the agents do.
 
 ---
-*This page is editable at `C:\CLAUDE\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\CLAUDE\INTRO\status_intro.md` — save and click Refresh to update.*

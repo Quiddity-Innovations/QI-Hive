@@ -61,7 +61,7 @@
 - C:\Users\renne\.claude\user_prompt_hook.py (NEW)
 - C:\Users\renne\.claude\settings.json (UserPromptSubmit hook added)
 - C:\UNIVERSAL\dashboard\qi_dashboard.py (+python_path endpoints)
-- C:\NAYA\tools\*.ps1 (4 files — qi_python.ps1 dot-source)
+- C:\APPS\NAYA\tools\*.ps1 (4 files — qi_python.ps1 dot-source)
 - C:\UNIVERSAL\qi_brain\tools\install_backup_task.bat (qi_python.bat call)
 
 ---
@@ -71,7 +71,7 @@
 
 ### Built
 - QI Universal Control Panel bat (menu launcher, Windows Terminal tabs)
-- Ecosystem folder moved from C:\QI\ECOSYSTEM → C:\UNIVERSAL\ECOSYSTEM
+- Ecosystem folder moved from C:\APPS\QI\ECOSYSTEM → C:\UNIVERSAL\ECOSYSTEM
 - All CLAUDE.md files updated across all projects
 - MaiaNightlySync rescheduled to 9PM
 

@@ -67,7 +67,8 @@
       "host": "lottery.quiddityinnovations.com",
       "upstream": "127.0.0.1:8777",
       "app": "LotteryWiz",
-      "mode": "protected"
+      "mode": "open",
+      "why": "DEMO SITE (2026-08-16): Cloudflare Access (one-time email PIN, policy: any email) is the wall at the Cloudflare edge, so the gate cookie login would be a second wall that demo visitors cannot pass. Owner-only edits inside the app are still protected by the LotteryWiz owner key. Revert to 'protected' when the demo period ends or Cloudflare Access is removed."
     },
     {
       "host": "cypher.quiddityinnovations.com",
@@ -141,7 +142,7 @@
       "app": "Naya webhook",
       "mode": "mixed",
       "public_paths": ["/webhook/", "/health"],
-      "note": "Routes confirmed in C:\\NAYA\\naya_server.py: /webhook/telegram, /webhook/peer-bridge."
+      "note": "Routes confirmed in C:\\APPS\\NAYA\\naya_server.py: /webhook/telegram, /webhook/peer-bridge."
     },
 
     {
@@ -157,7 +158,7 @@
       "app": "Claude Voice (LINE webhook)",
       "mode": "mixed",
       "public_paths": ["/line/webhook", "/health", "/audio/", "/media/"],
-      "note": "Routes enumerated from C:\\CLAUDE\\Claude Voice\\line_bot.py (2026-08-05): those four are all that exist. /audio/ and /media/ MUST stay public -- LINE's servers fetch media from those URLs to deliver it to users, so gating them would break voice and video replies. Both resolve with os.path.basename(), so path traversal is already blocked. Gating everything else buys per-request access logging and closes off any route added later."
+      "note": "Routes enumerated from C:\\APPS\\CLAUDE\\Claude Voice\\line_bot.py (2026-08-05): those four are all that exist. /audio/ and /media/ MUST stay public -- LINE's servers fetch media from those URLs to deliver it to users, so gating them would break voice and video replies. Both resolve with os.path.basename(), so path traversal is already blocked. Gating everything else buys per-request access logging and closes off any route added later."
     },
     {
       "host": "oc-line.quiddityinnovations.com",
@@ -173,7 +174,7 @@
       "app": "MQ API",
       "mode": "mixed",
       "public_paths": ["/health"],
-      "note": "Routes enumerated from C:\\MQ\\api\\main.py (2026-08-05): only /health, /version and /info exist -- there are NO webhooks, so nothing external needs to post here and the whole surface can be gated. /health left open for uptime monitoring. Service was stopped when this was applied, so the change carried no risk. Re-check if MQ later adds Facebook/Instagram/WhatsApp callbacks, which would need listing here."
+      "note": "Routes enumerated from C:\\APPS\\MQ\\api\\main.py (2026-08-05): only /health, /version and /info exist -- there are NO webhooks, so nothing external needs to post here and the whole surface can be gated. /health left open for uptime monitoring. Service was stopped when this was applied, so the change carried no risk. Re-check if MQ later adds Facebook/Instagram/WhatsApp callbacks, which would need listing here."
     }
   ]
 }

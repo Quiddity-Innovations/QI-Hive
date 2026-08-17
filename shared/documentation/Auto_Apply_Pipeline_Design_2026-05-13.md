@@ -155,7 +155,7 @@ Headless Claude Code invocation (Section 3). Everything else is plumbing we cont
 ## Decisions Resolved (2026-05-13)
 
 - A. Headless Claude Code: DEFERRED to Phase 2. Phase 1 ships inbox-fallback only.
-- B. Worktree root: C:\QIH\worktrees\apply\<dispatch_id> (namespaced subfolder, avoids collision with C:\CLAUDE\.claude\worktrees\).
+- B. Worktree root: C:\QIH\worktrees\apply\<dispatch_id> (namespaced subfolder, avoids collision with C:\APPS\CLAUDE\.claude\worktrees\).
 - C. Commit policy: PR-only default. Per-project opt-in via qi_registry.json flag `auto_merge_approved_fixes: true`.
 - D. Allowlist trimmed to THREE for Phase 1: typo_fix, doc_link_correction, gitignore_addition. (Dropped dead_import_removal and missing_init_py - re-add after clean Phase 1 baseline.)
 - E. NSSM service: QI_HiveApply, runs as user account (parity with QI_HiveIngest, not SYSTEM).

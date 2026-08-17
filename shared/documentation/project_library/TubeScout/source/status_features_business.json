@@ -37,7 +37,7 @@
   {
     "category": "Daily Digest & Ecosystem",
     "features": [
-      {"name": "Kaze AI Digest", "description": "The daily AI news digest (by Maia Quiddam, via Kaze) is embedded right in TubeScout and viewable from any computer.", "status": "live", "notes": "Reads C:\\OC\\runtime\\dashboard\\ai-digest\\index.html live and re-serves it through TubeScout's own tunnel"},
+      {"name": "Kaze AI Digest", "description": "The daily AI news digest (by Maia Quiddam, via Kaze) is embedded right in TubeScout and viewable from any computer.", "status": "live", "notes": "Reads C:\\APPS\\OC\\runtime\\dashboard\\ai-digest\\index.html live and re-serves it through TubeScout's own tunnel"},
       {"name": "Feeds NEXUS Scout / Kaze", "description": "A curated set of your AI/tech channels is pushed to NEXUS Scout so Kaze's digest automatically picks up YouTube items.", "status": "live", "notes": "OPML of native YouTube RSS feeds → /scout/import/opml; AI/tech topics only, not all 816 subs"},
       {"name": "Public news page over a permanent link", "description": "The news page and digest are reachable from anywhere over a stable public URL, with no open ports on the machine.", "status": "live", "notes": "QI_TubeScoutTunnel → tubescout.quiddityinnovations.com (named Cloudflare tunnel)"},
       {"name": "Settings as a control panel", "description": "Tune the whole pipeline — interests, thresholds, providers, topic visibility, channel priorities — from one Settings page, no restart.", "status": "live", "notes": "Config-driven; writes back to config/tubescout.json and refreshes the cache"},

@@ -9,7 +9,7 @@ REM  MUST BE RUN AS ADMINISTRATOR.
 REM ============================================================
 setlocal
 set NSSM=C:\QIH\engine\bin\nssm.exe
-set PYTHON=C:\1-AI\APPS\PYTHON\python.exe
+set PYTHON=C:\Program Files\Python311\python.exe
 set SCRIPT=C:\QIH\engine\common\qi_elevate.py
 set SVC=QI_Elevate
 set APPDIR=C:\QIH\engine\common

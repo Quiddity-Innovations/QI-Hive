@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live Naya source (C:\\NAYA). Each shows the real code behind a capability and explains what it does. Naya reuses Maia's engine via a DB-redirect shim, runs an 8-model failover chain from the database, routes by LLM-extracted intent, and gates every filesystem action behind explicit approval.",
+  "intro": "Excerpts copied from the live Naya source (C:\\APPS\\NAYA). Each shows the real code behind a capability and explains what it does. Naya reuses Maia's engine via a DB-redirect shim, runs an 8-model failover chain from the database, routes by LLM-extracted intent, and gates every filesystem action behind explicit approval.",
   "sections": [
     {
       "category": "Shared Engine (DB redirect shim)",
@@ -9,16 +9,16 @@
           "feature": "Sibling-of-Maia: reuse Maia's code, keep separate data",
           "file": "naya_db.py",
           "language": "python",
-          "code": "import maia_db as _mdb\n\n# ── Redirect ALL database operations to Naya's own file ──\n_mdb.DB_FILE = os.path.join(r\"C:\\NAYA\", \"naya.db\")\n\n# Re-export every public symbol so callers can use `import naya_db as db`\n# and get identical function signatures — all backed by C:\\NAYA\\naya.db\nfrom maia_db import *          # noqa: F401, F403\nfrom maia_db import _conn      # re-export private connection helper too",
-          "explanation": "This three-line trick is what makes Naya a sibling of Maia rather than a fork. It imports Maia's maia_db module, overwrites its DB_FILE attribute to point at C:\\NAYA\\naya.db, then re-exports every function. Every downstream module (maia_context, maia_lang, naya_server) that does `import naya_db as db` now runs Maia's proven code against Naya's own data — no duplication, no cross-contamination with maia.db."
+          "code": "import maia_db as _mdb\n\n# ── Redirect ALL database operations to Naya's own file ──\n_mdb.DB_FILE = os.path.join(r\"C:\\APPS\\NAYA\", \"naya.db\")\n\n# Re-export every public symbol so callers can use `import naya_db as db`\n# and get identical function signatures — all backed by C:\\APPS\\NAYA\\naya.db\nfrom maia_db import *          # noqa: F401, F403\nfrom maia_db import _conn      # re-export private connection helper too",
+          "explanation": "This three-line trick is what makes Naya a sibling of Maia rather than a fork. It imports Maia's maia_db module, overwrites its DB_FILE attribute to point at C:\\APPS\\NAYA\\naya.db, then re-exports every function. Every downstream module (maia_context, maia_lang, naya_server) that does `import naya_db as db` now runs Maia's proven code against Naya's own data — no duplication, no cross-contamination with maia.db."
         },
         {
           "title": "Import order matters — patch before maia_* loads",
           "feature": "Guaranteed DB isolation",
           "file": "naya_server.py · path setup",
           "language": "python",
-          "code": "NAYA_HOME = r\"C:\\NAYA\"\nQI_PATH   = r\"C:\\QI\"\nsys.path.insert(0, QI_PATH)\nsys.path.insert(0, NAYA_HOME)\n\n# naya_db MUST be imported first — it patches maia_db.DB_FILE to C:\\NAYA\\naya.db\n# so all subsequent maia_* imports (rag, lang, context) transparently use naya.db\nimport naya_db as db\n\nimport maia_lang as _maia_lang\nimport maia_context as ctx_builder",
-          "explanation": "The patch only works if it lands before any other module imports maia_db. naya_server puts both C:\\NAYA and C:\\QI on the path, imports naya_db first to apply the DB redirect, and only then imports maia_lang and maia_context — which now resolve to Naya's database. Get the order wrong and Maia's modules would silently read maia.db."
+          "code": "NAYA_HOME = r\"C:\\APPS\\NAYA\"\nQI_PATH   = r\"C:\\APPS\\QI\"\nsys.path.insert(0, QI_PATH)\nsys.path.insert(0, NAYA_HOME)\n\n# naya_db MUST be imported first — it patches maia_db.DB_FILE to C:\\APPS\\NAYA\\naya.db\n# so all subsequent maia_* imports (rag, lang, context) transparently use naya.db\nimport naya_db as db\n\nimport maia_lang as _maia_lang\nimport maia_context as ctx_builder",
+          "explanation": "The patch only works if it lands before any other module imports maia_db. naya_server puts both C:\\APPS\\NAYA and C:\\APPS\\QI on the path, imports naya_db first to apply the DB redirect, and only then imports maia_lang and maia_context — which now resolve to Naya's database. Get the order wrong and Maia's modules would silently read maia.db."
         }
       ]
     },
@@ -172,7 +172,7 @@
           "feature": "Tasuke / Maia / Naya conversation over HTTP",
           "file": "naya_server.py · peer-bridge",
           "language": "python",
-          "code": "NAYA_BOT_ID = 8667837858  # @Naya_qi_bot\n_PEER_BRIDGE_PATHS = {\n    \"shared_chats\": (\n        r\"C:\\QI\\shared-chats.json\",\n        r\"\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\workspace-bridge\\shared-chats.json\",\n    ),\n    \"secret\": (\n        r\"C:\\QI\\secrets\\peer-bridge.env\",\n        r\"\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\secrets\\peer-bridge.env\",\n    ),\n}",
+          "code": "NAYA_BOT_ID = 8667837858  # @Naya_qi_bot\n_PEER_BRIDGE_PATHS = {\n    \"shared_chats\": (\n        r\"C:\\APPS\\QI\\shared-chats.json\",\n        r\"\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\workspace-bridge\\shared-chats.json\",\n    ),\n    \"secret\": (\n        r\"C:\\APPS\\QI\\secrets\\peer-bridge.env\",\n        r\"\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\secrets\\peer-bridge.env\",\n    ),\n}",
           "explanation": "Telegram refuses to deliver messages from one bot to another, so sibling QI bots that share a chat talk over an HMAC-signed HTTP bridge instead. Naya loads the shared-chat roster and the signing secret from either the Windows path or the WSL/OpenClaw mirror, so the bridge works whether the peer lives on Windows or inside WSL. The /webhook/peer-bridge route verifies the signature before accepting a relayed message."
         }
       ]

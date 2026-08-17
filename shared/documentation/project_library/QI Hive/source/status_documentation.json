@@ -50,12 +50,12 @@
     {
       "name": "Agent Fabric",
       "documents": [
-        {"title": "Dispatch Protocol", "file": "DISPATCH_PROTOCOL.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "protocol", "description": "Standing rule mapping each task type to a hive-* agent, the design->build->inspect->scribe workflows, and anti-patterns."},
-        {"title": "hive-architect", "file": "hive-architect.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Strategic system designer (Opus) — ADRs, cross-project design, breaking-change analysis. Design only, no code."},
-        {"title": "hive-builder", "file": "hive-builder.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Implementation specialist (Sonnet) — writes code from an architect's plan."},
-        {"title": "hive-inspector", "file": "hive-inspector.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Read-only code review + standards/compliance gate (Sonnet)."},
-        {"title": "hive-ops / scout / scribe / tester", "file": "hive-ops.md, hive-scout.md, hive-scribe.md, hive-tester.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Service triage, fast research, documentation, and cross-project testing roles (Haiku)."},
-        {"title": "hive-librarian", "file": "hive-librarian.md", "location": "C:\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Documentation Brain retrieval + curation — finds docs, traverses the graph, flags stale/duplicate docs."}
+        {"title": "Dispatch Protocol", "file": "DISPATCH_PROTOCOL.md", "location": "C:\\APPS\\CLAUDE\\.claude\\agents\\", "type": "protocol", "description": "Standing rule mapping each task type to a hive-* agent, the design->build->inspect->scribe workflows, and anti-patterns."},
+        {"title": "hive-architect", "file": "hive-architect.md", "location": "C:\\APPS\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Strategic system designer (Opus) — ADRs, cross-project design, breaking-change analysis. Design only, no code."},
+        {"title": "hive-builder", "file": "hive-builder.md", "location": "C:\\APPS\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Implementation specialist (Sonnet) — writes code from an architect's plan."},
+        {"title": "hive-inspector", "file": "hive-inspector.md", "location": "C:\\APPS\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Read-only code review + standards/compliance gate (Sonnet)."},
+        {"title": "hive-ops / scout / scribe / tester", "file": "hive-ops.md, hive-scout.md, hive-scribe.md, hive-tester.md", "location": "C:\\APPS\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Service triage, fast research, documentation, and cross-project testing roles (Haiku)."},
+        {"title": "hive-librarian", "file": "hive-librarian.md", "location": "C:\\APPS\\CLAUDE\\.claude\\agents\\", "type": "agent", "description": "Documentation Brain retrieval + curation — finds docs, traverses the graph, flags stale/duplicate docs."}
       ]
     },
     {

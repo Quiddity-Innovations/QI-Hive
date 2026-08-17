@@ -7,10 +7,10 @@ Runs nightly at 1:00 AM via Windows Task Scheduler.
 Keeps 30 days of backups; older ones are auto-purged.
 
 Targets:
-  - C:\QI\maia.db              (Maia: users, messages, config)
-  - C:\NAYA\naya.db            (Naya: conversations, preferences)
-  - C:\NAYA\filehq\db\filehq.db (FileHQ file index — large, use SQLite backup API)
-  - C:\NEXUS\nexus.db          (NEXUS: sessions, metrics, cache)
+  - C:\APPS\QI\maia.db              (Maia: users, messages, config)
+  - C:\APPS\NAYA\naya.db            (Naya: conversations, preferences)
+  - C:\APPS\NAYA\filehq\db\filehq.db (FileHQ file index — large, use SQLite backup API)
+  - C:\APPS\NEXUS\nexus.db          (NEXUS: sessions, metrics, cache)
   - C:\UNIVERSAL\qi_brain\qi_brain.db (QI Brain: decisions, features, sessions)
 
 Usage:
@@ -38,10 +38,10 @@ LOG_FILE       = Path(r"C:\UNIVERSAL\BACKUPS\backup.log")
 # Each tuple: (source_path, label)
 # label is used in the filename: label_YYYY-MM-DD.db
 TARGETS: list[tuple[Path, str]] = [
-    (Path(r"C:\QI\maia.db"),                              "maia"),
-    (Path(r"C:\NAYA\naya.db"),                            "naya"),
-    (Path(r"C:\NAYA\filehq\db\filehq.db"),                "filehq"),
-    (Path(r"C:\NEXUS\nexus.db"),                          "nexus"),
+    (Path(r"C:\APPS\QI\maia.db"),                              "maia"),
+    (Path(r"C:\APPS\NAYA\naya.db"),                            "naya"),
+    (Path(r"C:\APPS\NAYA\filehq\db\filehq.db"),                "filehq"),
+    (Path(r"C:\APPS\NEXUS\nexus.db"),                          "nexus"),
     (Path(r"C:\UNIVERSAL\qi_brain\qi_brain.db"),          "qi_brain"),
 ]
 

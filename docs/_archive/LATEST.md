@@ -9,14 +9,14 @@
 ### Project Status Pages — all projects now covered
 `/projects/status` on QI Hive dashboard (:8600) renders a Maia-style Project Status tab
 for every project. Each project has 6 INTRO files seeded:
-- Maia (`C:\QI\INTRO\`) — pre-existing
-- Naya (`C:\NAYA\INTRO\`) — seeded this session
-- NEXUS (`C:\NEXUS\INTRO\`) — seeded this session
-- EasyFlow (`C:\EasyFlow\INTRO\`) — seeded this session
+- Maia (`C:\APPS\QI\INTRO\`) — pre-existing
+- Naya (`C:\APPS\NAYA\INTRO\`) — seeded this session
+- NEXUS (`C:\APPS\NEXUS\INTRO\`) — seeded this session
+- EasyFlow (`C:\APPS\EasyFlow\INTRO\`) — seeded this session
 - QI Hive (`C:\QIH\INTRO\`) — seeded this session
 
 ### SessionStart hooks upgraded — all 4 projects
-`C:\QI`, `C:\NAYA`, `C:\NEXUS`, `C:\EasyFlow` — `.claude/settings.json` updated.
+`C:\APPS\QI`, `C:\APPS\NAYA`, `C:\APPS\NEXUS`, `C:\APPS\EasyFlow` — `.claude/settings.json` updated.
 New hook calls `session_bootstrap.py` which:
 1. Fetches QI Brain context (POST /api/context) for the project
 2. Reads LATEST.md (this file)
@@ -42,7 +42,7 @@ Type `/catchup` in any session to re-fetch Brain context + LATEST + blockers mid
 Expected result: Brain decision count 7 -> ~80+, features 1 -> ~50+.
 
 ### Permission prompts — permanently suppressed
-`C:\CLAUDE\.claude\settings.json` created with `bypassPermissions`.
+`C:\APPS\CLAUDE\.claude\settings.json` created with `bypassPermissions`.
 `~\.claude\settings.json` updated with explicit `.claude/**` allow patterns.
 After Claude Desktop restart, no more allow/deny prompts on go/loop runs.
 
@@ -54,16 +54,16 @@ C:\QIH\engine\common\session_bootstrap.py   NEW -- SessionStart hook
 C:\QIH\engine\common\session_stop.py        NEW -- Stop hook
 C:\QIH\engine\hive\dashboard\project_status.py  NEW -- Project Status renderer
 C:\QIH\tools\backfill_decisions.py          NEW -- decisions+features backfill
-C:\CLAUDE\.claude\settings.json             NEW -- bypassPermissions for C:\CLAUDE worktrees
+C:\APPS\CLAUDE\.claude\settings.json             NEW -- bypassPermissions for C:\APPS\CLAUDE worktrees
 C:\Users\renne\.claude\settings.json        UPDATED -- .claude/** allow rules
 C:\Users\renne\.claude\commands\catchup.md  NEW -- /catchup slash command
-C:\QI\.claude\settings.json                 UPDATED -- bootstrap hook
-C:\NAYA\.claude\settings.json               UPDATED -- bootstrap hook
-C:\NEXUS\.claude\settings.json              UPDATED -- bootstrap hook
-C:\EasyFlow\.claude\settings.json           UPDATED -- bootstrap hook
-C:\NAYA\INTRO\                              NEW -- 6 status files
-C:\NEXUS\INTRO\                             NEW -- 6 status files
-C:\EasyFlow\INTRO\                          NEW -- 6 status files
+C:\APPS\QI\.claude\settings.json                 UPDATED -- bootstrap hook
+C:\APPS\NAYA\.claude\settings.json               UPDATED -- bootstrap hook
+C:\APPS\NEXUS\.claude\settings.json              UPDATED -- bootstrap hook
+C:\APPS\EasyFlow\.claude\settings.json           UPDATED -- bootstrap hook
+C:\APPS\NAYA\INTRO\                              NEW -- 6 status files
+C:\APPS\NEXUS\INTRO\                             NEW -- 6 status files
+C:\APPS\EasyFlow\INTRO\                          NEW -- 6 status files
 C:\QIH\INTRO\                               NEW -- 6 status files
 ```
 

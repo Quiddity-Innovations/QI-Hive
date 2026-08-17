@@ -1,6 +1,6 @@
 {
   "table": [
-    {"layer": "Language", "technology": "Python", "role": "Primary language for the Brain, dashboard, agent pipeline, and all engine code", "license": "PSF (open source)", "version": "3.11 (C:\\1-AI\\APPS\\PYTHON)"},
+    {"layer": "Language", "technology": "Python", "role": "Primary language for the Brain, dashboard, agent pipeline, and all engine code", "license": "PSF (open source)", "version": "3.11 (C:\\Program Files\\Python311)"},
     {"layer": "Web Framework", "technology": "FastAPI", "role": "Both the Hive Dashboard (:8600) and the QI Brain API (:9011)", "license": "MIT", "version": "0.115+"},
     {"layer": "Web Framework", "technology": "Uvicorn", "role": "ASGI server hosting the FastAPI apps", "license": "BSD", "version": "0.30+"},
     {"layer": "Web Framework", "technology": "Pydantic", "role": "Request/response models + validators (field_validator pid normalisation)", "license": "MIT", "version": "2.x"},

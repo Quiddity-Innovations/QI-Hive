@@ -15,7 +15,7 @@
       "priority": "high",
       "items": [
         {"title": "Implement /version and /info", "detail": "Only GET /health exists. Add GET /version (project=cognibase, semver, status) and GET /info (this project's qi_registry.json entry) to honour the QI module interface contract every project must implement."},
-        {"title": "Stand up QI_CogniBase + QI_CogniBaseTunnel", "detail": "Both services are documented in QI_Service_Registry.md (venv python, AppDirectory C:\\CogniBase, requires sqlglot) and a named tunnel cognibase.quiddityinnovations.com is reserved — but neither is installed/running 24/7. Register with NSSM and confirm the public tunnel."},
+        {"title": "Stand up QI_CogniBase + QI_CogniBaseTunnel", "detail": "Both services are documented in QI_Service_Registry.md (venv python, AppDirectory C:\\APPS\\CogniBase, requires sqlglot) and a named tunnel cognibase.quiddityinnovations.com is reserved — but neither is installed/running 24/7. Register with NSSM and confirm the public tunnel."},
         {"title": "Run qi_validator.py --project cognibase", "detail": "Validate folder layout, naming, and contract compliance against QI_Standards.md before promoting beyond pre-POC. Reconcile the project's capital-A 'Application' package layout with QI standards."},
         {"title": "Promote status from pre_poc", "detail": "Once a live OnBase connection works end-to-end and a real (non-fixture) anchor materializes, update qi_registry.json status from pre_poc to poc/active_development with an honest milestone note."}
       ]

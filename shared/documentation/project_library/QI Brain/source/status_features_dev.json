@@ -5,7 +5,7 @@
       {"name": "FastAPI app (:9011)", "file": "api.py :: app = FastAPI(...)", "status": "live", "detail": "Single app, title='QI Brain API', version='002'. All Brain logic lives here; MCP server is a thin client. CORS allow_origins=['*'] (local-only). Mounts poller + distiller at module import."},
       {"name": "Health / version / info probes", "file": "api.py :: health() / version() / info()", "status": "live", "detail": "GET /health -> {status, service, port:9011, version}. /version reports build 2026-04-20. /info lists capabilities + endpoint count + /docs URL — used by qi_validator + uptime monitors."},
       {"name": "Status dashboard endpoint", "file": "api.py :: status()", "status": "live", "detail": "GET /api/status aggregates active_projects, active_decisions (superseded_by IS NULL), features_logged, pending_reviews, sessions_logged, chroma_counts, providers_active."},
-      {"name": "QI_BrainAPI NSSM service", "file": "C:\\QIH\\ecosystem\\QI_Service_Registry.md", "status": "live", "detail": "Service QI_BrainAPI, binary C:\\1-AI\\APPS\\PYTHON\\python.exe, params C:\\QIH\\engine\\brain\\api.py, AppDirectory C:\\QIH, log C:\\QIH\\engine\\brain\\LOGS\\qi_brain_api.log. Port 9011 (9010 squatted by Logitech G HUB, moved 2026-05-14)."}
+      {"name": "QI_BrainAPI NSSM service", "file": "C:\\QIH\\ecosystem\\QI_Service_Registry.md", "status": "live", "detail": "Service QI_BrainAPI, binary C:\\Program Files\\Python311\\python.exe, params C:\\QIH\\engine\\brain\\api.py, AppDirectory C:\\QIH, log C:\\QIH\\engine\\brain\\LOGS\\qi_brain_api.log. Port 9011 (9010 squatted by Logitech G HUB, moved 2026-05-14)."}
     ]
   },
   {

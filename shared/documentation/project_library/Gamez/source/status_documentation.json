@@ -3,54 +3,54 @@
     {
       "name": "Project Overview & Setup",
       "documents": [
-        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\Gamez\\", "type": "Markdown", "description": "What Gamez is, the file layout, port rule (block 8710-8719), run steps, key handling, the QI_GamezProxy service, and the static public tunnel. The single best orientation file."},
-        {"title": "Friend Setup Guide (README FIRST)", "file": "HOW TO SET THIS UP (README FIRST!).txt", "location": "C:\\Gamez\\release\\", "type": "Text", "description": "Friend-facing setup for the shared/portable build: running the app, the shared-AI access code, and installing a free local Ollama."},
-        {"title": "Release Readme", "file": "README.txt", "location": "C:\\Gamez\\release\\", "type": "Text", "description": "What's in the release bundle (the .exe + portable zips) and how to run it."},
-        {"title": "Ollama Setup Page", "file": "SETUP.txt", "location": "C:\\Gamez\\proxy\\", "type": "Text", "description": "The 'install your own free AI (Ollama)' page served live at GET /setup over the tunnel for users who lose shared-AI access."}
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\APPS\\Gamez\\", "type": "Markdown", "description": "What Gamez is, the file layout, port rule (block 8710-8719), run steps, key handling, the QI_GamezProxy service, and the static public tunnel. The single best orientation file."},
+        {"title": "Friend Setup Guide (README FIRST)", "file": "HOW TO SET THIS UP (README FIRST!).txt", "location": "C:\\APPS\\Gamez\\release\\", "type": "Text", "description": "Friend-facing setup for the shared/portable build: running the app, the shared-AI access code, and installing a free local Ollama."},
+        {"title": "Release Readme", "file": "README.txt", "location": "C:\\APPS\\Gamez\\release\\", "type": "Text", "description": "What's in the release bundle (the .exe + portable zips) and how to run it."},
+        {"title": "Ollama Setup Page", "file": "SETUP.txt", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Text", "description": "The 'install your own free AI (Ollama)' page served live at GET /setup over the tunnel for users who lose shared-AI access."}
       ]
     },
     {
       "name": "Configuration",
       "documents": [
-        {"title": "Proxy Config (self-documenting)", "file": "config.json", "location": "C:\\Gamez\\proxy\\", "type": "JSON", "description": "All server settings + secrets: port, refresh_minutes, player_source (fifa), apifootball_season, api_football_key, openrouter_api_key, ai_access_password, allow_origins — each explained in an inline _notes block."},
-        {"title": "Shared Build Config", "file": "config.shared.json", "location": "C:\\Gamez\\build\\", "type": "JSON", "description": "Key-sanitized config baked into the portable build so a shared binary never leaks the owner's keys."},
-        {"title": "Config Editor (UI)", "file": "config_editor.html", "location": "C:\\Gamez\\proxy\\", "type": "HTML", "description": "One-page editor for config.json, served local-only at GET /config/editor (refused over the tunnel)."}
+        {"title": "Proxy Config (self-documenting)", "file": "config.json", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "JSON", "description": "All server settings + secrets: port, refresh_minutes, player_source (fifa), apifootball_season, api_football_key, openrouter_api_key, ai_access_password, allow_origins — each explained in an inline _notes block."},
+        {"title": "Shared Build Config", "file": "config.shared.json", "location": "C:\\APPS\\Gamez\\build\\", "type": "JSON", "description": "Key-sanitized config baked into the portable build so a shared binary never leaks the owner's keys."},
+        {"title": "Config Editor (UI)", "file": "config_editor.html", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "HTML", "description": "One-page editor for config.json, served local-only at GET /config/editor (refused over the tunnel)."}
       ]
     },
     {
       "name": "Key Source — Proxy & Engine",
       "documents": [
-        {"title": "FastAPI Proxy", "file": "server.py", "location": "C:\\Gamez\\proxy\\", "type": "Python", "description": "The service. Serves WC2026.html at /, exposes /snapshot /health /fixtures /players /teams /kalshi /refresh, the AI relays (/ai/openrouter, /ai/ollama/*), and local-only /config*. refresh() fetch-score-cache pipeline + APScheduler + warm cache."},
-        {"title": "Data Sources", "file": "sources.py", "location": "C:\\Gamez\\proxy\\", "type": "Python", "description": "Server-side fetchers: ESPN fixtures/standings/bracket, EA FC 26 ratings → national squads, optional API-Football deep stats, Kalshi live odds with self-healing series discovery, and a SAMPLE fallback."},
-        {"title": "Scoring Engine", "file": "scoring.py", "location": "C:\\Gamez\\proxy\\", "type": "Python", "description": "Transparent heuristic: position-aware percentile PPS (score_players), rated-input scoring (score_all_rated), and projected-XI squad strength SSS (score_team) with star bonus + bench depth."},
-        {"title": "AI Grounding Audit", "file": "audit_ai.py", "location": "C:\\Gamez\\proxy\\", "type": "Python", "description": "Sends the page's persona prompt + JSON snapshot through the live /ai/openrouter and checks the AI stays grounded in the panels and refuses outside info."},
-        {"title": "API-Football Key Test", "file": "test_apifootball.py", "location": "C:\\Gamez\\proxy\\", "type": "Python", "description": "Verifies a configured API-Football key against /status (same check as GET /apifootball/check)."}
+        {"title": "FastAPI Proxy", "file": "server.py", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Python", "description": "The service. Serves WC2026.html at /, exposes /snapshot /health /fixtures /players /teams /kalshi /refresh, the AI relays (/ai/openrouter, /ai/ollama/*), and local-only /config*. refresh() fetch-score-cache pipeline + APScheduler + warm cache."},
+        {"title": "Data Sources", "file": "sources.py", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Python", "description": "Server-side fetchers: ESPN fixtures/standings/bracket, EA FC 26 ratings → national squads, optional API-Football deep stats, Kalshi live odds with self-healing series discovery, and a SAMPLE fallback."},
+        {"title": "Scoring Engine", "file": "scoring.py", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Python", "description": "Transparent heuristic: position-aware percentile PPS (score_players), rated-input scoring (score_all_rated), and projected-XI squad strength SSS (score_team) with star bonus + bench depth."},
+        {"title": "AI Grounding Audit", "file": "audit_ai.py", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Python", "description": "Sends the page's persona prompt + JSON snapshot through the live /ai/openrouter and checks the AI stays grounded in the panels and refuses outside info."},
+        {"title": "API-Football Key Test", "file": "test_apifootball.py", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Python", "description": "Verifies a configured API-Football key against /status (same check as GET /apifootball/check)."}
       ]
     },
     {
       "name": "Key Source — Front End & Launchers",
       "documents": [
-        {"title": "The App (single-file front end)", "file": "WC2026.html", "location": "C:\\Gamez\\", "type": "HTML", "description": "The entire UI in one ~97 KB file: board assembly + /snapshot polling, the betting-window math (winProb=p^rounds), the unified multi-provider AI call, the Kalshi list + market edge, and the persistent dynamic workspace."},
-        {"title": "Windowed Launcher", "file": "launcher_gui.py", "location": "C:\\Gamez\\proxy\\", "type": "Python", "description": "Runs the proxy in a background thread and opens the app in a native OS webview window (pywebview). Entry point for the default windowed build."},
-        {"title": "Console Launcher", "file": "launcher.py", "location": "C:\\Gamez\\proxy\\", "type": "Python", "description": "The older browser-launch entry point used by the --console build variant."},
-        {"title": "Run Proxy (local)", "file": "run_proxy.bat", "location": "C:\\Gamez\\proxy\\", "type": "Batch", "description": "Starts the proxy locally for development (python server.py on :8710)."}
+        {"title": "The App (single-file front end)", "file": "WC2026.html", "location": "C:\\APPS\\Gamez\\", "type": "HTML", "description": "The entire UI in one ~97 KB file: board assembly + /snapshot polling, the betting-window math (winProb=p^rounds), the unified multi-provider AI call, the Kalshi list + market edge, and the persistent dynamic workspace."},
+        {"title": "Windowed Launcher", "file": "launcher_gui.py", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Python", "description": "Runs the proxy in a background thread and opens the app in a native OS webview window (pywebview). Entry point for the default windowed build."},
+        {"title": "Console Launcher", "file": "launcher.py", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Python", "description": "The older browser-launch entry point used by the --console build variant."},
+        {"title": "Run Proxy (local)", "file": "run_proxy.bat", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Batch", "description": "Starts the proxy locally for development (python server.py on :8710)."}
       ]
     },
     {
       "name": "Build, Packaging & Release",
       "documents": [
-        {"title": "Build Script (windowed)", "file": "build_exe.py", "location": "C:\\Gamez\\", "type": "Python", "description": "PyInstaller build of the self-contained windowed app. OS-aware output WC2026-{win,mac,linux}; --console for the browser-launch variant; bundles key-sanitized config."},
-        {"title": "Build Script (one-dir)", "file": "build_exe_onedir.py", "location": "C:\\Gamez\\", "type": "Python", "description": "One-directory PyInstaller build (faster start, antivirus-friendlier) producing WC2026_portable-win-onedir.zip."},
-        {"title": "PyInstaller Spec", "file": "WC2026.spec", "location": "C:\\Gamez\\", "type": "Spec", "description": "PyInstaller spec describing the bundled data files (WC2026.html, config) and the entry point."},
-        {"title": "CI Build Workflow", "file": "build.yml", "location": "C:\\Gamez\\.github\\workflows\\", "type": "YAML", "description": "GitHub Actions matrix building the windowed app on Windows + macOS + Linux and uploading all three as artifacts."},
-        {"title": "Tour Recorder + Video", "file": "produce_tour.py / WC2026_Tour.mp4", "location": "C:\\Gamez\\release\\", "type": "Python / Video", "description": "Script that produces the screen-recorded product tour, and the resulting demo video."}
+        {"title": "Build Script (windowed)", "file": "build_exe.py", "location": "C:\\APPS\\Gamez\\", "type": "Python", "description": "PyInstaller build of the self-contained windowed app. OS-aware output WC2026-{win,mac,linux}; --console for the browser-launch variant; bundles key-sanitized config."},
+        {"title": "Build Script (one-dir)", "file": "build_exe_onedir.py", "location": "C:\\APPS\\Gamez\\", "type": "Python", "description": "One-directory PyInstaller build (faster start, antivirus-friendlier) producing WC2026_portable-win-onedir.zip."},
+        {"title": "PyInstaller Spec", "file": "WC2026.spec", "location": "C:\\APPS\\Gamez\\", "type": "Spec", "description": "PyInstaller spec describing the bundled data files (WC2026.html, config) and the entry point."},
+        {"title": "CI Build Workflow", "file": "build.yml", "location": "C:\\APPS\\Gamez\\.github\\workflows\\", "type": "YAML", "description": "GitHub Actions matrix building the windowed app on Windows + macOS + Linux and uploading all three as artifacts."},
+        {"title": "Tour Recorder + Video", "file": "produce_tour.py / WC2026_Tour.mp4", "location": "C:\\APPS\\Gamez\\release\\", "type": "Python / Video", "description": "Script that produces the screen-recorded product tour, and the resulting demo video."}
       ]
     },
     {
       "name": "Service & Ecosystem",
       "documents": [
-        {"title": "Service Install / Uninstall / Restart", "file": "install_service.bat / uninstall_service.bat / restart_service.bat", "location": "C:\\Gamez\\proxy\\", "type": "Batch", "description": "Register, remove, and restart the QI_GamezProxy NSSM service. install_service.bat self-elevates via UAC."},
-        {"title": "QI Service Registry (QI_GamezProxy)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entry: QI_GamezProxy (AppDirectory C:\\Gamez\\proxy, server.py, port 8710, log gamez_proxy_service.log) + the QI_GamezTunnel / qi-gamez tunnel mapping."},
+        {"title": "Service Install / Uninstall / Restart", "file": "install_service.bat / uninstall_service.bat / restart_service.bat", "location": "C:\\APPS\\Gamez\\proxy\\", "type": "Batch", "description": "Register, remove, and restart the QI_GamezProxy NSSM service. install_service.bat self-elevates via UAC."},
+        {"title": "QI Service Registry (QI_GamezProxy)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entry: QI_GamezProxy (AppDirectory C:\\APPS\\Gamez\\proxy, server.py, port 8710, log gamez_proxy_service.log) + the QI_GamezTunnel / qi-gamez tunnel mapping."},
         {"title": "QI Ecosystem Registry (gamez)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "Gamez registry entry: port block 8710-8719, family_tier=cousin, integrates_with maia (shared OpenRouter key), exposed endpoints. github: TBD."},
         {"title": "Static Tunnel Map", "file": "tunnels.json", "location": "C:\\QIH\\engine\\tunnels\\", "type": "JSON", "description": "Master tunnel map; qi-gamez ingress maps gamez.quiddityinnovations.com → localhost:8710. Adjust ingress here, never create quick tunnels for Gamez."}
       ]

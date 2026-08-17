@@ -24,7 +24,7 @@ INBOX = Path(r"C:\QIH\shared\reports\inbox")
 LOGS  = Path(r"C:\QIH\logs")
 LOGS.mkdir(parents=True, exist_ok=True)
 
-PYTHON = r"C:\1-AI\APPS\PYTHON\python.exe"
+PYTHON = r"C:\Program Files\Python311\python.exe"
 
 
 def main():

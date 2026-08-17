@@ -35,7 +35,7 @@
       "items": [
         {"title": "Resume decision", "detail": "Naya is registry status 'paused' while its two services run. Make an explicit call: keep it as a maintained personal tool, fold its file-engine capabilities into another QI project, or formally retire it — so the running services aren't orphaned."},
         {"title": "Flask -> FastAPI alignment", "detail": "naya_server.py is Flask while the rest of the ecosystem (Maia, NEXUS, FileHQ) is FastAPI. A migration would unify middleware, CORS-from-registry, and /version /info shapes — large effort, low urgency while paused."},
-        {"title": "Folder-strategy migration", "detail": "Per the QI folder strategy, personal projects may move under C:\\QIP. Moving C:\\NAYA would require repointing NSSM AppDirectories, naya_db paths, and the nightly sync — defer until the resume decision is made."},
+        {"title": "Folder-strategy migration", "detail": "Per the QI folder strategy, personal projects may move under C:\\APPS\\QIP. Moving C:\\APPS\\NAYA would require repointing NSSM AppDirectories, naya_db paths, and the nightly sync — defer until the resume decision is made."},
         {"title": "Service account review", "detail": "Decide whether QI_NayaBot / QI_NayaGradio should run under LOCAL SYSTEM or a dedicated account — it affects which drives the scanner can see and what the executor can delete."}
       ]
     }

@@ -59,4 +59,4 @@ One saved Profile, watched forever. As Japan's vacant-home glut grows, AkiyaScou
 Every user-facing text field is stored as a `*_ja` / `*_en` pair. The Japanese original is the source of truth (buyers use it with agents); the English is a cached translation layered on top. The dashboard offers an EN / 日本語 / Both toggle, the map ships English, Japanese, satellite, and topographic base layers, and place names are kept verbatim in code so a local LLM can't mangle them into pinyin.
 
 ---
-*This page is editable at `C:\AkiyaScout\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\AkiyaScout\INTRO\status_intro.md` — save and click Refresh to update.*

@@ -17,7 +17,7 @@
     {"layer": "Packaging", "technology": "PyInstaller", "role": "Bundles the proxy + HTML + config into a single self-contained app (windowed + onedir builds)", "license": "GPL w/ exception", "version": "WC2026.spec"},
     {"layer": "Desktop Window", "technology": "pywebview", "role": "Opens the app in a native OS webview window (Edge WebView2 / WebKit / WebKitGTK) instead of a browser tab", "license": "BSD", "version": "launcher_gui.py"},
     {"layer": "CI / Build", "technology": "GitHub Actions", "role": "Builds the windowed app on Windows + macOS + Linux runners and uploads all three artifacts", "license": "Proprietary (CI)", "version": ".github/workflows/build.yml"},
-    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_GamezProxy Windows service (AppDirectory C:\\Gamez\\proxy) + QI_GamezTunnel exposing gamez.quiddityinnovations.com", "license": "Open source / Cloudflare", "version": "static named tunnel qi-gamez"}
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_GamezProxy Windows service (AppDirectory C:\\APPS\\Gamez\\proxy) + QI_GamezTunnel exposing gamez.quiddityinnovations.com", "license": "Open source / Cloudflare", "version": "static named tunnel qi-gamez"}
   ],
   "descriptions": [
     {

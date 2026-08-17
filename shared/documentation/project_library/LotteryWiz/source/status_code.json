@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live Lottery Wiz source (C:\\Lottery Wiz). Each shows the real code behind a capability and explains how it powers that feature. The math lives in two pure-Python engines (engine_py.py for Fantasy 5, lottery_general.py for any game) shared by the FastAPI server, the browser, and the MCP server. Throughout, covering designs restructure coverage but never change the odds.",
+  "intro": "Excerpts copied from the live Lottery Wiz source (C:\\APPS\\Lottery Wiz). Each shows the real code behind a capability and explains how it powers that feature. The math lives in two pure-Python engines (engine_py.py for Fantasy 5, lottery_general.py for any game) shared by the FastAPI server, the browser, and the MCP server. Throughout, covering designs restructure coverage but never change the odds.",
   "sections": [
     {
       "category": "Covering-Design Solver (the core)",

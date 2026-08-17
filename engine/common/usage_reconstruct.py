@@ -49,12 +49,12 @@ ARCHIVE = Path(r"C:\QIH\data\usage_archive")
 
 # Repos that carry dated commit history for QI work.
 REPOS = [
-    r"C:\QI", r"C:\QIH", r"C:\NAYA", r"C:\NEXUS",
-    r"C:\OC", r"C:\EasyFlow", r"C:\MQ", r"C:\Claude",
+    r"C:\APPS\QI", r"C:\QIH", r"C:\APPS\NAYA", r"C:\APPS\NEXUS",
+    r"C:\APPS\OC", r"C:\APPS\EasyFlow", r"C:\APPS\MQ", r"C:\Claude",
 ]
 
 # Project trees whose file mtimes act as an activity proxy before git existed.
-MTIME_TREES = [r"C:\QI", r"C:\NAYA", r"C:\NEXUS", r"C:\OC"]
+MTIME_TREES = [r"C:\APPS\QI", r"C:\APPS\NAYA", r"C:\APPS\NEXUS", r"C:\APPS\OC"]
 
 # ── Evidence-backed boundaries ──────────────────────────────────────────
 SUBSCRIPTION_START = date(2026, 2, 18)   # ~/.claude.json firstStartTime

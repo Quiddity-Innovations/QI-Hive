@@ -6,23 +6,23 @@
 
 ## ANSWERS TO YOUR 2 QUESTIONS
 
-### Q1 — Which projects have migrated to C:\QIP as of today?
-**None.** `C:\QIP` exists as an empty folder. No projects have moved yet.
+### Q1 — Which projects have migrated to C:\APPS\QIP as of today?
+**None.** `C:\APPS\QIP` exists as an empty folder. No projects have moved yet.
 
 Current authoritative paths (use these — not QIP paths):
 | Project    | Current Path      | Status         |
 |------------|-------------------|----------------|
 | QI Hive    | C:\QIH            | ✅ Already at final location |
-| Maia       | C:\QI             | 🔄 Migrates to C:\QIP\Maia eventually |
-| Naya       | C:\NAYA           | 🔄 Migrates to C:\QIP\Naya eventually |
-| NEXUS      | C:\NEXUS          | 🔄 Migrates to C:\QIP\NEXUS eventually |
-| OpenClaw   | C:\OC             | 🔄 Migrates to C:\QIP\OC eventually |
-| MQ         | C:\MQ             | 🔄 Migrates to C:\QIP\MQ eventually |
-| EasyFlow   | C:\EasyFlow       | 🔄 Migrates to C:\QIP\EasyFlow eventually |
+| Maia       | C:\APPS\QI             | 🔄 Migrates to C:\APPS\QIP\Maia eventually |
+| Naya       | C:\APPS\NAYA           | 🔄 Migrates to C:\APPS\QIP\Naya eventually |
+| NEXUS      | C:\APPS\NEXUS          | 🔄 Migrates to C:\APPS\QIP\NEXUS eventually |
+| OpenClaw   | C:\APPS\OC             | 🔄 Migrates to C:\APPS\QIP\OC eventually |
+| MQ         | C:\APPS\MQ             | 🔄 Migrates to C:\APPS\QIP\MQ eventually |
+| EasyFlow   | C:\APPS\EasyFlow       | 🔄 Migrates to C:\APPS\QIP\EasyFlow eventually |
 | QI-Universal | C:\UNIVERSAL    | Infrastructure — stays |
 
 Migration rule: ONE project at a time. Renne decides the order. Maia first is the suggestion but not confirmed.
-After all projects move, `C:\QI` is renamed to `C:\QIB` (QI Business — brand, legal, marketing, admin).
+After all projects move, `C:\APPS\QI` is renamed to `C:\QIB` (QI Business — brand, legal, marketing, admin).
 
 ---
 

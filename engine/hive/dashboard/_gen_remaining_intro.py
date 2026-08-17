@@ -32,7 +32,7 @@ def grab(path: str, start: int, end: int) -> str:
 
 JOBS = [
     # ── QI Connector ────────────────────────────────────────────────────
-    (r"C:\QIP\Connector\INTRO", {
+    (r"C:\APPS\QIP\Connector\INTRO", {
         "intro": (
             "QI Connector is a remote MCP server that exposes the QI ecosystem "
             "to Claude as a set of callable tools. It holds no data of its own "
@@ -41,7 +41,7 @@ JOBS = [
             "auditable."),
         "sections": [
             ("Authentication", [
-                (r"C:\QIP\Connector\api\main.py", 54, 66,
+                (r"C:\APPS\QIP\Connector\api\main.py", 54, 66,
                  "Self-provisioning bearer + path tokens",
                  "Capability-URL access control",
                  "Both tokens are generated once with secrets.token_urlsafe(32) "
@@ -53,7 +53,7 @@ JOBS = [
                  "and restarting."),
             ]),
             ("Brain Proxy", [
-                (r"C:\QIP\Connector\api\main.py", 79, 84,
+                (r"C:\APPS\QIP\Connector\api\main.py", 79, 84,
                  "Single bounded call into the Brain API",
                  "Every tool is a thin proxy",
                  "All Brain-backed tools funnel through this one helper: a "
@@ -61,7 +61,7 @@ JOBS = [
                  "Centralising it means timeout and error behaviour are "
                  "uniform across the whole tool surface rather than "
                  "reimplemented per tool."),
-                (r"C:\QIP\Connector\api\main.py", 74, 78,
+                (r"C:\APPS\QIP\Connector\api\main.py", 74, 78,
                  "Response clipping",
                  "Bounded payloads back to the model",
                  "Tool results are clipped before being returned. An unbounded "
@@ -72,7 +72,7 @@ JOBS = [
         ]}),
 
     # ── Retirement Analyzer ─────────────────────────────────────────────
-    (r"C:\Retirement Analyzer\INTRO", {
+    (r"C:\APPS\Retirement Analyzer\INTRO", {
         "intro": (
             "Retirement Analyzer ingests a Fidelity positions export and turns "
             "it into an allocation, concentration and rebalancing view. The "
@@ -81,7 +81,7 @@ JOBS = [
             "rather than arithmetic."),
         "sections": [
             ("Classification", [
-                (r"C:\Retirement Analyzer\shared\analyzer.py", 37, 51,
+                (r"C:\APPS\Retirement Analyzer\shared\analyzer.py", 37, 51,
                  "Asset-class classification",
                  "Allocation by asset class",
                  "Each holding is bucketed into Cash / Bond / International "
@@ -93,7 +93,7 @@ JOBS = [
                  "dropped, so totals always reconcile."),
             ]),
             ("Parsing", [
-                (r"C:\Retirement Analyzer\shared\analyzer.py", 127, 146,
+                (r"C:\APPS\Retirement Analyzer\shared\analyzer.py", 127, 146,
                  "Tolerant Fidelity CSV parser",
                  "Fidelity CSV import",
                  "Fidelity exports carry disclaimer rows, blank lines and "
@@ -135,7 +135,7 @@ HEADROOM_WHY = (
     "Headroom is not a standalone QI application, so this tab is not "
     "applicable to it.\n\n"
     "Headroom is a utility that lives inside Claude Manager at "
-    "`C:\\CLAUDE\\Tools`, alongside the other maintenance scripts there. It has "
+    "`C:\\APPS\\CLAUDE\\Tools`, alongside the other maintenance scripts there. It has "
     "no source tree of its own, no service, no port allocation in the QI port "
     "registry and no independent delivery milestone — which is why it has no "
     "INTRO folder and why the dashboard shows `n/a` rather than a readiness "
@@ -150,7 +150,7 @@ HEADROOM_WHY = (
 
 
 def write_headroom() -> list[str]:
-    intro = Path(r"C:\CLAUDE\Tools\INTRO")
+    intro = Path(r"C:\APPS\CLAUDE\Tools\INTRO")
     intro.mkdir(parents=True, exist_ok=True)
     written = []
 
@@ -160,7 +160,7 @@ def write_headroom() -> list[str]:
 
     note = [{"category": "Not applicable",
              "features": [{"name": "Not a standalone project",
-                           "file": "C:\\CLAUDE\\Tools",
+                           "file": "C:\\APPS\\CLAUDE\\Tools",
                            "status": "planned",
                            "detail": HEADROOM_WHY.replace("\n\n", " ")}]}]
     for f in ("status_features_business.json", "status_features_dev.json"):
@@ -217,7 +217,7 @@ def main() -> None:
         print(f"wrote {out}  ({len(sections)} sections, {n} snippets)")
 
     w = write_headroom()
-    print(f"wrote C:\\CLAUDE\\Tools\\INTRO  ({len(w)} files: {', '.join(w)})")
+    print(f"wrote C:\\APPS\\CLAUDE\\Tools\\INTRO  ({len(w)} files: {', '.join(w)})")
 
 
 if __name__ == "__main__":

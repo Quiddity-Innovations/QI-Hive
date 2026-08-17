@@ -40,7 +40,7 @@ print("log_session:", resp)
 decisions = [
     ("Use qwen2.5:7b locally for batch extraction", "Keeps backfill cost at zero; sufficient quality for structured JSON extraction from session summaries"),
     ("session_bootstrap/session_stop are project-agnostic scripts", "One shared script per hook type, parameterised by --project and --project-id. Avoids code duplication across 4 projects."),
-    ("bypassPermissions set permanently for C:\\CLAUDE worktree and globally", "Autonomous sessions should not require human approval for file writes inside project directories."),
+    ("bypassPermissions set permanently for C:\\APPS\\CLAUDE worktree and globally", "Autonomous sessions should not require human approval for file writes inside project directories."),
     ("Project Status uses INTRO folder convention across all projects", "Consistent with Maia's established pattern. Any project with INTRO/ gets a status page automatically."),
 ]
 for title, rationale in decisions:

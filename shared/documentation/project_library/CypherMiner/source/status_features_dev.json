@@ -76,8 +76,8 @@
     "category": "Build, Services & Ops",
     "features": [
       {"name": "Vite + TS + PWA build", "file": "frontend/package.json, frontend/vite.config.ts, frontend/index.html", "status": "live", "detail": "Scripts: dev (vite), build (tsc && vite build -> frontend/dist), preview. devDeps: typescript 5.6, vite 6, vite-plugin-pwa 0.21 (offline service worker). No runtime framework dependency."},
-      {"name": "QI_CypherMinerUI service", "file": "TOOLS/setup_services.ps1 / QI_Service_Registry.md", "status": "live", "detail": "Serves frontend/dist on 7842 via 'python -m http.server 7842 --bind 127.0.0.1 --directory C:\\CypherMiner\\frontend\\dist'. Logs ui_service.log."},
-      {"name": "QI_CypherMinerAPI service", "file": "install_api_service_admin.bat", "status": "live", "detail": "NSSM service running run_api.py (port 8502), AppDirectory C:\\CypherMiner, auto-start, logs LOGS/api_out.log + api_err.log."},
+      {"name": "QI_CypherMinerUI service", "file": "TOOLS/setup_services.ps1 / QI_Service_Registry.md", "status": "live", "detail": "Serves frontend/dist on 7842 via 'python -m http.server 7842 --bind 127.0.0.1 --directory C:\\APPS\\CypherMiner\\frontend\\dist'. Logs ui_service.log."},
+      {"name": "QI_CypherMinerAPI service", "file": "install_api_service_admin.bat", "status": "live", "detail": "NSSM service running run_api.py (port 8502), AppDirectory C:\\APPS\\CypherMiner, auto-start, logs LOGS/api_out.log + api_err.log."},
       {"name": "QI_CypherMinerTunnel (static named)", "file": "install_tunnel.bat / C:\\QIH\\engine\\tunnels\\configs\\qi-cypherminer.yml", "status": "live", "detail": "Static named Cloudflare tunnel qi-cypherminer exposing :7842 at https://cypher.quiddityinnovations.com. Legacy quick-tunnel path retained for shipped/customer boxes."},
       {"name": "Smoke tests", "file": "tests/test_smoke.py", "status": "live", "detail": "pytest checks /health, /version, /info and /openapi.json against the running API; every test SKIPS (never fails) if the service is down, so it is CI/offline-safe."}
     ]

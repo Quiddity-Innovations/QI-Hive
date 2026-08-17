@@ -1,33 +1,35 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-08 12:35:12 (nightly reconciler)_
+_Auto-generated: 2026-08-17 09:01:03 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
-| autopdf | Hardening + MCP integration | active | 55 | 2026-08-07 17:13:55 |
+| autopdf | Hardening + MCP integration | active | 58 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 52 | 2026-08-08 12:05:54 |
-| claude_voice | Dual-brain routing + Hive/launcher registration | active | 11 | 2026-08-07 02:01:14 |
-| cognibase | Pre-POC — Phase B core complete | active | 27 | 2026-07-29 12:23:08 |
+| claude_manager | Operational | active | 53 | 2026-08-09 15:20:35 |
+| claude_voice | Dual-brain routing + Hive/launcher registration | active | 12 | 2026-08-07 02:01:14 |
+| cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
+| comfyui | Active â€” media engine operational | active | 1 | 2026-08-10 23:57:42 |
 | connector | v1.0 live | active_development | 1 | 2026-07-30 21:21:48 |
 | cypherminer | Phase 1 — frontend + tunnel live | complete | 4 | 2026-06-16 11:29:45 |
-| digitization | v1 — tool + docs delivered | complete | 3 | 2026-08-07 19:08:28 |
+| digitization | v1 — tool + docs delivered | complete | 4 | 2026-08-11 17:10:00 |
 | easyflow | v1.2.x tester feedback cycle | blocked | 85 | 2026-05-22 15:24:39 |
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | gamez | Correctness & data integrity (post-feature-complete) | active | 8 | 2026-06-29 21:42:14 |
-| lotterywiz | v1 — live + public | active | 6 | 2026-06-17 21:30:15 |
+| lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
 | m2v | v0.1.0 — scaffold + first render | active | 6 | 2026-06-18 00:35:05 |
-| maia | Phase 4 — production | active | 18 | 2026-07-30 14:49:16 |
-| mapsnap | BU Edition ready to ship | active | 152 | 2026-08-07 13:33:09 |
+| maia | Phase 4 — production | active | 22 | 2026-08-13 18:28:00 |
+| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 173 | 2026-08-17 12:06:21 |
 | mq | Phase 0 — scaffold | new | 1 | 2026-04-06 12:00:00 |
 | naya | Phase 3 — bot + UI live | paused | 5 | 2026-06-23 16:03:19 |
-| nexus | Phase 2 — NSSM-supervised | active | 17 | 2026-08-07 15:35:36 |
-| openclaw | Phase 2 — agent expansion | active | 26 | 2026-07-31 18:11:10 |
+| nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
+| openclaw | Phase 2 — agent expansion | active | 65 | 2026-07-31 21:58:24 |
 | personalsong | Working app | active | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 139 | 2026-08-05 04:53:27 |
+| qi_hive | Dashboard UX polish | active | 191 | 2026-08-17 08:35:36 |
 | retirementanalyzer | v1 - engine + API + UI live | active | 7 | 2026-07-03 02:52:18 |
+| synvox | Phase 0 - Foundation (MatrAIx engine bootstrap) | active | 1 | 2026-08-16 20:57:20 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 21 | 2026-04-20 01:16:46 |
 
@@ -62,6 +64,22 @@ _Auto-generated: 2026-08-08 12:35:12 (nightly reconciler)_
 - **Status:** active
 - **Summary:** M18 + M25-minimal + portability shipped, 50/50 tests passing. Runs as QI_CogniBase service :8650 + tunnel.
 - **Next:** BU pilot preparation
+
+### comfyui
+- **Phase:** Active â€” media engine operational
+- **Status:** active
+- **Summary:** Local image/video generation engine on D:\AI, port 8189, driven by Claude via the qi-comfy MCP server and directly usable in its own web UI at http://127.0.0.1:8189.
+
+14 workflows verified working: t2i_fast (Z-Image Turbo, ~8s), t2i_sdxl, t2i_lora (SDXL + nudify_xl_lite, the NSFW route), t2i_lora_sd15 (Realistic Vision 5.1 for the three SD 1.5 LoRAs), t2i_ideogram (only engine rendering legible text), i2i, describe2img (Gemma 4 in-graph captioning), t2v_minimax (DEFAULT video â€” 1344x768 WITH stereo audio, ~75s), t2v_wan, i2v_wan, plus video_enhance_av / video_enhance / video_smooth / video_upscale.
+
+Generation is gated: Claude renders only on an explicit RENDER: or /comfy trigger, never inferred. SFW and NSFW both in scope; no real identifiable people, no minors.
+
+Every workflow exists twice â€” API format for Claude, editor twins prefixed "QI - " in the ComfyUI sidebar for Renne. They are copies, not links.
+
+Engine selection and defaults live in D:\AI\workflows\_video_backends.json. Docs: CLAUDE.md (rules), CHEATSHEET.md (daily), RENDER_TEMPLATES.md (5 worked examples doubling as a regression suite), HOW_TO_RUN_IT_YOURSELF.md (GUI steps).
+
+Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both). Exposes POST /free for VRAM release, already consumed by voice_studio.
+- **Next:** 1. Resolve the port conflict: 8189 sits inside Maia's 8100-8199 block. Either formalise 8180-8189 as a media/GPU carve-out, or migrate and update Start_ComfyUI.bat + qi_comfy_mcp.py COMFY_URL + voice_studio together. 2. Finish the ref2va NVFP4 download (11.67 GB) to enable MiniMax Reference-to-Video. 3. Decide whether to enable the MiniMax cloud API nodes (needs credits). 4. Optional third entry point: a Render.bat CLI. 5. No ControlNet models installed yet.
 
 ### connector
 - **Phase:** v1.0 live
@@ -100,10 +118,10 @@ _Auto-generated: 2026-08-08 12:35:12 (nightly reconciler)_
 - **Next:** Optional: Teams-Eval card visual pass now that lines are real; consider extending the guard to single-team title answers if needed.
 
 ### lotterywiz
-- **Phase:** v1 — live + public
+- **Phase:** Public demo â€” documented
 - **Status:** active
-- **Summary:** Fantasy 5 covering-design app live on :8777 as QI_LotteryWiz; public Cloudflare tunnel QI_LotteryWizTunnel installed as a persistent service 2026-06-15.
-- **Next:** Add to nightly reconcile maps; consider git init + GitHub; named tunnel once domain is live.
+- **Summary:** Live public demo at lottery.quiddityinnovations.com (any email gets a Cloudflare one-time code), now with a complete Quiddity Innovations documentation set: doc\README.md index, LotteryWiz_User_Guide.docx (16 sections, 23 screenshots, 4 recipes), feature-tour videos in both house voices (8.4/8.6 min, 24 scenes, + chapter segments), narration script, and five re-runnable scripts that regenerate everything from the live app.
+- **Next:** Pick the house voice (Andrew or Ava); owner click-through of the demo login; share doc\README.md + guide with first guests; decide git vs shared storage for the ~15 MB videos; on approval remove Cloudflare Access and revert QI Gate to protected.
 
 ### m2v
 - **Phase:** v0.1.0 — scaffold + first render
@@ -118,10 +136,10 @@ _Auto-generated: 2026-08-08 12:35:12 (nightly reconciler)_
 - **Next:** Multi-bot template engine + RAG (ChromaDB)
 
 ### mapsnap
-- **Phase:** BU Edition ready to ship
+- **Phase:** OnBase DNA â€” Tier C dark-mask calibration
 - **Status:** active
-- **Summary:** BU Edition finalized 2026-07-31: dist\MapSnap_BU_Edition_2026-07-31.zip â€” one kit, two modes (deploy.json). BU MCP gateway live as QI_MapSnapMCPBU :8652 (3 tools, table_data off), 4/4 acceptance vs main edition. IIS front door rehearsed with SSE streaming proven, machine reverted to local mode. SERVER_DEPLOY.md covers server promotion.
-- **Next:** Rotate leaked OpenRouter key; BU-account claude mcp add + conversational 4-test rerun; table_data decision on main gateway; optional QIH gateway-code sync.
+- **Summary:** OnBase DNA Program at 232 dark (type,bit) pairs, 136 reachable by one dialog, 96 needing write-probing; overall row coverage 80.3 percent over an 18-package corpus. action.flags2 is effectively closed (5 dark pairs, 99.8 percent). Audit workstream is current: AUDIT-REPORT-2026-08-11 fully triaged. Note Types and Scan Queues are 100 percent and published.
+- **Next:** Locate the Located By sub-selector encoding; mine GOV25's new dark pairs; action.flags (64 reachable); ruletable.flags (6.8 percent row coverage vs 96 dark pairs). Register the OnBase DNA Program as its own project via qi_new_project.py.
 
 ### mq
 - **Phase:** Phase 0 — scaffold
@@ -176,6 +194,12 @@ _Auto-generated: 2026-08-08 12:35:12 (nightly reconciler)_
 - **Status:** active
 - **Summary:** Scaffolded via qi_new_project.py (19/19 compliance). Built stdlib analysis engine (allocation, concentration/HHI, drift, rebalancing), FastAPI on 8504, Gradio UI on 7844, sample dataset. Verified /analyze on sample (11 positions, $210k). Registered in registry + Brain + dashboard.
 - **Next:** Install QI_FidelityAnalyzer + QI_FidelityAnalyzerTunnel services; add PDF positions parsing; configurable target allocation in UI; first git commit + GitHub.
+
+### synvox
+- **Phase:** Phase 0 - Foundation (MatrAIx engine bootstrap)
+- **Status:** active
+- **Summary:** SynVox registered in the QI registry and bootstrapped on PowerSpec. Engine (MatrAIx, MIT) cloned to C:\APPS\SynVox\engine\matraix with a uv-managed Python 3.12 venv and all editable packages installed; Persona 1M dataset pulled locally. Remote operations are live: the QI Connector now carries a whitelisted executor (qi_list_scripts / qi_execute_script / qi_script_status), so the whole bootstrap re-runs from any device with qi_execute_script('setup-synvox'). Phase 0 is complete except its gate - the free Docker smoke test - because Docker Desktop is not installed on this machine.
+- **Next:** 1) Install Docker Desktop (needs WSL2 + reboot) and run the free harbor smoke test - the Phase 0 gate, no API key required. 2) setx ANTHROPIC_API_KEY with the personal Quiddity Innovations key. 3) Write persona_explore.py - free pandas/Polars segment profiling over Persona 1M, no inference cost. 4) Email/Discord the MatrAIx team for written clarification of the Persona 1M license before any commercial redistribution. 5) Phase 1: draft task qi-survey_nexus-pricing-tiers, debug on 3-5 Haiku personas, then ~100-persona cohort on Sonnet (~$1-5).
 
 ### tubescout
 - **Phase:** MVP + refinements complete

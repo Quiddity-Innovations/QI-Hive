@@ -4,7 +4,7 @@
     "features": [
       {"name": "main.py — process launcher", "file": "main.py :: main()", "status": "live", "detail": "argparse CLI: default starts API+UI+Scout; --api-only / --ui-only / --scout / --init-db. UTF-8 reconfigures stdout/stderr. Runs init_database() first, then Scout scheduler, synthesis keep-warm thread + scheduler, API thread (uvicorn), UI in main thread."},
       {"name": "Synthesis keep-warm", "file": "main.py :: warmup_synthesis() / start_keepwarm_scheduler()", "status": "live", "detail": "Pre-loads + re-pings the local 26B synthesis model every keep_warm_interval_minutes (20) so the first real synthesis isn't a ~25-30s cold start. Config-gated by core.synthesis_keep_warm."},
-      {"name": "QI_NEXUS NSSM service", "file": "NEXUS_Install.bat / NEXUS_Control.bat / install.py", "status": "live", "detail": "Service QI_NEXUS, AppDirectory C:\\NEXUS, runs main.py. Logs to C:\\NEXUS\\LOGS\\nexus_service.log + nexus_service_error.log. Public via QI_NEXUSTunnel (Cloudflare, UI 7880)."}
+      {"name": "QI_NEXUS NSSM service", "file": "NEXUS_Install.bat / NEXUS_Control.bat / install.py", "status": "live", "detail": "Service QI_NEXUS, AppDirectory C:\\APPS\\NEXUS, runs main.py. Logs to C:\\APPS\\NEXUS\\LOGS\\nexus_service.log + nexus_service_error.log. Public via QI_NEXUSTunnel (Cloudflare, UI 7880)."}
     ]
   },
   {

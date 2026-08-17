@@ -1,0 +1,27 @@
+{
+  "_comment": "QI Executor whitelist — THE security boundary for remote script execution. Scripts must be plain filenames living in this folder (C:\\QIH\\dispatch\\scripts). sha256='ANY' is acceptable while a script is still changing; pin the real hash once it is stable (PowerShell: (Get-FileHash .\\Setup-SynVox.ps1).Hash) so a modified script refuses to run until re-approved. NEVER put secrets in a script or in this file — API keys live in machine environment variables (setx).",
+  "_updated": "2026-08-16",
+  "scripts": {
+    "setup-synvox": {
+      "file": "Setup-SynVox.ps1",
+      "description": "SynVox Phase 0 - MatrAIx engine bootstrap: prerequisites (git/uv/Python 3.12/Node 20+), Docker check-only, clone MatrAIx into C:\\APPS\\SynVox\\engine\\matraix, uv venv + editable installs, Persona 1M dataset download, free Docker smoke test. Idempotent and master-logged to C:\\APPS\\SynVox\\logs. Never runs a paid persona simulation.",
+      "sha256": "ANY",
+      "allowed_args": [],
+      "machine": "POWERSPEC"
+    },
+    "synvox-smoke": {
+      "file": "Test-SynVoxSmoke.ps1",
+      "description": "SynVox Phase 0 acceptance gate - FREE. Runs 'matraix smoke' (upstream host-lane onboarding smoke) over every Survey task in the engine: loads the questionnaire, renders a persona, runs the real survey runner against a deterministic fake client, checks the answer envelope. No Docker, no provider calls, no ANTHROPIC_API_KEY, cost $0 - it CANNOT spend money. Answers are synthetic and not persona-faithful: this proves the harness works, it is never a simulation result. Logs to C:\\APPS\\SynVox\\logs\\synvox_smoke_<timestamp>.log.",
+      "sha256": "ANY",
+      "allowed_args": [],
+      "machine": "POWERSPEC"
+    },
+    "qi-health-snapshot": {
+      "file": "Get-QIHealth.ps1",
+      "description": "Read-only QI machine health snapshot: every QI_* Windows service state, disk space per drive, and a /health probe of every registered project port. Logs to C:\\QIH\\logs\\qi_health_<timestamp>.log.",
+      "sha256": "ANY",
+      "allowed_args": [],
+      "machine": "POWERSPEC"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live NEXUS source (C:\\NEXUS). Each shows the real code behind a capability and explains how it powers that feature. Config-driven throughout — no AI model names are hardcoded in source; they live in config/providers.json and config/nexus.json.",
+  "intro": "Excerpts copied from the live NEXUS source (C:\\APPS\\NEXUS). Each shows the real code behind a capability and explains how it powers that feature. Config-driven throughout — no AI model names are hardcoded in source; they live in config/providers.json and config/nexus.json.",
   "sections": [
     {
       "category": "API Surface (FastAPI :8010)",
@@ -9,7 +9,7 @@
           "feature": "FastAPI service that any QI project can call",
           "file": "api/main.py · module scope",
           "language": "python",
-          "code": "app = FastAPI(\n    title=\"NEXUS API\",\n    description=\"Neural Exchange and Unified Synthesis — Quiddity Innovations AI Backbone\",\n    version=\"0.1.0\"\n)\n\ntry:\n    import sys as _sys; _sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI as _QI\n    _cors_origins = _QI.cors_origins()\nexcept Exception:\n    # Fallback if registry not available\n    _cors_origins = [\"http://localhost:7880\", \"http://localhost:8001\", ...]\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=_cors_origins,\n    allow_methods=[\"GET\", \"POST\", \"PUT\", \"DELETE\"],\n    allow_headers=[\"*\"]\n)\n\n# Singletons\n_dispatcher = Dispatcher()\n_synthesizer = Synthesizer()",
+          "code": "app = FastAPI(\n    title=\"NEXUS API\",\n    description=\"Neural Exchange and Unified Synthesis — Quiddity Innovations AI Backbone\",\n    version=\"0.1.0\"\n)\n\ntry:\n    import sys as _sys; _sys.path.insert(0, r\"C:\\APPS\\QI\\ECOSYSTEM\")\n    from qi_registry import QI as _QI\n    _cors_origins = _QI.cors_origins()\nexcept Exception:\n    # Fallback if registry not available\n    _cors_origins = [\"http://localhost:7880\", \"http://localhost:8001\", ...]\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=_cors_origins,\n    allow_methods=[\"GET\", \"POST\", \"PUT\", \"DELETE\"],\n    allow_headers=[\"*\"]\n)\n\n# Singletons\n_dispatcher = Dispatcher()\n_synthesizer = Synthesizer()",
           "explanation": "Creates the single FastAPI app that exposes all 60+ NEXUS routes on port 8010. Allowed CORS origins are pulled from the shared qi_registry (never hardcoded) so sibling QI projects — Maia, Naya, FileHQ, OpenClaw — can call NEXUS without per-project edits. The Dispatcher and Synthesizer are built once as module singletons and reused for every request."
         },
         {

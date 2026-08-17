@@ -18,7 +18,7 @@
   "count_auto_safe": 36,
   "entries": [
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\run_realtime.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\run_realtime.bat",
       "current": "run_realtime.bat",
       "product": "ClaudeVoice",
       "role": "Run",
@@ -28,7 +28,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\say.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\say.bat",
       "current": "say.bat",
       "product": "ClaudeVoice",
       "role": null,
@@ -40,7 +40,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\talk.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\dist\\ClaudeVoice_Portable\\talk.bat",
       "current": "talk.bat",
       "product": "ClaudeVoice",
       "role": null,
@@ -52,7 +52,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\install_meeting_service.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\install_meeting_service.bat",
       "current": "install_meeting_service.bat",
       "product": "ClaudeVoice",
       "role": "Install",
@@ -62,7 +62,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\install_service.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\install_service.bat",
       "current": "install_service.bat",
       "product": "ClaudeVoice",
       "role": "Install",
@@ -72,7 +72,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_bridge_health.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_bridge_health.bat",
       "current": "run_bridge_health.bat",
       "product": "ClaudeVoice",
       "role": "Run",
@@ -86,7 +86,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_control.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_control.bat",
       "current": "run_control.bat",
       "product": "ClaudeVoice",
       "role": "Control",
@@ -96,7 +96,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_line.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_line.bat",
       "current": "run_line.bat",
       "product": "ClaudeVoice",
       "role": "Run",
@@ -106,7 +106,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_meeting.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_meeting.bat",
       "current": "run_meeting.bat",
       "product": "ClaudeVoice",
       "role": "Run",
@@ -116,7 +116,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_realtime.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_realtime.bat",
       "current": "run_realtime.bat",
       "product": "ClaudeVoice",
       "role": "Run",
@@ -126,7 +126,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_server.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_server.bat",
       "current": "run_server.bat",
       "product": "ClaudeVoice",
       "role": "Start",
@@ -136,7 +136,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_telegram.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_telegram.bat",
       "current": "run_telegram.bat",
       "product": "ClaudeVoice",
       "role": "Run",
@@ -146,7 +146,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\run_webcall.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\run_webcall.bat",
       "current": "run_webcall.bat",
       "product": "ClaudeVoice",
       "role": "Run",
@@ -156,7 +156,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\say.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\say.bat",
       "current": "say.bat",
       "product": "ClaudeVoice",
       "role": null,
@@ -168,7 +168,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\start_meeting_room.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\start_meeting_room.bat",
       "current": "start_meeting_room.bat",
       "product": "ClaudeVoice",
       "role": "Start",
@@ -182,7 +182,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\CLAUDE\\Claude Voice\\talk.bat",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice\\talk.bat",
       "current": "talk.bat",
       "product": "ClaudeVoice",
       "role": null,
@@ -194,7 +194,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\CLAUDE\\Dashboard\\install_service.bat",
+      "path": "C:\\APPS\\CLAUDE\\Dashboard\\install_service.bat",
       "current": "install_service.bat",
       "product": "Hive",
       "role": "Install",
@@ -204,7 +204,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\CLAUDE\\Dashboard\\start_dashboard.bat",
+      "path": "C:\\APPS\\CLAUDE\\Dashboard\\start_dashboard.bat",
       "current": "start_dashboard.bat",
       "product": "Hive",
       "role": "Start",
@@ -214,7 +214,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NAYA\\install_naya_watchdog.bat",
+      "path": "C:\\APPS\\NAYA\\install_naya_watchdog.bat",
       "current": "install_naya_watchdog.bat",
       "product": "Naya",
       "role": "Install",
@@ -224,7 +224,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NAYA\\naya_control.bat",
+      "path": "C:\\APPS\\NAYA\\naya_control.bat",
       "current": "naya_control.bat",
       "product": "Naya",
       "role": "Control",
@@ -234,7 +234,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NAYA\\start_naya.bat",
+      "path": "C:\\APPS\\NAYA\\start_naya.bat",
       "current": "start_naya.bat",
       "product": "Naya",
       "role": "Start",
@@ -244,7 +244,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NAYA\\tools\\Naya Folder Picker.bat",
+      "path": "C:\\APPS\\NAYA\\tools\\Naya Folder Picker.bat",
       "current": "Naya Folder Picker.bat",
       "product": "Naya",
       "role": null,
@@ -256,7 +256,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\NEXUS\\NEXUS_Setup.bat",
+      "path": "C:\\APPS\\NEXUS\\NEXUS_Setup.bat",
       "current": "NEXUS_Setup.bat",
       "product": "NEXUS",
       "role": "Install",
@@ -266,7 +266,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NEXUS\\Start_NEXUS.bat",
+      "path": "C:\\APPS\\NEXUS\\Start_NEXUS.bat",
       "current": "Start_NEXUS.bat",
       "product": "NEXUS",
       "role": "Start",
@@ -276,7 +276,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NEXUS\\Start_NEXUS_Scout_Only.bat",
+      "path": "C:\\APPS\\NEXUS\\Start_NEXUS_Scout_Only.bat",
       "current": "Start_NEXUS_Scout_Only.bat",
       "product": "NEXUS",
       "role": "Start",
@@ -286,7 +286,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NEXUS\\fix_service_path.bat",
+      "path": "C:\\APPS\\NEXUS\\fix_service_path.bat",
       "current": "fix_service_path.bat",
       "product": "NEXUS",
       "role": null,
@@ -298,7 +298,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\NEXUS\\install_nexus_service.bat",
+      "path": "C:\\APPS\\NEXUS\\install_nexus_service.bat",
       "current": "install_nexus_service.bat",
       "product": "NEXUS",
       "role": "Install",
@@ -308,7 +308,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NEXUS\\install_nexus_tunnel.bat",
+      "path": "C:\\APPS\\NEXUS\\install_nexus_tunnel.bat",
       "current": "install_nexus_tunnel.bat",
       "product": "NEXUS",
       "role": "Install",
@@ -318,7 +318,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NEXUS\\nexus_control.bat",
+      "path": "C:\\APPS\\NEXUS\\nexus_control.bat",
       "current": "nexus_control.bat",
       "product": "NEXUS",
       "role": "Control",
@@ -328,7 +328,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\NEXUS\\restart_nexus.bat",
+      "path": "C:\\APPS\\NEXUS\\restart_nexus.bat",
       "current": "restart_nexus.bat",
       "product": "NEXUS",
       "role": "Restart",
@@ -338,7 +338,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\PersonalSong\\install_service.bat",
+      "path": "C:\\APPS\\PersonalSong\\install_service.bat",
       "current": "install_service.bat",
       "product": "PersonalSong",
       "role": "Install",
@@ -348,7 +348,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\PersonalSong\\run_queue.bat",
+      "path": "C:\\APPS\\PersonalSong\\run_queue.bat",
       "current": "run_queue.bat",
       "product": "PersonalSong",
       "role": "Start",
@@ -358,7 +358,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\PersonalSong\\run_server.bat",
+      "path": "C:\\APPS\\PersonalSong\\run_server.bat",
       "current": "run_server.bat",
       "product": "PersonalSong",
       "role": "Start",
@@ -368,7 +368,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\TOOLS\\fix_logfile.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\fix_logfile.bat",
       "current": "fix_logfile.bat",
       "product": "Maia",
       "role": null,
@@ -380,7 +380,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\TOOLS\\fix_nssm_logs.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\fix_nssm_logs.bat",
       "current": "fix_nssm_logs.bat",
       "product": "Maia",
       "role": null,
@@ -392,7 +392,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\TOOLS\\fix_tunnel_service.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\fix_tunnel_service.bat",
       "current": "fix_tunnel_service.bat",
       "product": "Maia",
       "role": null,
@@ -404,7 +404,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\TOOLS\\register_nightly_sync.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\register_nightly_sync.bat",
       "current": "register_nightly_sync.bat",
       "product": "Maia",
       "role": null,
@@ -416,7 +416,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\TOOLS\\restart_maia.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\restart_maia.bat",
       "current": "restart_maia.bat",
       "product": "Maia",
       "role": "Restart",
@@ -426,7 +426,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\TOOLS\\restart_tunnel_and_update.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\restart_tunnel_and_update.bat",
       "current": "restart_tunnel_and_update.bat",
       "product": "Maia",
       "role": "Restart",
@@ -436,7 +436,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\TOOLS\\schedule_reconcile.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\schedule_reconcile.bat",
       "current": "schedule_reconcile.bat",
       "product": "Maia",
       "role": null,
@@ -448,7 +448,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\TOOLS\\setup_named_tunnel.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\setup_named_tunnel.bat",
       "current": "setup_named_tunnel.bat",
       "product": "Maia",
       "role": "Install",
@@ -458,7 +458,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\TOOLS\\setup_service.bat",
+      "path": "C:\\APPS\\QI\\TOOLS\\setup_service.bat",
       "current": "setup_service.bat",
       "product": "Maia",
       "role": "Install",
@@ -468,7 +468,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\fix_service_path.bat",
+      "path": "C:\\APPS\\QI\\fix_service_path.bat",
       "current": "fix_service_path.bat",
       "product": "Maia",
       "role": null,
@@ -480,7 +480,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\fix_tunnel_logpath.bat",
+      "path": "C:\\APPS\\QI\\fix_tunnel_logpath.bat",
       "current": "fix_tunnel_logpath.bat",
       "product": "Maia",
       "role": null,
@@ -492,7 +492,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\install_maia_services.bat",
+      "path": "C:\\APPS\\QI\\install_maia_services.bat",
       "current": "install_maia_services.bat",
       "product": "Maia",
       "role": "Install",
@@ -502,7 +502,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\install_watchdog.bat",
+      "path": "C:\\APPS\\QI\\install_watchdog.bat",
       "current": "install_watchdog.bat",
       "product": "Maia",
       "role": "Install",
@@ -512,7 +512,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\maia_control - (backup on 03-24-2026).bat",
+      "path": "C:\\APPS\\QI\\maia_control - (backup on 03-24-2026).bat",
       "current": "maia_control - (backup on 03-24-2026).bat",
       "product": "Maia",
       "role": "Control",
@@ -524,7 +524,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\QI\\maia_control.bat",
+      "path": "C:\\APPS\\QI\\maia_control.bat",
       "current": "maia_control.bat",
       "product": "Maia",
       "role": "Control",
@@ -534,7 +534,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\QI\\restart_maiabot.bat",
+      "path": "C:\\APPS\\QI\\restart_maiabot.bat",
       "current": "restart_maiabot.bat",
       "product": "Maia",
       "role": "Restart",
@@ -544,7 +544,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\TUBESCOUT\\Start_TubeScout.bat",
+      "path": "C:\\APPS\\TUBESCOUT\\Start_TubeScout.bat",
       "current": "Start_TubeScout.bat",
       "product": "TubeScout",
       "role": "Start",
@@ -554,7 +554,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\TUBESCOUT\\install_service_admin.bat",
+      "path": "C:\\APPS\\TUBESCOUT\\install_service_admin.bat",
       "current": "install_service_admin.bat",
       "product": "TubeScout",
       "role": "Install",
@@ -564,7 +564,7 @@
       "auto_safe": true
     },
     {
-      "path": "C:\\TUBESCOUT\\run_cycle.bat",
+      "path": "C:\\APPS\\TUBESCOUT\\run_cycle.bat",
       "current": "run_cycle.bat",
       "product": "TubeScout",
       "role": "Start",
@@ -579,7 +579,7 @@
       "auto_safe": false
     },
     {
-      "path": "C:\\TUBESCOUT\\start_server.bat",
+      "path": "C:\\APPS\\TUBESCOUT\\start_server.bat",
       "current": "start_server.bat",
       "product": "TubeScout",
       "role": "Start",

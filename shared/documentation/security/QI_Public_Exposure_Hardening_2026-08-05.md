@@ -161,7 +161,7 @@ Ports `9040`/`9041` are inside the QI Hive family block (`9000–9099`) per
 | Audit | Every allow/deny/login/failure as JSON, with real client IP + country |
 
 The password and session design is lifted deliberately from
-`C:\MapSnap\Application\auth.py`, which was the strongest existing implementation in
+`C:\APPS\MapSnap\Application\auth.py`, which was the strongest existing implementation in
 the estate — the per-tab/feature RBAC was dropped as unnecessary for a gate.
 
 **The first-run setup lock deserves particular note.** Without it, the
@@ -290,8 +290,8 @@ of what is exposed, which four hosts remain unauthenticated, and how the defence
 built — a roadmap for an attacker if published. It is committed locally
 (`10564f4`) and held.
 
-Verified that `QI_NightlyGitSync` covers only `C:\AutoPDF`, `C:\PersonalSong` and
-`C:\M2V`, so **`C:\QIH` will not be auto-pushed**. The commit will stay local until
+Verified that `QI_NightlyGitSync` covers only `C:\APPS\AutoPDF`, `C:\APPS\PersonalSong` and
+`C:\APPS\M2V`, so **`C:\QIH` will not be auto-pushed**. The commit will stay local until
 the owner decides.
 
 ### Decision required from the owner
@@ -383,7 +383,7 @@ state: **20 of 22 hostnames require a login** (14 `protected`, 6 `mixed`, 2 `ope
 | Host | Was | Now | Basis |
 |---|---|---|---|
 | `claudevoice.quiddityinnovations.com` | open | **mixed** | Routes read from `line_bot.py`: `/line/webhook`, `/health`, `/audio/{f}`, `/media/{f}` are all that exist. The media paths stay public because LINE's servers fetch from them to deliver replies; both use `os.path.basename()`, so traversal is already blocked. Its FastAPI `/docs` is now behind the wall. |
-| `api.quiddam.com` | open | **mixed** | Routes read from `C:\MQ\api\main.py`: only `/health`, `/version`, `/info`. **No webhooks**, so nothing external needs to post here. `/health` left open for uptime monitoring. MQ was stopped, so the change carried no risk. |
+| `api.quiddam.com` | open | **mixed** | Routes read from `C:\APPS\MQ\api\main.py`: only `/health`, `/version`, `/info`. **No webhooks**, so nothing external needs to post here. `/health` left open for uptime monitoring. MQ was stopped, so the change carried no risk. |
 | `oc-line.quiddityinnovations.com` | open | **open** | Catch-all handler — see §6.1. Not safe to allow-list without reading the WSL routing table. |
 | `connector.quiddityinnovations.com` | open | **open** | Permanent exception — carries its own bearer auth. |
 

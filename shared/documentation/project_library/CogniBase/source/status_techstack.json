@@ -24,7 +24,7 @@
     {"layer": "AI — Local (pre-wired, off)", "technology": "Ollama · LM Studio · llama.cpp", "role": "Local inference + embeddings (nomic-embed-text); openai_compatible adapter covers any OpenAI-compatible local server", "license": "MIT / mixed", "version": "HTTP (no SDK)"},
     {"layer": "Packaging", "technology": "setuptools + Docker", "role": "pip editable install (cognibase-server / cognibase-rag scripts) and Docker/compose with bind-mounted state for full portability", "license": "MIT / Apache 2.0", "version": "pyproject 0.4.0.dev0"},
     {"layer": "Testing", "technology": "pytest + pytest-asyncio", "role": "≈95 tests against FakeChatVendor/FakeEmbedVendor — no API keys required to run the suite", "license": "MIT", "version": ">=8"},
-    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "Planned QI_CogniBase service (venv python, AppDirectory C:\\CogniBase) + QI_CogniBaseTunnel → cognibase.quiddityinnovations.com (documented, not yet running)", "license": "Open source / Cloudflare", "version": "nssm via C:\\QIH\\engine\\bin\\nssm.exe"}
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "Planned QI_CogniBase service (venv python, AppDirectory C:\\APPS\\CogniBase) + QI_CogniBaseTunnel → cognibase.quiddityinnovations.com (documented, not yet running)", "license": "Open source / Cloudflare", "version": "nssm via C:\\QIH\\engine\\bin\\nssm.exe"}
   ],
   "descriptions": [
     {

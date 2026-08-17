@@ -30,7 +30,7 @@ echo.
 echo --- status ---
 "%NSSM%" status QI_NayaBot
 echo.
-echo Done. Check C:\NAYA\LOGS for a line like:
+echo Done. Check C:\APPS\NAYA\LOGS for a line like:
 echo   "LINE webhook auto-registered: https://naya-line.quiddityinnovations.com/webhook/line"
 echo.
 pause

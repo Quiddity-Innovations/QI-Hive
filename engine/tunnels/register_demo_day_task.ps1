@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 
 $taskName = 'QI_DemoDayStartup'
-$python   = 'C:\1-AI\APPS\PYTHON\python.exe'
+$python   = 'C:\Program Files\Python311\python.exe'
 $script   = 'C:\QIH\engine\tunnels\demo_day_startup.py'
 $conhost  = "$env:WINDIR\System32\conhost.exe"
 

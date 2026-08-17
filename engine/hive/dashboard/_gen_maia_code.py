@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Generate C:\\QI\\INTRO\\status_code.json — Maia's "Code Explained" tab.
+"""Generate C:\\APPS\\QI\\INTRO\\status_code.json — Maia's "Code Explained" tab.
 
 Every snippet is extracted verbatim from the live source at generation time
 rather than transcribed, so the tab cannot drift into describing code that no
 longer exists. Explanations are written against what the code actually does.
 
-Schema matches the other projects (see C:\\NEXUS\\INTRO\\status_code.json):
+Schema matches the other projects (see C:\\APPS\\NEXUS\\INTRO\\status_code.json):
     {"intro": str, "sections": [{"category": str, "snippets": [
         {"title","feature","file","language","code","explanation"}]}]}
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-QI = Path(r"C:\QI")
+QI = Path(r"C:\APPS\QI")
 OUT = QI / "INTRO" / "status_code.json"
 MAX_LINES = 22
 

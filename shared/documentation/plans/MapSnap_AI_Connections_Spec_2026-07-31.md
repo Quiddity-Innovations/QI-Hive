@@ -1,7 +1,7 @@
 # MapSnap — AI Connections: Agreed Design Spec
 
 **Date:** 2026-07-31 · **Decided by:** Renne · **Status:** Agreed, implementation deferred until the BU-edition merge
-**Implements after:** Renne delivers the laptop-fixed BU edition → three-way compare (laptop vs `C:\MapSnap` main vs BU kit) → these features are built on the merged latest, then shipped to BOTH editions.
+**Implements after:** Renne delivers the laptop-fixed BU edition → three-way compare (laptop vs `C:\APPS\MapSnap` main vs BU kit) → these features are built on the merged latest, then shipped to BOTH editions.
 
 ---
 
@@ -70,6 +70,6 @@ Behaviors:
 
 ## Sequencing
 
-1. **Now:** nothing changes in `C:\MapSnap` (freeze holds while Renne fixes the picker on the laptop).
+1. **Now:** nothing changes in `C:\APPS\MapSnap` (freeze holds while Renne fixes the picker on the laptop).
 2. **BU version delivered:** three-way compare → merge latest into main + BU kit (picker independence fix lands here).
 3. **Then:** implement Feature 1 + Feature 2 on the merged base → rebuild browser HTML → ship to both editions.

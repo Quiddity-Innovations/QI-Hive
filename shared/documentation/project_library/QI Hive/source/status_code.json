@@ -175,7 +175,7 @@
         {
           "title": "A sub-agent is defined by Markdown front-matter",
           "feature": "Seven specialist hive agents loaded by Claude Code",
-          "file": ".claude\\agents\\hive-architect.md · front-matter (at C:\\CLAUDE)",
+          "file": ".claude\\agents\\hive-architect.md · front-matter (at C:\\APPS\\CLAUDE)",
           "language": "markdown",
           "code": "---\nname: hive-architect\ndescription: Strategic system designer for QI Hive. Use for architecture decisions, multi-project design, choosing patterns, breaking-change analysis, ADRs, and implementation plans before code is written. NOT for writing code — design only.\nmodel: opus\ntools: Read, Glob, Grep, Bash, WebFetch, WebSearch\n---\n\nYou are the **QI Hive Architect**. You design systems before anyone builds them.",
           "explanation": "Each hive agent is just a Markdown file: YAML front-matter declares its name, when to use it (description), which model it runs on, and which tools it may touch; the body is its system prompt. Claude Code loads every *.md in .claude\\agents at startup. The architect runs on Opus and is read-only by design — it plans, it does not edit."

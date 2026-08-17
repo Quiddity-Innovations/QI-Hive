@@ -24,14 +24,14 @@ Assessed against Quiddity Innovations' current toolset, the headline finding is 
 
 ### The convergence signals (QI and BU already chose the same things)
 
-- OpenClaw — BU's TerrierAI Assistant is built on OpenClaw; Renne already runs OpenClaw in production (C:\OC). Renne holds operational OpenClaw experience BU is only now hardening.
+- OpenClaw — BU's TerrierAI Assistant is built on OpenClaw; Renne already runs OpenClaw in production (C:\APPS\OC). Renne holds operational OpenClaw experience BU is only now hardening.
 - MCP (Model Context Protocol) — BU's Nexus/Regent agents call data through MCP tools; QI's Brain and tooling are already MCP-native. This is the single cleanest integration surface.
 - Claude Code — BU uses a custom Claude Code skill to convert SnapLogic→Prefect pipelines; QI's entire operating model is Claude-Code-driven.
 - Vector + open formats — BU uses pgvector / Iceberg / Trino; QI's tools use ChromaDB/pgvector-class stores and are designed engine-agnostic.
 
 ### The one collision to fix
 
-BU's AI platform is named “Nexus.” Renne also has a project named NEXUS (C:\NEXUS). In any BU-facing material this will cause confusion and should be renamed or clearly differentiated.
+BU's AI platform is named “Nexus.” Renne also has a project named NEXUS (C:\APPS\NEXUS). In any BU-facing material this will cause confusion and should be renamed or clearly differentiated.
 
 ### Bottom line
 
@@ -49,9 +49,9 @@ This assessment cross-reads two BU source documents against the live QI ecosyste
 | BU-AI-Data-Engineering-Dossier-for-Quiddity.md | Full BU site crawl: AIDA strategy, four-tier portfolio, TerrierAI/TerrierData products, the eight Atlas components, full tech stack, 2026 roadmap (4 lanes), vendors being retired. |
 | nexus-platform-overview.pdf (8 pp, BU IS&T, Apr 2026) | Deep technical spec of BU's Nexus AI-chat platform: 5-layer topology, MCP server, agent loop, admin portal, LLM providers, infra/security/observability. |
 | C:\QIH\ecosystem\qi_registry.json | Authoritative list of 25 QI projects, ports, status, families. |
-| C:\CogniBase\DESIGN\* + README | CogniBase architecture, three-corpus model, access model, Query Federator, and the BU REST-POC coordination + beyond-OnBase strategy docs. |
-| C:\MapSnap\INTRO + docs | MapSnap status, knowledge-bundle design, OnBase/Jenzabar targeting, BU video script. |
-| C:\AutoPDF\INTRO | AutoPDF local-first PDF toolkit + OnBase DIP output. |
+| C:\APPS\CogniBase\DESIGN\* + README | CogniBase architecture, three-corpus model, access model, Query Federator, and the BU REST-POC coordination + beyond-OnBase strategy docs. |
+| C:\APPS\MapSnap\INTRO + docs | MapSnap status, knowledge-bundle design, OnBase/Jenzabar targeting, BU video script. |
+| C:\APPS\AutoPDF\INTRO | AutoPDF local-first PDF toolkit + OnBase DIP output. |
 
 ---
 ## 2.  The BU Target Environment (condensed)
@@ -149,19 +149,19 @@ The QI ecosystem holds 25 registered projects. Most are unrelated to BU (consume
 
 | Project | Path / status | One-liner |
 | --- | --- | --- |
-| CogniBase | C:\CogniBase — pre_poc | Vendor-neutral local OnBase intelligence: schema map + metadata + RAG + federated retrieval, pluggable LLMs (Claude/OpenAI/Gemini/Ollama). |
-| MapSnap | C:\MapSnap — active_stable | Local-first schema-intelligence tool: any enterprise DB → navigable browser + AI that explains schema and does NL→SQL, regulated data never leaves the box. |
-| AutoPDF | C:\AutoPDF — active dev | Local-first PDF toolkit: bulk convert / split / extract → CSV/XLSX/OnBase DIP. No cloud, no telemetry. |
+| CogniBase | C:\APPS\CogniBase — pre_poc | Vendor-neutral local OnBase intelligence: schema map + metadata + RAG + federated retrieval, pluggable LLMs (Claude/OpenAI/Gemini/Ollama). |
+| MapSnap | C:\APPS\MapSnap — active_stable | Local-first schema-intelligence tool: any enterprise DB → navigable browser + AI that explains schema and does NL→SQL, regulated data never leaves the box. |
+| AutoPDF | C:\APPS\AutoPDF — active dev | Local-first PDF toolkit: bulk convert / split / extract → CSV/XLSX/OnBase DIP. No cloud, no telemetry. |
 
 ### Supporting QI platform layer (credibility & integration assets)
 
 | Asset | Why it matters to BU |
 | --- | --- |
-| OpenClaw (C:\OC, active_production) | Same platform BU chose for TerrierAI Assistant — direct operational credibility and a concrete collaboration entry point. |
+| OpenClaw (C:\APPS\OC, active_production) | Same platform BU chose for TerrierAI Assistant — direct operational credibility and a concrete collaboration entry point. |
 | QI Brain (MCP server, :9011) | Demonstrates QI is already MCP-native with a knowledge-graph/decision store — mirrors BU's ontology ambition. |
 | QI Hive + 7 sub-agents | Multi-agent orchestration (architect/builder/inspector/ops/scout/scribe/tester) — parallels BU's Regent agent-runtime direction. |
 | Maia (multi-channel AI assistant) | Chat/voice/LINE/Telegram delivery — parallels TerrierAI Agents' chat/voice/SMS/email channel vision. |
-| NEXUS (C:\NEXUS) — NAME COLLISION | Renne's NEXUS collides with BU's Nexus platform name. Rename / differentiate before any BU contact. |
+| NEXUS (C:\APPS\NEXUS) — NAME COLLISION | Renne's NEXUS collides with BU's Nexus platform name. Rename / differentiate before any BU contact. |
 
 ---
 ## 4.  Alignment Map — QI tools → BU tiers & components
@@ -256,7 +256,7 @@ BU's agents reach data exclusively through MCP tools, and BU uses a custom Claud
 
 ### The NEXUS naming collision — fix before contact
 
-BU's flagship AI platform is “Nexus.” Renne's own project C:\NEXUS shares the name. In any BU-facing document, deck, or repo this will read as either confusion or presumption. Recommendation: rename Renne's NEXUS (or give it a clear product name) for external materials, and never present a QI “NEXUS” to BU.
+BU's flagship AI platform is “Nexus.” Renne's own project C:\APPS\NEXUS shares the name. In any BU-facing document, deck, or repo this will read as either confusion or presumption. Recommendation: rename Renne's NEXUS (or give it a clear product name) for external materials, and never present a QI “NEXUS” to BU.
 
 ### Differentiation vs. CollegeVine
 
@@ -383,9 +383,9 @@ BU's stated stance — “AI has changed build vs. buy; we build in-house” —
 - C:\Users\renne\Downloads\BU-AI-Data-Engineering-Dossier-for-Quiddity.md
 - C:\Users\renne\Downloads\nexus-platform-overview.pdf (8 pp)
 - C:\QIH\ecosystem\qi_registry.json (25 projects)
-- C:\CogniBase\README.md, DESIGN\ARCHITECTURE.md, COORDINATION_BU_TEAM.md, STRATEGY_BEYOND_ONBASE.md
-- C:\MapSnap\INTRO\status_intro.md + docs
-- C:\AutoPDF\INTRO
+- C:\APPS\CogniBase\README.md, DESIGN\ARCHITECTURE.md, COORDINATION_BU_TEAM.md, STRATEGY_BEYOND_ONBASE.md
+- C:\APPS\MapSnap\INTRO\status_intro.md + docs
+- C:\APPS\AutoPDF\INTRO
 - Memory: project_bu_techdocs_videos.md (BU IT/licensing docs + explainer videos)
 
 ---

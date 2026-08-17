@@ -75,4 +75,4 @@ OpenClaw started with six named agents. Seiri was cancelled and absorbed by Naya
 One orchestrator, many hands. OpenClaw is the **autonomous-action layer of the QI ecosystem** — the natural partner to Maia's conversation. The roadmap marries the two: Maia handles the dialogue, recognises an actionable request, and hands it to OpenClaw to execute. Add a new specialist by writing a profile and a TOOLS.md section; the platform grows by text, not by rebuilds.
 
 ---
-*This page is editable at `C:\OC\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\OC\INTRO\status_intro.md` — save and click Refresh to update.*

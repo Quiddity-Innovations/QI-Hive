@@ -39,10 +39,10 @@ def load_registry_paths() -> dict[str, str]:
 
 def projectdir_to_cwd(projectdir_name: str) -> str:
     """The Claude Code projects directory encodes the cwd as e.g.
-    'C--CLAUDE--claude-worktrees-foo' which represents 'C:\\CLAUDE\\.claude\\worktrees\\foo'.
+    'C--CLAUDE--claude-worktrees-foo' which represents 'C:\\APPS\\CLAUDE\\.claude\\worktrees\\foo'.
     Decode that back to a path."""
     # First dash is the colon. Subsequent double-dashes are backslashes.
-    # 'C--CLAUDE--claude-worktrees-foo' → 'C:\\CLAUDE\\.claude\\worktrees-foo'
+    # 'C--CLAUDE--claude-worktrees-foo' → 'C:\\APPS\\CLAUDE\\.claude\\worktrees-foo'
     # Special case: the literal pattern '.claude' is rendered as '-claude' because
     # the leading dot was stripped. There's no clean reverse — we approximate.
     if not projectdir_name:
@@ -70,7 +70,7 @@ def infer_project(cwd: str, registry: dict[str, str]) -> str:
                 best, best_len = pid, len(p)
     if best:
         return best
-    if cwd_n.startswith(os.path.normcase(r"C:\CLAUDE")):
+    if cwd_n.startswith(os.path.normcase(r"C:\APPS\CLAUDE")):
         return "claude_manager"
     return "unknown"
 

@@ -147,7 +147,7 @@ Ollama-based tools adopt the hub by changing one URL.
 `cerebras → groq_gptoss → cloudflare → cf_kimi → groq → gemini → openrouter →
 nim_qwen → gemma4 → nvidia_nim → cf_glm → mistral → chatgpt`
 
-**API keys live ONLY in `C:\NEXUS\secrets\nexus.env`.** That is the point of the hub —
+**API keys live ONLY in `C:\APPS\NEXUS\secrets\nexus.env`.** That is the point of the hub —
 adopting it lets a tool drop its own keys. Never tunnel port 8010.
 
 ### Adoption and fallback posture (verified 2026-08-07)
@@ -161,7 +161,7 @@ mode. Not every tool honours it:
 | **Maia** | `/v1/chat/completions`, `X-QI-App: maia` | ✅ Automatic — its own provider chain |
 | **Naya** | same shape as Maia (+ `force_sonnet` bypass for explicit Anthropic) | ✅ Automatic — its own chain |
 | **Retirement Analyzer** | hub as an entry in `config/ai_providers.json` | ✅ Automatic — one retry to local Ollama `:11434`, flagged `fallback_used` |
-| **LotteryWiz** | `OLLAMA_URL` → hub, via the **Ollama shim** `/api/chat` | ❌ **None** — surfaces `Ollama HTTP <code>` to the user |
+| **LotteryWiz** | `OLLAMA_URL` → hub, via the **Ollama shim** `/api/chat` | ✅ Automatic since 2026-08-08 — falls back to local Ollama `:11434`, emits a degraded notice (see §6.1) |
 | **QI Brain** | `openai_hub` provider per agent profile | ❌ No fallback chain in the provider factory |
 | **EasyFlow** | no hub code found in the repo | — not actually integrated |
 
@@ -174,7 +174,7 @@ mode. Not every tool honours it:
 
 ### Built but never wired
 
-`C:\QI\nexus_client.py` is a complete REST client for NEXUS `/synthesize` and
+`C:\APPS\QI\nexus_client.py` is a complete REST client for NEXUS `/synthesize` and
 `/scout/digest`. **It is imported nowhere.** The only references are old
 session-summary scripts listing it as a planned step.
 
@@ -202,33 +202,54 @@ not a Maia code path:
 | `nexus_ai_digest` | GET | `/scout/digest` |
 | `nexus_synthesize` | POST | `/synthesize` |
 
-Config: `C:\NEXUS\config\mcp_gateway.json`. Sibling gateways: MapSnap `:8651`,
+Config: `C:\APPS\NEXUS\config\mcp_gateway.json`. Sibling gateways: MapSnap `:8651`,
 AutoPDF `:8701`.
 
 ---
 
 ## 6. Open risks
 
-1. **LotteryWiz is a hard dependency on NEXUS.** It is running and public at
-   `lottery.quiddityinnovations.com`. If the hub fails, users see a raw error.
-   Recovery today is manual: set `OLLAMA_URL=http://localhost:11434` and restart.
-   Fix: retry local Ollama once inside `stream_ollama` before surfacing the error —
-   the API shape is identical on both ends.
+1. ~~**LotteryWiz is a hard dependency on NEXUS.**~~ ✅ **FIXED 2026-08-08.**
+   `stream_ollama` in `C:\APPS\Lottery Wiz\server.py` is now hub-first with automatic
+   fallback to local Ollama (`OLLAMA_FALLBACK_URL`, default `http://127.0.0.1:11434`;
+   set empty to disable). `/api/ai/status` probes in the same order and reports
+   `source: hub | local-fallback`, so a hub outage no longer makes the UI hide the
+   AI feature.
 
-2. **Five gated apps also bind to `0.0.0.0`, so the LAN bypasses the gate:**
+   It only falls back **if no token has been emitted yet** — retrying after a partial
+   stream would replay text the user already saw. A mid-stream failure surfaces as
+   `stream interrupted`; both endpoints down surfaces one clear error naming both.
 
-   | Port | App | Public host it is gated behind |
+   Verified by simulated outage (12 checks): hub up → normal, no notice; hub dead →
+   tokens still delivered from local Ollama plus a "answered by local Ollama" notice;
+   both dead → single clear error, no crash; status probe falls back and reports
+   `local-fallback`. Backup: `server.py.bak-fallback-20260808`.
+
+   **All hub adopters now degrade gracefully.** QI Brain remains the exception —
+   `openai_hub` per agent profile with no fallback chain — but it is barely exercised
+   (2 calls logged).
+
+2. ~~**Five gated apps also bind to `0.0.0.0`, so the LAN bypasses the gate.**~~
+   ✅ **FIXED 2026-08-08** — all five rebound to `127.0.0.1`:
+
+   | Port | App | File changed |
    |---|---|---|
-   | 7860 | Maia Gradio | `maia-demo.quiddityinnovations.com` |
-   | 7861 | Naya Gradio | `naya.quiddityinnovations.com` |
-   | 8001 | Maia API | `maia.quiddityinnovations.com` |
-   | 8002 | Naya webhook | `naya-line.quiddityinnovations.com` |
-   | 8600 | **QI Hive Dashboard** | `hive.quiddityinnovations.com` |
+   | 7860 | Maia Gradio | `C:\APPS\QI\maia_gradio.py` (`server_name`) |
+   | 7861 | Naya Gradio | `C:\APPS\NAYA\naya_gradio.py` (`server_name`) |
+   | 8001 | Maia API | `C:\APPS\QI\maia_server.py` (`uvicorn.run host`) |
+   | 8002 | Naya webhook | `C:\APPS\NAYA\naya_server.py` (`app.run host`) |
+   | 8600 | QI Hive Dashboard | `C:\QIH\engine\hive\dashboard\server.py` (`uvicorn.run host`) |
 
-   Anyone on the same network can reach `http://<machine-ip>:<port>` directly with no
-   gate. Maia's Gradio has its own login behind it; **the Hive dashboard on :8600 does
-   not** — it is the crown jewels (ecosystem snapshot, service control, Brain data) and
-   is LAN-reachable unauthenticated. NEXUS binds loopback and is not affected.
+   The gate reaches all of them over loopback, so nothing public changed. Verified after
+   the change: loopback 200 on all five; LAN connection refused on all five; public hosts
+   still 302→login; `mixed`-mode webhook paths (`/maia/`, `/health`, `/version`,
+   naya-line `/health`, claudevoice `/health`) still reach the app; `/panel` still gated.
+   Backups: `*.bak-bind-20260808`. Restart is required after editing any of these —
+   the bind is read at startup.
+
+   **Standing rule:** a QI app should bind `127.0.0.1`. Public access is the gate's job.
+   Binding `0.0.0.0` silently creates a second, ungated door on the LAN. Check with:
+   `netstat -ano | findstr LISTENING | findstr ":<port>"` — the address must be `127.0.0.1`.
 
 3. **`connector.quiddityinnovations.com` is `mode: open`** — the only host the internet
    reaches without the gate, protected solely by its own bearer token.

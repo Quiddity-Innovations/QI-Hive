@@ -6,7 +6,7 @@ REM  2) Install CypherMiner API as a permanent service (:8502)
 REM  3) Restart AutoPDF service (:6969)
 REM ============================================================
 set NSSM=C:\QIH\engine\bin\nssm.exe
-set PY=C:\1-AI\APPS\PYTHON\python.exe
+set PY=C:\Program Files\Python311\python.exe
 
 echo [1/3] Restarting QI_Dashboard ...
 "%NSSM%" restart QI_Dashboard
@@ -14,9 +14,9 @@ echo [1/3] Restarting QI_Dashboard ...
 echo.
 echo [2/3] Installing/refreshing QI_CypherMinerAPI ...
 "%NSSM%" install QI_CypherMinerAPI "%PY%" "run_api.py"  2>nul
-"%NSSM%" set QI_CypherMinerAPI AppDirectory C:\CypherMiner
-"%NSSM%" set QI_CypherMinerAPI AppStdout C:\CypherMiner\LOGS\api_out.log
-"%NSSM%" set QI_CypherMinerAPI AppStderr C:\CypherMiner\LOGS\api_err.log
+"%NSSM%" set QI_CypherMinerAPI AppDirectory C:\APPS\CypherMiner
+"%NSSM%" set QI_CypherMinerAPI AppStdout C:\APPS\CypherMiner\LOGS\api_out.log
+"%NSSM%" set QI_CypherMinerAPI AppStderr C:\APPS\CypherMiner\LOGS\api_err.log
 "%NSSM%" set QI_CypherMinerAPI Start SERVICE_AUTO_START
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8502" ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
 "%NSSM%" start QI_CypherMinerAPI  2>nul

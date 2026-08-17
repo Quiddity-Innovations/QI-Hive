@@ -28,18 +28,18 @@ _REGISTRY_PATH = Path(r"C:\QIH\ecosystem\qi_registry.json")
 # Hardcoded overrides: pid -> (display_name, INTRO dir).
 # These take precedence over registry-derived paths. Keep as-is — do not delete.
 PROJECT_INTRO: dict[str, tuple[str, Path]] = {
-    "maia":      ("Maia",      Path(r"C:\QI\INTRO")),
-    "naya":      ("Naya",      Path(r"C:\NAYA\INTRO")),
-    "nexus":     ("NEXUS",     Path(r"C:\NEXUS\INTRO")),
-    "easyflow":  ("EasyFlow",  Path(r"C:\EasyFlow\INTRO")),
+    "maia":      ("Maia",      Path(r"C:\APPS\QI\INTRO")),
+    "naya":      ("Naya",      Path(r"C:\APPS\NAYA\INTRO")),
+    "nexus":     ("NEXUS",     Path(r"C:\APPS\NEXUS\INTRO")),
+    "easyflow":  ("EasyFlow",  Path(r"C:\APPS\EasyFlow\INTRO")),
     "qi_hive":   ("QI Hive",   Path(r"C:\QIH\INTRO")),
     "qi_brain":  ("QI Brain",  Path(r"C:\QIH\engine\brain\INTRO")),
-    "filehq":    ("FileHQ",    Path(r"C:\NAYA\filehq\INTRO")),
-    "openclaw":  ("OpenClaw",  Path(r"C:\OC\INTRO")),
-    "mq":        ("MQ",        Path(r"C:\MQ\INTRO")),
-    "autopdf":   ("AutoPDF",   Path(r"C:\AutoPDF\INTRO")),
-    "cognibase": ("CogniBase", Path(r"C:\CogniBase\INTRO")),
-    "mapsnap":   ("MapSnap",   Path(r"C:\MapSnap\INTRO")),
+    "filehq":    ("FileHQ",    Path(r"C:\APPS\NAYA\filehq\INTRO")),
+    "openclaw":  ("OpenClaw",  Path(r"C:\APPS\OC\INTRO")),
+    "mq":        ("MQ",        Path(r"C:\APPS\MQ\INTRO")),
+    "autopdf":   ("AutoPDF",   Path(r"C:\APPS\AutoPDF\INTRO")),
+    "cognibase": ("CogniBase", Path(r"C:\APPS\CogniBase\INTRO")),
+    "mapsnap":   ("MapSnap",   Path(r"C:\APPS\MapSnap\INTRO")),
 }
 
 
@@ -507,7 +507,7 @@ def render_project_status(pid: str, tab: str = "overview", embed: bool = False) 
             + _empty(
                 f"INTRO folder not found: {intro} — "
                 f"seed it with status_*.json + status_intro.md "
-                f"(copy the shape from C:\\QI\\INTRO\\) to unlock all tabs."
+                f"(copy the shape from C:\\APPS\\QI\\INTRO\\) to unlock all tabs."
             )
         )
         return (f"{name} — Project Status", minimal_body)

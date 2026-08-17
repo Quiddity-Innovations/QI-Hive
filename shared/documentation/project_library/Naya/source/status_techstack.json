@@ -8,7 +8,7 @@
     {"layer": "UI", "technology": "Gradio", "role": "Local operator console on port 7861 — Chat, File Manager, Naya Brain, Settings, Logs tabs", "license": "Apache 2.0", "version": ">=5.0"},
     {"layer": "Database", "technology": "SQLite (naya.db)", "role": "Control plane: config (93 keys), llm_chain (8 rows), conversations (690), subjects; Maia-style schema via the maia_db shim", "license": "Public domain", "version": "3.x (WAL)"},
     {"layer": "Database", "technology": "SQLite (naya_brain.db)", "role": "File-intelligence store: naya_scans, naya_similarity_groups (~2.7M rows), folder insights, intents, operations, drives, settings", "license": "Public domain", "version": "3.x (~2.3 GB)"},
-    {"layer": "Shared Engine", "technology": "maia_db / maia_context / maia_lang (C:\\QI)", "role": "Reused from Maia; naya_db.py repoints maia_db.DB_FILE to naya.db so they run against Naya's own data", "license": "Quiddity Innovations (internal)", "version": "shared with Maia"},
+    {"layer": "Shared Engine", "technology": "maia_db / maia_context / maia_lang (C:\\APPS\\QI)", "role": "Reused from Maia; naya_db.py repoints maia_db.DB_FILE to naya.db so they run against Naya's own data", "license": "Quiddity Innovations (internal)", "version": "shared with Maia"},
     {"layer": "Chat Channel", "technology": "Telegram Bot API", "role": "Outbound long-poll getUpdates loop (@Naya_qi_bot); owner-restricted; no inbound port", "license": "Free API", "version": "Bot API"},
     {"layer": "AI — Local (Ollama)", "technology": "DeepSeek-R1 8B / GPT-OSS 20B / Gemma3:27b / Qwen3:4b", "role": "Local, free, private inference at 127.0.0.1:11434 — first in the failover chain (DeepSeek-R1 8B is primary)", "license": "Mixed open weights / MIT runtime", "version": "via Ollama"},
     {"layer": "AI — Cloud (free)", "technology": "Cloudflare Workers AI · OpenRouter", "role": "Free-tier cloud models: Cloudflare Qwen1.5 7B, MiniMax M2.5, GPT-OSS 120B", "license": "Free tier", "version": "see llm_chain"},
@@ -21,13 +21,13 @@
     {"layer": "Scheduling", "technology": "Windows Task Scheduler (schtasks)", "role": "Registers deferred / recurring scan jobs under the Naya\\ task prefix", "license": "OS built-in", "version": "—"},
     {"layer": "Documents", "technology": "python-docx", "role": "Word (.docx) report generation; Markdown/text fallback for PDF when COM is unavailable", "license": "MIT", "version": ">=1.1"},
     {"layer": "Documents", "technology": "pywin32 (win32com)", "role": "Optional PDF export via Word COM automation", "license": "PSF-style", "version": "optional"},
-    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads tokens/keys from C:\\NAYA\\secrets\\naya.env at startup", "license": "BSD", "version": ">=1.0"},
+    {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads tokens/keys from C:\\APPS\\NAYA\\secrets\\naya.env at startup", "license": "BSD", "version": ">=1.0"},
     {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_NayaBot (8002) + QI_NayaGradio (7861) Windows services; QI_NayaTunnel exposes the UI for occasional demos only", "license": "Open source / Cloudflare", "version": "nssm 2.24"}
   ],
   "descriptions": [
     {
       "title": "Sibling of Maia — one engine, two products",
-      "body": "Naya does not reimplement chat, context, or language handling. naya_db.py imports Maia's maia_db, overwrites its DB_FILE to C:\\NAYA\\naya.db, and re-exports every symbol — so maia_context.build_context() and maia_lang.detect_input_language() run unchanged but against Naya's own data. naya_db MUST be imported before any maia_* module so the patch lands first. The result: Maia's battle-tested classroom engine becomes a single-owner personal assistant just by swapping the database and the persona. Maia and Naya stay separate projects; Maia may call Naya's API, but Naya never merges into Maia's codebase."
+      "body": "Naya does not reimplement chat, context, or language handling. naya_db.py imports Maia's maia_db, overwrites its DB_FILE to C:\\APPS\\NAYA\\naya.db, and re-exports every symbol — so maia_context.build_context() and maia_lang.detect_input_language() run unchanged but against Naya's own data. naya_db MUST be imported before any maia_* module so the patch lands first. The result: Maia's battle-tested classroom engine becomes a single-owner personal assistant just by swapping the database and the persona. Maia and Naya stay separate projects; Maia may call Naya's API, but Naya never merges into Maia's codebase."
     },
     {
       "title": "Two databases, two jobs",

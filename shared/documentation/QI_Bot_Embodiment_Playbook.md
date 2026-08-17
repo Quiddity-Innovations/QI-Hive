@@ -1,7 +1,7 @@
 # 🧍 QI Bot Embodiment Playbook
 ### Giving a QI bot a voice, a face, a body, and autonomy — reusable across all bots
 
-**Origin:** built first on **Claude Voice** (`C:\CLAUDE\Claude Voice`), 2026-06-20. Intended for reuse by
+**Origin:** built first on **Claude Voice** (`C:\APPS\CLAUDE\Claude Voice`), 2026-06-20. Intended for reuse by
 **Maia Quiddam (MQ)** and any future persona bot. Owner: Renne Santiago / Quiddity Innovations.
 
 > Goal (Renne's vision): make a bot feel like a real person — voice, face, full-body avatar,
@@ -19,7 +19,7 @@
 | **Pronunciation** | say names right | `pronounce.py` + `C:\QIH\shared\voice\pronunciation.json` (Renne→Renee) | **shared** |
 | **Ears (in)** | transcribe user speech | faster-whisper (CUDA on RTX 5080, CPU fallback) | `transcribe()` |
 | **Face / talking video** | avatar still + voice, OR realistic lip-sync | `media.py`: fast tier (ffmpeg) · HD tier = **Hallo2** in WSL2 | `media.make_avatar_video` |
-| **Full body** | full-figure avatar video | AvatarStudio (LivePortrait/Hallo2) — `C:\1-AI\APPS\AvatarStudio` | AvatarStudio pipeline |
+| **Full body** | full-figure avatar video | AvatarStudio (LivePortrait/Hallo2) — `C:\APPS\AvatarStudio` | AvatarStudio pipeline |
 | **Channels** | reach people | Telegram (long-poll) · LINE (webhook + tunnel) | `telegram_bot.py` / `line_bot.py` |
 | **Autonomy** | decide text/voice/video per turn | `modality.py` (rules + LLM tag, rate-limited) | **reusable engine** |
 | **Control** | owner directives, on/off | owner DM commands + `data/*control*.json` state | per-bot |

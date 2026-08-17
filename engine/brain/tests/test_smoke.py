@@ -9,7 +9,7 @@ Read-only contract checks only. WRITE endpoints (/api/log_decision,
 EXCLUDED because they mutate the brain DB / ChromaDB.
 
 Run:
-    C:\\1-AI\\APPS\\PYTHON\\python.exe -m pytest C:\\QIH\\engine\\brain\\tests -v
+    C:\\Program Files\\Python311\\python.exe -m pytest C:\\QIH\\engine\\brain\\tests -v
 """
 import pytest
 import requests

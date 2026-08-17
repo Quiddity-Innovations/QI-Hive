@@ -1,7 +1,7 @@
 # Docker Foundations — Containerizing an Existing Service
 ### Track C, stages C1–C2 of the [QI Free Cloud Master Plan](QI_Free_Cloud_Master_Plan.md)
 
-**Subject app:** the Maia queue drainer (`C:\QI\TOOLS\aws_relay\queue_drainer.py`) — chosen because containerizing an *existing, running* service is the most common real-world Docker task.
+**Subject app:** the Maia queue drainer (`C:\APPS\QI\TOOLS\aws_relay\queue_drainer.py`) — chosen because containerizing an *existing, running* service is the most common real-world Docker task.
 **Status:** C1 complete 2026-07-30 — image built, live event processed end-to-end by the container. NSSM remains the production runner until the k3s stage (M4) proves cluster operation.
 
 ---
@@ -24,9 +24,9 @@
 
 ## The five Docker lessons this stage teaches
 
-**1. Parameterize before you containerize.** Hardcoded paths (`C:\QI\secrets\...`) are meaningless inside a container. First change: every external touchpoint (queue URL, target webhook, secret file, log file) became an env var with the old value as default — the script still runs identically outside Docker.
+**1. Parameterize before you containerize.** Hardcoded paths (`C:\APPS\QI\secrets\...`) are meaningless inside a container. First change: every external touchpoint (queue URL, target webhook, secret file, log file) became an env var with the old value as default — the script still runs identically outside Docker.
 
-**2. Images hold code, volumes hold state, env holds config.** The [Dockerfile](C:\QI\TOOLS\aws_relay\Dockerfile) copies ONLY the script and installs deps. Secrets (`maia.env`, AWS credentials) are mounted **read-only** at runtime by [docker-compose.yml](C:\QI\TOOLS\aws_relay\docker-compose.yml); logs mount to the normal QI log folder. **Never bake a secret into an image** — images get shared, exported, cached.
+**2. Images hold code, volumes hold state, env holds config.** The [Dockerfile](C:\APPS\QI\TOOLS\aws_relay\Dockerfile) copies ONLY the script and installs deps. Secrets (`maia.env`, AWS credentials) are mounted **read-only** at runtime by [docker-compose.yml](C:\APPS\QI\TOOLS\aws_relay\docker-compose.yml); logs mount to the normal QI log folder. **Never bake a secret into an image** — images get shared, exported, cached.
 
 **3. `python:3.12-slim` + `pip install` + `COPY` + `CMD` is 90% of real Dockerfiles.** Result: 246 MB self-contained image, reproducible anywhere.
 

@@ -34,9 +34,9 @@ def write_if_missing(path: Path, content: str, label: str):
 # ─────────────────────────────────────────────────────────────────────────────
 # OPENCLAW
 # Phase 0+1 complete. Gateway running. 6 agents: Tasuke, Kaze, Sentry, Seiri, Yubin, Koe.
-# Runs on Node.js in WSL. C:\OC\ on Windows, /mnt/c/OC in WSL.
+# Runs on Node.js in WSL. C:\APPS\OC\ on Windows, /mnt/c/OC in WSL.
 # ─────────────────────────────────────────────────────────────────────────────
-OC = Path(r"C:\OC\DOCUMENTATION")
+OC = Path(r"C:\APPS\OC\DOCUMENTATION")
 
 write_if_missing(OC / "OpenClaw_Implementation_Log.md", f"""\
 # OpenClaw — Implementation Log
@@ -55,7 +55,7 @@ This log starts now and will be maintained going forward.
 
 ### Architecture as of {TODAY}
 - **Framework:** Commercial OpenClaw framework (Node.js, runs in WSL)
-- **Root:** `C:\\OC\\` (Windows) / `/mnt/c/OC` (WSL)
+- **Root:** `C:\\APPS\\OC\\` (Windows) / `/mnt/c/OC` (WSL)
 - **Gateway:** Running — WSL → Windows bridge operational
 - **6 Custom Agents:**
   | Agent   | Role                        |
@@ -74,9 +74,9 @@ This log starts now and will be maintained going forward.
 - **Anthropic token:** Disabled for cost saving (using Ollama/local models)
 
 ### Files Changed
-- `C:\\OC\\DOCUMENTATION\\OpenClaw_Implementation_Log.md` (NEW — this file)
-- `C:\\OC\\DOCUMENTATION\\OpenClaw_Meeting_Minutes.md` (NEW)
-- `C:\\OC\\DOCUMENTATION\\OpenClaw_Version_History.md` (NEW)
+- `C:\\APPS\\OC\\DOCUMENTATION\\OpenClaw_Implementation_Log.md` (NEW — this file)
+- `C:\\APPS\\OC\\DOCUMENTATION\\OpenClaw_Meeting_Minutes.md` (NEW)
+- `C:\\APPS\\OC\\DOCUMENTATION\\OpenClaw_Version_History.md` (NEW)
 
 ---
 """, "OpenClaw / Implementation Log")
@@ -141,16 +141,16 @@ write_if_missing(OC / "OpenClaw_Version_History.md", f"""\
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# FILEHQ (absorbed into Naya — docs live under C:\NAYA\filehq\DOCUMENTATION\)
+# FILEHQ (absorbed into Naya — docs live under C:\APPS\NAYA\filehq\DOCUMENTATION\)
 # File intelligence engine. READ-ONLY scanner. Drives F:\ scanning.
 # ─────────────────────────────────────────────────────────────────────────────
-FHQ = Path(r"C:\NAYA\filehq\DOCUMENTATION")
+FHQ = Path(r"C:\APPS\NAYA\filehq\DOCUMENTATION")
 
 write_if_missing(FHQ / "FileHQ_Implementation_Log.md", f"""\
 # FileHQ — Implementation Log
 
 > FileHQ is a file intelligence engine absorbed into Naya.
-> Root: `C:\\NAYA\\filehq\\`
+> Root: `C:\\APPS\\NAYA\\filehq\\`
 > Original standalone path `C:\\FileHQ` marked for deletion.
 
 ---
@@ -160,10 +160,10 @@ write_if_missing(FHQ / "FileHQ_Implementation_Log.md", f"""\
 
 ### Architecture as of {TODAY}
 - **Status:** Merged into Naya — NOT a standalone service
-- **Root:** `C:\\NAYA\\filehq\\`
+- **Root:** `C:\\APPS\\NAYA\\filehq\\`
 - **Port:** 8200 (when started by QI_NayaBot on port 8002)
 - **Function:** READ-ONLY file scanner for F:\\ drive
-- **DB:** `C:\\NAYA\\filehq\\db\\filehq.db` (SQLite)
+- **DB:** `C:\\APPS\\NAYA\\filehq\\db\\filehq.db` (SQLite)
 - **API:** Started by Naya server — not an independent NSSM service
 - **Original path:** `C:\\FileHQ` — exists for reference, marked for deletion
 
@@ -179,9 +179,9 @@ Reason: too small to justify independent deployment; Naya's domain
 includes file intelligence.
 
 ### Files Changed
-- `C:\\NAYA\\filehq\\DOCUMENTATION\\FileHQ_Implementation_Log.md` (NEW)
-- `C:\\NAYA\\filehq\\DOCUMENTATION\\FileHQ_Meeting_Minutes.md` (NEW)
-- `C:\\NAYA\\filehq\\DOCUMENTATION\\FileHQ_Version_History.md` (NEW)
+- `C:\\APPS\\NAYA\\filehq\\DOCUMENTATION\\FileHQ_Implementation_Log.md` (NEW)
+- `C:\\APPS\\NAYA\\filehq\\DOCUMENTATION\\FileHQ_Meeting_Minutes.md` (NEW)
+- `C:\\APPS\\NAYA\\filehq\\DOCUMENTATION\\FileHQ_Version_History.md` (NEW)
 
 ---
 """, "FileHQ / Implementation Log")
@@ -196,7 +196,7 @@ write_if_missing(FHQ / "FileHQ_Meeting_Minutes.md", f"""\
 
 ### Decision: FileHQ stays merged into Naya
 - `C:\\FileHQ` standalone path marked for deletion
-- All active code lives at `C:\\NAYA\\filehq\\`
+- All active code lives at `C:\\APPS\\NAYA\\filehq\\`
 - No independent NSSM service — started by QI_NayaBot
 - Port 8200 reserved in QI port block
 
@@ -222,10 +222,10 @@ write_if_missing(FHQ / "FileHQ_Version_History.md", f"""\
 ## v0.1 — 2026-03-28 (Merged into Naya)
 **Type:** Architecture decision
 ### Changed
-- Moved from `C:\\FileHQ` standalone → `C:\\NAYA\\filehq\\`
+- Moved from `C:\\FileHQ` standalone → `C:\\APPS\\NAYA\\filehq\\`
 - Integrated with QI_NayaBot (starts FileHQ on port 8200 at launch)
 - F:\\ READ-ONLY scanner built and operational
-- DB: `C:\\NAYA\\filehq\\db\\filehq.db`
+- DB: `C:\\APPS\\NAYA\\filehq\\db\\filehq.db`
 
 ---
 """, "FileHQ / Version History")
@@ -233,10 +233,10 @@ write_if_missing(FHQ / "FileHQ_Version_History.md", f"""\
 
 # ─────────────────────────────────────────────────────────────────────────────
 # EASYFLOW
-# Email/calendar automation. Phase 1 built. Port 8550. C:\EasyFlow\.
+# Email/calendar automation. Phase 1 built. Port 8550. C:\APPS\EasyFlow\.
 # Phase 2: Outlook/Teams integration.
 # ─────────────────────────────────────────────────────────────────────────────
-EF = Path(r"C:\EasyFlow\DOCUMENTATION")
+EF = Path(r"C:\APPS\EasyFlow\DOCUMENTATION")
 
 write_if_missing(EF / "EasyFlow_Implementation_Log.md", f"""\
 # EasyFlow — Implementation Log
@@ -255,7 +255,7 @@ This log starts now.
 
 ### Architecture as of {TODAY}
 - **Purpose:** Email and calendar automation for Renne's workflows
-- **Root:** `C:\\EasyFlow\\`
+- **Root:** `C:\\APPS\\EasyFlow\\`
 - **Port:** 8550 (allocated in QI port block: 8550-8559)
 - **Phase 1:** Complete (core automation built)
 - **Phase 2:** Outlook / Microsoft Teams integration — pending
@@ -268,9 +268,9 @@ This log starts now.
 - **Phase 3:** Cross-project notifications (EasyFlow → Maia/Naya alerts) — 📋 planned
 
 ### Files Changed
-- `C:\\EasyFlow\\DOCUMENTATION\\EasyFlow_Implementation_Log.md` (NEW — this file)
-- `C:\\EasyFlow\\DOCUMENTATION\\EasyFlow_Meeting_Minutes.md` (NEW)
-- `C:\\EasyFlow\\DOCUMENTATION\\EasyFlow_Version_History.md` (NEW)
+- `C:\\APPS\\EasyFlow\\DOCUMENTATION\\EasyFlow_Implementation_Log.md` (NEW — this file)
+- `C:\\APPS\\EasyFlow\\DOCUMENTATION\\EasyFlow_Meeting_Minutes.md` (NEW)
+- `C:\\APPS\\EasyFlow\\DOCUMENTATION\\EasyFlow_Version_History.md` (NEW)
 
 ---
 """, "EasyFlow / Implementation Log")
@@ -329,7 +329,7 @@ write_if_missing(EF / "EasyFlow_Version_History.md", f"""\
 # ─────────────────────────────────────────────────────────────────────────────
 # NAYA — Missing Version History only
 # ─────────────────────────────────────────────────────────────────────────────
-NAYA = Path(r"C:\NAYA\DOCUMENTATION")
+NAYA = Path(r"C:\APPS\NAYA\DOCUMENTATION")
 
 write_if_missing(NAYA / "Naya_Version_History.md", f"""\
 # Naya — Version History
@@ -431,7 +431,7 @@ write_if_missing(UNI / "QIOrchestrator_Implementation_Log.md", f"""\
 - C:\\Users\\renne\\.claude\\user_prompt_hook.py (NEW)
 - C:\\Users\\renne\\.claude\\settings.json (UserPromptSubmit hook added)
 - C:\\UNIVERSAL\\dashboard\\qi_dashboard.py (+python_path endpoints)
-- C:\\NAYA\\tools\\*.ps1 (4 files — qi_python.ps1 dot-source)
+- C:\\APPS\\NAYA\\tools\\*.ps1 (4 files — qi_python.ps1 dot-source)
 - C:\\UNIVERSAL\\qi_brain\\tools\\install_backup_task.bat (qi_python.bat call)
 
 ---
@@ -441,7 +441,7 @@ write_if_missing(UNI / "QIOrchestrator_Implementation_Log.md", f"""\
 
 ### Built
 - QI Universal Control Panel bat (menu launcher, Windows Terminal tabs)
-- Ecosystem folder moved from C:\\QI\\ECOSYSTEM → C:\\UNIVERSAL\\ECOSYSTEM
+- Ecosystem folder moved from C:\\APPS\\QI\\ECOSYSTEM → C:\\UNIVERSAL\\ECOSYSTEM
 - All CLAUDE.md files updated across all projects
 - MaiaNightlySync rescheduled to 9PM
 

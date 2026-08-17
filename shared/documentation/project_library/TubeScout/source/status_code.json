@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live TubeScout source (C:\\TUBESCOUT). Each shows the real code behind a capability and explains how it powers that feature. TubeScout hosts no LLM of its own — summarization, scoring and recommendation all route through NEXUS; YouTube is read-only; every pipeline stage degrades gracefully.",
+  "intro": "Excerpts copied from the live TubeScout source (C:\\APPS\\TUBESCOUT). Each shows the real code behind a capability and explains how it powers that feature. TubeScout hosts no LLM of its own — summarization, scoring and recommendation all route through NEXUS; YouTube is read-only; every pipeline stage degrades gracefully.",
   "sections": [
     {
       "category": "Database (tubescout.db)",
@@ -59,7 +59,7 @@
           "feature": "FastAPI news page + API any QI project can reach",
           "file": "api/main.py · module scope",
           "language": "python",
-          "code": "try:\n    sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8503\", \"http://localhost:7843\"]\n\napp = FastAPI(\n    title=\"TubeScout API\",\n    description=\"YouTube subscription intelligence ... — Quiddity Innovations\",\n    version=\"0.1.0\"\n)\napp.add_middleware(CORSMiddleware, allow_origins=_cors,\n                   allow_methods=[\"GET\", \"POST\"], allow_headers=[\"*\"])",
+          "code": "try:\n    sys.path.insert(0, r\"C:\\APPS\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8503\", \"http://localhost:7843\"]\n\napp = FastAPI(\n    title=\"TubeScout API\",\n    description=\"YouTube subscription intelligence ... — Quiddity Innovations\",\n    version=\"0.1.0\"\n)\napp.add_middleware(CORSMiddleware, allow_origins=_cors,\n                   allow_methods=[\"GET\", \"POST\"], allow_headers=[\"*\"])",
           "explanation": "The single FastAPI app on :8503 serving both the HTML pages and the JSON API. Allowed CORS origins come from the shared QI registry (with a localhost fallback) so sibling projects don't need per-project edits. Only GET/POST are allowed at the CORS layer — consistent with the read-public / token-guarded-write model."
         },
         {

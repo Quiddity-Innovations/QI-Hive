@@ -1,6 +1,6 @@
 {
   "table": [
-    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the control API, channels, realtime loop, meeting room, and backends", "license": "PSF (open source)", "version": "3.x (C:\\1-AI\\APPS\\PYTHON)"},
+    {"layer": "Language", "technology": "Python", "role": "Sole implementation language for the control API, channels, realtime loop, meeting room, and backends", "license": "PSF (open source)", "version": "3.x (C:\\Program Files\\Python311)"},
     {"layer": "Control API", "technology": "FastAPI", "role": "Loopback control/health API + brain config UI on :8720 (/health, /version, /info, /config, /brain*, /bridge/health, /say)", "license": "MIT", "version": "see requirements.txt"},
     {"layer": "Control API", "technology": "Uvicorn", "role": "ASGI server hosting the FastAPI apps (server.py :8720, line_bot.py :8721, meeting_server.py :8722), log_level=warning", "license": "BSD", "version": "see requirements.txt"},
     {"layer": "Control API", "technology": "Pydantic", "role": "Request models (BrainSet, SayBody) for the control endpoints", "license": "MIT", "version": "(FastAPI dep)"},

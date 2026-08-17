@@ -23,7 +23,7 @@ for item in [
     "Attribution fixes: Gmail_Beyond, QI_Universal, C:\\Users\\* paths now map correctly",
     "Autonomous service control: sc.exe resolver added to broker whitelist; qi_service.py wraps sc for stop/start/restart/status",
     "Orphan-broker race diagnosed, stale PID killed, single-instance lock added to qi_elevate.py",
-    "FileHQ path corrected in status.json to C:\\NAYA\\filehq (retired)",
+    "FileHQ path corrected in status.json to C:\\APPS\\NAYA\\filehq (retired)",
     "Committed c98ce9a and pushed to origin/master",
 ]:
     d.add_paragraph(item, style="List Bullet")

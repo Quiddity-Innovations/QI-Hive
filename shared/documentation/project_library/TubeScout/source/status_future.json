@@ -6,7 +6,7 @@
       "items": [
         {"title": "QI Brain session + decision logging", "detail": "Today only implement-worthy features are logged to the Brain (POST /api/log_feature). Wire qi.log_session() per cycle (videos swept, summarized, scored) and qi.log_decision() for notable picks, so the ecosystem has cross-project visibility into what TubeScout is surfacing. integration.brain_base is already configured."},
         {"title": "Reconcile registry vs. live tunnel", "detail": "qi_registry.json still describes QI_TubeScoutTunnel as an ephemeral quick tunnel, but it was migrated 2026-06-18 to the permanent named tunnel tubescout.quiddityinnovations.com. Update the registry services[] entry and exposes_to_ecosystem to match QI_Service_Registry.md."},
-        {"title": "Reconcile CLAUDE.md paths", "detail": "CLAUDE.md and api/main.py still import the QI registry from the legacy C:\\QI\\ECOSYSTEM; the canonical location migrated to C:\\QIH\\ecosystem on 2026-04-22. Repoint the sys.path.insert and the doc references."},
+        {"title": "Reconcile CLAUDE.md paths", "detail": "CLAUDE.md and api/main.py still import the QI registry from the legacy C:\\APPS\\QI\\ECOSYSTEM; the canonical location migrated to C:\\QIH\\ecosystem on 2026-04-22. Repoint the sys.path.insert and the doc references."},
         {"title": "Run qi_validator on tubescout", "detail": "Run python C:\\QIH\\ecosystem\\qi_validator.py --project tubescout to confirm folder layout, port allocation (8503 API / 7843 UI) and the Module Interface Contract, and fix any drift flagged."}
       ]
     },

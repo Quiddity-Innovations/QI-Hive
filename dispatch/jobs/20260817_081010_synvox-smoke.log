@@ -1,0 +1,53 @@
+2026-08-17T08:10:10-04:00 [START] synvox-smoke -> Test-SynVoxSmoke.ps1 args=[]
+2026-08-17 08:10:10 [INFO] ====================================================
+2026-08-17 08:10:10 [INFO]   SynVox FREE smoke gate (host lane, no Docker, no API key)
+2026-08-17 08:10:10 [INFO]   Machine: POWERSPEC   User: POWERSPEC$
+2026-08-17 08:10:10 [INFO]   Master log: C:\APPS\SynVox\logs\synvox_smoke_20260817_081010.log
+2026-08-17 08:10:10 [INFO] ====================================================
+2026-08-17 08:10:10 [INFO] Survey tasks discovered: example-survey_product-feedback, survey_annual-checkup-habits, survey_price-sensitivity-hasbro-gaming-candy-land
+2026-08-17 08:10:10 [INFO] SMOKE START : example-survey_product-feedback (personas=3)
+2026-08-17 08:10:14 [INFO]     Smoke: ok
+2026-08-17 08:10:14 [INFO]     Task: application\tasks\example-survey_product-feedback
+2026-08-17 08:10:14 [INFO]     App: survey
+2026-08-17 08:10:14 [INFO]     Runtime: host json_survey / persona-json-survey
+2026-08-17 08:10:14 [INFO]     Mode: fake · personas 3 · calls 3 · cost $0
+2026-08-17 08:10:14 [INFO]     Notes:
+2026-08-17 08:10:14 [INFO]       - Host Survey smoke — no Docker, no provider calls.
+2026-08-17 08:10:14 [INFO]       - Answers are synthetic (fake client), not persona-faithful.
+2026-08-17 08:10:14 [INFO]       - Temp dir C:\WINDOWS\TEMP\matraix-smoke-f1ybo_vj
+2026-08-17 08:10:14 [INFO]       - Temp artifacts removed after successful smoke.
+2026-08-17 08:10:14 [INFO]       - Resolved auto profile: json_survey / persona-json-survey · logical calls=3 · cost $0
+2026-08-17 08:10:14 [OK  ] SMOKE PASS  : example-survey_product-feedback
+2026-08-17 08:10:14 [INFO] SMOKE START : survey_annual-checkup-habits (personas=3)
+2026-08-17 08:10:14 [INFO]     Smoke: ok
+2026-08-17 08:10:14 [INFO]     Task: application\tasks\survey_annual-checkup-habits
+2026-08-17 08:10:14 [INFO]     App: survey
+2026-08-17 08:10:14 [INFO]     Runtime: host json_survey / persona-json-survey
+2026-08-17 08:10:14 [INFO]     Mode: fake · personas 3 · calls 3 · cost $0
+2026-08-17 08:10:14 [INFO]     Notes:
+2026-08-17 08:10:14 [INFO]       - Host Survey smoke — no Docker, no provider calls.
+2026-08-17 08:10:14 [INFO]       - Answers are synthetic (fake client), not persona-faithful.
+2026-08-17 08:10:14 [INFO]       - Temp dir C:\WINDOWS\TEMP\matraix-smoke-guxwb5_7
+2026-08-17 08:10:14 [INFO]       - Temp artifacts removed after successful smoke.
+2026-08-17 08:10:14 [INFO]       - Resolved auto profile: json_survey / persona-json-survey · logical calls=3 · cost $0
+2026-08-17 08:10:14 [OK  ] SMOKE PASS  : survey_annual-checkup-habits
+2026-08-17 08:10:14 [INFO] SMOKE START : survey_price-sensitivity-hasbro-gaming-candy-land (personas=3)
+2026-08-17 08:10:15 [INFO]     Smoke: ok
+2026-08-17 08:10:15 [INFO]     Task: application\tasks\survey_price-sensitivity-hasbro-gaming-candy-land
+2026-08-17 08:10:15 [INFO]     App: survey
+2026-08-17 08:10:15 [INFO]     Runtime: host json_survey / persona-json-survey
+2026-08-17 08:10:15 [INFO]     Mode: fake · personas 3 · calls 3 · cost $0
+2026-08-17 08:10:15 [INFO]     Notes:
+2026-08-17 08:10:15 [INFO]       - Host Survey smoke — no Docker, no provider calls.
+2026-08-17 08:10:15 [INFO]       - Answers are synthetic (fake client), not persona-faithful.
+2026-08-17 08:10:15 [INFO]       - Temp dir C:\WINDOWS\TEMP\matraix-smoke-1ol54q62
+2026-08-17 08:10:15 [INFO]       - Temp artifacts removed after successful smoke.
+2026-08-17 08:10:15 [INFO]       - Resolved auto profile: json_survey / persona-json-survey · logical calls=3 · cost $0
+2026-08-17 08:10:15 [OK  ] SMOKE PASS  : survey_price-sensitivity-hasbro-gaming-candy-land
+2026-08-17 08:10:15 [INFO] ===================== SUMMARY =====================
+2026-08-17 08:10:15 [INFO] Survey smoke: 3 passed, 0 failed, of 3 task(s)
+2026-08-17 08:10:15 [INFO] Cost: $0 - fake client, no provider calls, no Docker.
+2026-08-17 08:10:15 [INFO] Answers are synthetic and NOT persona-faithful. This proves the harness, not the market.
+2026-08-17 08:10:15 [INFO] Docker is still needed for the Harbor stack smoke and web/os-app tasks.
+2026-08-17 08:10:15 [INFO] Master log: C:\APPS\SynVox\logs\synvox_smoke_20260817_081010.log
+2026-08-17 08:10:15 [INFO] ====================================================

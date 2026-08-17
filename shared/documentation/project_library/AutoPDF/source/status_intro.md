@@ -70,4 +70,4 @@ AutoPDF stays a small, portable, local-only tool — but becomes the **records-i
 
 `AutoPDF.exe` is an idempotent native C# launcher: it pings `:6969/api/status`, and if AutoPDF is already up it just opens the browser; otherwise it starts `Application/AutoPDF-Server.ps1` hidden, shows a splash, and opens the UI. Server version is stamped `2026.06.15`. Engines live under `Application/` (`gs/`, `poppler/`, `tesseract/`, `tabula/`, `pdftk/`, `java/`, `naps2/`). Saved recipes and templates are plain JSON under `Application/recipes/` and `Application/templates/`, so they copy cleanly between machines.
 
-*This page is editable at C:\AutoPDF\INTRO\status_intro.md — save and click Refresh to update.*
+*This page is editable at C:\APPS\AutoPDF\INTRO\status_intro.md — save and click Refresh to update.*

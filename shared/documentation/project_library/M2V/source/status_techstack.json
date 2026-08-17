@@ -22,7 +22,7 @@
     {"layer": "Image Gen (PoC)", "technology": "ComfyUI (HTTP API)", "role": "External SDXL frame generator the standalone track drives over urllib to produce scene_##.png (not yet run)", "license": "GPL-3.0", "version": "core nodes"},
     {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads config/m2v.json and an optional secrets/m2v.env (currently empty — no external keys needed)", "license": "BSD", "version": ">=1.0"},
     {"layer": "Persistence", "technology": "In-memory dict (no database)", "role": "Jobs live in a process-lifetime JOBS dict; outputs are files under data/output and data/scenes. No DB yet (planned)", "license": "n/a", "version": "n/a"},
-    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_M2V Windows service (AppDirectory C:\\M2V) + named tunnel qi-m2v -> m2v.quiddityinnovations.com (installers present; service not yet registered)", "license": "Public domain / Cloudflare", "version": "nssm via C:\\QIH\\engine\\bin"}
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_M2V Windows service (AppDirectory C:\\APPS\\M2V) + named tunnel qi-m2v -> m2v.quiddityinnovations.com (installers present; service not yet registered)", "license": "Public domain / Cloudflare", "version": "nssm via C:\\QIH\\engine\\bin"}
   ],
   "descriptions": [
     {

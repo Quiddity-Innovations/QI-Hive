@@ -6,42 +6,42 @@
         {
           "title": "README",
           "file": "README.md",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "Markdown",
           "description": "Top-level overview: what you get, quickstart, project layout, privacy & licensing summary."
         },
         {
           "title": "Project Summary",
           "file": "SUMMARY.md",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "Markdown",
           "description": "Quick 'what is this?' — tabs, how it works, current state, tech stack, ecosystem role."
         },
         {
           "title": "Installation Guide",
           "file": "INSTALL.md",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "Markdown",
           "description": "Requirements, optional engines (Office/Tesseract/Tabula/Ollama), Ollama mapper build, verify, ports, troubleshooting, uninstall, updating."
         },
         {
           "title": "Changelog",
           "file": "CHANGELOG.md",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "Markdown",
           "description": "Phase-by-phase history: foundation, Smart Mapping, Templates v2, tagged mapping, launcher, OnBase XML export."
         },
         {
           "title": "Third-Party Components & Licenses",
           "file": "THIRD-PARTY-LICENSES.md",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "Markdown",
           "description": "Bundled engine versions + SPDX licenses, GPL/AGPL written offer, and the ship-to-third-party compliance checklist."
         },
         {
           "title": "Claude Session Instructions",
           "file": "CLAUDE.md",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "Markdown",
           "description": "Project-specific Claude instructions: PowerShell compat rules, template/regex concepts, test-suite map, common pitfalls."
         }
@@ -53,35 +53,35 @@
         {
           "title": "AutoPDF Cheatsheet",
           "file": "AutoPDF_Cheatsheet.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "One-stop plain-English 'what each box is for' + detailed reference across all 7 tabs."
         },
         {
           "title": "User Guide",
           "file": "AutoPDF_User_Guide.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "End-user task guide, per tab."
         },
         {
           "title": "Technical Guide",
           "file": "AutoPDF_Technical_Guide.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "Architecture, internals, and the /api surface."
         },
         {
           "title": "Technical Documentation",
           "file": "AutoPDF_Technical_Documentation.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "Extended technical documentation companion to the Technical Guide."
         },
         {
           "title": "Test Guide",
           "file": "AutoPDF_Test_Guide.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "Manual + automated regression test plan; the manual checklist for items the automated tiers don't reach."
         }
@@ -93,42 +93,42 @@
         {
           "title": "Demo Walkthrough (step by step)",
           "file": "AutoPDF_Demo_Walkthrough_StepByStep.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "Exact-clicks walkthrough for the Index Creator demo scenarios."
         },
         {
           "title": "Demo Runbook",
           "file": "AutoPDF_Demo_Runbook.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "Operator runbook for driving the live demo."
         },
         {
           "title": "Demo Video Script",
           "file": "AutoPDF_Demo_Video_Script.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "Approved narration script for the recorded Index Creator demo video."
         },
         {
           "title": "Index Creator Demo Video",
           "file": "AutoPDF_Index_Creator_Demo_2.mp4",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Video (MP4)",
           "description": "Approved demo video (edge-tts narration); built via docs\\_build_video.py with screens from docs\\_capture_v3.py."
         },
         {
           "title": "OnBase Ingestion Boundary",
           "file": "AutoPDF_OnBase_Ingestion_Boundary.docx",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Word",
           "description": "Defines where AutoPDF stops and OnBase DIP ingestion begins (BU review)."
         },
         {
           "title": "OnBase XML Index Export — Enhancement Note",
           "file": "ENHANCEMENT_OnBase_XML_Index_Export.md",
-          "location": "C:\\AutoPDF\\docs\\",
+          "location": "C:\\APPS\\AutoPDF\\docs\\",
           "type": "Markdown",
           "description": "What shipped (Foundation 24.1 schema), implementation map, config knobs, and remaining optional items."
         }
@@ -140,56 +140,56 @@
         {
           "title": "HTTP server + processing engine",
           "file": "AutoPDF-Server.ps1",
-          "location": "C:\\AutoPDF\\Application\\",
+          "location": "C:\\APPS\\AutoPDF\\Application\\",
           "type": "PowerShell",
           "description": "~7,400-line single-file engine: routes, conversion, split, extraction, index, OnBase XML, AI proxy, scheduler. Version 2026.06.15."
         },
         {
           "title": "Front-end logic",
           "file": "app.js",
-          "location": "C:\\AutoPDF\\Application\\",
+          "location": "C:\\APPS\\AutoPDF\\Application\\",
           "type": "JavaScript",
           "description": "~5,600-line vanilla JS for all 7 tabs; collectSplitConfig / idxCollectConfig / buildZoneNamePayload."
         },
         {
           "title": "Single-page UI shell",
           "file": "AutoPDFTool.html",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "HTML",
           "description": "The browser UI served at 127.0.0.1:6969; 7 tabs plus About/Help."
         },
         {
           "title": "Visual Zone Mapper",
           "file": "zone-mapper.html",
-          "location": "C:\\AutoPDF\\",
+          "location": "C:\\APPS\\AutoPDF\\",
           "type": "HTML",
           "description": "Standalone zone mapper used by the Splitter's New tab / Popup / Split-view modes (modal mode is inline in app.js)."
         },
         {
           "title": "Regex pattern library",
           "file": "regex_library.json",
-          "location": "C:\\AutoPDF\\Application\\",
+          "location": "C:\\APPS\\AutoPDF\\Application\\",
           "type": "JSON",
           "description": "~30 builtin reusable patterns; user-editable in Settings; AI-proposed additions can be merged in."
         },
         {
           "title": "Ollama specialization recipe",
           "file": "AutoPDFMapper.Modelfile",
-          "location": "C:\\AutoPDF\\Application\\templates\\",
+          "location": "C:\\APPS\\AutoPDF\\Application\\templates\\",
           "type": "Ollama Modelfile",
           "description": "ollama create autopdf-mapper -f ...; SYSTEM block teaches the three field kinds + library convention."
         },
         {
           "title": "App settings",
           "file": "autopdf-settings.json",
-          "location": "C:\\AutoPDF\\Application\\",
+          "location": "C:\\APPS\\AutoPDF\\Application\\",
           "type": "JSON",
           "description": "Port, folders, Ollama host/model/num_ctx, accessPin, update toggle, DPI/quality."
         },
         {
           "title": "Service registration",
           "file": "_register_services.ps1",
-          "location": "C:\\AutoPDF\\Application\\",
+          "location": "C:\\APPS\\AutoPDF\\Application\\",
           "type": "PowerShell",
           "description": "Registers QI_AutoPDF (manual placeholder) + QI_AutoPDFTunnel (auto-start Cloudflare) per QI naming standard."
         }
@@ -201,35 +201,35 @@
         {
           "title": "Test suite README",
           "file": "README.md",
-          "location": "C:\\AutoPDF\\Tests\\",
+          "location": "C:\\APPS\\AutoPDF\\Tests\\",
           "type": "Markdown",
           "description": "How to run the three-tier regression suite."
         },
         {
           "title": "Tier 1/2 PowerShell tests",
           "file": "Run-AutoPDFTests.ps1",
-          "location": "C:\\AutoPDF\\Tests\\",
+          "location": "C:\\APPS\\AutoPDF\\Tests\\",
           "type": "PowerShell",
           "description": "~27 API + AI-shape tests; -WithAi exercises ai_extract. Seconds to run."
         },
         {
           "title": "Tier 3 browser tests",
           "file": "BrowserTests\\",
-          "location": "C:\\AutoPDF\\Tests\\",
+          "location": "C:\\APPS\\AutoPDF\\Tests\\",
           "type": "Python (pytest + Playwright)",
           "description": "UI regression (pre_flight, regex_library, settings, smart_mapping, splitter, workflow); product-agnostic harness."
         },
         {
           "title": "PP-OCRv5 ONNX engine plan",
           "file": "PLAN_PP-OCRv5_ONNX_engine.md",
-          "location": "C:\\AutoPDF\\PP-OCRv6\\",
+          "location": "C:\\APPS\\AutoPDF\\PP-OCRv6\\",
           "type": "Markdown",
           "description": "Approved (not started) plan for a second, no-Python OCR engine via ONNX Runtime + RapidOcrNet."
         },
         {
           "title": "PaddleOCR integration task (prototype/rejected route)",
           "file": "TASK_autopdf_ocr_integration.md",
-          "location": "C:\\AutoPDF\\PP-OCRv6\\",
+          "location": "C:\\APPS\\AutoPDF\\PP-OCRv6\\",
           "type": "Markdown",
           "description": "Python PaddleOCR hybrid-extractor task spec; not wired into the server (superseded by the ONNX plan)."
         }

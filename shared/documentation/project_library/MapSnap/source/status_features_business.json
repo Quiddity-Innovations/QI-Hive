@@ -193,7 +193,7 @@
         "name": "Admin guide & feature list",
         "description": "Maintained operator documentation covering setup, AI connections, and the full feature catalogue.",
         "status": "live",
-        "notes": "Lives under C:\\MapSnap\\docs as .docx files."
+        "notes": "Lives under C:\\APPS\\MapSnap\\docs as .docx files."
       },
       {
         "name": "Runs as a managed Windows service",

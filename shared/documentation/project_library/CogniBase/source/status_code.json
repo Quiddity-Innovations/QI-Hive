@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts from the live CogniBase source (C:\\CogniBase\\Application). CogniBase is pre-POC: the code below is real and runs locally, but it currently operates against fixtures, not a live OnBase deployment (the REST/Unity clients are stubs). The design is config-driven throughout — no AI model names are hardcoded in source; they live in Settings/settings.json.",
+  "intro": "Excerpts from the live CogniBase source (C:\\APPS\\CogniBase\\Application). CogniBase is pre-POC: the code below is real and runs locally, but it currently operates against fixtures, not a live OnBase deployment (the REST/Unity clients are stubs). The design is config-driven throughout — no AI model names are hardcoded in source; they live in Settings/settings.json.",
   "sections": [
     {
       "category": "Server & App Wiring (FastAPI :8650)",

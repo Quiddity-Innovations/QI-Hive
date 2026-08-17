@@ -1,104 +1,104 @@
 {
   "renames": [
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Line.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_line.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Line.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_line.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Meeting.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_meeting.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Meeting.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_meeting.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Realtime.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_realtime.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Realtime.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_realtime.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Telegram.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_telegram.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Telegram.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_telegram.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Webcall.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_webcall.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_Webcall.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_webcall.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_BridgeHealth.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\run_bridge_health.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_BridgeHealth.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\run_bridge_health.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Start_MeetingRoom.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\start_meeting_room.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Start_MeetingRoom.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\start_meeting_room.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Install.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\install_service.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Install.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\install_service.bat"
     },
     {
-      "from": "C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Install_Meeting.bat",
-      "to": "C:\\CLAUDE\\Claude Voice\\install_meeting_service.bat"
+      "from": "C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Install_Meeting.bat",
+      "to": "C:\\APPS\\CLAUDE\\Claude Voice\\install_meeting_service.bat"
     },
     {
-      "from": "C:\\QI\\Maia_Restart_Bot.bat",
-      "to": "C:\\QI\\restart_maiabot.bat"
+      "from": "C:\\APPS\\QI\\Maia_Restart_Bot.bat",
+      "to": "C:\\APPS\\QI\\restart_maiabot.bat"
     },
     {
-      "from": "C:\\QI\\TOOLS\\Maia_Restart.bat",
-      "to": "C:\\QI\\TOOLS\\restart_maia.bat"
+      "from": "C:\\APPS\\QI\\TOOLS\\Maia_Restart.bat",
+      "to": "C:\\APPS\\QI\\TOOLS\\restart_maia.bat"
     },
     {
-      "from": "C:\\QI\\TOOLS\\Maia_Restart_TunnelUpdate.bat",
-      "to": "C:\\QI\\TOOLS\\restart_tunnel_and_update.bat"
+      "from": "C:\\APPS\\QI\\TOOLS\\Maia_Restart_TunnelUpdate.bat",
+      "to": "C:\\APPS\\QI\\TOOLS\\restart_tunnel_and_update.bat"
     },
     {
-      "from": "C:\\QI\\Maia_Install.bat",
-      "to": "C:\\QI\\install_maia_services.bat"
+      "from": "C:\\APPS\\QI\\Maia_Install.bat",
+      "to": "C:\\APPS\\QI\\install_maia_services.bat"
     },
     {
-      "from": "C:\\QI\\Maia_Install_Watchdog.bat",
-      "to": "C:\\QI\\install_watchdog.bat"
+      "from": "C:\\APPS\\QI\\Maia_Install_Watchdog.bat",
+      "to": "C:\\APPS\\QI\\install_watchdog.bat"
     },
     {
-      "from": "C:\\QI\\TOOLS\\Maia_Setup.bat",
-      "to": "C:\\QI\\TOOLS\\setup_service.bat"
+      "from": "C:\\APPS\\QI\\TOOLS\\Maia_Setup.bat",
+      "to": "C:\\APPS\\QI\\TOOLS\\setup_service.bat"
     },
     {
-      "from": "C:\\QI\\TOOLS\\Maia_Setup_NamedTunnel.bat",
-      "to": "C:\\QI\\TOOLS\\setup_named_tunnel.bat"
+      "from": "C:\\APPS\\QI\\TOOLS\\Maia_Setup_NamedTunnel.bat",
+      "to": "C:\\APPS\\QI\\TOOLS\\setup_named_tunnel.bat"
     },
     {
-      "from": "C:\\NEXUS\\NEXUS_Start.bat",
-      "to": "C:\\NEXUS\\Start_NEXUS.bat"
+      "from": "C:\\APPS\\NEXUS\\NEXUS_Start.bat",
+      "to": "C:\\APPS\\NEXUS\\Start_NEXUS.bat"
     },
     {
-      "from": "C:\\NEXUS\\NEXUS_Start_ScoutOnly.bat",
-      "to": "C:\\NEXUS\\Start_NEXUS_Scout_Only.bat"
+      "from": "C:\\APPS\\NEXUS\\NEXUS_Start_ScoutOnly.bat",
+      "to": "C:\\APPS\\NEXUS\\Start_NEXUS_Scout_Only.bat"
     },
     {
-      "from": "C:\\NEXUS\\NEXUS_Install.bat",
-      "to": "C:\\NEXUS\\install_nexus_service.bat"
+      "from": "C:\\APPS\\NEXUS\\NEXUS_Install.bat",
+      "to": "C:\\APPS\\NEXUS\\install_nexus_service.bat"
     },
     {
-      "from": "C:\\NEXUS\\NEXUS_Install_Tunnel.bat",
-      "to": "C:\\NEXUS\\install_nexus_tunnel.bat"
+      "from": "C:\\APPS\\NEXUS\\NEXUS_Install_Tunnel.bat",
+      "to": "C:\\APPS\\NEXUS\\install_nexus_tunnel.bat"
     },
     {
-      "from": "C:\\PersonalSong\\PersonalSong_Start_Queue.bat",
-      "to": "C:\\PersonalSong\\run_queue.bat"
+      "from": "C:\\APPS\\PersonalSong\\PersonalSong_Start_Queue.bat",
+      "to": "C:\\APPS\\PersonalSong\\run_queue.bat"
     },
     {
-      "from": "C:\\PersonalSong\\PersonalSong_Start_Server.bat",
-      "to": "C:\\PersonalSong\\run_server.bat"
+      "from": "C:\\APPS\\PersonalSong\\PersonalSong_Start_Server.bat",
+      "to": "C:\\APPS\\PersonalSong\\run_server.bat"
     },
     {
-      "from": "C:\\TUBESCOUT\\TubeScout_Start.bat",
-      "to": "C:\\TUBESCOUT\\Start_TubeScout.bat"
+      "from": "C:\\APPS\\TUBESCOUT\\TubeScout_Start.bat",
+      "to": "C:\\APPS\\TUBESCOUT\\Start_TubeScout.bat"
     },
     {
-      "from": "C:\\TUBESCOUT\\TubeScout_Start_Server.bat",
-      "to": "C:\\TUBESCOUT\\start_server.bat"
+      "from": "C:\\APPS\\TUBESCOUT\\TubeScout_Start_Server.bat",
+      "to": "C:\\APPS\\TUBESCOUT\\start_server.bat"
     },
     {
-      "from": "C:\\TUBESCOUT\\TubeScout_Run_Cycle.bat",
-      "to": "C:\\TUBESCOUT\\run_cycle.bat"
+      "from": "C:\\APPS\\TUBESCOUT\\TubeScout_Run_Cycle.bat",
+      "to": "C:\\APPS\\TUBESCOUT\\run_cycle.bat"
     }
   ],
   "edits": [

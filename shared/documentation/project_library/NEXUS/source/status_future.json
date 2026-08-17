@@ -6,8 +6,8 @@
       "items": [
         {"title": "QI Brain — session logging", "detail": "Register each NEXUS synthesis in the Brain DB via qi.log_session(): prompt, providers used, routing mode, elapsed time, judge verdict. Gives the ecosystem cross-project visibility into what NEXUS is being asked. Not yet wired."},
         {"title": "QI Brain — decision logging", "detail": "Log significant orchestration decisions (which routing mode won, judge best-pick, provider failures, model swaps) via qi.log_decision() so model-selection learning is shared across projects."},
-        {"title": "Maia synthesis routing", "detail": "Wire Maia's LLM chain to optionally route complex queries to POST /synthesize for multi-AI synthesis. Client stub exists at C:\\QI\\nexus_client.py — make it a selectable routing mode in Maia."},
-        {"title": "QI Standards compliance audit", "detail": "Run qi_validator.py --project nexus. Reconcile the legacy api/main.py CORS import path (C:\\QI\\ECOSYSTEM) with the migrated C:\\QIH\\ecosystem location, confirm folder layout, and refresh QI_Service_Registry.md entries."}
+        {"title": "Maia synthesis routing", "detail": "Wire Maia's LLM chain to optionally route complex queries to POST /synthesize for multi-AI synthesis. Client stub exists at C:\\APPS\\QI\\nexus_client.py — make it a selectable routing mode in Maia."},
+        {"title": "QI Standards compliance audit", "detail": "Run qi_validator.py --project nexus. Reconcile the legacy api/main.py CORS import path (C:\\APPS\\QI\\ECOSYSTEM) with the migrated C:\\QIH\\ecosystem location, confirm folder layout, and refresh QI_Service_Registry.md entries."}
       ]
     },
     {

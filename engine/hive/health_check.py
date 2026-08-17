@@ -18,7 +18,14 @@ from pathlib import Path
 # run_health_check() fans out many subprocess calls (sc, netstat, git). On
 # every dashboard page load this adds seconds of latency. Cache the result
 # for HEALTH_CACHE_TTL seconds so back-to-back page loads are fast.
-HEALTH_CACHE_TTL = 30  # seconds
+# The dashboard's _board_sync_loop() recomputes this every 300s on a worker
+# thread. A 30s TTL meant the cache was expired for 90% of that window, so any
+# request that touched run_health_check() paid the full fan-out (~12-47s of sc /
+# netstat / git subprocess probes) — /api/health simply timed out. Matching the
+# TTL to the refresh cadence keeps requests on warm cache; the background loop,
+# which calls force=True, is what actually keeps the data fresh.
+# (2026-08-17 audit.)
+HEALTH_CACHE_TTL = 330  # seconds — slightly over the 300s background refresh
 _health_cache = {"t": 0.0, "data": None}
 _health_lock = threading.Lock()
 
@@ -35,13 +42,18 @@ _SERVICE_MAP = {
     "lotterywiz":       "QI_LotteryWiz",
     "cypherminer":      "QI_CypherMinerUI",
     "tubescout":        "QI_TubeScout",
-    "fidelityanalyzer": "QI_FidelityAnalyzer",
-    "avatarstudio":     "QI_AvatarStudio",
-    "personalsong":     "QI_PersonalSong",
-    "m2v":              "QI_M2V",
-    "mq":               "QI_MQ",
     "qi_brain":         "QI_BrainAPI",
     "qi_hive":          "QI_Dashboard",
+    # Added 2026-08-17 audit — these services exist but were never mapped, so
+    # the projects reported no service at all.
+    "retirementanalyzer": "QI_RetirementAnalyzer",
+    "headroom":           "QI_Headroom",
+    "playdeck":           "QI_PlayDeck",
+    # Removed 2026-08-17 audit — QI_FidelityAnalyzer / QI_AvatarStudio /
+    # QI_PersonalSong / QI_M2V / QI_MQ were mapped but have never been
+    # installed, so those projects could never report healthy. They are
+    # desktop/CLI tools with no service by design; absence of a mapping is
+    # correct and the health check now skips the service probe for them.
 }
 
 # Project IDs that have a public Cloudflare tunnel service.
@@ -125,54 +137,54 @@ def _build_projects_from_registry() -> dict:
 # Fallback used when the registry file cannot be read.
 _PROJECTS_FALLBACK = {
     "Maia": {
-        "path": r"C:\QI",
+        "path": r"C:\APPS\QI",
         "service": "QI_MaiaBot",
         "tunnel": "QI_MaiaTunnel",
         "api_port": 8001,
         "ui_port": 7860,
-        "db": r"C:\QI\maia.db",
-        "doc_path": r"C:\QI\DOCUMENTATION",
+        "db": r"C:\APPS\QI\maia.db",
+        "doc_path": r"C:\APPS\QI\DOCUMENTATION",
         "key_files": ["maia_server.py", "maia_gradio.py"],
     },
     "Naya": {
-        "path": r"C:\NAYA",
+        "path": r"C:\APPS\NAYA",
         "service": "QI_NayaBot",
         "tunnel": None,
         "api_port": 8002,
         "ui_port": 7861,
-        "db": r"C:\NAYA\naya.db",
-        "doc_path": r"C:\NAYA\DOCUMENTATION",
+        "db": r"C:\APPS\NAYA\naya.db",
+        "doc_path": r"C:\APPS\NAYA\DOCUMENTATION",
         "key_files": ["naya_server.py"],
     },
     "NEXUS": {
-        "path": r"C:\NEXUS",
+        "path": r"C:\APPS\NEXUS",
         "service": "QI_NEXUS",
         "tunnel": None,
         "api_port": 8010,
         "ui_port": 7880,
-        "db": r"C:\NEXUS\nexus.db",
-        "doc_path": r"C:\NEXUS\Quiddity Innovations - NEXUS Documentation",
+        "db": r"C:\APPS\NEXUS\nexus.db",
+        "doc_path": r"C:\APPS\NEXUS\Quiddity Innovations - NEXUS Documentation",
         "key_files": ["main.py"],
     },
     "OpenClaw": {
-        "path": r"C:\OC",
+        "path": r"C:\APPS\OC",
         "service": None,
         "tunnel": None,
         "api_port": None,
         "ui_port": None,
         "db": None,
-        "doc_path": r"C:\OC\DOCUMENTATION",
+        "doc_path": r"C:\APPS\OC\DOCUMENTATION",
         "key_files": [],
         "note": "Runs in WSL — service check not applicable",
     },
     "MQ": {
-        "path": r"C:\MQ",
+        "path": r"C:\APPS\MQ",
         "service": None,
         "tunnel": None,
         "api_port": None,
         "ui_port": None,
-        "db": r"C:\MQ\mq.db",
-        "doc_path": r"C:\MQ\DOCUMENTATION",
+        "db": r"C:\APPS\MQ\mq.db",
+        "doc_path": r"C:\APPS\MQ\DOCUMENTATION",
         "key_files": [],
         "note": "Not yet live — waiting on Meta credentials",
     },
@@ -199,35 +211,35 @@ _PROJECTS_FALLBACK = {
         "note": "QI Brain — hive nervous system. SQLite + ChromaDB + MCP.",
     },
     "EasyFlow": {
-        "path": r"C:\EasyFlow",
+        "path": r"C:\APPS\EasyFlow",
         "service": None,
         "tunnel": None,
         "api_port": 8550,
         "ui_port": None,
         "db": None,
-        "doc_path": r"C:\EasyFlow\DOCUMENTATION",
+        "doc_path": r"C:\APPS\EasyFlow\DOCUMENTATION",
         "key_files": ["app.py"],
         "note": "Email/inbox tier automation. Local Flask dashboard (not NSSM).",
     },
     "Claude Manager": {
-        "path": r"C:\CLAUDE",
+        "path": r"C:\APPS\CLAUDE",
         "service": None,
         "tunnel": None,
         "api_port": None,
         "ui_port": None,
         "db": None,
-        "doc_path": r"C:\CLAUDE\DOCUMENTATION",
+        "doc_path": r"C:\APPS\CLAUDE\DOCUMENTATION",
         "key_files": [],
         "note": "Orchestration/PM layer. No served ports.",
     },
     "FileHQ": {
-        "path": r"C:\NAYA\filehq",
+        "path": r"C:\APPS\NAYA\filehq",
         "service": None,
         "tunnel": None,
         "api_port": None,
         "ui_port": None,
         "db": None,
-        "doc_path": r"C:\NAYA\filehq",
+        "doc_path": r"C:\APPS\NAYA\filehq",
         "key_files": [],
         "note": "Merged into Naya 2026-Q1. Kept for visibility.",
     },
@@ -345,8 +357,19 @@ def check_summary(path):
 
 # ── Main check ───────────────────────────────────────────────────────────────
 
+def cached_health_check():
+    """Return the last computed result without ever recomputing, or None.
+
+    For request handlers: serving slightly stale health data instantly always
+    beats blocking a page load on a multi-second subprocess fan-out. The
+    background refresher owns recomputation. (2026-08-17 audit.)
+    """
+    with _health_lock:
+        return _health_cache["data"]
+
+
 def run_health_check(force: bool = False):
-    """Cached public entrypoint. Pass force=True to skip the 30s cache."""
+    """Cached public entrypoint. Pass force=True to skip the cache."""
     now = time.time()
     if not force:
         with _health_lock:

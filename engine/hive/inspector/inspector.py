@@ -31,23 +31,23 @@ DB = r'C:\QIH\data\qi_brain.db'
 REGISTRY = r'C:\QIH\ecosystem\qi_registry.json'
 HOOKS_DIR = Path(r'C:\QIH\hooks')
 NSSM = r'C:\QIH\engine\bin\nssm.exe'
-PYTHON = r'C:\1-AI\APPS\PYTHON\python.exe'
+PYTHON = r'C:\Program Files\Python311\python.exe'
 BOOTSTRAP = r'C:\QIH\engine\common\session_bootstrap.py'
 SESSION_STOP = r'C:\QIH\engine\common\session_stop.py'
 
 # Projects we expect on disk (project_id -> path)
 PROJECT_PATHS = {
-    'maia':      r'C:\QI',
-    'naya':      r'C:\NAYA',
-    'nexus':     r'C:\NEXUS',
-    'easyflow':  r'C:\EasyFlow',
-    'mq':        r'C:\MQ',
-    'cognibase': r'C:\CogniBase',
-    'mapsnap':   r'C:\MapSnap',
-    'autopdf':   r'C:\AutoPDF',
+    'maia':      r'C:\APPS\QI',
+    'naya':      r'C:\APPS\NAYA',
+    'nexus':     r'C:\APPS\NEXUS',
+    'easyflow':  r'C:\APPS\EasyFlow',
+    'mq':        r'C:\APPS\MQ',
+    'cognibase': r'C:\APPS\CogniBase',
+    'mapsnap':   r'C:\APPS\MapSnap',
+    'autopdf':   r'C:\APPS\AutoPDF',
     'qi_hive':   r'C:\QIH',
-    'personalsong': r'C:\PersonalSong',
-    'm2v':       r'C:\M2V',
+    'personalsong': r'C:\APPS\PersonalSong',
+    'm2v':       r'C:\APPS\M2V',
 }
 
 # Skip hook checks for these (adjacent / external / retired)

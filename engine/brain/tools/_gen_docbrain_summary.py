@@ -76,7 +76,7 @@ tbl.rows[0].cells[1].text = "Change"
 for f, ch in [
     (r"C:\QIH\engine\brain\doc_harvester.py", "NEW — index builder + graph + embed"),
     (r"C:\QIH\engine\brain\migrations\2026_06_18_doc_index.sql", "NEW — docs + doc_relationships tables"),
-    (r"C:\CLAUDE\.claude\agents\hive-librarian.md", "NEW — Librarian sub-agent"),
+    (r"C:\APPS\CLAUDE\.claude\agents\hive-librarian.md", "NEW — Librarian sub-agent"),
     (r"C:\QIH\ecosystem\QI_Claude_Manager_Guide.md", "MOD — added PART 12 (Documentation Brain)"),
     (r"C:\QIH\engine\hive\dashboard\server.py", "MOD — fixed guide path, added Doc Brain note"),
     (r"C:\QIH\tools\nightly_reconcile.py", "MOD — doc-harvest fold-in"),

@@ -1,5 +1,5 @@
 {
-  "intro": "Every snippet below is copied from OpenClaw's actual source under C:\\OC. They trace the real spine of the system: the gateway capability contract (TOOLS.md), the orchestrator's permission firewall, the LLM router every agent shares, and each specialist's core logic.",
+  "intro": "Every snippet below is copied from OpenClaw's actual source under C:\\APPS\\OC. They trace the real spine of the system: the gateway capability contract (TOOLS.md), the orchestrator's permission firewall, the LLM router every agent shares, and each specialist's core logic.",
   "sections": [
     {
       "category": "Gateway & Capability Wiring (TOOLS.md)",

@@ -136,4 +136,4 @@ model), **deeper Brain integration** (every synthesis logged for cross-project m
 local machine.
 
 ---
-*This page is editable at `C:\NEXUS\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\NEXUS\INTRO\status_intro.md` — save and click Refresh to update.*

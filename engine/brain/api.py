@@ -39,6 +39,7 @@ Run:
 """
 from __future__ import annotations
 import difflib
+import re
 import json
 import logging
 import os
@@ -51,7 +52,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 def _norm_pid(pid: str) -> str:
@@ -60,6 +61,46 @@ def _norm_pid(pid: str) -> str:
     if not isinstance(pid, str):
         return pid
     return pid.strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def _clean_str(v):
+    """Strip lone UTF-16 surrogates from caller text. They arrive via mis-decoded
+    client payloads, survive json parsing, and then crash the sqlite INSERT with
+    UnicodeEncodeError — a 500 AFTER validation passed (seen live 2026-08-14 on
+    /api/log_session, '\\udc8f'). Replacing is lossy for exactly one broken char;
+    losing the whole session log is worse."""
+    if isinstance(v, str):
+        try:
+            v.encode("utf-8")
+            return v
+        except UnicodeEncodeError:
+            return v.encode("utf-8", "replace").decode("utf-8")
+    return v
+
+
+def _as_count(v):
+    """Tolerant count coercion for decisions_made / features_logged. The session-end
+    protocol reads as 'pass the decisions', so callers legitimately send a list or
+    prose where the schema says int. Ints pass through; lists count; numeric strings
+    parse; prose counts its ';'/newline items. Content folding into `summary` is
+    handled by the model validator so nothing the caller wrote is discarded."""
+    if v is None:
+        return 0
+    if isinstance(v, bool):
+        return int(v)
+    if isinstance(v, int):
+        return v
+    if isinstance(v, list):
+        return len(v)
+    if isinstance(v, str):
+        s = v.strip()
+        if not s:
+            return 0
+        try:
+            return int(s)
+        except ValueError:
+            return len([p for p in re.split(r"[;\n]", s) if p.strip()])
+    return 0
 
 
 log = logging.getLogger("qi_brain.api")
@@ -421,6 +462,20 @@ class LogDecisionRequest(BaseModel):
     impact_scope:  str = "project"
     tags:          Optional[list[str]] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def _tolerant(cls, data):
+        # Accept the payload shapes real callers send instead of 422ing:
+        # tags as a comma-separated string, and any text field carrying lone
+        # surrogates (which would otherwise 500 at the INSERT).
+        if isinstance(data, dict):
+            t = data.get("tags")
+            if isinstance(t, str):
+                data["tags"] = [p.strip() for p in t.split(",") if p.strip()]
+            for k, v in list(data.items()):
+                data[k] = _clean_str(v)
+        return data
+
     @field_validator("project_id")
     @classmethod
     def _norm(cls, v): return _norm_pid(v)
@@ -690,6 +745,38 @@ class LogSessionRequest(BaseModel):
     next_steps:      Optional[str] = None
     model_used:      Optional[str] = None
     started_at:      Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _tolerant(cls, data):
+        # The session-end protocol reads as "pass the decisions/features", so
+        # callers legitimately send lists or prose where this schema says int,
+        # a list for next_steps, or a string for files_changed. Coerce instead
+        # of 422ing, and NEVER discard caller text: prose sent in the count
+        # fields is folded into `summary` before the count replaces it.
+        if not isinstance(data, dict):
+            return data
+        for fld, label in (("decisions_made", "Decisions made"),
+                           ("features_logged", "Features logged")):
+            v = data.get(fld)
+            if isinstance(v, str) and v.strip() and not v.strip().lstrip("-").isdigit():
+                data["summary"] = f"{data.get('summary', '')}\n\n{label}: {v.strip()}"
+            elif isinstance(v, list) and v and any(not isinstance(x, int) for x in v):
+                joined = "; ".join(str(x) for x in v)
+                data["summary"] = f"{data.get('summary', '')}\n\n{label}: {joined}"
+            data[fld] = _as_count(v) if v is not None else 0
+        ns = data.get("next_steps")
+        if isinstance(ns, list):
+            data["next_steps"] = "; ".join(str(x) for x in ns)
+        fc = data.get("files_changed")
+        if isinstance(fc, str):
+            data["files_changed"] = [p.strip() for p in re.split(r"[;,\n]", fc) if p.strip()]
+        for k, v in list(data.items()):
+            if isinstance(v, str):
+                data[k] = _clean_str(v)
+            elif isinstance(v, list):
+                data[k] = [_clean_str(x) for x in v]
+        return data
 
     @field_validator("project_id")
     @classmethod
@@ -1110,12 +1197,27 @@ async def post_heartbeat(req: HeartbeatIn):
     """
     meta_json = json.dumps(req.meta) if req.meta else None
     with open_brain_db() as conn:
+        # Normalise the caller-supplied id the same way every other write path
+        # does. Without this, hooks sending 'qihive' accumulated a parallel
+        # history: 5231 of 5375 heartbeats landed under 'qihive' while the
+        # canonical project is 'qi_hive', so every freshness/drift query saw a
+        # project with almost no activity and the Inspector filed false
+        # "no session activity" dispatches for months. (2026-08-17 audit.)
+        pid = req.project_id
+        if pid:
+            try:
+                pid = _resolve_pid(conn, pid)
+            except HTTPException:
+                # A heartbeat is telemetry — never fail the caller over an
+                # unknown project. Keep the raw value and let it be visible.
+                log.warning("heartbeat: unresolved project_id %r kept as-is", req.project_id)
+                pid = req.project_id
         cur = conn.execute(
             """INSERT INTO agent_heartbeats
                (agent_id, agent_kind, event, project_id, session_ref, model, meta_json)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (req.agent_id, req.agent_kind, req.event,
-             req.project_id, req.session_ref, req.model, meta_json),
+             pid, req.session_ref, req.model, meta_json),
         )
         row_id = cur.lastrowid
         conn.commit()

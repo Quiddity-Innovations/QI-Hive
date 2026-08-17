@@ -115,4 +115,4 @@ summarized via the shared NEXUS backbone, and surfaced as a clean, deduped, topi
 that feeds the wider QI ecosystem.
 
 ---
-*This page is editable at `C:\TUBESCOUT\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\TUBESCOUT\INTRO\status_intro.md` — save and click Refresh to update.*

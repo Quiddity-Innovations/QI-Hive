@@ -32,8 +32,8 @@
   {
     "category": "Session Hooks",
     "features": [
-      {"name": "settings.json — hook + permission wiring", "file": ".claude/settings.json", "status": "live", "detail": "permissions.defaultMode=bypassPermissions, allow Bash/Read/Write/Edit/Glob/Grep/WebFetch/WebSearch/mcp__*. Hooks: SessionEnd -> session_end.py, SubagentStop -> subagent_stop.py (both via C:\\1-AI\\APPS\\PYTHON\\python.exe, 15s timeout)."},
-      {"name": "SessionEnd auto-stub", "file": "~/.claude/session_end.py :: main()", "status": "live", "detail": "Reads hook JSON from stdin, infers project from cwd vs registry (longest-prefix; C:\\CLAUDE -> claude_manager), pulls a coarse transcript summary, dedups by session_id, writes a session stub to C:\\QIH\\shared\\reports\\inbox for QI_HiveIngest. Best-effort, never blocks."},
+      {"name": "settings.json — hook + permission wiring", "file": ".claude/settings.json", "status": "live", "detail": "permissions.defaultMode=bypassPermissions, allow Bash/Read/Write/Edit/Glob/Grep/WebFetch/WebSearch/mcp__*. Hooks: SessionEnd -> session_end.py, SubagentStop -> subagent_stop.py (both via C:\\Program Files\\Python311\\python.exe, 15s timeout)."},
+      {"name": "SessionEnd auto-stub", "file": "~/.claude/session_end.py :: main()", "status": "live", "detail": "Reads hook JSON from stdin, infers project from cwd vs registry (longest-prefix; C:\\APPS\\CLAUDE -> claude_manager), pulls a coarse transcript summary, dedups by session_id, writes a session stub to C:\\QIH\\shared\\reports\\inbox for QI_HiveIngest. Best-effort, never blocks."},
       {"name": "SubagentStop role attribution", "file": "~/.claude/subagent_stop.py :: main()", "status": "live", "detail": "Normalises subagent_type to hive_<role> (HIVE_ROLES set), infers project from cwd, writes <agent>_subagent_<ts>_<sid>.json to the Hive inbox so sub-agent work is attributed to the right role in qi_brain.db."},
       {"name": "SessionStart context injection", "file": "~/.claude/session_context.py", "status": "live", "detail": "Global hook (not in project settings.json). Builds the ecosystem briefing via qi_context_loader, probes QI Brain (fail-LOUD if down), appends the Hive dispatch reminder + the monthly-audit PENDING_REVIEW gate, and emits hookSpecificOutput.additionalContext. Note: probes :9010 in source while Brain now lives on :9011 — known stale-port nit."}
     ]
@@ -45,7 +45,7 @@
       {"name": "Claude-Clean-Restart.bat", "file": "Tools/Claude-Clean-Restart.bat", "status": "live", "detail": "Explorer-launched wrapper: Scan -> choice-gated Clean -> Locks verify -> relaunch Claude via shell:AppsFolder\\Claude_pzs8sxrjxfjjc!Claude. No reboot needed."},
       {"name": "qi_self_audit.py", "file": "Tools/qi_self_audit.py", "status": "live", "detail": "Monthly read-only audit + optional --apply-safe. Safe fixes: -CleanOrphans, git worktree prune + remove CLEAN worktrees across 8 repos, prune dead .claude.json worktree entries (with .bak). Reports big folders/temp/backups for decision. Writes .md+.docx + PENDING_REVIEW.json flag."},
       {"name": "Run-Monthly-SelfAudit.ps1", "file": "Tools/Run-Monthly-SelfAudit.ps1", "status": "live", "detail": "QI_ClaudeSelfAudit orchestrator (last Friday). Runs qi_self_audit.py --apply-safe, parses the one-line AUDIT summary, notifies via Tasuke, auto-opens Claude Desktop for the in-session decision gate. Headless via conhost --headless."},
-      {"name": "qi_tasuke_notify.py", "file": "Tools/qi_tasuke_notify.py", "status": "live", "detail": "POSTs a LINE broadcast via api.line.me/v2/bot/message/broadcast; token read from C:\\OC\\secrets\\tasuke-line.env (no stored userId). Message capped at 4900 chars."}
+      {"name": "qi_tasuke_notify.py", "file": "Tools/qi_tasuke_notify.py", "status": "live", "detail": "POSTs a LINE broadcast via api.line.me/v2/bot/message/broadcast; token read from C:\\APPS\\OC\\secrets\\tasuke-line.env (no stored userId). Message capped at 4900 chars."}
     ]
   },
   {

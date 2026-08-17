@@ -9,12 +9,12 @@ STATUS = Path(r"C:\QIH\data\status.json")
 s = json.loads(STATUS.read_text(encoding='utf-8'))
 
 s['projects']['EasyFlow'] = {
-    "path": "C:\\EasyFlow",
+    "path": "C:\\APPS\\EasyFlow",
     "status": "active_development",
     "current_task": None,
     "locked_files": [],
     "last_activity": "2026-04-19",
-    "notes": "EasyFlow — workflow automation. Port 8550. To migrate to C:\\QIP\\EasyFlow under QI Project Standard."
+    "notes": "EasyFlow — workflow automation. Port 8550. To migrate to C:\\APPS\\QIP\\EasyFlow under QI Project Standard."
 }
 
 s['projects']['FileHQ'] = {
@@ -23,13 +23,13 @@ s['projects']['FileHQ'] = {
     "current_task": None,
     "locked_files": [],
     "last_activity": "2026-04-19",
-    "notes": "FileHQ — file management hub. Port 8000. To migrate to C:\\QIP\\FileHQ under QI Project Standard."
+    "notes": "FileHQ — file management hub. Port 8000. To migrate to C:\\APPS\\QIP\\FileHQ under QI Project Standard."
 }
 
 # Claude_Manager is superseded
 if 'Claude_Manager' in s['projects']:
     s['projects']['Claude_Manager']['status'] = 'retired'
-    s['projects']['Claude_Manager']['notes'] = "Retired 2026-04-19 — replaced by QI_Hive. Legacy NSSM service removed. Folder C:\\CLAUDE pending archive + delete."
+    s['projects']['Claude_Manager']['notes'] = "Retired 2026-04-19 — replaced by QI_Hive. Legacy NSSM service removed. Folder C:\\APPS\\CLAUDE pending archive + delete."
 
 STATUS.write_text(json.dumps(s, indent=2, ensure_ascii=False), encoding='utf-8')
 print(f"Updated {STATUS}")

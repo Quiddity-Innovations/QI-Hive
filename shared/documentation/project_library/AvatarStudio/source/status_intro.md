@@ -96,4 +96,4 @@ AI and media are global. The studio narrates in **ten languages** out of the box
   language, and pitch/speed are adjustable per render.
 
 ---
-*This page is editable at `C:\1-AI\APPS\AvatarStudio\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\AvatarStudio\INTRO\status_intro.md` — save and click Refresh to update.*

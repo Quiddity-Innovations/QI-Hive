@@ -2,7 +2,7 @@
 *Internal — Renne / Quiddity Innovations — 2026-06-27*
 
 ## The collision
-BU's flagship AI-chat platform is named **"Nexus"** (`nexus-agent`, `nexus-admin`, `nexus-mcp-server` — see `nexus-platform-overview.pdf`). Quiddity has a registered project **NEXUS** at `C:\NEXUS` (id `nexus`, port 8010/7880, `active_development`).
+BU's flagship AI-chat platform is named **"Nexus"** (`nexus-agent`, `nexus-admin`, `nexus-mcp-server` — see `nexus-platform-overview.pdf`). Quiddity has a registered project **NEXUS** at `C:\APPS\NEXUS` (id `nexus`, port 8010/7880, `active_development`).
 
 **Why it matters (only for BU-facing contexts):** in any deck, doc, repo, or email shown to BU, "QI NEXUS" reads as either confusion ("is this their Nexus?") or presumption ("did they copy our platform name?"). It undercuts an otherwise strong, architecturally-aligned story.
 

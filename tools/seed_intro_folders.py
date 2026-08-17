@@ -24,9 +24,9 @@ PROJECTS = {
     },
     "filehq": {
         "name": "FileHQ",
-        "path": r"C:\NAYA\filehq",
+        "path": r"C:\APPS\NAYA\filehq",
         "tagline": "File intelligence engine — merged into Naya",
-        "status_line": "MERGED into Naya (C:\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
+        "status_line": "MERGED into Naya (C:\\APPS\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
         "what": ("FileHQ is the file-intelligence subsystem of Naya. It indexes the user's "
                  "documents, makes them searchable, and serves them to the Naya bot as a "
                  "retrieval source. It started as a standalone POC and was folded into Naya "
@@ -36,7 +36,7 @@ PROJECTS = {
     },
     "openclaw": {
         "name": "OpenClaw",
-        "path": r"C:\OC",
+        "path": r"C:\APPS\OC",
         "tagline": "Autonomous AI agent platform",
         "status_line": "Active production — 6 custom agents on a WSL gateway.",
         "what": ("OpenClaw is an autonomous AI agent platform running on WSL. It exposes a "
@@ -49,7 +49,7 @@ PROJECTS = {
     },
     "mq": {
         "name": "MQ",
-        "path": r"C:\MQ",
+        "path": r"C:\APPS\MQ",
         "tagline": "Maia Quiddam — autonomous social media persona",
         "status_line": "New project — early build.",
         "what": ("MQ (Maia Quiddam) is an autonomous AI social media persona for Facebook, "
@@ -60,7 +60,7 @@ PROJECTS = {
     },
     "autopdf": {
         "name": "AutoPDF",
-        "path": r"C:\AutoPDF",
+        "path": r"C:\APPS\AutoPDF",
         "tagline": "Local-only PDF toolkit",
         "status_line": "Active dev — phase 2c.",
         "what": ("AutoPDF is a self-contained PDF toolkit that converts, splits, extracts "
@@ -71,7 +71,7 @@ PROJECTS = {
     },
     "cognibase": {
         "name": "CogniBase",
-        "path": r"C:\CogniBase",
+        "path": r"C:\APPS\CogniBase",
         "tagline": "OnBase-aware AI knowledge platform",
         "status_line": "Pre-POC — architecture and connectors being scoped.",
         "what": ("CogniBase is a local desktop platform that connects to Hyland OnBase, "
@@ -85,7 +85,7 @@ PROJECTS = {
     },
     "mapsnap": {
         "name": "MapSnap",
-        "path": r"C:\MapSnap",
+        "path": r"C:\APPS\MapSnap",
         "tagline": "Schema intelligence for any enterprise database",
         "status_line": "Active and stable.",
         "what": ("MapSnap is a local-first schema-intelligence tool for ANY enterprise "

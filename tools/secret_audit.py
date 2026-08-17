@@ -29,23 +29,23 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # (id, path) — authoritative list from qi_registry.json (git repos only)
 REPOS = [
-    ("maia",            r"C:\QI"),
-    ("naya",            r"C:\NAYA"),
-    ("nexus",           r"C:\NEXUS"),
-    ("openclaw",        r"C:\OC"),
-    ("mq",              r"C:\MQ"),
-    ("easyflow",        r"C:\EasyFlow"),
+    ("maia",            r"C:\APPS\QI"),
+    ("naya",            r"C:\APPS\NAYA"),
+    ("nexus",           r"C:\APPS\NEXUS"),
+    ("openclaw",        r"C:\APPS\OC"),
+    ("mq",              r"C:\APPS\MQ"),
+    ("easyflow",        r"C:\APPS\EasyFlow"),
     ("qi_hive",         r"C:\QIH"),
-    ("autopdf",         r"C:\AutoPDF"),
-    ("personalsong",    r"C:\PersonalSong"),
-    ("m2v",             r"C:\M2V"),
-    ("cognibase",       r"C:\CogniBase"),
-    ("mapsnap",         r"C:\MapSnap"),
-    ("cypherminer",     r"C:\CypherMiner"),
-    ("lotterywiz",      r"C:\Lottery Wiz"),
-    ("tubescout",       r"C:\TUBESCOUT"),
+    ("autopdf",         r"C:\APPS\AutoPDF"),
+    ("personalsong",    r"C:\APPS\PersonalSong"),
+    ("m2v",             r"C:\APPS\M2V"),
+    ("cognibase",       r"C:\APPS\CogniBase"),
+    ("mapsnap",         r"C:\APPS\MapSnap"),
+    ("cypherminer",     r"C:\APPS\CypherMiner"),
+    ("lotterywiz",      r"C:\APPS\Lottery Wiz"),
+    ("tubescout",       r"C:\APPS\TUBESCOUT"),
     ("avatarstudio",    r"C:\1-AI\APPS\AvatarStudio"),
-    ("claude_manager",  r"C:\CLAUDE"),
+    ("claude_manager",  r"C:\APPS\CLAUDE"),
 ]
 
 OUT_DIR = Path(r"C:\QIH\logs\secret_audit")

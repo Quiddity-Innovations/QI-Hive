@@ -93,15 +93,15 @@ Your dispatch appears on the Hive Dashboard as a card. Renne clicks **Approve** 
 | Project | Path | Status |
 |---|---|---|
 | QI Hive | `C:\QIH` | ✅ At final location |
-| Maia | `C:\QI` | Migrates to `C:\QIP\Maia` eventually |
-| Naya | `C:\NAYA` | Migrates to `C:\QIP\Naya` eventually |
-| NEXUS | `C:\NEXUS` | Migrates to `C:\QIP\NEXUS` eventually |
-| OpenClaw | `C:\OC` | Migrates to `C:\QIP\OC` eventually |
-| MQ | `C:\MQ` | Migrates to `C:\QIP\MQ` eventually |
-| EasyFlow | `C:\EasyFlow` | Migrates to `C:\QIP\EasyFlow` eventually |
+| Maia | `C:\APPS\QI` | Migrates to `C:\APPS\QIP\Maia` eventually |
+| Naya | `C:\APPS\NAYA` | Migrates to `C:\APPS\QIP\Naya` eventually |
+| NEXUS | `C:\APPS\NEXUS` | Migrates to `C:\APPS\QIP\NEXUS` eventually |
+| OpenClaw | `C:\APPS\OC` | Migrates to `C:\APPS\QIP\OC` eventually |
+| MQ | `C:\APPS\MQ` | Migrates to `C:\APPS\QIP\MQ` eventually |
+| EasyFlow | `C:\APPS\EasyFlow` | Migrates to `C:\APPS\QIP\EasyFlow` eventually |
 | QI-Universal | `C:\UNIVERSAL` | Infrastructure — stays |
 
-**Rule:** migrations happen one project at a time. `C:\QIP` exists but is empty. After all projects move, `C:\QI` is renamed `C:\QIB` (QI Business).
+**Rule:** migrations happen one project at a time. `C:\APPS\QIP` exists but is empty. After all projects move, `C:\APPS\QI` is renamed `C:\QIB` (QI Business).
 
 ## That's it
 

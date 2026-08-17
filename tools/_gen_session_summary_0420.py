@@ -26,7 +26,7 @@ for item in [
     "one module renders Maia-style 7-tab status pages for any project with an INTRO folder.",
     "INTRO folders seeded for 4 projects: Naya (6 files), NEXUS (6 files), EasyFlow (6 files), "
     "QI Hive (6 files). Total: 24 new status JSON/MD files. Sourced from each project's docs + code.",
-    "Gap 1 — SessionStart hook upgraded x4: C:\\QI, C:\\NAYA, C:\\NEXUS, C:\\EasyFlow all now call "
+    "Gap 1 — SessionStart hook upgraded x4: C:\\APPS\\QI, C:\\APPS\\NAYA, C:\\APPS\\NEXUS, C:\\APPS\\EasyFlow all now call "
     "session_bootstrap.py which injects Brain context + LATEST.md as additionalContext.",
     "Gap 2 — Stop hook upgraded x4: session_stop.py parses Claude transcript, extracts decisions, "
     "posts qi.log_session + qi.log_decision to Brain automatically on session close.",
@@ -35,7 +35,7 @@ for item in [
     "Gap 4+5 — decisions/features backfill: backfill_decisions.py processes all 58 session summary "
     "docx files using local qwen2.5:7b via ollama. Extracts structured decisions + features, "
     "posts to Brain API. Expected: 7->80+ decisions, 1->50+ features.",
-    "Permission prompts permanently suppressed: C:\\CLAUDE\\.claude\\settings.json (new) + "
+    "Permission prompts permanently suppressed: C:\\APPS\\CLAUDE\\.claude\\settings.json (new) + "
     "global settings.json updated with .claude/** allow patterns + bypassPermissions.",
     "LATEST.md rewritten as full cross-session broadcast for 2026-04-20 changes.",
 ]:
@@ -104,15 +104,15 @@ for f in [
     "C:\\QIH\\tools\\backfill_decisions.py (NEW)",
     "C:\\QIH\\docs\\LATEST.md (UPDATED)",
     "C:\\QIH\\docs\\BLOCKERS_FOR_RENNE.md (UPDATED)",
-    "C:\\CLAUDE\\.claude\\settings.json (NEW)",
+    "C:\\APPS\\CLAUDE\\.claude\\settings.json (NEW)",
     "C:\\Users\\renne\\.claude\\settings.json (UPDATED — .claude/** allows)",
     "C:\\Users\\renne\\.claude\\commands\\catchup.md (NEW)",
     "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\feedback_modus_operandi.md (NEW)",
-    "C:\\QI\\.claude\\settings.json, C:\\NAYA\\.claude\\settings.json (UPDATED)",
-    "C:\\NEXUS\\.claude\\settings.json, C:\\EasyFlow\\.claude\\settings.json (UPDATED)",
-    "C:\\NAYA\\INTRO\\ — 6 files (NEW)",
-    "C:\\NEXUS\\INTRO\\ — 6 files (NEW)",
-    "C:\\EasyFlow\\INTRO\\ — 6 files (NEW)",
+    "C:\\APPS\\QI\\.claude\\settings.json, C:\\APPS\\NAYA\\.claude\\settings.json (UPDATED)",
+    "C:\\APPS\\NEXUS\\.claude\\settings.json, C:\\APPS\\EasyFlow\\.claude\\settings.json (UPDATED)",
+    "C:\\APPS\\NAYA\\INTRO\\ — 6 files (NEW)",
+    "C:\\APPS\\NEXUS\\INTRO\\ — 6 files (NEW)",
+    "C:\\APPS\\EasyFlow\\INTRO\\ — 6 files (NEW)",
     "C:\\QIH\\INTRO\\ — 6 files (NEW)",
 ]:
     doc.add_paragraph(f, style="List Bullet")

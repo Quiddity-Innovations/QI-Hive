@@ -32,8 +32,8 @@ This is the canonical roster of every Quiddity Innovations conversational bot �
 - Group-chat awareness: cheer probability, chatter probability, approval workflow
 
 **Where she lives:**
-- Code: `C:/QI/maia_server.py` (FastAPI) — 8000+ lines
-- DB: `C:/QI/maia.db` (config, sessions, group approvals, multi-channel state)
+- Code: `C:/APPS/QI/maia_server.py` (FastAPI) — 8000+ lines
+- DB: `C:/APPS/QI/maia.db` (config, sessions, group approvals, multi-channel state)
 - Service: `QI_MaiaBot` (NSSM, port 8001)
 - LINE webhook: `/maia/webhook` on the existing tunnel
 - Telegram: webhook auto-registered on startup
@@ -60,11 +60,11 @@ This is the canonical roster of every Quiddity Innovations conversational bot �
 - LINE: NEW — Naya Patel `@914violz`, wired via `naya_line.py` module (~190 lines)
 
 **Where she lives:**
-- Code: `C:/NAYA/naya_server.py` (Flask) + `C:/NAYA/naya_line.py` (LINE handler)
-- DB: `C:/NAYA/naya.db` + `naya_brain.db`
+- Code: `C:/APPS/NAYA/naya_server.py` (Flask) + `C:/APPS/NAYA/naya_line.py` (LINE handler)
+- DB: `C:/APPS/NAYA/naya.db` + `naya_brain.db`
 - Service: `QI_NayaBot` (NSSM, port 8002)
 - LINE webhook: `/webhook/line` via STATIC NAMED tunnel → **https://naya-line.quiddityinnovations.com/webhook/line** (qi-naya ingress, port 8002). ⚠️ Re-register this URL in the LINE Developer Console.
-- Secrets: `C:/NAYA/secrets/naya-line.env` (Win) + `~/.openclaw/secrets/naya-line.env` (WSL mirror, 0600)
+- Secrets: `C:/APPS/NAYA/secrets/naya-line.env` (Win) + `~/.openclaw/secrets/naya-line.env` (WSL mirror, 0600)
 
 **Persona:**
 - Direct, precise, intellectually curious. Renne is technical — Naya never dumbs things down.
@@ -92,7 +92,7 @@ Per Renne's "identity-as-feature" call (2026-05-14): a separate OpenClaw agent t
 - LINE brain: `~/.openclaw/agents/tasuke-line/agent/` + workspace `~/.openclaw/agents/tasuke-line/workspace/` (mirrored from main)
 - LINE webhook: routed by OpenClaw gateway at `127.0.0.1:18789/line/webhook` (account `tasuke-line`)
 - Tunnel: STATIC NAMED → **https://oc-line.quiddityinnovations.com/line/webhook** (qi-kaze ingress, port 18789; shared with Kaze). ⚠️ Re-register in LINE console.
-- Secrets: `C:/OC/secrets/tasuke-line.env` + WSL mirror
+- Secrets: `C:/APPS/OC/secrets/tasuke-line.env` + WSL mirror
 
 **Notes:**
 - LINE display name is currently **"Tasuke"** (no surname). Rename to "Tasuke Hattori" available **on/after 2026-05-21** (LINE's 7-day rename cooldown blocks earlier change).
@@ -125,7 +125,7 @@ Per Renne's "identity-as-feature" call (2026-05-14): a separate OpenClaw agent t
 - IDENTITY: `~/.openclaw/agents/kaze/workspace/IDENTITY.md` (updated 2026-05-14 with new bio)
 - LINE webhook: same OpenClaw gateway as Tasuke (`/line/webhook`, account `kaze-line`)
 - Tunnel: shared with Tasuke → STATIC NAMED **https://oc-line.quiddityinnovations.com/line/webhook** (qi-kaze ingress, port 18789).
-- Secrets: `C:/OC/secrets/kaze-line.env` + WSL mirror
+- Secrets: `C:/APPS/OC/secrets/kaze-line.env` + WSL mirror
 
 ---
 

@@ -23,7 +23,7 @@ from pathlib import Path
 # INTRO dirs that don't follow <path>\INTRO (mirror dashboard/project_status.py overrides)
 INTRO_OVERRIDES = {
     "qi_brain": r"C:\QIH\engine\brain\INTRO",
-    "filehq":   r"C:\NAYA\filehq\INTRO",
+    "filehq":   r"C:\APPS\NAYA\filehq\INTRO",
 }
 
 SIX_FILES = ["status_intro.md", "status_documentation.json",

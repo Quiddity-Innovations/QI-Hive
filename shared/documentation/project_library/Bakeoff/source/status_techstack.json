@@ -53,7 +53,7 @@
   "descriptions": [
     {
       "title": "Stack",
-      "body": "Pure-Python eval rig at C:\\QIP\\Bakeoff. No service, no port — run on demand. Same gpt-oss-20b brain on both sides; smoke test 10/10 (2026-07-06); Renne runs the full suite and decides."
+      "body": "Pure-Python eval rig at C:\\APPS\\QIP\\Bakeoff. No service, no port — run on demand. Same gpt-oss-20b brain on both sides; smoke test 10/10 (2026-07-06); Renne runs the full suite and decides."
     }
   ]
 }

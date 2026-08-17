@@ -74,7 +74,7 @@ Everything needed to reproduce this project. Updated as phases add components.
 | `edge-tts` (Python) | Free neural narration (Andrew/Ava voices) |
 | Pillow (Python) | Renders 1080p frames incl. flat 2D animated cartoon characters (Kroger-commercial style) |
 | FFmpeg | Assembles frames + narration into MP4 |
-| Existing QI pipeline | `C:\CLAUDE\Tools\build_bu_videos.py` — being extended with a character-animation layer |
+| Existing QI pipeline | `C:\APPS\CLAUDE\Tools\build_bu_videos.py` — being extended with a character-animation layer |
 
 ---
 
@@ -205,14 +205,14 @@ aws ssm put-parameter --name /qi/maia/line_channel_secret --type SecureString --
 In our run, a short Python script read the secret from the local `secrets\maia.env` and piped it straight to this command so the value never appeared on screen or in logs. Standard SSM parameters + default KMS encryption = free.
 
 ### 2.3 The Lambda function ✅
-Code: [`C:\QI\TOOLS\aws_relay\lambda_function.py`](C:\QI\TOOLS\aws_relay\lambda_function.py) — ~80 lines, stdlib + boto3 only. What it does per request:
+Code: [`C:\APPS\QI\TOOLS\aws_relay\lambda_function.py`](C:\APPS\QI\TOOLS\aws_relay\lambda_function.py) — ~80 lines, stdlib + boto3 only. What it does per request:
 1. Reject if `X-Line-Signature` header is missing → 403
 2. Compute HMAC-SHA256 of the raw body with the channel secret (fetched from SSM once per warm container); constant-time compare → 403 on mismatch. **This signature check is the security layer that makes a public URL safe.**
 3. Parse the webhook JSON; enqueue each event to SQS with `MessageGroupId` = LINE user/group/room ID (preserves per-conversation order)
 4. Return 200 fast — LINE only needs an ack; the real reply happens later from home
 
 ### 2.4 Deploy: role + function + public URL ⏳
-Deployment script: [`C:\QI\TOOLS\aws_relay\deploy_lambda.py`](C:\QI\TOOLS\aws_relay\deploy_lambda.py) — idempotent (safe to re-run). It:
+Deployment script: [`C:\APPS\QI\TOOLS\aws_relay\deploy_lambda.py`](C:\APPS\QI\TOOLS\aws_relay\deploy_lambda.py) — idempotent (safe to re-run). It:
 1. Creates execution role `qi-maia-webhook-role` — trust policy allows only `lambda.amazonaws.com`; permissions are exactly three: `sqs:SendMessage` on our queue, `ssm:GetParameter` on our one parameter, CloudWatch logs
 2. Zips + creates/updates function `qi-maia-webhook` (python3.12, 128 MB, 10 s timeout — smallest possible footprint)
 3. Creates a **Function URL** with auth `NONE` (public — that's what LINE needs to reach; step 2.3's signature check does the authenticating) and prints the webhook URL
@@ -249,10 +249,10 @@ LINE replies (via reply token) are free/unlimited but tokens die in ~1 min; push
 ⚠️ Without the freshness check, ALL relayed replies would be pushes and the monthly quota would die in days. Design rule: **push is for backlog only.**
 
 ### 3.3 The drainer
-[`C:\QI\TOOLS\aws_relay\queue_drainer.py`](C:\QI\TOOLS\aws_relay\queue_drainer.py): boto3 long-poll (20 s) on the FIFO queue → loopback POST (180 s timeout — LLM replies are slow) → delete on 200. Verdict logic: `ok`/4xx → delete (4xx = poison message, logged, never loops), 5xx/unreachable → leave for retry via visibility timeout. Heartbeat log line every 10 min. Logs: `C:\QI\LOGS\queue_drain_log.txt` + service log `C:\QIH\logs\maia_queue_drain.log`.
+[`C:\APPS\QI\TOOLS\aws_relay\queue_drainer.py`](C:\APPS\QI\TOOLS\aws_relay\queue_drainer.py): boto3 long-poll (20 s) on the FIFO queue → loopback POST (180 s timeout — LLM replies are slow) → delete on 200. Verdict logic: `ok`/4xx → delete (4xx = poison message, logged, never loops), 5xx/unreachable → leave for retry via visibility timeout. Heartbeat log line every 10 min. Logs: `C:\APPS\QI\LOGS\queue_drain_log.txt` + service log `C:\QIH\logs\maia_queue_drain.log`.
 
 ### 3.4 Service installation (via elevation broker)
-Installed as **QI_MaiaQueueDrain** through the QI_Elevate broker (7 whitelisted `nssm` calls: install, AppDirectory, Description, Start, AppStdout, AppStderr, start). The broker whitelist only accepts service scripts under `C:\QIH|C:\QIP`, so a 3-line **launcher shim** (`C:\QIH\engine\relay\maia_queue_drain_service.py`, `runpy.run_path` → real drainer) bridges to the Maia project without weakening the policy. AWS credentials: the service runs as LocalSystem, so the drainer pins `AWS_SHARED_CREDENTIALS_FILE` to the workstation user's credentials file explicitly.
+Installed as **QI_MaiaQueueDrain** through the QI_Elevate broker (7 whitelisted `nssm` calls: install, AppDirectory, Description, Start, AppStdout, AppStderr, start). The broker whitelist only accepts service scripts under `C:\QIH|C:\APPS\QIP`, so a 3-line **launcher shim** (`C:\QIH\engine\relay\maia_queue_drain_service.py`, `runpy.run_path` → real drainer) bridges to the Maia project without weakening the policy. AWS credentials: the service runs as LocalSystem, so the drainer pins `AWS_SHARED_CREDENTIALS_FILE` to the workstation user's credentials file explicitly.
 
 ### 3.5 Shadow test (before cutover)
 With LINE still pointed at the tunnel, a synthetic signed event was POSTed to the **Lambda URL**: Lambda → SQS → drainer → local server → LLM reply → push delivered to the owner's real LINE. Full-path proof with zero production risk.

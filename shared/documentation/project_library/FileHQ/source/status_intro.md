@@ -9,7 +9,7 @@ It turns millions of loose files spread across a drive into one queryable, dedup
 index — without moving a single file until you explicitly approve it.
 
 FileHQ began as a **standalone proof-of-concept** at `C:\FileHQ` (port 8000). It has since been
-**merged into Naya** and now lives at `C:\NAYA\filehq\`. Naya — Quiddity's personal-assistant bot —
+**merged into Naya** and now lives at `C:\APPS\NAYA\filehq\`. Naya — Quiddity's personal-assistant bot —
 consumes FileHQ as its **file brain**: when you ask Naya "how many duplicates do I have?" or "what's
 taking up space on F:?", Naya queries the FileHQ index (read-only by default) and answers from live data.
 
@@ -17,9 +17,9 @@ taking up space on F:?", Naya queries the FileHQ index (read-only by default) an
 
 > **FileHQ is no longer a separate product.** It is a **sub-engine of Naya**.
 > Registry status is `merged_into_naya`. The original `C:\FileHQ` is retired and marked for deletion;
-> the engine code is the package `filehq/` under the Naya project root (`C:\NAYA\filehq\`).
+> the engine code is the package `filehq/` under the Naya project root (`C:\APPS\NAYA\filehq\`).
 > FileHQ does **not** run as its own `QI_*` Windows service — it is started by Naya, and Naya talks to it
-> through `C:\NAYA\filehq_bridge.py`. Read paths (search, stats, duplicates) are always allowed;
+> through `C:\APPS\NAYA\filehq_bridge.py`. Read paths (search, stats, duplicates) are always allowed;
 > file **moves and deletes require explicit owner approval** in the same message.
 
 ## The Problem It Solves
@@ -80,4 +80,4 @@ file-intelligence layer for any QI project. The 8000–8099 port block stays res
 be split back out.
 
 ---
-*This page is editable at `C:\NAYA\filehq\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\NAYA\filehq\INTRO\status_intro.md` — save and click Refresh to update.*

@@ -39,7 +39,7 @@
     "features": [
       {"name": "\"The Quant\" chat", "description": "An AI analyst answers questions strictly from your live panels — standings, squad scores, the betting window, Kalshi — in expected-value and edge terms, and refuses to invent outside facts.", "status": "live", "notes": "Grounded system prompt + JSON snapshot of the panels; audited by audit_ai.py"},
       {"name": "Choose your AI engine", "description": "Use a free local AI (Ollama) or any major cloud provider — OpenRouter, OpenAI, Anthropic, Google, xAI, Azure, or a custom endpoint.", "status": "live", "notes": "Provider chosen in Settings; keys stay in the browser's localStorage"},
-      {"name": "Free shared AI (no setup)", "description": "Out of the box the AI works with no key: the proxy holds a shared OpenRouter key server-side and falls back through free models if one is busy.", "status": "live", "notes": "OpenRouter key shared from C:\\QI\\maia.db; proxied so the browser never sees it; free-model fallback chain"},
+      {"name": "Free shared AI (no setup)", "description": "Out of the box the AI works with no key: the proxy holds a shared OpenRouter key server-side and falls back through free models if one is busy.", "status": "live", "notes": "OpenRouter key shared from C:\\APPS\\QI\\maia.db; proxied so the browser never sees it; free-model fallback chain"},
       {"name": "Shared-AI access code", "description": "When shared over the public tunnel, the AI can be gated by an access code; change the code and stale users are instantly locked out with a friendly 'set up your own AI' message.", "status": "live", "notes": "Only tunnel traffic is gated (Cloudflare headers); local/exe use is never gated"}
     ]
   },
@@ -55,7 +55,7 @@
   {
     "category": "QI Ecosystem Integration",
     "features": [
-      {"name": "Shared OpenRouter key", "description": "Reuses the one OpenRouter key the ecosystem already has (from Maia), so there's no separate key to manage.", "status": "live", "notes": "Reads system.openrouter_api_key from C:\\QI\\maia.db, like MapSnap"},
+      {"name": "Shared OpenRouter key", "description": "Reuses the one OpenRouter key the ecosystem already has (from Maia), so there's no separate key to manage.", "status": "live", "notes": "Reads system.openrouter_api_key from C:\\APPS\\QI\\maia.db, like MapSnap"},
       {"name": "Registered service + public tunnel", "description": "Runs as a managed Windows service and is reachable on a stable public web address through the ecosystem's tunnel system.", "status": "live", "notes": "QI_GamezProxy (NSSM) + QI_GamezTunnel → gamez.quiddityinnovations.com"},
       {"name": "Registry-governed ports", "description": "Uses its allocated port block from the QI ecosystem registry rather than a random port.", "status": "live", "notes": "Block 8710-8719; proxy on 8710"},
       {"name": "QI Brain logging", "description": "Register Gamez sessions and decisions in the QI Brain for cross-project memory.", "status": "planned", "notes": "Not yet wired"}

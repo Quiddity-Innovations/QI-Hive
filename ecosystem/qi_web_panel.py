@@ -45,7 +45,7 @@ PROJECTS = {
     "maia": {
         "name": "Maia",
         "subtitle": "AI assistant platform · multi-channel",
-        "path": r"C:\QI",
+        "path": r"C:\APPS\QI",
         "color": "#6366f1",
         "ports": [
             {"label": "API",       "port": 8001, "url": "http://localhost:8001/health"},
@@ -57,15 +57,15 @@ PROJECTS = {
             {"name": "MaiaDemoTunnel",  "label": "Demo tunnel (exposes 7860)"},
         ],
         "logs": [
-            {"label": "maia_log.txt",         "path": r"C:\QI\logs\maia_log.txt"},
-            {"label": "tunnel_log.txt",       "path": r"C:\QI\logs\tunnel_log.txt"},
-            {"label": "demo_tunnel_log.txt",  "path": r"C:\QI\logs\demo_tunnel_log.txt"},
-            {"label": "maia_error.txt",       "path": r"C:\QI\logs\maia_error.txt"},
+            {"label": "maia_log.txt",         "path": r"C:\APPS\QI\logs\maia_log.txt"},
+            {"label": "tunnel_log.txt",       "path": r"C:\APPS\QI\logs\tunnel_log.txt"},
+            {"label": "demo_tunnel_log.txt",  "path": r"C:\APPS\QI\logs\demo_tunnel_log.txt"},
+            {"label": "maia_error.txt",       "path": r"C:\APPS\QI\logs\maia_error.txt"},
         ],
-        "tunnel_log":    r"C:\QI\logs\tunnel_log.txt",
+        "tunnel_log":    r"C:\APPS\QI\logs\tunnel_log.txt",
         "tunnels": [
-            {"label": "Webhooks tunnel (MaiaTunnel)", "serves_port": 8001, "log": r"C:\QI\logs\tunnel_log.txt"},
-            {"label": "Demo tunnel (MaiaDemoTunnel)", "serves_port": 7860, "log": r"C:\QI\LOGS\Maia_Gradio_Tunnel_Log.txt"},
+            {"label": "Webhooks tunnel (MaiaTunnel)", "serves_port": 8001, "log": r"C:\APPS\QI\logs\tunnel_log.txt"},
+            {"label": "Demo tunnel (MaiaDemoTunnel)", "serves_port": 7860, "log": r"C:\APPS\QI\LOGS\Maia_Gradio_Tunnel_Log.txt"},
         ],
         "pages": [
             {"label": "Gradio Chat UI",       "url": "http://localhost:7860",                    "desc": "Main chat interface"},
@@ -82,7 +82,7 @@ PROJECTS = {
     "naya": {
         "name": "Naya",
         "subtitle": "File intelligence + brain · sibling bot",
-        "path": r"C:\NAYA",
+        "path": r"C:\APPS\NAYA",
         "color": "#22c55e",
         "ports": [
             {"label": "API",        "port": 8002, "url": "http://localhost:8002/health"},
@@ -95,12 +95,12 @@ PROJECTS = {
             {"name": "NayaTunnel",  "label": "Naya Cloudflare tunnel"},
         ],
         "logs": [
-            {"label": "naya log",  "path": r"C:\NAYA\logs\naya_log.txt"},
-            {"label": "tunnel log","path": r"C:\NAYA\logs\tunnel_log.txt"},
+            {"label": "naya log",  "path": r"C:\APPS\NAYA\logs\naya_log.txt"},
+            {"label": "tunnel log","path": r"C:\APPS\NAYA\logs\tunnel_log.txt"},
         ],
-        "tunnel_log": r"C:\NAYA\logs\tunnel_log.txt",
+        "tunnel_log": r"C:\APPS\NAYA\logs\tunnel_log.txt",
         "tunnels": [
-            {"label": "Gradio tunnel (NayaTunnel)", "serves_port": 7861, "log": r"C:\NAYA\LOGS\naya_tunnel_error.txt"},
+            {"label": "Gradio tunnel (NayaTunnel)", "serves_port": 7861, "log": r"C:\APPS\NAYA\LOGS\naya_tunnel_error.txt"},
         ],
         "pages": [
             {"label": "Gradio UI",     "url": "http://localhost:7861",         "desc": "Main Naya chat/admin"},
@@ -112,7 +112,7 @@ PROJECTS = {
     "nexus": {
         "name": "NEXUS",
         "subtitle": "Multi-AI orchestration · scout/synthesize",
-        "path": r"C:\NEXUS",
+        "path": r"C:\APPS\NEXUS",
         "color": "#f59e0b",
         "ports": [
             {"label": "API", "port": 8010, "url": "http://localhost:8010/health"},
@@ -123,12 +123,12 @@ PROJECTS = {
             {"name": "NEXUSTunnel",  "label": "NEXUS Cloudflare tunnel"},
         ],
         "logs": [
-            {"label": "nexus log",  "path": r"C:\NEXUS\logs\nexus_log.txt"},
-            {"label": "tunnel log", "path": r"C:\NEXUS\logs\tunnel_log.txt"},
+            {"label": "nexus log",  "path": r"C:\APPS\NEXUS\logs\nexus_log.txt"},
+            {"label": "tunnel log", "path": r"C:\APPS\NEXUS\logs\tunnel_log.txt"},
         ],
-        "tunnel_log": r"C:\NEXUS\logs\tunnel_log.txt",
+        "tunnel_log": r"C:\APPS\NEXUS\logs\tunnel_log.txt",
         "tunnels": [
-            {"label": "UI tunnel (NEXUSTunnel)", "serves_port": 7880, "log": r"C:\NEXUS\LOGS\nexus_tunnel.log"},
+            {"label": "UI tunnel (NEXUSTunnel)", "serves_port": 7880, "log": r"C:\APPS\NEXUS\LOGS\nexus_tunnel.log"},
         ],
         "pages": [
             {"label": "NEXUS UI",      "url": "http://localhost:7880",        "desc": "Main interface"},
@@ -140,7 +140,7 @@ PROJECTS = {
     "oc": {
         "name": "OpenClaw (OC)",
         "subtitle": "Autonomous orchestrator · WSL-based",
-        "path": r"C:\OC",
+        "path": r"C:\APPS\OC",
         "color": "#ec4899",
         "ports": [
             {"label": "Gateway",   "port": 18789, "url": "http://127.0.0.1:18789"},
@@ -150,10 +150,10 @@ PROJECTS = {
             {"name": "OC-Keepalive-Service", "label": "OC keepalive monitor"},
         ],
         "logs": [
-            {"label": "keepalive daemon",  "path": r"C:\OC\logs\keepalive.log"},
-            {"label": "ChatGPT keepalive", "path": r"C:\OC\logs\chatgpt_keepalive.log"},
-            {"label": "WSL watchdog",      "path": r"C:\OC\logs\wsl_watchdog.log"},
-            {"label": "Kaze digest",       "path": r"C:\OC\logs\kaze_digest.log"},
+            {"label": "keepalive daemon",  "path": r"C:\APPS\OC\logs\keepalive.log"},
+            {"label": "ChatGPT keepalive", "path": r"C:\APPS\OC\logs\chatgpt_keepalive.log"},
+            {"label": "WSL watchdog",      "path": r"C:\APPS\OC\logs\wsl_watchdog.log"},
+            {"label": "Kaze digest",       "path": r"C:\APPS\OC\logs\kaze_digest.log"},
         ],
         "tunnel_log": None,
         "tunnels": [],

@@ -73,7 +73,7 @@ M2V is in **early scaffold** phase. The skeleton runs; the heavy generative stag
 
 ## Ports & Home
 
-- **Path:** `C:\M2V`
+- **Path:** `C:\APPS\M2V`
 - **API port:** 8501 (block 8500–8599)
 - **UI port:** 7841 (block 7840–7849)
 - **Family tier:** cousin
@@ -86,4 +86,4 @@ no cloud, no per-render bill, no leaked masters. Eventually wired to **PersonalS
 there flows straight into M2V for its visual.
 
 ---
-*This page is editable at `C:\M2V\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\M2V\INTRO\status_intro.md` — save and click Refresh to update.*

@@ -59,4 +59,4 @@ The model never claims to predict a winner. It estimates a single per-match win 
 The same codebase runs three ways: from `file://` (the HTML alone, degraded — no live data), served by the proxy at `http://localhost:8710/` (full, same-origin), or as a portable `.exe` that bundles the proxy and opens in its own native OS webview window. The bundled config is key-sanitized, and a friend without the shared key can paste their own or run a free local Ollama.
 
 ---
-*This page is editable at `C:\Gamez\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\Gamez\INTRO\status_intro.md` — save and click Refresh to update.*

@@ -6,11 +6,11 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 PROJECTS = {
  "FidelityAnalyzer": r"C:\FidelityAnalyzer",
- "CypherMiner":      r"C:\CypherMiner",
- "LotteryWiz":       r"C:\Lottery Wiz",
- "TubeScout":        r"C:\TUBESCOUT",
- "M2V":              r"C:\M2V",
- "PersonalSong":     r"C:\PersonalSong",
+ "CypherMiner":      r"C:\APPS\CypherMiner",
+ "LotteryWiz":       r"C:\APPS\Lottery Wiz",
+ "TubeScout":        r"C:\APPS\TUBESCOUT",
+ "M2V":              r"C:\APPS\M2V",
+ "PersonalSong":     r"C:\APPS\PersonalSong",
  "AvatarStudio":     r"C:\1-AI\APPS\AvatarStudio",
  "DigitizationCostTool": r"C:\Users\renne\Downloads\DIGITIZATION COSTS",
 }

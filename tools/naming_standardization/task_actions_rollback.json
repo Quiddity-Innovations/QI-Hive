@@ -1,22 +1,22 @@
 ﻿[
     {
-        "from":  "--headless cmd /c \"C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_BridgeHealth.bat\"",
-        "to":  "--headless cmd /c \"C:\\CLAUDE\\Claude Voice\\run_bridge_health.bat\"",
+        "from":  "--headless cmd /c \"C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Run_BridgeHealth.bat\"",
+        "to":  "--headless cmd /c \"C:\\APPS\\CLAUDE\\Claude Voice\\run_bridge_health.bat\"",
         "task":  "QI_ClaudeVoiceBridgeCheck"
     },
     {
-        "from":  "--headless cmd.exe /c \"C:\\CLAUDE\\Claude Voice\\ClaudeVoice_Start_MeetingRoom.bat\"",
-        "to":  "--headless cmd.exe /c \"C:\\CLAUDE\\Claude Voice\\start_meeting_room.bat\"",
+        "from":  "--headless cmd.exe /c \"C:\\APPS\\CLAUDE\\Claude Voice\\ClaudeVoice_Start_MeetingRoom.bat\"",
+        "to":  "--headless cmd.exe /c \"C:\\APPS\\CLAUDE\\Claude Voice\\start_meeting_room.bat\"",
         "task":  "QI_ClaudeVoiceMeeting_8AM"
     },
     {
-        "from":  "--headless cmd.exe /c \"C:\\TUBESCOUT\\TubeScout_Run_Cycle.bat\"",
-        "to":  "--headless cmd.exe /c \"C:\\TUBESCOUT\\run_cycle.bat\"",
+        "from":  "--headless cmd.exe /c \"C:\\APPS\\TUBESCOUT\\TubeScout_Run_Cycle.bat\"",
+        "to":  "--headless cmd.exe /c \"C:\\APPS\\TUBESCOUT\\run_cycle.bat\"",
         "task":  "QI_TubeScout_AM"
     },
     {
-        "from":  "--headless cmd.exe /c \"C:\\TUBESCOUT\\TubeScout_Run_Cycle.bat\"",
-        "to":  "--headless cmd.exe /c \"C:\\TUBESCOUT\\run_cycle.bat\"",
+        "from":  "--headless cmd.exe /c \"C:\\APPS\\TUBESCOUT\\TubeScout_Run_Cycle.bat\"",
+        "to":  "--headless cmd.exe /c \"C:\\APPS\\TUBESCOUT\\run_cycle.bat\"",
         "task":  "QI_TubeScout_PM"
     }
 ]

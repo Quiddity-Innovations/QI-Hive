@@ -1,0 +1,122 @@
+2026-08-16T17:37:20-04:00 [START] qi-health-snapshot -> Get-QIHealth.ps1 args=[]
+?# : The term '?#' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At C:\QIH\dispatch\scripts\Get-QIHealth.ps1:1 char:1
++ ?# ============================================================
++ ~~
+    + CategoryInfo          : ObjectNotFound: (?#:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+===== QI health snapshot 2026-08-16 17:37:20 on POWERSPEC =====
+
+--- QI_* Windows services ---
+QI_AutoPDF                 Stopped
+QI_AutoPDFMCP              Running
+QI_AutoPDFTunnel           Running
+QI_BrainAPI                Running
+QI_Caddy                   Running
+QI_ClaudeVoiceControl      Running
+QI_ClaudeVoiceLine         Running
+QI_ClaudeVoiceTelegram     Running
+QI_ClaudeVoiceTunnel       Running
+QI_CogniBase               Running
+QI_CogniBaseTunnel         Running
+QI_ConnectorMCP            Running
+QI_ConnectorTunnel         Running
+QI_CypherMinerTunnel       Running
+QI_CypherMinerUI           Running
+QI_Dashboard               Running
+QI_DashboardTunnel         Running
+QI_Elevate                 Running
+QI_GamezProxy              Running
+QI_GamezQuantProxy         Stopped
+QI_GamezTunnel             Running
+QI_Gate                    Running
+QI_Headroom                Running
+QI_HiveApply               Running
+QI_HiveIngest              Running
+QI_HiveInspectorDrain      Running
+QI_KazeConfigAPI           Running
+QI_KazeNewsTunnel          Running
+QI_LotteryWiz              Running
+QI_LotteryWizTunnel        Running
+QI_M2VTunnel               Running
+QI_MaiaBot                 Running
+QI_MaiaDemoTunnel          Stopped
+QI_MaiaGradio              Running
+QI_MaiaQueueDrain          Running
+QI_MaiaTunnel              Running
+QI_MapSnap                 Running
+QI_MapSnapBUSetup          Stopped
+QI_MapSnapMCP              Running
+QI_MapSnapMCPBU            Running
+QI_MapSnapTunnel           Running
+QI_MQTunnel                Running
+QI_NayaBot                 Running
+QI_NayaGradio              Running
+QI_NayaTunnel              Running
+QI_NEXUS                   Running
+QI_NexusMCP                Running
+QI_NEXUSTunnel             Running
+QI_PlayDeck                Running
+QI_RetirementAnalyzer      Stopped
+QI_TubeScout               Running
+QI_TubeScoutTunnel         Running
+
+--- Disk space ---
+C:  330.1 GB free of 1861.3 GB  (17.7% free)
+D:  772.7 GB free of 1863 GB  (41.5% free)
+E:  6351 GB free of 18627.8 GB  (34.1% free)
+F:  226.3 GB free of 237.6 GB  (95.2% free)
+G:  17.6 GB free of 29.8 GB  (59.1% free)
+
+--- API /health probes (registered ports) ---
+filehq             api    8000   DOWN
+maia               api    8001   HTTP 200
+maia               ui     7860   OPEN (no /health)
+naya               api    8002   HTTP 200
+naya               ui     7861   OPEN (no /health)
+nexus              api    8010   HTTP 200
+nexus              ui     7880   OPEN (no /health)
+nexus              mcp    8310   HTTP 200
+openclaw           gateway 18789  DOWN
+mq                 api    8500   DOWN
+mq                 ui     7840   DOWN
+easyflow           dashboard 8550   DOWN
+qi_brain           api    9011   HTTP 200
+qi_hive            dashboard 8600   HTTP 200
+autopdf            http   6969   DOWN
+autopdf            mcp    8701   HTTP 200
+cognibase          api    8650   HTTP 200
+mapsnap            api    9876   OPEN (no /health)
+mapsnap            mcp    8651   HTTP 200
+m2v                api    8501   DOWN
+m2v                ui     7841   DOWN
+personalsong       ui     8088   DOWN
+cypherminer        api    8502   DOWN
+cypherminer        ui     7842   OPEN (no /health)
+lotterywiz         api    8777   OPEN (no /health)
+tubescout          api    8503   HTTP 200
+tubescout          ui     7843   DOWN
+retirementanalyzer api    8504   DOWN
+retirementanalyzer ui     7844   DOWN
+avatarstudio       ui     7862   DOWN
+gamez              api    8710   HTTP 200
+gamez              quant  8712   DOWN
+claude_voice       api    8720   HTTP 200
+claude_voice       line   8721   HTTP 200
+claude_voice       webcall 8722   HTTP 200
+claude_voice       voice_api 8725   DOWN
+akiyascout         api    8505   DOWN
+akiyascout         ui     7845   DOWN
+headroom           proxy  9020   HTTP 200
+playdeck           api    8506   HTTP 200
+playdeck           ui     7846   DOWN
+connector          api    9030   HTTP 200
+voice_studio       ui     7863   DOWN
+comfyui            api    8740   DOWN
+mediastudio        ui     7864   DOWN
+filmforge          api    7865   DOWN
+
+Snapshot log: C:\QIH\logs\qi_health_20260816_173720.log
+===== end =====

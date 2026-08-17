@@ -2,7 +2,7 @@
 ### Kroger-style animated explainer · Gate 1 (after M1) · drafted 2026-07-30
 
 **Source of truth:** AWS_Free_Tier_Setup_Guide.md Parts 0–3 (all steps proven live 2026-07-30).
-**Pipeline:** extended `C:\CLAUDE\Tools\build_bu_videos.py` — edge-tts narration (Andrew/Ava) + Pillow flat-2D character frames + FFmpeg. ~4–5 min.
+**Pipeline:** extended `C:\APPS\CLAUDE\Tools\build_bu_videos.py` — edge-tts narration (Andrew/Ava) + Pillow flat-2D character frames + FFmpeg. ~4–5 min.
 **Characters:** "Renne" (builder, at a desk with a PC tower) · "Maia" (friendly bot avatar) · "Postie" (LINE mail-carrier character) · a cloud with a door (Lambda) and a mailbox (SQS).
 
 | # | Scene | Visual | Narration beat |

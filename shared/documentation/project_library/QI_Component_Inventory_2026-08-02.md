@@ -12,33 +12,33 @@ Data sources: per-app `status_techstack.json` files in the project library (buil
 
 | Project / App | Where | Stack summary (top components) |
 |---|---|---|
-| AkiyaScout | C:\AkiyaScout | Python, FastAPI, Uvicorn, Pydantic, Gradio, selectolax |
-| AutoPDF | C:\AutoPDF | Windows PowerShell, AutoPDF-Server.ps1, Vanilla JavaScript, HTML5 + CSS3, C#, Ghostscript |
+| AkiyaScout | C:\APPS\AkiyaScout | Python, FastAPI, Uvicorn, Pydantic, Gradio, selectolax |
+| AutoPDF | C:\APPS\AutoPDF | Windows PowerShell, AutoPDF-Server.ps1, Vanilla JavaScript, HTML5 + CSS3, C#, Ghostscript |
 | AvatarStudio | C:\AvatarStudio | Python, Gradio, Kokoro, edge-tts, soundfile + NumPy + SciPy, LivePortrait |
-| Claude Manager | C:\CLAUDE | Claude Code, Opus / Sonnet / Haiku, Python, PowerShell, Windows Batch, Markdown front-matter agents |
-| Claude Voice | C:\CLAUDE\Claude Voice | Python, FastAPI, Uvicorn, Pydantic, faster-whisper, edge-tts |
-| CogniBase | C:\CogniBase | Python, FastAPI, Uvicorn, Pydantic, python-multipart, ChromaDB |
-| CypherMiner | C:\CypherMiner | TypeScript, Vite, vite-plugin-pwa, Vanilla DOM, CSS variables, Web Crypto API |
+| Claude Manager | C:\APPS\CLAUDE | Claude Code, Opus / Sonnet / Haiku, Python, PowerShell, Windows Batch, Markdown front-matter agents |
+| Claude Voice | C:\APPS\CLAUDE\Claude Voice | Python, FastAPI, Uvicorn, Pydantic, faster-whisper, edge-tts |
+| CogniBase | C:\APPS\CogniBase | Python, FastAPI, Uvicorn, Pydantic, python-multipart, ChromaDB |
+| CypherMiner | C:\APPS\CypherMiner | TypeScript, Vite, vite-plugin-pwa, Vanilla DOM, CSS variables, Web Crypto API |
 | Digitization Cost Tool | (BU consulting tool) | Single-file HTML5, Vanilla JavaScript, Hand-written CSS, Web Storage, Browser print-to-PDF, Python 3 + python-docx |
-| EasyFlow | C:\EasyFlow | Chrome / Edge Extension, JavaScript, Chrome Extension APIs, Google Apps Script, Python + Flask, Jinja2 + HTML/CSS/JS |
+| EasyFlow | C:\APPS\EasyFlow | Chrome / Edge Extension, JavaScript, Chrome Extension APIs, Google Apps Script, Python + Flask, Jinja2 + HTML/CSS/JS |
 | FileHQ | C:\FileHQ | Python, FastAPI, Uvicorn, Jinja2 + StaticFiles, python-multipart, SQLite |
-| Gamez | C:\Gamez | Single-file HTML/CSS/JS, Python, FastAPI, Uvicorn, httpx, APScheduler |
+| Gamez | C:\APPS\Gamez | Single-file HTML/CSS/JS, Python, FastAPI, Uvicorn, httpx, APScheduler |
 | LotteryWiz | C:\LotteryWiz | Python, FastAPI, Uvicorn, Python stdlib, NumPy, httpx |
-| M2V | C:\M2V | Python, FastAPI, Uvicorn, python-multipart, Pydantic, Gradio |
-| MQ | C:\MQ | Python, FastAPI, Uvicorn, Pydantic, Gradio, feedparser |
-| MapSnap | C:\MapSnap | Python, Python stdlib http.server, Single-page HTML / CSS / vanilla JS, SQLite, JSON sidecar files, pyodbc |
-| NEXUS | C:\NEXUS | Python, FastAPI, Uvicorn, Pydantic, Gradio, asyncio |
-| Naya | C:\NAYA | Python, Flask, Anthropic SDK, requests, FastAPI + Uvicorn, Gradio |
-| OpenClaw | C:\OC (WSL) | OpenClaw, WSL — Ubuntu, systemd, Python 3.11 / 3.12, Bash, Node.js |
-| PersonalSong Studio | C:\PersonalSong | Python, FastAPI, Uvicorn, Pydantic, python-multipart + aiofiles, ACE-Step |
+| M2V | C:\APPS\M2V | Python, FastAPI, Uvicorn, python-multipart, Pydantic, Gradio |
+| MQ | C:\APPS\MQ | Python, FastAPI, Uvicorn, Pydantic, Gradio, feedparser |
+| MapSnap | C:\APPS\MapSnap | Python, Python stdlib http.server, Single-page HTML / CSS / vanilla JS, SQLite, JSON sidecar files, pyodbc |
+| NEXUS | C:\APPS\NEXUS | Python, FastAPI, Uvicorn, Pydantic, Gradio, asyncio |
+| Naya | C:\APPS\NAYA | Python, Flask, Anthropic SDK, requests, FastAPI + Uvicorn, Gradio |
+| OpenClaw | C:\APPS\OC (WSL) | OpenClaw, WSL — Ubuntu, systemd, Python 3.11 / 3.12, Bash, Node.js |
+| PersonalSong Studio | C:\APPS\PersonalSong | Python, FastAPI, Uvicorn, Pydantic, python-multipart + aiofiles, ACE-Step |
 | QI Brain | C:\QIH\engine\brain | Python, FastAPI, Uvicorn, Pydantic, JSON-RPC 2.0 over stdio, SQLite |
 | QI Hive | C:\QIH | Python, FastAPI, Uvicorn, Pydantic, AdminLTE, Bootstrap |
-| TubeScout | C:\TUBESCOUT | Python, FastAPI, Uvicorn, Pydantic, Gradio, Server-rendered HTML + CSS + vanilla JS |
+| TubeScout | C:\APPS\TUBESCOUT | Python, FastAPI, Uvicorn, Pydantic, Gradio, Server-rendered HTML + CSS + vanilla JS |
 | PlayDeck *(new since 6/24)* | C:\PlayDeck, :8506 | FastAPI, Uvicorn[standard], httpx, yt-dlp, curl_cffi, python-dotenv |
-| Bakeoff *(new since 6/24)* | C:\QIP\Bakeoff | Hermes Agent, OpenClaw, Ollama, PyYAML, RDAP via stdlib urllib, WSL2 |
-| QI Connector *(new since 6/24)* | C:\QIP\Connector, :9030 | MCP SDK / FastMCP, FastAPI, Uvicorn[standard], httpx, Pydantic, python-docx |
-| Claude Manager Tools — video pipeline *(new since 6/24)* | C:\CLAUDE\Tools | edge-tts, Pillow, FFmpeg, python-docx, AWS CLI, winget + Task Scheduler |
-| Headroom *(new since 6/24)* | C:\CLAUDE\Tools, :9020 | headroom-ai[all], litellm, anthropic SDK, torch/transformers/huggingface-hub/datasets, opentelemetry api/sdk/otlp, NSSM |
+| Bakeoff *(new since 6/24)* | C:\APPS\QIP\Bakeoff | Hermes Agent, OpenClaw, Ollama, PyYAML, RDAP via stdlib urllib, WSL2 |
+| QI Connector *(new since 6/24)* | C:\APPS\QIP\Connector, :9030 | MCP SDK / FastMCP, FastAPI, Uvicorn[standard], httpx, Pydantic, python-docx |
+| Claude Manager Tools — video pipeline *(new since 6/24)* | C:\APPS\CLAUDE\Tools | edge-tts, Pillow, FFmpeg, python-docx, AWS CLI, winget + Task Scheduler |
+| Headroom *(new since 6/24)* | C:\APPS\CLAUDE\Tools, :9020 | headroom-ai[all], litellm, anthropic SDK, torch/transformers/huggingface-hub/datasets, opentelemetry api/sdk/otlp, NSSM |
 | QI MCP Gateway *(new since 6/24)* | C:\QIH\engine\common\qi_mcp_gateway.py | MCP SDK / FastMCP + transport_security, httpx |
 
 ---
@@ -308,21 +308,21 @@ Original Quiddity Innovations code — no upstream, no external author.
 | **QI Hive dashboard + War Room + Library** | FastAPI ops center: mission control, dispatch, compliance, doc Library (:8600) | C:\QIH\engine\hive\dashboard |
 | **QI Brain (API + ChromaDB memory)** | Ecosystem memory: decisions, sessions, features, doc index (:9011) | C:\QIH\engine\brain |
 | **qi_mcp_gateway.py** | Reusable config-driven MCP front door for any QI app (ADAPTERS registry); MapSnap first adopter | C:\QIH\engine\common |
-| **QI Connector** | Remote MCP server for claude.ai / Claude Code (:9030, connector.quiddityinnovations.com) | C:\QIP\Connector |
+| **QI Connector** | Remote MCP server for claude.ai / Claude Code (:9030, connector.quiddityinnovations.com) | C:\APPS\QIP\Connector |
 | **QI_Elevate broker** | Elevation broker for headless admin ops (replaces gsudo) | C:\QIH\engine\common |
 | **qi_registry.py / qi_validator.py / qi_new_project.py** | Ecosystem registry, compliance checker, project scaffolder | C:\QIH\ecosystem |
-| **Maia / Naya / NEXUS bot engines** | Multi-channel AI assistant platform, multi-LLM chains, template engine vision | C:\QI, C:\NAYA, C:\NEXUS |
-| **MapSnap engine + extractors** | DB schema browser/extractor suite (SQL Server/Postgres/MySQL/Oracle/Qdrant), Data Chat, BU Edition kit | C:\MapSnap |
-| **AutoPDF engine** | PowerShell HttpListener PDF/OCR pipeline | C:\AutoPDF |
-| **EasyFlow extension** | Chrome/Edge MV3 extension (10 locales) | C:\EasyFlow |
-| **qi_toon_video.py + BU video pipeline** | Flat-2D character animation / explainer-video generator (edge-tts + Pillow + FFmpeg) | C:\CLAUDE\Tools |
+| **Maia / Naya / NEXUS bot engines** | Multi-channel AI assistant platform, multi-LLM chains, template engine vision | C:\APPS\QI, C:\APPS\NAYA, C:\APPS\NEXUS |
+| **MapSnap engine + extractors** | DB schema browser/extractor suite (SQL Server/Postgres/MySQL/Oracle/Qdrant), Data Chat, BU Edition kit | C:\APPS\MapSnap |
+| **AutoPDF engine** | PowerShell HttpListener PDF/OCR pipeline | C:\APPS\AutoPDF |
+| **EasyFlow extension** | Chrome/Edge MV3 extension (10 locales) | C:\APPS\EasyFlow |
+| **qi_toon_video.py + BU video pipeline** | Flat-2D character animation / explainer-video generator (edge-tts + Pillow + FFmpeg) | C:\APPS\CLAUDE\Tools |
 | **doc_harvester.py + hive-librarian** | Documentation Brain: doc index + knowledge graph (937+ docs) | C:\QIH\engine\brain |
-| **Bakeoff eval rig** | Hermes vs OpenClaw agent-harness evaluation (same gpt-oss-20b brain) | C:\QIP\Bakeoff |
+| **Bakeoff eval rig** | Hermes vs OpenClaw agent-harness evaluation (same gpt-oss-20b brain) | C:\APPS\QIP\Bakeoff |
 | **PlayDeck** | Own video player UI: 3-tier browse (yt-dlp/scrape/headless), offline library (:8506) | C:\PlayDeck |
-| **PersonalSong Studio** | Local AI song generator orchestration (ACE-Step + Demucs + Seed-VC) | C:\PersonalSong |
-| **TubeScout** | YouTube-subscription news tool (:8503) | C:\TUBESCOUT |
-| **Claude Voice** | LINE/Telegram voice bridge + meeting room (:8722) | C:\CLAUDE\Claude Voice |
-| **Hive agent suite** | 8 specialized sub-agents (architect/builder/inspector/ops/scout/scribe/tester/librarian) + dispatch protocol | C:\CLAUDE\.claude\agents |
+| **PersonalSong Studio** | Local AI song generator orchestration (ACE-Step + Demucs + Seed-VC) | C:\APPS\PersonalSong |
+| **TubeScout** | YouTube-subscription news tool (:8503) | C:\APPS\TUBESCOUT |
+| **Claude Voice** | LINE/Telegram voice bridge + meeting room (:8722) | C:\APPS\CLAUDE\Claude Voice |
+| **Hive agent suite** | 8 specialized sub-agents (architect/builder/inspector/ops/scout/scribe/tester/librarian) + dispatch protocol | C:\APPS\CLAUDE\.claude\agents |
 
 ---
 
@@ -330,8 +330,8 @@ Original Quiddity Innovations code — no upstream, no external author.
 
 - C:\PlayDeck\web\vendor\hls.min.js — vendored minified hls.js build (no version string)
 - C:\PlayDeck\engine\bin\nssm.exe — per-project NSSM copy (QI convention)
-- C:\QIP\Connector — NSSM per-project service convention (shared C:\QIH\engine\bin\nssm.exe)
-- C:\CLAUDE\Tools\headroom_env\ — entire isolated Python venv vendored (torch, transformers, datasets, cv2, aiohttp, cryptography...), no manifest
+- C:\APPS\QIP\Connector — NSSM per-project service convention (shared C:\QIH\engine\bin\nssm.exe)
+- C:\APPS\CLAUDE\Tools\headroom_env\ — entire isolated Python venv vendored (torch, transformers, datasets, cv2, aiohttp, cryptography...), no manifest
 - No verbatim code copying between QI sibling projects found — cross-project reuse is the shared nssm.exe binary and the intentionally shared qi_mcp_gateway.py module
 - `C:\QIH\engine\hive\dashboard\static\vendor\vis-network.min.js` — vis-network graph library (Apache-2.0/MIT dual), used by the Library knowledge graph
 - Per-project `engine\bin\nssm.exe` copies across QI projects (standing convention: each project ships its own NSSM 2.24)
@@ -341,7 +341,7 @@ Original Quiddity Innovations code — no upstream, no external author.
 
 ## 5. Components discussed but NOT adopted (or only partially adopted)
 
-- **Buzz** (Block / Jack Dorsey's open-source AI-agent workspace) — evaluated as successor to the hand-built QI Hive War Room/dispatch UI; not migrated (too new; replatforming mid-cycle would burn August). Sandbox trial + 3–6 month re-check instead. (2026-07-27, C:\CLAUDE\Tech_Evaluation_2026-07.md)
+- **Buzz** (Block / Jack Dorsey's open-source AI-agent workspace) — evaluated as successor to the hand-built QI Hive War Room/dispatch UI; not migrated (too new; replatforming mid-cycle would burn August). Sandbox trial + 3–6 month re-check instead. (2026-07-27, C:\APPS\CLAUDE\Tech_Evaluation_2026-07.md)
 - **Colibri** (MoE model streaming engine, 744B GLM-5.2 on consumer hardware) — evaluated for "Ronald" local Ollama fallback; watch-list only — ~9 tok/s too slow for voice latency. (2026-07-27, Tech_Evaluation_2026-07.md)
 - **Nostr** (decentralized signed-message protocol) — evaluated as notification/identity layer; skipped — LINE/Telegram already cover it. (2026-07-27, Tech_Evaluation_2026-07.md)
 - **OpenClaw as the Claude Voice harness** — rejected for the real-time voice/video rebuild (gateway 404/version mismatch, fragile extra hop); **LiveKit** chosen instead. (2026-06-21, ClaudeVoice summaries)
@@ -373,8 +373,8 @@ False lead checked: **NotebookLM** IS adopted (Kaze news-digest archive + knowle
 ## Appendix — how to regenerate this inventory
 
 1. Rebuild per-app stacks: re-run the project-library build (`C:\QIH\shared\documentation\project_library\_build_project_docs.py`) so each app's `source/status_techstack.json` is fresh.
-2. Re-aggregate: `python C:\CLAUDE\Tools\techstack_aggregate.py`
+2. Re-aggregate: `python C:\APPS\CLAUDE\Tools\techstack_aggregate.py`
 3. Refresh latest-version research (PyPI/npm/GitHub) and update the research JSONs.
-4. `python C:\CLAUDE\Tools\gen_component_inventory.py` → writes this file into the project library.
-5. `python C:\CLAUDE\Tools\gen_inventory_pdf.py` → refreshes the .docx/.pdf twins.
+4. `python C:\APPS\CLAUDE\Tools\gen_component_inventory.py` → writes this file into the project library.
+5. `python C:\APPS\CLAUDE\Tools\gen_inventory_pdf.py` → refreshes the .docx/.pdf twins.
 6. Re-index the Library: `python C:\QIH\engine\brain\doc_harvester.py --no-embed` (or full run to embed).

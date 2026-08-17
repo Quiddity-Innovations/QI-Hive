@@ -133,7 +133,7 @@
     "filehq": {
       "phase": "Retired \u2014 merged into Naya",
       "status": "retired",
-      "summary": "Capabilities absorbed into Naya (C:\\NAYA\\filehq). Original C:\\FileHQ marked for deletion.",
+      "summary": "Capabilities absorbed into Naya (C:\\APPS\\NAYA\\filehq). Original C:\\FileHQ marked for deletion.",
       "next_steps": null,
       "recorded_at": "2026-06-10 10:45:00",
       "session_count": 0,
@@ -160,7 +160,7 @@
     "autopdf": {
       "phase": "Phase 2c \u2014 Smart Mapping",
       "status": "active",
-      "summary": "Path standardized to C:\\AutoPDF (2026-05-13). Server on :6969 running. Git repo initialized 2026-06-10.",
+      "summary": "Path standardized to C:\\APPS\\AutoPDF (2026-05-13). Server on :6969 running. Git repo initialized 2026-06-10.",
       "next_steps": "Resume Phase 2c work; consider 8700-block migration",
       "recorded_at": "2026-06-10 10:45:00",
       "session_count": 10,

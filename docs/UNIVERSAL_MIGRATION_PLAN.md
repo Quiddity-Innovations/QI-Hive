@@ -34,12 +34,12 @@ Service working directories (`AppDirectory`) — the actual code they execute:
 | QI_BrainAPI | C:\QIH | ✅ runs `C:\QIH\engine\brain\api.py` |
 | QI_Dashboard | C:\QIH | ✅ runs `C:\QIH\engine\hive\dashboard\server.py` |
 | QI_DashboardTunnel | **C:\UNIVERSAL\dashboard** | ❌ runs `tunnel_manager.py` inside UNIVERSAL |
-| QI_MaiaBot | C:\QI | ✅ |
-| QI_MaiaTunnel | C:\QI | ✅ |
+| QI_MaiaBot | C:\APPS\QI | ✅ |
+| QI_MaiaTunnel | C:\APPS\QI | ✅ |
 | QI_MaiaDemoTunnel | C:\Program Files (x86)\cloudflared | ✅ |
-| QI_NayaBot | C:\NAYA | ✅ |
-| QI_NayaGradio | C:\NAYA | ✅ |
-| QI_NEXUS | C:\NEXUS | ✅ |
+| QI_NayaBot | C:\APPS\NAYA | ✅ |
+| QI_NayaGradio | C:\APPS\NAYA | ✅ |
+| QI_NEXUS | C:\APPS\NEXUS | ✅ |
 | QI_Elevate | C:\QIH\engine\common | ✅ |
 | QI_HiveIngest | C:\QIH\engine\hive\ingest | ✅ |
 

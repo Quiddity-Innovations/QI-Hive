@@ -7,7 +7,7 @@
         {"title": "Obtain Meta credentials", "detail": "Get Facebook Page approval + Meta Developer app, then populate secrets/mq.env with FB_PAGE_ID, FB_PAGE_ACCESS_TOKEN (Maia page) and QI_PAGE_ID, QI_PAGE_ACCESS_TOKEN (QI page). This is the single hard blocker for any real publishing."},
         {"title": "First end-to-end dry run", "detail": "Run Kaze to fetch a real digest, Fumi to generate a draft, and the publisher in --dry-run mode — proving the pipeline works before a single live post. Nothing in the pipeline has executed yet."},
         {"title": "Configure the LLM keys", "detail": "Set CF_ACCOUNT_ID + CF_AI_TOKEN (Cloudflare Workers AI) and confirm a local Ollama with qwen3:8b for fallback, so Fumi can actually generate text."},
-        {"title": "Register as a persistent QI service", "detail": "Wrap main.py as an NSSM service named QI_MQ* (AppDirectory C:\\MQ), set Description, and register it in C:\\QIH\\ecosystem\\QI_Service_Registry.md so the API/UI stay up and the Hive dashboard can monitor MQ live."}
+        {"title": "Register as a persistent QI service", "detail": "Wrap main.py as an NSSM service named QI_MQ* (AppDirectory C:\\APPS\\MQ), set Description, and register it in C:\\QIH\\ecosystem\\QI_Service_Registry.md so the API/UI stay up and the Hive dashboard can monitor MQ live."}
       ]
     },
     {

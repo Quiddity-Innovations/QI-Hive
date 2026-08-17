@@ -24,7 +24,7 @@
     {"layer": "AI — Cloud (active)", "technology": "Cloudflare Workers AI", "role": "llama-3.3-70b-fp8-fast dispatch + scout synthesis (free tier)", "license": "Free tier", "version": "llama-3.3-70b-fp8"},
     {"layer": "AI — Local (active)", "technology": "Ollama", "role": "Local runtime hosting gemma4:26b (primary synthesiser, kept warm) and qwen3:4b (fast local / Scout)", "license": "MIT", "version": "gemma4:26b / qwen3:4b"},
     {"layer": "AI — Disabled / pre-wired", "technology": "Gemini · Grok · Anthropic · Azure · Bedrock · OpenRouter · Perplexity · Cohere · Together · Fireworks · NVIDIA NIM", "role": "Registered adapters, off by default — enable by adding a key (generic_openai covers OpenAI-compatible vendors)", "license": "Mixed (mostly paid)", "version": "see providers.json"},
-    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_NEXUS Windows service (AppDirectory C:\\NEXUS) + QI_NEXUSTunnel exposing the UI publicly", "license": "Open source / Cloudflare", "version": "nssm 2.24"}
+    {"layer": "Operations", "technology": "NSSM + Cloudflare Tunnel", "role": "QI_NEXUS Windows service (AppDirectory C:\\APPS\\NEXUS) + QI_NEXUSTunnel exposing the UI publicly", "license": "Open source / Cloudflare", "version": "nssm 2.24"}
   ],
   "descriptions": [
     {

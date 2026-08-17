@@ -3,74 +3,74 @@
     {
       "name": "Project Overview & Setup",
       "documents": [
-        {"title": "NEXUS Master Status Report", "file": "NEXUS_Master_Status_Report.md", "location": "C:\\NEXUS\\docs\\", "type": "Markdown", "description": "Single-page status overview: version, ports, service, feature status, pending work, key files."},
-        {"title": "Project README", "file": "README.md", "location": "C:\\NEXUS\\docs\\", "type": "Markdown", "description": "Repo readme — what NEXUS is and how it fits the QI ecosystem."},
-        {"title": "Project Summary", "file": "SUMMARY.md", "location": "C:\\NEXUS\\", "type": "Markdown", "description": "Plain-language summary: the panel-of-experts analogy, ecosystem role, ports, tech stack."},
-        {"title": "Installation Guide", "file": "INSTALL.md", "location": "C:\\NEXUS\\", "type": "Markdown", "description": "Requirements, install.py flags (--check/--deps/--services/--venv/--skip-keys/--unattended), API-key sources, service registration, verification URLs, troubleshooting."},
-        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\NEXUS\\", "type": "Markdown", "description": "Session-start protocol, role, the four modules, provider channels, design principles, file structure, ports. Note: provider list here is the original vision — config/providers.json is the live source of truth."},
-        {"title": "Next Session Prompt", "file": "NEXT_SESSION_PROMPT.md", "location": "C:\\NEXUS\\", "type": "Markdown", "description": "Hand-off prompt with current providers, expert personas, Scout topics, key file map, Scout API quick reference, and prioritised next steps."}
+        {"title": "NEXUS Master Status Report", "file": "NEXUS_Master_Status_Report.md", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Markdown", "description": "Single-page status overview: version, ports, service, feature status, pending work, key files."},
+        {"title": "Project README", "file": "README.md", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Markdown", "description": "Repo readme — what NEXUS is and how it fits the QI ecosystem."},
+        {"title": "Project Summary", "file": "SUMMARY.md", "location": "C:\\APPS\\NEXUS\\", "type": "Markdown", "description": "Plain-language summary: the panel-of-experts analogy, ecosystem role, ports, tech stack."},
+        {"title": "Installation Guide", "file": "INSTALL.md", "location": "C:\\APPS\\NEXUS\\", "type": "Markdown", "description": "Requirements, install.py flags (--check/--deps/--services/--venv/--skip-keys/--unattended), API-key sources, service registration, verification URLs, troubleshooting."},
+        {"title": "Claude Project Instructions", "file": "CLAUDE.md", "location": "C:\\APPS\\NEXUS\\", "type": "Markdown", "description": "Session-start protocol, role, the four modules, provider channels, design principles, file structure, ports. Note: provider list here is the original vision — config/providers.json is the live source of truth."},
+        {"title": "Next Session Prompt", "file": "NEXT_SESSION_PROMPT.md", "location": "C:\\APPS\\NEXUS\\", "type": "Markdown", "description": "Hand-off prompt with current providers, expert personas, Scout topics, key file map, Scout API quick reference, and prioritised next steps."}
       ]
     },
     {
       "name": "Technical & User Guides",
       "documents": [
-        {"title": "NEXUS Technical Reference", "file": "NEXUS_Technical_Reference.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "API contract, provider config schema, Scout topic format, synthesizer/routing modes."},
-        {"title": "NEXUS User Guide", "file": "NEXUS_User_Guide.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "End-user walkthrough of the Gradio console tabs and common workflows."},
-        {"title": "NEXUS Operator Guide", "file": "NEXUS_Operator_Guide.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "Running, monitoring, and troubleshooting the QI_NEXUS service."},
-        {"title": "NEXUS Manual Test Guide", "file": "NEXUS_Manual_Test_Guide.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "Step-by-step manual test checklist across the UI tabs and API endpoints."},
-        {"title": "NEXUS UI Reorganization Plan", "file": "NEXUS_UI_Reorganization_Plan.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "Plan behind the 8-tab Gradio layout (Orchestrator / Scout / Batch & Schedule / Expert Panel / Curate & Export / Bench / Settings / Help)."}
+        {"title": "NEXUS Technical Reference", "file": "NEXUS_Technical_Reference.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "API contract, provider config schema, Scout topic format, synthesizer/routing modes."},
+        {"title": "NEXUS User Guide", "file": "NEXUS_User_Guide.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "End-user walkthrough of the Gradio console tabs and common workflows."},
+        {"title": "NEXUS Operator Guide", "file": "NEXUS_Operator_Guide.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "Running, monitoring, and troubleshooting the QI_NEXUS service."},
+        {"title": "NEXUS Manual Test Guide", "file": "NEXUS_Manual_Test_Guide.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "Step-by-step manual test checklist across the UI tabs and API endpoints."},
+        {"title": "NEXUS UI Reorganization Plan", "file": "NEXUS_UI_Reorganization_Plan.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "Plan behind the 8-tab Gradio layout (Orchestrator / Scout / Batch & Schedule / Expert Panel / Curate & Export / Bench / Settings / Help)."}
       ]
     },
     {
       "name": "Logs, Minutes & History",
       "documents": [
-        {"title": "NEXUS Implementation Log", "file": "NEXUS_Implementation_Log.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "Chronological build history of what was created, fixed, and decided."},
-        {"title": "NEXUS Meeting Minutes", "file": "NEXUS_Meeting_Minutes.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "Session-by-session decisions and next steps."},
-        {"title": "NEXUS Version History", "file": "NEXUS_Version_History.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "Version changelog. App version 0.1.0; DB schema at v4."},
-        {"title": "NEXUS Regression Test Report", "file": "NEXUS_Regression_Test_Report.docx", "location": "C:\\NEXUS\\docs\\", "type": "Word Document", "description": "Results of the regression_test.py run across dispatch and synthesis flows."},
-        {"title": "Session Summaries", "file": "Session Summaries\\", "location": "C:\\NEXUS\\docs\\", "type": "Folder", "description": "Dated .docx session summaries (NEXUS_Summary_YYYY-MM-DD_HHMM.docx)."}
+        {"title": "NEXUS Implementation Log", "file": "NEXUS_Implementation_Log.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "Chronological build history of what was created, fixed, and decided."},
+        {"title": "NEXUS Meeting Minutes", "file": "NEXUS_Meeting_Minutes.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "Session-by-session decisions and next steps."},
+        {"title": "NEXUS Version History", "file": "NEXUS_Version_History.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "Version changelog. App version 0.1.0; DB schema at v4."},
+        {"title": "NEXUS Regression Test Report", "file": "NEXUS_Regression_Test_Report.docx", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Word Document", "description": "Results of the regression_test.py run across dispatch and synthesis flows."},
+        {"title": "Session Summaries", "file": "Session Summaries\\", "location": "C:\\APPS\\NEXUS\\docs\\", "type": "Folder", "description": "Dated .docx session summaries (NEXUS_Summary_YYYY-MM-DD_HHMM.docx)."}
       ]
     },
     {
       "name": "Key Source — Entry & Core",
       "documents": [
-        {"title": "Main Entry Point", "file": "main.py", "location": "C:\\NEXUS\\", "type": "Python", "description": "Launches API + UI + Scout scheduler + synthesis keep-warm. CLI: --api-only / --ui-only / --scout / --init-db."},
-        {"title": "FastAPI App", "file": "main.py", "location": "C:\\NEXUS\\api\\", "type": "Python", "description": "60+ REST endpoints on port 8010: /synthesize(/stream), /judge, /providers*, /config/*, /sessions, /history, /scout/*, /batch/*, /schedule/*, /personas*, /bench/*, /rag/*, /curate/*, /upload/extract. CORS from qi_registry."},
-        {"title": "Core Dispatcher", "file": "dispatcher.py", "location": "C:\\NEXUS\\core\\", "type": "Python", "description": "Parallel asyncio dispatch to all providers + chain_dispatch + dispatch_stream. Lazy provider load; returns DispatchResult with successful/failed."},
-        {"title": "Core Synthesizer", "file": "synthesizer.py", "location": "C:\\NEXUS\\core\\", "type": "Python", "description": "Merges responses via the configured synthesis provider (gemma4:26b primary, chatgpt fallback). Preserves tables/code; concatenates as last resort."},
-        {"title": "Inference Modes", "file": "inference_modes.py", "location": "C:\\NEXUS\\core\\", "type": "Python", "description": "Fast/Balanced/Thinking/Deep capability registry + per-mode timeout multipliers. Single source of truth for /providers/capabilities."},
-        {"title": "Scheduler & Batch Runner", "file": "scheduler.py, batch_runner.py", "location": "C:\\NEXUS\\core\\", "type": "Python", "description": "APScheduler wrapper for Scout + scheduled jobs; batch prompt execution with per-prompt logs."},
-        {"title": "Scorer (DeepEval bridge)", "file": "scorer.py", "location": "C:\\NEXUS\\core\\", "type": "Python", "description": "NexusJudge wraps any provider as a DeepEval LLM; runs concurrent G-Eval Clarity/Accuracy/Depth with per-metric timeout + simple-mode fallback."},
-        {"title": "Provider Base", "file": "base.py", "location": "C:\\NEXUS\\core\\providers\\", "type": "Python", "description": "NexusProvider ABC + ProviderResponse dataclass. Adding a provider = one file here + an entry in providers.json."}
+        {"title": "Main Entry Point", "file": "main.py", "location": "C:\\APPS\\NEXUS\\", "type": "Python", "description": "Launches API + UI + Scout scheduler + synthesis keep-warm. CLI: --api-only / --ui-only / --scout / --init-db."},
+        {"title": "FastAPI App", "file": "main.py", "location": "C:\\APPS\\NEXUS\\api\\", "type": "Python", "description": "60+ REST endpoints on port 8010: /synthesize(/stream), /judge, /providers*, /config/*, /sessions, /history, /scout/*, /batch/*, /schedule/*, /personas*, /bench/*, /rag/*, /curate/*, /upload/extract. CORS from qi_registry."},
+        {"title": "Core Dispatcher", "file": "dispatcher.py", "location": "C:\\APPS\\NEXUS\\core\\", "type": "Python", "description": "Parallel asyncio dispatch to all providers + chain_dispatch + dispatch_stream. Lazy provider load; returns DispatchResult with successful/failed."},
+        {"title": "Core Synthesizer", "file": "synthesizer.py", "location": "C:\\APPS\\NEXUS\\core\\", "type": "Python", "description": "Merges responses via the configured synthesis provider (gemma4:26b primary, chatgpt fallback). Preserves tables/code; concatenates as last resort."},
+        {"title": "Inference Modes", "file": "inference_modes.py", "location": "C:\\APPS\\NEXUS\\core\\", "type": "Python", "description": "Fast/Balanced/Thinking/Deep capability registry + per-mode timeout multipliers. Single source of truth for /providers/capabilities."},
+        {"title": "Scheduler & Batch Runner", "file": "scheduler.py, batch_runner.py", "location": "C:\\APPS\\NEXUS\\core\\", "type": "Python", "description": "APScheduler wrapper for Scout + scheduled jobs; batch prompt execution with per-prompt logs."},
+        {"title": "Scorer (DeepEval bridge)", "file": "scorer.py", "location": "C:\\APPS\\NEXUS\\core\\", "type": "Python", "description": "NexusJudge wraps any provider as a DeepEval LLM; runs concurrent G-Eval Clarity/Accuracy/Depth with per-metric timeout + simple-mode fallback."},
+        {"title": "Provider Base", "file": "base.py", "location": "C:\\APPS\\NEXUS\\core\\providers\\", "type": "Python", "description": "NexusProvider ABC + ProviderResponse dataclass. Adding a provider = one file here + an entry in providers.json."}
       ]
     },
     {
       "name": "Key Source — Scout, Bench, Shared",
       "documents": [
-        {"title": "Scout Runner", "file": "runner.py", "location": "C:\\NEXUS\\scout\\", "type": "Python", "description": "run_scout_cycle(topic_id): fetch -> dedup -> store -> digest. Idempotent topic_id migration at import."},
-        {"title": "Scout Fetcher / Dedup / Digest", "file": "fetcher.py, deduplicator.py, digest.py", "location": "C:\\NEXUS\\scout\\", "type": "Python", "description": "Topic-aware RSS/Reddit/HN fetch; rapidfuzz dedup at 85%; markdown + .docx digest generation."},
-        {"title": "Bench Runner", "file": "runner.py", "location": "C:\\NEXUS\\bench\\", "type": "Python", "description": "run_suite() runs each case x provider, scores, persists bench_provider_runs + bench_results; recommend() ranks providers by mean score; seed_starter_suite()."},
-        {"title": "Shared DB + Schema", "file": "db.py, schema.sql", "location": "C:\\NEXUS\\shared\\", "type": "Python / SQL", "description": "init_db() + idempotent migrations; SQLite WAL, FK on; schema_version v4 (bench tables added 2026-06-13)."},
-        {"title": "Shared RAG", "file": "rag.py", "location": "C:\\NEXUS\\shared\\", "type": "Python", "description": "NexusRAG over ChromaDB (collection nexus_knowledge). Background init with 300s deadline; ingests knowledge/nexus_curated.jsonl + curated exports."},
-        {"title": "Shared Config + Logging", "file": "config.py, log_setup.py", "location": "C:\\NEXUS\\shared\\", "type": "Python", "description": "Dotted-path get() over nexus.json with hot reload; per-subsystem rotating log handlers (scorer.log, dispatcher.log)."}
+        {"title": "Scout Runner", "file": "runner.py", "location": "C:\\APPS\\NEXUS\\scout\\", "type": "Python", "description": "run_scout_cycle(topic_id): fetch -> dedup -> store -> digest. Idempotent topic_id migration at import."},
+        {"title": "Scout Fetcher / Dedup / Digest", "file": "fetcher.py, deduplicator.py, digest.py", "location": "C:\\APPS\\NEXUS\\scout\\", "type": "Python", "description": "Topic-aware RSS/Reddit/HN fetch; rapidfuzz dedup at 85%; markdown + .docx digest generation."},
+        {"title": "Bench Runner", "file": "runner.py", "location": "C:\\APPS\\NEXUS\\bench\\", "type": "Python", "description": "run_suite() runs each case x provider, scores, persists bench_provider_runs + bench_results; recommend() ranks providers by mean score; seed_starter_suite()."},
+        {"title": "Shared DB + Schema", "file": "db.py, schema.sql", "location": "C:\\APPS\\NEXUS\\shared\\", "type": "Python / SQL", "description": "init_db() + idempotent migrations; SQLite WAL, FK on; schema_version v4 (bench tables added 2026-06-13)."},
+        {"title": "Shared RAG", "file": "rag.py", "location": "C:\\APPS\\NEXUS\\shared\\", "type": "Python", "description": "NexusRAG over ChromaDB (collection nexus_knowledge). Background init with 300s deadline; ingests knowledge/nexus_curated.jsonl + curated exports."},
+        {"title": "Shared Config + Logging", "file": "config.py, log_setup.py", "location": "C:\\APPS\\NEXUS\\shared\\", "type": "Python", "description": "Dotted-path get() over nexus.json with hot reload; per-subsystem rotating log handlers (scorer.log, dispatcher.log)."}
       ]
     },
     {
       "name": "Configuration",
       "documents": [
-        {"title": "Runtime Config", "file": "nexus.json", "location": "C:\\NEXUS\\config\\", "type": "JSON", "description": "Ports, core (synthesis provider/model, keep-warm), scout (interval, dedup threshold), scorer (mode=deepeval, judge=groq), logging subsystems."},
-        {"title": "Providers", "file": "providers.json", "location": "C:\\NEXUS\\config\\", "type": "JSON", "description": "Live source of truth for all 18 registered providers — adapter, enabled flag, model, env_key, role, timeout, notes."},
-        {"title": "Personas / User Personas", "file": "personas.json, user_personas.json", "location": "C:\\NEXUS\\config\\", "type": "JSON", "description": "26 built-in expert personas (locked, real-expert-inspired) + user-created personas."},
-        {"title": "Scout Topics / Sources", "file": "scout_topics.json, scout_sources.json", "location": "C:\\NEXUS\\config\\", "type": "JSON", "description": "Topic registry (ai_news default + TubeScout YouTube topics) with per-topic RSS/Reddit/HN sources."}
+        {"title": "Runtime Config", "file": "nexus.json", "location": "C:\\APPS\\NEXUS\\config\\", "type": "JSON", "description": "Ports, core (synthesis provider/model, keep-warm), scout (interval, dedup threshold), scorer (mode=deepeval, judge=groq), logging subsystems."},
+        {"title": "Providers", "file": "providers.json", "location": "C:\\APPS\\NEXUS\\config\\", "type": "JSON", "description": "Live source of truth for all 18 registered providers — adapter, enabled flag, model, env_key, role, timeout, notes."},
+        {"title": "Personas / User Personas", "file": "personas.json, user_personas.json", "location": "C:\\APPS\\NEXUS\\config\\", "type": "JSON", "description": "26 built-in expert personas (locked, real-expert-inspired) + user-created personas."},
+        {"title": "Scout Topics / Sources", "file": "scout_topics.json, scout_sources.json", "location": "C:\\APPS\\NEXUS\\config\\", "type": "JSON", "description": "Topic registry (ai_news default + TubeScout YouTube topics) with per-topic RSS/Reddit/HN sources."}
       ]
     },
     {
       "name": "Testing & Ecosystem",
       "documents": [
-        {"title": "Smoke Test", "file": "smoke_test.py", "location": "C:\\NEXUS\\", "type": "Python", "description": "Quick end-to-end check of /health, /providers, and a basic /synthesize call."},
-        {"title": "Regression Test", "file": "regression_test.py", "location": "C:\\NEXUS\\", "type": "Python", "description": "Regression suite for core dispatch and synthesis flows."},
-        {"title": "Pytest Smoke", "file": "test_smoke.py", "location": "C:\\NEXUS\\tests\\", "type": "Python", "description": "Pytest-style smoke test."},
-        {"title": "QI Service Registry (QI_NEXUS)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entry: QI_NEXUS (AppDirectory C:\\NEXUS, main.py, logs nexus_service.log) + QI_NEXUSTunnel."},
+        {"title": "Smoke Test", "file": "smoke_test.py", "location": "C:\\APPS\\NEXUS\\", "type": "Python", "description": "Quick end-to-end check of /health, /providers, and a basic /synthesize call."},
+        {"title": "Regression Test", "file": "regression_test.py", "location": "C:\\APPS\\NEXUS\\", "type": "Python", "description": "Regression suite for core dispatch and synthesis flows."},
+        {"title": "Pytest Smoke", "file": "test_smoke.py", "location": "C:\\APPS\\NEXUS\\tests\\", "type": "Python", "description": "Pytest-style smoke test."},
+        {"title": "QI Service Registry (QI_NEXUS)", "file": "QI_Service_Registry.md", "location": "C:\\QIH\\ecosystem\\", "type": "Markdown", "description": "Canonical NSSM entry: QI_NEXUS (AppDirectory C:\\APPS\\NEXUS, main.py, logs nexus_service.log) + QI_NEXUSTunnel."},
         {"title": "QI Ecosystem Registry (nexus)", "file": "qi_registry.json", "location": "C:\\QIH\\ecosystem\\", "type": "JSON", "description": "NEXUS registry entry: ports 8010/7880, family_tier=backbone, integrates_with maia/naya/filehq/openclaw, exposed endpoints."},
         {"title": "Project Memory Index", "file": "MEMORY.md", "location": "C:\\Users\\renne\\.claude\\projects\\C--NEXUS\\memory\\", "type": "Markdown", "description": "Claude's persistent memory index for the NEXUS project (decisions, people, features)."}
       ]

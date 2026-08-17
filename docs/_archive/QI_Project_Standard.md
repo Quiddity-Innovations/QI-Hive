@@ -8,7 +8,7 @@
 
 ## 1. Folder Structure (Mandatory)
 
-Every QI project lives in a single root folder (e.g. `C:\QIH`, `C:\QIP\Maia`, `C:\QIP\Naya`) with this exact 7-folder layout:
+Every QI project lives in a single root folder (e.g. `C:\QIH`, `C:\APPS\QIP\Maia`, `C:\APPS\QIP\Naya`) with this exact 7-folder layout:
 
 ```
 <project-root>/
@@ -154,12 +154,12 @@ Exceptions should be truly exceptional. The goal is uniformity — open any QI p
 | Project | Current path | Target path | Priority |
 |---|---|---|---|
 | QI Hive | `C:\QIH` | `C:\QIH` (reorganize in place) | Done this session |
-| Maia | `C:\QI` | `C:\QIP\Maia` | Next |
-| NEXUS | `C:\NEXUS` | `C:\QIP\NEXUS` | After Maia |
-| Naya | `C:\NAYA` | `C:\QIP\Naya` | After NEXUS |
-| OpenClaw | `C:\OC` | `C:\QIP\OpenClaw` | After Naya |
-| EasyFlow | `C:\EasyFlow` | `C:\QIP\EasyFlow` | After OC |
-| FileHQ | `C:\FileHQ` | `C:\QIP\FileHQ` | After EasyFlow |
+| Maia | `C:\APPS\QI` | `C:\APPS\QIP\Maia` | Next |
+| NEXUS | `C:\APPS\NEXUS` | `C:\APPS\QIP\NEXUS` | After Maia |
+| Naya | `C:\APPS\NAYA` | `C:\APPS\QIP\Naya` | After NEXUS |
+| OpenClaw | `C:\APPS\OC` | `C:\APPS\QIP\OpenClaw` | After Naya |
+| EasyFlow | `C:\APPS\EasyFlow` | `C:\APPS\QIP\EasyFlow` | After OC |
+| FileHQ | `C:\FileHQ` | `C:\APPS\QIP\FileHQ` | After EasyFlow |
 
 Migrate one at a time. Each migration includes:
 1. Restructure into 7-folder layout
@@ -168,4 +168,4 @@ Migrate one at a time. Each migration includes:
 4. Update `qi_registry.json` and `QI_Service_Registry.md`
 5. Archive the old folder for one week, then delete
 
-After all projects migrated to `C:\QIP`, rename `C:\QI` → `C:\QIB` (QI Business).
+After all projects migrated to `C:\APPS\QIP`, rename `C:\APPS\QI` → `C:\QIB` (QI Business).

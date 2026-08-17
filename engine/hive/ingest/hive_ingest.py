@@ -209,10 +209,21 @@ def main() -> None:
         log(f"[REFRESH] live refresh unavailable: {type(e).__name__}: {e}")
 
     last_refresh = 0.0
+    warned_strays: set[str] = set()
     while True:
         try:
             for p in sorted(INBOX.glob("*.json"), key=lambda x: x.stat().st_mtime):
                 ingest(p)
+
+            # Anything that is not *.json is invisible to the loop above and will
+            # sit in the inbox forever. A 2026-05-15 audit report did exactly that
+            # for three months before the 2026-08-17 audit found it. Warn once per
+            # file so strays surface in the log instead of vanishing silently.
+            for p in INBOX.iterdir():
+                if p.is_file() and p.suffix.lower() != ".json" and p.name not in warned_strays:
+                    warned_strays.add(p.name)
+                    log(f"[STRAY] {p.name} is not *.json — it will never be ingested. "
+                        f"Move it out of the inbox or convert it to a report.")
 
             now = time.time()
             if light_refresh and (now - last_refresh) >= REFRESH_EVERY:

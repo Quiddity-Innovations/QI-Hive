@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live AkiyaScout source (C:\\AkiyaScout). Each shows the real code behind a capability and explains how it works. Bilingual and region-driven throughout: nothing about geography, sources, or rates is hardcoded in logic — it lives in the SQLite reference + settings tables.",
+  "intro": "Excerpts copied from the live AkiyaScout source (C:\\APPS\\AkiyaScout). Each shows the real code behind a capability and explains how it works. Bilingual and region-driven throughout: nothing about geography, sources, or rates is hardcoded in logic — it lives in the SQLite reference + settings tables.",
   "sections": [
     {
       "category": "Persistence (akiyascout.db)",
@@ -159,8 +159,8 @@
           "feature": "Standard QI service interface",
           "file": "api/main.py · module scope + version()",
           "language": "python",
-          "code": "try:\n    sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8505\", \"http://localhost:7845\"]\n\napp = FastAPI(title=\"AkiyaScout API\",\n              description=\"English-first Japanese real-estate Scout Engine — Quiddity Innovations\",\n              version=\"0.1.0\")\napp.add_middleware(CORSMiddleware, allow_origins=_cors,\n                   allow_methods=[\"GET\", \"POST\", \"PUT\", \"DELETE\"], allow_headers=[\"*\"])\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"akiyascout\", \"version\": \"0.1.0\", \"status\": \"development\"}",
-          "explanation": "AkiyaScout implements the QI service contract every ecosystem project exposes (/health, /version, /info). CORS origins are pulled from the shared qi_registry so sibling QI projects are trusted without per-project edits, with a localhost fallback. Note the import path still points at the legacy C:\\QI\\ECOSYSTEM location (migration to C:\\QIH\\ecosystem is a pending compliance item)."
+          "code": "try:\n    sys.path.insert(0, r\"C:\\APPS\\QI\\ECOSYSTEM\")\n    from qi_registry import QI\n    _cors = QI.cors_origins()\nexcept Exception:\n    _cors = [\"http://localhost:8505\", \"http://localhost:7845\"]\n\napp = FastAPI(title=\"AkiyaScout API\",\n              description=\"English-first Japanese real-estate Scout Engine — Quiddity Innovations\",\n              version=\"0.1.0\")\napp.add_middleware(CORSMiddleware, allow_origins=_cors,\n                   allow_methods=[\"GET\", \"POST\", \"PUT\", \"DELETE\"], allow_headers=[\"*\"])\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"akiyascout\", \"version\": \"0.1.0\", \"status\": \"development\"}",
+          "explanation": "AkiyaScout implements the QI service contract every ecosystem project exposes (/health, /version, /info). CORS origins are pulled from the shared qi_registry so sibling QI projects are trusted without per-project edits, with a localhost fallback. Note the import path still points at the legacy C:\\APPS\\QI\\ECOSYSTEM location (migration to C:\\QIH\\ecosystem is a pending compliance item)."
         },
         {
           "title": "Dynamic listing search with USD/JPY conversion",

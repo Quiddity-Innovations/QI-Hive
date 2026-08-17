@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts copied from the live M2V source (C:\\M2V). M2V is an early-stage project, so this set is proportionate — it covers the real pipeline (lyric direction, audio segmentation, image+video generation, FFmpeg assembly), the API/job model, and the standalone proof-of-concept that actually rendered a video. Everything runs locally; there are no external AI keys.",
+  "intro": "Excerpts copied from the live M2V source (C:\\APPS\\M2V). M2V is an early-stage project, so this set is proportionate — it covers the real pipeline (lyric direction, audio segmentation, image+video generation, FFmpeg assembly), the API/job model, and the standalone proof-of-concept that actually rendered a video. Everything runs locally; there are no external AI keys.",
   "sections": [
     {
       "category": "Service Launch & API (FastAPI :8501)",

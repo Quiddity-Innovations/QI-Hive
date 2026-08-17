@@ -30,7 +30,7 @@ for bullet in [
     "QI Brain schema fixed: FK references to dropped agents_old table were causing every log_session POST to 500. Rebuilt 5 tables with correct FK -> agents.",
     "QI Brain backfilled: 30 historical sessions imported from C:\\UNIVERSAL\\DOCUMENTATION\\Session_Summaries\\. Brain session count 7 → 37.",
     "qi_hive added to brain projects table (was missing).",
-    "LATEST.md rewritten with full autonomous-elevation broadcast so sibling Claude sessions in C:\\QI, C:\\NAYA, C:\\NEXUS, C:\\EasyFlow know the new path.",
+    "LATEST.md rewritten with full autonomous-elevation broadcast so sibling Claude sessions in C:\\APPS\\QI, C:\\APPS\\NAYA, C:\\APPS\\NEXUS, C:\\APPS\\EasyFlow know the new path.",
     "All work committed + pushed to origin/master (commits da905d7, 650b7f2).",
 ]:
     doc.add_paragraph(bullet, style="List Bullet")

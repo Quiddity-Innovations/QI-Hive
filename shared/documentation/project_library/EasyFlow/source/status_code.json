@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts from the live EasyFlow source (C:\\EasyFlow). EasyFlow has three surfaces driven by one config: the browser extension (Extension/), the Apps Script classifier (EasyFlow_AppsScript.js), and the Python dashboard + Gmail tools (Tools/app.py, create_*.py). Each snippet shows the real code behind a capability and how config.json flows into it.",
+  "intro": "Excerpts from the live EasyFlow source (C:\\APPS\\EasyFlow). EasyFlow has three surfaces driven by one config: the browser extension (Extension/), the Apps Script classifier (EasyFlow_AppsScript.js), and the Python dashboard + Gmail tools (Tools/app.py, create_*.py). Each snippet shows the real code behind a capability and how config.json flows into it.",
   "sections": [
     {
       "category": "Config — the single source of truth",

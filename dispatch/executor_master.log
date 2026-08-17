@@ -1,0 +1,40 @@
+2026-08-16T16:37:03-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
+2026-08-16T16:37:51-04:00 [DENY] key=definitely-not-whitelisted args=[] reason=unknown script_key 'definitely-not-whitelisted' — not in the whitelist (known: ['qi-health-snapshot', 'setup-synvox'])
+2026-08-16T16:37:51-04:00 [DENY] key=qi-health-snapshot args=['--rm', '-rf'] reason=argument(s) ['--rm', '-rf'] not whitelisted for 'qi-health-snapshot' (allowed_args: [])
+2026-08-16T16:37:51-04:00 [LAUNCH] job=20260816_163751_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=49720
+2026-08-16T16:37:51-04:00 [RESULT] job=20260816_163751_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-16T16:38:40-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
+2026-08-16T16:38:52-04:00 [DENY] key=definitely-not-whitelisted args=[] reason=unknown script_key 'definitely-not-whitelisted' — not in the whitelist (known: ['qi-health-snapshot', 'setup-synvox'])
+2026-08-16T16:38:52-04:00 [DENY] key=qi-health-snapshot args=['--rm', '-rf'] reason=argument(s) ['--rm', '-rf'] not whitelisted for 'qi-health-snapshot' (allowed_args: [])
+2026-08-16T16:38:52-04:00 [LAUNCH] job=20260816_163852_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=48896
+2026-08-16T16:40:13-04:00 [DENY] key=definitely-not-whitelisted args=[] reason=unknown script_key 'definitely-not-whitelisted' — not in the whitelist (known: ['qi-health-snapshot', 'setup-synvox'])
+2026-08-16T16:40:13-04:00 [DENY] key=qi-health-snapshot args=['--rm', '-rf'] reason=argument(s) ['--rm', '-rf'] not whitelisted for 'qi-health-snapshot' (allowed_args: [])
+2026-08-16T16:40:13-04:00 [LAUNCH] job=20260816_164013_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=25720
+2026-08-16T16:43:01-04:00 [RESULT] job=20260816_163852_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-16T16:44:17-04:00 [RESULT] job=20260816_164013_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-16T16:46:01-04:00 [DENY] key=definitely-not-whitelisted args=[] reason=unknown script_key 'definitely-not-whitelisted' — not in the whitelist (known: ['qi-health-snapshot', 'setup-synvox'])
+2026-08-16T16:46:01-04:00 [DENY] key=qi-health-snapshot args=['--rm', '-rf'] reason=argument(s) ['--rm', '-rf'] not whitelisted for 'qi-health-snapshot' (allowed_args: [])
+2026-08-16T16:46:01-04:00 [LAUNCH] job=20260816_164601_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=59920
+2026-08-16T16:48:53-04:00 [LAUNCH] job=20260816_164853_setup-synvox key=setup-synvox file=Setup-SynVox.ps1 args=[] pid=30748
+2026-08-16T16:49:07-04:00 [DENY] key=definitely-not-whitelisted args=[] reason=unknown script_key 'definitely-not-whitelisted' — not in the whitelist (known: ['qi-health-snapshot', 'setup-synvox'])
+2026-08-16T16:49:07-04:00 [DENY] key=qi-health-snapshot args=['--rm', '-rf'] reason=argument(s) ['--rm', '-rf'] not whitelisted for 'qi-health-snapshot' (allowed_args: [])
+2026-08-16T16:49:07-04:00 [LAUNCH] job=20260816_164907_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=12500
+2026-08-16T16:49:23-04:00 [RESULT] job=20260816_164853_setup-synvox key=setup-synvox status=succeeded exit=0
+2026-08-16T16:50:09-04:00 [RESULT] job=20260816_164601_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-16T16:51:47-04:00 [LAUNCH] job=20260816_165147_setup-synvox key=setup-synvox file=Setup-SynVox.ps1 args=[] pid=50648
+2026-08-16T16:52:33-04:00 [RESULT] job=20260816_165147_setup-synvox key=setup-synvox status=succeeded exit=0
+2026-08-16T16:53:13-04:00 [RESULT] job=20260816_164907_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-16T17:37:20-04:00 [DENY] key=definitely-not-whitelisted args=[] reason=unknown script_key 'definitely-not-whitelisted' — not in the whitelist (known: ['qi-health-snapshot', 'setup-synvox'])
+2026-08-16T17:37:20-04:00 [DENY] key=qi-health-snapshot args=['--rm', '-rf'] reason=argument(s) ['--rm', '-rf'] not whitelisted for 'qi-health-snapshot' (allowed_args: [])
+2026-08-16T17:37:20-04:00 [LAUNCH] job=20260816_173720_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=39336
+2026-08-16T17:41:23-04:00 [RESULT] job=20260816_173720_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-16T17:42:40-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
+2026-08-16T17:43:25-04:00 [DENY] key=definitely-not-whitelisted args=[] reason=unknown script_key 'definitely-not-whitelisted' - not in the whitelist (known: ['qi-health-snapshot', 'setup-synvox'])
+2026-08-16T17:43:25-04:00 [DENY] key=qi-health-snapshot args=['--rm', '-rf'] reason=argument(s) ['--rm', '-rf'] not whitelisted for 'qi-health-snapshot' (allowed_args: [])
+2026-08-16T17:43:25-04:00 [LAUNCH] job=20260816_174325_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=16900
+2026-08-16T17:47:31-04:00 [RESULT] job=20260816_174325_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-16T18:07:37-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
+2026-08-16T19:45:28-04:00 [LAUNCH] job=20260816_194528_setup-synvox key=setup-synvox file=Setup-SynVox.ps1 args=[] pid=48936
+2026-08-16T19:46:10-04:00 [RESULT] job=20260816_194528_setup-synvox key=setup-synvox status=succeeded exit=0
+2026-08-17T08:10:10-04:00 [LAUNCH] job=20260817_081010_synvox-smoke key=synvox-smoke file=Test-SynVoxSmoke.ps1 args=[] pid=28380
+2026-08-17T08:10:15-04:00 [RESULT] job=20260817_081010_synvox-smoke key=synvox-smoke status=succeeded exit=0

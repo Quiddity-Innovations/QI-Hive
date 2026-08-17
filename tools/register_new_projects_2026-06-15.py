@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 One-shot registration of three projects the Hive was missing:
-  - lotterywiz   (Lottery Wiz)         C:\\Lottery Wiz
-  - cypherminer  (CypherMiner)         C:\\CypherMiner   (was in registry, missing from Brain DB)
+  - lotterywiz   (Lottery Wiz)         C:\\APPS\\Lottery Wiz
+  - cypherminer  (CypherMiner)         C:\\APPS\\CypherMiner   (was in registry, missing from Brain DB)
   - digitization (Digitization Cost Tool)  C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS
 
 Updates:
@@ -26,7 +26,7 @@ REG_NEW = {
         "id": "lotterywiz",
         "name": "LotteryWiz",
         "description": "Fantasy 5 covering-design app — generates optimal play sets with guaranteed coverage. FastAPI + export to .xlsx/.csv.",
-        "path": r"C:\Lottery Wiz",
+        "path": r"C:\APPS\Lottery Wiz",
         "github": "TBD",
         "status": "active",
         "primary_language": "Python",
@@ -72,9 +72,9 @@ print(f"  registry: added {added or 'nothing'} (now {len(reg['projects'])} proje
 # projects: project_id, display_name, tagline, path, api_port, ui_port, tier, active, created_at
 PROJECTS = [
     ("lotterywiz",  "LotteryWiz",            "Fantasy 5 covering-design app (FastAPI on 8777)",
-        r"C:\Lottery Wiz", 8777, 8777, "project", 1, TS),
+        r"C:\APPS\Lottery Wiz", 8777, 8777, "project", 1, TS),
     ("cypherminer", "CypherMiner",           "Local-first bilingual (EN/PT) offline crypto/encoding/math/text tools suite",
-        r"C:\CypherMiner", 8502, 7842, "project", 1, TS),
+        r"C:\APPS\CypherMiner", 8502, 7842, "project", 1, TS),
     ("digitization","Digitization Cost Tool","Client-side HTML cost-comparison tool for Document Imaging & Services",
         r"C:\Users\renne\Downloads\DIGITIZATION COSTS", None, None, "project", 1, TS),
 ]

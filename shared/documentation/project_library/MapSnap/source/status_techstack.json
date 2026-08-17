@@ -5,7 +5,7 @@
       "technology": "Python (CPython)",
       "role": "Single implementation language for the server, extractors, enrichment pipeline, and doc generators.",
       "license": "PSF",
-      "version": "3.11+ (C:\\1-AI\\APPS\\PYTHON\\python.exe)"
+      "version": "3.11+ (C:\\Program Files\\Python311\\python.exe)"
     },
     {
       "layer": "Web server",
@@ -182,7 +182,7 @@
     },
     {
       "title": "Service + tunnel operations",
-      "body": "On the Quiddity host MapSnap runs as the QI_MapSnap NSSM service (AppDirectory C:\\MapSnap, port 9876, rotated logs in C:\\MapSnap\\LOGS) behind QI_MapSnapTunnel, a named Cloudflare tunnel giving the stable URL https://mapsnap.quiddityinnovations.com. start.bat auto-detects service vs manual mode; on a shipped/customer box with no QI services it falls back to local Python plus a Cloudflare quick tunnel."
+      "body": "On the Quiddity host MapSnap runs as the QI_MapSnap NSSM service (AppDirectory C:\\APPS\\MapSnap, port 9876, rotated logs in C:\\APPS\\MapSnap\\LOGS) behind QI_MapSnapTunnel, a named Cloudflare tunnel giving the stable URL https://mapsnap.quiddityinnovations.com. start.bat auto-detects service vs manual mode; on a shipped/customer box with no QI services it falls back to local Python plus a Cloudflare quick tunnel."
     }
   ]
 }

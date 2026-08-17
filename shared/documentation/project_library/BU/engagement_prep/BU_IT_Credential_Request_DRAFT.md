@@ -40,4 +40,4 @@ Renne
 Quiddity Innovations · quiddityinnovations.com
 
 ---
-*Reference: the auth flow and SDK materials are in `C:\CogniBase\API\` (IDP token-generation doc, Unity API SDK, REST API lab guide). Coordination model: `C:\CogniBase\DESIGN\COORDINATION_BU_TEAM.md`.*
+*Reference: the auth flow and SDK materials are in `C:\APPS\CogniBase\API\` (IDP token-generation doc, Unity API SDK, REST API lab guide). Coordination model: `C:\APPS\CogniBase\DESIGN\COORDINATION_BU_TEAM.md`.*

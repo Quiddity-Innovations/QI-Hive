@@ -1,5 +1,5 @@
 {
-  "intro": "Excerpts from the live MQ source (C:\\MQ). This is an early-stage project: the publishing pipeline (Kaze RSS -> Fumi compose -> Fumi publish) is complete in code but has not yet been run, there are no Meta credentials, and there is no database. The snippets below are the real code behind each capability; where a capability is built-but-unrun or planned, the explanation says so.",
+  "intro": "Excerpts from the live MQ source (C:\\APPS\\MQ). This is an early-stage project: the publishing pipeline (Kaze RSS -> Fumi compose -> Fumi publish) is complete in code but has not yet been run, there are no Meta credentials, and there is no database. The snippets below are the real code behind each capability; where a capability is built-but-unrun or planned, the explanation says so.",
   "sections": [
     {
       "category": "Entry Point & API (FastAPI :8500)",
@@ -17,7 +17,7 @@
           "feature": "QI contract endpoints (/health, /version, /info)",
           "file": "api/main.py",
           "language": "python",
-          "code": "@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\"}\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"mq\", \"version\": \"0.1.0\", \"status\": \"development\"}\n\n@app.get(\"/info\")\nasync def info():\n    try:\n        sys.path.insert(0, r\"C:\\QI\\ECOSYSTEM\")\n        from qi_registry import QI\n        return QI.project(\"mq\")\n    except Exception:\n        return {\"project\": \"mq\", \"name\": \"MQ\"}\n\n# ── Add your endpoints below this line ───────────────────",
+          "code": "@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"ok\"}\n\n@app.get(\"/version\")\nasync def version():\n    return {\"project\": \"mq\", \"version\": \"0.1.0\", \"status\": \"development\"}\n\n@app.get(\"/info\")\nasync def info():\n    try:\n        sys.path.insert(0, r\"C:\\APPS\\QI\\ECOSYSTEM\")\n        from qi_registry import QI\n        return QI.project(\"mq\")\n    except Exception:\n        return {\"project\": \"mq\", \"name\": \"MQ\"}\n\n# ── Add your endpoints below this line ───────────────────",
           "explanation": "These three endpoints are the entire API surface so far — they implement the QI Module Interface Contract so the Hive dashboard can monitor MQ. /info reads the live registry entry. The trailing comment is literal: no business endpoints exist yet. This is the honest shape of a 'new' project — the contract is in, the features are not."
         },
         {

@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-REPO = Path(r"C:\PersonalSong")
+REPO = Path(r"C:\APPS\PersonalSong")
 CFG = REPO / "config" / "app_config.json"
 BK_DIR = Path(r"C:\QIH\logs\secret_audit")
 ORIGIN = "https://github.com/Quiddity-Innovations/PersonalSong.git"

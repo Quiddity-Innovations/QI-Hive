@@ -54,7 +54,7 @@ CLAUDE_MD_TEMPLATE = """\
 ## QI Service (NSSM)
 ```
 Service name: QI_{name}Bot
-Binary: C:\\1-AI\\APPS\\PYTHON\\python.exe
+Binary: C:\\Program Files\\Python311\\python.exe
 Script: {path}\\main.py
 Log: {path}\\LOGS\\service_log.txt
 ```

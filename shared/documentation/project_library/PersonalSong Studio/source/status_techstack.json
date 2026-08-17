@@ -23,7 +23,7 @@
     {"layer": "Integration", "technology": "Plex (plex_module)", "role": "ID3 tag + copy to a Plex-watched folder + section scan; connection/section probes", "license": "in-repo module", "version": "local Plex Media Server :32400"},
     {"layer": "Config / Secrets", "technology": "python-dotenv", "role": "Loads .env (OLLAMA_*, HF_TOKEN, MUSIC_LIBRARY_PATH, PLEX_LIBRARY_PATH); app_config.json layered over DEFAULTS", "license": "BSD", "version": ">=1.0"},
     {"layer": "QR / Cards", "technology": "qrcode", "role": "Printable greeting card with a scannable QR linking to the song's play page (tunnel/LAN-aware)", "license": "BSD", "version": "bundled"},
-    {"layer": "Operations", "technology": "NSSM (QI standard binary)", "role": "QI_PersonalSong Windows service (AppDirectory C:\\PersonalSong, serve.py, rotating logs)", "license": "Public domain", "version": "C:\\QIH\\engine\\bin\\nssm.exe"}
+    {"layer": "Operations", "technology": "NSSM (QI standard binary)", "role": "QI_PersonalSong Windows service (AppDirectory C:\\APPS\\PersonalSong, serve.py, rotating logs)", "license": "Public domain", "version": "C:\\QIH\\engine\\bin\\nssm.exe"}
   ],
   "descriptions": [
     {

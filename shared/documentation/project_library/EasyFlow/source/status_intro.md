@@ -108,4 +108,4 @@ from a free family gift into a polished, store-listed product with optional paid
 free core stays free.
 
 ---
-*This page is editable at `C:\EasyFlow\INTRO\status_intro.md` — save and click Refresh to update.*
+*This page is editable at `C:\APPS\EasyFlow\INTRO\status_intro.md` — save and click Refresh to update.*

@@ -29,19 +29,19 @@ CF   = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
 # app spec: service, appdir, python, params, ports(for echo), tunnel(port or None)
 APPS = [
     dict(svc="QI_FidelityAnalyzer", dir=r"C:\FidelityAnalyzer",
-         py=r"C:\1-AI\APPS\PYTHON\python.exe", params="main.py",
+         py=r"C:\Program Files\Python311\python.exe", params="main.py",
          desc="Fidelity Portfolio Analyzer - FastAPI :8504 + Gradio UI :7844 (single process).",
          tunnel=None),
     dict(svc="QI_AvatarStudio", dir=r"C:\1-AI\APPS\AvatarStudio",
          py=r"C:\1-AI\APPS\AvatarStudio\.venv\Scripts\python.exe", params="avatar_studio.py",
          desc="QI Avatar Studio - Gradio talking-head video pipeline :7862 (WSL2 render backends).",
          tunnel=None),
-    dict(svc="QI_PersonalSong", dir=r"C:\PersonalSong",
-         py=r"C:\PersonalSong\.venv\Scripts\python.exe", params="serve.py",
+    dict(svc="QI_PersonalSong", dir=r"C:\APPS\PersonalSong",
+         py=r"C:\APPS\PersonalSong\.venv\Scripts\python.exe", params="serve.py",
          desc="PersonalSong Studio - local AI song generator web app :8088 (acestep in .venv).",
          tunnel=None),
-    dict(svc="QI_M2V", dir=r"C:\M2V",
-         py=r"C:\M2V\.venv\Scripts\python.exe", params="main.py",
+    dict(svc="QI_M2V", dir=r"C:\APPS\M2V",
+         py=r"C:\APPS\M2V\.venv\Scripts\python.exe", params="main.py",
          desc="M2V Music-to-Video - FastAPI :8501 + Gradio UI :7841.",
          # tunnel=None: M2V is now a STATIC NAMED tunnel (qi-m2v) on
          # quiddityinnovations.com via tunnels.json, not a quick tunnel.
@@ -136,7 +136,7 @@ for a in APPS:
     calls.append(f'echo. & echo === {a["svc"]} === & call "{a["dir"]}\\install_service.bat"')
     if a["tunnel"]:
         calls.append(f'echo. & echo === {a["svc"]}Tunnel === & call "{a["dir"]}\\install_tunnel.bat"')
-calls.append('echo. & echo === TubeScout (service + tunnel, existing script) === & call "C:\\TUBESCOUT\\install_service_admin.bat"')
+calls.append('echo. & echo === TubeScout (service + tunnel, existing script) === & call "C:\\APPS\\TUBESCOUT\\install_service_admin.bat"')
 # Honor "all on demand": flip TubeScout app service from AUTO_START to DEMAND_START.
 calls.append(f'"{NSSM}" set QI_TubeScout Start SERVICE_DEMAND_START')
 master.write_text(

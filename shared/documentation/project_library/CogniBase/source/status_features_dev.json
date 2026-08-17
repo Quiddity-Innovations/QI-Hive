@@ -70,7 +70,7 @@
       {"name": "Settings loader with env indirection", "file": "Application/utils/config.py :: load_settings() / save_settings()", "status": "live", "detail": "Reads Settings/settings.json; resolves any 'env:NAME' string from a Settings/.env or the OS env at load time; save_settings() restores env: markers so real keys are never written back. lru_cache'd."},
       {"name": "Path + logging + dir helpers", "file": "Application/utils/paths.py, logger.py", "status": "live", "detail": "ROOT-relative paths (PRODUCT, ONBASE, RAG_INDEX, DESIGN), ensure_dirs() on startup, setup_logging(level)."},
       {"name": "Test suite", "file": "tests/ (≈14 modules)", "status": "live", "detail": "≈95 test functions across validator, drafter, audit, routes, anchors, bridges, sources, RAG index/query, vendor router, discovery/visualizer, and server smoke. Runs against FakeChatVendor/FakeEmbedVendor — no API keys required."},
-      {"name": "QI_CogniBase NSSM service", "file": "install_tunnel_service.bat, install_sync_service.bat, QI_Service_Registry.md", "status": "planned", "detail": "Service QI_CogniBase (venv python, AppDirectory C:\\CogniBase, requires sqlglot) + QI_CogniBaseTunnel documented in the service registry; not yet installed/running 24/7. Stderr logs show clean manual starts on :8650."}
+      {"name": "QI_CogniBase NSSM service", "file": "install_tunnel_service.bat, install_sync_service.bat, QI_Service_Registry.md", "status": "planned", "detail": "Service QI_CogniBase (venv python, AppDirectory C:\\APPS\\CogniBase, requires sqlglot) + QI_CogniBaseTunnel documented in the service registry; not yet installed/running 24/7. Stderr logs show clean manual starts on :8650."}
     ]
   }
 ]

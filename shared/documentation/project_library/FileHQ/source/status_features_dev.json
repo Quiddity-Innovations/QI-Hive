@@ -4,7 +4,7 @@
     "features": [
       {"name": "run.py — standalone launcher", "file": "run.py", "status": "partial", "detail": "Boots the FastAPI app via uvicorn on 127.0.0.1:8000 with reload. Standalone entry point from the pre-merge POC; in the merged world FileHQ is started by Naya, not by this script directly."},
       {"name": "FastAPI app (50+ endpoints)", "file": "main.py :: app = FastAPI(title='FileHQ', version='0.1.0')", "status": "live", "detail": "All REST routes: /api/scan, /api/stats, /api/files/{tree,list,search}, /api/categorize*, /api/hash*, /api/dedup*, /api/organize*, /api/structure*, /api/tasks*, /api/history*, /api/exceptions*, /api/settings*. Jinja2Templates + StaticFiles serve the dashboard. Background jobs run on threads guarded by _job_lock / _active_jobs."},
-      {"name": "filehq package init", "file": "__init__.py", "status": "live", "detail": "Marks C:\\NAYA\\filehq as the importable 'filehq' package so modules import as filehq.scanner, filehq.dedup, etc."}
+      {"name": "filehq package init", "file": "__init__.py", "status": "live", "detail": "Marks C:\\APPS\\NAYA\\filehq as the importable 'filehq' package so modules import as filehq.scanner, filehq.dedup, etc."}
     ]
   },
   {
@@ -64,7 +64,7 @@
   {
     "category": "Naya Integration Bridge",
     "features": [
-      {"name": "REST + direct-DB bridge", "file": "C:\\NAYA\\filehq_bridge.py", "status": "live", "detail": "Wraps all 50+ FileHQ endpoints (_get/_post/_put/_delete to http://127.0.0.1:8200) AND opens a read-only SQLite connection (file:...?mode=ro) for fast lookups (db_file_count, db_largest_files, db_category_breakdown, db_drive_usage, db_search_files). _sanitize_http_error strips internal URLs/IPs from user-facing errors."},
+      {"name": "REST + direct-DB bridge", "file": "C:\\APPS\\NAYA\\filehq_bridge.py", "status": "live", "detail": "Wraps all 50+ FileHQ endpoints (_get/_post/_put/_delete to http://127.0.0.1:8200) AND opens a read-only SQLite connection (file:...?mode=ro) for fast lookups (db_file_count, db_largest_files, db_category_breakdown, db_drive_usage, db_search_files). _sanitize_http_error strips internal URLs/IPs from user-facing errors."},
       {"name": "Intent + action detection", "file": "filehq_bridge.py :: is_filehq_question(), detect_action(), execute_chat_action()", "status": "live", "detail": "Keyword match decides if a message is file-related; detect_action() maps it to scan/dedup_summary/largest_files/categorize/hash/search_files/etc. Destructive execute_dedup/execute_organize require approved=True (explicit 'you may proceed')."},
       {"name": "Prompt context + Telegram", "file": "filehq_bridge.py :: build_context_for_prompt(), telegram_file_command()", "status": "live", "detail": "Builds a live [FILEHQ CONTEXT] block (stats, dedup summary, top categories, drive usage, active jobs, last scan) injected into Naya's system prompt; offline path tells the user how to start FileHQ. /files Telegram subcommands."}
     ]
