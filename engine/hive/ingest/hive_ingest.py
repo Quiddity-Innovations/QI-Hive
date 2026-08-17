@@ -24,6 +24,36 @@ BRAIN_DB = ROOT / "data" / "qi_brain.db"
 LOG_DIR  = ROOT / "logs" / "hive"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG = LOG_DIR / "ingest.log"
+REGISTRY = ROOT / "ecosystem" / "qi_registry.json"
+
+_REG_IDS_CACHE: set | None = None
+
+
+def _canonical_project_id(pid):
+    """Map a report's free-text project name onto the canonical registry id.
+
+    Separator- and case-insensitive: 'QI_Hive', 'qihive' and 'QI-Hive' all
+    resolve to 'qi_hive'. Unknown values pass through untouched — ingesting a
+    report for an unregistered project is better than dropping it. See the
+    2026-08-17 audit: the split namespace was the root cause of months of false
+    'no session activity' alerts.
+    """
+    global _REG_IDS_CACHE
+    if not pid or pid == "unknown":
+        return pid
+    if _REG_IDS_CACHE is None:
+        try:
+            import json as _j
+            _REG_IDS_CACHE = {
+                p["id"] for p in _j.loads(REGISTRY.read_text(encoding="utf-8"))["projects"]
+            }
+        except Exception:
+            _REG_IDS_CACHE = set()
+    if pid in _REG_IDS_CACHE:
+        return pid
+    import re as _re
+    flat = {_re.sub(r"[^a-z0-9]", "", i.lower()): i for i in _REG_IDS_CACHE}
+    return flat.get(_re.sub(r"[^a-z0-9]", "", str(pid).lower()), pid)
 
 for d in [INBOX, ARCHIVE]:
     d.mkdir(parents=True, exist_ok=True)
@@ -67,6 +97,12 @@ def write_to_brain(payload: dict) -> bool:
         # Map "unknown" / "?" / empty to "claude_manager" if source is claude_code
         if project in ("unknown", "?", "", None) and payload.get("source") == "claude_code":
             project = "claude_manager"
+        # Reports name their project freely — hive_report.py is called with
+        # "--project QI_Hive" from this repo's own CLAUDE.md, so session_log
+        # accumulated 'QI_Hive' alongside the canonical 'qi_hive'. Normalise at
+        # the boundary so the freshness/drift queries see one project, not two.
+        # (2026-08-17 audit.)
+        project = _canonical_project_id(project)
 
         source = payload.get("source") or "unknown"
         # Prefer explicit agent_id in payload (set by sub-agent hooks); else derive from source.

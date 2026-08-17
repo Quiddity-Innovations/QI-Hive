@@ -480,6 +480,32 @@ def _promote_dispatches_to_tasks(tasks: list) -> list:
         return tasks
 
     import json as _json
+
+    # Deduplicate on the LOGICAL ISSUE, not the dispatch id.
+    #
+    # The Inspector files a NEW dispatch (new id) for the same finding on every
+    # run, so keying only on dispatch_id let the same issue land on the board
+    # again and again: by 2026-08-17 the board held 233 open tasks of which only
+    # 80 were distinct — eighteen identical copies of a single .gitignore finding
+    # per project. A board nobody can read is a board nobody uses.
+    #
+    # (project_id, check_id) is the stable identity of a finding across re-files.
+    # (2026-08-17 audit.)
+    def _issue_key(project_id, payload_obj):
+        return (
+            (project_id or "").lower(),
+            payload_obj.get("check_id") or payload_obj.get("fix_category") or "",
+        )
+
+    open_issue_keys = set()
+    for t in tasks:
+        if t.get("column") == "done":
+            continue
+        open_issue_keys.add((
+            (t.get("project") or "").lower(),
+            t.get("check_id") or t.get("category") or "",
+        ))
+
     for r in rows:
         task_id = f"disp-{r['dispatch_id']}"
         if task_id in existing_ids:
@@ -488,6 +514,12 @@ def _promote_dispatches_to_tasks(tasks: list) -> list:
             payload = _json.loads(r["payload"]) if r["payload"] else {}
         except Exception:
             payload = {}
+
+        issue_key = _issue_key(r["project_id"], payload)
+        # Only suppress duplicates of issues that are still OPEN on the board.
+        # A resolved-then-recurring problem should legitimately reappear.
+        if issue_key[1] and issue_key in open_issue_keys:
+            continue
         title = (payload.get("message") or f"Dispatch {r['dispatch_id'][:8]}")[:120]
         _sf = payload.get("suggested_fix") or ""
         if isinstance(_sf, dict):
@@ -497,7 +529,15 @@ def _promote_dispatches_to_tasks(tasks: list) -> list:
         suggested_fix = _sf[:500]
         fix_category = payload.get("fix_category") or ""
         apply_state = (r["apply_state"] or "").lower()
-        if apply_state in ("applied",):
+        dispatch_status = (r["status"] or "").lower()
+        # A resolved dispatch is finished work — it belongs in 'done', not the
+        # backlog. Resolving a dispatch sets reviewed_at, which is part of this
+        # query's WHERE clause, so without this the audit's own queue drain
+        # promoted 180 closed findings straight back onto the open board.
+        # (2026-08-17 audit.)
+        if dispatch_status == "resolved":
+            column = "done"
+        elif apply_state in ("applied", "applied_local"):
             column = "done"
         elif apply_state in ("in_progress", "queued", "review"):
             column = "in_progress"
@@ -516,9 +556,14 @@ def _promote_dispatches_to_tasks(tasks: list) -> list:
             "column": column,
             "created_at": ts.split("T")[0] if "T" in ts else ts[:10],
             "category": fix_category,
+            # Persist the check_id so the dedup above has a stable identity to
+            # match on next run, independent of fix_category being set.
+            "check_id": payload.get("check_id") or "",
             "source": "brain_dispatch",
         })
         existing_ids.add(task_id)
+        if issue_key[1] and column != "done":
+            open_issue_keys.add(issue_key)
     return tasks
 
 

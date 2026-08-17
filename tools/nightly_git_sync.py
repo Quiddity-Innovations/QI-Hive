@@ -90,6 +90,127 @@ def sync(repo: str):
         log(f"FAIL {repo}: push: {p.stderr.strip()[:200]}")
 
 
+def publish_qi_apply_branches():
+    """Push auto-apply branches that the QI_HiveApply service committed locally.
+
+    Added 2026-08-17 (Renne-approved). QI_HiveApply runs as LocalSystem, which has
+    no GitHub credentials. Rather than give a SYSTEM-privileged service a
+    write-scoped token, the service stops at a local commit on a qi-apply/* branch
+    and marks the run 'applied_local'. This job — a scheduled task running as
+    Renne, with a working Git Credential Manager session — publishes them.
+
+    The trust boundary is the whole point: the component that can write code as
+    SYSTEM never holds a credential that can reach GitHub. Publishing happens
+    under Renne's own identity, on his schedule.
+
+    Content is already mechanically inspected and hive-inspector-approved before
+    it reaches 'applied_local', and every branch opens a PR rather than landing on
+    master — so nothing here merges without a human.
+    """
+    import json as _json
+    import sqlite3
+
+    db = Path(r"C:\QIH\data\qi_brain.db")
+    registry = Path(r"C:\QIH\ecosystem\qi_registry.json")
+    if not db.exists():
+        log("publish: qi_brain.db not found — skipped")
+        return
+
+    try:
+        paths = {
+            p["id"]: p["path"]
+            for p in _json.loads(registry.read_text(encoding="utf-8")).get("projects", [])
+            if p.get("id") and p.get("path")
+        }
+    except Exception as e:
+        log(f"publish: cannot read registry: {e}")
+        return
+
+    conn = sqlite3.connect(str(db))
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """SELECT r.id, r.dispatch_id, r.meta, r.commit_sha, d.project_id, d.payload
+           FROM dispatch_runs r
+           JOIN dispatches d ON d.dispatch_id = r.dispatch_id
+           WHERE r.state='applied_local'"""
+    ).fetchall()
+
+    if not rows:
+        log("publish: no auto-apply branches awaiting publication")
+        conn.close()
+        return
+
+    log(f"publish: {len(rows)} branch(es) awaiting publication")
+    for row in rows:
+        try:
+            branch = (_json.loads(row["meta"]) or {}).get("branch") if row["meta"] else None
+        except Exception:
+            branch = None
+        if not branch:
+            log(f"publish SKIP {row['dispatch_id']}: no branch recorded in meta")
+            continue
+
+        repo = paths.get(row["project_id"])
+        if not repo or not Path(repo, ".git").exists():
+            log(f"publish SKIP {row['dispatch_id']}: no repo for project '{row['project_id']}'")
+            continue
+
+        # Branch must still exist locally — someone may have cleaned it up.
+        if git(repo, "rev-parse", "--verify", branch).returncode != 0:
+            log(f"publish SKIP {row['dispatch_id']}: branch {branch} no longer exists locally")
+            continue
+
+        p = git(repo, "push", "-u", "origin", branch)
+        if p.returncode != 0:
+            log(f"publish FAIL {row['dispatch_id']}: push {branch}: {p.stderr.strip()[:160]}")
+            continue
+        log(f"publish: pushed {branch}")
+
+        try:
+            payload = _json.loads(row["payload"]) if row["payload"] else {}
+        except Exception:
+            payload = {}
+        category = payload.get("fix_category") or payload.get("check_id") or "auto-apply"
+        title = f"qi-apply: {category} ({row['dispatch_id'][:8]})"
+        body = "\n".join([
+            "Auto-applied by QI_HiveApply, published by nightly_git_sync.",
+            "",
+            f"- Category: {category}",
+            f"- Dispatch: {row['dispatch_id']}",
+            f"- Commit: {row['commit_sha']}",
+            "- Inspector verdict: pass (mechanical checks + hive-inspector)",
+            "",
+            "The apply service runs as LocalSystem and holds no GitHub credentials;",
+            "it committed this locally and this job published it. Review before merging.",
+        ])
+        pr = subprocess.run(
+            ["gh", "pr", "create", "--head", branch, "--title", title, "--body", body],
+            cwd=repo, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=120,
+        )
+        already_open = "already exists" in (pr.stderr or "").lower()
+        if pr.returncode != 0 and not already_open:
+            # Push succeeded but the PR did not open — e.g. a transient GitHub 503,
+            # which is exactly what happened on the first live run. Do NOT mark this
+            # applied: that would strand a published branch with no PR and nothing
+            # to retry it. Leaving it 'applied_local' makes the next run re-push
+            # (a no-op) and retry the PR, so the job is self-healing.
+            log(f"publish RETRY-LATER {row['dispatch_id']}: branch pushed but "
+                f"gh pr create failed: {pr.stderr.strip()[:150]}")
+            continue
+
+        log(f"publish: PR ready for {branch} — {(pr.stdout or 'already open').strip()[:120]}")
+        with conn:
+            conn.execute(
+                "UPDATE dispatch_runs SET state='applied' WHERE id=?", (row["id"],)
+            )
+            conn.execute(
+                "UPDATE dispatches SET apply_state='applied' WHERE dispatch_id=?",
+                (row["dispatch_id"],),
+            )
+    conn.close()
+
+
 def coverage_check():
     """Warn about registry projects that are git repos but sync nowhere.
 
@@ -131,5 +252,9 @@ if __name__ == "__main__":
             sync(r)
         except Exception as e:
             log(f"FAIL {r}: {type(e).__name__}: {e}")
+    try:
+        publish_qi_apply_branches()
+    except Exception as e:
+        log(f"FAIL publish_qi_apply_branches: {type(e).__name__}: {e}")
     coverage_check()
     log("=== nightly git sync done ===")

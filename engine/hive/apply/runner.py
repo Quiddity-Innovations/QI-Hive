@@ -60,10 +60,20 @@ _FORBIDDEN_PATHS = [
 
 log = logging.getLogger("hive_apply.runner")
 
-# LocalSystem runs this worker; repos are owned by Renne — git refuses without this.
-# (safe.directory is also set machine-wide via `git config --system` as of
-# 2026-08-17, so this flag is belt-and-braces rather than the sole mechanism.)
-_GIT = ["git", "-c", "safe.directory=*"]
+# This worker runs as LocalSystem while the repos are owned by Renne, so git's
+# ownership check has to be satisfied somehow.
+#
+# This used to be `git -c safe.directory=*`, which disables the ownership check
+# for every repo the invocation touches. That wildcard is no longer needed: as of
+# 2026-08-17 `git config --system --add safe.directory C:/QIH` grants it for the
+# real repo, and worktrees resolve their gitdir back to that root, so they inherit
+# it. Verified empirically in SYSTEM context — a probe dispatch completed through
+# worktree creation, transform, inspector and commit with no wildcard present.
+#
+# Keeping it off means the trust is enumerated in one auditable place (the system
+# gitconfig, added through a narrowly-scoped elevation rule) rather than granted
+# blanket at every call site.
+_GIT = ["git"]
 
 # Never let git block on an interactive credential prompt. LocalSystem has no
 # GitHub credentials, so `git push` launched git-credential-manager.exe and hung
@@ -254,6 +264,25 @@ def _resolve_pending_reviews(conn: sqlite3.Connection) -> None:
     ).fetchall()
 
     for run in rows:
+        # Claim the row before acting on it. The concurrency mutex in dispatcher
+        # only guards run *pickup* — it never guarded resolution, so two resolvers
+        # (the service plus a manual tick, or two service instances) could both
+        # advance the same run: double push, and whichever finished last wrote the
+        # final state. That is exactly what happened to run 11 on 2026-08-17 — a
+        # manual tick pushed and opened PR #1 successfully, then the service's
+        # credential-blocked push failed and overwrote the row with 'failed'.
+        # This UPDATE is the compare-and-swap: only one resolver can move the row
+        # out of pending_review, and only that one proceeds. (2026-08-17 audit.)
+        claimed = conn.execute(
+            "UPDATE dispatch_runs SET state='resolving' "
+            "WHERE id=? AND state='pending_review'",
+            (run["id"],),
+        ).rowcount
+        conn.commit()
+        if not claimed:
+            log.debug("run_id=%s already claimed by another resolver — skipping", run["id"])
+            continue
+
         if run["inspector_verdict"] == "pass":
             _commit_and_advance(conn, run)
         else:
@@ -330,11 +359,48 @@ def _commit_and_advance(conn: sqlite3.Connection, run: sqlite3.Row) -> None:
             (commit_sha, run["dispatch_id"]),
         )
     else:
-        # PR path: push a branch then open a PR via gh CLI
+        # PR path: create the branch. Whether we PUBLISH it (push + PR) from here
+        # depends on service_may_publish.
         branch = f"qi-apply/{run['dispatch_id'][:8]}"
         subprocess.run(
             [*_GIT, "checkout", "-b", branch], cwd=worktree, capture_output=True, text=True
         )
+
+        # ── Publish split (2026-08-17 audit, Renne-approved) ──────────────────
+        # This worker runs as LocalSystem, which has no GitHub credentials. Rather
+        # than hand a privileged service account a write-scoped token, the service
+        # stops at a local commit and a user-context job publishes it later
+        # (tools/nightly_git_sync.py :: publish_qi_apply_branches).
+        #
+        # The trust boundary is the point: the component that can write code as
+        # SYSTEM never holds a credential that can reach GitHub. It proposes
+        # locally; publishing happens under Renne's own identity.
+        #
+        # Branches outlive their worktree — they live in the main repo — so the
+        # commit is safe here until the publisher picks it up.
+        if not _project_flag(project_id, "service_may_publish", default=False):
+            conn.execute(
+                "UPDATE dispatch_runs SET state='applied_local', commit_sha=?, "
+                "finished_at=datetime('now'), meta=? WHERE id=?",
+                (commit_sha, json.dumps({"branch": branch, "awaiting": "publish"}), run["id"]),
+            )
+            conn.execute(
+                "UPDATE dispatches SET apply_state='applied_local', applied_at=datetime('now'), "
+                "applied_commit=? WHERE dispatch_id=?",
+                (commit_sha, run["dispatch_id"]),
+            )
+            conn.commit()
+            log.info(
+                "run_id=%d dispatch_id=%s: committed locally on %s — awaiting publish "
+                "by nightly_git_sync (service_may_publish=false)",
+                run["id"], run["dispatch_id"], branch,
+            )
+            subprocess.run(
+                [*_GIT, "worktree", "remove", str(worktree), "--force"],
+                cwd=project_root, capture_output=True, text=True,
+            )
+            return
+
         r = subprocess.run(
             [*_GIT, "push", "-u", "origin", branch], cwd=worktree, capture_output=True, text=True,
             env=_GIT_ENV, timeout=_GIT_NET_TIMEOUT,

@@ -1,11 +1,39 @@
 #!/usr/bin/env python
 """Write one row to agent_heartbeats. Called from Claude Code hooks."""
 import argparse
+import json
+import re
 import sqlite3
 import sys
 from pathlib import Path
 
 DB = Path(r"C:\QIH\data\qi_brain.db")
+REGISTRY = Path(r"C:\QIH\ecosystem\qi_registry.json")
+
+
+def canonical_project_id(pid: str | None) -> str | None:
+    """Map a caller-supplied project id onto the canonical registry id.
+
+    This writer goes straight to SQLite, bypassing the Brain API — so the
+    API's _resolve_pid() never sees these rows. The Claude Code hooks passed
+    '--project qihive' for months, and 5231 of 5375 heartbeats (97%) landed
+    under 'qihive' instead of 'qi_hive'. Every session-freshness query then saw
+    a near-idle project and the Inspector filed false alerts for months.
+
+    Normalising here means the hooks can be sloppy without corrupting the data.
+    Unknown ids are returned unchanged — a heartbeat is telemetry and must never
+    fail the hook. (2026-08-17 audit.)
+    """
+    if not pid:
+        return pid
+    try:
+        ids = {p["id"] for p in json.loads(REGISTRY.read_text(encoding="utf-8"))["projects"]}
+    except Exception:
+        return pid
+    if pid in ids:
+        return pid
+    flat = {re.sub(r"[^a-z0-9]", "", i.lower()): i for i in ids}
+    return flat.get(re.sub(r"[^a-z0-9]", "", pid.lower()), pid)
 
 
 def main():
@@ -28,7 +56,8 @@ def main():
         conn.execute(
             "INSERT INTO agent_heartbeats (agent_id, agent_kind, event, project_id, session_ref, model, meta_json) "
             "VALUES (?,?,?,?,?,?,?)",
-            (args.agent, args.kind, args.event, args.project, args.session, args.model, args.meta),
+            (args.agent, args.kind, args.event, canonical_project_id(args.project),
+             args.session, args.model, args.meta),
         )
         conn.commit()
         conn.close()

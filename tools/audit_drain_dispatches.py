@@ -64,9 +64,30 @@ def main(apply: bool) -> int:
             continue
         newest[(r["project_id"], check_of(r))] = r["dispatch_id"]
 
+    # Which (project, check) pairs are PASS or SKIP in the most recent run? A
+    # dispatch describing a problem that no longer exists is noise, and leaving it
+    # open is how the queue silently refilled after the underlying issues were
+    # actually fixed. This is the rule that makes the queue self-healing.
+    latest_run = con.execute(
+        "SELECT run_id FROM compliance_log ORDER BY log_id DESC LIMIT 1"
+    ).fetchone()
+    now_passing: set[tuple] = set()
+    if latest_run:
+        for row in con.execute(
+            "SELECT project_id, check_id FROM compliance_log "
+            "WHERE run_id=? AND status IN ('pass','skip')", (latest_run["run_id"],)
+        ):
+            now_passing.add((row["project_id"], row["check_id"]))
+
     actions: list[tuple[str, str, str]] = []   # (dispatch_id, reason, note)
     for r in rows:
         did, pid, chk = r["dispatch_id"], r["project_id"], check_of(r)
+
+        if r["status"] == "pending" and (pid, chk) in now_passing:
+            actions.append((did, "now_passing",
+                            f"[{STAMP} audit] Closed: check '{chk}' no longer reports a problem for "
+                            f"{pid} in the latest compliance run (pass or intentionally skipped)."))
+            continue
 
         if did.startswith(FIXTURE_PREFIXES) or pid in FIXTURE_PROJECTS:
             actions.append((did, "test_fixture",

@@ -1,10 +1,10 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-17 11:28:42 (nightly reconciler)_
+_Auto-generated: 2026-08-17 14:08:12 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
-| autopdf | Hardening + MCP integration | active | 58 | 2026-08-17 11:56:15 |
+| autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
 | claude_manager | Operational | active | 53 | 2026-08-09 15:20:35 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 12 | 2026-08-07 02:01:14 |
@@ -17,17 +17,17 @@ _Auto-generated: 2026-08-17 11:28:42 (nightly reconciler)_
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | gamez | Correctness & data integrity (post-feature-complete) | active | 8 | 2026-06-29 21:42:14 |
 | lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
-| m2v | v0.1.0 — scaffold + first render | active | 6 | 2026-06-18 00:35:05 |
-| maia | Phase 4 — production | active | 22 | 2026-08-13 18:28:00 |
-| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 173 | 2026-08-17 12:06:21 |
-| mq | Phase 0 — scaffold | new | 1 | 2026-04-06 12:00:00 |
+| m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
+| maia | Phase 4 — production | active | 23 | 2026-08-13 21:00:07 |
+| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 179 | 2026-08-17 12:06:21 |
+| mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | naya | Phase 3 — bot + UI live | paused | 5 | 2026-06-23 16:03:19 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
 | openclaw | Phase 2 — agent expansion | active | 65 | 2026-07-31 21:58:24 |
-| personalsong | Working app | active | 11 | 2026-06-18 00:35:04 |
+| personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 193 | 2026-08-17 11:28:23 |
+| qi_hive | Dashboard UX polish | active | 195 | 2026-08-17 11:30:01 |
 | retirementanalyzer | v1 - engine + API + UI live | active | 7 | 2026-07-03 02:52:18 |
 | synvox | Phase 0 - Foundation (MatrAIx engine bootstrap) | active | 1 | 2026-08-16 20:57:20 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
@@ -125,9 +125,9 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 
 ### m2v
 - **Phase:** v0.1.0 — scaffold + first render
-- **Status:** active
-- **Summary:** API :8501 live (/health ok). First test video produced (forro_anime_mv.mp4).
-- **Next:** Define pipeline phases; wire to PersonalSong output
+- **Status:** paused
+- **Summary:** Marked paused by the 2026-08-17 audit — 60 days without a session. Silence is now intentional, so compliance stops filing session_freshness/brain_drift. Set back to 'active' on the next real session.
+- **Next:** Resume when Renne picks the project back up.
 
 ### maia
 - **Phase:** Phase 4 — production
@@ -143,9 +143,9 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 
 ### mq
 - **Phase:** Phase 0 — scaffold
-- **Status:** new
-- **Summary:** API scaffold runs on :8500 (/health ok). Started 2026-06-10 as part of full-ecosystem boot.  Status corrected per owner (Renne) 2026-06-18 dashboard review.
-- **Next:** Obtain Meta credentials
+- **Status:** paused
+- **Summary:** Marked paused by the 2026-08-17 audit — 133 days without a session; scaffold only. Silence is now intentional, so compliance stops filing session_freshness/brain_drift. Set back to 'active' on the next real session.
+- **Next:** Resume when Renne picks the project back up.
 
 ### naya
 - **Phase:** Phase 3 — bot + UI live
@@ -167,9 +167,9 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 
 ### personalsong
 - **Phase:** Working app
-- **Status:** active
-- **Summary:** Studio on :8088 (ACE-Step vocals + Demucs/Seed-VC clone). 4 session summaries 2026-06-05/06. Git repo initialized 2026-06-10.
-- **Next:** Register tunnel/port block decision; continue feature work
+- **Status:** paused
+- **Summary:** Marked paused by the 2026-08-17 audit — 60 days without a session. Silence is now intentional, so compliance stops filing session_freshness/brain_drift. Set back to 'active' on the next real session.
+- **Next:** Resume when Renne picks the project back up.
 
 ### playdeck
 - **Phase:** Feature build â€” subjects and cross-site subscriptions

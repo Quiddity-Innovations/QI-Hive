@@ -2,7 +2,7 @@
 
 **Authority:** This file is the single source of truth for all QI/OC/Maia **Windows Scheduled Tasks** (the sibling of `QI_Service_Registry.md`, which covers NSSM *services*).
 **Location:** `C:\QIH\ecosystem\QI_Scheduled_Tasks_Registry.md`
-**Last updated:** 2026-06-18
+**Last updated:** 2026-08-17 (audit: documented 8 missing tasks, flagged the QI_NightlyReconcile timeout and four dead one-shots — see §7)
 
 > **If a scheduled task pops a command window, or you need to disable/enable one, START HERE.**
 
@@ -108,6 +108,41 @@ All `hidden_user` tasks below are now windowless. `*` = required a one-time elev
 | OC-ChatGPT-Keepalive | time trigger | `oc-chatgpt-keepalive.py` | hidden_user | already pythonw (silent) |
 | OC_WSL_KeepAlive * | time trigger | `keep-wsl-alive.ps1` | hidden_user | conhost (Highest) |
 | QI_McpConnectorGuard | every 5 min | `C:\QIH\engine	ools\ConnectorGuard\connector_guard.py` | hidden_user | conhost --headless in TR; reconciles Claude Desktop mcpServers vs connectors.json manifest; heartbeat in ConnectorGuard\logs |
+| QI_NightlyReconcile | daily 02:30 | `tools\nightly_reconcile.py` | system | Backfills session_log from git + .docx, regenerates LATEST.md/status.json, runs the doc harvest + embeddings. **⚠ Was terminated (0x41306) on 2026-08-17 against a PT10M limit** — a measured run takes ~3.5 min but the doc-harvest embedding step is variable (175 docs that night). Needs `ExecutionTimeLimit` raised to PT30M — see §7. |
+| QI_ClaudeSelfAudit | monthly | Claude self-audit | hidden_user | Documented 2026-08-17 audit. |
+| QI_ClaudeUpdate_6AM | daily 06:00 | `C:\APPS\CLAUDE\Tools\claude_update_launch.bat` | hidden_user | Documented 2026-08-17 audit. |
+| QI_ClaudeVoiceBridgeCheck | hourly | Claude Voice bridge health probe | hidden_user | Documented 2026-08-17 audit. |
+| QI_ClaudeVoiceMeeting_8AM | daily 08:00 | Claude Voice meeting room | hidden_user | Long-running by design (hosts the room) — a `Running` state during the day is expected, not a hang. Documented 2026-08-17 audit. |
+| QI_EffortLedger_Daily | daily 23:50 | `engine\effort\EffortLedger_Daily.bat` | hidden_user | Documented 2026-08-17 audit. |
+| QI_FilmForge_Night | nightly (disabled) | FilmForge night runner | — | Currently **Disabled**, has never run. Documented 2026-08-17 audit. |
+
+### Retired / orphaned one-shots — safe to delete
+
+These have no `NextRunTime` and no live purpose. They linger because one-shot tasks
+are never cleaned up automatically. Deleting them needs an elevated shell (see §7).
+
+| Task | Last ran | Why it's dead |
+|---|---|---|
+| **MaiaRevertMiMo** | 2026-04-01 | One-shot; last result `0x80070002` (file not found). `revert_mimo.py` exists again today, but the task has no trigger, so it will never fire. |
+| **QI_ClaudeUpdate_Tonight** | 2026-06-28 | One-shot companion to `QI_ClaudeUpdate_6AM`, which covers this daily. |
+| **QI_DemoDayStartup** | 2026-07-20 | One-shot for a specific demo day that has passed. |
+| **QI_GamezAIPin** | 2026-06-25 | One-shot that set a Gamez AI pin; already applied. |
+
+### §7 — Elevated fixes still outstanding (2026-08-17 audit)
+
+These need an **elevated** PowerShell; they are deliberately NOT in the QI Elevation
+Broker whitelist, because task creation/deletion takes arbitrary commands as arguments.
+
+```powershell
+# 1. Stop QI_NightlyReconcile being killed mid-run (measured 3.5 min, limit is 10)
+$t = Get-ScheduledTask -TaskName 'QI_NightlyReconcile'
+$t.Settings.ExecutionTimeLimit = 'PT30M'
+Set-ScheduledTask -TaskName 'QI_NightlyReconcile' -Settings $t.Settings
+
+# 2. Remove the four dead one-shots listed above
+'MaiaRevertMiMo','QI_ClaudeUpdate_Tonight','QI_DemoDayStartup','QI_GamezAIPin' |
+  ForEach-Object { Unregister-ScheduledTask -TaskName $_ -Confirm:$false }
+```
 | QI_ComplianceFast | inspector fast cycle | `inspector --mode fast` | system | SYSTEM — already invisible |
 | QI_NightlyReconcile | nightly | `nightly_reconcile.py` | system | SYSTEM — already invisible |
 | **QI_DemoDayStartup** | **once 2026-06-26 07:30** | `C:\QIH\engine\tunnels\demo_day_startup.py` | hidden_user | conhost --headless; one-time demo-day kick. Starts all apps + tunnels, verifies every public URL, retries down ones, pushes pass/fail to Tasuke LINE. Runs Limited; `nssm start/restart` elevated via QI_Elevate broker. M2V (no NSSM svc) launched as a detached process. Safe to delete after the demo day. |

@@ -22,6 +22,14 @@
       "sha256": "ANY",
       "allowed_args": [],
       "machine": "POWERSPEC"
+    },
+    "install-synvox": {
+      "file": "Install-SynVox.ps1",
+      "description": "SynVox install configuration - complements setup-synvox (which builds the engine). Verifies the engine/venv/Persona 1M are already healthy (refuses to run and exits non-zero if not, pointing at setup-synvox rather than re-bootstrapping), writes the SYNVOX_EDITION and bind address (config\\synvox.json + a user env var), verifies the Claude Max subscription CLI is headless-authenticated via qi_claude_brain.cli_status() and writes bin/env-file REFERENCES ONLY into config\\ai_providers.json, generates the SynVox API bearer token into secrets\\ (0600-equivalent, never logged), and optionally (-InstallServices) registers QI_SynVoxAPI as an NSSM service. QI_SynVoxRouter is registered only with the additional -Force flag, with a loud warning, because it drives a PERSONAL Claude Max subscription and NSSM services run under a service account. Master-logged to C:\\APPS\\SynVox\\logs\\synvox_install_<timestamp>.log.",
+      "sha256": "ANY",
+      "allowed_args": [],
+      "machine": "POWERSPEC",
+      "_note": "This script is normally run INTERACTIVELY, as the person whose Claude Max plan is being configured, with -ClaudeBin/-ClaudeEnvFile pointing at their own claude.exe and OAuth env file. allowed_args is deliberately [] so a remote qi_execute_script('install-synvox') call can only run it with all defaults, never with someone else's provider paths: the QI Connector executor runs as NT AUTHORITY\\SYSTEM, which is the wrong principal to drive a personal subscription lane (same reasoning as the QI_SynVoxRouter -Force gate above)."
     }
   }
 }

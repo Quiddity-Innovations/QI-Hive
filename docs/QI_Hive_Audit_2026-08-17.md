@@ -191,7 +191,81 @@ instead of a hang — the loop survives and picks up the next run.
 
 ---
 
-## Still needs Renne — one item
+## Session 3 — publish split shipped, backlog cleared
+
+Renne chose **Option B**: the privileged service never gets a GitHub credential.
+
+### The publish split ✅
+- `QI_HiveApply` now stops at a local commit on a `qi-apply/*` branch and marks the
+  run `applied_local`. It attempts no push and holds no token.
+- `nightly_git_sync.publish_qi_apply_branches()` — running as a scheduled task under
+  Renne's account, with a working credential manager — pushes those branches and
+  opens the PRs.
+- Verified end-to-end. The first live run hit a transient GitHub 503 on `gh pr
+  create`, which exposed a flaw in the first draft: it marked the run `applied`
+  anyway, stranding a pushed branch with no PR and nothing to retry it. Now a
+  failed PR leaves the run `applied_local`, so the next run re-pushes (a no-op)
+  and retries — self-healing. Re-run produced PR #2, since closed as a test.
+
+### `safe.directory=*` removed ✅
+Settled empirically rather than assumed. A probe dispatch ran to completion in
+SYSTEM context with the wildcard removed, proving the `--system` entry covers
+worktrees (they resolve their gitdir back to the repo root). The wildcard is gone;
+trust is now enumerated in one auditable place.
+
+### Two more latent bugs found and fixed
+1. **`_resolve_pending_reviews` had no concurrency guard.** Only run *pickup* was
+   protected. A manual tick and the service both resolved run 11 concurrently —
+   the manual one pushed and opened PR #1 successfully, then the service's
+   credential-blocked push failed and overwrote the row with `failed`. A record
+   said "failed" for work that had actually shipped. Now a compare-and-swap claim
+   (`pending_review -> resolving`) means only one resolver proceeds.
+2. **The task board duplicated every finding.** `_promote_dispatches_to_tasks`
+   keyed on `dispatch_id`, but the Inspector files a *new* dispatch for the same
+   finding each run — so 233 open tasks contained only 80 distinct items, eighteen
+   copies of one `.gitignore` finding per project. Now dedupes on
+   `(project, check_id)`. A related regression from this audit's own queue drain —
+   resolving a dispatch sets `reviewed_at`, which put 180 closed findings straight
+   back on the open board — was fixed by mapping `status='resolved'` to `done`.
+
+### Backlog cleared
+| Item | Before | After |
+|---|---|---|
+| Open dispatches | 26 | **7** (6 `brain_drift`, 1 real docs issue) |
+| Open board tasks | 233 (80 distinct) | **51, zero duplicates** |
+| Non-canonical project ids | 2 live leaks | **0** |
+| Undocumented scheduled tasks | 8 | **0** |
+
+The dispatch queue is now self-healing: `audit_drain_dispatches.py` closes anything
+whose check reports `pass` **or** `skip` in the latest compliance run, so fixing the
+underlying problem retires the ticket automatically.
+
+`mq`, `personalsong` and `m2v` were marked **paused** — factually, 60–133 days with
+no session while still flagged `active`, which is what made the Inspector nag nightly.
+One row each to reverse when Renne picks them back up.
+
+### Regression check
+`tools/audit_status_check.py` (new) re-verifies all 28 audit items against live
+state. Currently **26 done / 2 lagging**. Run it after any Hive change.
+
+---
+
+## Still needs Renne — elevated, deliberately not brokered
+
+Both remaining items are Windows Scheduled Task changes. They are **not** in the
+elevation whitelist because task creation/deletion takes arbitrary commands as
+arguments — brokering that would hand automation a general-purpose execution path.
+Exact commands are in `ecosystem/QI_Scheduled_Tasks_Registry.md` §7:
+
+1. **`QI_NightlyReconcile` is being killed mid-run.** Its `ExecutionTimeLimit` is
+   `PT10M`; a measured run takes ~3.5 min, but the doc-harvest embedding step is
+   variable (175 docs on the night it was terminated). Raise to `PT30M`.
+2. **Four dead one-shot tasks** — `MaiaRevertMiMo`, `QI_ClaudeUpdate_Tonight`,
+   `QI_DemoDayStartup`, `QI_GamezAIPin` — have no trigger and no purpose.
+
+---
+
+## Superseded — original write-up of the credential item
 
 ### Auto-apply cannot push: LocalSystem has no git credentials
 Everything up to the push is now working and autonomous. The final step fails

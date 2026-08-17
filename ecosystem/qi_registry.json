@@ -3,9 +3,9 @@
   "name": "Quiddity Innovations — Ecosystem Registry",
   "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
   "version": "1.0.0",
-  "last_updated": "2026-08-16",
+  "last_updated": "2026-08-17",
   "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
-  "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759."
+  "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded."
  },
  "module_interface_contract": {
   "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -80,7 +80,7 @@
    "8720-8729": "Claude Voice family (realtime two-way voice assistant)",
    "8730-8739": "Voice Studio family (studio/batch voice rendering) — RESERVED. The panel currently serves UI+API on 7863; this block is held for a headless API split.",
    "8740-8749": "QI Media Studio family (composition layer) - RESERVED. The panel serves UI+API on 7864; this block is held for a headless API split.",
-   "8750-8759": "SynVox family - RESERVED. No listening service in Phase 0; held for the Phase 5 standalone product surface."
+   "8750-8759": "SynVox family. 8750 = MatrAIx dev GUI (tools\\view_gui.py, manual). 8751 = SynVox API. 8753 = SynVox AI Router (subscription lane). 8752 and 8754-8759 unallocated."
   },
   "ui_blocks": {
    "7800-7809": "Maia UI family",
@@ -1559,9 +1559,20 @@
    "description": "SynVox (synthetic vox - the synthetic voice of the people). Consumer-grade idea-validation platform: 'anyone with an idea can test it against the world before betting on it.' A user describes an idea, product, price, email or chatbot in plain language; SynVox (1) rehearses it against simulated persona audiences using the MatrAIx engine + Persona 1M dataset, and (2) reality-checks it against live market data (APIs) and RAG-ingested industry reports, producing one evidence-graded verdict - who wants this, why, what to change, how confident to be - with simulation-vs-reality disagreements flagged. NEXUS, EasyFlow/MailBrain and Maia are hidden engines and the guinea-pig first customers.",
    "path": "C:\\APPS\\SynVox",
    "github": null,
-   "status": "phase_0",
+   "status": "active_development",
    "primary_language": "Python 3.12 (uv-managed) + MatrAIx harbor CLI",
-   "ports": {},
+   "ports": {
+    "api": {
+     "current": 8751,
+     "block": "8750-8759",
+     "notes": "SynVox API (synvox_server.py) - the product surface. Declared per Law 5 before implementation; service QI_SynVoxAPI. The MatrAIx Playground dev GUI (tools\run_playground.py) moved 8751 -> 8755 to make room."
+    },
+    "ai_router": {
+     "current": 8753,
+     "block": "8750-8759",
+     "notes": "SynVox AI Router - OpenAI-compatible shim whose backend is headless 'claude -p' on a Claude Max subscription (no Anthropic API key). Lets MatrAIx reach the subscription lane unchanged via OPENAI_BASE_URL. Loopback only, bearer-gated. DELIBERATELY NOT AN NSSM SERVICE: it is a per-user FOREGROUND process (python tools\run_router.py). A service account - and the Connector executor's NT AUTHORITY\\SYSTEM in particular - must not drive a personal consumer subscription, and a machine-wide always-on endpoint holding one person's Max plan is the wrong posture. On a metered or BYOK lane (Enterprise/Cloud editions) a service IS appropriate, because the credential belongs to the org rather than to a person. This is the InferenceLane seam. Allocated 2026-08-17; service declaration corrected the same day."
+    }
+   },
    "family_tier": "sibling",
    "family_notes": "Sibling tier - a product in its own right, not a tool of another project. Composes existing QI apps as engines: NEXUS (multi-model synthesis of results), EasyFlow/MailBrain (email-campaign simulation), Maia (multilingual conversational layer for chatbot evals), CogniBase (RAG store for ingested market reports). Reached through the QI Connector rather than owning its own MCP server in Phase 0-1; port block 8750-8759 is reserved for the Phase 5 standalone surface. Registered 2026-08-16.",
    "integrates_with": [
@@ -1573,32 +1584,55 @@
     "cognibase"
    ],
    "exposes_to_ecosystem": [
-    "Persona cohort profiling over the Persona 1M dataset (Phase 0 - free, no API cost)",
-    "Planned Phase 2 MCP tools on the QI Connector: matraix_list_tasks, matraix_sample_personas, matraix_run_task, matraix_job_status, matraix_get_report, matraix_estimate_cost",
-    "Planned Phase 4 market_* (World Bank, Census, Eurostat, GitHub, HF, Trends, Reddit, Product Hunt, FRED) and rag_* tool groups"
+    "GET /health, GET /version, GET /info - QI module interface contract",
+    "GET /v1/capabilities - edition, task kinds, providers, engine commit, rubric version",
+    "POST /v1/scenarios, /v1/scenarios/{id}/compile|smoke|estimate - plain-language scenario authoring; smoke is free and cannot reach a provider",
+    "POST /v1/runs (requires a signed approval token from /estimate), GET /v1/runs/{id}, /events, /results, /verdict, /cost",
+    "POST /v1/cohorts/size|profile - free persona segmentation over Persona 1M, no LLM calls, counted from the postings index",
+    "Planned synvox_* MCP tools via the QI Connector's declarative generic_tools (no new Connector code)"
    ],
    "consumes_from_ecosystem": [
     "connector (MCP front door - remote execution via qi_execute_script('setup-synvox'))",
     "qi_brain (decisions, project state, session history)",
-    "Anthropic API via ANTHROPIC_API_KEY - the ONLY cost in the stack; personal Quiddity Innovations key only, never a BU credential"
+    "Claude Max subscription via headless `claude -p` (qi_claude_brain in C:\\QIH\\engine\\common) - the persona/authoring/synthesis brain. Owner decision 2026-08-17 (QI Brain #530): NO metered Anthropic API key, no per-call spend. Per-user - each principal points config\u0007i_providers.json at their own claude.exe and OAuth env file. Consequence: no token or cost telemetry, so results carry cost_usd: null by design and the spend gate is a call-and-time budget, not dollars."
    ],
    "paths": {
     "logs": "C:\\APPS\\SynVox\\logs",
     "engine": "C:\\APPS\\SynVox\\engine\\matraix",
     "personas": "C:\\APPS\\SynVox\\engine\\matraix\\persona\\datasets\\matraix-persona-1m\\release",
     "docs": "C:\\APPS\\SynVox\\Quiddity Innovations - SynVox Documentation",
-    "bootstrap_script": "C:\\QIH\\dispatch\\scripts\\Setup-SynVox.ps1"
+    "bootstrap_script": "C:\\QIH\\dispatch\\scripts\\Setup-SynVox.ps1",
+    "ai_router": "C:\\APPS\\SynVox\\synvox\\ai\\router.py"
    },
-   "loopback_only": true,
+   "loopback_only": false,
    "internet_exposed": false,
-   "exposure_note": "No listening service in Phase 0. Reachable remotely only through the QI Connector's whitelisted executor (qi_execute_script('setup-synvox')) - the manifest is the security boundary.",
-   "services": [],
+   "exposure_note": "One loopback-only listener: the SynVox AI Router on 127.0.0.1:8753 (synvox\u0007i\router.py), an OpenAI-compatible shim whose backend is the owner's Claude Max plan via headless `claude -p`. Bearer-token protected (secrets\router_token.txt) because loopback is not a security boundary. Not an NSSM service and deliberately NOT remotely executable: the QI Connector executor runs as NT AUTHORITY\\SYSTEM and a personal subscription must not be driven from a service account. Everything else is reachable remotely only through the Connector's whitelisted executor.",
+   "services": [
+    {
+     "name": "synvox_api",
+     "nssm_name": "QI_SynVoxAPI",
+     "port": 8751,
+     "type": "FastAPI (uvicorn)",
+     "managed_by": "NSSM",
+     "start_type": "auto",
+     "internet_exposed": false,
+     "installed": null,
+     "notes": "Declared per Law 5 before implementation. 'installed' is filled in when the NSSM service is actually registered."
+    }
+   ],
    "licensing": {
     "engine": "MatrAIx (github.com/MatrAIx-ai/MatrAIx-Persona-8B) - MIT, commercial use OK",
     "dataset": "Persona 1M (HF: MatrAIx2026/MatrAIx_Persona_1M_Public_Release) - free download. OPEN QUESTION: written clarification needed from the MatrAIx team before any commercial redistribution inside a QI product. Internal analysis use only until then."
    },
    "ip_separation": "Quiddity Innovations LLC project. Developed exclusively on personal hardware (PowerSpec) with personal accounts. No Boston University hardware, network, accounts, credentials or work hours - keeps LLC IP ownership clean.",
-   "added_to_registry": "2026-08-16"
+   "added_to_registry": "2026-08-16",
+   "editions": {
+    "_doc": "One codebase, four editions (QI Brain decisions #532, #533). An edition may only swap an implementation behind an interface - it may never add or remove a feature. The separating axis is who operates the install and whose Anthropic account pays, not scale.",
+    "personal": "1 user, own Claude Max plan, loopback, SQLite, call budget.",
+    "professional": "3-10 users in one small business sharing ONE Max plan on one host over the LAN. Fair-share queueing across users on the single shared inference lane. Renne + Urcil run here.",
+    "enterprise": "A company self-hosts on its own Anthropic API account. Metered - the customer's money. Postgres, SSO, per-tenant quotas.",
+    "cloud": "QI-hosted SaaS on QI's Anthropic business account; customers pay for access. Metered - Renne's money, so the dollar gate becomes margin protection. GATED on written Persona 1M commercial-redistribution clarification from the MatrAIx team (decision #533)."
+   }
   }
  ],
  "family_taxonomy": {

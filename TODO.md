@@ -27,13 +27,21 @@
       and the May run still carries `stale_lock_cleared_2026-05-14` proving it was hit and
       hand-cleared back then); and `worktrees/` was missing from `.gitignore`.
       **Verified autonomous: ~50s start-to-finish, no human tick.**
-- [ ] 🔴 **Last mile: auto-apply cannot PUSH — LocalSystem has no git credentials.**
-      Everything up to the push works. The push fails cleanly (no longer hangs) with
-      *"Cannot prompt because user interactivity has been disabled"*. Two options, both yours:
-      **(a)** run the service as you — `nssm set QI_HiveApply ObjectName .\renne <password>` —
-      so it inherits your Git Credential Manager session (cleanest, needs your password);
-      or **(b)** provision a PAT in SYSTEM's credential store scoped to the QI repos.
-      Until then the pipeline commits locally, fails the push loudly, and stays unwedged.
+- [x] ✅ **Auto-apply push — SOLVED without any credential** (Option B, 2026-08-17).
+      The service commits locally on a `qi-apply/*` branch and marks it `applied_local`;
+      `nightly_git_sync.publish_qi_apply_branches()` — running as you, with your credential
+      manager — pushes and opens the PR. No PAT exists anywhere, and the component that can
+      write code as SYSTEM never holds a token that reaches GitHub. Verified end-to-end;
+      PR retry is self-healing after transient GitHub failures.
+- [ ] 🔴 **Two elevated scheduled-task fixes** — exact commands in
+      [`ecosystem/QI_Scheduled_Tasks_Registry.md`](ecosystem/QI_Scheduled_Tasks_Registry.md) §7.
+      Not brokered on purpose: task creation/deletion takes arbitrary commands as arguments.
+      **(a)** `QI_NightlyReconcile` is being killed mid-run — `ExecutionTimeLimit` is PT10M,
+      a measured run is ~3.5 min but doc-harvest embedding is variable; raise to PT30M.
+      **(b)** Delete four dead one-shots: `MaiaRevertMiMo`, `QI_ClaudeUpdate_Tonight`,
+      `QI_DemoDayStartup`, `QI_GamezAIPin`.
+- [ ] ⚪ **Regression check available:** `python C:\QIH\tools\audit_status_check.py` re-verifies
+      all 28 audit items against live state (currently 26 done / 2 lagging). Run after Hive changes.
 - [ ] 🔴 **17 registry repos sync nowhere.** The new `coverage_check()` in
       `nightly_git_sync.py` now reports them every run (warn-only). Enrolling them in
       nightly auto-commit is a policy call: akiyascout, avatarstudio, claude_manager,
