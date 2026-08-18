@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-17 14:08:12 (nightly reconciler)_
+_Auto-generated: 2026-08-18 00:33:35 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -9,7 +9,7 @@ _Auto-generated: 2026-08-17 14:08:12 (nightly reconciler)_
 | claude_manager | Operational | active | 53 | 2026-08-09 15:20:35 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 12 | 2026-08-07 02:01:14 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
-| comfyui | Active â€” media engine operational | active | 1 | 2026-08-10 23:57:42 |
+| comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
 | connector | v1.0 live | active_development | 1 | 2026-07-30 21:21:48 |
 | cypherminer | Phase 1 — frontend + tunnel live | complete | 4 | 2026-06-16 11:29:45 |
 | digitization | v1 — tool + docs delivered | complete | 4 | 2026-08-11 17:10:00 |
@@ -27,9 +27,9 @@ _Auto-generated: 2026-08-17 14:08:12 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 195 | 2026-08-17 11:30:01 |
+| qi_hive | Dashboard UX polish | active | 197 | 2026-08-17 14:10:47 |
 | retirementanalyzer | v1 - engine + API + UI live | active | 7 | 2026-07-03 02:52:18 |
-| synvox | Phase 0 - Foundation (MatrAIx engine bootstrap) | active | 1 | 2026-08-16 20:57:20 |
+| synvox | Phase 0 - Foundation (MatrAIx engine bootstrap) | active | 5 | 2026-08-17 23:51:33 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 21 | 2026-04-20 01:16:46 |
 
