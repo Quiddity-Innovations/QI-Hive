@@ -160,3 +160,46 @@ Set-ScheduledTask -TaskName 'QI_NightlyReconcile' -Settings $t.Settings
 ---
 
 *Related: `QI_Service_Registry.md` (NSSM services), `QI_Ecosystem_Map.md` (ports & families), `QI_Standards.md` (conventions).*
+
+
+---
+
+## QI_RelaySync — Claude-to-Claude collaborator relay
+
+**Added:** 2026-08-18 · **Cadence:** every 30 min (:00 / :30) · **Window mode:** `hidden_user`
+
+Exchanges structured project updates with external collaborators (currently Urcil Peters)
+through a private git mailbox, so each side's Claude can brief its owner and draft replies
+without either human hand-writing relay prompts.
+
+| Item | Path |
+|---|---|
+| Mailbox repo (separate repo — **not** inside QIH) | `C:\QI-RELAY\` |
+| Protocol spec (configures both Claudes) | `C:\QI-RELAY\PROTOCOL.md` |
+| Task action | `C:\QIH	ools\qi_relay_cycle.bat` |
+| Transport step (no AI) | `C:\QIH	ools\qi_relay_sync.py` |
+| Drafting step (sandboxed Claude) | `C:\QIH	ools\qi_relay_draft.py` |
+| Digest output | `C:\QIH\inbox
+elay\pending.md` |
+| Logs | `C:\QIH\LOGS\qi_relay_sync.log`, `qi_relay_draft.log` |
+
+**Why `hidden_user` and not `system`:** the cycle needs the user profile for git
+credentials and `claude` CLI auth. As SYSTEM it would fail both.
+
+**Symptom → check:**
+
+| Symptom | Check |
+|---|---|
+| No new messages appearing | `qi_relay_sync.log` — look for `pull failed` or `no remote configured` |
+| Messages appear but no drafts | `qi_relay_draft.log` — `Not logged in` means the CLI lost its session |
+| `[GUARD] reverted ...` in the draft log | The drafting step tried to write outside `_drafts/`. Investigate before re-running — this is the injection tripwire. |
+| `quarantined` entries in `state/renne.json` | A peer sent a spoofed or malformed message. It was NOT forwarded. |
+
+**LIVE as of 2026-08-19.** Remote: `https://github.com/Quiddity-Innovations/qi-relay` (private).
+Task registered and wrapped headless; **first run held until Sun 2026-08-23 00:00**, then every
+30 min indefinitely. Principal: Interactive (needs the user profile for git creds + claude auth).
+
+⚠️ **Two things still open:** the L2 drafting step has never had a successful model call
+(`python C:\QIH\tools\qi_relay_draft.py --self-test --budget 0.40`). The external collaborator
+has been invited as an outside collaborator on the relay repo only; identities and roster live in
+the **private** relay repo (`peers.json`), never here — **this repo is public.**

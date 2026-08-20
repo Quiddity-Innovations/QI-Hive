@@ -84,3 +84,6 @@ engine/tools/ConnectorGuard/backups/
 # BU employer material — NEVER commit (repo is public). Renne directive 2026-08-08.
 BU Administrative Backups/
 worktrees/
+
+# QI Relay digests — regenerated every sync, machine-local
+inbox/relay/
