@@ -1,13 +1,13 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-18 00:33:35 (nightly reconciler)_
+_Auto-generated: 2026-08-21 00:34:43 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 53 | 2026-08-09 15:20:35 |
-| claude_voice | Dual-brain routing + Hive/launcher registration | active | 12 | 2026-08-07 02:01:14 |
+| claude_manager | Operational | active | 319 | 2026-08-21 00:17:25 |
+| claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
 | connector | v1.0 live | active_development | 1 | 2026-07-30 21:21:48 |
@@ -19,7 +19,7 @@ _Auto-generated: 2026-08-18 00:33:35 (nightly reconciler)_
 | lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
 | m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production | active | 23 | 2026-08-13 21:00:07 |
-| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 179 | 2026-08-17 12:06:21 |
+| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 182 | 2026-08-17 15:08:52 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | naya | Phase 3 — bot + UI live | paused | 5 | 2026-06-23 16:03:19 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
@@ -27,11 +27,11 @@ _Auto-generated: 2026-08-18 00:33:35 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 197 | 2026-08-17 14:10:47 |
+| qi_hive | Dashboard UX polish | active | 205 | 2026-08-20 18:44:56 |
 | retirementanalyzer | v1 - engine + API + UI live | active | 7 | 2026-07-03 02:52:18 |
-| synvox | Phase 0 - Foundation (MatrAIx engine bootstrap) | active | 5 | 2026-08-17 23:51:33 |
+| synvox | Phase 2 â€” product surface at MatrAIx-console parity, capacity-scalable | healthy | 43 | 2026-08-20 15:37:54 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
-| universal | Migration into C:\QIH | merged | 21 | 2026-04-20 01:16:46 |
+| universal | Migration into C:\QIH | merged | 24 | 2026-08-20 16:19:35 |
 
 ## Per-project
 
@@ -196,10 +196,20 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** Install QI_FidelityAnalyzer + QI_FidelityAnalyzerTunnel services; add PDF positions parsing; configurable target allocation in UI; first git commit + GitHub.
 
 ### synvox
-- **Phase:** Phase 0 - Foundation (MatrAIx engine bootstrap)
-- **Status:** active
-- **Summary:** SynVox registered in the QI registry and bootstrapped on PowerSpec. Engine (MatrAIx, MIT) cloned to C:\APPS\SynVox\engine\matraix with a uv-managed Python 3.12 venv and all editable packages installed; Persona 1M dataset pulled locally. Remote operations are live: the QI Connector now carries a whitelisted executor (qi_list_scripts / qi_execute_script / qi_script_status), so the whole bootstrap re-runs from any device with qi_execute_script('setup-synvox'). Phase 0 is complete except its gate - the free Docker smoke test - because Docker Desktop is not installed on this machine.
-- **Next:** 1) Install Docker Desktop (needs WSL2 + reboot) and run the free harbor smoke test - the Phase 0 gate, no API key required. 2) setx ANTHROPIC_API_KEY with the personal Quiddity Innovations key. 3) Write persona_explore.py - free pandas/Polars segment profiling over Persona 1M, no inference cost. 4) Email/Discord the MatrAIx team for written clarification of the Persona 1M license before any commercial redistribution. 5) Phase 1: draft task qi-survey_nexus-pricing-tiers, debug on 3-5 Haiku personas, then ~100-persona cohort on Sonnet (~$1-5).
+- **Phase:** Phase 2 â€” product surface at MatrAIx-console parity, capacity-scalable
+- **Status:** healthy
+- **Summary:** Session 4 closed at head f1a97f7. 867 tests / 0 failed, all four gates green, three surfaces 200, public hostname 302. Working tree clean; Session 5 has started and now owns the repo.
+
+Landed: ENH-67 (capacity as configuration â€” the cohort grid buckets so the progress payload is size-independent of n), the full run experience (grid, live metrics, distributions, segments, trajectory), and ENH-68 (dotted home globe with a three-mode counter, each mode captioned with what the number actually is).
+
+Five graded studies now live in the demo workspace: 94 personas, 0 errors, $0. The n=48 Coke study is the demo centrepiece â€” 90% would keep buying but only on offer, which is a margin problem rather than a churn problem.
+
+Three silent bugs fixed, all in honesty-critical paths: construct_id (which had disabled the entire evidence layer across every spec), a false-disagreement bug where a mismatched polarity table scored 0% instead of "cannot say", and a guard test that could not fail on its own bug.
+
+Demo materials ready: a Word script and a 15-slide PowerPoint, both with every value verified against the live install, and both scripting the 62%-vs-61% coincidence to be volunteered rather than discovered.
+
+Open and honest: the globe's live ROTATION was never confirmed on a real screen (inspected through a non-compositing automation browser, so rAF was throttled and it rendered as a correct still image). That is Session 5's first task.
+- **Next:** ["Confirm the home globe actually spins on a real screen â€” static render verified, rotation not", "Finish ENH-68: region highlight is wired but unproven, cohort mode points at a field that may not exist, and the Settings toggle Renne asked for is not built", "Reality-check matching QUALITY â€” claim patterns and favourability polarity against live adapter output; this is what lifts a grade above C", "Chat / web / app task kinds â€” design the behavioural grading rubric BEFORE writing a compiler", "Grow the persona pool via rule-based crosswalks (US Census PUMS, Brazilian IBGE) â€” no LLM cost, and the personas are owned, which also settles the Persona 1M licence question"]
 
 ### tubescout
 - **Phase:** MVP + refinements complete

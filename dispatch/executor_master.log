@@ -45,3 +45,7 @@
 2026-08-17T09:45:12-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
 2026-08-17T09:45:26-04:00 [LAUNCH] job=20260817_094526_qi-health-snapshot key=qi-health-snapshot file=Get-QIHealth.ps1 args=[] pid=16404
 2026-08-17T09:49:15-04:00 [RESULT] job=20260817_094526_qi-health-snapshot key=qi-health-snapshot status=succeeded exit=0
+2026-08-18T11:34:54-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
+2026-08-18T11:49:03-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
+2026-08-19T14:52:04-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)
+2026-08-19T14:53:08-04:00 [INIT] executor tools registered on POWERSPEC (scripts=C:\QIH\dispatch\scripts, jobs=C:\QIH\dispatch\jobs)

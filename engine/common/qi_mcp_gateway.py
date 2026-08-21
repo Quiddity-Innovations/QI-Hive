@@ -47,9 +47,11 @@ Auth model (same as QI Connector):
 """
 import json
 import logging
+import re
 import secrets as pysecrets
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 import httpx
 
@@ -367,11 +369,28 @@ def register_generic_tools(mcp, cfg: dict):
         def _make(method=method, path=path):
             def _tool(params: dict | None = None) -> str:
                 try:
+                    # PATH TEMPLATING. A declared path may carry {placeholders}
+                    # - e.g. /v1/runs/{run_id} - which are filled from params;
+                    # whatever is left over still goes as query (GET) or body.
+                    # Before this, the path was used LITERALLY and any tool
+                    # declaring a path parameter 404'd against its own target.
+                    # Adopters whose paths carry no braces are untouched: the
+                    # loop below simply does not execute for them.
+                    # Values are URL-quoted with no safe characters, so an id
+                    # cannot smuggle a slash and walk to another route.
+                    args = dict(params or {})
+                    resolved = path
+                    for key in re.findall(r"\{(\w+)\}", path):
+                        if key not in args:
+                            return _err(
+                                f"{method} {path} needs '{key}' in params")
+                        resolved = resolved.replace(
+                            "{" + key + "}", quote(str(args.pop(key)), safe=""))
                     with httpx.Client(timeout=30.0) as c:
                         if method == "GET":
-                            r = c.get(f"{base}{path}", params=params or {}, headers=hdrs)
+                            r = c.get(f"{base}{resolved}", params=args, headers=hdrs)
                         else:
-                            r = c.request(method, f"{base}{path}", json=params or {}, headers=hdrs)
+                            r = c.request(method, f"{base}{resolved}", json=args, headers=hdrs)
                         r.raise_for_status()
                         try:
                             return _clip(r.json())

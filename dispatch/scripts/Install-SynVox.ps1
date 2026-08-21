@@ -14,7 +14,7 @@
 #  Machine : PowerSpec (personal/QI hardware ONLY - never BU)
 #  Run     : powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-SynVox.ps1 `
 #                -Edition professional -ClaudeBin "C:\path\to\claude.exe" `
-#                -ClaudeEnvFile "C:\path\to\claude_cli.env"
+#                -ClaudeEnvFile "C:\path\to\claude_max.env"
 #            or remotely (NOT recommended for the subscription lane - see the
 #            _note in manifest.json): qi_execute_script("install-synvox")
 #
@@ -290,8 +290,25 @@ if (-not $ResolvedClaudeBin) {
 # ---- resolve the OAuth env file ----
 $ResolvedClaudeEnvFile = $ClaudeEnvFile
 if (-not $ResolvedClaudeEnvFile) {
-    $ResolvedClaudeEnvFile = Join-Path $SecretsDir "claude_cli.env"
-    Write-Log "INFO" "No -ClaudeEnvFile given - defaulting to $ResolvedClaudeEnvFile"
+    # claude_max.env is the convention. It was claude_cli.env here while every
+    # other surface - the committed docs, the install guide and the live
+    # config\ai_providers.json - said claude_max.env, so an install that took
+    # the default wrote an env_file_ref pointing at a file nobody creates.
+    # Corrected 2026-08-18.
+    $PreferredEnvFile = Join-Path $SecretsDir "claude_max.env"
+    $LegacyEnvFile    = Join-Path $SecretsDir "claude_cli.env"
+
+    if ((-not (Test-Path $PreferredEnvFile)) -and (Test-Path $LegacyEnvFile)) {
+        # An install made before the rename. Use what is actually there rather
+        # than pointing at a file that does not exist, and say so loudly - the
+        # fix is a rename, and this script is not going to do it silently.
+        $ResolvedClaudeEnvFile = $LegacyEnvFile
+        Write-Log "WARN" "No -ClaudeEnvFile given. $PreferredEnvFile does not exist but $LegacyEnvFile does, so this install is using the legacy name."
+        Write-Log "WARN" "Rename it to claude_max.env when convenient - that is the name every other SynVox surface uses."
+    } else {
+        $ResolvedClaudeEnvFile = $PreferredEnvFile
+        Write-Log "INFO" "No -ClaudeEnvFile given - defaulting to $ResolvedClaudeEnvFile"
+    }
 }
 
 # ---- verify headless auth via qi_claude_brain.cli_status() ----

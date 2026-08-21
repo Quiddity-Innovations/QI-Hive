@@ -320,13 +320,23 @@ if (-not (Test-Path $BaseDir)) {
     }
 }
 
-# ---------- 6. API key reminder (never stored here) ----------
+# ---------- 6. metered key check - ABSENT is the correct state ----------
+#
+# Inverted 2026-08-18. This block used to WARN when ANTHROPIC_API_KEY was
+# missing and tell you to `setx` one, then report a present key as success.
+# That predates the subscription lane (owner decision, QI Brain #530) and is
+# now backwards in a way that costs real money if followed: persona runs go
+# through the SynVox Router on 127.0.0.1:8753, whose backend is headless
+# `claude -p` on a Claude Max plan. There is no metered spend and there is no
+# key to set. CLAUDE.md rule 5 says do not set one, and
+# tools\run_survey_via_router.py strips ANTHROPIC_API_KEY from the child
+# environment so a stray one cannot be reached anyway.
 if (-not $env:ANTHROPIC_API_KEY) {
-    Write-Log "WARN" 'ANTHROPIC_API_KEY is not set. Before ANY real persona run:  setx ANTHROPIC_API_KEY "sk-ant-..."  - personal Quiddity Innovations key only, never a BU credential. No key is ever written into this script or the manifest.'
-    $script:Results["api_key"] = "NOT SET (reminder logged)"
+    Write-Log "OK" "ANTHROPIC_API_KEY is not set. That is CORRECT - SynVox runs on the Claude Max subscription lane and must never reach a metered key."
+    $script:Results["api_key"] = "ABSENT (correct)"
 } else {
-    Write-Log "INFO" "ANTHROPIC_API_KEY is present in the machine environment (value never logged)."
-    $script:Results["api_key"] = "SET"
+    Write-Log "WARN" "ANTHROPIC_API_KEY IS SET on this machine (value never logged). SynVox will not use it - the Router lane strips it - but it should not be here: it means something on this host can spend metered credit. Remove it unless another project genuinely needs it."
+    $script:Results["api_key"] = "PRESENT (unexpected - see log)"
 }
 
 # ---------- 6b. Hand the whole project tree back to the interactive user ----------
