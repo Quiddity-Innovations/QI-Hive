@@ -333,7 +333,7 @@ Original Quiddity Innovations code — no upstream, no external author.
 - C:\APPS\QIP\Connector — NSSM per-project service convention (shared C:\QIH\engine\bin\nssm.exe)
 - C:\APPS\CLAUDE\Tools\headroom_env\ — entire isolated Python venv vendored (torch, transformers, datasets, cv2, aiohttp, cryptography...), no manifest
 - No verbatim code copying between QI sibling projects found — cross-project reuse is the shared nssm.exe binary and the intentionally shared qi_mcp_gateway.py module
-- `C:\QIH\engine\hive\dashboard\static\vendor\vis-network.min.js` — vis-network graph library (Apache-2.0/MIT dual), used by the Library knowledge graph
+- `C:\QIH\engine\hive\dashboard\static\vendor\d3.v7.min.js` — D3 v7 (ISC), used by the Library knowledge graph (Plex). Replaced `vis-network.min.js` on 2026-08-22 when Plex was rebuilt on D3; the vis-network bundle was deleted.
 - Per-project `engine\bin\nssm.exe` copies across QI projects (standing convention: each project ships its own NSSM 2.24)
 - Bundled Java runtimes + tabula-java / pdftk-java jars inside AutoPDF (no system Java install required)
 
