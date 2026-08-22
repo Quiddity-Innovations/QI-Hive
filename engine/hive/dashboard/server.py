@@ -671,15 +671,30 @@ def _readme_block(page_id: str) -> str:
     </script>"""
 
 
-VALID_THEMES = {"penumbra", "light", "auto", "orange", "dark"}
+VALID_THEMES = {"penumbra", "light", "auto", "orange", "dark", "museum", "manuscript"}
 
 # QI theme -> Bootstrap base ('auto' has no entry — resolved client-side from
 # the OS). 'penumbra' is the original QI dark look (renamed 2026-08-06);
 # 'orange' and 'dark' are ports of the two major NEXUS themes and share the
 # NEXUS orange accent (#f97316) on a light / dark base respectively.
-_THEME_BASE   = {"penumbra": "dark", "light": "light", "orange": "light", "dark": "dark"}
+_THEME_BASE   = {"penumbra": "dark", "light": "light", "orange": "light", "dark": "dark",
+                 "museum": "dark", "manuscript": "light"}
 _THEME_ACCENT = {"orange": "orange", "dark": "orange"}
 QI_ACCENT_ORANGE = "#f97316"
+
+# Museum / Manuscript are a *skin*, not an accent: they restate the whole
+# surface-and-ink palette rather than recolouring one hue. They ride their own
+# attribute so they never contend with the NEXUS orange accent above.
+_THEME_SKIN = {"museum": "museum", "manuscript": "manuscript"}
+# Loaded only when a skin is active — the other five themes pay nothing, and
+# the fallback stack below is a real serif on every Windows box, so an offline
+# dashboard degrades to Palatino rather than to Arial.
+QI_SKIN_FONTS = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
+    'family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">'
+)
 
 QI_ACCENT_CSS = """
     /* ── QI accent themes (Orange / Dark — ported from NEXUS, 2026-08-06) ── */
@@ -724,6 +739,324 @@ QI_ACCENT_CSS = """
     html[data-qi-accent="orange"] .progress-bar { background-color:#f97316; }
 """
 
+
+QI_SKIN_CSS = """
+    /* ══ QI skins: Museum (dark) / Manuscript (light) ══════════════════════
+       Added 2026-08-22. The five older themes are Bootstrap's stock greys with
+       one hue swapped; they read as a bootstrap admin template because that is
+       what they are. These two restate the whole palette instead — a warm ink
+       on a deep indigo or a parchment ground, gold hairlines instead of grey
+       borders, and a serif for display type.
+
+       The palette is lifted from the World Mythologies site
+       (C:\\APPS\\Mythologies\\site\\css\\style.css), which is the reference Renne
+       pointed at, so the Plex and its host now share one visual language.
+
+       Everything is expressed as Bootstrap and AdminLTE custom properties, so
+       components inherit it without per-component overrides. */
+
+    html[data-qi-skin] {
+      --qi-serif: "Cormorant Garamond", "Palatino Linotype", Palatino, Georgia, serif;
+      --qi-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    /* ── Museum — dark ── */
+    html[data-qi-skin="museum"] {
+      --qi-bg: #0e1019;
+      --qi-canvas: radial-gradient(1400px 800px at 50% -12%, #1a1e30 0%, #12141f 45%, #0b0d15 100%);
+      --qi-raised: #171a28;
+      --qi-raised-2: #1d2133;
+      --qi-ink: #eae4d6;
+      --qi-ink-strong: #f6f1e5;
+      --qi-ink-muted: #b1a993;
+      --qi-gold: #d4af6a;
+      --qi-gold-strong: #e8c987;
+      --qi-hairline: rgba(212, 175, 106, 0.16);
+      --qi-hairline-strong: rgba(212, 175, 106, 0.32);
+      --qi-tint: rgba(212, 175, 106, 0.07);
+      --qi-ink-on-gold: #14110a;
+
+      --bs-body-bg: #0e1019;         --bs-body-bg-rgb: 14,16,25;
+      --bs-body-color: #eae4d6;      --bs-body-color-rgb: 234,228,214;
+      --bs-emphasis-color: #f6f1e5;
+      --bs-secondary-bg: #171a28;    --bs-secondary-bg-rgb: 23,26,40;
+      --bs-tertiary-bg: #1d2133;     --bs-tertiary-bg-rgb: 29,33,51;
+      --bs-secondary-color: rgba(234,228,214,0.66);
+      --bs-tertiary-color: rgba(234,228,214,0.46);
+      --bs-border-color: rgba(212,175,106,0.16);
+      --bs-border-color-translucent: rgba(212,175,106,0.14);
+      --bs-heading-color: #f6f1e5;
+      --bs-primary: #d4af6a;         --bs-primary-rgb: 212,175,106;
+      --bs-link-color: #dcc99a;      --bs-link-color-rgb: 220,201,154;
+      --bs-link-hover-color: #e8c987; --bs-link-hover-color-rgb: 232,201,135;
+      --bs-focus-ring-color: rgba(212,175,106,0.28);
+      --bs-code-color: #dcc99a;
+      color-scheme: dark;
+    }
+
+    /* ── Manuscript — light ── */
+    html[data-qi-skin="manuscript"] {
+      --qi-bg: #f2ead9;
+      --qi-canvas: radial-gradient(1300px 750px at 50% -12%, #faf5e8 0%, #f2ead9 55%, #e9dfc8 100%);
+      --qi-raised: #faf5e9;
+      --qi-raised-2: #f2eadb;
+      --qi-ink: #35301f;
+      --qi-ink-strong: #221c10;
+      --qi-ink-muted: #6d6350;
+      --qi-gold: #9a7a2e;
+      --qi-gold-strong: #7c5f1d;
+      --qi-hairline: rgba(154, 122, 46, 0.24);
+      --qi-hairline-strong: rgba(154, 122, 46, 0.45);
+      --qi-tint: rgba(154, 122, 46, 0.07);
+      --qi-ink-on-gold: #fdf8ec;
+
+      --bs-body-bg: #f2ead9;         --bs-body-bg-rgb: 242,234,217;
+      --bs-body-color: #35301f;      --bs-body-color-rgb: 53,48,31;
+      --bs-emphasis-color: #221c10;
+      --bs-secondary-bg: #faf5e9;    --bs-secondary-bg-rgb: 250,245,233;
+      --bs-tertiary-bg: #f2eadb;     --bs-tertiary-bg-rgb: 242,234,219;
+      --bs-secondary-color: rgba(53,48,31,0.68);
+      --bs-tertiary-color: rgba(53,48,31,0.48);
+      --bs-border-color: rgba(154,122,46,0.24);
+      --bs-border-color-translucent: rgba(154,122,46,0.2);
+      --bs-heading-color: #221c10;
+      --bs-primary: #9a7a2e;         --bs-primary-rgb: 154,122,46;
+      --bs-link-color: #7c5f1d;      --bs-link-color-rgb: 124,95,29;
+      --bs-link-hover-color: #5c4614; --bs-link-hover-color-rgb: 92,70,20;
+      --bs-focus-ring-color: rgba(154,122,46,0.28);
+      --bs-code-color: #7c5f1d;
+      color-scheme: light;
+    }
+
+    /* ── Shared skin treatment ── */
+    html[data-qi-skin] body {
+      font-family: var(--qi-sans);
+      background-color: var(--qi-bg) !important;
+      background-image: var(--qi-canvas);
+      background-attachment: fixed;
+      color: var(--qi-ink);
+    }
+    /* AdminLTE paints these panels itself; hand them back to the skin. */
+    html[data-qi-skin] .app-main,
+    html[data-qi-skin] .app-content,
+    html[data-qi-skin] .app-content-header,
+    html[data-qi-skin] .app-wrapper { background: transparent !important; }
+
+    html[data-qi-skin] h1, html[data-qi-skin] h2, html[data-qi-skin] h3,
+    html[data-qi-skin] h4, html[data-qi-skin] h5, html[data-qi-skin] h6,
+    html[data-qi-skin] .card-title,
+    html[data-qi-skin] .app-content-header .breadcrumb + h3 {
+      font-family: var(--qi-serif);
+      font-weight: 600;
+      letter-spacing: 0.004em;
+      color: var(--qi-ink-strong);
+    }
+    html[data-qi-skin] h1 { font-size: 1.95rem; }
+    html[data-qi-skin] h3 { font-size: 1.42rem; }
+
+    /* Card headers become a quiet letterspaced rule rather than a grey bar —
+       the single change that does most to stop this reading as a template. */
+    html[data-qi-skin] .card {
+      background-color: var(--qi-raised);
+      border: 1px solid var(--qi-hairline);
+      border-radius: 10px;
+      box-shadow: none;
+    }
+    html[data-qi-skin] .card-header {
+      background: transparent;
+      border-bottom: 1px solid var(--qi-hairline);
+      color: var(--qi-gold);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding-top: 0.72rem;
+      padding-bottom: 0.72rem;
+    }
+    html[data-qi-skin] .card-header .card-title {
+      font-family: var(--qi-sans);
+      font-size: 0.74rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--qi-gold);
+    }
+    html[data-qi-skin] .card-footer { background: transparent; border-top: 1px solid var(--qi-hairline); }
+
+    html[data-qi-skin] .app-sidebar {
+      background-color: var(--qi-raised) !important;
+      border-right: 1px solid var(--qi-hairline);
+      box-shadow: none !important;
+      --lte-sidebar-color: var(--bs-secondary-color);
+      --lte-sidebar-hover-color: var(--qi-ink-strong);
+      --lte-sidebar-hover-bg: var(--qi-tint);
+      --lte-sidebar-active-color: var(--qi-gold-strong);
+      --lte-sidebar-menu-active-bg: var(--qi-tint);
+      --lte-sidebar-menu-active-color: var(--qi-gold-strong);
+      --lte-sidebar-header-color: var(--qi-ink-muted);
+      --lte-sidebar-submenu-color: var(--bs-secondary-color);
+      --lte-sidebar-submenu-hover-color: var(--qi-ink-strong);
+      --lte-sidebar-submenu-hover-bg: var(--qi-tint);
+      --lte-sidebar-submenu-active-color: var(--qi-gold-strong);
+      --lte-sidebar-submenu-active-bg: var(--qi-tint);
+    }
+    /* Gold is a hairline hue, not a fill — a solid gold nav block is garish and
+       drops the label contrast. The active item gets a rule and warm ink. */
+    html[data-qi-skin] .app-sidebar .nav-link.active {
+      background: var(--qi-tint) !important;
+      color: var(--qi-gold-strong) !important;
+      box-shadow: inset 2px 0 0 var(--qi-gold);
+    }
+    html[data-qi-skin] .app-sidebar .nav-link.active .nav-icon { color: var(--qi-gold) !important; }
+    html[data-qi-skin] .sidebar-brand {
+      border-bottom: 1px solid var(--qi-hairline);
+      background: transparent;
+    }
+    html[data-qi-skin] .brand-text {
+      font-family: var(--qi-serif);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--qi-gold-strong);
+    }
+
+    html[data-qi-skin] .app-header {
+      background-color: var(--qi-raised) !important;
+      border-bottom: 1px solid var(--qi-hairline);
+      box-shadow: none;
+    }
+    html[data-qi-skin] .app-footer {
+      background: transparent;
+      border-top: 1px solid var(--qi-hairline);
+      color: var(--qi-ink-muted);
+    }
+    html[data-qi-skin] body.lock-header .app-content-header {
+      background: var(--qi-bg);
+      box-shadow: 0 1px 0 var(--qi-hairline);
+    }
+
+    html[data-qi-skin] .table {
+      --bs-table-bg: transparent;
+      --bs-table-color: var(--qi-ink);
+      --bs-table-border-color: var(--qi-hairline);
+      --bs-table-hover-bg: var(--qi-tint);
+      --bs-table-hover-color: var(--qi-ink-strong);
+      --bs-table-active-bg: var(--qi-tint);
+      --bs-table-active-color: var(--qi-ink-strong);
+    }
+    html[data-qi-skin] .table > thead th {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--qi-ink-muted);
+      border-bottom-color: var(--qi-hairline-strong);
+    }
+
+    html[data-qi-skin] .btn-primary {
+      --bs-btn-bg: var(--qi-gold);        --bs-btn-border-color: var(--qi-gold);
+      --bs-btn-color: var(--qi-ink-on-gold);
+      --bs-btn-hover-bg: var(--qi-gold-strong);
+      --bs-btn-hover-border-color: var(--qi-gold-strong);
+      --bs-btn-hover-color: var(--qi-ink-on-gold);
+      --bs-btn-active-bg: var(--qi-gold-strong);
+      --bs-btn-active-border-color: var(--qi-gold-strong);
+      --bs-btn-active-color: var(--qi-ink-on-gold);
+      --bs-btn-disabled-bg: var(--qi-gold); --bs-btn-disabled-border-color: var(--qi-gold);
+      --bs-btn-disabled-color: var(--qi-ink-on-gold);
+    }
+    html[data-qi-skin] .btn-outline-primary,
+    html[data-qi-skin] .btn-outline-secondary {
+      --bs-btn-color: var(--qi-gold);
+      --bs-btn-border-color: var(--qi-hairline-strong);
+      --bs-btn-hover-bg: var(--qi-tint);
+      --bs-btn-hover-border-color: var(--qi-gold);
+      --bs-btn-hover-color: var(--qi-gold-strong);
+      --bs-btn-active-bg: var(--qi-tint);
+      --bs-btn-active-border-color: var(--qi-gold);
+      --bs-btn-active-color: var(--qi-gold-strong);
+    }
+    html[data-qi-skin] .text-primary   { color: var(--qi-gold) !important; }
+    html[data-qi-skin] .bg-primary     { background-color: var(--qi-gold) !important; color: var(--qi-ink-on-gold) !important; }
+    html[data-qi-skin] .border-primary { border-color: var(--qi-gold) !important; }
+    /* Bootstrap hardcodes white ink on .text-bg-primary because its stock
+       primary is a mid blue. Gold is a LIGHT hue, so white on it lands at
+       1.4:1 — illegible. Both skins therefore restate the ink, not just the
+       ground. Same trap for the skip-link, which is gold-on-gold otherwise. */
+    html[data-qi-skin] .text-bg-primary,
+    html[data-qi-skin] .badge.bg-primary,
+    html[data-qi-skin] .skip-link {
+      background-color: var(--qi-gold) !important;
+      color: var(--qi-ink-on-gold) !important;
+    }
+    html[data-qi-skin] .text-bg-primary a,
+    html[data-qi-skin] .badge.bg-primary a { color: var(--qi-ink-on-gold) !important; }
+    html[data-qi-skin] .nav-pills .nav-link.active {
+      background-color: var(--qi-tint); color: var(--qi-gold-strong);
+      box-shadow: inset 0 -2px 0 var(--qi-gold);
+    }
+    html[data-qi-skin] .nav-tabs { border-bottom-color: var(--qi-hairline); }
+    html[data-qi-skin] .nav-tabs .nav-link.active {
+      color: var(--qi-gold-strong);
+      background: transparent;
+      border-color: var(--qi-hairline) var(--qi-hairline) transparent;
+    }
+    html[data-qi-skin] .form-check-input:checked {
+      background-color: var(--qi-gold); border-color: var(--qi-gold);
+    }
+    html[data-qi-skin] input[type="checkbox"],
+    html[data-qi-skin] input[type="radio"],
+    html[data-qi-skin] input[type="range"] { accent-color: var(--qi-gold); }
+    html[data-qi-skin] .form-control,
+    html[data-qi-skin] .form-select {
+      background-color: var(--qi-raised-2);
+      border-color: var(--qi-hairline);
+      color: var(--qi-ink);
+    }
+    html[data-qi-skin] .form-control:focus,
+    html[data-qi-skin] .form-select:focus {
+      border-color: var(--qi-gold);
+      box-shadow: 0 0 0 0.2rem var(--bs-focus-ring-color);
+    }
+    html[data-qi-skin] .dropdown-menu {
+      background-color: var(--qi-raised);
+      border: 1px solid var(--qi-hairline);
+      --bs-dropdown-link-hover-bg: var(--qi-tint);
+      --bs-dropdown-link-active-bg: var(--qi-tint);
+      --bs-dropdown-link-active-color: var(--qi-gold-strong);
+    }
+    html[data-qi-skin] .modal-content,
+    html[data-qi-skin] .offcanvas,
+    html[data-qi-skin] .list-group-item {
+      background-color: var(--qi-raised);
+      border-color: var(--qi-hairline);
+      color: var(--qi-ink);
+    }
+    html[data-qi-skin] .progress { background-color: var(--qi-raised-2); }
+    html[data-qi-skin] .progress-bar { background-color: var(--qi-gold); }
+    html[data-qi-skin] .page-link { color: var(--qi-gold); background: transparent; border-color: var(--qi-hairline); }
+    html[data-qi-skin] hr,
+    html[data-qi-skin] .dropdown-divider { border-color: var(--qi-hairline); opacity: 1; }
+    html[data-qi-skin] code, html[data-qi-skin] kbd, html[data-qi-skin] pre {
+      font-family: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+    }
+    html[data-qi-skin] .badge.text-bg-secondary {
+      background-color: var(--qi-raised-2) !important;
+      color: var(--qi-ink-muted) !important;
+      border: 1px solid var(--qi-hairline);
+    }
+    /* The small-box KPI tiles ship as saturated flat blocks. Mute them to the
+       card surface and let the status colour survive as a left rule only. */
+    html[data-qi-skin] .small-box {
+      background: var(--qi-raised) !important;
+      border: 1px solid var(--qi-hairline);
+      border-radius: 10px;
+      color: var(--qi-ink) !important;
+      box-shadow: none;
+    }
+    html[data-qi-skin] .small-box .inner h3 { font-family: var(--qi-serif); color: var(--qi-ink-strong); }
+    html[data-qi-skin] .small-box a,
+    html[data-qi-skin] .small-box .small-box-footer { color: var(--qi-gold) !important; }
+"""
+
 def _get_theme() -> str:
     cfg = _load_hive_config()
     t = cfg.get("theme", "penumbra")
@@ -749,7 +1082,8 @@ def _get_header_lock() -> bool:
 def _theme_icon(theme: str) -> str:
     return {"penumbra": "bi-moon-stars-fill", "light": "bi-sun-fill",
             "auto": "bi-circle-half", "orange": "bi-brightness-high-fill",
-            "dark": "bi-moon-fill"}.get(theme, "bi-circle-half")
+            "dark": "bi-moon-fill", "museum": "bi-bank",
+            "manuscript": "bi-journal-bookmark"}.get(theme, "bi-circle-half")
 
 
 def base_layout(title: str, content: str, active: str = "") -> str:
@@ -800,16 +1134,21 @@ def base_layout(title: str, content: str, active: str = "") -> str:
     bs_theme_attr = f'data-bs-theme="{_base}"' if _base else ""
     _accent = _THEME_ACCENT.get(theme, "")
     accent_attr = f'data-qi-accent="{_accent}"' if _accent else ""
+    _skin = _THEME_SKIN.get(theme, "")
+    skin_attr = f'data-qi-skin="{_skin}"' if _skin else ""
+    skin_fonts = QI_SKIN_FONTS if _skin else ""
     header_lock_cls = "lock-header" if _get_header_lock() else ""
     return f"""<!doctype html>
-<html lang="en">
+<html lang="en" {skin_attr}>
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>{title} | QI Claude Manager</title>
+  {skin_fonts}
   <link rel="stylesheet" href="/static/vendor/overlayscrollbars.min.css"/>
   <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css"/>
   <link rel="stylesheet" href="/static/css/adminlte.min.css"/>
+  <link rel="stylesheet" href="/static/css/qi-plex.css"/>
   <script src="/static/vendor/bootstrap.bundle.min.js"></script>
   <script src="/static/js/adminlte.min.js"></script>
   <script src="/static/vendor/Sortable.min.js"></script>
@@ -878,6 +1217,7 @@ def base_layout(title: str, content: str, active: str = "") -> str:
       .app-content pre              {{ max-width: 100%; height: auto; }}
     }}
 {QI_ACCENT_CSS}
+{QI_SKIN_CSS}
   </style>
   <script>
     /* Resolve the theme onto <html> so EVERY component (incl. dropdowns/modals
@@ -887,21 +1227,25 @@ def base_layout(title: str, content: str, active: str = "") -> str:
        orange accent; Penumbra = the original QI dark). */
     (function(){{
       var t = "{theme}";
-      var BASE   = {{penumbra:'dark', dark:'dark', orange:'light', light:'light'}};
+      var BASE   = {{penumbra:'dark', dark:'dark', orange:'light', light:'light',
+                     museum:'dark', manuscript:'light'}};
       var ACCENT = {{orange:'orange', dark:'orange'}};
+      var SKIN   = {{museum:'museum', manuscript:'manuscript'}};
       var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
       function resolve(){{ return t === 'auto' ? (mq && mq.matches ? 'dark' : 'light') : (BASE[t] || 'dark'); }}
       function apply(){{
         document.documentElement.setAttribute('data-bs-theme', resolve());
         if (ACCENT[t]) document.documentElement.setAttribute('data-qi-accent', ACCENT[t]);
         else document.documentElement.removeAttribute('data-qi-accent');
+        if (SKIN[t]) document.documentElement.setAttribute('data-qi-skin', SKIN[t]);
+        else document.documentElement.removeAttribute('data-qi-skin');
       }}
       apply();
       if (t === 'auto' && mq && mq.addEventListener) mq.addEventListener('change', apply);
     }})();
   </script>
 </head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary {header_lock_cls}" {bs_theme_attr} {accent_attr}>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary {header_lock_cls}" {bs_theme_attr} {accent_attr} {skin_attr}>
 <div class="app-wrapper">
 
   <!-- Navbar -->
@@ -938,6 +1282,13 @@ def base_layout(title: str, content: str, active: str = "") -> str:
             <li><a class="dropdown-item {'fw-bold' if theme=='dark' else ''}"
                    href="#" onclick="setTheme('dark');return false;">
               <i class="bi bi-moon-fill me-2" style="color:{QI_ACCENT_ORANGE}"></i>Dark</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item {'fw-bold' if theme=='museum' else ''}"
+                   href="#" onclick="setTheme('museum');return false;">
+              <i class="bi bi-bank me-2" style="color:#d4af6a"></i>Museum</a></li>
+            <li><a class="dropdown-item {'fw-bold' if theme=='manuscript' else ''}"
+                   href="#" onclick="setTheme('manuscript');return false;">
+              <i class="bi bi-journal-bookmark me-2" style="color:#9a7a2e"></i>Manuscript</a></li>
           </ul>
         </li>
         <!-- Write-access unlock (needed for in-page saves through the tunnel) -->
@@ -3865,19 +4216,14 @@ def library_page():
 
     <div id="v-graph" style="display:none">
       <div class="card"><div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
-          <div><i class="bi bi-diagram-3 me-2"></i><span id="g-crumb" class="fw-semibold">QI Ecosystem</span></div>
-          <div class="small">
-            <span class="badge text-bg-primary">project</span>
-            <span class="badge text-bg-secondary">&#128196; doc</span>
-            <span class="badge" style="background:#b45309">&#9878; decision</span>
-            <span class="badge text-bg-success">&#10024; feature</span>
-            <span class="badge" style="background:#7c3aed">&#128221; session</span>
-            <button id="g-home" class="btn btn-sm btn-outline-secondary ms-2" title="Ecosystem root"><i class="bi bi-house"></i></button>
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2" style="min-width:0">
+            <i class="bi bi-diagram-3 text-secondary"></i>
+            <nav id="g-crumb" class="plex-crumb" aria-label="Plex trail"><span class="crumb-link current">QI Ecosystem</span></nav>
           </div>
+          <div class="small text-muted">Click a node to inspect &middot; double-click or <kbd>E</kbd> to expand &middot; drag to rearrange</div>
         </div>
-        <div id="g-plex" style="height:72vh;border:1px solid var(--bs-border-color,#30363d);border-radius:8px"></div>
-        <div class="small text-muted mt-2">Click any node to re-center the Plex on it. Hover a doc for its full path.</div>
+        <div id="g-plex" style="height:72vh"></div>
       </div></div>
     </div>
 
@@ -3913,12 +4259,12 @@ def library_page():
         <div id="sp-gutter" title="Drag to resize"><div class="lib-grip"></div></div>
         <div id="sp-right" class="lib-pane">
           <div class="card h-100"><div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
-              <div><i class="bi bi-diagram-3 me-2"></i><span id="sp-crumb" class="fw-semibold">QI Ecosystem</span></div>
-              <button id="sp-home" class="btn btn-sm btn-outline-secondary" title="Ecosystem root"><i class="bi bi-house"></i></button>
+            <div class="d-flex align-items-center mb-2 flex-wrap gap-2" style="min-width:0">
+              <i class="bi bi-diagram-3 text-secondary"></i>
+              <nav id="sp-crumb" class="plex-crumb" aria-label="Plex trail"><span class="crumb-link current">QI Ecosystem</span></nav>
             </div>
-            <div id="sp-plex" style="height:64vh;border:1px solid var(--bs-border-color,#30363d);border-radius:8px"></div>
-            <div class="small text-muted mt-2">List &rarr; graph: click a result to center it. Graph &rarr; list: click a project to filter, a doc to highlight. Drag the divider to resize.</div>
+            <div id="sp-plex" style="height:64vh"></div>
+            <div class="small text-muted mt-2">List &rarr; graph: click a result to center it. Graph &rarr; list: selecting a project filters, selecting a doc highlights. Drag the divider to resize.</div>
           </div></div>
         </div>
       </div>
@@ -3966,29 +4312,35 @@ def library_page():
         }
       }
 
-      const COLORS={root:'#2563eb',project:'#3b82f6',doc:'#9ca3af',decision:'#b45309',feature:'#16a34a',session:'#7c3aed'};
-      const EMOJI={root:'\\uD83C\\uDF10',project:'',doc:'\\uD83D\\uDCC4',decision:'\\u2696\\uFE0F',feature:'\\u2728',session:'\\uD83D\\uDCDD'};
-      let visLoading=false, visQ=[];
-      function loadVis(cb){
-        if(window.vis){ cb(true); return; }
-        visQ.push(cb);
-        if(visLoading) return; visLoading=true;
-        const s=document.createElement('script');
-        s.src='/static/vendor/vis-network.min.js';
-        s.onload=()=>{ visQ.forEach(f=>f(true)); visQ=[]; };
-        s.onerror=()=>{ visQ.forEach(f=>f(false)); visQ=[]; };
-        document.head.appendChild(s);
+      /* The Plex is drawn by /static/js/qi-plex.js (D3 v7) — see that file for
+         the visual grammar. Both scripts are fetched on first use only; the
+         Library page costs nothing extra until someone opens the Graph tab. */
+      let plexLoading=false, plexQ=[];
+      function loadPlex(cb){
+        if(window.QIPlex && window.d3){ cb(true); return; }
+        plexQ.push(cb);
+        if(plexLoading) return; plexLoading=true;
+        const one = src => new Promise((res,rej)=>{ const s=document.createElement('script');
+          s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+        one('/static/vendor/d3.v7.min.js')
+          .then(()=>one('/static/js/qi-plex.js'))
+          .then(()=>{ plexQ.forEach(f=>f(true)); plexQ=[]; })
+          .catch(()=>{ plexQ.forEach(f=>f(false)); plexQ=[]; });
       }
-      function vNodes(d){ return d.nodes.map(n=>{ const focus=n.id===d.focus, bd=COLORS[n.type]||'#9ca3af';
-        const bg=focus?'rgba(219,234,254,0.78)':'rgba(248,249,250,0.55)';
-        const hl=focus?'rgba(219,234,254,0.95)':'rgba(237,241,244,0.88)';
-        return {id:n.id,
-        label:(EMOJI[n.type]?EMOJI[n.type]+' ':'')+n.label+(n.sub?'\\n'+n.sub:''),
-        title:n.path||n.sub||'', shape:(n.type==='root'||n.type==='project')?'ellipse':'box',
-        color:{background:bg,border:bd,highlight:{background:hl,border:bd},hover:{background:hl,border:bd}},
-        borderWidth:focus?3:1, font:{size:focus?16:13,color:'#1f2937'}}; }); }
-      function vEdges(d){ return d.links.map((l,i)=>({id:'e'+i,from:l.from,to:l.to,label:l.label,
-        font:{size:10,color:'#9aa0a6',strokeWidth:0,align:'top'},color:{color:'#c8ccd1'},smooth:{type:'continuous'}})); }
+      /* Trail of re-centres, so drilling three projects deep is reversible. */
+      function renderCrumb(el, trail, go){
+        if(!el) return;
+        if(!trail || !trail.length){ el.innerHTML='<span class="crumb-link current">QI Ecosystem</span>'; return; }
+        el.innerHTML = trail.map((t,i)=>{
+          const last = i===trail.length-1;
+          return '<button type="button" class="crumb-link'+(last?' current':'')+'" data-i="'+i+'"'+
+                 (last?' aria-current="page"':'')+'>'+esc(t.label)+'</button>'+
+                 (last?'':'<span class="crumb-sep" aria-hidden="true">/</span>');
+        }).join('');
+        el.querySelectorAll('button[data-i]').forEach(b=>b.addEventListener('click',()=>{
+          const t=trail[+b.dataset.i]; if(t) go(t.id);
+        }));
+      }
       function toast(msg, kind){
         let t=document.getElementById('plex-toast');
         if(!t){ t=document.createElement('div'); t.id='plex-toast';
@@ -4035,46 +4387,35 @@ def library_page():
         m.style.top=Math.min(y, window.innerHeight-40-items.length*36)+'px';
         m.style.display='block';
       }
-      function makeGraph(container, crumbEl, onNode){
-        const nodes=new vis.DataSet([]), edges=new vis.DataSet([]);
-        const net=new vis.Network(container,{nodes,edges},{
-          physics:{solver:'forceAtlas2Based',forceAtlas2Based:{gravitationalConstant:-65,springLength:130,springConstant:0.05},stabilization:{iterations:110}},
-          nodes:{shape:'box',margin:9,widthConstraint:{maximum:175}},
-          edges:{arrows:{to:{enabled:false}}}, interaction:{hover:true,tooltipDelay:120}
-        });
-        try{ new ResizeObserver(()=>{ try{ net.setSize(container.clientWidth+'px', container.clientHeight+'px'); net.redraw(); }catch(e){} }).observe(container); }catch(e){}
-        net.on('click', p => { if(p.nodes.length && onNode) onNode(p.nodes[0]); });
-        net.on('doubleClick', p => { if(p.nodes.length && p.nodes[0].indexOf('doc:')===0) openDoc(p.nodes[0].slice(4)); });
-        net.on('oncontext', p => {
-          p.event.preventDefault();
-          const id=net.getNodeAt(p.pointer.DOM);
-          const menu=document.getElementById('plex-menu');
-          if(!id){ if(menu) menu.style.display='none'; return; }
-          const nd=nodes.get(id), type=id.split(':')[0], rest=id.split(':').slice(1).join(':');
-          const path=nd&&nd.title, items=[];
-          if(type==='doc'){
-            items.push({label:'Open document',icon:'bi-box-arrow-up-right',fn:()=>openDoc(rest)});
-            items.push({label:'Reveal in folder',icon:'bi-folder2-open',fn:()=>revealDoc(rest)});
-            items.push({label:'Download',icon:'bi-download',fn:()=>downloadDoc(rest)});
-            if(path) items.push({label:'Copy path',icon:'bi-clipboard',fn:()=>copyText(path)});
-            items.push({label:'Center here',icon:'bi-bullseye',fn:()=>recenter(id)});
-          } else if(type==='project'){
-            items.push({label:'Expand / center',icon:'bi-bullseye',fn:()=>recenter(id)});
-            items.push({label:'Copy project id',icon:'bi-clipboard',fn:()=>copyText(rest)});
-          } else {
-            items.push({label:'Center here',icon:'bi-bullseye',fn:()=>recenter(id)});
-            items.push({label:'Copy id',icon:'bi-clipboard',fn:()=>copyText(id)});
+      function makeGraph(container, crumbEl, onSelect){
+        const inst = QIPlex.create(container, {
+          rootId: 'root:qi',
+          fetchGraph: id => api.graph(id),
+          onSelect: n => { if(n && onSelect) onSelect(n.id, n); },
+          onTrail: trail => renderCrumb(crumbEl, trail, id => inst.recenter(id)),
+          /* The inspector rail covers these too — the menu stays for anyone
+             who already has the right-click habit. */
+          onContextMenu: (ev, d) => {
+            const rest=d.id.split(':').slice(1).join(':'), items=[];
+            if(d.type==='doc'){
+              items.push({label:'Open document',icon:'bi-box-arrow-up-right',fn:()=>openDoc(rest)});
+              items.push({label:'Reveal in folder',icon:'bi-folder2-open',fn:()=>revealDoc(rest)});
+              items.push({label:'Download',icon:'bi-download',fn:()=>downloadDoc(rest)});
+              if(d.path) items.push({label:'Copy path',icon:'bi-clipboard',fn:()=>copyText(d.path)});
+            } else {
+              items.push({label:'Copy id',icon:'bi-clipboard',fn:()=>copyText(rest)});
+            }
+            items.push({label:'Expand here',icon:'bi-bullseye',fn:()=>inst.recenter(d.id)});
+            showMenu(ev.clientX, ev.clientY, items);
+          },
+          actions: {
+            open:     id => openDoc(id),
+            reveal:   id => revealDoc(id),
+            download: id => downloadDoc(id),
+            copy:     p  => copyText(p)
           }
-          showMenu(p.event.clientX, p.event.clientY, items);
         });
-        async function recenter(id){
-          const d=await api.graph(id);
-          nodes.clear(); edges.clear(); nodes.add(vNodes(d)); edges.add(vEdges(d));
-          if(crumbEl){ const f=d.nodes.find(n=>n.id===d.focus); crumbEl.textContent=f?f.label:id; }
-          setTimeout(()=>{ try{ net.focus(id,{scale:0.95,animation:{duration:450}}); }catch(e){} }, 60);
-          return d;
-        }
-        return {recenter, net};
+        return inst;
       }
 
       async function loadFacets(){
@@ -4104,12 +4445,11 @@ def library_page():
       let mainGraph=null;
       function initGraph(){
         if(mainGraph) return;
-        loadVis(ok => { if(!ok){ $('g-plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; return; }
-          mainGraph=makeGraph($('g-plex'), $('g-crumb'), id => mainGraph.recenter(id));
-          mainGraph.recenter('root:qi');
+        loadPlex(ok => { if(!ok){ $('g-plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; return; }
+          mainGraph=makeGraph($('g-plex'), $('g-crumb'), null);
+          mainGraph.home();
         });
       }
-      $('g-home').addEventListener('click', () => { if(mainGraph) mainGraph.recenter('root:qi'); });
 
       let splitGraph=null, splitInited=false;
       async function splitSearch(){
@@ -4123,21 +4463,19 @@ def library_page():
       }
       function initSplit(){
         if(splitInited) return; splitInited=true;
-        loadVis(ok => { if(!ok){ $('sp-plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; return; }
-          splitGraph=makeGraph($('sp-plex'), $('sp-crumb'), id => {
-            splitGraph.recenter(id);
-            const t=id.split(':')[0], rest=id.split(':').slice(1).join(':');
-            if(t==='project'){ $('sp-project').value=rest; splitSearch(); }
-            else if(t==='doc'){ highlightDoc(rest); }
+        loadPlex(ok => { if(!ok){ $('sp-plex').innerHTML='<div class="text-danger p-3">Could not load the graph library (offline?).</div>'; return; }
+          splitGraph=makeGraph($('sp-plex'), $('sp-crumb'), (id, n) => {
+            const rest=id.split(':').slice(1).join(':');
+            if(n.type==='project'){ $('sp-project').value=rest; splitSearch(); }
+            else if(n.type==='doc'){ highlightDoc(rest); }
           });
-          splitGraph.recenter('root:qi');
+          splitGraph.home();
         });
         splitSearch();
       }
       $('sp-go').addEventListener('click', splitSearch);
       $('sp-q').addEventListener('keydown', e => { if(e.key==='Enter') splitSearch(); });
       ['sp-project','sp-type'].forEach(id => $(id).addEventListener('change', splitSearch));
-      $('sp-home').addEventListener('click', () => { if(splitGraph) splitGraph.recenter('root:qi'); });
 
       (function(){
         const split=$('sp-split'), left=$('sp-left'), gutter=$('sp-gutter');
@@ -4184,7 +4522,7 @@ def library_page():
       }
       TABS.forEach(t => $(t[0]).addEventListener('click', () => {
         show(t[0]); if(t[2]) t[2]();
-        const g=t[3](); if(g&&g.net) setTimeout(()=>{ try{ g.net.redraw(); g.net.fit({animation:false}); }catch(e){} }, 90);
+        const g=t[3](); if(g&&g.resize) setTimeout(()=>{ try{ g.resize(); }catch(e){} }, 90);
       }));
 
       loadFacets(); searchMain();
@@ -6351,14 +6689,18 @@ def _status_embed_html(title: str, body: str) -> str:
     bs = f'data-bs-theme="{_base}"' if _base else ""
     _accent = _THEME_ACCENT.get(theme, "")
     acc = f'data-qi-accent="{_accent}"' if _accent else ""
-    return (f'<!doctype html><html lang="en" {bs} {acc}><head><meta charset="utf-8"/>'
+    _skin = _THEME_SKIN.get(theme, "")
+    skn = f'data-qi-skin="{_skin}"' if _skin else ""
+    fonts = QI_SKIN_FONTS if _skin else ""
+    return (f'<!doctype html><html lang="en" {bs} {acc} {skn}><head><meta charset="utf-8"/>'
             f'<meta name="viewport" content="width=device-width,initial-scale=1"/>'
-            f'<title>{html.escape(title)}</title>'
+            f'<title>{html.escape(title)}</title>{fonts}'
             f'<link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css"/>'
             f'<link rel="stylesheet" href="/static/css/adminlte.min.css"/>'
+            f'<link rel="stylesheet" href="/static/css/qi-plex.css"/>'
             f'<script src="/static/vendor/bootstrap.bundle.min.js"></script>'
-            f'<style>{QI_ACCENT_CSS}</style>'
-            f'</head><body class="bg-body" {bs} {acc}><div class="p-3">{body}</div></body></html>')
+            f'<style>{QI_ACCENT_CSS}{QI_SKIN_CSS}</style>'
+            f'</head><body class="bg-body" {bs} {acc} {skn}><div class="p-3">{body}</div></body></html>')
 
 
 @app.get("/project/{pid}/status", response_class=HTMLResponse)

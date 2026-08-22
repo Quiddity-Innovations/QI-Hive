@@ -1,7 +1,7 @@
 # QI Hive — Dashboard Feature Guide
 
 **Quiddity Innovations**  ·  Service `QI_Dashboard` · http://localhost:8600 · QI Hive v3.0  
-*Generated 2026-06-19 · Revised 2026-08-06 (template v2, five-theme switcher)*
+*Generated 2026-06-19 · Revised 2026-08-06 (template v2, five-theme switcher) · Revised 2026-08-22 (Plex rebuilt on D3; Museum & Manuscript skins added — seven themes)*
 
 ## Overview
 
@@ -10,7 +10,7 @@ The QI Hive is the unified control plane for every Quiddity Innovations project.
 ### Anatomy of every page
 
 - **Left sidebar** — Fixed navigation listing all pages under the “QI HIVE” header, plus a colour-coded Status Legend (Complete / In Progress / Backlog / New / Pre-POC / Retired).
-- **Top bar** — Live clock, a theme switcher (Penumbra / Light / System plus the NEXUS-ported Orange and Dark accent themes; Penumbra — the original dark look — is the default), and a heart-pulse shortcut that jumps straight to the Health Check.
+- **Top bar** — Live clock, a theme switcher (Penumbra / Light / System, the NEXUS-ported Orange and Dark accent themes, and the Museum / Manuscript skins added 2026-08-22; Penumbra — the original dark look — remains the default), and a heart-pulse shortcut that jumps straight to the Health Check.
 - **Content area** — The page itself. Most pages open with an “About this page” expander and read live data on every load.
 - **Footer** — “Quiddity Innovations” on the left and “QI Hive v3.0 — Powered by QI Brain” on the right, present on every page.
 
@@ -530,8 +530,38 @@ The Documentation Brain — a searchable index and knowledge graph (“Plex”) 
 - Full-text + semantic search over ~900 cataloged docs
 - Filters by project and type; live counts (docs / embedded / stale)
 - Open a doc or reveal it in Explorer
-- Knowledge-graph neighbourhood (“Plex”)
+- Knowledge-graph neighbourhood (“Plex”) — see below
 - Backed by the qi_brain.db docs table + qi_docs Chroma collection
+
+**The Plex, rebuilt 2026-08-22**
+
+It ran on vis-network until then: identical grey boxes joined by identical grey
+lines, so the picture said nothing a list would not have said, and every action
+was hidden behind a right-click. It is now a D3 v7 force layout
+(`static/js/qi-plex.js` + `static/css/qi-plex.css`), built to the same standard
+as the World Mythologies relationship map at `C:\APPS\Mythologies\site`.
+
+| | What it now shows |
+|---|---|
+| **Node size** | Degree — the hubs are visibly the hubs |
+| **Node colour** | Entity type: ecosystem, project, document, decision, feature, session |
+| **Node glyph** | The title's initial, set in the display serif |
+| **Edge colour + dash** | The relation — *in ecosystem / contains / decided / implements / produced / mentions*. Both channels carry it, so the graph survives greyscale and colour-vision deficiency |
+| **Arrowheads** | Only on the directional relations |
+| **Selecting** | Dims the rest to a ghost rather than hiding it, so context survives |
+
+Interaction: **click** a node to select it and open the inspector rail;
+**double-click** or press **E** to expand the Plex around it; **drag** to
+rearrange; **Tab / Enter / Escape** work throughout, because the nodes are real
+SVG elements rather than canvas pixels. A breadcrumb records every expansion, so
+drilling three projects deep is reversible. The right-click menu still works for
+anyone with the habit.
+
+Edge captions appear only when fourteen or fewer edges are lit — selecting a
+hub would otherwise print its entire star at once, which is worse than none.
+
+The Plex reads its palette from CSS custom properties, so it follows the
+dashboard theme (including Museum and Manuscript) without a second switch.
 
 
 ---
@@ -594,7 +624,7 @@ Every page reads from two live sources of truth:
 - Public access: `QI_DashboardTunnel` (Cloudflare, on-demand) — see the Tunnels page.
 - Code: `C:\QIH\engine\hive\dashboard\server.py` (single FastAPI app).
 - Companion service: `QI_BrainAPI` on :9011 supplies the knowledge layer.
-- Stack: FastAPI + AdminLTE / Bootstrap 5, Bootstrap Icons; five themes (Penumbra default; Orange & Dark carry the NEXUS orange accent).
+- Stack: FastAPI + AdminLTE / Bootstrap 5, Bootstrap Icons, D3 v7 (Plex only, lazy-loaded); seven themes (Penumbra default; Orange & Dark carry the NEXUS orange accent; Museum & Manuscript are full skins — they restate the whole surface-and-ink palette, not one hue, and add a display serif).
 
 ## Appendix C — Master Build Prompt
 

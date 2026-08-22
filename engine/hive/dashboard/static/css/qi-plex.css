@@ -1,0 +1,492 @@
+/* ============================================================
+   QI Plex — the Documentation Brain relationship graph.
+
+   Rebuilt 2026-08-22 as a D3 force layout to the same standard as the
+   World Mythologies relationship map (C:\APPS\Mythologies\site). It
+   replaced a stock vis-network canvas whose default box nodes and grey
+   edges carried no information beyond "these two things are joined".
+
+   The visual language, borrowed wholesale from that map:
+     · medallion nodes — a category-coloured disc carrying an initial,
+       ringed, sized by how connected the node is
+     · typed edges — every relation has its own colour AND its own dash
+       pattern, so the graph still reads without colour
+     · dimming rather than hiding — selecting a node fades the rest to a
+       ghost instead of removing it, so context survives
+
+   Tokens resolve from the dashboard's own Bootstrap theme, so the Plex
+   follows Penumbra / Light / Museum / Manuscript without a second switch.
+   ============================================================ */
+
+.qi-plex {
+  --plex-serif: "Cormorant Garamond", "Palatino Linotype", Palatino, Georgia, serif;
+  --plex-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Node categories — one per Brain entity type. Tuned to hold their
+     identity on both the dark ground and the parchment one. */
+  --plex-root:     #d4af6a;
+  --plex-project:  #7aa8e8;
+  --plex-doc:      #9aa6b8;
+  --plex-decision: #e0a34e;
+  --plex-feature:  #8fbf6a;
+  --plex-session:  #b493e6;
+
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--plex-frame);
+  background: var(--plex-canvas);
+  font-family: var(--plex-sans);
+}
+
+/* ---------------- DARK GROUND ---------------- */
+.qi-plex,
+[data-bs-theme="dark"] .qi-plex {
+  --plex-canvas: radial-gradient(1200px 700px at 50% -12%, #1a1e30 0%, #12141f 46%, #0b0d15 100%);
+  --plex-ink: #eae4d6;
+  --plex-ink-muted: #b1a993;
+  --plex-ink-faint: #8d8674;
+  --plex-gold: #d4af6a;
+  --plex-gold-line: rgba(212, 175, 106, 0.34);
+  --plex-frame: rgba(212, 175, 106, 0.22);
+  --plex-hairline: rgba(212, 175, 106, 0.16);
+  --plex-surface: #171a28;
+  --plex-surface-2: #1d2133;
+  --plex-node-face: #171a28;
+  --plex-node-halo: rgba(212, 175, 106, 0.16);
+  --plex-label-stroke: #10131e;
+  --plex-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  --plex-shadow-soft: 0 6px 22px rgba(0, 0, 0, 0.42);
+  --plex-focus: #7dd3fc;
+
+  --plex-e-project:    #c9a24d;
+  --plex-e-has:        #8f9bb0;
+  --plex-e-decided:    #e8a25e;
+  --plex-e-implements: #8fbf6a;
+  --plex-e-produced:   #b493e6;
+  --plex-e-mentions:   #7aa8e8;
+  --plex-e-other:      #9aa0a6;
+  --plex-e-dim:        rgba(140, 140, 150, 0.10);
+}
+
+/* ---------------- LIGHT GROUND ---------------- */
+[data-bs-theme="light"] .qi-plex {
+  --plex-canvas: radial-gradient(1100px 650px at 50% -12%, #faf5e8 0%, #f3ecdd 55%, #e9dfc8 100%);
+  --plex-ink: #35301f;
+  --plex-ink-muted: #6d6350;
+  --plex-ink-faint: #857a63;
+  --plex-gold: #9a7a2e;
+  --plex-gold-line: rgba(154, 122, 46, 0.5);
+  --plex-frame: rgba(154, 122, 46, 0.32);
+  --plex-hairline: rgba(154, 122, 46, 0.24);
+  --plex-surface: #faf5e9;
+  --plex-surface-2: #f2eadb;
+  --plex-node-face: #fbf7ec;
+  --plex-node-halo: rgba(154, 122, 46, 0.14);
+  --plex-label-stroke: #f6efdf;
+  --plex-shadow: 0 16px 40px rgba(96, 78, 42, 0.22);
+  --plex-shadow-soft: 0 5px 18px rgba(96, 78, 42, 0.16);
+  --plex-focus: #1d4ed8;
+
+  --plex-project:  #2b5fad;
+  --plex-doc:      #6b7280;
+  --plex-decision: #b45309;
+  --plex-feature:  #4d7c0f;
+  --plex-session:  #7c4dbc;
+
+  --plex-e-project:    #8a6a1f;
+  --plex-e-has:        #6b7280;
+  --plex-e-decided:    #b45309;
+  --plex-e-implements: #4d7c0f;
+  --plex-e-produced:   #7c4dbc;
+  --plex-e-mentions:   #2b5fad;
+  --plex-e-other:      #7d7362;
+  --plex-e-dim:        rgba(120, 108, 84, 0.14);
+}
+
+/* ---------------- STAGE ---------------- */
+.qi-plex .plex-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+.qi-plex .plex-svg.grabbing { cursor: grabbing; }
+
+.qi-plex-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13.5px;
+  color: var(--plex-ink-muted);
+  pointer-events: none;
+  letter-spacing: 0.01em;
+}
+.qi-plex-ring {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--plex-gold-line);
+  border-top-color: var(--plex-gold);
+  animation: qi-plex-spin 0.9s linear infinite;
+}
+@keyframes qi-plex-spin { to { transform: rotate(360deg); } }
+
+.qi-plex-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--plex-ink-muted);
+  pointer-events: none;
+}
+
+/* ---------------- EDGES ----------------
+   Colour AND dash pattern both carry the relation, so the graph is still
+   readable in greyscale or with a colour-vision deficiency. */
+.qi-plex .edge {
+  fill: none;
+  stroke-width: 1.4;
+  stroke-opacity: 0.55;
+  transition: stroke-opacity 0.25s, stroke-width 0.15s;
+}
+.qi-plex .edge.e-project    { stroke: var(--plex-e-project); stroke-width: 1.9; }
+.qi-plex .edge.e-has        { stroke: var(--plex-e-has); stroke-dasharray: 6 4; }
+.qi-plex .edge.e-decided    { stroke: var(--plex-e-decided); stroke-dasharray: 10 4; }
+.qi-plex .edge.e-implements { stroke: var(--plex-e-implements); stroke-dasharray: 4 4; }
+.qi-plex .edge.e-produced   { stroke: var(--plex-e-produced); stroke-dasharray: 1 5; stroke-linecap: round; }
+.qi-plex .edge.e-mentions   { stroke: var(--plex-e-mentions); stroke-dasharray: 8 3 2 3; }
+.qi-plex .edge.e-other      { stroke: var(--plex-e-other); stroke-dasharray: 2 5; stroke-linecap: round; }
+
+.qi-plex .edge.is-dim { stroke: var(--plex-e-dim) !important; stroke-opacity: 1; }
+.qi-plex .edge.is-lit { stroke-opacity: 0.95; stroke-width: 2.4; }
+
+.qi-plex marker path { fill: context-stroke; }
+.qi-plex .m-project    { fill: var(--plex-e-project); }
+.qi-plex .m-has        { fill: var(--plex-e-has); }
+.qi-plex .m-decided    { fill: var(--plex-e-decided); }
+.qi-plex .m-implements { fill: var(--plex-e-implements); }
+.qi-plex .m-produced   { fill: var(--plex-e-produced); }
+.qi-plex .m-mentions   { fill: var(--plex-e-mentions); }
+.qi-plex .m-other      { fill: var(--plex-e-other); }
+
+/* Edge labels stay hidden until the neighbourhood is lit — 40 relation
+   captions at once is the noise the old Plex drowned in. */
+.qi-plex .elabel {
+  font-family: var(--plex-sans);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  fill: var(--plex-ink-faint);
+  text-anchor: middle;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  paint-order: stroke;
+  stroke: var(--plex-label-stroke);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.qi-plex .elabel.is-lit { opacity: 1; }
+
+/* ---------------- NODES ---------------- */
+.qi-plex .node { cursor: pointer; }
+.qi-plex .node .ring {
+  fill: var(--plex-node-face);
+  stroke-width: 2.5;
+  transition: stroke-width 0.15s;
+}
+[data-bs-theme="dark"] .qi-plex .node .ring,
+.qi-plex .node .ring { filter: drop-shadow(0 0 10px var(--plex-node-halo)); }
+[data-bs-theme="light"] .qi-plex .node .ring { filter: none; }
+
+.qi-plex .node:hover .ring,
+.qi-plex .node.is-selected .ring { stroke-width: 4; }
+
+.qi-plex .node .halo {
+  fill: none;
+  stroke: var(--plex-gold);
+  stroke-opacity: 0;
+  stroke-width: 2;
+  transition: stroke-opacity 0.2s;
+}
+.qi-plex .node.is-selected .halo { stroke-opacity: 0.9; }
+.qi-plex .node.is-focus .halo { stroke-opacity: 0.55; stroke-dasharray: 3 4; }
+
+.qi-plex .node:focus { outline: none; }
+.qi-plex .node:focus-visible { outline: none; }
+.qi-plex .node .focus-ring {
+  fill: none;
+  stroke: var(--plex-focus);
+  stroke-width: 2.5;
+  stroke-dasharray: 4 3;
+  visibility: hidden;
+}
+.qi-plex .node:focus-visible .focus-ring { visibility: visible; }
+
+.qi-plex .node .medallion { pointer-events: none; }
+.qi-plex .node .initial {
+  font-family: var(--plex-serif);
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.qi-plex .node .nlabel {
+  font-family: var(--plex-sans);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--plex-ink);
+  paint-order: stroke;
+  stroke: var(--plex-label-stroke);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.qi-plex .node .nsub {
+  font-family: var(--plex-sans);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  fill: var(--plex-ink-faint);
+  paint-order: stroke;
+  stroke: var(--plex-label-stroke);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.qi-plex .node.is-dim { opacity: 0.14; }
+.qi-plex .node.is-dim .nlabel,
+.qi-plex .node.is-dim .nsub { display: none; }
+
+/* ---------------- ZOOM TOOLS ---------------- */
+.qi-plex .plex-tools {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 4;
+}
+.qi-plex .plex-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--plex-hairline);
+  background: var(--plex-surface);
+  color: var(--plex-ink-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--plex-shadow-soft);
+  transition: color 0.14s, border-color 0.14s, background 0.14s;
+}
+.qi-plex .plex-btn:hover {
+  color: var(--plex-gold);
+  border-color: var(--plex-gold-line);
+  background: var(--plex-surface-2);
+}
+.qi-plex .plex-btn:focus-visible {
+  outline: 2px solid var(--plex-focus);
+  outline-offset: 2px;
+}
+
+/* ---------------- LEGEND ---------------- */
+.qi-plex .plex-legend {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 4;
+  max-width: min(300px, calc(100% - 28px));
+  border-radius: 9px;
+  border: 1px solid var(--plex-hairline);
+  background: var(--plex-surface);
+  box-shadow: var(--plex-shadow-soft);
+  font-size: 12px;
+  color: var(--plex-ink-muted);
+}
+.qi-plex .plex-legend > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 7px 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  color: var(--plex-gold);
+  user-select: none;
+}
+.qi-plex .plex-legend > summary::-webkit-details-marker { display: none; }
+.qi-plex .plex-legend[open] > summary { border-bottom: 1px solid var(--plex-hairline); }
+.qi-plex .legend-body { padding: 9px 12px 11px; max-height: 42vh; overflow: auto; }
+.qi-plex .legend-h {
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--plex-ink-faint);
+  margin: 8px 0 5px;
+  font-weight: 600;
+}
+.qi-plex .legend-h:first-child { margin-top: 0; }
+.qi-plex .legend-list { list-style: none; margin: 0; padding: 0; }
+.qi-plex .legend-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2.5px 0;
+  line-height: 1.35;
+}
+.qi-plex .legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: 0 0 12px;
+  border: 2px solid currentColor;
+  background: var(--plex-node-face);
+}
+
+/* ---------------- INSPECTOR ----------------
+   The old Plex hid everything behind a right-click menu, which is
+   undiscoverable and unusable on a touchscreen. Selecting a node now
+   opens this rail; the context menu still works for people who know it. */
+.qi-plex .plex-inspector {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  width: min(292px, calc(100% - 24px));
+  border-radius: 10px;
+  border: 1px solid var(--plex-hairline);
+  background: var(--plex-surface);
+  box-shadow: var(--plex-shadow);
+  color: var(--plex-ink);
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.18s, transform 0.18s;
+}
+.qi-plex .plex-inspector.is-open {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.qi-plex .insp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 12px 9px;
+  border-bottom: 1px solid var(--plex-hairline);
+}
+.qi-plex .insp-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: 0 0 12px;
+  margin-top: 4px;
+  border: 2px solid currentColor;
+  background: var(--plex-node-face);
+}
+.qi-plex .insp-title {
+  font-family: var(--plex-serif);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.24;
+  letter-spacing: 0.005em;
+  word-break: break-word;
+}
+.qi-plex .insp-kind {
+  font-size: 9.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--plex-ink-faint);
+  margin-top: 3px;
+  font-weight: 600;
+}
+.qi-plex .insp-close {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: var(--plex-ink-faint);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.qi-plex .insp-close:hover { color: var(--plex-ink); }
+.qi-plex .insp-body { padding: 9px 12px 11px; }
+.qi-plex .insp-path {
+  font-family: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+  font-size: 10.5px;
+  color: var(--plex-ink-muted);
+  word-break: break-all;
+  line-height: 1.45;
+  margin-bottom: 9px;
+}
+.qi-plex .insp-meta {
+  font-size: 11.5px;
+  color: var(--plex-ink-muted);
+  margin-bottom: 9px;
+}
+.qi-plex .insp-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+.qi-plex .insp-btn {
+  border: 1px solid var(--plex-hairline);
+  background: var(--plex-surface-2);
+  color: var(--plex-ink-muted);
+  border-radius: 7px;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color 0.14s, border-color 0.14s;
+}
+.qi-plex .insp-btn:hover { color: var(--plex-gold); border-color: var(--plex-gold-line); }
+.qi-plex .insp-btn.primary {
+  color: var(--plex-gold);
+  border-color: var(--plex-gold-line);
+}
+
+@media (max-width: 820px) {
+  .qi-plex .plex-inspector { position: static; width: auto; margin: 8px; }
+  .qi-plex .plex-legend { display: none; }
+}
+
+/* ---------------- CRUMB TRAIL ----------------
+   A breadcrumb of where the Plex has been re-centred, so drilling three
+   projects deep is reversible without going home and starting again. */
+.plex-crumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  min-width: 0;
+}
+.plex-crumb .crumb-link {
+  border: 0;
+  background: none;
+  padding: 1px 3px;
+  border-radius: 4px;
+  color: var(--bs-secondary-color);
+  cursor: pointer;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plex-crumb .crumb-link:hover { color: var(--bs-body-color); text-decoration: underline; }
+.plex-crumb .crumb-link.current { color: var(--bs-body-color); font-weight: 600; cursor: default; }
+.plex-crumb .crumb-link.current:hover { text-decoration: none; }
+.plex-crumb .crumb-sep { color: var(--bs-secondary-color); opacity: 0.55; }
