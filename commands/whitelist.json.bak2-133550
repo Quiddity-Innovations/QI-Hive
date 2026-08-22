@@ -237,20 +237,20 @@
     },
     {
       "name": "nssm_install_noosorbis_exception",
-      "description": "EXCEPTION (2026-08-21, Renne's call): QI_NoosOrbis runs from the C:/APPS run tier. The standard nssm_* rules permit only C:/QIH and C:/QIP, NOT C:/APPS - which is where every QI app service actually lives (Maia, NEXUS, MapSnap all predate the broker). Pinned to this ONE service, ONE interpreter and ONE script. If C:/APPS is ever added to the standard rules, delete these four.",
+      "description": "EXCEPTION (2026-08-21, Renne's explicit call): install QI_NoosOrbis from the D: dev workshop instead of the C: run tier. Deliberately pinned to this ONE service name, this ONE interpreter and this ONE script - it grants nothing else on D:. Remove this rule once NoosOrbis is promoted to C:\\APPS.",
       "cmd": "nssm",
       "arg_count_min": 4,
       "arg_count_max": 4,
       "args_regex": [
         "^install$",
         "^QI_NoosOrbis$",
-        "^C:\\\\Program\\ Files\\\\Python311\\\\python\\.exe$",
-        "^C:\\\\APPS\\\\NoosOrbis\\\\main\\.py$"
+        "^C:\\Program Files\\Python311\\python\\.exe$",
+        "^D:\\Dev\\NoosOrbis\\main\\.py$"
       ]
     },
     {
       "name": "nssm_set_appdir_noosorbis_exception",
-      "description": "EXCEPTION (2026-08-21, Renne's call): QI_NoosOrbis runs from the C:/APPS run tier. The standard nssm_* rules permit only C:/QIH and C:/QIP, NOT C:/APPS - which is where every QI app service actually lives (Maia, NEXUS, MapSnap all predate the broker). Pinned to this ONE service, ONE interpreter and ONE script. If C:/APPS is ever added to the standard rules, delete these four.",
+      "description": "EXCEPTION (2026-08-21): AppDirectory for QI_NoosOrbis only, pinned to its workshop root.",
       "cmd": "nssm",
       "arg_count_min": 4,
       "arg_count_max": 4,
@@ -258,12 +258,12 @@
         "^set$",
         "^QI_NoosOrbis$",
         "^AppDirectory$",
-        "^C:\\\\APPS\\\\NoosOrbis$"
+        "^D:\\Dev\\NoosOrbis$"
       ]
     },
     {
       "name": "nssm_set_logs_noosorbis_exception",
-      "description": "EXCEPTION (2026-08-21, Renne's call): QI_NoosOrbis runs from the C:/APPS run tier. The standard nssm_* rules permit only C:/QIH and C:/QIP, NOT C:/APPS - which is where every QI app service actually lives (Maia, NEXUS, MapSnap all predate the broker). Pinned to this ONE service, ONE interpreter and ONE script. If C:/APPS is ever added to the standard rules, delete these four.",
+      "description": "EXCEPTION (2026-08-21): AppStdout/AppStderr for QI_NoosOrbis only, inside its own log dir.",
       "cmd": "nssm",
       "arg_count_min": 4,
       "arg_count_max": 4,
@@ -271,20 +271,7 @@
         "^set$",
         "^QI_NoosOrbis$",
         "^App(Stdout|Stderr)$",
-        "^C:\\\\APPS\\\\NoosOrbis\\\\data\\\\logs\\\\[A-Za-z0-9_.-]+\\.log$"
-      ]
-    },
-    {
-      "name": "nssm_set_appparams_noosorbis_exception",
-      "description": "EXCEPTION (2026-08-21, Renne's call): QI_NoosOrbis runs from the C:/APPS run tier. The standard nssm_* rules permit only C:/QIH and C:/QIP, NOT C:/APPS - which is where every QI app service actually lives (Maia, NEXUS, MapSnap all predate the broker). Pinned to this ONE service, ONE interpreter and ONE script. If C:/APPS is ever added to the standard rules, delete these four.",
-      "cmd": "nssm",
-      "arg_count_min": 4,
-      "arg_count_max": 4,
-      "args_regex": [
-        "^set$",
-        "^QI_NoosOrbis$",
-        "^AppParameters$",
-        "^C:\\\\APPS\\\\NoosOrbis\\\\main\\.py$"
+        "^D:\\Dev\\NoosOrbis\\data\\logs\\[A-Za-z0-9_.-]+\\.log$"
       ]
     }
   ]

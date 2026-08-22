@@ -2,9 +2,9 @@
 # QI Gate — public edge.  GENERATED FILE — DO NOT EDIT BY HAND.
 #   source:    C:\QIH\engine\gate\config\gate.json
 #   regenerate: python C:\QIH\engine\gate\gen_caddyfile.py
-#   generated: 2026-08-16 16:22:09
+#   generated: 2026-08-21 13:25:23
 #
-#   22 public hostnames: 13 protected, 7 mixed, 2 open
+#   23 public hostnames: 13 protected, 7 mixed, 3 open
 #
 #   Every Cloudflare tunnel points here. Caddy does the proxying
 #   (websockets/SSE/Gradio queues pass through untouched) and asks
@@ -573,6 +573,22 @@
 				header_up X-Forwarded-Proto https
 				header_up X-Forwarded-Host {http.request.host}
 			}
+		}
+	}
+
+	# ── noosorbis.quiddityinnovations.com  →  NoosOrbis  [open]
+	#   DEMO (2026-08-21, Renne's explicit call): showing the reading experience to a friend.
+	#   UNLIKE the other two open hosts this app carries NO auth of its own, so right now the
+	#   only wall is obscurity of the URL. Two live costs while open: every Librarian question
+	#   runs on the local GPU (gemma4:latest, ~25-30s idle, far worse under ComfyUI contention),
+	#   and all Wikimedia calls carry Renne's User-Agent and IP against his rate limit. REVISIT:
+	#   add Cloudflare Access (one-time email PIN, as lottery.quiddityinnovations.com does) or
+	#   switch to 'protected' once the demo ends.
+	@h22 host noosorbis.quiddityinnovations.com
+	handle @h22 {
+		reverse_proxy 127.0.0.1:8507 {
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {http.request.host}
 		}
 	}
 

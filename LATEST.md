@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-21 00:34:43 (nightly reconciler)_
+_Auto-generated: 2026-08-22 00:34:12 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 319 | 2026-08-21 00:17:25 |
+| claude_manager | Operational | active | 442 | 2026-08-21 23:23:04 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -27,9 +27,9 @@ _Auto-generated: 2026-08-21 00:34:43 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 205 | 2026-08-20 18:44:56 |
+| qi_hive | Dashboard UX polish | active | 206 | 2026-08-21 00:35:01 |
 | retirementanalyzer | v1 - engine + API + UI live | active | 7 | 2026-07-03 02:52:18 |
-| synvox | Phase 2 â€” product surface at MatrAIx-console parity, capacity-scalable | healthy | 43 | 2026-08-20 15:37:54 |
+| synvox | Phase 4 â€” evidence layer and trust | active | 61 | 2026-08-21 18:02:01 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 24 | 2026-08-20 16:19:35 |
 
@@ -196,20 +196,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** Install QI_FidelityAnalyzer + QI_FidelityAnalyzerTunnel services; add PDF positions parsing; configurable target allocation in UI; first git commit + GitHub.
 
 ### synvox
-- **Phase:** Phase 2 â€” product surface at MatrAIx-console parity, capacity-scalable
-- **Status:** healthy
-- **Summary:** Session 4 closed at head f1a97f7. 867 tests / 0 failed, all four gates green, three surfaces 200, public hostname 302. Working tree clean; Session 5 has started and now owns the repo.
-
-Landed: ENH-67 (capacity as configuration â€” the cohort grid buckets so the progress payload is size-independent of n), the full run experience (grid, live metrics, distributions, segments, trajectory), and ENH-68 (dotted home globe with a three-mode counter, each mode captioned with what the number actually is).
-
-Five graded studies now live in the demo workspace: 94 personas, 0 errors, $0. The n=48 Coke study is the demo centrepiece â€” 90% would keep buying but only on offer, which is a margin problem rather than a churn problem.
-
-Three silent bugs fixed, all in honesty-critical paths: construct_id (which had disabled the entire evidence layer across every spec), a false-disagreement bug where a mismatched polarity table scored 0% instead of "cannot say", and a guard test that could not fail on its own bug.
-
-Demo materials ready: a Word script and a 15-slide PowerPoint, both with every value verified against the live install, and both scripting the 62%-vs-61% coincidence to be volunteered rather than discovered.
-
-Open and honest: the globe's live ROTATION was never confirmed on a real screen (inspected through a non-compositing automation browser, so rAF was throttled and it rendered as a correct still image). That is Session 5's first task.
-- **Next:** ["Confirm the home globe actually spins on a real screen â€” static render verified, rotation not", "Finish ENH-68: region highlight is wired but unproven, cohort mode points at a field that may not exist, and the Settings toggle Renne asked for is not built", "Reality-check matching QUALITY â€” claim patterns and favourability polarity against live adapter output; this is what lifts a grade above C", "Chat / web / app task kinds â€” design the behavioural grading rubric BEFORE writing a compiler", "Grow the persona pool via rule-based crosswalks (US Census PUMS, Brazilian IBGE) â€” no LLM cost, and the personas are owned, which also settles the Persona 1M licence question"]
+- **Phase:** Phase 4 â€” evidence layer and trust
+- **Status:** active
+- **Summary:** Session 9 closed with 1094 passed / 0 failed and every gate green; the end-to-end study runs the full product graded, 3/3, 0 errored, in 105 seconds at $0. D1b is finished: all seven evidence adapters declare what kind of number they return, "text" exists as a fourth kind distinct from "did not say", and census and hackernews can derive a genuine change with refusals that keep it honest. D3 was found and closed in the same session â€” reality-check agreement now has to declare how reliable the agreeing source was, and the rubric carries a "medium" floor on the grade-A path. 34 new guards, all mutation-tested; two were caught passing for the wrong reason.
+- **Next:** D1c: GitHub is the last adapter that cannot support or contradict anything â€” its repo endpoint carries no history, and the fix needs a decision about which construct a GitHub number is evidence for before any call is written. Then wire the evidence layer into the end-to-end path, since reality_check comes back "absent" there and none of D1/D1b/D3 is exercised by the only check that runs the product. D2b (apply upstream patch 0005 or keep rule 1b) is small and still open.
 
 ### tubescout
 - **Phase:** MVP + refinements complete

@@ -771,3 +771,29 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Logs** | `C:\QIH\logs\mapsnap_bu_iis_setup.log` (script output) · `qi_mapsnap_bu_setup_svc.log` (service) |
 | **Start type** | **DEMAND_START** (never auto-runs) · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
 | **Added** | 2026-07-31 — BU Edition session; installed via QI_Elevate broker |
+
+## QI_NoosOrbis / QI_NoosOrbisTunnel  (added 2026-08-21)
+
+| Field | Value |
+|---|---|
+| **QI_NoosOrbis** | `C:\Program Files\Python311\python.exe C:\APPS\NoosOrbis\main.py` |
+| AppDirectory | `C:\APPS\NoosOrbis` |
+| Port | 8507 (loopback only — never tunnel this port directly) |
+| Logs | `C:\APPS\NoosOrbis\data\logs\service_out.log` / `service_err.log` |
+| **QI_NoosOrbisTunnel** | cloudflared, config `C:\QIH\engine\tunnels\configs\qi-noosorbis.yml`, tunnel `qi-noosorbis` |
+| Public URL | https://noosorbis.quiddityinnovations.com |
+| Gate mode | **open** — no auth wall (see the `why` in gate.json) |
+
+**Promoted to the C: run tier 2026-08-21.** Four scoped rules in
+`C:\QIH\commands\whitelist.json` named `*_noosorbis_exception` still permit it, because the
+STANDARD `nssm_*` rules cover only `C:\QIH` and `C:\QIP` — **not `C:\APPS`**, which is where
+every QI app service actually lives (Maia, NEXUS, MapSnap all predate the broker). Promotion
+did not remove the need for the exceptions. Adding `C:\APPS` to the standard rules would, and
+would cover the other app services too.
+
+Repo: https://github.com/Quiddity-Innovations/noosorbis (private)
+
+Symptom lookup:
+- public 502 → check **QI_NoosOrbis** first; the tunnel stays healthy while the app is down
+- hostname 404s after a gate change → restart **QI_Caddy** (serves :9040), not QI_Gate (:9041)
+- Librarian slow → GPU contention, check ComfyUI

@@ -6,7 +6,6 @@
     "owner": "Renne Santiago / Quiddity Innovations",
     "regenerate_caddyfile": "python C:\\QIH\\engine\\gate\\gen_caddyfile.py"
   },
-
   "gate": {
     "listen_port": 9040,
     "auth_port": 9041,
@@ -15,13 +14,11 @@
     "brand": "Quiddity Innovations",
     "access_log": "C:\\QIH\\engine\\gate\\LOGS\\access.log"
   },
-
   "_modes": {
     "protected": "Login required for every path. Default for anything with a UI.",
     "mixed": "Login required EXCEPT the paths listed in public_paths (machine callbacks that authenticate themselves by signature).",
     "open": "No gate. Only for endpoints that carry their own strong auth, or that we have not yet finished verifying — each one must carry a 'why' and be revisited."
   },
-
   "hosts": [
     {
       "host": "hive.quiddityinnovations.com",
@@ -30,7 +27,6 @@
       "mode": "protected",
       "note": "Crown jewels: ecosystem snapshot, service control, Brain data, war room. Was fully readable by anyone before 2026-08-05."
     },
-
     {
       "host": "cognibase.quiddityinnovations.com",
       "upstream": "127.0.0.1:8650",
@@ -42,7 +38,9 @@
       "upstream": "127.0.0.1:9876",
       "app": "MapSnap",
       "mode": "mixed",
-      "public_paths": ["/mcp"],
+      "public_paths": [
+        "/mcp"
+      ],
       "note": "MapSnap has its own login (Application/auth.py) — the gate is a second wall in front of it. /mcp carries its own bearer token for the QI MCP Gateway, so it bypasses the cookie wall."
     },
     {
@@ -120,13 +118,16 @@
       "app": "Maia Quiddam dev",
       "mode": "protected"
     },
-
     {
       "host": "maia.quiddityinnovations.com",
       "upstream": "127.0.0.1:8001",
       "app": "Maia API (LINE/Telegram/FB/WhatsApp)",
       "mode": "mixed",
-      "public_paths": ["/maia/", "/health", "/version"],
+      "public_paths": [
+        "/maia/",
+        "/health",
+        "/version"
+      ],
       "note": "Platform callbacks must stay reachable and verify their own signatures. Everything else on :8001 -- /panel, /memory, /history, /export, /admin/* -- was publicly readable and is now behind the gate."
     },
     {
@@ -134,17 +135,23 @@
       "upstream": "127.0.0.1:8001",
       "app": "Maia API (quiddam.com alias)",
       "mode": "mixed",
-      "public_paths": ["/maia/", "/health", "/version"]
+      "public_paths": [
+        "/maia/",
+        "/health",
+        "/version"
+      ]
     },
     {
       "host": "naya-line.quiddityinnovations.com",
       "upstream": "127.0.0.1:8002",
       "app": "Naya webhook",
       "mode": "mixed",
-      "public_paths": ["/webhook/", "/health"],
+      "public_paths": [
+        "/webhook/",
+        "/health"
+      ],
       "note": "Routes confirmed in C:\\APPS\\NAYA\\naya_server.py: /webhook/telegram, /webhook/peer-bridge."
     },
-
     {
       "host": "connector.quiddityinnovations.com",
       "upstream": "127.0.0.1:9030",
@@ -157,7 +164,12 @@
       "upstream": "127.0.0.1:8721",
       "app": "Claude Voice (LINE webhook)",
       "mode": "mixed",
-      "public_paths": ["/line/webhook", "/health", "/audio/", "/media/"],
+      "public_paths": [
+        "/line/webhook",
+        "/health",
+        "/audio/",
+        "/media/"
+      ],
       "note": "Routes enumerated from C:\\APPS\\CLAUDE\\Claude Voice\\line_bot.py (2026-08-05): those four are all that exist. /audio/ and /media/ MUST stay public -- LINE's servers fetch media from those URLs to deliver it to users, so gating them would break voice and video replies. Both resolve with os.path.basename(), so path traversal is already blocked. Gating everything else buys per-request access logging and closes off any route added later."
     },
     {
@@ -165,7 +177,10 @@
       "upstream": "127.0.0.1:18789",
       "app": "OpenClaw gateway (WSL)",
       "mode": "mixed",
-      "public_paths": ["/line/webhook", "/health"],
+      "public_paths": [
+        "/line/webhook",
+        "/health"
+      ],
       "note": "Resolved 2026-08-05 by response-body fingerprinting (the earlier path-probe was misleading). Only TWO real routes exist: /health returns {\"ok\":true,\"status\":\"live\"} and /line/webhook returns OK (400 on POST = its own signature check). Every other path -- /, /status, /webhook, /telegram/webhook, /events, even nonsense -- returns byte-identical SPA HTML, i.e. a single-page-app fallback, not a catch-all API. /api/* returns a real 404. So the fallback is the OpenClaw agent CONTROL PANEL, which was reachable from the internet with no authentication. It is now behind the login wall; the LINE callback stays public and, being matched before forward_auth, survives a gate outage. Internal agents (Tasuke/Kaze/Yubin/Sentry) talk to the gateway over localhost inside WSL, so gating the public hostname does not affect them. Gateway process: pid on :18789, /usr/bin/node openclaw-gateway."
     },
     {
@@ -173,8 +188,17 @@
       "upstream": "127.0.0.1:8500",
       "app": "MQ API",
       "mode": "mixed",
-      "public_paths": ["/health"],
+      "public_paths": [
+        "/health"
+      ],
       "note": "Routes enumerated from C:\\APPS\\MQ\\api\\main.py (2026-08-05): only /health, /version and /info exist -- there are NO webhooks, so nothing external needs to post here and the whole surface can be gated. /health left open for uptime monitoring. Service was stopped when this was applied, so the change carried no risk. Re-check if MQ later adds Facebook/Instagram/WhatsApp callbacks, which would need listing here."
+    },
+    {
+      "host": "noosorbis.quiddityinnovations.com",
+      "upstream": "127.0.0.1:8507",
+      "app": "NoosOrbis",
+      "mode": "open",
+      "why": "DEMO (2026-08-21, Renne's explicit call): showing the reading experience to a friend. UNLIKE the other two open hosts this app carries NO auth of its own, so right now the only wall is obscurity of the URL. Two live costs while open: every Librarian question runs on the local GPU (gemma4:latest, ~25-30s idle, far worse under ComfyUI contention), and all Wikimedia calls carry Renne's User-Agent and IP against his rate limit. REVISIT: add Cloudflare Access (one-time email PIN, as lottery.quiddityinnovations.com does) or switch to 'protected' once the demo ends."
     }
   ]
 }

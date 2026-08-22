@@ -1,1964 +1,2008 @@
 {
- "_meta": {
-  "name": "Quiddity Innovations — Ecosystem Registry",
-  "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
-  "version": "1.0.0",
-  "last_updated": "2026-08-17",
-  "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
-  "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded."
- },
- "module_interface_contract": {
-  "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
-  "version": "1.0",
-  "required_endpoints": [
-   {
-    "path": "/health",
-    "method": "GET",
-    "response": {
-     "status": "ok"
-    },
-    "purpose": "Liveness check. All monitoring, the unified app, and the validator call this."
-   },
-   {
-    "path": "/version",
-    "method": "GET",
-    "response": {
-     "project": "<id>",
-     "version": "<semver>",
-     "status": "<active|development|deprecated>"
-    },
-    "purpose": "Identity. Who am I, what version am I."
-   },
-   {
-    "path": "/info",
-    "method": "GET",
-    "response": "Full registry entry for this project (from qi_registry.json)",
-    "purpose": "Self-description. The unified app uses this to discover capabilities."
-   }
-  ],
-  "standard_response_envelope": {
-   "status": "ok | error",
-   "data": "payload object",
-   "error": "null or error message string",
-   "project": "project id",
-   "version": "semver string"
+  "_meta": {
+    "name": "Quiddity Innovations — Ecosystem Registry",
+    "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
+    "version": "1.0.0",
+    "last_updated": "2026-08-21",
+    "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded."
   },
-  "cross_project_call_rule": "All calls to other QI projects MUST have a graceful fallback. A project must be fully functional even if all its dependencies are offline.",
-  "api_versioning_rule": "Adding response fields = OK. Removing or renaming fields = breaking change. Breaking changes require a new versioned endpoint (/v2/...)."
- },
- "governance": {
-  "principles_doc": "C:\\QIH\\ecosystem\\QI_Architecture_Principles.md",
-  "standards_doc": "C:\\QIH\\ecosystem\\QI_Standards.md",
-  "validator_tool": "python C:\\QIH\\ecosystem\\qi_validator.py --project <id>",
-  "new_project_tool": "python C:\\QIH\\ecosystem\\qi_new_project.py",
-  "rules": [
-   "Registry is updated BEFORE code is written — never after",
-   "Every project runs standalone without any other QI project",
-   "Every project honors the module interface contract",
-   "Every project follows QI_Standards.md naming and folder conventions",
-   "No port is used outside the project's allocated block",
-   "CLAUDE.md exists at every project root",
-   "secrets/ is always gitignored",
-   "Session summary saved as .docx after every significant session"
-  ]
- },
- "port_strategy": {
-  "rule": "Each project owns a dedicated port BLOCK. No project may use another project's block.",
-  "api_blocks": {
-   "8000-8099": "System / FileHQ family",
-   "8100-8199": "Maia family",
-   "8200-8299": "Naya family",
-   "8300-8399": "NEXUS family",
-   "8400-8499": "OpenClaw / Agent family",
-   "8500-8509": "MQ family",
-   "8550-8559": "EasyFlow family",
-   "8600-8649": "QI Launcher family",
-   "9000-9099": "QI Hive family (Brain 9011, Connector 9030, Gate edge 9040 / auth 9041)",
-   "8700-8709": "AutoPDF family (desktop tool, port 6969 pre-registry)",
-   "8650-8659": "MapSnap family (mapsnap, cognibase)",
-   "8710-8719": "Gamez family (WC2026 dashboard proxy)",
-   "8720-8729": "Claude Voice family (realtime two-way voice assistant)",
-   "8730-8739": "Voice Studio family (studio/batch voice rendering) — RESERVED. The panel currently serves UI+API on 7863; this block is held for a headless API split.",
-   "8740-8749": "QI Media Studio family (composition layer) - RESERVED. The panel serves UI+API on 7864; this block is held for a headless API split.",
-   "8750-8759": "SynVox family. 8750 = MatrAIx dev GUI (tools\\view_gui.py, manual). 8751 = SynVox API. 8753 = SynVox AI Router (subscription lane). 8752 and 8754-8759 unallocated."
-  },
-  "ui_blocks": {
-   "7800-7809": "Maia UI family",
-   "7810-7819": "Naya UI family",
-   "7820-7829": "NEXUS UI family",
-   "7830-7839": "OpenClaw UI family",
-   "7840+": "Reserved — future"
-  },
-  "migration_note": "Existing ports below were created before this registry. They WORK and should NOT be changed unless there is a specific reason. New services MUST follow the block strategy."
- },
- "projects": [
-  {
-   "id": "filehq",
-   "name": "FileHQ",
-   "description": "File intelligence engine — MERGED into Naya (C:\\APPS\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
-   "path": "C:\\APPS\\NAYA\\filehq",
-   "original_path": "C:\\FileHQ",
-   "github": "TBD",
-   "status": "merged_into_naya",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8000,
-     "block": "8000-8099",
-     "notes": "First in block — good"
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Merging into Naya. FileHQ becomes Naya's file engine. Phase 1 (bridge) complete. Phase 2 (code absorption) pending Renne approval.",
-   "integrates_with": [
-    "naya",
-    "maia"
-   ],
-   "exposes_to_ecosystem": [
-    "File scanning and indexing",
-    "Document content extraction",
-    "File search API"
-   ],
-   "consumes_from_ecosystem": [
-    "nexus (LLM recommendations for file analysis)"
-   ]
-  },
-  {
-   "id": "maia",
-   "name": "Maia",
-   "description": "Multi-channel AI assistant platform (LINE, Telegram, Messenger, Instagram, WhatsApp)",
-   "path": "C:\\APPS\\QI",
-   "paths": {
-    "logs": "C:\\APPS\\QI\\LOGS"
-   },
-   "github": "https://github.com/Quiddity-Innovations/MAIA",
-   "status": "active_production",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8001,
-     "recommended_block": "8100",
-     "notes": "Pre-registry — do not change unless migrating"
-    },
-    "ui": {
-     "current": 7860,
-     "recommended_block": "7800",
-     "notes": "Pre-registry — do not change unless migrating"
-    }
-   },
-   "services": [
-    {
-     "name": "maia_server",
-     "nssm_name": "QI_MaiaBot",
-     "port": 8001,
-     "type": "FastAPI",
-     "managed_by": "NSSM"
-    },
-    {
-     "name": "maia_gradio",
-     "nssm_name": "QI_MaiaDemoTunnel",
-     "port": 7860,
-     "type": "Gradio",
-     "managed_by": "NSSM"
-    },
-    {
-     "name": "maia_tunnel",
-     "nssm_name": "QI_MaiaTunnel",
-     "port": null,
-     "type": "Cloudflare Tunnel",
-     "managed_by": "NSSM"
-    }
-   ],
-   "family_tier": "core",
-   "family_notes": "The flagship product. All other projects ultimately serve Maia or learn from it.",
-   "integrates_with": [
-    "nexus",
-    "naya",
-    "filehq",
-    "openclaw"
-   ],
-   "exposes_to_ecosystem": [
-    "Multi-channel messaging (LINE/Telegram/Messenger/Instagram/WhatsApp)",
-    "Personality engine",
-    "LLM chain (MiniMax → GPT → Qwen3 → Gemma3 → DeepSeek → Qwen3:4b)",
-    "Group/user config system",
-    "RAG (ChromaDB — in development)",
-    "Connector MCP tools (Phase 1): maia_info / maia_history / maia_memory (generic_tools config)"
-   ],
-   "consumes_from_ecosystem": [
-    "nexus (/synthesize — multi-AI answers)",
-    "nexus (/scout/digest — AI news feed)",
-    "nexus (/bench/recommend — LLM selection)"
-   ]
-  },
-  {
-   "id": "naya",
-   "name": "Naya",
-   "description": "Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanning. Work in progress: the service runs daily (sends Renne updates) but active development is paused and needs to resume to evolve into its intended scope.",
-   "path": "C:\\APPS\\NAYA",
-   "paths": {
-    "logs": "C:\\APPS\\NAYA\\LOGS"
-   },
-   "github": "https://github.com/Quiddity-Innovations/NAYA",
-   "status": "running_dev_paused",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8002,
-     "recommended_block": "8200",
-     "notes": "Pre-registry — do not change unless migrating"
-    },
-    "ui": {
-     "current": 7861,
-     "recommended_block": "7810",
-     "notes": "Pre-registry — do not change unless migrating"
-    }
-   },
-   "services": [
-    {
-     "name": "NayaBot",
-     "port": 8002,
-     "type": "Flask/WSGI",
-     "managed_by": "NSSM",
-     "auto_start": true,
-     "internet_exposed": false,
-     "cloudflare_tunnel": false,
-     "notes": "LAN-only. Telegram uses outbound long-polling — no inbound internet access needed. Never expose via Cloudflare."
-    }
-   ],
-   "telegram": {
-    "bot": "@Naya_qi_bot",
-    "interface": "long-poll (outbound only)",
-    "allowed_users": "Renne only",
-    "notes": "Telegram is the ONLY chat interface for Naya. No LINE, no Messenger, no Gradio UI for users."
-   },
-   "database": "C:\\APPS\\NAYA\\naya.db (SEPARATE from maia.db — never share)",
-   "family_tier": "sibling_candidate",
-   "family_notes": "Personal file management AI for Renne. Absorbed FileHQ as file engine module. Telegram is the only chat interface. LAN-only — no Cloudflare tunnel, no internet exposure.",
-   "integrates_with": [
-    "filehq",
-    "nexus",
-    "maia"
-   ],
-   "exposes_to_ecosystem": [
-    "Personal knowledge base queries",
-    "File Scout (F:\\ read-only scan)",
-    "Domain-specific reasoning (AI/physics/programming)",
-    "Connector MCP tools (Phase 1): naya_status / naya_ask (generic_tools config)"
-   ],
-   "consumes_from_ecosystem": [
-    "nexus (/synthesize)",
-    "filehq (file content)",
-    "maia (shared personality/LLM engine — future)"
-   ]
-  },
-  {
-   "id": "nexus",
-   "name": "NEXUS",
-   "description": "Neural Exchange and Unified Synthesis — AI orchestration backbone for all QI projects",
-   "path": "C:\\APPS\\NEXUS",
-   "paths": {
-    "logs": "C:\\APPS\\NEXUS\\LOGS"
-   },
-   "github": "https://github.com/rennesan/NEXUS",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8010,
-     "recommended_block": "8300",
-     "notes": "Pre-registry — within safe range, no conflict"
-    },
-    "ui": {
-     "current": 7880,
-     "recommended_block": "7820",
-     "notes": "Pre-registry — within safe range, no conflict"
-    },
-    "mcp": {
-     "current": 8310,
-     "block": "8300-8399",
-     "notes": "NEXUS MCP Gateway (QI_NexusMCP) via qi_mcp_gateway + C:\\APPS\\NEXUS\\config\\mcp_gateway.json. Loopback. Added 2026-07-31."
-    }
-   },
-   "services": [
-    {
-     "name": "nexus_api",
-     "port": 8010,
-     "type": "FastAPI"
-    },
-    {
-     "name": "nexus_ui",
-     "port": 7880,
-     "type": "Gradio"
-    },
-    {
-     "name": "nexus_mcp",
-     "nssm_name": "QI_NexusMCP",
-     "port": 8310,
-     "type": "QI MCP Gateway",
-     "managed_by": "NSSM",
-     "start_type": "auto",
-     "internet_exposed": false,
-     "installed": "2026-07-31"
-    }
-   ],
-   "family_tier": "backbone",
-   "family_notes": "The AI intelligence layer. Not a user-facing product — it serves all other projects. In the unified app, NEXUS becomes the AI engine module that powers everything.",
-   "integrates_with": [
-    "maia",
-    "naya",
-    "filehq",
-    "openclaw"
-   ],
-   "exposes_to_ecosystem": [
-    "POST /synthesize — multi-AI parallel dispatch + synthesis",
-    "GET /scout/digest — daily AI news digest",
-    "POST /scout/run — trigger news collection",
-    "GET /bench/recommend — LLM recommendation by use case [Phase 2]",
-    "GET /providers — list active AI channels",
-    "MCP :8310 + connector tools: nexus_providers / nexus_ai_digest / nexus_synthesize (declarative generic_tools)"
-   ],
-   "consumes_from_ecosystem": [],
-   "ai_providers": [
-    "ChatGPT Plus (openai-codex)",
-    "Gemini (free)",
-    "Groq (free)",
-    "Mistral (free)",
-    "Ollama (local)",
-    "Cloudflare AI (free)",
-    "Grok (pending)"
-   ]
-  },
-  {
-   "id": "openclaw",
-   "name": "OpenClaw",
-   "description": "Autonomous AI agent platform — Tasuke-orchestrated (Renne talks only to Tasuke). Five core agents: Tasuke, Kaze, Sentry, Yubin, Koe. Helper agents Asa, Kakei and NotebookLM are paused in development; Seiri lives in a separate worktree.",
-   "path": "C:\\APPS\\OC",
-   "paths": {
-    "logs": "C:\\APPS\\OC\\LOGS"
-   },
-   "github": "TBD",
-   "status": "active_production",
-   "primary_language": "Node.js (OpenClaw framework) + Python (custom agents)",
-   "runtime": "WSL Ubuntu-24.04",
-   "ports": {
-    "gateway": {
-     "current": 18789,
-     "notes": "WSL listener on 0.0.0.0:18789 (TCP), non-HTTP gateway protocol. Reachable from Windows via WSL loopback."
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Autonomous agent layer. Where Maia responds, OpenClaw acts. Future: Maia routes complex action tasks to OpenClaw. Strong marriage candidate with Maia for agent-assisted conversations.",
-   "integrates_with": [
-    "maia",
-    "nexus"
-   ],
-   "exposes_to_ecosystem": [
-    "Tasuke — orchestration (Telegram bot, live)",
-    "Kaze — news/digest (live)",
-    "Yubin — email/mail (Gmail IMAP, live)",
-    "Sentry — health monitoring (live)",
-    "Koe — voice/communication (planned Phase 4)"
-   ],
-   "cancelled_agents": [
-    "Seiri — CANCELLED 2026-04-05. File management fully replaced by Naya (absorbed FileHQ)."
-   ],
-   "consumes_from_ecosystem": [
-    "nexus (LLM providers via Ollama/Cloudflare)",
-    "maia (future — action routing)"
-   ]
-  },
-  {
-   "id": "mq",
-   "name": "MQ",
-   "description": "Maia Quiddam — autonomous AI social media persona for Facebook, Instagram, WhatsApp",
-   "path": "C:\\APPS\\MQ",
-   "github": "https://github.com/Quiddity-Innovations/MQ",
-   "status": "new",
-   "status_reason": "Awaiting Facebook Page approval + Meta Developer credentials. Entry point exists (Start_MQ.bat -> main.py). Updated 2026-05-11.",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8500,
-     "block": "8500-8599"
-    },
-    "ui": {
-     "current": 7840,
-     "block": "7840-7849"
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "New project — family role to be determined as it develops. Status 2026-05-13: not started yet (was paused_pending_credentials; corrected to new).",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info"
-   ],
-   "consumes_from_ecosystem": [],
-   "paths": {
-    "logs": "C:\\APPS\\MQ\\data\\logs"
-   }
-  },
-  {
-   "id": "easyflow",
-   "name": "EasyFlow",
-   "description": "Email organization tool — tier-based inbox management with Gmail API + Apps Script automation. Free gift tool for family/friends.",
-   "path": "C:\\APPS\\EasyFlow",
-   "paths": {
-    "logs": "C:\\APPS\\EasyFlow\\LOGS"
-   },
-   "github": "TBD",
-   "status": "active_development",
-   "primary_language": "Python (Flask dashboard) + Google Apps Script",
-   "ports": {
-    "dashboard": {
-     "current": 8550,
-     "block": "8550-8559",
-     "notes": "Local Flask dashboard — desktop tool, not a server"
-    }
-   },
-   "family_tier": "standalone_tool",
-   "family_notes": "Standalone desktop tool for email management. Not a server-based QI project. Runs locally for end users. Built as a gift for family/friends with full UI-driven workflow.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [],
-   "consumes_from_ecosystem": []
-  },
-  {
-   "id": "universal",
-   "name": "QI-Universal",
-   "description": "Universal tools and dashboards shared across all QI projects — QI Launcher, cross-project utilities",
-   "path": "C:\\QIH",
-   "github": "https://github.com/Quiddity-Innovations/QI-Hive",
-   "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 — see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
-   "status": "merged",
-   "primary_language": "HTML/Python",
-   "ports": {},
-   "family_tier": "infrastructure",
-   "family_notes": "Universal tools layer. Not a product — shared utilities for all QI projects. QI Launcher at localhost:8650 is the single-page dashboard for all project localhost URLs. | Launcher port 8650 removed 2026-06-15 (conflicted with cognibase; QI Launcher superseded by Hive Dashboard :8600).",
-   "integrates_with": [
-    "maia",
-    "nexus",
-    "naya",
-    "mq",
-    "openclaw",
-    "claude_manager"
-   ],
-   "exposes_to_ecosystem": [
-    "GET http://localhost:8650 — QI Launcher (all project links in one page)"
-   ],
-   "consumes_from_ecosystem": []
-  },
-  {
-   "id": "qi_brain",
-   "name": "QI Brain",
-   "description": "Shared knowledge substrate for the QI ecosystem. SQLite + ChromaDB + 12-tool MCP server.",
-   "path": "C:\\QIH\\engine\\brain",
-   "github": "TBD",
-   "status": "active",
-   "primary_language": "Python",
-   "tier": "backbone",
-   "ports": {
-    "api": {
-     "current": 9011,
-     "block": "9000-9099",
-     "notes": "QI Orchestration block. Port 9010 is permanently squatted by Logitech G HUB (lghub_agent.exe) on 127.0.0.1:9010 — moved to 9011 on 2026-05-14."
-    },
-    "mcp": {
-     "current": "stdio",
-     "block": "N/A",
-     "notes": "stdio MCP — no port"
-    }
-   },
-   "family": "orchestration",
-   "services": [
-    "QI_BrainAPI"
-   ],
-   "dependencies": [],
-   "dependents": [
-    "all projects via MCP"
-   ],
-   "mcp_tools": [
-    "qi.get_context",
-    "qi.log_decision",
-    "qi.log_feature",
-    "qi.get_pending_features",
-    "qi.decide_on_feature",
-    "qi.update_project_state",
-    "qi.search_memory",
-    "qi.log_session",
-    "qi.get_ecosystem_snapshot",
-    "qi.supersede_decision",
-    "qi.explain",
-    "qi.override_evaluation"
-   ],
-   "added": "2026-04-19",
-   "paths": {
-    "logs": "C:\\QIH\\engine\\brain\\LOGS"
-   }
-  },
-  {
-   "id": "qi_hive",
-   "name": "QI Hive",
-   "description": "Unified agent orchestration and knowledge system — QI Brain + Dashboard + 7 hive agents. The bee colony.",
-   "path": "C:\\QIH",
-   "paths": {
-    "logs": "C:\\QIH\\engine\\hive\\dashboard\\LOGS"
-   },
-   "github": "https://github.com/Quiddity-Innovations/QI-Hive",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "dashboard": {
-     "current": 8600,
-     "block": "8600-8649",
-     "notes": "Hive dashboard"
-    }
-   },
-   "services": [
-    {
-     "name": "QI_Dashboard",
-     "port": 8600,
-     "type": "FastAPI",
-     "managed_by": "NSSM",
-     "path": "C:\\QIH\\engine\\hive\\dashboard\\server.py"
-    },
-    {
-     "name": "QI_BrainAPI",
-     "port": 9011,
-     "type": "FastAPI",
-     "managed_by": "NSSM",
-     "path": "C:\\QIH\\engine\\brain\\api.py"
-    }
-   ],
-   "sub_systems": {
-    "brain": "C:\\QIH\\engine\\brain — knowledge substrate (SQLite + ChromaDB + MCP + 12 tools)",
-    "hive": "C:\\QIH\\engine\\hive — agent system (7 agents, dashboard, skills, tests)",
-    "effort": "C:\\QIH\\engine\\effort - effort ledger: forensic hours/token tracking per project (SQLite + hash-chained daily ledger); surfaced at /effort and /api/effort on the dashboard"
-   },
-   "family_tier": "orchestration",
-   "family_notes": "The nervous system and operational layer. Absorbs Claude Manager. QI Brain is the hive mind. Agents are the bees.",
-   "integrates_with": [
-    "maia",
-    "nexus",
-    "naya",
-    "openclaw",
-    "mq",
-    "easyflow"
-   ],
-   "exposes_to_ecosystem": [
-    "GET  http://localhost:8600 — Hive Dashboard",
-    "GET  http://localhost:9011 — QI Brain API",
-    "POST http://localhost:9011/api/agent/growth — agent growth loop",
-    "GET  http://localhost:9011/api/agents — list all hive agents",
-    "POST http://localhost:9011/api/log_session — session logging for all projects",
-    "POST http://localhost:9011/api/log_decision — decisions for all projects"
-   ],
-   "future_structure": "Projects migrate to C:\\APPS\\QIP one by one. C:\\APPS\\QI becomes C:\\QIB (business side).",
-   "added": "2026-04-19",
-   "consumes_from_ecosystem": [
-    "qi_brain (Brain API :9011)"
-   ],
-   "scheduled_tasks": [
-    {
-     "name": "QI_EffortLedger_Daily",
-     "schedule": "daily 23:50",
-     "command": "C:\\QIH\\engine\\effort\\EffortLedger_Daily.bat",
-     "purpose": "incremental effort collection + sealed ledger entry",
-     "log": "C:\\QIH\\logs\\effort_ledger_task.log"
-    }
-   ]
-  },
-  {
-   "id": "autopdf",
-   "name": "AutoPDF",
-   "path": "C:\\APPS\\AutoPDF",
-   "path_standard": "C:\\APPS\\AutoPDF",
-   "path_migration_note": "Migrated 2026-05-13 from C:\\Users\\renne\\Downloads\\AUTOPDF to standardized path C:\\APPS\\AutoPDF. AutoPDF is fully portable — reads everything via relative paths, so the move required no code changes.",
-   "type": "desktop_tool",
-   "status": "Active Dev",
-   "tier": "Tool",
-   "description": "Self-contained PDF toolkit: convert / split / extract / catalog. Local-only, no cloud.",
-   "language": "PowerShell + vanilla JS",
-   "phase": "2c",
-   "github": "https://github.com/Quiddity-Innovations/AutoPDF",
-   "ports": {
-    "http": {
-     "current": 6969,
-     "recommended_block": "8700-8709",
-     "notes": "Pre-registry — port 6969 chosen independently. Works correctly. Migration to 8700 block recommended only when adopting other ecosystem integrations."
-    },
-    "mcp": {
-     "current": 8701,
-     "block": "8700-8709",
-     "notes": "AutoPDF MCP Gateway (QI_AutoPDFMCP) - config-driven MCP server via C:\\APPS\\AutoPDF\\tools\\qi_mcp_gateway.py + C:\\APPS\\AutoPDF\\config\\mcp_gateway.json. Loopback-only and DISABLED by default; every tool is switched on individually. First port actually used from AutoPDF's allocated block (the app itself remains on pre-registry port 6969). Added 2026-08-07."
-    }
-   },
-   "exposes": [
-    "POST /api/template-apply-batch  (folder → CSV via template)",
-    "POST /api/template-test         (single PDF verification)",
-    "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
-    "POST /api/template-propose      (AI field proposal)",
-    "GET  /api/regex-library         (reusable patterns)",
-    "MCP :8701 - autopdf_status / autopdf_templates / autopdf_presets / autopdf_regex_library (metadata, on) + autopdf_list_pdfs / autopdf_extract / autopdf_index_preview (document content, off) + autopdf_run_workflow / autopdf_split (writes files, off). Each tool independently switchable; a disabled tool is never registered."
-   ],
-   "consumes": [
-    "Local Ollama (optional) — Smart Mapping AI",
-    "Bundled engines: Ghostscript, Poppler, Tesseract, Tabula, PDFtk, Liberica JRE"
-   ],
-   "ecosystem_role": "Standalone tool, now also reachable BY AI clients through its MCP gateway (first inbound integration, 2026-08-07). Can still be called by Maia / NEXUS / FileHQ in the future to extract fields from user-supplied PDFs.",
-   "loopback_only": true,
-   "internet_exposed": false,
-   "documentation": {
-    "root_md": [
-     "README.md",
-     "SUMMARY.md",
-     "INSTALL.md",
-     "CHANGELOG.md",
-     "CLAUDE.md",
-     "NEXT_SESSION_PROMPT.md"
+  "module_interface_contract": {
+    "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
+    "version": "1.0",
+    "required_endpoints": [
+      {
+        "path": "/health",
+        "method": "GET",
+        "response": {
+          "status": "ok"
+        },
+        "purpose": "Liveness check. All monitoring, the unified app, and the validator call this."
+      },
+      {
+        "path": "/version",
+        "method": "GET",
+        "response": {
+          "project": "<id>",
+          "version": "<semver>",
+          "status": "<active|development|deprecated>"
+        },
+        "purpose": "Identity. Who am I, what version am I."
+      },
+      {
+        "path": "/info",
+        "method": "GET",
+        "response": "Full registry entry for this project (from qi_registry.json)",
+        "purpose": "Self-description. The unified app uses this to discover capabilities."
+      }
     ],
-    "docx": [
-     "Documentation/AutoPDF_Technical_Guide.docx",
-     "Documentation/AutoPDF_User_Guide.docx",
-     "Documentation/AutoPDF_Test_Guide.docx"
-    ],
-    "tests": [
-     "Tests/Run-AutoPDFTests.ps1 (Tier 1 + 2 — PowerShell)",
-     "Tests/BrowserTests/ (Tier 3 — Playwright)"
+    "standard_response_envelope": {
+      "status": "ok | error",
+      "data": "payload object",
+      "error": "null or error message string",
+      "project": "project id",
+      "version": "semver string"
+    },
+    "cross_project_call_rule": "All calls to other QI projects MUST have a graceful fallback. A project must be fully functional even if all its dependencies are offline.",
+    "api_versioning_rule": "Adding response fields = OK. Removing or renaming fields = breaking change. Breaking changes require a new versioned endpoint (/v2/...)."
+  },
+  "governance": {
+    "principles_doc": "C:\\QIH\\ecosystem\\QI_Architecture_Principles.md",
+    "standards_doc": "C:\\QIH\\ecosystem\\QI_Standards.md",
+    "validator_tool": "python C:\\QIH\\ecosystem\\qi_validator.py --project <id>",
+    "new_project_tool": "python C:\\QIH\\ecosystem\\qi_new_project.py",
+    "rules": [
+      "Registry is updated BEFORE code is written — never after",
+      "Every project runs standalone without any other QI project",
+      "Every project honors the module interface contract",
+      "Every project follows QI_Standards.md naming and folder conventions",
+      "No port is used outside the project's allocated block",
+      "CLAUDE.md exists at every project root",
+      "secrets/ is always gitignored",
+      "Session summary saved as .docx after every significant session"
     ]
-   },
-   "added_to_registry": "2026-05-01",
-   "family_tier": "Tool",
-   "exposes_to_ecosystem": [
-    "POST /api/template-apply-batch  (folder → CSV via template)",
-    "POST /api/template-test         (single PDF verification)",
-    "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
-    "POST /api/template-propose      (AI field proposal)",
-    "GET  /api/regex-library         (reusable patterns)",
-    "MCP :8701 - autopdf_status / autopdf_templates / autopdf_presets / autopdf_regex_library (metadata, on) + autopdf_list_pdfs / autopdf_extract / autopdf_index_preview (document content, off) + autopdf_run_workflow / autopdf_split (writes files, off). Each tool independently switchable; a disabled tool is never registered."
-   ],
-   "paths": {
-    "logs": "C:\\APPS\\AutoPDF\\Application\\LOGS"
-   },
-   "services": [
+  },
+  "port_strategy": {
+    "rule": "Each project owns a dedicated port BLOCK. No project may use another project's block.",
+    "api_blocks": {
+      "8000-8099": "System / FileHQ family",
+      "8100-8199": "Maia family",
+      "8200-8299": "Naya family",
+      "8300-8399": "NEXUS family",
+      "8400-8499": "OpenClaw / Agent family",
+      "8500-8509": "MQ family",
+      "8550-8559": "EasyFlow family",
+      "8600-8649": "QI Launcher family",
+      "9000-9099": "QI Hive family (Brain 9011, Connector 9030, Gate edge 9040 / auth 9041)",
+      "8700-8709": "AutoPDF family (desktop tool, port 6969 pre-registry)",
+      "8650-8659": "MapSnap family (mapsnap, cognibase)",
+      "8710-8719": "Gamez family (WC2026 dashboard proxy)",
+      "8720-8729": "Claude Voice family (realtime two-way voice assistant)",
+      "8730-8739": "Voice Studio family (studio/batch voice rendering) — RESERVED. The panel currently serves UI+API on 7863; this block is held for a headless API split.",
+      "8740-8749": "QI Media Studio family (composition layer) - RESERVED. The panel serves UI+API on 7864; this block is held for a headless API split.",
+      "8750-8759": "SynVox family. 8750 = MatrAIx dev GUI (tools\\view_gui.py, manual). 8751 = SynVox API. 8753 = SynVox AI Router (subscription lane). 8752 and 8754-8759 unallocated."
+    },
+    "ui_blocks": {
+      "7800-7809": "Maia UI family",
+      "7810-7819": "Naya UI family",
+      "7820-7829": "NEXUS UI family",
+      "7830-7839": "OpenClaw UI family",
+      "7840+": "Reserved — future"
+    },
+    "migration_note": "Existing ports below were created before this registry. They WORK and should NOT be changed unless there is a specific reason. New services MUST follow the block strategy."
+  },
+  "projects": [
     {
-     "name": "autopdf_mcp",
-     "nssm_name": "QI_AutoPDFMCP",
-     "path": "C:\\APPS\\AutoPDF\\tools\\run_mcp_gateway.py",
-     "app_directory": "C:\\APPS\\AutoPDF",
-     "port": 8701,
-     "start": "SERVICE_AUTO_START",
-     "logs": "C:\\APPS\\AutoPDF\\Application\\LOGS\\mcp_gateway.log",
-     "register_with": "C:\\APPS\\AutoPDF\\Application\\_register_mcp_service.ps1 (run elevated)",
-     "notes": "Needs no interactive desktop session (unlike AutoPDF itself, which requires one for Office COM + scanner drivers), so it runs as a real auto-start service. The 'enabled' flag in config\\mcp_gateway.json is the actual on/off switch - the process exits cleanly when false."
-    }
-   ]
-  },
-  {
-   "id": "cognibase",
-   "name": "CogniBase",
-   "description": "Local desktop platform that connects to Hyland OnBase, lifts its data into a vector store + data lake, and lets AI correlate, infer, and report across boundaries OnBase itself can't query. Vendor-neutral LLM router (Claude/OpenAI/Gemini/Ollama/LM Studio/llama.cpp), pluggable source connectors, OnBase-Web-Client-style retrieval UI, templated and ad-hoc reports. First source: OnBase. Future sources: filesystem, email, Jenzabar.",
-   "path": "C:\\APPS\\CogniBase",
-   "github": "https://github.com/rennesan/cognibase",
-   "status": "pre_poc",
-   "primary_language": "Python (FastAPI backend) + React (single-file UI mockup)",
-   "ports": {
-    "api": {
-     "current": 8650,
-     "block": "8650-8659",
-     "notes": "Local FastAPI server. Block reserved for MapSnap family (siblings: mapsnap)."
-    }
-   },
-   "family_tier": "standalone_tool",
-   "family_notes": "Sibling of MapSnap (engine-agnostic schema-intelligence tool for any enterprise database). Renamed from 'mapsnap_onbase' to 'cognibase' on 2026-05-06 to reflect the broader mission: not just an OnBase mirror but a platform that exceeds OnBase. Status corrected 2026-05-13: pre_poc (was phase_b_core_complete_pilot_ready; renaming reflects actual maturity stage).",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "OnBase schema as JSON",
-    "OnBase metadata RAG search",
-    "OnBase document retrieval (read-only)",
-    "Report generation (.docx)"
-   ],
-   "consumes_from_ecosystem": [
-    "qi_brain (optional, for cross-project context logging)"
-   ],
-   "version": "0.5.0-dev",
-   "last_milestone": "M18 (Discovery + Bridges) + M25-minimal (Lifecycle visualizer) + Portability",
-   "tests": "50/50 passing",
-   "last_updated": "2026-05-09",
-   "paths": {
-    "logs": "C:\\APPS\\CogniBase\\LOGS"
-   }
-  },
-  {
-   "id": "mapsnap",
-   "name": "MapSnap",
-   "description": "Local-first schema-intelligence tool for ANY enterprise database set up as a profile (SQL Server, Oracle, PostgreSQL, MySQL, SQLite — e.g. Jenzabar EX, Hyland OnBase, SAP/BUworks). Live extract or CSV/DDL import builds schema.json; renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings, layered with a local AI that explains the schema and does NL→SQL. Egress guardrail keeps regulated data on-box. Demonstrated at BU on a personal system; the aim is for it to serve as the onboarding tool for a systems-of-record federation, proposing canonical-key mappings that become candidate Normalizers CogniBase governs. Original product; design ancestor of cognibase.",
-   "path": "C:\\APPS\\MapSnap",
-   "github": "https://github.com/rennesan/mapsnap",
-   "status": "active_stable",
-   "primary_language": "Python (local HTTP server) + static HTML browser",
-   "ports": {
-    "api": {
-     "current": 9876,
-     "block": "8650-8659",
-     "notes": "Legacy port 9876 pre-registry. Block 8650-8659 reserved for MapSnap family but not in use here. Per registry rule, existing ports stay unless there's a reason to migrate."
-    },
-    "mcp": {
-     "current": 8651,
-     "block": "8650-8659",
-     "notes": "MapSnap MCP Gateway (QI_MapSnapMCP) — config-driven MCP server via C:\\QIH\\engine\\common\\qi_mcp_gateway.py + C:\\APPS\\MapSnap\\config\\mcp_gateway.json. Loopback-only by default; BU mode = LAN bind via config. Added 2026-07-30."
-    }
-   },
-   "family_tier": "standalone_tool",
-   "family_notes": "Sibling of cognibase (same DNA, different scope). MapSnap = engine-agnostic schema intelligence over any structured system of record (proposes canonical-key mappings for the BU federation); cognibase = live OnBase + cross-source correlation/governance. Kept separate intentionally to insulate the stable discovery tool from the integration product's churn.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "Schema as JSON (any engine: SQL Server/Oracle/Postgres/MySQL/SQLite)",
-    "Schema browser HTML",
-    "Canonical-key mapping proposals (candidate Normalizers for CogniBase)",
-    "MCP :8651 — mapsnap_profiles / mapsnap_schema / mapsnap_ask (+table_data via config)",
-    "Service API tokens (Application\\service_tokens.json) — machine-to-machine bearer auth, added 2026-07-30"
-   ],
-   "consumes_from_ecosystem": [],
-   "paths": {
-    "logs": "C:\\APPS\\MapSnap\\LOGS"
-   },
-   "services": [
-    {
-     "name": "mapsnap_mcp",
-     "nssm_name": "QI_MapSnapMCP",
-     "port": 8651,
-     "type": "QI MCP Gateway (FastMCP)",
-     "managed_by": "NSSM",
-     "start_type": "auto",
-     "internet_exposed": false,
-     "installed": "2026-07-30"
-    }
-   ]
-  },
-  {
-   "id": "m2v",
-   "name": "M2V",
-   "description": "Music to Video — AI-powered music video generator from lyrics + audio track",
-   "path": "C:\\APPS\\M2V",
-   "github": "https://github.com/Quiddity-Innovations/M2V",
-   "status": "new",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8501,
-     "block": "8500-8599"
-    },
-    "ui": {
-     "current": 7841,
-     "block": "7840-7849"
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "New project — family role to be determined as it develops.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info"
-   ],
-   "consumes_from_ecosystem": [],
-   "paths": {
-    "logs": "C:\\APPS\\M2V\\data\\logs"
-   }
-  },
-  {
-   "id": "personalsong",
-   "name": "PersonalSong Studio",
-   "description": "Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone. Web app via serve.py (uvicorn in-process).",
-   "path": "C:\\APPS\\PersonalSong",
-   "github": "https://github.com/Quiddity-Innovations/PersonalSong",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "ui": {
-     "current": 8088,
-     "recommended_block": "8500-8599",
-     "notes": "Pre-registry — port 8088 chosen before registration (registered 2026-06-10). Outside all allocated blocks; works, keep unless migrating. If migrated, use 8502 in the 8500-8599 cousin block."
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Sibling-in-spirit of M2V (song generation feeds music-video generation). Registered 2026-06-10 during Brain drift reconciliation.",
-   "integrates_with": [
-    "m2v"
-   ],
-   "exposes_to_ecosystem": [
-    "Song generation (ACE-Step)",
-    "Voice cloning (Demucs/Seed-VC)"
-   ],
-   "consumes_from_ecosystem": [],
-   "loopback_only": true,
-   "internet_exposed": false,
-   "added_to_registry": "2026-06-10"
-  },
-  {
-   "id": "cypherminer",
-   "name": "CypherMiner",
-   "description": "Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools",
-   "path": "C:\\APPS\\CypherMiner",
-   "github": "https://github.com/Quiddity-Innovations/CypherMiner",
-   "status": "complete",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8502,
-     "block": "8500-8599"
-    },
-    "ui": {
-     "current": 7842,
-     "block": "7840-7849"
-    }
-   },
-   "family_tier": "sibling",
-   "family_notes": "New project — family role to be determined as it develops.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info"
-   ],
-   "consumes_from_ecosystem": [],
-   "paths": {
-    "logs": "C:\\APPS\\CypherMiner\\LOGS"
-   }
-  },
-  {
-   "id": "lotterywiz",
-   "name": "LotteryWiz",
-   "description": "Fantasy 5 covering-design app — generates optimal play sets with guaranteed coverage. FastAPI + export to .xlsx/.csv.",
-   "path": "C:\\APPS\\Lottery Wiz",
-   "github": "https://github.com/Quiddity-Innovations/LotteryWiz",
-   "status": "active",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8777,
-     "block": "8770-8779",
-     "notes": "Pre-registry ad-hoc port — works, kept per migration_note. UI served from same FastAPI app."
-    }
-   },
-   "family_tier": "sibling",
-   "family_notes": "Standalone utility app. NSSM service QI_LotteryWiz + public tunnel QI_LotteryWizTunnel (installed 2026-06-15).",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "Fantasy 5 covering-design generator",
-    "Play-set export API"
-   ],
-   "consumes_from_ecosystem": [],
-   "paths": {
-    "logs": "C:\\APPS\\Lottery Wiz\\LOGS"
-   }
-  },
-  {
-   "id": "digitization",
-   "name": "Digitization Cost Tool",
-   "description": "BU Digitization Cost Comparison Tool — client-side HTML calculator for Document Imaging & Services pricing/scenarios. Ships with technical docs + user guide.",
-   "path": "C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS",
-   "github": "https://github.com/Quiddity-Innovations/DigitizationCostTool",
-   "status": "complete",
-   "primary_language": "HTML/JS",
-   "ports": {},
-   "family_tier": "sibling",
-   "family_notes": "Self-contained single-file HTML tool (no server). NOT YET migrated to a C:\\ project root — still under Downloads. Migration to QI standard layout pending.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "Digitization cost comparison / scenario modelling (standalone)"
-   ],
-   "consumes_from_ecosystem": []
-  },
-  {
-   "id": "tubescout",
-   "name": "TubeScout",
-   "description": "YouTube subscription intelligence: organize subs, sweep daily uploads, transcript-to-news page, feeds NEXUS Scout/Kaze digest + QI Brain implement-scouting",
-   "path": "C:\\APPS\\TUBESCOUT",
-   "github": "https://github.com/Quiddity-Innovations/TubeScout",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8503,
-     "block": "8500-8599"
-    },
-    "ui": {
-     "current": 7843,
-     "block": "7840-7849"
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "YouTube subscription intelligence. Feeds NEXUS Scout (Kaze digest) + QI Brain implement-scoring. Sibling-in-spirit of NEXUS Scout.",
-   "integrates_with": [
-    "nexus",
-    "qi_brain",
-    "openclaw"
-   ],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info",
-    "GET / (public landing)",
-    "GET /news (public news page)",
-    "GET /digest (public — Kaze AI Digest by Maia Quiddam, served via TubeScout tunnel)",
-    "GET /api/news",
-    "GET /stats",
-    "GET /channels",
-    "GET /videos"
-   ],
-   "consumes_from_ecosystem": [
-    "nexus (/synthesize summaries + scoring)",
-    "nexus (/scout/import/opml -> Kaze)",
-    "qi_brain (/api/log_feature)"
-   ],
-   "scheduled_tasks": [
-    "QI_TubeScout_AM (07:00 daily)",
-    "QI_TubeScout_PM (19:00 daily)"
-   ],
-   "services": [
-    {
-     "name": "tubescout_api",
-     "nssm_name": "QI_TubeScout",
-     "port": 8503,
-     "type": "FastAPI",
-     "managed_by": "NSSM",
-     "start_type": "auto",
-     "internet_exposed": false,
-     "installed": "2026-06-18"
+      "id": "filehq",
+      "name": "FileHQ",
+      "description": "File intelligence engine — MERGED into Naya (C:\\APPS\\NAYA\\filehq\\). Original C:\\FileHQ marked for deletion.",
+      "path": "C:\\APPS\\NAYA\\filehq",
+      "original_path": "C:\\FileHQ",
+      "github": "TBD",
+      "status": "merged_into_naya",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8000,
+          "block": "8000-8099",
+          "notes": "First in block — good"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Merging into Naya. FileHQ becomes Naya's file engine. Phase 1 (bridge) complete. Phase 2 (code absorption) pending Renne approval.",
+      "integrates_with": [
+        "naya",
+        "maia"
+      ],
+      "exposes_to_ecosystem": [
+        "File scanning and indexing",
+        "Document content extraction",
+        "File search API"
+      ],
+      "consumes_from_ecosystem": [
+        "nexus (LLM recommendations for file analysis)"
+      ]
     },
     {
-     "name": "tubescout_tunnel",
-     "nssm_name": "QI_TubeScoutTunnel",
-     "port": null,
-     "type": "Cloudflare Tunnel",
-     "managed_by": "NSSM",
-     "start_type": "auto",
-     "internet_exposed": true,
-     "installed": "2026-06-18",
-     "notes": "Public quick tunnel -> :8503. URL is ephemeral (regenerated each restart). Hive dashboard parses the current URL from C:\\APPS\\TUBESCOUT\\data\\logs\\tunnel.log"
-    }
-   ],
-   "paths": {
-    "logs": "C:\\APPS\\TUBESCOUT\\data\\logs"
-   }
-  },
-  {
-   "id": "retirementanalyzer",
-   "name": "Retirement Analyzer",
-   "description": "Ingests a Fidelity positions CSV export and computes allocation, tax-bucket split (Taxable/Tax-Deferred/Roth), concentration risk (top-5 + HHI), glide-path drift vs a years-to-retirement target, rebalancing trades, and a 5-year retirement readiness plan (spending gap, 3-yr cash buffer, withdrawal rate vs 4% rule, income layers, blueprint checklist). FastAPI + Gradio. Formerly Fidelity Portfolio Analyzer (id fidelityanalyzer).",
-   "path": "C:\\APPS\\Retirement Analyzer",
-   "github": "https://github.com/Quiddity-Innovations/RetirementAnalyzer",
-   "status": "active",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8504,
-     "block": "8500-8599"
-    },
-    "ui": {
-     "current": 7844,
-     "block": "7840-7849"
-    }
-   },
-   "family_tier": "sibling",
-   "family_notes": "Personal-finance utility. Automates the manual Fidelity portfolio review/rebalancing previously done by hand (see Downloads analysis docs), extended with a 5-year retirement-readiness planning layer.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info",
-    "GET /target",
-    "GET /blueprint",
-    "POST /analyze",
-    "POST /analyze_text",
-    "POST /rebalance",
-    "POST /retirement"
-   ],
-   "consumes_from_ecosystem": [],
-   "paths": {
-    "logs": "C:\\APPS\\Retirement Analyzer\\data\\logs"
-   }
-  },
-  {
-   "id": "avatarstudio",
-   "name": "AvatarStudio",
-   "description": "QI Avatar Studio — Gradio pipeline that turns a script into a talking-head avatar video (TTS via Kokoro/edge-tts → background removal → Hallo2/LivePortrait render in WSL2 → video-retalking lip-sync → MP4). Multi-language.",
-   "path": "C:\\APPS\\AvatarStudio",
-   "github": "https://github.com/Quiddity-Innovations/AvatarStudio",
-   "status": "active",
-   "primary_language": "Python",
-   "ports": {
-    "ui": {
-     "current": 7862,
-     "block": "7840-7869",
-     "notes": "Pre-registry Gradio port. Works; keep per migration_note."
-    }
-   },
-   "family_tier": "sibling",
-   "family_notes": "Media-generation studio. Depends on WSL2 for avatar render backends. Shares the avatar/voice vision used across QI agents.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "Talking-head avatar video generation (Gradio UI :7862)"
-   ],
-   "consumes_from_ecosystem": [],
-   "paths": {
-    "logs": "C:\\APPS\\AvatarStudio\\logs"
-   }
-  },
-  {
-   "id": "claude_manager",
-   "name": "Claude Manager",
-   "description": "Claude Code management workspace — QI Hive orchestration, ecosystem reconciliation scripts, Brain backfills, and cross-project session management. Meta/management project (no served ports).",
-   "path": "C:\\APPS\\CLAUDE",
-   "github": "TBD",
-   "status": "active",
-   "primary_language": "Python",
-   "ports": {},
-   "family_tier": "backbone",
-   "family_notes": "Management/meta workspace that operates ON the ecosystem rather than being a deployed app.",
-   "integrates_with": [
-    "qi_hive",
-    "qi_brain"
-   ],
-   "exposes_to_ecosystem": [
-    "Ecosystem reconciliation + project registration tooling"
-   ],
-   "consumes_from_ecosystem": [
-    "qi_brain",
-    "qi_hive"
-   ]
-  },
-  {
-   "id": "gamez",
-   "name": "Gamez",
-   "description": "World Cup 2026 betting-window dashboard. Single-file HTML app (WC2026.html) + FastAPI proxy (live ESPN fixtures/standings/bracket, Kalshi odds, heuristic player->team scoring married into a betting-window engine, multi-provider AI analyst).",
-   "path": "C:\\APPS\\Gamez",
-   "original_path": "C:\\APPS\\Gamez",
-   "github": "TBD",
-   "status": "active",
-   "primary_language": "Python+HTML",
-   "ports": {
-    "api": {
-     "current": 8710,
-     "block": "8710-8719",
-     "notes": "Gamez block; proxy serves the HTML at / so the app runs same-origin."
-    },
-    "quant": {
-     "current": 8712,
-     "block": "8710-8719",
-     "notes": "Mr. Hyde side-service (QI_GamezQuantProxy, manual start, off by default). Localhost-only; serves the private 'Quant' AI persona that the public proxy relays via /persona only while it runs. No tunnel (public stays on worldcup:8710); 8711 is the dev preview."
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Standalone betting/analytics tool. Shares the OpenRouter key from C:\\APPS\\QI\\maia.db (like MapSnap). Packaged as a portable .exe for sharing.",
-   "integrates_with": [
-    "maia"
-   ],
-   "exposes_to_ecosystem": [
-    "GET / (app)",
-    "GET /health",
-    "GET /snapshot",
-    "GET /kalshi",
-    "GET /apifootball/check",
-    "POST /ai/openrouter"
-   ],
-   "consumes_from_ecosystem": [
-    "maia (shared OpenRouter key via maia.db)"
-   ]
-  },
-  {
-   "id": "claude_voice",
-   "name": "Claude Voice",
-   "description": "Voice-driven assistant + (in progress) VOICE DISPATCH console. Real Claude answers FREE via the claude_cli backend (headless claude -p on Renne subscription, CLAUDE_CODE_OAUTH_TOKEN) on PC voice/LINE/Telegram — the file bridge is replaced. Hourly self-health via QI_ClaudeVoiceBridgeCheck. Roadmap: LiveKit spine (natural voice + Zoom-like screen/doc share) + voice->QI Hive dispatch. Claude voice is MALE; name always Claude.",
-   "path": "C:\\APPS\\CLAUDE\\Claude Voice",
-   "github": "TBD",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8720,
-     "block": "8720-8729",
-     "notes": "Control/health API + BRAIN CONFIG UI for the realtime assistant (Mode B): GET / (dual-brain toggle UI: Claude=bridge / Ronald=local Ollama, with hard-set lock), /brain, /brain/active, /brain/config, /health, /version, /info. Served by server.py (NSSM QI_ClaudeVoiceControl). Loopback-only, never tunneled."
-    },
-    "line": {
-     "current": 8721,
-     "block": "8720-8729",
-     "notes": "LINE Messaging API webhook server (line_bot.py): POST /line/webhook + GET /audio/* for voice notes. THIS port is exposed publicly via the static named tunnel qi-claudevoice (claudevoice.quiddityinnovations.com) — webhook only. Telegram bridge uses outbound long-poll (no port)."
-    },
-    "webcall": {
-     "current": 8722,
-     "block": "8720-8729",
-     "notes": "Claude's Meeting Room (meeting_server.py): multi-participant Zoom-style room HOSTED by Claude. People (browser) and other AGENTS (WebSocket /ws) join; live roster + shared transcript; Claude greets/facilitates/speaks. Browser mic -> Whisper STT (CPU) -> brain -> edge-tts -> audio-reactive host avatar. Loopback-only today (bind 0.0.0.0 or tunnel to admit remote participants). Brain shared with :8720 via data/brain_state.json. Supersedes the 1:1 webcall_server.py."
-    },
-    "voice_api": {
-     "current": 8725,
-     "block": "8720-8729",
-     "notes": "Shared voice HTTP API (/health /speak /transcribe /listen) - voice_service.py"
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Standalone realtime voice assistant spun out of Gamez on 2026-06-20. The STT+VAD+TTS bridge is a reusable ecosystem feature other QI projects can adopt (e.g. Maia/OpenClaw Koe). Male voice (Andrew EN / Antonio pt-BR); identity is always 'Claude', never 'Andrew'.",
-   "integrates_with": [
-    "qi_brain",
-    "nexus",
-    "maia"
-   ],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info",
-    "Reusable voice bridge: speak.py (TTS edge-tts, male) + listen.py (STT faster-whisper)",
-    "Realtime full-duplex voice loop (VAD -> STT -> LLM -> TTS, streaming + barge-in)"
-   ],
-   "consumes_from_ecosystem": [
-    "Claude subscription via headless claude CLI (claude_cli backend = primary real-Claude path, FREE)",
-    "Local Ollama (default brain; optional/toggleable)",
-    "Anthropic API (optional/toggleable brain)",
-    "OpenRouter free tier via shared C:\\APPS\\QI\\maia.db key (optional/toggleable brain)",
-    "qi_brain (optional context logging)"
-   ],
-   "voice_rules": {
-    "gender": "MALE always",
-    "voices": {
-     "en": "en-US-AndrewNeural",
-     "pt-BR": "pt-BR-AntonioNeural"
-    },
-    "identity": "When asked his name, answers 'Claude' (never 'Andrew'). Andrew is timbre, not identity."
-   },
-   "loopback_only": false,
-   "internet_exposed": true,
-   "exposure_note": "Only :8721 (LINE webhook + /audio) is public via tunnel qi-claudevoice. Control API :8720 and the realtime audio loop stay loopback-only. Telegram bridge is outbound long-poll (no inbound).",
-   "added_to_registry": "2026-06-20",
-   "paths": {
-    "logs": "C:\\APPS\\CLAUDE\\Claude Voice\\LOGS"
-   },
-   "scheduled_tasks": [
-    "QI_ClaudeVoiceMeeting_8AM (meeting room :8722, daily 08:00)",
-    "QI_ClaudeVoiceBridgeCheck (bridge health, hourly)"
-   ]
-  },
-  {
-   "id": "akiyascout",
-   "name": "AkiyaScout",
-   "description": "English-first Japanese real estate (Akiya/Kominka/rural) aggregation platform with a personalized background Scout Engine: multi-source JP scraping, translation pipeline, profile wizard, and scheduled match notifications.",
-   "path": "C:\\APPS\\AkiyaScout",
-   "github": "TBD",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8505,
-     "block": "8500-8599"
-    },
-    "ui": {
-     "current": 7845,
-     "block": "7840-7849"
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Personal single-user, LOCAL-only property scout (no commercial/public use). v1 POC scope: Honshu, Kansai->Chubu->Kanto corridor, region-driven for future expansion. Bilingual storage (JA raw + EN translation, UI toggle).",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info",
-    "GET /stats",
-    "GET /listings",
-    "GET /profiles",
-    "POST /ingest"
-   ],
-   "consumes_from_ecosystem": []
-  },
-  {
-   "id": "headroom",
-   "name": "Headroom",
-   "description": "Context/token compression layer (open-source, Apache-2.0) — proxy + MCP server that compresses tool outputs, JSON, logs and history before they reach LLMs. Shared infrastructure for the whole ecosystem.",
-   "path": "C:\\APPS\\CLAUDE\\Tools",
-   "github": "https://github.com/headroomlabs-ai/headroom",
-   "status": "pilot",
-   "primary_language": "Python",
-   "ports": {
-    "proxy": {
-     "current": 9020,
-     "block": "9000-9099",
-     "notes": "Headroom compression proxy (OpenAI-compatible gateway). QI Hive family block — shared infrastructure like Brain (:9011). Registered 2026-07-28 during pilot; promote to QI_Headroom NSSM service if adopted."
-    },
-    "mcp": {
-     "current": "stdio",
-     "block": "N/A",
-     "notes": "headroom mcp serve — stdio MCP for Claude Code sessions (headroom_compress / headroom_retrieve / headroom_stats). Registered in C:\\APPS\\CLAUDE\\.mcp.json."
-    }
-   },
-   "family_tier": "backbone",
-   "family_notes": "Pilot 2026-07: proxy in front of Ollama first (OPENAI_API_BASE=http://localhost:11434/v1), then NEXUS providers if savings hold. Do NOT re-point Claude Code's own endpoint through the proxy — subscription OAuth path stays untouched; Claude Code uses the MCP mode instead.",
-   "integrates_with": [
-    "nexus",
-    "qi_hive",
-    "claude_manager"
-   ],
-   "exposes_to_ecosystem": [
-    "OpenAI-compatible proxy on :9020",
-    "MCP tools: headroom_compress, headroom_retrieve, headroom_stats"
-   ],
-   "consumes_from_ecosystem": []
-  },
-  {
-   "id": "playdeck",
-   "name": "PlayDeck",
-   "description": "Personal hybrid video player — custom control UI over YouTube/Vimeo (IFrame API) and general tube sites (yt-dlp + own player); local-only",
-   "path": "C:\\PlayDeck",
-   "github": "TBD",
-   "status": "new",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8506,
-     "block": "8500-8599"
-    },
-    "ui": {
-     "current": 7846,
-     "block": "7840-7849"
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "New project — family role to be determined as it develops.",
-   "integrates_with": [],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info"
-   ],
-   "consumes_from_ecosystem": []
-  },
-  {
-   "id": "connector",
-   "name": "QI Connector",
-   "description": "QI Connector — remote MCP server (Streamable HTTP) exposing QI ecosystem tools (Brain, registry, service health, public URLs) to Claude across all surfaces (claude.ai web/mobile, Desktop, Claude Code) as a custom connector.",
-   "path": "C:\\APPS\\QIP\\Connector",
-   "github": "https://github.com/Quiddity-Innovations/QI-Connector",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 9030,
-     "block": "9000-9099",
-     "notes": "QI Hive infrastructure block (Brain :9011, Headroom :9020). MCP endpoint at /mcp — Streamable HTTP, bearer-token auth; capability-URL alias for clients that cannot send headers."
-    }
-   },
-   "family_tier": "backbone",
-   "family_notes": "Backbone infrastructure — the ecosystem's front door for Claude clients. One remote MCP connector (claude.ai custom connector) replaces per-machine, per-tool MCP config: claude.ai web/mobile, Claude Desktop and Claude Code all reach QI tools through connector.quiddityinnovations.com. Registered 2026-07-30.",
-   "integrates_with": [
-    "qi_brain",
-    "qi_hive",
-    "synvox"
-   ],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info",
-    "POST /mcp — MCP Streamable HTTP. Core tools: qi_ecosystem_snapshot, qi_search_memory, qi_get_context, qi_log_decision, qi_registry_lookup, qi_service_status, qi_headlines, qi_dispatches, qi_public_urls. Adapter tools (config-gated via qi_mcp_gateway): mapsnap_profiles, mapsnap_schema, mapsnap_ask. Executor tools (added 2026-08-16, whitelist-gated by C:\\QIH\\dispatch\\scripts\\manifest.json): qi_list_scripts, qi_execute_script (background job, returns job_id), qi_script_status",
-    "Remote whitelisted script execution for the whole ecosystem - jobs in C:\\QIH\\dispatch\\jobs, audit trail C:\\QIH\\dispatch\\executor_master.log"
-   ],
-   "consumes_from_ecosystem": [
-    "qi_brain (HTTP :9011 — ecosystem snapshot, memory search, context, decision log; graceful fallback when offline)"
-   ],
-   "paths": {
-    "logs": "C:\\APPS\\QIP\\Connector\\data\\logs"
-   },
-   "loopback_only": false,
-   "internet_exposed": true,
-   "exposure_note": "Public via named tunnel qi-connector (connector.quiddityinnovations.com). Server binds 127.0.0.1:9030; /mcp requires bearer token (or the secret capability path). /health,/version,/info are open.",
-   "services": [
-    {
-     "name": "connector_mcp",
-     "nssm_name": "QI_ConnectorMCP",
-     "port": 9030,
-     "type": "FastAPI + FastMCP (Streamable HTTP)",
-     "managed_by": "NSSM",
-     "start_type": "auto",
-     "internet_exposed": true,
-     "installed": "2026-07-30"
+      "id": "maia",
+      "name": "Maia",
+      "description": "Multi-channel AI assistant platform (LINE, Telegram, Messenger, Instagram, WhatsApp)",
+      "path": "C:\\APPS\\QI",
+      "paths": {
+        "logs": "C:\\APPS\\QI\\LOGS"
+      },
+      "github": "https://github.com/Quiddity-Innovations/MAIA",
+      "status": "active_production",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8001,
+          "recommended_block": "8100",
+          "notes": "Pre-registry — do not change unless migrating"
+        },
+        "ui": {
+          "current": 7860,
+          "recommended_block": "7800",
+          "notes": "Pre-registry — do not change unless migrating"
+        }
+      },
+      "services": [
+        {
+          "name": "maia_server",
+          "nssm_name": "QI_MaiaBot",
+          "port": 8001,
+          "type": "FastAPI",
+          "managed_by": "NSSM"
+        },
+        {
+          "name": "maia_gradio",
+          "nssm_name": "QI_MaiaDemoTunnel",
+          "port": 7860,
+          "type": "Gradio",
+          "managed_by": "NSSM"
+        },
+        {
+          "name": "maia_tunnel",
+          "nssm_name": "QI_MaiaTunnel",
+          "port": null,
+          "type": "Cloudflare Tunnel",
+          "managed_by": "NSSM"
+        }
+      ],
+      "family_tier": "core",
+      "family_notes": "The flagship product. All other projects ultimately serve Maia or learn from it.",
+      "integrates_with": [
+        "nexus",
+        "naya",
+        "filehq",
+        "openclaw"
+      ],
+      "exposes_to_ecosystem": [
+        "Multi-channel messaging (LINE/Telegram/Messenger/Instagram/WhatsApp)",
+        "Personality engine",
+        "LLM chain (MiniMax → GPT → Qwen3 → Gemma3 → DeepSeek → Qwen3:4b)",
+        "Group/user config system",
+        "RAG (ChromaDB — in development)",
+        "Connector MCP tools (Phase 1): maia_info / maia_history / maia_memory (generic_tools config)"
+      ],
+      "consumes_from_ecosystem": [
+        "nexus (/synthesize — multi-AI answers)",
+        "nexus (/scout/digest — AI news feed)",
+        "nexus (/bench/recommend — LLM selection)"
+      ]
     },
     {
-     "name": "connector_tunnel",
-     "nssm_name": "QI_ConnectorTunnel",
-     "port": null,
-     "type": "Cloudflare Named Tunnel (qi-connector)",
-     "managed_by": "NSSM",
-     "start_type": "auto",
-     "internet_exposed": true,
-     "installed": "2026-07-30"
-    }
-   ],
-   "added_to_registry": "2026-07-30"
-  },
-  {
-   "id": "voice_studio",
-   "name": "QI Voice Studio",
-   "description": "Studio (batch) voice tier: VibeVoice 1.5B long-form, multi-speaker rendering with consent-gated cloned voices. Narrates the BU/MapSnap explainer videos. NOT the realtime tier — conversation stays on Claude Voice edge-tts.",
-   "path": "C:\\APPS\\VoiceStudio",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "ui": {
-     "current": 7863,
-     "block": "7840-7869",
-     "notes": "Voice Studio panel (FastAPI, serves both the HTML panel and its JSON API on this one port). Loopback-only and NEVER tunneled: data/voices holds biometric voice samples. Port 8730 (block 8730-8739) is reserved for a headless API split if the suite shell later needs a separate origin — nothing listens there yet."
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Sibling-in-spirit of Claude Voice: same domain, opposite tier. Claude Voice = realtime conversation (edge-tts, ~300 ms first audio). Voice Studio = batch rendering (VibeVoice 1.5B, RTF ~0.8, ~6 GB VRAM). Deliberately NOT wired into Claude Voice's :8725; the realtime path must not inherit a multi-second time-to-first-audio.",
-   "integrates_with": [
-    "claude_voice",
-    "mapsnap",
-    "avatarstudio",
-    "comfyui"
-   ],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info",
-    "GET / (panel; ?embed=1 strips chrome for the ComfyUI sidebar tab)",
-    "GET /api/voices (roster + consent scopes)",
-    "POST /api/voices (register a consented voice)",
-    "POST /api/render (quick render)",
-    "POST /api/build (explainer video build)",
-    "GET /api/jobs, GET /api/jobs/{id} (status + log tail)",
-    "GET /api/outputs",
-    "GET /api/gpu (VRAM status)"
-   ],
-   "consumes_from_ecosystem": [
-    "comfyui (POST http://127.0.0.1:8740/free to release VRAM before a render)"
-   ],
-   "services": [],
-   "paths": {
-    "logs": "D:\\Dev\\VoiceStudio\\logs",
-    "voices": "D:\\Dev\\VoiceStudio\\data\\voices",
-    "outputs": "D:\\Dev\\VoiceStudio\\data\\out",
-    "models": "D:\\Dev\\VoiceStudio\\data\\models"
-   },
-   "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10."
-  },
-  {
-   "id": "comfyui",
-   "name": "ComfyUI (QI Media Engine)",
-   "description": "Local image and video generation engine. Driven conversationally by Claude through the qi-comfy MCP server; also usable directly in its own web UI. The only sanctioned image/video generator on this machine.",
-   "path": "D:\\AI",
-   "github": "TBD",
-   "status": "active",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 8740,
-     "block": "8740-8749",
-     "notes": "Migrated from 8189 on 2026-08-10. 8189 sat inside Maia's 8100-8199 block; 8740 opens the media/GPU band next to Claude Voice (8720-8729) and Voice Studio (8730-8739). Referenced by voice_studio, mediastudio and filmforge - migrate all together, never piecemeal."
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Shared GPU utility rather than a sibling app: it owns the RTX 5080's VRAM. voice_studio already calls POST /free to release VRAM before its own renders, so any project doing heavy GPU work must coordinate through this engine.",
-   "integrates_with": [
-    "voice_studio",
-    "avatarstudio",
-    "mapsnap",
-    "nexus"
-   ],
-   "exposes_to_ecosystem": [
-    "GET  /system_stats (version, GPU, free VRAM)",
-    "POST /prompt (queue an API-format workflow)",
-    "GET  /history/{prompt_id} (results)",
-    "GET  /queue (running + pending)",
-    "POST /interrupt (cancel current job)",
-    "POST /free (release VRAM — used by voice_studio)",
-    "GET  /view?filename=… (fetch an output file)",
-    "GET  /object_info (live node + installed-model schema)"
-   ],
-   "consumes_from_ecosystem": [],
-   "services": [],
-   "paths": {
-    "models": "D:\\AI\\models",
-    "workflows_api": "D:\\AI\\workflows",
-    "workflows_editor": "D:\\AI\\ComfyUI_windows_portable\\ComfyUI\\user\\default\\workflows",
-    "outputs": "D:\\AI\\output",
-    "logs": "D:\\AI\\comfy_8740.log",
-    "start": "D:\\AI\\Start_ComfyUI.bat",
-    "mcp_server": "C:\\QIH\\engine\\mcp\\qi_comfy_mcp.py",
-    "docs": "D:\\AI\\CLAUDE.md, D:\\AI\\CHEATSHEET.md, D:\\AI\\RENDER_TEMPLATES.md, D:\\AI\\HOW_TO_RUN_IT_YOURSELF.md"
-   },
-   "mcp_tools": [
-    "comfy_status",
-    "comfy_models",
-    "comfy_node_info",
-    "comfy_workflows",
-    "comfy_workflow_check",
-    "comfy_run",
-    "comfy_result",
-    "comfy_cancel"
-   ],
-   "engines": {
-    "_note": "Verified working 2026-08-10. Engine selection + defaults live in D:\\AI\\workflows\\_video_backends.json.",
-    "video": {
-     "minimax_h3": {
-      "workflow": "t2v_minimax / r2v_minimax",
-      "model": "minimax_h3_fl2va_pruned_nvfp4 (11.67 GB) + minimax_h3_ref2va_pruned_nvfp4",
-      "text_encoder": "qwen3vl_32b_minimax_h3_nvfp4_awq (14.61 GB), CLIP type 'minimax'",
-      "vae": "minimax_h3_video_vae_fp16 + minimax_h3_audio_vae_fp32",
-      "lora": "minimax_h3_fl2v_turbo_4step (1.82 GB) — enables 4-step sampling",
-      "output": "1344x768 @ 25fps WITH stereo AAC audio",
-      "measured": "~75 s (t2v) / ~92 s (r2v) per 3 s clip",
-      "status": "DEFAULT video engine — text-to-video, image-to-video and reference-to-video all working",
-      "notes": "NVFP4 is a native op on the sm_120 Blackwell 5080. The int8 build (19.53 GB) does NOT fit 16.3 GB VRAM; the NVFP4 build does."
-     },
-     "wan_2_1": {
-      "workflow": "t2v_wan / i2v_wan",
-      "model": "Wan2_1-T2V-14B_fp8_e4m3fn (15 GB), Wan2_1-I2V-14B-720P_fp8_e4m3fn (17 GB)",
-      "text_encoder": "umt5_xxl_fp8_e4m3fn_scaled, CLIP type 'wan'",
-      "vae": "wanvideo\\Wan2_1_VAE_bf16",
-      "clip_vision": "clip_vision_h_vith (ViT-H 1280) — I2V only",
-      "output": "832x480, SILENT",
-      "measured": "~335 s per 3 s clip",
-      "status": "secondary — kept deliberately as an independent model family and fallback",
-      "notes": "umt5-xxl-enc-bf16 on disk is the WanVideoWrapper build and CANNOT be loaded by native nodes. Escalation ladder (fp16 encoder, then kijai wrapper) is defined in _video_backends.json and must stay switchable."
-     },
-     "minimax_cloud": {
-      "status": "installed but DISABLED — bills MiniMax credits",
-      "nodes": "MinimaxHailuo03TextToVideoNode, MinimaxHailuo03FirstLastFrameNode, MinimaxHailuo03ReferenceNode, MinimaxImageToVideoNode"
-     }
+      "id": "naya",
+      "name": "Naya",
+      "description": "Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanning. Work in progress: the service runs daily (sends Renne updates) but active development is paused and needs to resume to evolve into its intended scope.",
+      "path": "C:\\APPS\\NAYA",
+      "paths": {
+        "logs": "C:\\APPS\\NAYA\\LOGS"
+      },
+      "github": "https://github.com/Quiddity-Innovations/NAYA",
+      "status": "running_dev_paused",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8002,
+          "recommended_block": "8200",
+          "notes": "Pre-registry — do not change unless migrating"
+        },
+        "ui": {
+          "current": 7861,
+          "recommended_block": "7810",
+          "notes": "Pre-registry — do not change unless migrating"
+        }
+      },
+      "services": [
+        {
+          "name": "NayaBot",
+          "port": 8002,
+          "type": "Flask/WSGI",
+          "managed_by": "NSSM",
+          "auto_start": true,
+          "internet_exposed": false,
+          "cloudflare_tunnel": false,
+          "notes": "LAN-only. Telegram uses outbound long-polling — no inbound internet access needed. Never expose via Cloudflare."
+        }
+      ],
+      "telegram": {
+        "bot": "@Naya_qi_bot",
+        "interface": "long-poll (outbound only)",
+        "allowed_users": "Renne only",
+        "notes": "Telegram is the ONLY chat interface for Naya. No LINE, no Messenger, no Gradio UI for users."
+      },
+      "database": "C:\\APPS\\NAYA\\naya.db (SEPARATE from maia.db — never share)",
+      "family_tier": "sibling_candidate",
+      "family_notes": "Personal file management AI for Renne. Absorbed FileHQ as file engine module. Telegram is the only chat interface. LAN-only — no Cloudflare tunnel, no internet exposure.",
+      "integrates_with": [
+        "filehq",
+        "nexus",
+        "maia"
+      ],
+      "exposes_to_ecosystem": [
+        "Personal knowledge base queries",
+        "File Scout (F:\\ read-only scan)",
+        "Domain-specific reasoning (AI/physics/programming)",
+        "Connector MCP tools (Phase 1): naya_status / naya_ask (generic_tools config)"
+      ],
+      "consumes_from_ecosystem": [
+        "nexus (/synthesize)",
+        "filehq (file content)",
+        "maia (shared personality/LLM engine — future)"
+      ]
     },
-    "image": {
-     "z_image_turbo": "t2i_fast — 8 steps, ~8 s. Default for exploration. cfg 1.0 so negatives are inert.",
-     "sdxl": "t2i_sdxl / t2i_lora / i2i — realisticStockPhoto v2.0, Juggernaut-XL v9. nudify_xl_lite is the ONLY SDXL LoRA.",
-     "sd15": "t2i_lora_sd15 — Realistic Vision 5.1 + v1-5-pruned-emaonly-fp16. For innievag / shojovibe_v11 / PSCowgirl (all SD 1.5).",
-     "ideogram_v4": "t2i_ideogram — dual UNet, the ONLY engine here that renders legible typography."
-    },
-    "llm_in_graph": {
-     "gemma4": "describe2img — Gemma 4 runs inside the graph via the native TextGenerate node (~15 tok/s), captions a reference image and drives generation. No API key."
-    },
-    "post_processing": "video_enhance_av (4x UltraSharp, PRESERVES audio), video_enhance (drops audio), video_smooth (RIFE), video_upscale"
-   },
-   "notes": "Generation is gated behind an explicit trigger: Claude renders only on a 'RENDER:' or '/comfy' message, never inferred. Rules in D:\\AI\\CLAUDE.md. SFW and NSFW both in scope. Workflows exist twice on purpose: API format in D:\\AI\\workflows (what Claude queues) and editor twins prefixed 'QI - ' in the ComfyUI user folder (what Renne clicks). They are copies, not links — changing one does not change the other. Registered 2026-08-10.",
-   "added_to_registry": "2026-08-10"
-  },
-  {
-   "id": "mediastudio",
-   "name": "QI Media Studio",
-   "description": "The composition layer for QI's generators. Indexes every asset ComfyUI, Voice Studio, AvatarStudio, PersonalSong, M2V and the project library have produced, and turns a declarative shot list into finished media. Generates nothing itself - stills and video go to ComfyUI, speech to Voice Studio - so each domain keeps a single authority.",
-   "path": "C:\\APPS\\MediaStudio",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "ui": {
-     "current": 7864,
-     "block": "7840-7869",
-     "notes": "Media Studio panel (FastAPI serves the UI and its JSON API on this one port). LOOPBACK ONLY and never tunneled: the library indexes biometric voice samples and unreleased client media. Port 8740 (block 8740-8749) is reserved for a headless API split; nothing listens there yet."
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Suite shell and compositor. Voice Studio (7863) is its first mounted module; modules are discovered from this registry rather than hardcoded, so any project exposing an embeddable panel joins without a code change.",
-   "integrates_with": [
-    "voice_studio",
-    "comfyui",
-    "avatarstudio",
-    "personalsong",
-    "m2v"
-   ],
-   "exposes_to_ecosystem": [
-    "GET /health",
-    "GET /version",
-    "GET /info",
-    "GET / (panel; ?embed=1 strips chrome for embedding)",
-    "GET /api/library/search, /api/library/stats",
-    "POST /api/library/scan",
-    "GET /api/media?path= (serves indexed assets; the index is the allowlist)",
-    "GET/PUT /api/shotlists/{name}",
-    "POST /api/compose (shot list -> media, dry_run supported)",
-    "POST /api/generate (ComfyUI workflow or video engine)",
-    "GET /api/jobs, GET /api/jobs/{id}",
-    "GET /api/system, GET /api/modules"
-   ],
-   "consumes_from_ecosystem": [
-    "voice_studio (vv_batch.py for narration; consent gate enforced there, never here)",
-    "comfyui :8740 (/prompt, /history, /queue) via D:\\AI\\workflows + _video_backends.json",
-    "qi_registry.json (suite module discovery)"
-   ],
-   "services": [],
-   "paths": {
-    "logs": "D:\\Dev\\MediaStudio\\logs",
-    "outputs": "D:\\Dev\\MediaStudio\\data\\out",
-    "shotlists": "D:\\Dev\\MediaStudio\\docs\\shotlists",
-    "index": "D:\\Dev\\MediaStudio\\data\\index.db"
-   },
-   "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10."
-  },
-  {
-   "id": "filmforge",
-   "name": "QI FilmForge",
-   "description": "Long-form film orchestration: story -> script -> scenes -> shot lists -> overnight GPU rendering. Generates nothing itself and assembles nothing itself: shots go to ComfyUI via the driver layer, assembly goes to Media Studio's av_mux, speech to Voice Studio. Its own contribution is the model abstraction layer, scene decomposition, durable multi-night state, and the GPU render-window broker.",
-   "path": "C:\\APPS\\FilmForge",
-   "github": "TBD",
-   "status": "active_development",
-   "primary_language": "Python",
-   "ports": {
-    "api": {
-     "current": 7865,
-     "block": "8750-8759",
-     "notes": "7865 for a future panel (next free after mediastudio 7864); block 8750-8759 reserved for a headless API split. Nothing listens yet - the night runner is a scheduled CLI, not a service."
-    }
-   },
-   "family_tier": "cousin",
-   "family_notes": "Sits above mediastudio rather than beside it: FilmForge decides WHAT to shoot and WHEN the GPU is free; Media Studio turns the resulting shot list into media. Deliberately no ffmpeg of its own - av_mux is the single assembly authority.",
-   "integrates_with": [
-    "comfyui",
-    "mediastudio",
-    "voice_studio"
-   ],
-   "consumes_from_ecosystem": [
-    "comfyui (POST /prompt via D:\\AI\\workflows; /queue and /free for GPU state)",
-    "comfyui (D:\\AI\\workflows\\_video_backends.json is the engine registry - read, never copied)",
-    "mediastudio (engine/av_mux.py for ALL ffmpeg; engine/compose.py for shot lists)",
-    "voice_studio (vv_batch for narration; engine/gpu_lease.py is the GPU seam)",
-    "ollama :11434 (screenplay generation; GPU tenant since 2026-08-11, brokered at NORMAL priority - shared with maia/nexus/openclaw/autopdf)"
-   ],
-   "exposes_to_ecosystem": [
-    "filmforge.orchestration.broker — ECOSYSTEM GPU BROKER. Priorities BATCH/NORMAL/INTERACTIVE, preemption by yield-flag, file lock at C:\\QIH\run\\gpu.lease, heartbeat+TTL. stdlib-only so it imports into torch-free venvs. VoiceStudio gpu_lease.py is a client.",
-    "filmforge.script.shotlist — Fountain screenplay -> Media Studio shot list (the interface between the projects)",
-    "filmforge.models — ShotPrompt + ModelCapabilities + per-model prompt shaping; shareable with mediastudio via pip install -e",
-    "filmforge.models.backends — reads _video_backends.json; resolve() refuses disabled engines",
-    "filmforge.orchestration.window/state — nightly render windows, durable resumable shot state"
-   ],
-   "services": [],
-   "scheduled_tasks": [
-    "QI_FilmForge_Night (registered DISABLED, fires at window start)"
-   ],
-   "paths": {
-    "config": "D:\\Dev\\FilmForge\\config\\config.yaml",
-    "projects": "D:\\Dev\\FilmForge\\projects",
-    "logs": "D:\\Dev\\FilmForge\\LOGS",
-    "entry": "D:\\Dev\\FilmForge\\RenderNight.bat"
-   },
-   "notes": "Built 2026-08-10. Modules A (script generation), B (decomposition) and C (production manager) all working and verified end to end; output accepted by Media Studio compose --dry-run. Module D deliberately NOT built here: av_mux is the assembly authority, and the crossfade() and last_frame() primitives FilmForge needed were contributed upstream to it rather than forked. GPU broker live and cross-project preemption verified with VoiceStudio. Measured: ~80 s/shot on MiniMax H3 warm; an 8 h window is ~20 min of finished film, so a 90 min feature is ~4-5 nights. CORRECTED 2026-08-11 - OLLAMA IS A GPU TENANT. The 2026-08-10 finding (Ollama 0.32.6 reporting library=cpu and 0.00 GB VRAM, not seeing the RTX 5080 sm_120, so all local LLM work across maia/nexus/openclaw/autopdf was CPU-bound) no longer holds: the 0.32.7 update plus a restart restored CUDA (sm_120, 15.9 GiB). Re-measured on GPU: gemma4:latest 136.1 tok/s at 3.29 GB resident and 100% on GPU; gemma4:26b 65.6 tok/s at 12.0 GB, 65% on GPU; gemma4:31b 4.9 tok/s at 10.8 GB, only 49% on GPU because it wants 22 GB at runtime. Resident VRAM is NOT the pull size in either direction. Default moved 31b -> 26b: 31b is now both the largest and the slowest. OllamaTextDriver now takes a broker lease at NORMAL priority (preempts FilmForge's own BATCH overnight render at the next shot boundary) and returns VRAM with keep_alive=0 when another tenant is waiting. extend_video() implemented for MiniMax H3: last-frame continuity chaining via node 7's optional first_frame input, frame extracted by av_mux.last_frame().",
-   "added_to_registry": "2026-08-10"
-  },
-  {
-   "id": "onbase_dna",
-   "name": "OnBase DNA Program",
-   "description": "Genotype-to-phenotype decoding of OnBase configuration (DNA Codex, calibration, generated documentation) plus the Beyond-MapSnap product pre-work (Implementation Tool and Document Creator charters). Knowledge program: no service, no ports. Sessions previously logged under 'mapsnap' or 'unknown' for lack of this id.",
-   "path": "C:\\Users\\renne\\Downloads\\NOTE DISCOVERY",
-   "github": "none — client-adjacent data, never a public repo",
-   "status": "active",
-   "primary_language": "Python",
-   "ports": {},
-   "family_tier": "cousin",
-   "family_notes": "Feeds MapSnap DNA knowledge (read-only). Spawns the Implementation Tool and Document Creator at T-1 per the 2026-08-14 charters. BU/client data never enters a repo."
-  },
-  {
-   "id": "synvox",
-   "name": "SynVox",
-   "description": "SynVox (synthetic vox - the synthetic voice of the people). Consumer-grade idea-validation platform: 'anyone with an idea can test it against the world before betting on it.' A user describes an idea, product, price, email or chatbot in plain language; SynVox (1) rehearses it against simulated persona audiences using the MatrAIx engine + Persona 1M dataset, and (2) reality-checks it against live market data (APIs) and RAG-ingested industry reports, producing one evidence-graded verdict - who wants this, why, what to change, how confident to be - with simulation-vs-reality disagreements flagged. NEXUS, EasyFlow/MailBrain and Maia are hidden engines and the guinea-pig first customers.",
-   "path": "C:\\APPS\\SynVox",
-   "github": null,
-   "status": "active_development",
-   "primary_language": "Python 3.12 (uv-managed) + MatrAIx harbor CLI",
-   "ports": {
-    "api": {
-     "current": 8751,
-     "block": "8750-8759",
-     "notes": "SynVox API (synvox_server.py) - the product surface. Declared per Law 5 before implementation; service QI_SynVoxAPI. The MatrAIx Playground dev GUI (tools\run_playground.py) moved 8751 -> 8755 to make room."
-    },
-    "ai_router": {
-     "current": 8753,
-     "block": "8750-8759",
-     "notes": "SynVox AI Router - OpenAI-compatible shim whose backend is headless 'claude -p' on a Claude Max subscription (no Anthropic API key). Lets MatrAIx reach the subscription lane unchanged via OPENAI_BASE_URL. Loopback only, bearer-gated. DELIBERATELY NOT AN NSSM SERVICE: it is a per-user FOREGROUND process (python tools\run_router.py). A service account - and the Connector executor's NT AUTHORITY\\SYSTEM in particular - must not drive a personal consumer subscription, and a machine-wide always-on endpoint holding one person's Max plan is the wrong posture. On a metered or BYOK lane (Enterprise/Cloud editions) a service IS appropriate, because the credential belongs to the org rather than to a person. This is the InferenceLane seam. Allocated 2026-08-17; service declaration corrected the same day."
-    }
-   },
-   "family_tier": "sibling",
-   "family_notes": "Sibling tier - a product in its own right, not a tool of another project. Composes existing QI apps as engines: NEXUS (multi-model synthesis of results), EasyFlow/MailBrain (email-campaign simulation), Maia (multilingual conversational layer for chatbot evals), CogniBase (RAG store for ingested market reports). Reached through the QI Connector rather than owning its own MCP server in Phase 0-1; port block 8750-8759 is reserved for the Phase 5 standalone surface. Registered 2026-08-16.",
-   "integrates_with": [
-    "connector",
-    "qi_brain",
-    "nexus",
-    "easyflow",
-    "maia",
-    "cognibase"
-   ],
-   "exposes_to_ecosystem": [
-    "GET /health, GET /version, GET /info - QI module interface contract",
-    "GET /v1/capabilities - edition, task kinds, providers, engine commit, rubric version",
-    "POST /v1/scenarios, /v1/scenarios/{id}/compile|smoke|estimate - plain-language scenario authoring; smoke is free and cannot reach a provider",
-    "POST /v1/runs (requires a signed approval token from /estimate), GET /v1/runs/{id}, /events, /results, /verdict, /cost",
-    "POST /v1/cohorts/size|profile - free persona segmentation over Persona 1M, no LLM calls, counted from the postings index",
-    "Planned synvox_* MCP tools via the QI Connector's declarative generic_tools (no new Connector code)"
-   ],
-   "consumes_from_ecosystem": [
-    "connector (MCP front door - remote execution via qi_execute_script('setup-synvox'))",
-    "qi_brain (decisions, project state, session history)",
-    "Claude Max subscription via headless `claude -p` (qi_claude_brain in C:\\QIH\\engine\\common) - the persona/authoring/synthesis brain. Owner decision 2026-08-17 (QI Brain #530): NO metered Anthropic API key, no per-call spend. Per-user - each principal points config\u0007i_providers.json at their own claude.exe and OAuth env file. Consequence: no token or cost telemetry, so results carry cost_usd: null by design and the spend gate is a call-and-time budget, not dollars."
-   ],
-   "paths": {
-    "logs": "C:\\APPS\\SynVox\\logs",
-    "engine": "C:\\APPS\\SynVox\\engine\\matraix",
-    "personas": "C:\\APPS\\SynVox\\engine\\matraix\\persona\\datasets\\matraix-persona-1m\\release",
-    "docs": "C:\\APPS\\SynVox\\Quiddity Innovations - SynVox Documentation",
-    "bootstrap_script": "C:\\QIH\\dispatch\\scripts\\Setup-SynVox.ps1",
-    "ai_router": "C:\\APPS\\SynVox\\synvox\\ai\\router.py"
-   },
-   "loopback_only": false,
-   "internet_exposed": false,
-   "exposure_note": "One loopback-only listener: the SynVox AI Router on 127.0.0.1:8753 (synvox\u0007i\router.py), an OpenAI-compatible shim whose backend is the owner's Claude Max plan via headless `claude -p`. Bearer-token protected (secrets\router_token.txt) because loopback is not a security boundary. Not an NSSM service and deliberately NOT remotely executable: the QI Connector executor runs as NT AUTHORITY\\SYSTEM and a personal subscription must not be driven from a service account. Everything else is reachable remotely only through the Connector's whitelisted executor.",
-   "services": [
     {
-     "name": "synvox_api",
-     "nssm_name": "QI_SynVoxAPI",
-     "port": 8751,
-     "type": "FastAPI (uvicorn)",
-     "managed_by": "NSSM",
-     "start_type": "auto",
-     "internet_exposed": false,
-     "installed": null,
-     "notes": "Declared per Law 5 before implementation. 'installed' is filled in when the NSSM service is actually registered."
+      "id": "nexus",
+      "name": "NEXUS",
+      "description": "Neural Exchange and Unified Synthesis — AI orchestration backbone for all QI projects",
+      "path": "C:\\APPS\\NEXUS",
+      "paths": {
+        "logs": "C:\\APPS\\NEXUS\\LOGS"
+      },
+      "github": "https://github.com/rennesan/NEXUS",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8010,
+          "recommended_block": "8300",
+          "notes": "Pre-registry — within safe range, no conflict"
+        },
+        "ui": {
+          "current": 7880,
+          "recommended_block": "7820",
+          "notes": "Pre-registry — within safe range, no conflict"
+        },
+        "mcp": {
+          "current": 8310,
+          "block": "8300-8399",
+          "notes": "NEXUS MCP Gateway (QI_NexusMCP) via qi_mcp_gateway + C:\\APPS\\NEXUS\\config\\mcp_gateway.json. Loopback. Added 2026-07-31."
+        }
+      },
+      "services": [
+        {
+          "name": "nexus_api",
+          "port": 8010,
+          "type": "FastAPI"
+        },
+        {
+          "name": "nexus_ui",
+          "port": 7880,
+          "type": "Gradio"
+        },
+        {
+          "name": "nexus_mcp",
+          "nssm_name": "QI_NexusMCP",
+          "port": 8310,
+          "type": "QI MCP Gateway",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": false,
+          "installed": "2026-07-31"
+        }
+      ],
+      "family_tier": "backbone",
+      "family_notes": "The AI intelligence layer. Not a user-facing product — it serves all other projects. In the unified app, NEXUS becomes the AI engine module that powers everything.",
+      "integrates_with": [
+        "maia",
+        "naya",
+        "filehq",
+        "openclaw"
+      ],
+      "exposes_to_ecosystem": [
+        "POST /synthesize — multi-AI parallel dispatch + synthesis",
+        "GET /scout/digest — daily AI news digest",
+        "POST /scout/run — trigger news collection",
+        "GET /bench/recommend — LLM recommendation by use case [Phase 2]",
+        "GET /providers — list active AI channels",
+        "MCP :8310 + connector tools: nexus_providers / nexus_ai_digest / nexus_synthesize (declarative generic_tools)"
+      ],
+      "consumes_from_ecosystem": [],
+      "ai_providers": [
+        "ChatGPT Plus (openai-codex)",
+        "Gemini (free)",
+        "Groq (free)",
+        "Mistral (free)",
+        "Ollama (local)",
+        "Cloudflare AI (free)",
+        "Grok (pending)"
+      ]
+    },
+    {
+      "id": "openclaw",
+      "name": "OpenClaw",
+      "description": "Autonomous AI agent platform — Tasuke-orchestrated (Renne talks only to Tasuke). Five core agents: Tasuke, Kaze, Sentry, Yubin, Koe. Helper agents Asa, Kakei and NotebookLM are paused in development; Seiri lives in a separate worktree.",
+      "path": "C:\\APPS\\OC",
+      "paths": {
+        "logs": "C:\\APPS\\OC\\LOGS"
+      },
+      "github": "TBD",
+      "status": "active_production",
+      "primary_language": "Node.js (OpenClaw framework) + Python (custom agents)",
+      "runtime": "WSL Ubuntu-24.04",
+      "ports": {
+        "gateway": {
+          "current": 18789,
+          "notes": "WSL listener on 0.0.0.0:18789 (TCP), non-HTTP gateway protocol. Reachable from Windows via WSL loopback."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Autonomous agent layer. Where Maia responds, OpenClaw acts. Future: Maia routes complex action tasks to OpenClaw. Strong marriage candidate with Maia for agent-assisted conversations.",
+      "integrates_with": [
+        "maia",
+        "nexus"
+      ],
+      "exposes_to_ecosystem": [
+        "Tasuke — orchestration (Telegram bot, live)",
+        "Kaze — news/digest (live)",
+        "Yubin — email/mail (Gmail IMAP, live)",
+        "Sentry — health monitoring (live)",
+        "Koe — voice/communication (planned Phase 4)"
+      ],
+      "cancelled_agents": [
+        "Seiri — CANCELLED 2026-04-05. File management fully replaced by Naya (absorbed FileHQ)."
+      ],
+      "consumes_from_ecosystem": [
+        "nexus (LLM providers via Ollama/Cloudflare)",
+        "maia (future — action routing)"
+      ]
+    },
+    {
+      "id": "mq",
+      "name": "MQ",
+      "description": "Maia Quiddam — autonomous AI social media persona for Facebook, Instagram, WhatsApp",
+      "path": "C:\\APPS\\MQ",
+      "github": "https://github.com/Quiddity-Innovations/MQ",
+      "status": "new",
+      "status_reason": "Awaiting Facebook Page approval + Meta Developer credentials. Entry point exists (Start_MQ.bat -> main.py). Updated 2026-05-11.",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8500,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7840,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "New project — family role to be determined as it develops. Status 2026-05-13: not started yet (was paused_pending_credentials; corrected to new).",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\APPS\\MQ\\data\\logs"
+      }
+    },
+    {
+      "id": "easyflow",
+      "name": "EasyFlow",
+      "description": "Email organization tool — tier-based inbox management with Gmail API + Apps Script automation. Free gift tool for family/friends.",
+      "path": "C:\\APPS\\EasyFlow",
+      "paths": {
+        "logs": "C:\\APPS\\EasyFlow\\LOGS"
+      },
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python (Flask dashboard) + Google Apps Script",
+      "ports": {
+        "dashboard": {
+          "current": 8550,
+          "block": "8550-8559",
+          "notes": "Local Flask dashboard — desktop tool, not a server"
+        }
+      },
+      "family_tier": "standalone_tool",
+      "family_notes": "Standalone desktop tool for email management. Not a server-based QI project. Runs locally for end users. Built as a gift for family/friends with full UI-driven workflow.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "universal",
+      "name": "QI-Universal",
+      "description": "Universal tools and dashboards shared across all QI projects — QI Launcher, cross-project utilities",
+      "path": "C:\\QIH",
+      "github": "https://github.com/Quiddity-Innovations/QI-Hive",
+      "migration_note": "Migrated from C:\\UNIVERSAL into C:\\QIH on 2026-04-22 — see C:\\QIH\\docs\\UNIVERSAL_MIGRATION_PLAN.md",
+      "status": "merged",
+      "primary_language": "HTML/Python",
+      "ports": {},
+      "family_tier": "infrastructure",
+      "family_notes": "Universal tools layer. Not a product — shared utilities for all QI projects. QI Launcher at localhost:8650 is the single-page dashboard for all project localhost URLs. | Launcher port 8650 removed 2026-06-15 (conflicted with cognibase; QI Launcher superseded by Hive Dashboard :8600).",
+      "integrates_with": [
+        "maia",
+        "nexus",
+        "naya",
+        "mq",
+        "openclaw",
+        "claude_manager"
+      ],
+      "exposes_to_ecosystem": [
+        "GET http://localhost:8650 — QI Launcher (all project links in one page)"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "qi_brain",
+      "name": "QI Brain",
+      "description": "Shared knowledge substrate for the QI ecosystem. SQLite + ChromaDB + 12-tool MCP server.",
+      "path": "C:\\QIH\\engine\\brain",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "tier": "backbone",
+      "ports": {
+        "api": {
+          "current": 9011,
+          "block": "9000-9099",
+          "notes": "QI Orchestration block. Port 9010 is permanently squatted by Logitech G HUB (lghub_agent.exe) on 127.0.0.1:9010 — moved to 9011 on 2026-05-14."
+        },
+        "mcp": {
+          "current": "stdio",
+          "block": "N/A",
+          "notes": "stdio MCP — no port"
+        }
+      },
+      "family": "orchestration",
+      "services": [
+        "QI_BrainAPI"
+      ],
+      "dependencies": [],
+      "dependents": [
+        "all projects via MCP"
+      ],
+      "mcp_tools": [
+        "qi.get_context",
+        "qi.log_decision",
+        "qi.log_feature",
+        "qi.get_pending_features",
+        "qi.decide_on_feature",
+        "qi.update_project_state",
+        "qi.search_memory",
+        "qi.log_session",
+        "qi.get_ecosystem_snapshot",
+        "qi.supersede_decision",
+        "qi.explain",
+        "qi.override_evaluation"
+      ],
+      "added": "2026-04-19",
+      "paths": {
+        "logs": "C:\\QIH\\engine\\brain\\LOGS"
+      }
+    },
+    {
+      "id": "qi_hive",
+      "name": "QI Hive",
+      "description": "Unified agent orchestration and knowledge system — QI Brain + Dashboard + 7 hive agents. The bee colony.",
+      "path": "C:\\QIH",
+      "paths": {
+        "logs": "C:\\QIH\\engine\\hive\\dashboard\\LOGS"
+      },
+      "github": "https://github.com/Quiddity-Innovations/QI-Hive",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "dashboard": {
+          "current": 8600,
+          "block": "8600-8649",
+          "notes": "Hive dashboard"
+        }
+      },
+      "services": [
+        {
+          "name": "QI_Dashboard",
+          "port": 8600,
+          "type": "FastAPI",
+          "managed_by": "NSSM",
+          "path": "C:\\QIH\\engine\\hive\\dashboard\\server.py"
+        },
+        {
+          "name": "QI_BrainAPI",
+          "port": 9011,
+          "type": "FastAPI",
+          "managed_by": "NSSM",
+          "path": "C:\\QIH\\engine\\brain\\api.py"
+        }
+      ],
+      "sub_systems": {
+        "brain": "C:\\QIH\\engine\\brain — knowledge substrate (SQLite + ChromaDB + MCP + 12 tools)",
+        "hive": "C:\\QIH\\engine\\hive — agent system (7 agents, dashboard, skills, tests)",
+        "effort": "C:\\QIH\\engine\\effort - effort ledger: forensic hours/token tracking per project (SQLite + hash-chained daily ledger); surfaced at /effort and /api/effort on the dashboard"
+      },
+      "family_tier": "orchestration",
+      "family_notes": "The nervous system and operational layer. Absorbs Claude Manager. QI Brain is the hive mind. Agents are the bees.",
+      "integrates_with": [
+        "maia",
+        "nexus",
+        "naya",
+        "openclaw",
+        "mq",
+        "easyflow"
+      ],
+      "exposes_to_ecosystem": [
+        "GET  http://localhost:8600 — Hive Dashboard",
+        "GET  http://localhost:9011 — QI Brain API",
+        "POST http://localhost:9011/api/agent/growth — agent growth loop",
+        "GET  http://localhost:9011/api/agents — list all hive agents",
+        "POST http://localhost:9011/api/log_session — session logging for all projects",
+        "POST http://localhost:9011/api/log_decision — decisions for all projects"
+      ],
+      "future_structure": "Projects migrate to C:\\APPS\\QIP one by one. C:\\APPS\\QI becomes C:\\QIB (business side).",
+      "added": "2026-04-19",
+      "consumes_from_ecosystem": [
+        "qi_brain (Brain API :9011)"
+      ],
+      "scheduled_tasks": [
+        {
+          "name": "QI_EffortLedger_Daily",
+          "schedule": "daily 23:50",
+          "command": "C:\\QIH\\engine\\effort\\EffortLedger_Daily.bat",
+          "purpose": "incremental effort collection + sealed ledger entry",
+          "log": "C:\\QIH\\logs\\effort_ledger_task.log"
+        }
+      ]
+    },
+    {
+      "id": "autopdf",
+      "name": "AutoPDF",
+      "path": "C:\\APPS\\AutoPDF",
+      "path_standard": "C:\\APPS\\AutoPDF",
+      "path_migration_note": "Migrated 2026-05-13 from C:\\Users\\renne\\Downloads\\AUTOPDF to standardized path C:\\APPS\\AutoPDF. AutoPDF is fully portable — reads everything via relative paths, so the move required no code changes.",
+      "type": "desktop_tool",
+      "status": "Active Dev",
+      "tier": "Tool",
+      "description": "Self-contained PDF toolkit: convert / split / extract / catalog. Local-only, no cloud.",
+      "language": "PowerShell + vanilla JS",
+      "phase": "2c",
+      "github": "https://github.com/Quiddity-Innovations/AutoPDF",
+      "ports": {
+        "http": {
+          "current": 6969,
+          "recommended_block": "8700-8709",
+          "notes": "Pre-registry — port 6969 chosen independently. Works correctly. Migration to 8700 block recommended only when adopting other ecosystem integrations."
+        },
+        "mcp": {
+          "current": 8701,
+          "block": "8700-8709",
+          "notes": "AutoPDF MCP Gateway (QI_AutoPDFMCP) - config-driven MCP server via C:\\APPS\\AutoPDF\\tools\\qi_mcp_gateway.py + C:\\APPS\\AutoPDF\\config\\mcp_gateway.json. Loopback-only and DISABLED by default; every tool is switched on individually. First port actually used from AutoPDF's allocated block (the app itself remains on pre-registry port 6969). Added 2026-08-07."
+        }
+      },
+      "exposes": [
+        "POST /api/template-apply-batch  (folder → CSV via template)",
+        "POST /api/template-test         (single PDF verification)",
+        "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
+        "POST /api/template-propose      (AI field proposal)",
+        "GET  /api/regex-library         (reusable patterns)",
+        "MCP :8701 - autopdf_status / autopdf_templates / autopdf_presets / autopdf_regex_library (metadata, on) + autopdf_list_pdfs / autopdf_extract / autopdf_index_preview (document content, off) + autopdf_run_workflow / autopdf_split (writes files, off). Each tool independently switchable; a disabled tool is never registered."
+      ],
+      "consumes": [
+        "Local Ollama (optional) — Smart Mapping AI",
+        "Bundled engines: Ghostscript, Poppler, Tesseract, Tabula, PDFtk, Liberica JRE"
+      ],
+      "ecosystem_role": "Standalone tool, now also reachable BY AI clients through its MCP gateway (first inbound integration, 2026-08-07). Can still be called by Maia / NEXUS / FileHQ in the future to extract fields from user-supplied PDFs.",
+      "loopback_only": true,
+      "internet_exposed": false,
+      "documentation": {
+        "root_md": [
+          "README.md",
+          "SUMMARY.md",
+          "INSTALL.md",
+          "CHANGELOG.md",
+          "CLAUDE.md",
+          "NEXT_SESSION_PROMPT.md"
+        ],
+        "docx": [
+          "Documentation/AutoPDF_Technical_Guide.docx",
+          "Documentation/AutoPDF_User_Guide.docx",
+          "Documentation/AutoPDF_Test_Guide.docx"
+        ],
+        "tests": [
+          "Tests/Run-AutoPDFTests.ps1 (Tier 1 + 2 — PowerShell)",
+          "Tests/BrowserTests/ (Tier 3 — Playwright)"
+        ]
+      },
+      "added_to_registry": "2026-05-01",
+      "family_tier": "Tool",
+      "exposes_to_ecosystem": [
+        "POST /api/template-apply-batch  (folder → CSV via template)",
+        "POST /api/template-test         (single PDF verification)",
+        "POST /api/ai-chat               (Smart Mapping chat — Ollama)",
+        "POST /api/template-propose      (AI field proposal)",
+        "GET  /api/regex-library         (reusable patterns)",
+        "MCP :8701 - autopdf_status / autopdf_templates / autopdf_presets / autopdf_regex_library (metadata, on) + autopdf_list_pdfs / autopdf_extract / autopdf_index_preview (document content, off) + autopdf_run_workflow / autopdf_split (writes files, off). Each tool independently switchable; a disabled tool is never registered."
+      ],
+      "paths": {
+        "logs": "C:\\APPS\\AutoPDF\\Application\\LOGS"
+      },
+      "services": [
+        {
+          "name": "autopdf_mcp",
+          "nssm_name": "QI_AutoPDFMCP",
+          "path": "C:\\APPS\\AutoPDF\\tools\\run_mcp_gateway.py",
+          "app_directory": "C:\\APPS\\AutoPDF",
+          "port": 8701,
+          "start": "SERVICE_AUTO_START",
+          "logs": "C:\\APPS\\AutoPDF\\Application\\LOGS\\mcp_gateway.log",
+          "register_with": "C:\\APPS\\AutoPDF\\Application\\_register_mcp_service.ps1 (run elevated)",
+          "notes": "Needs no interactive desktop session (unlike AutoPDF itself, which requires one for Office COM + scanner drivers), so it runs as a real auto-start service. The 'enabled' flag in config\\mcp_gateway.json is the actual on/off switch - the process exits cleanly when false."
+        }
+      ]
+    },
+    {
+      "id": "cognibase",
+      "name": "CogniBase",
+      "description": "Local desktop platform that connects to Hyland OnBase, lifts its data into a vector store + data lake, and lets AI correlate, infer, and report across boundaries OnBase itself can't query. Vendor-neutral LLM router (Claude/OpenAI/Gemini/Ollama/LM Studio/llama.cpp), pluggable source connectors, OnBase-Web-Client-style retrieval UI, templated and ad-hoc reports. First source: OnBase. Future sources: filesystem, email, Jenzabar.",
+      "path": "C:\\APPS\\CogniBase",
+      "github": "https://github.com/rennesan/cognibase",
+      "status": "pre_poc",
+      "primary_language": "Python (FastAPI backend) + React (single-file UI mockup)",
+      "ports": {
+        "api": {
+          "current": 8650,
+          "block": "8650-8659",
+          "notes": "Local FastAPI server. Block reserved for MapSnap family (siblings: mapsnap)."
+        }
+      },
+      "family_tier": "standalone_tool",
+      "family_notes": "Sibling of MapSnap (engine-agnostic schema-intelligence tool for any enterprise database). Renamed from 'mapsnap_onbase' to 'cognibase' on 2026-05-06 to reflect the broader mission: not just an OnBase mirror but a platform that exceeds OnBase. Status corrected 2026-05-13: pre_poc (was phase_b_core_complete_pilot_ready; renaming reflects actual maturity stage).",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "OnBase schema as JSON",
+        "OnBase metadata RAG search",
+        "OnBase document retrieval (read-only)",
+        "Report generation (.docx)"
+      ],
+      "consumes_from_ecosystem": [
+        "qi_brain (optional, for cross-project context logging)"
+      ],
+      "version": "0.5.0-dev",
+      "last_milestone": "M18 (Discovery + Bridges) + M25-minimal (Lifecycle visualizer) + Portability",
+      "tests": "50/50 passing",
+      "last_updated": "2026-05-09",
+      "paths": {
+        "logs": "C:\\APPS\\CogniBase\\LOGS"
+      }
+    },
+    {
+      "id": "mapsnap",
+      "name": "MapSnap",
+      "description": "Local-first schema-intelligence tool for ANY enterprise database set up as a profile (SQL Server, Oracle, PostgreSQL, MySQL, SQLite — e.g. Jenzabar EX, Hyland OnBase, SAP/BUworks). Live extract or CSV/DDL import builds schema.json; renders a navigable HTML browser with FK relationships, ERD-confirmed edges, and module groupings, layered with a local AI that explains the schema and does NL→SQL. Egress guardrail keeps regulated data on-box. Demonstrated at BU on a personal system; the aim is for it to serve as the onboarding tool for a systems-of-record federation, proposing canonical-key mappings that become candidate Normalizers CogniBase governs. Original product; design ancestor of cognibase.",
+      "path": "C:\\APPS\\MapSnap",
+      "github": "https://github.com/rennesan/mapsnap",
+      "status": "active_stable",
+      "primary_language": "Python (local HTTP server) + static HTML browser",
+      "ports": {
+        "api": {
+          "current": 9876,
+          "block": "8650-8659",
+          "notes": "Legacy port 9876 pre-registry. Block 8650-8659 reserved for MapSnap family but not in use here. Per registry rule, existing ports stay unless there's a reason to migrate."
+        },
+        "mcp": {
+          "current": 8651,
+          "block": "8650-8659",
+          "notes": "MapSnap MCP Gateway (QI_MapSnapMCP) — config-driven MCP server via C:\\QIH\\engine\\common\\qi_mcp_gateway.py + C:\\APPS\\MapSnap\\config\\mcp_gateway.json. Loopback-only by default; BU mode = LAN bind via config. Added 2026-07-30."
+        }
+      },
+      "family_tier": "standalone_tool",
+      "family_notes": "Sibling of cognibase (same DNA, different scope). MapSnap = engine-agnostic schema intelligence over any structured system of record (proposes canonical-key mappings for the BU federation); cognibase = live OnBase + cross-source correlation/governance. Kept separate intentionally to insulate the stable discovery tool from the integration product's churn.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Schema as JSON (any engine: SQL Server/Oracle/Postgres/MySQL/SQLite)",
+        "Schema browser HTML",
+        "Canonical-key mapping proposals (candidate Normalizers for CogniBase)",
+        "MCP :8651 — mapsnap_profiles / mapsnap_schema / mapsnap_ask (+table_data via config)",
+        "Service API tokens (Application\\service_tokens.json) — machine-to-machine bearer auth, added 2026-07-30"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\APPS\\MapSnap\\LOGS"
+      },
+      "services": [
+        {
+          "name": "mapsnap_mcp",
+          "nssm_name": "QI_MapSnapMCP",
+          "port": 8651,
+          "type": "QI MCP Gateway (FastMCP)",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": false,
+          "installed": "2026-07-30"
+        }
+      ]
+    },
+    {
+      "id": "m2v",
+      "name": "M2V",
+      "description": "Music to Video — AI-powered music video generator from lyrics + audio track",
+      "path": "C:\\APPS\\M2V",
+      "github": "https://github.com/Quiddity-Innovations/M2V",
+      "status": "new",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8501,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7841,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "New project — family role to be determined as it develops.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\APPS\\M2V\\data\\logs"
+      }
+    },
+    {
+      "id": "personalsong",
+      "name": "PersonalSong Studio",
+      "description": "Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone. Web app via serve.py (uvicorn in-process).",
+      "path": "C:\\APPS\\PersonalSong",
+      "github": "https://github.com/Quiddity-Innovations/PersonalSong",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "ui": {
+          "current": 8088,
+          "recommended_block": "8500-8599",
+          "notes": "Pre-registry — port 8088 chosen before registration (registered 2026-06-10). Outside all allocated blocks; works, keep unless migrating. If migrated, use 8502 in the 8500-8599 cousin block."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Sibling-in-spirit of M2V (song generation feeds music-video generation). Registered 2026-06-10 during Brain drift reconciliation.",
+      "integrates_with": [
+        "m2v"
+      ],
+      "exposes_to_ecosystem": [
+        "Song generation (ACE-Step)",
+        "Voice cloning (Demucs/Seed-VC)"
+      ],
+      "consumes_from_ecosystem": [],
+      "loopback_only": true,
+      "internet_exposed": false,
+      "added_to_registry": "2026-06-10"
+    },
+    {
+      "id": "cypherminer",
+      "name": "CypherMiner",
+      "description": "Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools",
+      "path": "C:\\APPS\\CypherMiner",
+      "github": "https://github.com/Quiddity-Innovations/CypherMiner",
+      "status": "complete",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8502,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7842,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "New project — family role to be determined as it develops.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\APPS\\CypherMiner\\LOGS"
+      }
+    },
+    {
+      "id": "lotterywiz",
+      "name": "LotteryWiz",
+      "description": "Fantasy 5 covering-design app — generates optimal play sets with guaranteed coverage. FastAPI + export to .xlsx/.csv.",
+      "path": "C:\\APPS\\Lottery Wiz",
+      "github": "https://github.com/Quiddity-Innovations/LotteryWiz",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8777,
+          "block": "8770-8779",
+          "notes": "Pre-registry ad-hoc port — works, kept per migration_note. UI served from same FastAPI app."
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "Standalone utility app. NSSM service QI_LotteryWiz + public tunnel QI_LotteryWizTunnel (installed 2026-06-15).",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Fantasy 5 covering-design generator",
+        "Play-set export API"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\APPS\\Lottery Wiz\\LOGS"
+      }
+    },
+    {
+      "id": "digitization",
+      "name": "Digitization Cost Tool",
+      "description": "BU Digitization Cost Comparison Tool — client-side HTML calculator for Document Imaging & Services pricing/scenarios. Ships with technical docs + user guide.",
+      "path": "C:\\Users\\renne\\Downloads\\DIGITIZATION COSTS",
+      "github": "https://github.com/Quiddity-Innovations/DigitizationCostTool",
+      "status": "complete",
+      "primary_language": "HTML/JS",
+      "ports": {},
+      "family_tier": "sibling",
+      "family_notes": "Self-contained single-file HTML tool (no server). NOT YET migrated to a C:\\ project root — still under Downloads. Migration to QI standard layout pending.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Digitization cost comparison / scenario modelling (standalone)"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "tubescout",
+      "name": "TubeScout",
+      "description": "YouTube subscription intelligence: organize subs, sweep daily uploads, transcript-to-news page, feeds NEXUS Scout/Kaze digest + QI Brain implement-scouting",
+      "path": "C:\\APPS\\TUBESCOUT",
+      "github": "https://github.com/Quiddity-Innovations/TubeScout",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8503,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7843,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "YouTube subscription intelligence. Feeds NEXUS Scout (Kaze digest) + QI Brain implement-scoring. Sibling-in-spirit of NEXUS Scout.",
+      "integrates_with": [
+        "nexus",
+        "qi_brain",
+        "openclaw"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET / (public landing)",
+        "GET /news (public news page)",
+        "GET /digest (public — Kaze AI Digest by Maia Quiddam, served via TubeScout tunnel)",
+        "GET /api/news",
+        "GET /stats",
+        "GET /channels",
+        "GET /videos"
+      ],
+      "consumes_from_ecosystem": [
+        "nexus (/synthesize summaries + scoring)",
+        "nexus (/scout/import/opml -> Kaze)",
+        "qi_brain (/api/log_feature)"
+      ],
+      "scheduled_tasks": [
+        "QI_TubeScout_AM (07:00 daily)",
+        "QI_TubeScout_PM (19:00 daily)"
+      ],
+      "services": [
+        {
+          "name": "tubescout_api",
+          "nssm_name": "QI_TubeScout",
+          "port": 8503,
+          "type": "FastAPI",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": false,
+          "installed": "2026-06-18"
+        },
+        {
+          "name": "tubescout_tunnel",
+          "nssm_name": "QI_TubeScoutTunnel",
+          "port": null,
+          "type": "Cloudflare Tunnel",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": true,
+          "installed": "2026-06-18",
+          "notes": "Public quick tunnel -> :8503. URL is ephemeral (regenerated each restart). Hive dashboard parses the current URL from C:\\APPS\\TUBESCOUT\\data\\logs\\tunnel.log"
+        }
+      ],
+      "paths": {
+        "logs": "C:\\APPS\\TUBESCOUT\\data\\logs"
+      }
+    },
+    {
+      "id": "retirementanalyzer",
+      "name": "Retirement Analyzer",
+      "description": "Ingests a Fidelity positions CSV export and computes allocation, tax-bucket split (Taxable/Tax-Deferred/Roth), concentration risk (top-5 + HHI), glide-path drift vs a years-to-retirement target, rebalancing trades, and a 5-year retirement readiness plan (spending gap, 3-yr cash buffer, withdrawal rate vs 4% rule, income layers, blueprint checklist). FastAPI + Gradio. Formerly Fidelity Portfolio Analyzer (id fidelityanalyzer).",
+      "path": "C:\\APPS\\Retirement Analyzer",
+      "github": "https://github.com/Quiddity-Innovations/RetirementAnalyzer",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8504,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7844,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "Personal-finance utility. Automates the manual Fidelity portfolio review/rebalancing previously done by hand (see Downloads analysis docs), extended with a 5-year retirement-readiness planning layer.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET /target",
+        "GET /blueprint",
+        "POST /analyze",
+        "POST /analyze_text",
+        "POST /rebalance",
+        "POST /retirement"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\APPS\\Retirement Analyzer\\data\\logs"
+      }
+    },
+    {
+      "id": "avatarstudio",
+      "name": "AvatarStudio",
+      "description": "QI Avatar Studio — Gradio pipeline that turns a script into a talking-head avatar video (TTS via Kokoro/edge-tts → background removal → Hallo2/LivePortrait render in WSL2 → video-retalking lip-sync → MP4). Multi-language.",
+      "path": "C:\\APPS\\AvatarStudio",
+      "github": "https://github.com/Quiddity-Innovations/AvatarStudio",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "ui": {
+          "current": 7862,
+          "block": "7840-7869",
+          "notes": "Pre-registry Gradio port. Works; keep per migration_note."
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "Media-generation studio. Depends on WSL2 for avatar render backends. Shares the avatar/voice vision used across QI agents.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Talking-head avatar video generation (Gradio UI :7862)"
+      ],
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "logs": "C:\\APPS\\AvatarStudio\\logs"
+      }
+    },
+    {
+      "id": "claude_manager",
+      "name": "Claude Manager",
+      "description": "Claude Code management workspace — QI Hive orchestration, ecosystem reconciliation scripts, Brain backfills, and cross-project session management. Meta/management project (no served ports).",
+      "path": "C:\\APPS\\CLAUDE",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {},
+      "family_tier": "backbone",
+      "family_notes": "Management/meta workspace that operates ON the ecosystem rather than being a deployed app.",
+      "integrates_with": [
+        "qi_hive",
+        "qi_brain"
+      ],
+      "exposes_to_ecosystem": [
+        "Ecosystem reconciliation + project registration tooling"
+      ],
+      "consumes_from_ecosystem": [
+        "qi_brain",
+        "qi_hive"
+      ]
+    },
+    {
+      "id": "gamez",
+      "name": "Gamez",
+      "description": "World Cup 2026 betting-window dashboard. Single-file HTML app (WC2026.html) + FastAPI proxy (live ESPN fixtures/standings/bracket, Kalshi odds, heuristic player->team scoring married into a betting-window engine, multi-provider AI analyst).",
+      "path": "C:\\APPS\\Gamez",
+      "original_path": "C:\\APPS\\Gamez",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python+HTML",
+      "ports": {
+        "api": {
+          "current": 8710,
+          "block": "8710-8719",
+          "notes": "Gamez block; proxy serves the HTML at / so the app runs same-origin."
+        },
+        "quant": {
+          "current": 8712,
+          "block": "8710-8719",
+          "notes": "Mr. Hyde side-service (QI_GamezQuantProxy, manual start, off by default). Localhost-only; serves the private 'Quant' AI persona that the public proxy relays via /persona only while it runs. No tunnel (public stays on worldcup:8710); 8711 is the dev preview."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Standalone betting/analytics tool. Shares the OpenRouter key from C:\\APPS\\QI\\maia.db (like MapSnap). Packaged as a portable .exe for sharing.",
+      "integrates_with": [
+        "maia"
+      ],
+      "exposes_to_ecosystem": [
+        "GET / (app)",
+        "GET /health",
+        "GET /snapshot",
+        "GET /kalshi",
+        "GET /apifootball/check",
+        "POST /ai/openrouter"
+      ],
+      "consumes_from_ecosystem": [
+        "maia (shared OpenRouter key via maia.db)"
+      ]
+    },
+    {
+      "id": "claude_voice",
+      "name": "Claude Voice",
+      "description": "Voice-driven assistant + (in progress) VOICE DISPATCH console. Real Claude answers FREE via the claude_cli backend (headless claude -p on Renne subscription, CLAUDE_CODE_OAUTH_TOKEN) on PC voice/LINE/Telegram — the file bridge is replaced. Hourly self-health via QI_ClaudeVoiceBridgeCheck. Roadmap: LiveKit spine (natural voice + Zoom-like screen/doc share) + voice->QI Hive dispatch. Claude voice is MALE; name always Claude.",
+      "path": "C:\\APPS\\CLAUDE\\Claude Voice",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8720,
+          "block": "8720-8729",
+          "notes": "Control/health API + BRAIN CONFIG UI for the realtime assistant (Mode B): GET / (dual-brain toggle UI: Claude=bridge / Ronald=local Ollama, with hard-set lock), /brain, /brain/active, /brain/config, /health, /version, /info. Served by server.py (NSSM QI_ClaudeVoiceControl). Loopback-only, never tunneled."
+        },
+        "line": {
+          "current": 8721,
+          "block": "8720-8729",
+          "notes": "LINE Messaging API webhook server (line_bot.py): POST /line/webhook + GET /audio/* for voice notes. THIS port is exposed publicly via the static named tunnel qi-claudevoice (claudevoice.quiddityinnovations.com) — webhook only. Telegram bridge uses outbound long-poll (no port)."
+        },
+        "webcall": {
+          "current": 8722,
+          "block": "8720-8729",
+          "notes": "Claude's Meeting Room (meeting_server.py): multi-participant Zoom-style room HOSTED by Claude. People (browser) and other AGENTS (WebSocket /ws) join; live roster + shared transcript; Claude greets/facilitates/speaks. Browser mic -> Whisper STT (CPU) -> brain -> edge-tts -> audio-reactive host avatar. Loopback-only today (bind 0.0.0.0 or tunnel to admit remote participants). Brain shared with :8720 via data/brain_state.json. Supersedes the 1:1 webcall_server.py."
+        },
+        "voice_api": {
+          "current": 8725,
+          "block": "8720-8729",
+          "notes": "Shared voice HTTP API (/health /speak /transcribe /listen) - voice_service.py"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Standalone realtime voice assistant spun out of Gamez on 2026-06-20. The STT+VAD+TTS bridge is a reusable ecosystem feature other QI projects can adopt (e.g. Maia/OpenClaw Koe). Male voice (Andrew EN / Antonio pt-BR); identity is always 'Claude', never 'Andrew'.",
+      "integrates_with": [
+        "qi_brain",
+        "nexus",
+        "maia"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "Reusable voice bridge: speak.py (TTS edge-tts, male) + listen.py (STT faster-whisper)",
+        "Realtime full-duplex voice loop (VAD -> STT -> LLM -> TTS, streaming + barge-in)"
+      ],
+      "consumes_from_ecosystem": [
+        "Claude subscription via headless claude CLI (claude_cli backend = primary real-Claude path, FREE)",
+        "Local Ollama (default brain; optional/toggleable)",
+        "Anthropic API (optional/toggleable brain)",
+        "OpenRouter free tier via shared C:\\APPS\\QI\\maia.db key (optional/toggleable brain)",
+        "qi_brain (optional context logging)"
+      ],
+      "voice_rules": {
+        "gender": "MALE always",
+        "voices": {
+          "en": "en-US-AndrewNeural",
+          "pt-BR": "pt-BR-AntonioNeural"
+        },
+        "identity": "When asked his name, answers 'Claude' (never 'Andrew'). Andrew is timbre, not identity."
+      },
+      "loopback_only": false,
+      "internet_exposed": true,
+      "exposure_note": "Only :8721 (LINE webhook + /audio) is public via tunnel qi-claudevoice. Control API :8720 and the realtime audio loop stay loopback-only. Telegram bridge is outbound long-poll (no inbound).",
+      "added_to_registry": "2026-06-20",
+      "paths": {
+        "logs": "C:\\APPS\\CLAUDE\\Claude Voice\\LOGS"
+      },
+      "scheduled_tasks": [
+        "QI_ClaudeVoiceMeeting_8AM (meeting room :8722, daily 08:00)",
+        "QI_ClaudeVoiceBridgeCheck (bridge health, hourly)"
+      ]
+    },
+    {
+      "id": "akiyascout",
+      "name": "AkiyaScout",
+      "description": "English-first Japanese real estate (Akiya/Kominka/rural) aggregation platform with a personalized background Scout Engine: multi-source JP scraping, translation pipeline, profile wizard, and scheduled match notifications.",
+      "path": "C:\\APPS\\AkiyaScout",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8505,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7845,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Personal single-user, LOCAL-only property scout (no commercial/public use). v1 POC scope: Honshu, Kansai->Chubu->Kanto corridor, region-driven for future expansion. Bilingual storage (JA raw + EN translation, UI toggle).",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET /stats",
+        "GET /listings",
+        "GET /profiles",
+        "POST /ingest"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "headroom",
+      "name": "Headroom",
+      "description": "Context/token compression layer (open-source, Apache-2.0) — proxy + MCP server that compresses tool outputs, JSON, logs and history before they reach LLMs. Shared infrastructure for the whole ecosystem.",
+      "path": "C:\\APPS\\CLAUDE\\Tools",
+      "github": "https://github.com/headroomlabs-ai/headroom",
+      "status": "pilot",
+      "primary_language": "Python",
+      "ports": {
+        "proxy": {
+          "current": 9020,
+          "block": "9000-9099",
+          "notes": "Headroom compression proxy (OpenAI-compatible gateway). QI Hive family block — shared infrastructure like Brain (:9011). Registered 2026-07-28 during pilot; promote to QI_Headroom NSSM service if adopted."
+        },
+        "mcp": {
+          "current": "stdio",
+          "block": "N/A",
+          "notes": "headroom mcp serve — stdio MCP for Claude Code sessions (headroom_compress / headroom_retrieve / headroom_stats). Registered in C:\\APPS\\CLAUDE\\.mcp.json."
+        }
+      },
+      "family_tier": "backbone",
+      "family_notes": "Pilot 2026-07: proxy in front of Ollama first (OPENAI_API_BASE=http://localhost:11434/v1), then NEXUS providers if savings hold. Do NOT re-point Claude Code's own endpoint through the proxy — subscription OAuth path stays untouched; Claude Code uses the MCP mode instead.",
+      "integrates_with": [
+        "nexus",
+        "qi_hive",
+        "claude_manager"
+      ],
+      "exposes_to_ecosystem": [
+        "OpenAI-compatible proxy on :9020",
+        "MCP tools: headroom_compress, headroom_retrieve, headroom_stats"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "playdeck",
+      "name": "PlayDeck",
+      "description": "Personal hybrid video player — custom control UI over YouTube/Vimeo (IFrame API) and general tube sites (yt-dlp + own player); local-only",
+      "path": "C:\\PlayDeck",
+      "github": "TBD",
+      "status": "new",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8506,
+          "block": "8500-8599"
+        },
+        "ui": {
+          "current": 7846,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "New project — family role to be determined as it develops.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
+      ],
+      "consumes_from_ecosystem": []
+    },
+    {
+      "id": "connector",
+      "name": "QI Connector",
+      "description": "QI Connector — remote MCP server (Streamable HTTP) exposing QI ecosystem tools (Brain, registry, service health, public URLs) to Claude across all surfaces (claude.ai web/mobile, Desktop, Claude Code) as a custom connector.",
+      "path": "C:\\APPS\\QIP\\Connector",
+      "github": "https://github.com/Quiddity-Innovations/QI-Connector",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 9030,
+          "block": "9000-9099",
+          "notes": "QI Hive infrastructure block (Brain :9011, Headroom :9020). MCP endpoint at /mcp — Streamable HTTP, bearer-token auth; capability-URL alias for clients that cannot send headers."
+        }
+      },
+      "family_tier": "backbone",
+      "family_notes": "Backbone infrastructure — the ecosystem's front door for Claude clients. One remote MCP connector (claude.ai custom connector) replaces per-machine, per-tool MCP config: claude.ai web/mobile, Claude Desktop and Claude Code all reach QI tools through connector.quiddityinnovations.com. Registered 2026-07-30.",
+      "integrates_with": [
+        "qi_brain",
+        "qi_hive",
+        "synvox"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "POST /mcp — MCP Streamable HTTP. Core tools: qi_ecosystem_snapshot, qi_search_memory, qi_get_context, qi_log_decision, qi_registry_lookup, qi_service_status, qi_headlines, qi_dispatches, qi_public_urls. Adapter tools (config-gated via qi_mcp_gateway): mapsnap_profiles, mapsnap_schema, mapsnap_ask. Executor tools (added 2026-08-16, whitelist-gated by C:\\QIH\\dispatch\\scripts\\manifest.json): qi_list_scripts, qi_execute_script (background job, returns job_id), qi_script_status",
+        "Remote whitelisted script execution for the whole ecosystem - jobs in C:\\QIH\\dispatch\\jobs, audit trail C:\\QIH\\dispatch\\executor_master.log"
+      ],
+      "consumes_from_ecosystem": [
+        "qi_brain (HTTP :9011 — ecosystem snapshot, memory search, context, decision log; graceful fallback when offline)"
+      ],
+      "paths": {
+        "logs": "C:\\APPS\\QIP\\Connector\\data\\logs"
+      },
+      "loopback_only": false,
+      "internet_exposed": true,
+      "exposure_note": "Public via named tunnel qi-connector (connector.quiddityinnovations.com). Server binds 127.0.0.1:9030; /mcp requires bearer token (or the secret capability path). /health,/version,/info are open.",
+      "services": [
+        {
+          "name": "connector_mcp",
+          "nssm_name": "QI_ConnectorMCP",
+          "port": 9030,
+          "type": "FastAPI + FastMCP (Streamable HTTP)",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": true,
+          "installed": "2026-07-30"
+        },
+        {
+          "name": "connector_tunnel",
+          "nssm_name": "QI_ConnectorTunnel",
+          "port": null,
+          "type": "Cloudflare Named Tunnel (qi-connector)",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": true,
+          "installed": "2026-07-30"
+        }
+      ],
+      "added_to_registry": "2026-07-30"
+    },
+    {
+      "id": "voice_studio",
+      "name": "QI Voice Studio",
+      "description": "Studio (batch) voice tier: VibeVoice 1.5B long-form, multi-speaker rendering with consent-gated cloned voices. Narrates the BU/MapSnap explainer videos. NOT the realtime tier — conversation stays on Claude Voice edge-tts.",
+      "path": "C:\\APPS\\VoiceStudio",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "ui": {
+          "current": 7863,
+          "block": "7840-7869",
+          "notes": "Voice Studio panel (FastAPI, serves both the HTML panel and its JSON API on this one port). Loopback-only and NEVER tunneled: data/voices holds biometric voice samples. Port 8730 (block 8730-8739) is reserved for a headless API split if the suite shell later needs a separate origin — nothing listens there yet."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Sibling-in-spirit of Claude Voice: same domain, opposite tier. Claude Voice = realtime conversation (edge-tts, ~300 ms first audio). Voice Studio = batch rendering (VibeVoice 1.5B, RTF ~0.8, ~6 GB VRAM). Deliberately NOT wired into Claude Voice's :8725; the realtime path must not inherit a multi-second time-to-first-audio.",
+      "integrates_with": [
+        "claude_voice",
+        "mapsnap",
+        "avatarstudio",
+        "comfyui"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET / (panel; ?embed=1 strips chrome for the ComfyUI sidebar tab)",
+        "GET /api/voices (roster + consent scopes)",
+        "POST /api/voices (register a consented voice)",
+        "POST /api/render (quick render)",
+        "POST /api/build (explainer video build)",
+        "GET /api/jobs, GET /api/jobs/{id} (status + log tail)",
+        "GET /api/outputs",
+        "GET /api/gpu (VRAM status)"
+      ],
+      "consumes_from_ecosystem": [
+        "comfyui (POST http://127.0.0.1:8740/free to release VRAM before a render)"
+      ],
+      "services": [],
+      "paths": {
+        "logs": "D:\\Dev\\VoiceStudio\\logs",
+        "voices": "D:\\Dev\\VoiceStudio\\data\\voices",
+        "outputs": "D:\\Dev\\VoiceStudio\\data\\out",
+        "models": "D:\\Dev\\VoiceStudio\\data\\models"
+      },
+      "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10."
+    },
+    {
+      "id": "comfyui",
+      "name": "ComfyUI (QI Media Engine)",
+      "description": "Local image and video generation engine. Driven conversationally by Claude through the qi-comfy MCP server; also usable directly in its own web UI. The only sanctioned image/video generator on this machine.",
+      "path": "D:\\AI",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8740,
+          "block": "8740-8749",
+          "notes": "Migrated from 8189 on 2026-08-10. 8189 sat inside Maia's 8100-8199 block; 8740 opens the media/GPU band next to Claude Voice (8720-8729) and Voice Studio (8730-8739). Referenced by voice_studio, mediastudio and filmforge - migrate all together, never piecemeal."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Shared GPU utility rather than a sibling app: it owns the RTX 5080's VRAM. voice_studio already calls POST /free to release VRAM before its own renders, so any project doing heavy GPU work must coordinate through this engine.",
+      "integrates_with": [
+        "voice_studio",
+        "avatarstudio",
+        "mapsnap",
+        "nexus"
+      ],
+      "exposes_to_ecosystem": [
+        "GET  /system_stats (version, GPU, free VRAM)",
+        "POST /prompt (queue an API-format workflow)",
+        "GET  /history/{prompt_id} (results)",
+        "GET  /queue (running + pending)",
+        "POST /interrupt (cancel current job)",
+        "POST /free (release VRAM — used by voice_studio)",
+        "GET  /view?filename=… (fetch an output file)",
+        "GET  /object_info (live node + installed-model schema)"
+      ],
+      "consumes_from_ecosystem": [],
+      "services": [],
+      "paths": {
+        "models": "D:\\AI\\models",
+        "workflows_api": "D:\\AI\\workflows",
+        "workflows_editor": "D:\\AI\\ComfyUI_windows_portable\\ComfyUI\\user\\default\\workflows",
+        "outputs": "D:\\AI\\output",
+        "logs": "D:\\AI\\comfy_8740.log",
+        "start": "D:\\AI\\Start_ComfyUI.bat",
+        "mcp_server": "C:\\QIH\\engine\\mcp\\qi_comfy_mcp.py",
+        "docs": "D:\\AI\\CLAUDE.md, D:\\AI\\CHEATSHEET.md, D:\\AI\\RENDER_TEMPLATES.md, D:\\AI\\HOW_TO_RUN_IT_YOURSELF.md"
+      },
+      "mcp_tools": [
+        "comfy_status",
+        "comfy_models",
+        "comfy_node_info",
+        "comfy_workflows",
+        "comfy_workflow_check",
+        "comfy_run",
+        "comfy_result",
+        "comfy_cancel"
+      ],
+      "engines": {
+        "_note": "Verified working 2026-08-10. Engine selection + defaults live in D:\\AI\\workflows\\_video_backends.json.",
+        "video": {
+          "minimax_h3": {
+            "workflow": "t2v_minimax / r2v_minimax",
+            "model": "minimax_h3_fl2va_pruned_nvfp4 (11.67 GB) + minimax_h3_ref2va_pruned_nvfp4",
+            "text_encoder": "qwen3vl_32b_minimax_h3_nvfp4_awq (14.61 GB), CLIP type 'minimax'",
+            "vae": "minimax_h3_video_vae_fp16 + minimax_h3_audio_vae_fp32",
+            "lora": "minimax_h3_fl2v_turbo_4step (1.82 GB) — enables 4-step sampling",
+            "output": "1344x768 @ 25fps WITH stereo AAC audio",
+            "measured": "~75 s (t2v) / ~92 s (r2v) per 3 s clip",
+            "status": "DEFAULT video engine — text-to-video, image-to-video and reference-to-video all working",
+            "notes": "NVFP4 is a native op on the sm_120 Blackwell 5080. The int8 build (19.53 GB) does NOT fit 16.3 GB VRAM; the NVFP4 build does."
+          },
+          "wan_2_1": {
+            "workflow": "t2v_wan / i2v_wan",
+            "model": "Wan2_1-T2V-14B_fp8_e4m3fn (15 GB), Wan2_1-I2V-14B-720P_fp8_e4m3fn (17 GB)",
+            "text_encoder": "umt5_xxl_fp8_e4m3fn_scaled, CLIP type 'wan'",
+            "vae": "wanvideo\\Wan2_1_VAE_bf16",
+            "clip_vision": "clip_vision_h_vith (ViT-H 1280) — I2V only",
+            "output": "832x480, SILENT",
+            "measured": "~335 s per 3 s clip",
+            "status": "secondary — kept deliberately as an independent model family and fallback",
+            "notes": "umt5-xxl-enc-bf16 on disk is the WanVideoWrapper build and CANNOT be loaded by native nodes. Escalation ladder (fp16 encoder, then kijai wrapper) is defined in _video_backends.json and must stay switchable."
+          },
+          "minimax_cloud": {
+            "status": "installed but DISABLED — bills MiniMax credits",
+            "nodes": "MinimaxHailuo03TextToVideoNode, MinimaxHailuo03FirstLastFrameNode, MinimaxHailuo03ReferenceNode, MinimaxImageToVideoNode"
+          }
+        },
+        "image": {
+          "z_image_turbo": "t2i_fast — 8 steps, ~8 s. Default for exploration. cfg 1.0 so negatives are inert.",
+          "sdxl": "t2i_sdxl / t2i_lora / i2i — realisticStockPhoto v2.0, Juggernaut-XL v9. nudify_xl_lite is the ONLY SDXL LoRA.",
+          "sd15": "t2i_lora_sd15 — Realistic Vision 5.1 + v1-5-pruned-emaonly-fp16. For innievag / shojovibe_v11 / PSCowgirl (all SD 1.5).",
+          "ideogram_v4": "t2i_ideogram — dual UNet, the ONLY engine here that renders legible typography."
+        },
+        "llm_in_graph": {
+          "gemma4": "describe2img — Gemma 4 runs inside the graph via the native TextGenerate node (~15 tok/s), captions a reference image and drives generation. No API key."
+        },
+        "post_processing": "video_enhance_av (4x UltraSharp, PRESERVES audio), video_enhance (drops audio), video_smooth (RIFE), video_upscale"
+      },
+      "notes": "Generation is gated behind an explicit trigger: Claude renders only on a 'RENDER:' or '/comfy' message, never inferred. Rules in D:\\AI\\CLAUDE.md. SFW and NSFW both in scope. Workflows exist twice on purpose: API format in D:\\AI\\workflows (what Claude queues) and editor twins prefixed 'QI - ' in the ComfyUI user folder (what Renne clicks). They are copies, not links — changing one does not change the other. Registered 2026-08-10.",
+      "added_to_registry": "2026-08-10"
+    },
+    {
+      "id": "mediastudio",
+      "name": "QI Media Studio",
+      "description": "The composition layer for QI's generators. Indexes every asset ComfyUI, Voice Studio, AvatarStudio, PersonalSong, M2V and the project library have produced, and turns a declarative shot list into finished media. Generates nothing itself - stills and video go to ComfyUI, speech to Voice Studio - so each domain keeps a single authority.",
+      "path": "C:\\APPS\\MediaStudio",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "ui": {
+          "current": 7864,
+          "block": "7840-7869",
+          "notes": "Media Studio panel (FastAPI serves the UI and its JSON API on this one port). LOOPBACK ONLY and never tunneled: the library indexes biometric voice samples and unreleased client media. Port 8740 (block 8740-8749) is reserved for a headless API split; nothing listens there yet."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Suite shell and compositor. Voice Studio (7863) is its first mounted module; modules are discovered from this registry rather than hardcoded, so any project exposing an embeddable panel joins without a code change.",
+      "integrates_with": [
+        "voice_studio",
+        "comfyui",
+        "avatarstudio",
+        "personalsong",
+        "m2v"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info",
+        "GET / (panel; ?embed=1 strips chrome for embedding)",
+        "GET /api/library/search, /api/library/stats",
+        "POST /api/library/scan",
+        "GET /api/media?path= (serves indexed assets; the index is the allowlist)",
+        "GET/PUT /api/shotlists/{name}",
+        "POST /api/compose (shot list -> media, dry_run supported)",
+        "POST /api/generate (ComfyUI workflow or video engine)",
+        "GET /api/jobs, GET /api/jobs/{id}",
+        "GET /api/system, GET /api/modules"
+      ],
+      "consumes_from_ecosystem": [
+        "voice_studio (vv_batch.py for narration; consent gate enforced there, never here)",
+        "comfyui :8740 (/prompt, /history, /queue) via D:\\AI\\workflows + _video_backends.json",
+        "qi_registry.json (suite module discovery)"
+      ],
+      "services": [],
+      "paths": {
+        "logs": "D:\\Dev\\MediaStudio\\logs",
+        "outputs": "D:\\Dev\\MediaStudio\\data\\out",
+        "shotlists": "D:\\Dev\\MediaStudio\\docs\\shotlists",
+        "index": "D:\\Dev\\MediaStudio\\data\\index.db"
+      },
+      "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10."
+    },
+    {
+      "id": "filmforge",
+      "name": "QI FilmForge",
+      "description": "Long-form film orchestration: story -> script -> scenes -> shot lists -> overnight GPU rendering. Generates nothing itself and assembles nothing itself: shots go to ComfyUI via the driver layer, assembly goes to Media Studio's av_mux, speech to Voice Studio. Its own contribution is the model abstraction layer, scene decomposition, durable multi-night state, and the GPU render-window broker.",
+      "path": "C:\\APPS\\FilmForge",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 7865,
+          "block": "8750-8759",
+          "notes": "7865 for a future panel (next free after mediastudio 7864); block 8750-8759 reserved for a headless API split. Nothing listens yet - the night runner is a scheduled CLI, not a service."
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Sits above mediastudio rather than beside it: FilmForge decides WHAT to shoot and WHEN the GPU is free; Media Studio turns the resulting shot list into media. Deliberately no ffmpeg of its own - av_mux is the single assembly authority.",
+      "integrates_with": [
+        "comfyui",
+        "mediastudio",
+        "voice_studio"
+      ],
+      "consumes_from_ecosystem": [
+        "comfyui (POST /prompt via D:\\AI\\workflows; /queue and /free for GPU state)",
+        "comfyui (D:\\AI\\workflows\\_video_backends.json is the engine registry - read, never copied)",
+        "mediastudio (engine/av_mux.py for ALL ffmpeg; engine/compose.py for shot lists)",
+        "voice_studio (vv_batch for narration; engine/gpu_lease.py is the GPU seam)",
+        "ollama :11434 (screenplay generation; GPU tenant since 2026-08-11, brokered at NORMAL priority - shared with maia/nexus/openclaw/autopdf)"
+      ],
+      "exposes_to_ecosystem": [
+        "filmforge.orchestration.broker — ECOSYSTEM GPU BROKER. Priorities BATCH/NORMAL/INTERACTIVE, preemption by yield-flag, file lock at C:\\QIH\run\\gpu.lease, heartbeat+TTL. stdlib-only so it imports into torch-free venvs. VoiceStudio gpu_lease.py is a client.",
+        "filmforge.script.shotlist — Fountain screenplay -> Media Studio shot list (the interface between the projects)",
+        "filmforge.models — ShotPrompt + ModelCapabilities + per-model prompt shaping; shareable with mediastudio via pip install -e",
+        "filmforge.models.backends — reads _video_backends.json; resolve() refuses disabled engines",
+        "filmforge.orchestration.window/state — nightly render windows, durable resumable shot state"
+      ],
+      "services": [],
+      "scheduled_tasks": [
+        "QI_FilmForge_Night (registered DISABLED, fires at window start)"
+      ],
+      "paths": {
+        "config": "D:\\Dev\\FilmForge\\config\\config.yaml",
+        "projects": "D:\\Dev\\FilmForge\\projects",
+        "logs": "D:\\Dev\\FilmForge\\LOGS",
+        "entry": "D:\\Dev\\FilmForge\\RenderNight.bat"
+      },
+      "notes": "Built 2026-08-10. Modules A (script generation), B (decomposition) and C (production manager) all working and verified end to end; output accepted by Media Studio compose --dry-run. Module D deliberately NOT built here: av_mux is the assembly authority, and the crossfade() and last_frame() primitives FilmForge needed were contributed upstream to it rather than forked. GPU broker live and cross-project preemption verified with VoiceStudio. Measured: ~80 s/shot on MiniMax H3 warm; an 8 h window is ~20 min of finished film, so a 90 min feature is ~4-5 nights. CORRECTED 2026-08-11 - OLLAMA IS A GPU TENANT. The 2026-08-10 finding (Ollama 0.32.6 reporting library=cpu and 0.00 GB VRAM, not seeing the RTX 5080 sm_120, so all local LLM work across maia/nexus/openclaw/autopdf was CPU-bound) no longer holds: the 0.32.7 update plus a restart restored CUDA (sm_120, 15.9 GiB). Re-measured on GPU: gemma4:latest 136.1 tok/s at 3.29 GB resident and 100% on GPU; gemma4:26b 65.6 tok/s at 12.0 GB, 65% on GPU; gemma4:31b 4.9 tok/s at 10.8 GB, only 49% on GPU because it wants 22 GB at runtime. Resident VRAM is NOT the pull size in either direction. Default moved 31b -> 26b: 31b is now both the largest and the slowest. OllamaTextDriver now takes a broker lease at NORMAL priority (preempts FilmForge's own BATCH overnight render at the next shot boundary) and returns VRAM with keep_alive=0 when another tenant is waiting. extend_video() implemented for MiniMax H3: last-frame continuity chaining via node 7's optional first_frame input, frame extracted by av_mux.last_frame().",
+      "added_to_registry": "2026-08-10"
+    },
+    {
+      "id": "onbase_dna",
+      "name": "OnBase DNA Program",
+      "description": "Genotype-to-phenotype decoding of OnBase configuration (DNA Codex, calibration, generated documentation) plus the Beyond-MapSnap product pre-work (Implementation Tool and Document Creator charters). Knowledge program: no service, no ports. Sessions previously logged under 'mapsnap' or 'unknown' for lack of this id.",
+      "path": "C:\\Users\\renne\\Downloads\\NOTE DISCOVERY",
+      "github": "none — client-adjacent data, never a public repo",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {},
+      "family_tier": "cousin",
+      "family_notes": "Feeds MapSnap DNA knowledge (read-only). Spawns the Implementation Tool and Document Creator at T-1 per the 2026-08-14 charters. BU/client data never enters a repo."
+    },
+    {
+      "id": "synvox",
+      "name": "SynVox",
+      "description": "SynVox (synthetic vox - the synthetic voice of the people). Consumer-grade idea-validation platform: 'anyone with an idea can test it against the world before betting on it.' A user describes an idea, product, price, email or chatbot in plain language; SynVox (1) rehearses it against simulated persona audiences using the MatrAIx engine + Persona 1M dataset, and (2) reality-checks it against live market data (APIs) and RAG-ingested industry reports, producing one evidence-graded verdict - who wants this, why, what to change, how confident to be - with simulation-vs-reality disagreements flagged. NEXUS, EasyFlow/MailBrain and Maia are hidden engines and the guinea-pig first customers.",
+      "path": "C:\\APPS\\SynVox",
+      "github": null,
+      "status": "active_development",
+      "primary_language": "Python 3.12 (uv-managed) + MatrAIx harbor CLI",
+      "ports": {
+        "api": {
+          "current": 8751,
+          "block": "8750-8759",
+          "notes": "SynVox API (synvox_server.py) - the product surface. Declared per Law 5 before implementation; service QI_SynVoxAPI. The MatrAIx Playground dev GUI (tools\run_playground.py) moved 8751 -> 8755 to make room."
+        },
+        "ai_router": {
+          "current": 8753,
+          "block": "8750-8759",
+          "notes": "SynVox AI Router - OpenAI-compatible shim whose backend is headless 'claude -p' on a Claude Max subscription (no Anthropic API key). Lets MatrAIx reach the subscription lane unchanged via OPENAI_BASE_URL. Loopback only, bearer-gated. DELIBERATELY NOT AN NSSM SERVICE: it is a per-user FOREGROUND process (python tools\run_router.py). A service account - and the Connector executor's NT AUTHORITY\\SYSTEM in particular - must not drive a personal consumer subscription, and a machine-wide always-on endpoint holding one person's Max plan is the wrong posture. On a metered or BYOK lane (Enterprise/Cloud editions) a service IS appropriate, because the credential belongs to the org rather than to a person. This is the InferenceLane seam. Allocated 2026-08-17; service declaration corrected the same day."
+        }
+      },
+      "family_tier": "sibling",
+      "family_notes": "Sibling tier - a product in its own right, not a tool of another project. Composes existing QI apps as engines: NEXUS (multi-model synthesis of results), EasyFlow/MailBrain (email-campaign simulation), Maia (multilingual conversational layer for chatbot evals), CogniBase (RAG store for ingested market reports). Reached through the QI Connector rather than owning its own MCP server in Phase 0-1; port block 8750-8759 is reserved for the Phase 5 standalone surface. Registered 2026-08-16.",
+      "integrates_with": [
+        "connector",
+        "qi_brain",
+        "nexus",
+        "easyflow",
+        "maia",
+        "cognibase"
+      ],
+      "exposes_to_ecosystem": [
+        "GET /health, GET /version, GET /info - QI module interface contract",
+        "GET /v1/capabilities - edition, task kinds, providers, engine commit, rubric version",
+        "POST /v1/scenarios, /v1/scenarios/{id}/compile|smoke|estimate - plain-language scenario authoring; smoke is free and cannot reach a provider",
+        "POST /v1/runs (requires a signed approval token from /estimate), GET /v1/runs/{id}, /events, /results, /verdict, /cost",
+        "POST /v1/cohorts/size|profile - free persona segmentation over Persona 1M, no LLM calls, counted from the postings index",
+        "Planned synvox_* MCP tools via the QI Connector's declarative generic_tools (no new Connector code)"
+      ],
+      "consumes_from_ecosystem": [
+        "connector (MCP front door - remote execution via qi_execute_script('setup-synvox'))",
+        "qi_brain (decisions, project state, session history)",
+        "Claude Max subscription via headless `claude -p` (qi_claude_brain in C:\\QIH\\engine\\common) - the persona/authoring/synthesis brain. Owner decision 2026-08-17 (QI Brain #530): NO metered Anthropic API key, no per-call spend. Per-user - each principal points config\u0007i_providers.json at their own claude.exe and OAuth env file. Consequence: no token or cost telemetry, so results carry cost_usd: null by design and the spend gate is a call-and-time budget, not dollars."
+      ],
+      "paths": {
+        "logs": "C:\\APPS\\SynVox\\logs",
+        "engine": "C:\\APPS\\SynVox\\engine\\matraix",
+        "personas": "C:\\APPS\\SynVox\\engine\\matraix\\persona\\datasets\\matraix-persona-1m\\release",
+        "docs": "C:\\APPS\\SynVox\\Quiddity Innovations - SynVox Documentation",
+        "bootstrap_script": "C:\\QIH\\dispatch\\scripts\\Setup-SynVox.ps1",
+        "ai_router": "C:\\APPS\\SynVox\\synvox\\ai\\router.py"
+      },
+      "loopback_only": false,
+      "internet_exposed": false,
+      "exposure_note": "One loopback-only listener: the SynVox AI Router on 127.0.0.1:8753 (synvox\u0007i\router.py), an OpenAI-compatible shim whose backend is the owner's Claude Max plan via headless `claude -p`. Bearer-token protected (secrets\router_token.txt) because loopback is not a security boundary. Not an NSSM service and deliberately NOT remotely executable: the QI Connector executor runs as NT AUTHORITY\\SYSTEM and a personal subscription must not be driven from a service account. Everything else is reachable remotely only through the Connector's whitelisted executor.",
+      "services": [
+        {
+          "name": "synvox_api",
+          "nssm_name": "QI_SynVoxAPI",
+          "port": 8751,
+          "type": "FastAPI (uvicorn)",
+          "managed_by": "NSSM",
+          "start_type": "auto",
+          "internet_exposed": false,
+          "installed": null,
+          "notes": "Declared per Law 5 before implementation. 'installed' is filled in when the NSSM service is actually registered."
+        }
+      ],
+      "licensing": {
+        "engine": "MatrAIx (github.com/MatrAIx-ai/MatrAIx-Persona-8B) - MIT, commercial use OK",
+        "dataset": "Persona 1M (HF: MatrAIx2026/MatrAIx_Persona_1M_Public_Release) - free download. OPEN QUESTION: written clarification needed from the MatrAIx team before any commercial redistribution inside a QI product. Internal analysis use only until then."
+      },
+      "ip_separation": "Quiddity Innovations LLC project. Developed exclusively on personal hardware (PowerSpec) with personal accounts. No Boston University hardware, network, accounts, credentials or work hours - keeps LLC IP ownership clean.",
+      "added_to_registry": "2026-08-16",
+      "editions": {
+        "_doc": "One codebase, four editions (QI Brain decisions #532, #533). An edition may only swap an implementation behind an interface - it may never add or remove a feature. The separating axis is who operates the install and whose Anthropic account pays, not scale.",
+        "personal": "1 user, own Claude Max plan, loopback, SQLite, call budget.",
+        "professional": "3-10 users in one small business sharing ONE Max plan on one host over the LAN. Fair-share queueing across users on the single shared inference lane. Renne + Urcil run here.",
+        "enterprise": "A company self-hosts on its own Anthropic API account. Metered - the customer's money. Postgres, SSO, per-tenant quotas.",
+        "cloud": "QI-hosted SaaS on QI's Anthropic business account; customers pay for access. Metered - Renne's money, so the dollar gate becomes margin protection. GATED on written Persona 1M commercial-redistribution clarification from the MatrAIx team (decision #533)."
+      }
+    },
+    {
+      "id": "noosorbis",
+      "name": "NoosOrbis",
+      "description": "Modern reading experience over live Wikipedia, with a Librarian AI assistant",
+      "path": "C:\\APPS\\NoosOrbis",
+      "github": "TBD",
+      "status": "new",
+      "primary_language": "Python",
+      "ports": {
+        "api": {
+          "current": 8507,
+          "block": "8500-8599",
+          "notes": "FastAPI serves BOTH the JSON API and the reading experience on this one port so the browser stays same-origin. Loopback-only bind; public access is via QI Gate :9040 + tunnel qi-noosorbis. UI port 7847 stays reserved."
+        },
+        "ui": {
+          "current": 7847,
+          "block": "7840-7849"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "New project — family role to be determined as it develops.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "GET /health",
+        "GET /version",
+        "GET /info"
+      ],
+      "consumes_from_ecosystem": [],
+      "public_url": "https://noosorbis.quiddityinnovations.com",
+      "tunnel": {
+        "name": "qi-noosorbis",
+        "service": "QI_NoosOrbisTunnel",
+        "id": "c145515d-6bbe-4e1d-8461-a3d6eb6ef59a",
+        "gate_mode": "open",
+        "notes": "Points at gate :9040, never the app port. Mode 'open' = no auth wall; see gate.json 'why'."
+      },
+      "known_gaps": [
+        "Gate mode is 'open' - no auth wall. Renne's standing decision; leave until he says otherwise. Every Librarian question runs on the local GPU and all Wikimedia calls carry his IP and User-Agent.",
+        "Four scoped elevation-whitelist rules named *_noosorbis_exception permit this service to run from C:/APPS. The STANDARD nssm_* rules cover only C:/QIH and C:/QIP - not C:/APPS, where every QI app service actually lives. Promotion did not remove the need for the exceptions; adding C:/APPS to the standard rules would.",
+        "D:/Dev/NoosOrbis is a stale copy, marked with PROMOTED-DO-NOT-EDIT.md. Safe to delete."
+      ],
+      "repo": "https://github.com/Quiddity-Innovations/noosorbis",
+      "repo_visibility": "private"
     }
-   ],
-   "licensing": {
-    "engine": "MatrAIx (github.com/MatrAIx-ai/MatrAIx-Persona-8B) - MIT, commercial use OK",
-    "dataset": "Persona 1M (HF: MatrAIx2026/MatrAIx_Persona_1M_Public_Release) - free download. OPEN QUESTION: written clarification needed from the MatrAIx team before any commercial redistribution inside a QI product. Internal analysis use only until then."
-   },
-   "ip_separation": "Quiddity Innovations LLC project. Developed exclusively on personal hardware (PowerSpec) with personal accounts. No Boston University hardware, network, accounts, credentials or work hours - keeps LLC IP ownership clean.",
-   "added_to_registry": "2026-08-16",
-   "editions": {
-    "_doc": "One codebase, four editions (QI Brain decisions #532, #533). An edition may only swap an implementation behind an interface - it may never add or remove a feature. The separating axis is who operates the install and whose Anthropic account pays, not scale.",
-    "personal": "1 user, own Claude Max plan, loopback, SQLite, call budget.",
-    "professional": "3-10 users in one small business sharing ONE Max plan on one host over the LAN. Fair-share queueing across users on the single shared inference lane. Renne + Urcil run here.",
-    "enterprise": "A company self-hosts on its own Anthropic API account. Metered - the customer's money. Postgres, SSO, per-tenant quotas.",
-    "cloud": "QI-hosted SaaS on QI's Anthropic business account; customers pay for access. Metered - Renne's money, so the dollar gate becomes margin protection. GATED on written Persona 1M commercial-redistribution clarification from the MatrAIx team (decision #533)."
-   }
-  }
- ],
- "family_taxonomy": {
-  "description": "Defines how projects will integrate in the future unified QI platform.",
-  "tiers": {
-   "core": "The primary product — Maia. All roads lead here.",
-   "backbone": "Infrastructure that powers everything — NEXUS. Never user-facing directly.",
-   "sibling": "Same DNA, different face. Share engine, personality, config. Can run as one app with feature flags.",
-   "sibling_candidate": "Not siblings yet but heading there. Will share code as they mature.",
-   "cousin": "Related domain, shared data/events, call each other's APIs. Independent deployment.",
-   "marriage": "Two modules that deeply complete each other. Merged feature = stronger than both."
-  },
-  "current_relationships": [
-   {
-    "projects": [
-     "maia",
-     "naya"
-    ],
-    "type": "sibling_candidate",
-    "description": "Same assistant engine, different personas (K-12 platform vs personal AI). Will share codebase when template engine is complete."
-   },
-   {
-    "projects": [
-     "maia",
-     "nexus"
-    ],
-    "type": "cousin",
-    "description": "Maia uses NEXUS for multi-AI synthesis and AI news. NEXUS is the AI backbone, Maia is the interface."
-   },
-   {
-    "projects": [
-     "naya",
-     "filehq"
-    ],
-    "type": "merging",
-    "description": "Naya (personal AI) + FileHQ (personal files) merger in progress. Phase 1 complete: full bridge (50+ endpoints), Telegram /files commands, enhanced File Manager UI. Phase 2 pending: physical code absorption into C:\\APPS\\NAYA. Naya = brain, FileHQ = engine."
-   },
-   {
-    "projects": [
-     "maia",
-     "openclaw"
-    ],
-    "type": "marriage_candidate",
-    "description": "Maia handles conversation, OpenClaw handles autonomous action. Together = AI assistant that can act, not just talk."
-   },
-   {
-    "projects": [
-     "nexus",
-     "all"
-    ],
-    "type": "backbone",
-    "description": "NEXUS Judge/Bench will eventually power LLM selection across all QI projects automatically."
-   }
   ],
-  "unified_app_vision": {
-   "description": "The future QI unified platform — one app, many modules.",
-   "modules": [
-    {
-     "module": "AI Engine",
-     "source": "nexus",
-     "role": "Core AI dispatch, synthesis, LLM management"
+  "family_taxonomy": {
+    "description": "Defines how projects will integrate in the future unified QI platform.",
+    "tiers": {
+      "core": "The primary product — Maia. All roads lead here.",
+      "backbone": "Infrastructure that powers everything — NEXUS. Never user-facing directly.",
+      "sibling": "Same DNA, different face. Share engine, personality, config. Can run as one app with feature flags.",
+      "sibling_candidate": "Not siblings yet but heading there. Will share code as they mature.",
+      "cousin": "Related domain, shared data/events, call each other's APIs. Independent deployment.",
+      "marriage": "Two modules that deeply complete each other. Merged feature = stronger than both."
     },
-    {
-     "module": "Assistant",
-     "source": "maia + naya",
-     "role": "Conversational AI — multi-channel, multi-persona"
-    },
-    {
-     "module": "Agent Layer",
-     "source": "openclaw",
-     "role": "Autonomous task execution"
-    },
-    {
-     "module": "File Intel",
-     "source": "filehq",
-     "role": "Document and file understanding"
-    },
-    {
-     "module": "News & Research",
-     "source": "nexus scout",
-     "role": "AI news, research aggregation"
-    },
-    {
-     "module": "Eval & Bench",
-     "source": "nexus judge/bench",
-     "role": "LLM testing and recommendation"
-    }
-   ]
-  }
- },
- "shared_infrastructure": {
-  "database": "SQLite per project (maia.db, nexus.db, etc.) — no shared DB today. Future: federated or migrated to PostgreSQL.",
-  "llm_chain": "Maia owns primary chain. NEXUS owns evaluation. All projects should query NEXUS for LLM recommendations.",
-  "auth": "None today — all local/internal. Future: shared auth token when unified app is built.",
-  "messaging": "No internal message bus today. Future: lightweight event bus (Redis Pub/Sub or simple SQLite queue).",
-  "cloudflare_tunnel": "Cloudflare Tunnel via STATIC NAMED tunnels on domain quiddityinnovations.com (purchased 2026-06-20). Hybrid design: one named tunnel PER PRODUCT for fault isolation (Maia bot+demo share qi-maia). Master map + tooling: C:\\QIH\\engine\tunnels\\ (tunnels.json, migrate_named_tunnels.py). Quick (*.trycloudflare.com) tunnels are DEPRECATED — do not create new ones.",
-  "nssm_services": {
-   "note": "NSSM binary standardized 2026-04-22 to C:\\QIH\\engine\\bin\\nssm.exe — all services use this. Service names use the QI_ prefix. Registry below reflects live audit on 2026-05-13.",
-   "registered": [
-    {
-     "name": "QI_MaiaBot",
-     "project": "maia",
-     "port": 8001,
-     "script": "C:\\APPS\\QI\\maia_server.py",
-     "internet_exposed": true
-    },
-    {
-     "name": "QI_MaiaTunnel",
-     "project": "maia",
-     "port": null,
-     "script": "cloudflared tunnel → :8001",
-     "internet_exposed": true
-    },
-    {
-     "name": "QI_MaiaDemoTunnel",
-     "project": "maia",
-     "port": null,
-     "script": "cloudflared tunnel → :7860",
-     "internet_exposed": true,
-     "start_type": "manual"
-    },
-    {
-     "name": "QI_MaiaGradio",
-     "project": "maia",
-     "port": 7860,
-     "script": "C:\\APPS\\QI\\maia_gradio.py",
-     "internet_exposed": false,
-     "added": "2026-05-09"
-    },
-    {
-     "name": "QI_NayaBot",
-     "project": "naya",
-     "port": 8002,
-     "script": "C:\\APPS\\NAYA\\naya_server.py (also starts FileHQ on 8200)",
-     "internet_exposed": false
-    },
-    {
-     "name": "QI_NayaGradio",
-     "project": "naya",
-     "port": 7861,
-     "script": "C:\\APPS\\NAYA\\naya_gradio.py",
-     "internet_exposed": false,
-     "depends_on": "QI_NayaBot",
-     "notes": "Stdout/Stderr paths added 2026-05-13 (were empty)"
-    },
-    {
-     "name": "QI_NEXUS",
-     "project": "nexus",
-     "port": 8010,
-     "script": "C:\\APPS\\NEXUS\\main.py",
-     "internet_exposed": false
-    },
-    {
-     "name": "QI_Dashboard",
-     "project": "qi_hive",
-     "port": 8600,
-     "script": "C:\\QIH\\engine\\hive\\dashboard\\server.py",
-     "internet_exposed": false,
-     "notes": "Log paths repointed 2026-05-13 from C:\\UNIVERSAL\\dashboard\\LOGS to C:\\QIH\\engine\\hive\\dashboard\\LOGS"
-    },
-    {
-     "name": "QI_DashboardTunnel",
-     "project": "qi_hive",
-     "port": null,
-     "script": "C:\\QIH\\engine\\hive\\tunnel\\tunnel_manager.py (cloudflared → :8600)",
-     "internet_exposed": true
-    },
-    {
-     "name": "QI_BrainAPI",
-     "project": "qi_brain",
-     "port": 9011,
-     "script": "C:\\QIH\\engine\\brain\\api.py",
-     "internet_exposed": false
-    },
-    {
-     "name": "QI_Elevate",
-     "project": "qi_hive",
-     "port": null,
-     "script": "C:\\QIH\\engine\\common\\* (elevation broker)",
-     "internet_exposed": false,
-     "registered": "2026-05-13"
-    },
-    {
-     "name": "QI_HiveIngest",
-     "project": "qi_hive",
-     "port": null,
-     "script": "C:\\QIH\\engine\\hive\\ingest\\* (ingestion worker)",
-     "internet_exposed": false,
-     "registered": "2026-05-13"
-    },
-    {
-     "name": "QI_KazeConfigAPI",
-     "project": "openclaw",
-     "port": 8401,
-     "script": "C:\\APPS\\OC\\repo\\scripts\\kaze\\kaze-config-api.py",
-     "internet_exposed": false,
-     "registered": "2026-05-13"
-    },
-    {
-     "name": "OC-Keepalive-Service",
-     "project": "openclaw",
-     "port": null,
-     "script": "C:\\APPS\\OC\\tools\\oc-keepalive-daemon.py",
-     "internet_exposed": false,
-     "notes": "Pre-dates QI_ naming convention — not renamed since it's OpenClaw-internal"
-    },
-    {
-     "name": "QI_TubeScout",
-     "project": "tubescout",
-     "port": 8503,
-     "script": "C:\\APPS\\TUBESCOUT (uvicorn api.main:app → :8503)",
-     "internet_exposed": false,
-     "registered": "2026-06-18",
-     "notes": "Reinstalled 2026-06-18 — AppDirectory corrected to C:\\APPS\\TUBESCOUT (was C:\\Program Files\\Python311, which broke api.main import and left the service PAUSED). Startup VBS (QI_TubeScout_Server.vbs) disabled to stop dual-server on :8503."
-    },
-    {
-     "name": "QI_TubeScoutTunnel",
-     "project": "tubescout",
-     "port": null,
-     "script": "cloudflared tunnel → :8503",
-     "internet_exposed": true,
-     "start_type": "auto",
-     "registered": "2026-06-18",
-     "notes": "AppStdout/AppStderr set to C:\\APPS\\TUBESCOUT\\data\\logs\\tunnel.log so the Hive dashboard can scrape the ephemeral public URL."
-    },
-    {
-     "name": "QI_Caddy",
-     "project": "qi_hive",
-     "port": "80/443",
-     "script": "C:\\QIH\\engine\\bin\\caddy.exe run --config C:\\QIH\\engine\\proxy\\Caddyfile",
-     "internet_exposed": false,
-     "start_type": "auto",
-     "registered": "2026-06-23",
-     "notes": "Local reverse proxy. One qi.local front door for all QI apps (subdomain routing, local HTTPS via Caddy internal CA). LAN-only — public exposure still handled by Cloudflare named tunnels. AppDirectory C:\\QIH\\engine\\proxy, log C:\\QIH\\logs\\qi_caddy.log. Config: C:\\QIH\\engine\\proxy\\Caddyfile."
-    }
-   ],
-   "naming_rule": "New services: QI_<Project><Role> — e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
-   "safety_rules": [
-    "NEVER kill a port without checking which project owns it — use qi_registry.json",
-    "NEVER expose Naya, NEXUS, or OC via Cloudflare tunnel — Maia ONLY",
-    "All services share the same Python (C:\\Program Files\\Python311\\python.exe) — a broken pip install affects ALL projects",
-    "Stopping MaiaBot kills LINE/Telegram webhooks — external users lose service immediately",
-    "NayaBot auto-starts FileHQ engine on port 8200 — stopping Naya also stops FileHQ",
-    "NSSM auto-restarts failed services — killing a port may trigger a restart loop",
-    "Before any port change: check ALL services in this registry, not just the current project"
-   ]
-  },
-  "qi_brain": "C:\\QIH\\data\\qi_brain.db — shared knowledge DB (backbone tier, :9011)",
-  "static_tunnels": {
-   "domain": "quiddityinnovations.com (primary), quiddam.com (Maia Quiddam)",
-   "registrar_dns": "Cloudflare",
-   "design": "hybrid: one named tunnel per product, fault-isolated",
-   "tooling": "C:\\QIH\\engine\tunnels\\",
-   "source_of_truth": "C:\\QIH\\engine\tunnels\tunnels.json",
-   "map": {
-    "maia.quiddityinnovations.com": "qi-maia → :8001 (QI_MaiaTunnel)",
-    "maia-demo.quiddityinnovations.com": "qi-maia → :7860",
-    "naya.quiddityinnovations.com": "qi-naya → :7861 (QI_NayaTunnel)",
-    "nexus.quiddityinnovations.com": "qi-nexus → :7880 (QI_NEXUSTunnel)",
-    "hive.quiddityinnovations.com": "qi-hive → :8600 (QI_DashboardTunnel)",
-    "autopdf.quiddityinnovations.com": "qi-autopdf → :6969 (QI_AutoPDFTunnel)",
-    "cognibase.quiddityinnovations.com": "qi-cognibase → :8650 (QI_CogniBaseTunnel)",
-    "mapsnap.quiddityinnovations.com": "qi-mapsnap → :9876 (QI_MapSnapTunnel)",
-    "lottery.quiddityinnovations.com": "qi-lotterywiz → :8777 (QI_LotteryWizTunnel)",
-    "cypher.quiddityinnovations.com": "qi-cypherminer → :7842 (QI_CypherMinerTunnel)",
-    "kaze.quiddityinnovations.com": "qi-kaze → :18800 (QI_KazeNewsTunnel)",
-    "tubescout.quiddityinnovations.com": "qi-tubescout → :8503 (QI_TubeScoutTunnel)",
-    "worldcup.quiddityinnovations.com": "qi-gamez → :8710 (QI_GamezTunnel) — WC2026 tool; renamed from gamez 2026-06-26, gamez hostname reserved for future hub",
-    "quiddam.com": "qi-mq → :7840 (QI_MQTunnel) — apex public site / combined feed",
-    "api.quiddam.com": "qi-mq → :8500 — Meta FB/IG/WhatsApp webhooks",
-    "dev.quiddam.com": "qi-mq → :7849 — RESERVED placeholder (Maia Quiddam dev)",
-    "maia.quiddam.com": "qi-mq → :8599 — RESERVED placeholder (Maia-on-Quiddam future)",
-    "connector.quiddityinnovations.com": "qi-connector → :9030 (QI_ConnectorTunnel) — remote MCP connector for Claude (bearer-token)"
-   },
-   "domains": [
-    "quiddityinnovations.com",
-    "quiddam.com"
-   ]
-  },
-  "aws": {
-   "account_id": "103140669477",
-   "region": "us-east-1",
-   "iam_cli_user": "qi-claude-cli",
-   "resources": {
-    "lambda": {
-     "qi-maia-webhook": {
-      "purpose": "LINE webhook front door for Maia (signature verify + enqueue)",
-      "function_url": "https://bq6r2rxvueooou5wz6dq4ok7ry0toncw.lambda-url.us-east-1.on.aws/"
-     }
-    },
-    "sqs": {
-     "qi-maia-events.fifo": {
-      "purpose": "Durable LINE event queue, 4-day retention, drained by QI_MaiaQueueDrain"
-     }
-    },
-    "ssm_parameters": [
-     "/qi/maia/line_channel_secret"
+    "current_relationships": [
+      {
+        "projects": [
+          "maia",
+          "naya"
+        ],
+        "type": "sibling_candidate",
+        "description": "Same assistant engine, different personas (K-12 platform vs personal AI). Will share codebase when template engine is complete."
+      },
+      {
+        "projects": [
+          "maia",
+          "nexus"
+        ],
+        "type": "cousin",
+        "description": "Maia uses NEXUS for multi-AI synthesis and AI news. NEXUS is the AI backbone, Maia is the interface."
+      },
+      {
+        "projects": [
+          "naya",
+          "filehq"
+        ],
+        "type": "merging",
+        "description": "Naya (personal AI) + FileHQ (personal files) merger in progress. Phase 1 complete: full bridge (50+ endpoints), Telegram /files commands, enhanced File Manager UI. Phase 2 pending: physical code absorption into C:\\APPS\\NAYA. Naya = brain, FileHQ = engine."
+      },
+      {
+        "projects": [
+          "maia",
+          "openclaw"
+        ],
+        "type": "marriage_candidate",
+        "description": "Maia handles conversation, OpenClaw handles autonomous action. Together = AI assistant that can act, not just talk."
+      },
+      {
+        "projects": [
+          "nexus",
+          "all"
+        ],
+        "type": "backbone",
+        "description": "NEXUS Judge/Bench will eventually power LLM selection across all QI projects automatically."
+      }
     ],
-    "iam_roles": [
-     "qi-maia-webhook-role"
-    ],
-    "budgets": [
-     "QI-ZeroSpend-Guard"
-    ]
-   },
-   "naming_rule": "all AWS resources prefixed qi-",
-   "docs": "C:\\QIH\\shared\\documentation\\guides\\AWS_Free_Tier_Setup_Guide.md",
-   "registered": "2026-07-30"
+    "unified_app_vision": {
+      "description": "The future QI unified platform — one app, many modules.",
+      "modules": [
+        {
+          "module": "AI Engine",
+          "source": "nexus",
+          "role": "Core AI dispatch, synthesis, LLM management"
+        },
+        {
+          "module": "Assistant",
+          "source": "maia + naya",
+          "role": "Conversational AI — multi-channel, multi-persona"
+        },
+        {
+          "module": "Agent Layer",
+          "source": "openclaw",
+          "role": "Autonomous task execution"
+        },
+        {
+          "module": "File Intel",
+          "source": "filehq",
+          "role": "Document and file understanding"
+        },
+        {
+          "module": "News & Research",
+          "source": "nexus scout",
+          "role": "AI news, research aggregation"
+        },
+        {
+          "module": "Eval & Bench",
+          "source": "nexus judge/bench",
+          "role": "LLM testing and recommendation"
+        }
+      ]
+    }
   },
-  "qi_gate": {
-   "name": "QI Gate",
-   "description": "Authentication wall in front of every internet-exposed QI application. All public Cloudflare tunnels terminate on the Caddy edge (:9040), which requires a signed-in session before proxying to the app.",
-   "path": "C:\\QIH\\engine\\gate",
-   "added": "2026-08-05",
-   "ports": {
-    "edge": 9040,
-    "auth": 9041
-   },
-   "services": [
-    "QI_Caddy",
-    "QI_Gate"
-   ],
-   "policy_file": "C:\\QIH\\engine\\gate\\config\\gate.json",
-   "runbook": "C:\\QIH\\engine\\gate\\README.md",
-   "audit_record": "C:\\QIH\\shared\\documentation\\security\\QI_Public_Exposure_Hardening_2026-08-05.md",
-   "rule": "Any NEW internet-exposed service MUST be added to gate.json and routed through :9040. Never point a Cloudflare tunnel straight at an app port."
+  "shared_infrastructure": {
+    "database": "SQLite per project (maia.db, nexus.db, etc.) — no shared DB today. Future: federated or migrated to PostgreSQL.",
+    "llm_chain": "Maia owns primary chain. NEXUS owns evaluation. All projects should query NEXUS for LLM recommendations.",
+    "auth": "None today — all local/internal. Future: shared auth token when unified app is built.",
+    "messaging": "No internal message bus today. Future: lightweight event bus (Redis Pub/Sub or simple SQLite queue).",
+    "cloudflare_tunnel": "Cloudflare Tunnel via STATIC NAMED tunnels on domain quiddityinnovations.com (purchased 2026-06-20). Hybrid design: one named tunnel PER PRODUCT for fault isolation (Maia bot+demo share qi-maia). Master map + tooling: C:\\QIH\\engine\tunnels\\ (tunnels.json, migrate_named_tunnels.py). Quick (*.trycloudflare.com) tunnels are DEPRECATED — do not create new ones.",
+    "nssm_services": {
+      "note": "NSSM binary standardized 2026-04-22 to C:\\QIH\\engine\\bin\\nssm.exe — all services use this. Service names use the QI_ prefix. Registry below reflects live audit on 2026-05-13.",
+      "registered": [
+        {
+          "name": "QI_MaiaBot",
+          "project": "maia",
+          "port": 8001,
+          "script": "C:\\APPS\\QI\\maia_server.py",
+          "internet_exposed": true
+        },
+        {
+          "name": "QI_MaiaTunnel",
+          "project": "maia",
+          "port": null,
+          "script": "cloudflared tunnel → :8001",
+          "internet_exposed": true
+        },
+        {
+          "name": "QI_MaiaDemoTunnel",
+          "project": "maia",
+          "port": null,
+          "script": "cloudflared tunnel → :7860",
+          "internet_exposed": true,
+          "start_type": "manual"
+        },
+        {
+          "name": "QI_MaiaGradio",
+          "project": "maia",
+          "port": 7860,
+          "script": "C:\\APPS\\QI\\maia_gradio.py",
+          "internet_exposed": false,
+          "added": "2026-05-09"
+        },
+        {
+          "name": "QI_NayaBot",
+          "project": "naya",
+          "port": 8002,
+          "script": "C:\\APPS\\NAYA\\naya_server.py (also starts FileHQ on 8200)",
+          "internet_exposed": false
+        },
+        {
+          "name": "QI_NayaGradio",
+          "project": "naya",
+          "port": 7861,
+          "script": "C:\\APPS\\NAYA\\naya_gradio.py",
+          "internet_exposed": false,
+          "depends_on": "QI_NayaBot",
+          "notes": "Stdout/Stderr paths added 2026-05-13 (were empty)"
+        },
+        {
+          "name": "QI_NEXUS",
+          "project": "nexus",
+          "port": 8010,
+          "script": "C:\\APPS\\NEXUS\\main.py",
+          "internet_exposed": false
+        },
+        {
+          "name": "QI_Dashboard",
+          "project": "qi_hive",
+          "port": 8600,
+          "script": "C:\\QIH\\engine\\hive\\dashboard\\server.py",
+          "internet_exposed": false,
+          "notes": "Log paths repointed 2026-05-13 from C:\\UNIVERSAL\\dashboard\\LOGS to C:\\QIH\\engine\\hive\\dashboard\\LOGS"
+        },
+        {
+          "name": "QI_DashboardTunnel",
+          "project": "qi_hive",
+          "port": null,
+          "script": "C:\\QIH\\engine\\hive\\tunnel\\tunnel_manager.py (cloudflared → :8600)",
+          "internet_exposed": true
+        },
+        {
+          "name": "QI_BrainAPI",
+          "project": "qi_brain",
+          "port": 9011,
+          "script": "C:\\QIH\\engine\\brain\\api.py",
+          "internet_exposed": false
+        },
+        {
+          "name": "QI_Elevate",
+          "project": "qi_hive",
+          "port": null,
+          "script": "C:\\QIH\\engine\\common\\* (elevation broker)",
+          "internet_exposed": false,
+          "registered": "2026-05-13"
+        },
+        {
+          "name": "QI_HiveIngest",
+          "project": "qi_hive",
+          "port": null,
+          "script": "C:\\QIH\\engine\\hive\\ingest\\* (ingestion worker)",
+          "internet_exposed": false,
+          "registered": "2026-05-13"
+        },
+        {
+          "name": "QI_KazeConfigAPI",
+          "project": "openclaw",
+          "port": 8401,
+          "script": "C:\\APPS\\OC\\repo\\scripts\\kaze\\kaze-config-api.py",
+          "internet_exposed": false,
+          "registered": "2026-05-13"
+        },
+        {
+          "name": "OC-Keepalive-Service",
+          "project": "openclaw",
+          "port": null,
+          "script": "C:\\APPS\\OC\\tools\\oc-keepalive-daemon.py",
+          "internet_exposed": false,
+          "notes": "Pre-dates QI_ naming convention — not renamed since it's OpenClaw-internal"
+        },
+        {
+          "name": "QI_TubeScout",
+          "project": "tubescout",
+          "port": 8503,
+          "script": "C:\\APPS\\TUBESCOUT (uvicorn api.main:app → :8503)",
+          "internet_exposed": false,
+          "registered": "2026-06-18",
+          "notes": "Reinstalled 2026-06-18 — AppDirectory corrected to C:\\APPS\\TUBESCOUT (was C:\\Program Files\\Python311, which broke api.main import and left the service PAUSED). Startup VBS (QI_TubeScout_Server.vbs) disabled to stop dual-server on :8503."
+        },
+        {
+          "name": "QI_TubeScoutTunnel",
+          "project": "tubescout",
+          "port": null,
+          "script": "cloudflared tunnel → :8503",
+          "internet_exposed": true,
+          "start_type": "auto",
+          "registered": "2026-06-18",
+          "notes": "AppStdout/AppStderr set to C:\\APPS\\TUBESCOUT\\data\\logs\\tunnel.log so the Hive dashboard can scrape the ephemeral public URL."
+        },
+        {
+          "name": "QI_Caddy",
+          "project": "qi_hive",
+          "port": "80/443",
+          "script": "C:\\QIH\\engine\\bin\\caddy.exe run --config C:\\QIH\\engine\\proxy\\Caddyfile",
+          "internet_exposed": false,
+          "start_type": "auto",
+          "registered": "2026-06-23",
+          "notes": "Local reverse proxy. One qi.local front door for all QI apps (subdomain routing, local HTTPS via Caddy internal CA). LAN-only — public exposure still handled by Cloudflare named tunnels. AppDirectory C:\\QIH\\engine\\proxy, log C:\\QIH\\logs\\qi_caddy.log. Config: C:\\QIH\\engine\\proxy\\Caddyfile."
+        }
+      ],
+      "naming_rule": "New services: QI_<Project><Role> — e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
+      "safety_rules": [
+        "NEVER kill a port without checking which project owns it — use qi_registry.json",
+        "NEVER expose Naya, NEXUS, or OC via Cloudflare tunnel — Maia ONLY",
+        "All services share the same Python (C:\\Program Files\\Python311\\python.exe) — a broken pip install affects ALL projects",
+        "Stopping MaiaBot kills LINE/Telegram webhooks — external users lose service immediately",
+        "NayaBot auto-starts FileHQ engine on port 8200 — stopping Naya also stops FileHQ",
+        "NSSM auto-restarts failed services — killing a port may trigger a restart loop",
+        "Before any port change: check ALL services in this registry, not just the current project"
+      ]
+    },
+    "qi_brain": "C:\\QIH\\data\\qi_brain.db — shared knowledge DB (backbone tier, :9011)",
+    "static_tunnels": {
+      "domain": "quiddityinnovations.com (primary), quiddam.com (Maia Quiddam)",
+      "registrar_dns": "Cloudflare",
+      "design": "hybrid: one named tunnel per product, fault-isolated",
+      "tooling": "C:\\QIH\\engine\tunnels\\",
+      "source_of_truth": "C:\\QIH\\engine\tunnels\tunnels.json",
+      "map": {
+        "maia.quiddityinnovations.com": "qi-maia → :8001 (QI_MaiaTunnel)",
+        "maia-demo.quiddityinnovations.com": "qi-maia → :7860",
+        "naya.quiddityinnovations.com": "qi-naya → :7861 (QI_NayaTunnel)",
+        "nexus.quiddityinnovations.com": "qi-nexus → :7880 (QI_NEXUSTunnel)",
+        "hive.quiddityinnovations.com": "qi-hive → :8600 (QI_DashboardTunnel)",
+        "autopdf.quiddityinnovations.com": "qi-autopdf → :6969 (QI_AutoPDFTunnel)",
+        "cognibase.quiddityinnovations.com": "qi-cognibase → :8650 (QI_CogniBaseTunnel)",
+        "mapsnap.quiddityinnovations.com": "qi-mapsnap → :9876 (QI_MapSnapTunnel)",
+        "lottery.quiddityinnovations.com": "qi-lotterywiz → :8777 (QI_LotteryWizTunnel)",
+        "cypher.quiddityinnovations.com": "qi-cypherminer → :7842 (QI_CypherMinerTunnel)",
+        "kaze.quiddityinnovations.com": "qi-kaze → :18800 (QI_KazeNewsTunnel)",
+        "tubescout.quiddityinnovations.com": "qi-tubescout → :8503 (QI_TubeScoutTunnel)",
+        "worldcup.quiddityinnovations.com": "qi-gamez → :8710 (QI_GamezTunnel) — WC2026 tool; renamed from gamez 2026-06-26, gamez hostname reserved for future hub",
+        "quiddam.com": "qi-mq → :7840 (QI_MQTunnel) — apex public site / combined feed",
+        "api.quiddam.com": "qi-mq → :8500 — Meta FB/IG/WhatsApp webhooks",
+        "dev.quiddam.com": "qi-mq → :7849 — RESERVED placeholder (Maia Quiddam dev)",
+        "maia.quiddam.com": "qi-mq → :8599 — RESERVED placeholder (Maia-on-Quiddam future)",
+        "connector.quiddityinnovations.com": "qi-connector → :9030 (QI_ConnectorTunnel) — remote MCP connector for Claude (bearer-token)"
+      },
+      "domains": [
+        "quiddityinnovations.com",
+        "quiddam.com"
+      ]
+    },
+    "aws": {
+      "account_id": "103140669477",
+      "region": "us-east-1",
+      "iam_cli_user": "qi-claude-cli",
+      "resources": {
+        "lambda": {
+          "qi-maia-webhook": {
+            "purpose": "LINE webhook front door for Maia (signature verify + enqueue)",
+            "function_url": "https://bq6r2rxvueooou5wz6dq4ok7ry0toncw.lambda-url.us-east-1.on.aws/"
+          }
+        },
+        "sqs": {
+          "qi-maia-events.fifo": {
+            "purpose": "Durable LINE event queue, 4-day retention, drained by QI_MaiaQueueDrain"
+          }
+        },
+        "ssm_parameters": [
+          "/qi/maia/line_channel_secret"
+        ],
+        "iam_roles": [
+          "qi-maia-webhook-role"
+        ],
+        "budgets": [
+          "QI-ZeroSpend-Guard"
+        ]
+      },
+      "naming_rule": "all AWS resources prefixed qi-",
+      "docs": "C:\\QIH\\shared\\documentation\\guides\\AWS_Free_Tier_Setup_Guide.md",
+      "registered": "2026-07-30"
+    },
+    "qi_gate": {
+      "name": "QI Gate",
+      "description": "Authentication wall in front of every internet-exposed QI application. All public Cloudflare tunnels terminate on the Caddy edge (:9040), which requires a signed-in session before proxying to the app.",
+      "path": "C:\\QIH\\engine\\gate",
+      "added": "2026-08-05",
+      "ports": {
+        "edge": 9040,
+        "auth": 9041
+      },
+      "services": [
+        "QI_Caddy",
+        "QI_Gate"
+      ],
+      "policy_file": "C:\\QIH\\engine\\gate\\config\\gate.json",
+      "runbook": "C:\\QIH\\engine\\gate\\README.md",
+      "audit_record": "C:\\QIH\\shared\\documentation\\security\\QI_Public_Exposure_Hardening_2026-08-05.md",
+      "rule": "Any NEW internet-exposed service MUST be added to gate.json and routed through :9040. Never point a Cloudflare tunnel straight at an app port."
+    }
   }
- }
 }
