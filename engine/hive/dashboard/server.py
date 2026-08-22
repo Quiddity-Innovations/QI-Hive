@@ -742,15 +742,12 @@ QI_ACCENT_CSS = """
 
 QI_SKIN_CSS = """
     /* ══ QI skins: Museum (dark) / Manuscript (light) ══════════════════════
-       Added 2026-08-22. The five older themes are Bootstrap's stock greys with
-       one hue swapped; they read as a bootstrap admin template because that is
-       what they are. These two restate the whole palette instead — a warm ink
-       on a deep indigo or a parchment ground, gold hairlines instead of grey
-       borders, and a serif for display type.
-
-       The palette is lifted from the World Mythologies site
-       (C:\\APPS\\Mythologies\\site\\css\\style.css), which is the reference Renne
-       pointed at, so the Plex and its host now share one visual language.
+       Added 2026-08-22, retuned the same day against the measured values in
+       C:\\APPS\\Mythologies\\site\\css\\style.css rather than an approximation
+       of them. The five older themes are Bootstrap's stock greys with one hue
+       swapped; these two restate the whole palette — warm ink on a deep indigo
+       or a parchment ground, gold hairlines instead of grey borders, a serif
+       for display type, and pill geometry throughout.
 
        Everything is expressed as Bootstrap and AdminLTE custom properties, so
        components inherit it without per-component overrides. */
@@ -758,6 +755,11 @@ QI_SKIN_CSS = """
     html[data-qi-skin] {
       --qi-serif: "Cormorant Garamond", "Palatino Linotype", Palatino, Georgia, serif;
       --qi-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      /* .hero is 22px and .pantheon-card 18px; the dashboard is denser than the
+         hub, so it takes the card value as its ceiling. */
+      --qi-radius: 18px;
+      --qi-radius-sm: 10px;
+      --qi-pill: 999px;
     }
 
     /* ── Museum — dark ── */
@@ -766,15 +768,21 @@ QI_SKIN_CSS = """
       --qi-canvas: radial-gradient(1400px 800px at 50% -12%, #1a1e30 0%, #12141f 45%, #0b0d15 100%);
       --qi-raised: #171a28;
       --qi-raised-2: #1d2133;
+      --qi-overlay: rgba(14, 16, 25, 0.82);
       --qi-ink: #eae4d6;
       --qi-ink-strong: #f6f1e5;
       --qi-ink-muted: #b1a993;
       --qi-gold: #d4af6a;
       --qi-gold-strong: #e8c987;
+      --qi-gold-line: rgba(212, 175, 106, 0.34);
       --qi-hairline: rgba(212, 175, 106, 0.16);
       --qi-hairline-strong: rgba(212, 175, 106, 0.32);
       --qi-tint: rgba(212, 175, 106, 0.07);
-      --qi-ink-on-gold: #14110a;
+      --qi-chip-bg: rgba(212, 175, 106, 0.10);
+      --qi-chip-ink: #dcc99a;
+      --qi-ink-on-gold: #17130a;
+      --qi-shadow-soft: 0 6px 24px rgba(0, 0, 0, 0.40);
+      --qi-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
 
       --bs-body-bg: #0e1019;         --bs-body-bg-rgb: 14,16,25;
       --bs-body-color: #eae4d6;      --bs-body-color-rgb: 234,228,214;
@@ -800,15 +808,24 @@ QI_SKIN_CSS = """
       --qi-canvas: radial-gradient(1300px 750px at 50% -12%, #faf5e8 0%, #f2ead9 55%, #e9dfc8 100%);
       --qi-raised: #faf5e9;
       --qi-raised-2: #f2eadb;
+      --qi-overlay: rgba(250, 245, 233, 0.88);
       --qi-ink: #35301f;
       --qi-ink-strong: #221c10;
       --qi-ink-muted: #6d6350;
       --qi-gold: #9a7a2e;
       --qi-gold-strong: #7c5f1d;
+      --qi-gold-line: rgba(154, 122, 46, 0.5);
       --qi-hairline: rgba(154, 122, 46, 0.24);
       --qi-hairline-strong: rgba(154, 122, 46, 0.45);
       --qi-tint: rgba(154, 122, 46, 0.07);
-      --qi-ink-on-gold: #fdf8ec;
+      --qi-chip-bg: rgba(154, 122, 46, 0.10);
+      --qi-chip-ink: #6d5313;
+      /* The reference sets .cta-primary ink to #17130a unconditionally — dark
+         on gold in BOTH themes. Cream on the mid-gold #9a7a2e is only 3.8:1;
+         the dark ink is 4.6:1 and passes AA for body text. */
+      --qi-ink-on-gold: #17130a;
+      --qi-shadow-soft: 0 5px 18px rgba(96, 78, 42, 0.16);
+      --qi-shadow: 0 16px 40px rgba(96, 78, 42, 0.22);
 
       --bs-body-bg: #f2ead9;         --bs-body-bg-rgb: 242,234,217;
       --bs-body-color: #35301f;      --bs-body-color-rgb: 53,48,31;
@@ -828,9 +845,11 @@ QI_SKIN_CSS = """
       color-scheme: light;
     }
 
-    /* ── Shared skin treatment ── */
+    /* ── Ground ── */
     html[data-qi-skin] body {
       font-family: var(--qi-sans);
+      font-size: 15px;
+      line-height: 1.55;
       background-color: var(--qi-bg) !important;
       background-image: var(--qi-canvas);
       background-attachment: fixed;
@@ -842,46 +861,56 @@ QI_SKIN_CSS = """
     html[data-qi-skin] .app-content-header,
     html[data-qi-skin] .app-wrapper { background: transparent !important; }
 
+    /* ── Display type ── */
     html[data-qi-skin] h1, html[data-qi-skin] h2, html[data-qi-skin] h3,
-    html[data-qi-skin] h4, html[data-qi-skin] h5, html[data-qi-skin] h6,
-    html[data-qi-skin] .card-title,
-    html[data-qi-skin] .app-content-header .breadcrumb + h3 {
+    html[data-qi-skin] h4, html[data-qi-skin] h5, html[data-qi-skin] h6 {
       font-family: var(--qi-serif);
       font-weight: 600;
-      letter-spacing: 0.004em;
+      letter-spacing: 0.01em;
+      line-height: 1.14;
       color: var(--qi-ink-strong);
     }
-    html[data-qi-skin] h1 { font-size: 1.95rem; }
-    html[data-qi-skin] h3 { font-size: 1.42rem; }
+    html[data-qi-skin] h1 { font-size: 2.3rem; }
+    html[data-qi-skin] h2 { font-size: 1.85rem; }
+    html[data-qi-skin] h3 { font-size: 1.5rem; }
+    /* The page-title strip is the dashboard's nearest thing to a hero. */
+    html[data-qi-skin] .app-content-header h3 { font-size: 1.72rem; }
 
-    /* Card headers become a quiet letterspaced rule rather than a grey bar —
-       the single change that does most to stop this reading as a template. */
+    /* ── Panels ──
+       .pantheon-card: 18px radius, hairline border, soft shadow. The first pass
+       zeroed the shadow; the reference keeps it, and without it the panels sit
+       flat on the ground instead of above it. */
     html[data-qi-skin] .card {
       background-color: var(--qi-raised);
       border: 1px solid var(--qi-hairline);
-      border-radius: 10px;
-      box-shadow: none;
+      border-radius: var(--qi-radius);
+      box-shadow: var(--qi-shadow-soft);
     }
+    /* .coll-group-h — the shelf header: serif, uppercase, gold, hairline rule. */
     html[data-qi-skin] .card-header {
       background: transparent;
-      border-bottom: 1px solid var(--qi-hairline);
-      color: var(--qi-gold);
-      font-size: 0.74rem;
+      border-bottom: 1px solid var(--qi-gold-line);
+      font-family: var(--qi-serif);
+      color: var(--qi-gold-strong);
+      font-size: 1rem;
       font-weight: 600;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding-top: 0.72rem;
-      padding-bottom: 0.72rem;
+      padding-top: 0.8rem;
+      padding-bottom: 0.7rem;
     }
     html[data-qi-skin] .card-header .card-title {
-      font-family: var(--qi-sans);
-      font-size: 0.74rem;
-      letter-spacing: 0.1em;
+      font-family: var(--qi-serif);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--qi-gold);
+      color: var(--qi-gold-strong);
     }
+    html[data-qi-skin] .card-body > .card-title { font-family: var(--qi-serif); text-transform: none; letter-spacing: 0.01em; }
     html[data-qi-skin] .card-footer { background: transparent; border-top: 1px solid var(--qi-hairline); }
 
+    /* ── Chrome ── */
     html[data-qi-skin] .app-sidebar {
       background-color: var(--qi-raised) !important;
       border-right: 1px solid var(--qi-hairline);
@@ -908,18 +937,24 @@ QI_SKIN_CSS = """
     }
     html[data-qi-skin] .app-sidebar .nav-link.active .nav-icon { color: var(--qi-gold) !important; }
     html[data-qi-skin] .sidebar-brand {
-      border-bottom: 1px solid var(--qi-hairline);
+      border-bottom: 1px solid var(--qi-gold-line);
       background: transparent;
     }
+    /* .brand-title / .brand-sub */
     html[data-qi-skin] .brand-text {
       font-family: var(--qi-serif);
+      font-size: 1.28rem;
       font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--qi-gold-strong);
+      letter-spacing: 0.04em;
+      color: var(--qi-ink-strong);
     }
+    html[data-qi-skin] .brand-image,
+    html[data-qi-skin] .sidebar-brand .nav-icon { color: var(--qi-gold); }
 
+    /* .topbar — translucent with a blur, not an opaque bar. */
     html[data-qi-skin] .app-header {
-      background-color: var(--qi-raised) !important;
+      background-color: var(--qi-overlay) !important;
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--qi-hairline);
       box-shadow: none;
     }
@@ -933,6 +968,7 @@ QI_SKIN_CSS = """
       box-shadow: 0 1px 0 var(--qi-hairline);
     }
 
+    /* ── Tables ── */
     html[data-qi-skin] .table {
       --bs-table-bg: transparent;
       --bs-table-color: var(--qi-ink);
@@ -942,15 +978,18 @@ QI_SKIN_CSS = """
       --bs-table-active-bg: var(--qi-tint);
       --bs-table-active-color: var(--qi-ink-strong);
     }
+    /* .browse-h — the wide-tracked section label. */
     html[data-qi-skin] .table > thead th {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      letter-spacing: 0.09em;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: var(--qi-ink-muted);
-      border-bottom-color: var(--qi-hairline-strong);
+      color: var(--qi-gold);
+      border-bottom-color: var(--qi-gold-line);
     }
 
+    /* ── Controls — pill geometry throughout (.solid-btn / .ghost-btn / .tab) ── */
+    html[data-qi-skin] .btn { border-radius: var(--qi-pill); }
     html[data-qi-skin] .btn-primary {
       --bs-btn-bg: var(--qi-gold);        --bs-btn-border-color: var(--qi-gold);
       --bs-btn-color: var(--qi-ink-on-gold);
@@ -962,18 +1001,26 @@ QI_SKIN_CSS = """
       --bs-btn-active-color: var(--qi-ink-on-gold);
       --bs-btn-disabled-bg: var(--qi-gold); --bs-btn-disabled-border-color: var(--qi-gold);
       --bs-btn-disabled-color: var(--qi-ink-on-gold);
+      font-weight: 600;
     }
+    /* .ghost-btn rests in MUTED ink and only warms to gold on hover — gold at
+       rest on every secondary button is what made the first pass look busy. */
     html[data-qi-skin] .btn-outline-primary,
     html[data-qi-skin] .btn-outline-secondary {
-      --bs-btn-color: var(--qi-gold);
-      --bs-btn-border-color: var(--qi-hairline-strong);
-      --bs-btn-hover-bg: var(--qi-tint);
-      --bs-btn-hover-border-color: var(--qi-gold);
+      --bs-btn-color: var(--qi-ink-muted);
+      --bs-btn-bg: var(--qi-raised-2);
+      --bs-btn-border-color: var(--qi-hairline);
+      --bs-btn-hover-bg: var(--qi-raised-2);
+      --bs-btn-hover-border-color: var(--qi-gold-line);
       --bs-btn-hover-color: var(--qi-gold-strong);
       --bs-btn-active-bg: var(--qi-tint);
       --bs-btn-active-border-color: var(--qi-gold);
       --bs-btn-active-color: var(--qi-gold-strong);
     }
+    html[data-qi-skin] .btn-group > .btn:not(:first-child) { border-top-left-radius: var(--qi-pill); border-bottom-left-radius: var(--qi-pill); }
+    html[data-qi-skin] .btn-group > .btn:not(:last-child)  { border-top-right-radius: var(--qi-pill); border-bottom-right-radius: var(--qi-pill); }
+    html[data-qi-skin] .btn-group { gap: 4px; }
+
     html[data-qi-skin] .text-primary   { color: var(--qi-gold) !important; }
     html[data-qi-skin] .bg-primary     { background-color: var(--qi-gold) !important; color: var(--qi-ink-on-gold) !important; }
     html[data-qi-skin] .border-primary { border-color: var(--qi-gold) !important; }
@@ -989,9 +1036,27 @@ QI_SKIN_CSS = """
     }
     html[data-qi-skin] .text-bg-primary a,
     html[data-qi-skin] .badge.bg-primary a { color: var(--qi-ink-on-gold) !important; }
+
+    /* .chip — pill, tinted, gold-hairlined, letterspaced. */
+    html[data-qi-skin] .badge {
+      border-radius: var(--qi-pill);
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      padding: 0.32em 0.72em;
+    }
+    html[data-qi-skin] .badge.text-bg-secondary,
+    html[data-qi-skin] .badge.bg-secondary {
+      background-color: var(--qi-chip-bg) !important;
+      color: var(--qi-chip-ink) !important;
+      border: 1px solid var(--qi-gold-line);
+    }
+
+    /* .tab */
+    html[data-qi-skin] .nav-pills .nav-link { border-radius: var(--qi-pill); }
     html[data-qi-skin] .nav-pills .nav-link.active {
-      background-color: var(--qi-tint); color: var(--qi-gold-strong);
-      box-shadow: inset 0 -2px 0 var(--qi-gold);
+      background-color: var(--qi-chip-bg);
+      color: var(--qi-gold-strong);
+      border: 1px solid var(--qi-gold-line);
     }
     html[data-qi-skin] .nav-tabs { border-bottom-color: var(--qi-hairline); }
     html[data-qi-skin] .nav-tabs .nav-link.active {
@@ -999,6 +1064,9 @@ QI_SKIN_CSS = """
       background: transparent;
       border-color: var(--qi-hairline) var(--qi-hairline) transparent;
     }
+
+    /* ── Forms — softened, but not pills; a pill text field reads as a search
+       box and most of these are not. ── */
     html[data-qi-skin] .form-check-input:checked {
       background-color: var(--qi-gold); border-color: var(--qi-gold);
     }
@@ -1009,6 +1077,7 @@ QI_SKIN_CSS = """
     html[data-qi-skin] .form-select {
       background-color: var(--qi-raised-2);
       border-color: var(--qi-hairline);
+      border-radius: var(--qi-radius-sm);
       color: var(--qi-ink);
     }
     html[data-qi-skin] .form-control:focus,
@@ -1016,21 +1085,39 @@ QI_SKIN_CSS = """
       border-color: var(--qi-gold);
       box-shadow: 0 0 0 0.2rem var(--bs-focus-ring-color);
     }
+    html[data-qi-skin] .form-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--qi-ink-muted);
+    }
+    html[data-qi-skin] .input-group > .form-control { border-radius: var(--qi-radius-sm) 0 0 var(--qi-radius-sm); }
+    html[data-qi-skin] .input-group > .btn:last-child { border-radius: 0 var(--qi-pill) var(--qi-pill) 0; }
+
+    /* ── Surfaces ── */
     html[data-qi-skin] .dropdown-menu {
       background-color: var(--qi-raised);
       border: 1px solid var(--qi-hairline);
+      border-radius: var(--qi-radius-sm);
+      box-shadow: var(--qi-shadow);
       --bs-dropdown-link-hover-bg: var(--qi-tint);
       --bs-dropdown-link-active-bg: var(--qi-tint);
       --bs-dropdown-link-active-color: var(--qi-gold-strong);
     }
     html[data-qi-skin] .modal-content,
-    html[data-qi-skin] .offcanvas,
+    html[data-qi-skin] .offcanvas {
+      background-color: var(--qi-raised);
+      border-color: var(--qi-hairline);
+      border-radius: var(--qi-radius);
+      color: var(--qi-ink);
+    }
     html[data-qi-skin] .list-group-item {
       background-color: var(--qi-raised);
       border-color: var(--qi-hairline);
       color: var(--qi-ink);
     }
-    html[data-qi-skin] .progress { background-color: var(--qi-raised-2); }
+    html[data-qi-skin] .progress { background-color: var(--qi-raised-2); border-radius: var(--qi-pill); }
     html[data-qi-skin] .progress-bar { background-color: var(--qi-gold); }
     html[data-qi-skin] .page-link { color: var(--qi-gold); background: transparent; border-color: var(--qi-hairline); }
     html[data-qi-skin] hr,
@@ -1038,19 +1125,14 @@ QI_SKIN_CSS = """
     html[data-qi-skin] code, html[data-qi-skin] kbd, html[data-qi-skin] pre {
       font-family: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
     }
-    html[data-qi-skin] .badge.text-bg-secondary {
-      background-color: var(--qi-raised-2) !important;
-      color: var(--qi-ink-muted) !important;
-      border: 1px solid var(--qi-hairline);
-    }
     /* The small-box KPI tiles ship as saturated flat blocks. Mute them to the
        card surface and let the status colour survive as a left rule only. */
     html[data-qi-skin] .small-box {
       background: var(--qi-raised) !important;
       border: 1px solid var(--qi-hairline);
-      border-radius: 10px;
+      border-radius: var(--qi-radius);
       color: var(--qi-ink) !important;
-      box-shadow: none;
+      box-shadow: var(--qi-shadow-soft);
     }
     html[data-qi-skin] .small-box .inner h3 { font-family: var(--qi-serif); color: var(--qi-ink-strong); }
     html[data-qi-skin] .small-box a,
