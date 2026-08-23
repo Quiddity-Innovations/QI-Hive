@@ -15,6 +15,7 @@ Called by both hooks:
   - user_prompt_hook.py    (UserPromptSubmit — loads per-project context)
 """
 import sys, os, json
+import re
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 import urllib.request
@@ -148,11 +149,21 @@ for pid, cfg in PROJECTS.items():
 # ── Public helpers ─────────────────────────────────────────────────────────────
 
 def detect_project(message: str) -> str | None:
-    """Return project_id if a known keyword appears in message, else None."""
+    """Return project_id if a known keyword appears in message, else None.
+
+    Word-boundary matched since 2026-08-22. Plain substring matching made the
+    ordinary English word "main" match Maia's "mai" keyword, so any prompt
+    containing main / remaining / domain / maintain / email injected a full
+    Maia briefing (~1.4k tokens) into an unrelated project's session. Same
+    bug class: "brain" -> universal, "claw" -> openclaw.
+
+    Lookarounds are used rather than \\b so that multi-word keywords such as
+    "line bot" and "qi brain" keep matching.
+    """
     msg = message.lower()
     # Sort by keyword length descending so "qi brain" beats "brain"
     for kw in sorted(KEYWORD_MAP, key=len, reverse=True):
-        if kw in msg:
+        if re.search(r'(?<!\w)' + re.escape(kw) + r'(?!\w)', msg):
             return KEYWORD_MAP[kw]
     return None
 
@@ -342,17 +353,72 @@ def build_briefing(project_id: str) -> str:
     return "\n".join(lines)
 
 
+def _native_memory_dir():
+    """Return this cwd's own Claude Code memory dir, or None.
+
+    Claude Code derives a project slug from the working directory
+    (C:\\CLAUDE -> C--CLAUDE) and auto-loads that store's MEMORY.md.
+    Used to avoid double-injecting an index Claude already has.
+
+    Slug-first, then fall back to known aliases. Several projects' memory
+    stores are named for an OLDER working directory than the code now lives
+    in — Naya runs from C:\\APPS\\NAYA but its store is C--NAYA (from C:\\NAYA),
+    and Maia runs from C:\\APPS\\QI but its store is C--QI. Without the alias
+    pass those sessions fell through to the legacy global store and were
+    shown MAIA's memory index regardless of which project they were in.
+    """
+    PROJECTS_ROOT = r"C:\Users\renne\.claude\projects"
+
+    def _store(slug):
+        d = os.path.join(PROJECTS_ROOT, slug, "memory")
+        return d if os.path.isdir(d) else None
+
+    try:
+        cwd = os.getcwd()
+        slug = cwd.replace(':', '-').replace('\\', '-').replace('/', '-')
+        hit = _store(slug)
+        if hit:
+            return hit
+
+        # Alias pass: C:\APPS\NAYA -> C--NAYA, C:\APPS\QI -> C--QI, etc.
+        # Try progressively shorter tails of the path, longest first, so a
+        # more specific store always wins over a shorter one.
+        parts = [p for p in re.split(r'[\\/]+', cwd) if p and ':' not in p]
+        drive = cwd.split(':', 1)[0]
+        for i in range(len(parts)):
+            tail = parts[i:]
+            if not tail:
+                continue
+            hit = _store(f"{drive}--" + "-".join(tail))
+            if hit:
+                return hit
+        return None
+    except Exception:
+        return None
+
+
 def build_global_briefing() -> str:
     """Minimal ecosystem-level briefing for SessionStart (no project yet known)."""
     lines = ["[QI Ecosystem — Session Start]"]
 
-    # Read MEMORY.md index
-    mem_index = os.path.join(MEM_DIR, "MEMORY.md")
-    try:
-        with open(mem_index, encoding='utf-8', errors='replace') as f:
-            lines.append("\n=== MEMORY INDEX ===\n" + f.read().strip())
-    except Exception:
-        pass
+    # Read MEMORY.md index — ONLY when this project has no native Claude
+    # memory store. Added 2026-08-22: Claude Code already injects the current
+    # project's MEMORY.md automatically, so emitting the legacy Downloads-era
+    # index here duplicated it (~1.8k tokens/session) AND showed the WRONG
+    # project's memory in every non-Maia session.
+    _native = _native_memory_dir()
+    if _native is None:
+        mem_index = os.path.join(MEM_DIR, "MEMORY.md")
+        try:
+            with open(mem_index, encoding='utf-8', errors='replace') as f:
+                lines.append("\n=== MEMORY INDEX (legacy global store) ===\n" + f.read().strip())
+        except Exception:
+            pass
+    else:
+        lines.append(
+            "\n=== MEMORY INDEX ===\n"
+            "Loaded natively by Claude Code from this project's own store: " + _native
+        )
 
     # Read user profile
     user_mem = os.path.join(MEM_DIR, "user_renne.md")

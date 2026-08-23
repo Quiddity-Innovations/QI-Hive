@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-22 00:34:12 (nightly reconciler)_
+_Auto-generated: 2026-08-23 00:33:46 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 442 | 2026-08-21 23:23:04 |
+| claude_manager | Operational | active | 559 | 2026-08-22 20:13:01 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -19,19 +19,20 @@ _Auto-generated: 2026-08-22 00:34:12 (nightly reconciler)_
 | lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
 | m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production | active | 23 | 2026-08-13 21:00:07 |
-| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 182 | 2026-08-17 15:08:52 |
+| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 185 | 2026-08-22 17:49:18 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
-| naya | Phase 3 — bot + UI live | paused | 5 | 2026-06-23 16:03:19 |
+| naya | Phase 4 â€” standalone application | paused | 6 | 2026-08-22 21:39:20 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
+| noosorbis | v0.5.0 â€” complete; owner signed off | complete | 5 | 2026-08-22 21:45:01 |
 | openclaw | Phase 2 — agent expansion | active | 65 | 2026-07-31 21:58:24 |
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 206 | 2026-08-21 00:35:01 |
+| qi_hive | Dashboard UX polish | active | 215 | 2026-08-22 18:46:00 |
 | retirementanalyzer | v1 - engine + API + UI live | active | 7 | 2026-07-03 02:52:18 |
-| synvox | Phase 4 â€” evidence layer and trust | active | 61 | 2026-08-21 18:02:01 |
+| synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 70 | 2026-08-22 21:17:44 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
-| universal | Migration into C:\QIH | merged | 24 | 2026-08-20 16:19:35 |
+| universal | Migration into C:\QIH | merged | 25 | 2026-08-22 17:38:23 |
 
 ## Per-project
 
@@ -148,16 +149,36 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** Resume when Renne picks the project back up.
 
 ### naya
-- **Phase:** Phase 3 — bot + UI live
+- **Phase:** Phase 4 â€” standalone application
 - **Status:** paused
-- **Summary:** Bot :8002 + Gradio :7861 + tunnel, LAN-only, Telegram long-poll. Last code work 2026-05-15 (BP overrides, parse fix).  Status set to paused per owner (Renne) 2026-06-18.
-- **Next:** FileHQ Phase 2 code absorption (pending Renne approval)
+- **Summary:** Naya is now a complete independent application (2026-08-22). Zero code or data reach-in to C:\APPS\QI: Maia's maia_db/maia_lang/maia_context vendored in-tree as naya_db_core/naya_lang/naya_context (deliberate fork), all 8 sys.path injections removed, peer-bridge relocated to C:\QIH\shared\bridge + C:\QIH\secrets. Fixed a real bug where naya_gradio.py was reading Maia's maia.db. Bot :8002 and Gradio :7861 verified HTTP 200 after restart via the QI_Elevate broker; error log empty.
+
+Drive scanning is paused per owner: \Naya\scan_for_duplicates (daily 02:00 over C:/D:/E:/F:) disabled, and usb_auto_scan + usb_scan_at_night set false. Telegram 409 root-caused â€” a webhook is registered, so getUpdates 409s by design; poller backed off from every-15s to once daily at 07:00, and 166.9 MB of log spam cleared.
+
+Status remains 'paused' (owner's standing decision from 2026-06-18) â€” this session was structural cleanup, not feature work.
+- **Next:** 1) Decide Telegram delivery path â€” webhook (working) or poller (now a once-daily no-op); running both is what caused the 409 storm. 2) Review naya_brain.db at 4.07 GB now that duplicate scans are paused. 3) Naya's four standard docs (Implementation Log, Meeting Minutes, Version History, Master Status Report) are still missing. 4) Optional: point Maia at C:\QIH\shared\bridge as well, once its code freeze lifts.
 
 ### nexus
 - **Phase:** Phase 2 — NSSM-supervised
 - **Status:** active
 - **Summary:** API :8010 + UI :7880 + tunnel live. 7 providers wired, Scout digest live.
 - **Next:** Fix chain routing; Judge/Bench Phase 2
+
+### noosorbis
+- **Phase:** v0.5.0 â€” complete; owner signed off
+- **Status:** complete
+- **Summary:** Live at https://noosorbis.quiddityinnovations.com, commits e6a98da â†’ 66eee99, working tree clean, 203 tests green. Renne has confirmed he is happy with the final product and closed the session.
+
+Front page rebuilt around the mark: no masthead on "/", one Ask-the-Librarian field, four dismissible panels with a restore bar, a Try shelf randomised each load from Wikipedia's featured feed, add-to-collection confirmation, and a mission statement set as a centred dedication spanning the page container.
+
+Librarian has three modes across three engines, with provenance carried on every backend event and painted as a distinct colour, badge and footnote. "In the library" (local Ollama over Wikipedia passages) and "Its own knowledge" (Gemini 3.7 Flash, free tier) are live. "The whole internet" is built and tested but dark pending an EXA_API_KEY â€” it now runs on a search provider plus the local model rather than Google grounding, so it needs no billing and keeps the reader's question on the machine.
+
+"What you asked" keeps every answer in the browser with the mode that produced it, and compares answers to the same question side by side â€” the site's central argument made visible rather than asserted.
+
+secrets/ is hardened: one editable file, git ignores the folder wholesale, key lookup falls back across it. No billing account exists on any provider, so the public site cannot incur charges.
+- **Next:** Two optional jobs, neither blocking and both Renne's to do. (1) Add EXA_API_KEY to C:\APPS\NoosOrbis\secrets\noosorbis.env and restart to light up "The whole internet" â€” free, no card, from https://dashboard.exa.ai; the mode reports itself off until then rather than failing after someone types. (2) Rotate the Gemini key, which appeared in a chat transcript during setup; git history is verified clean so this is precaution, and Google auto-revokes keys it detects as leaked.
+
+No further development planned. If ever wanted: server-side answer history for cross-device comparison (deliberately browser-only today), diagrams from an article's own structured data rather than the disabled diffusion pipeline, deleting the three *_noosorbis_exception elevation-whitelist rules now the app runs from C:\APPS\NoosOrbis, and Cloudflare Access while gate mode is open.
 
 ### openclaw
 - **Phase:** Phase 2 — agent expansion
@@ -196,10 +217,16 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** Install QI_FidelityAnalyzer + QI_FidelityAnalyzerTunnel services; add PDF positions parsing; configurable target allocation in UI; first git commit + GitHub.
 
 ### synvox
-- **Phase:** Phase 4 â€” evidence layer and trust
+- **Phase:** Phase 4 â€” evidence layer / reality check; monetisation deferred
 - **Status:** active
-- **Summary:** Session 9 closed with 1094 passed / 0 failed and every gate green; the end-to-end study runs the full product graded, 3/3, 0 errored, in 105 seconds at $0. D1b is finished: all seven evidence adapters declare what kind of number they return, "text" exists as a fourth kind distinct from "did not say", and census and hackernews can derive a genuine change with refusals that keep it honest. D3 was found and closed in the same session â€” reality-check agreement now has to declare how reliable the agreeing source was, and the rubric carries a "medium" floor on the grade-A path. 34 new guards, all mutation-tested; two were caught passing for the wrong reason.
-- **Next:** D1c: GitHub is the last adapter that cannot support or contradict anything â€” its repo endpoint carries no history, and the fix needs a decision about which construct a GitHub number is evidence for before any call is written. Then wire the evidence layer into the end-to-end path, since reality_check comes back "absent" there and none of D1/D1b/D3 is exercised by the only check that runs the product. D2b (apply upstream patch 0005 or keep rule 1b) is small and still open.
+- **Summary:** Session 12 (continued). Owner deferred monetisation: SynVox charges nobody, it is an internal tool for Renne and Urcil, and only enough endpoint surface was to be reserved for a future pricing model. Done and closed â€” synvox/billing.py holds the contract with no implementation, four routes (GET /v1/billing/plans, /account, /usage, POST /v1/billing/subscribe) answer 501 capability_disabled, capability_flags.billing is False, and all four were verified live. Nothing had to be moved: SynVox never had customer-billing code, and the two things that wear the word "price" â€” the pre-run cost gate and the Van Westendorp/Gabor-Granger instruments â€” are not billing and are now asserted untouched. The hard part is recorded rather than solved: on the subscription lane SynVox cannot measure money at all, so billing.METERABLE marks runs/personas/inference-calls countable and provider cost and tokens not, so nobody designs a plan on a number that reads zero for subscription-lane customers.
+
+Acting on that led into /v1/capabilities, where three statements had been false for four sessions: the reality_check flag said the matcher was not built after D1..D6 built it, the honesty block asserted a FIXED reality-check status (wrong shape for a per-verdict outcome), and the note â€” rendered on two UI screens â€” told users grade A was unreachable until a layer that had already shipped. All three were pinned by two tests and a route-walk check, which is why nobody noticed. Fixed, and an over-broad guard that asserted on a whole file while claiming to be about evidence routes was narrowed.
+
+D6b then attempted a second coverage gap and closed none, on the evidence: GitHub release-download velocity (cumulative counts with no timestamps make "latest > previous" near-structural), Open Collective cancellations (updatedAt is dominated by the platform's own billing sweep â€” 40 of 146 in the 00:00 UTC hour, busiest minutes 00:03 on the 21st of five months), and share-shift measures (attention moving between products is not people moving). The generalisation is the deliverable: a count can be dominated by the system rather than the users it describes â€” three instances now â€” and the test is "would this number move if no user did anything?". The follow-up audit of every change producer found nothing else and is closed.
+
+Suite 1202 -> 1219 passed / 0 failed; reality_coverage unchanged at 2 of 6 (deliberately); every gate PASS; end-to-end study graded 3/3 in 105s at $0; 11/11 mutations caught.
+- **Next:** D6c: close a coverage gap or establish that none can be closed yet â€” read CLAUDE.md rule 2i first, three candidates are already measured and rejected and repeating them wastes the session. D1d: price_stance wants a `band` kind no source emits; decide on paper. NEW: audit the rest of /v1/capabilities for stale claims (three in one block were false for four sessions; capability_flags.web_ui reads False on an install serving a web UI). Also: surface a source's refusal rate, and settle what reality_check.sources means when a source produced only a refusal. Monetisation stays deferred â€” do not build plans, metering or payment; when it is time, read billing.py's docstring first, including its flag that "edition" reads like a price tier and is not one.
 
 ### tubescout
 - **Phase:** MVP + refinements complete

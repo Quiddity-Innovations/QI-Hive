@@ -1677,6 +1677,34 @@
       ],
       "repo": "https://github.com/Quiddity-Innovations/noosorbis",
       "repo_visibility": "private"
+    },
+    {
+      "id": "mythologies",
+      "name": "World Mythologies",
+      "description": "Static site mapping 37 world mythologies as relationship graphs. 1,498 figures, 2,969 relationships, 559 story cycles.",
+      "path": "C:\\APPS\\Mythologies",
+      "github": "https://github.com/rennesan/mythologies-map",
+      "status": "live",
+      "primary_language": "JavaScript (site), Python (pipeline)",
+      "ports": {},
+      "family_tier": "product",
+      "family_notes": "Standalone public site. Shares no runtime with any other QI project - no port, no NSSM service, no database.",
+      "integrates_with": "",
+      "exposes_to_ecosystem": "A public reference site under the Quiddity brand.",
+      "consumes_from_ecosystem": "ComfyUI on 127.0.0.1:8740 for portrait rendering, and only on an explicit RENDER: trigger.",
+      "paths": {
+        "root": "C:\\APPS\\Mythologies",
+        "site": "C:\\APPS\\Mythologies\\site",
+        "pipeline": "C:\\APPS\\Mythologies\\packs",
+        "logs": "C:\\APPS\\Mythologies\\LOGS"
+      },
+      "type": "static_site",
+      "public_url": "https://mythology.quiddityinnovations.com",
+      "repos": [
+        "rennesan/mythologies-map",
+        "rennesan/mythologies-pipeline"
+      ],
+      "notes": "No ports and no service - deployed to Vercel from site/. Ship with: python packs/ship.py --deploy"
     }
   ],
   "family_taxonomy": {

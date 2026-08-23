@@ -1,0 +1,20 @@
+{
+  "global": null,
+  "chats": {
+    "-5190761961": {
+      "until": "2026-05-14T19:39:00-04:00",
+      "reason": "Alexandre said: Hattori, \nEu perguntei para a Maia. Foi ela quem mencionou i",
+      "set_at": "2026-05-14T19:09:00-04:00"
+    },
+    "-5281125993": {
+      "until": "2026-05-15T16:51:12-04:00",
+      "reason": "Olga said: Consegui mudar para Olga",
+      "set_at": "2026-05-15T16:21:12-04:00"
+    },
+    "-1003942950097": {
+      "until": "2026-05-15T15:00:44-04:00",
+      "reason": "Renne said: Naya, stop saying BS!",
+      "set_at": "2026-05-15T14:30:44-04:00"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "_comment": "Chats where Tasuke and Maia (or future peer bots) both participate. When either bot replies in one of these, the bridge mirrors the message to the others via HTTP so they can see each other (Telegram does not deliver bot-to-bot messages).",
+  "chats": [
+    {
+      "chat_id": "-5190761961",
+      "name": "Maia & Amigos"
+    },
+    {
+      "chat_id": "-5281125993",
+      "name": "Maia & Family"
+    }
+  ],
+  "peers": [
+    {
+      "name": "Maia",
+      "bot_id": "8610731233",
+      "username": "@Maia_The_Assistant_Bot",
+      "first_name": "Maia",
+      "endpoint": "http://127.0.0.1:8001/maia/peer-bridge"
+    },
+    {
+      "name": "Tasuke",
+      "bot_id": "8271413034",
+      "username": "@hyosukebot",
+      "first_name": "Hattori Tasuke",
+      "endpoint": "http://127.0.0.1:18801/peer-bridge"
+    },
+    {
+      "name": "Naya",
+      "bot_id": "8667837858",
+      "username": "@Naya_qi_bot",
+      "first_name": "Naya",
+      "endpoint": "http://127.0.0.1:8002/webhook/peer-bridge"
+    },
+    {
+      "name": "Kaze",
+      "bot_id": "8760042185",
+      "username": "@KAZE_QI_BOT",
+      "first_name": "KAZE",
+      "endpoint": "http://127.0.0.1:18801/peer-bridge"
+    }
+  ]
+}
