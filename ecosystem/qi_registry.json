@@ -1395,7 +1395,10 @@
         "comfy_workflow_check",
         "comfy_run",
         "comfy_result",
-        "comfy_cancel"
+        "comfy_cancel",
+        "comfy_upload",
+        "comfy_free",
+        "comfy_vary"
       ],
       "engines": {
         "_note": "Verified working 2026-08-10. Engine selection + defaults live in D:\\AI\\workflows\\_video_backends.json.",

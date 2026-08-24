@@ -181,7 +181,7 @@ Local PDF toolkit: convert / split / extract / catalog. Self-contained — bundl
 - **GitHub:** TBD (no remote yet)
 
 ### ComfyUI (QI Media Engine) — `D:\AI` — *Cousin / shared GPU utility*
-The only sanctioned image and video generator on this machine. Driven conversationally by Claude through the `qi-comfy` MCP server, and usable directly in its own web UI. Registered 2026-08-10 (the id `comfyui` was already referenced by `voice_studio` before any record existed).
+The only sanctioned image and video generator on this machine. Driven conversationally by Claude through the `qi-comfy` MCP server (11 tools), and usable directly in its own web UI. Registered 2026-08-10 (the id `comfyui` was already referenced by `voice_studio` before any record existed).
 - **Ports:** :8740 API + web UI, loopback only. ⚠️ Inside Maia's 8100–8199 block — see the conflict note under Port Registry.
 - **Status:** Active. 14 workflows verified working 2026-08-10.
 - **Trigger discipline:** Claude generates **only** on an explicit `RENDER:` or `/comfy` message — never inferred from conversation. Rules in `D:\AI\CLAUDE.md`. SFW and NSFW both in scope; no real identifiable people, no minors.
