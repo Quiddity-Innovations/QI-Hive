@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-25T00:06:01",
-  "cutoff": "2026-08-23T00:00:00",
+  "generated_at": "2026-08-26T00:06:02",
+  "cutoff": "2026-08-24T00:00:00",
   "transcripts_scanned": 6,
-  "transcripts_skipped_old": 138,
+  "transcripts_skipped_old": 139,
   "transcripts_skipped_subagent": 102,
-  "brain_rows_in_window": 3,
+  "brain_rows_in_window": 16,
   "candidates": [
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-MediaStudio\\0a25bdab-37b5-42ec-97e3-ddadff5813ad.jsonl",
@@ -25,17 +25,42 @@
       "first_prompt": "I heard that there is a native comfyUI mcp. Check this out, evaluate based on what we are currently using for QI Media Studio and ComfyUI integration.",
       "last_prompt": "Fine.  I will start when I am done.",
       "project_id": "mediastudio",
-      "mtime": "2026-08-23T17:43:46",
-      "size_bytes": 545163,
+      "mtime": "2026-08-25T22:06:06",
+      "size_bytes": 545246,
       "likely_logged": false
+    },
+    {
+      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\e9f4c362-5832-42c9-be13-cec76941177a.jsonl",
+      "cwd": "C:\\APPS\\Retirement Analyzer",
+      "first_ts": "2026-08-26T02:06:29.589Z",
+      "last_ts": "2026-08-26T02:20:53.715Z",
+      "user_prompts": 2,
+      "assistant_replies": 113,
+      "files_touched": [
+        "C:\\APPS\\Retirement Analyzer\\CLAUDE.md",
+        "C:\\APPS\\Retirement Analyzer\\api\\main.py",
+        "C:\\APPS\\Retirement Analyzer\\shared\\plans.py",
+        "C:\\APPS\\Retirement Analyzer\\tests\\test_independence.py",
+        "C:\\APPS\\Retirement Analyzer\\tests\\test_plans.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\e9f4c362-5832-42c9-be13-cec76941177a\\scratchpad\\mk_summary.py"
+      ],
+      "first_prompt": "<command-message>loop</command-message>\n<command-name>/loop</command-name>\n<command-args>Read BUILD_PLAN.md and R9_INDEPENDENCE_PATCH.md in full before doing anything. Then read CLAUDE.md.\n\nRun the existing test suite first and tell me what",
+      "last_prompt": "# /loop — schedule a recurring or self-paced prompt\n\nParse the input below into `[interval] <prompt…>` and schedule it.\n\n## Parsing (in priority order)\n\n1. **Leading token**: if the first whitespace-delimited token matches `^\\d+[smhd]$` (e.",
+      "project_id": "retirementanalyzer",
+      "mtime": "2026-08-25T22:20:53",
+      "size_bytes": 713596,
+      "likely_logged": true,
+      "matched_via": "time_proximity",
+      "matched_brain_started": "2026-08-25 22:20:57",
+      "matched_brain_title": "subagent_end"
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78.jsonl",
       "cwd": "C:\\APPS\\SynVox",
       "first_ts": "2026-08-22T20:09:05.596Z",
-      "last_ts": "2026-08-24T16:28:44.347Z",
-      "user_prompts": 17,
-      "assistant_replies": 877,
+      "last_ts": "2026-08-25T21:30:02.634Z",
+      "user_prompts": 18,
+      "assistant_replies": 928,
       "files_touched": [
         "C:\\APPS\\SynVox\\CLAUDE.md",
         "C:\\APPS\\SynVox\\SESSION_12_PROMPT.md",
@@ -66,13 +91,13 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78\\scratchpad\\commit_s14.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78\\scratchpad\\commit_twelve.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78\\scratchpad\\commit_vendor.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78\\scratchpad\\fix_backspace.py"
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78\\scratchpad\\find_db_writer.py"
       ],
       "first_prompt": "Synvox: Run session 12",
-      "last_prompt": "Based on what we have to do for Urcil's installation, evaluate my SynVox install and tell me the dependencies my SynVox implementation has in relationship to other applications that are part of the QI Hive, including the qi hive.",
+      "last_prompt": "I do not want SynVox to be attached or dependent on any QI Hive components.",
       "project_id": "synvox",
-      "mtime": "2026-08-24T12:43:44",
-      "size_bytes": 5257840,
+      "mtime": "2026-08-25T17:45:04",
+      "size_bytes": 5479900,
       "likely_logged": false
     },
     {
@@ -140,31 +165,6 @@
       "likely_logged": false
     },
     {
-      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\0aa4e99e-952f-4eb4-bc76-ea2e751728e2.jsonl",
-      "cwd": "C:\\QIH",
-      "first_ts": "2026-08-22T21:40:16.634Z",
-      "last_ts": "2026-08-22T22:47:08.200Z",
-      "user_prompts": 5,
-      "assistant_replies": 235,
-      "files_touched": [
-        "C:\\QIH\\engine\\hive\\dashboard\\static\\css\\qi-plex.css",
-        "C:\\QIH\\engine\\hive\\dashboard\\static\\js\\qi-plex.js",
-        "C:\\Users\\renne\\.claude\\projects\\C--QIH\\memory\\project_graphplex_d3.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--QIH\\memory\\reference_mythologies_design_standard.md",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\0aa4e99e-952f-4eb4-bc76-ea2e751728e2\\scratchpad\\finalize_summary.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\0aa4e99e-952f-4eb4-bc76-ea2e751728e2\\scratchpad\\make_summary.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\0aa4e99e-952f-4eb4-bc76-ea2e751728e2\\scratchpad\\patch_plex.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\0aa4e99e-952f-4eb4-bc76-ea2e751728e2\\scratchpad\\patch_skin_v2.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\0aa4e99e-952f-4eb4-bc76-ea2e751728e2\\scratchpad\\patch_theme.py"
-      ],
-      "first_prompt": "The GraphPlex under the QI Hive is of very bad quality. Look at the one created for Mythologies of the World and try to mimic that. Can we also match the theme to be more sophisticated as the Mythologies of the World? The QI HIve theme is r",
-      "last_prompt": "theme 1 and theme 2",
-      "project_id": "qi_hive",
-      "mtime": "2026-08-23T17:43:10",
-      "size_bytes": 2614625,
-      "likely_logged": false
-    },
-    {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\e0a8246d-60e1-4640-9c03-8f1263f504a0.jsonl",
       "cwd": "C:\\QIH",
       "first_ts": "2026-08-14T22:26:09.295Z",
@@ -212,7 +212,7 @@
     }
   ],
   "summary": {
-    "needs_backfill": 6,
-    "already_logged": 0
+    "needs_backfill": 5,
+    "already_logged": 1
   }
 }
