@@ -262,6 +262,53 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 
+### QI_TaskHealth
+| Field | Value |
+|---|---|
+| **Display name** | QI — Task Health Monitor |
+| **Description** | QI-wide scheduled-task freshness monitor. Verifies every QI/OC/Maia task by its OUTPUT ARTIFACT, because `conhost --headless` makes LastTaskResult always 0 and a growing wrapper log does not prove success. Polls 23 entries every 30 min, alerts to Telegram on staleness and on recovery. |
+| **Binary** | `C:\Program Files\Python311\python.exe` |
+| **Parameters** | `C:\QIH\tools\qi_task_health.py --daemon` |
+| **Working dir** | `C:\QIH` |
+| **Port** | none |
+| **Stdout log** | `C:\QIH\logs\qi_task_health.service.log` |
+| **Stderr log** | `C:\QIH\logs\qi_task_health.service.err.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **Manifest** | `C:\QIH\ecosystem\task_health_manifest.json` |
+| **Status out** | `C:\QIH\data\task_health.json` |
+| **Installed** | 2026-08-27, by `C:\QIH\tools\Install-QITaskHealthService.ps1` (elevated) |
+
+**Why it is a service and not a scheduled task.** A scheduled task would inherit
+the exact `conhost` exit-code blindness this monitor exists to compensate for,
+and the monitor must stay independent of everything it watches - a checker that
+lives inside the thing being checked dies with it. It also self-watches: the
+manifest contains an entry on its own `task_health.json`, so a dead monitor
+reads as stale rather than as a healthy estate.
+
+**⚠ It runs as LocalSystem, which is not the account the tasks run under.** That
+difference bit immediately on install: three healthy jobs reported DEAD because
+`\\wsl.localhost\...` is a per-user UNC path SYSTEM cannot see, and `git`
+refused repos owned by `renne` with "dubious ownership". Both were fixed in the
+checker rather than by running the service as a user - `git -c safe.directory`,
+and `yubin-daily.sh` now mirrors its outcome to a Windows-visible heartbeat.
+**Any new check must be readable by LocalSystem**, or it will cry wolf, and a
+monitor that cries wolf gets ignored.
+
+**Install / reinstall** (needs an ELEVATED shell - the QI_Elevate broker cannot
+do it, see below):
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\QIH\tools\Install-QITaskHealthService.ps1
+```
+
+**⚠ The broker cannot install QI services right now.** `nssm_install_qi` in
+`C:\QIH\commands\whitelist.json` permits python only at
+`C:\Windows\System32`, `C:\1-AI\APPS\PYTHON` or `C:\Python*` - none of which
+exist on this machine any more (python is at `C:\Program Files\Python311`), so
+the rule is unsatisfiable and every service install is denied. The whitelist was
+deliberately NOT widened; that is a security boundary. Brain decision 577.
+`nssm restart QI_TaskHealth` IS brokered and works normally.
+
 ### QI_Elevate
 | Field | Value |
 |---|---|

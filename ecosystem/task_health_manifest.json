@@ -68,17 +68,18 @@
     "OC-Yubin-Daily-8AM": {
       "owner": "openclaw",
       "check": "file",
-      "target": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\workspace-email\\last-digest.json",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\yubin\\last-run.json",
       "max_age_hours": 26,
       "severity": "high",
-      "note": "Written on EVERY run including zero-email days, so absence is unambiguous. Was frozen at 2026-08-09 07:00:33 for 18 days while its wrapper log kept growing with failures — the exact case that disproves mtime-of-log checking."
+      "note": "Reads the Windows-visible heartbeat written by yubin-daily.sh, NOT last-digest.json in the WSL home. The old \\\\wsl.localhost\\... target is a per-user UNC path: fine for a scheduled task running as 'renne', invisible to a service running as LOCAL SYSTEM, which reported a healthy Yubin as DEAD on 2026-08-27. A health check must not depend on which account happens to run it."
     },
     "OC-Yubin-Daily-6PM": {
       "owner": "openclaw",
       "check": "file",
-      "target": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\workspace-email\\last-digest.json",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\yubin\\last-run.json",
       "max_age_hours": 26,
-      "severity": "high"
+      "severity": "high",
+      "note": "Reads the Windows-visible heartbeat written by yubin-daily.sh, NOT last-digest.json in the WSL home. The old \\\\wsl.localhost\\... target is a per-user UNC path: fine for a scheduled task running as 'renne', invisible to a service running as LOCAL SYSTEM, which reported a healthy Yubin as DEAD on 2026-08-27. A health check must not depend on which account happens to run it."
     },
     "OC-Asa-Briefing-7AM": {
       "owner": "openclaw",

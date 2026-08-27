@@ -248,8 +248,19 @@ def check_git(spec):
     if not os.path.isdir(os.path.join(repo, ".git")):
         return None, "not a git repo: %s" % repo
     try:
+        # -c safe.directory: this monitor runs as a SERVICE (LOCAL SYSTEM) while
+        # the repos are owned by 'renne'. Without this, git refuses with
+        # "detected dubious ownership" and the check reports a perfectly healthy
+        # repo as DEAD. Observed the moment QI_TaskHealth was promoted from a
+        # scheduled task to a service on 2026-08-27.
+        #
+        # False alarms are not a cosmetic problem here: a monitor that cries
+        # wolf gets ignored, and an ignored monitor is exactly the 66-day
+        # silence this tool exists to prevent. Read-only ownership relaxation,
+        # scoped to the single repo being inspected.
         out = subprocess.run(
-            ["git", "-C", repo, "log", "-1", "--format=%cI"],
+            ["git", "-c", "safe.directory=" + repo, "-C", repo,
+             "log", "-1", "--format=%cI"],
             capture_output=True, text=True, timeout=60,
         )
         if out.returncode != 0:
