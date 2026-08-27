@@ -2,7 +2,7 @@
 
 **Authority:** This file is the single source of truth for all QI/OC/Maia **Windows Scheduled Tasks** (the sibling of `QI_Service_Registry.md`, which covers NSSM *services*).
 **Location:** `C:\QIH\ecosystem\QI_Scheduled_Tasks_Registry.md`
-**Last updated:** 2026-08-27 (**health audit** — 7 tasks found silently DEAD, §3 log-timestamp advice corrected as unsafe; see §8 and `C:\QIH\shared\documentation\QI_Task_Health_Audit_2026-08-27.md`)
+**Last updated:** 2026-08-27 (**health audit + same-day remediation** — 8 of 9 items fixed, QI_TaskHealth monitor added, see §9; **health audit** — 7 tasks found silently DEAD, §3 log-timestamp advice corrected as unsafe; see §8 and `C:\QIH\shared\documentation\QI_Task_Health_Audit_2026-08-27.md`)
 
 > **If a scheduled task pops a command window, or you need to disable/enable one, START HERE.**
 
@@ -179,9 +179,9 @@ without either human hand-writing relay prompts.
 |---|---|
 | Mailbox repo (separate repo — **not** inside QIH) | `C:\QI-RELAY\` |
 | Protocol spec (configures both Claudes) | `C:\QI-RELAY\PROTOCOL.md` |
-| Task action | `C:\QIH	ools\qi_relay_cycle.bat` |
-| Transport step (no AI) | `C:\QIH	ools\qi_relay_sync.py` |
-| Drafting step (sandboxed Claude) | `C:\QIH	ools\qi_relay_draft.py` |
+| Task action | `C:\QIH\tools\qi_relay_cycle.bat` |
+| Transport step (no AI) | `C:\QIH\tools\qi_relay_sync.py` |
+| Drafting step (sandboxed Claude) | `C:\QIH\tools\qi_relay_draft.py` |
 | Digest output | `C:\QIH\inbox
 elay\pending.md` |
 | Logs | `C:\QIH\LOGS\qi_relay_sync.log`, `qi_relay_draft.log` |
@@ -237,3 +237,67 @@ Manifest at `C:\QIH\ecosystem\task_health_manifest.json`, evaluated by an always
 (**QI_BrainAPI**, :9011). Central rather than per-task, because a per-task check dies with the task
 it is meant to watch. Check types ranked strongest-first: `db` row > log `marker` > `git` commit >
 file mtime. **Every new unattended job ships its freshness check as part of "done".**
+
+
+---
+
+## 9. QI_TaskHealth — the outcome monitor (added 2026-08-27)
+
+The remediation of the health audit. Everything above governs **how** a task
+runs; this governs **how we know it worked**.
+
+| Item | Path |
+|---|---|
+| Manifest | `C:\QIH\ecosystem\task_health_manifest.json` |
+| Checker | `C:\QIH\tools\qi_task_health.py` |
+| Status output | `C:\QIH\data\task_health.json` |
+| Log | `C:\QIH\logs\qi_task_health.log` |
+| Report | `C:\QIH\shared\documentation\QI_Task_Health_Audit_2026-08-27.md` |
+
+```bash
+python C:\QIH\tools\qi_task_health.py --once            # report to stdout
+python C:\QIH\tools\qi_task_health.py --once --json     # machine-readable
+python C:\QIH\tools\qi_task_health.py --once --notify   # alert if stale
+```
+
+Watches **22 tasks**. Check types, strongest first: `sqlite` (a data row whose
+timestamp advances) > `marker` (a task-specific success string) > `git` (a real
+commit) > `file` (mtime, last resort). Alerts to Telegram once per task per 20h,
+and sends a recovery notice when a task comes back.
+
+**It is central, not per-task, on purpose.** A per-task check ships inside the
+thing it checks, so it dies with it — a dead task cannot report itself dead. That
+is exactly how Kaze stayed dark 18 days and TubeScout 66.
+
+It also carries a **self-watch** entry on its own status file, so a dead monitor
+shows up as stale rather than as a healthy estate.
+
+### Two caveats, both deliberate
+
+**Interim host.** It runs as a user-level scheduled task, not an NSSM service,
+because the elevation broker's `nssm_install_qi` rule allows python only at
+`C:\Windows\System32`, `C:\1-AI\APPS\PYTHON` or `C:\Python*` — **none of which
+exist on this machine any more** (Python is at `C:\Program Files\Python311`), so
+the rule is currently unsatisfiable and every QI service install is denied. The
+whitelist was **not** widened; security boundaries are Tier 1. To promote, from an
+elevated shell:
+
+```bash
+C:\QIH\engine\bin\nssm.exe install QI_TaskHealth "C:\Program Files\Python311\python.exe" "C:\QIH\tools\qi_task_health.py --daemon"
+```
+
+then set `AppDirectory` to `C:\QIH`, start it, and delete the interim task.
+
+**Its own LastTaskResult is meaningless** — it is conhost-wrapped like everything
+else. Tolerable only because its product is a Telegram alert plus a status file
+that the manifest itself watches.
+
+### Adding a task to the monitor
+
+Add an entry to `task_health_manifest.json` naming the artifact that proves
+success. Prefer a **DB row** over a log marker, a marker over mtime, and never
+mtime of a wrapper log. If a job is silent by design, make it positively declare
+that — `QI_ClaudeUpdate_6AM` writes `result: "noop"` every morning, which is why
+"nothing happened" is still provably healthy there.
+
+**Every new unattended job ships its freshness check as part of "done".**

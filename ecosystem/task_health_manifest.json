@@ -1,0 +1,202 @@
+{
+  "_comment": "QI Task Health Manifest — the outcome-based counterpart to scheduled_tasks_window_policy.json. That file decides how a task runs; THIS file decides how we know it actually worked. Created 2026-08-27 by the scheduled-task health audit, which found 7 tasks silently dead (TubeScout for 66 days) while Task Scheduler reported success for every one of them. Evaluated by C:\\QIH\\tools\\qi_task_health.py, hosted in the always-on QI_TaskHealth service.",
+  "_why_not_lasttaskresult": "24 of 37 QI tasks are wrapped in `conhost.exe --headless`, which returns exit code 0 even when the wrapped binary does not exist. LastTaskResult is meaningless for those.",
+  "_why_not_mtime": "A wrapper log's mtime proves only that SOMETHING appended. Task actions redirect with '>> log 2>&1', so the shell's own failure messages land in the log meant to prove success. During the 18-day OC outage Yubin's wrapper log grew EVERY DAY with 'No such file or directory' while the job was completely dead. Prefer db > marker > git > file, in that order.",
+  "_check_types": {
+    "sqlite": "query must return a single timestamp; freshest wins. Strongest check — a real data row.",
+    "marker": "a success string must appear in a log file whose name may contain {date:FMT}. Proves the job reached its own finish line.",
+    "git": "most recent commit timestamp in a repo.",
+    "file": "artifact mtime. Weakest — use only where nothing better exists."
+  },
+  "_severity": "high = tell me the day it breaks. medium = tell me, no rush. low = report only.",
+  "defaults": {
+    "grace_hours": 6,
+    "alert_cooldown_hours": 20
+  },
+  "tasks": {
+    "QI_TubeScout_AM": {
+      "owner": "tubescout",
+      "check": "sqlite",
+      "target": "C:\\APPS\\TUBESCOUT\\tubescout.db",
+      "query": "SELECT MAX(discovered_at) FROM videos",
+      "max_age_hours": 26,
+      "severity": "high",
+      "note": "THE case study. Dead 2026-06-22 -> 2026-08-27 (66 days) on an expired Google OAuth refresh token, while logging 'cycle done' twice daily and feeding Kaze a corpus with zero new input. Nothing was watching it. Root cause: the Cloud OAuth consent screen is in Testing status, so refresh tokens hard-expire after 7 days."
+    },
+    "QI_TubeScout_PM": {
+      "owner": "tubescout",
+      "check": "sqlite",
+      "target": "C:\\APPS\\TUBESCOUT\\tubescout.db",
+      "query": "SELECT MAX(discovered_at) FROM videos",
+      "max_age_hours": 26,
+      "severity": "high",
+      "note": "Same artifact as the AM run — either firing keeps it fresh."
+    },
+    "OC-Kaze-Digest-6AM": {
+      "owner": "openclaw",
+      "check": "marker",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\kaze\\AGT-kaze-{date:%Y%m%d}-delivery.log",
+      "marker": "Unified daily digest complete",
+      "max_age_hours": 26,
+      "severity": "high",
+      "note": "Generalised from check_digest_freshness() in oc-keepalive-daemon.py — the reference implementation this whole manifest is modelled on."
+    },
+    "OC-Kaze-Digest-6PM": {
+      "owner": "openclaw",
+      "check": "marker",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\kaze\\AGT-kaze-{date:%Y%m%d}-delivery.log",
+      "marker": "Unified daily digest complete",
+      "max_age_hours": 26,
+      "severity": "high"
+    },
+    "OC-Kaze-AI-Digest-6AM": {
+      "owner": "openclaw",
+      "check": "marker",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\kaze\\AGT-kaze-ai-{date:%Y%m%d}.log",
+      "marker": "AI digest complete",
+      "max_age_hours": 26,
+      "severity": "medium"
+    },
+    "OC-Kaze-AI-Digest-6PM": {
+      "owner": "openclaw",
+      "check": "marker",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\kaze\\AGT-kaze-ai-{date:%Y%m%d}.log",
+      "marker": "AI digest complete",
+      "max_age_hours": 26,
+      "severity": "medium"
+    },
+    "OC-Yubin-Daily-8AM": {
+      "owner": "openclaw",
+      "check": "file",
+      "target": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\workspace-email\\last-digest.json",
+      "max_age_hours": 26,
+      "severity": "high",
+      "note": "Written on EVERY run including zero-email days, so absence is unambiguous. Was frozen at 2026-08-09 07:00:33 for 18 days while its wrapper log kept growing with failures — the exact case that disproves mtime-of-log checking."
+    },
+    "OC-Yubin-Daily-6PM": {
+      "owner": "openclaw",
+      "check": "file",
+      "target": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\hyosuke\\.openclaw\\workspace-email\\last-digest.json",
+      "max_age_hours": 26,
+      "severity": "high"
+    },
+    "OC-Asa-Briefing-7AM": {
+      "owner": "openclaw",
+      "check": "marker",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\briefing",
+      "marker": "Briefing sent",
+      "max_age_hours": 26,
+      "severity": "high",
+      "note": "Uses Asa's own dated log, not the append-only wrapper asa-task.log. The wrapper log captured 18 days of 'No such file or directory' and kept looking fresh the entire time — it is exactly the signal that must not be trusted.",
+      "glob": "briefing-*.log"
+    },
+    "OC-Kakei-Weekly-Sunday-7PM": {
+      "owner": "openclaw",
+      "check": "marker",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\kakei",
+      "marker": "Weekly summary sent",
+      "max_age_hours": 180,
+      "severity": "medium",
+      "note": "Weekly (Sun 19:00), so glob-newest rather than today's date. Until 2026-08-27 this printed its success line WITHOUT checking curl's response — 11 of 11 runs had actually failed on a JSONDecodeError. The marker is only trustworthy because that check now exists.",
+      "glob": "kakei-weekly-*.log"
+    },
+    "OC-Sentry-Drift-Sunday-8PM": {
+      "owner": "openclaw",
+      "check": "marker",
+      "target": "C:\\APPS\\OC\\runtime\\logs\\agents\\sentry",
+      "marker": "Drift report sent",
+      "max_age_hours": 180,
+      "severity": "medium",
+      "note": "Weekly. Had NEVER produced a report since creation — it read a reports dir that never existed and exited 0 on a 'skipping (no error)' guard. Fixed 2026-08-27 via inspector_export_snapshot.py; first successful drift report in its life ran that day.",
+      "glob": "sentry-drift-*.log"
+    },
+    "QI_NightlyGitSync": {
+      "owner": "qi_hive",
+      "check": "marker",
+      "target": "C:\\QIH\\logs\\nightly_git_sync.log",
+      "marker": "pushed",
+      "max_age_hours": 26,
+      "severity": "medium",
+      "note": "ABORTed on C:\\APPS\\PersonalSong every night from 2026-07-02 on a staged plex_token. It logged the ABORT correctly every single time — nobody read it. Alerting is the missing half, not logging."
+    },
+    "MaiaNightlySync": {
+      "owner": "maia",
+      "check": "git",
+      "target": "C:\\APPS\\QI",
+      "max_age_hours": 30,
+      "severity": "medium",
+      "note": "Checks a real commit, not the log, because this task used to write 'Nothing staged - skipping commit' and exit 0 while 86 files went unbacked for ~2 months."
+    },
+    "MaiaReconcile": {
+      "owner": "maia",
+      "check": "file",
+      "target": "C:\\APPS\\QI\\LOGS",
+      "glob": "maia_reconcile_*.log",
+      "max_age_hours": 26,
+      "severity": "medium"
+    },
+    "QI_EffortLedger_Daily": {
+      "owner": "qi_hive",
+      "check": "sqlite",
+      "target": "C:\\QIH\\data\\effort\\effort_ledger.db",
+      "query": "SELECT MAX(created_at) FROM ledger",
+      "max_age_hours": 26,
+      "severity": "medium",
+      "note": "Gold standard artifact: a hash-chained, tamper-evident row. Every unattended job should aim for something this unambiguous."
+    },
+    "QI_BrainBackfill": {
+      "owner": "qi_brain",
+      "check": "file",
+      "target": "C:\\QIH\\logs\\brain_backfill_tick.log",
+      "max_age_hours": 2,
+      "severity": "low",
+      "note": "Every 30 min; 2h window tolerates a couple of misses."
+    },
+    "QI_McpConnectorGuard": {
+      "owner": "qi_hive",
+      "check": "file",
+      "target": "C:\\QIH\\engine\\tools\\ConnectorGuard\\logs\\heartbeat.txt",
+      "max_age_hours": 1,
+      "severity": "low",
+      "note": "Every 5 min; already self-warns past 15 min via --status."
+    },
+    "QI_RelaySync": {
+      "owner": "qi_hive",
+      "check": "file",
+      "target": "C:\\QIH\\logs\\qi_relay_sync.log",
+      "max_age_hours": 3,
+      "severity": "low"
+    },
+    "QI_DomainDropWatch_Daily": {
+      "owner": "qi_hive",
+      "check": "file",
+      "target": "C:\\QIH\\data\\domain_watch_state.json",
+      "max_age_hours": 26,
+      "severity": "low"
+    },
+    "QI_ClaudeUpdate_6AM": {
+      "owner": "claude_manager",
+      "check": "file",
+      "target": "C:\\QIH\\logs\\claude_update_history.json",
+      "max_age_hours": 26,
+      "severity": "low",
+      "note": "Silent-by-design on days with no pending update, but it POSITIVELY DECLARES that by writing result:'noop' to this ledger every morning. That is the pattern every quiet job should copy — it is why 'nothing happened' is still provably healthy here."
+    },
+    "QI_UsageSnapshot": {
+      "owner": "qi_brain",
+      "check": "file",
+      "target": "C:\\QIH\\logs\\usage_snapshot.log",
+      "max_age_hours": 2,
+      "severity": "low",
+      "note": "pythonw, so its LastTaskResult IS trustworthy — included anyway because outcome beats exit code."
+    },
+    "QI_TaskHealth": {
+      "owner": "qi_hive",
+      "check": "file",
+      "target": "C:\\QIH\\data\\task_health.json",
+      "max_age_hours": 2,
+      "severity": "high",
+      "note": "The monitor watching itself. It rewrites this file every pass (every 30 min), so a stale one means the monitor stopped. Without this entry a dead monitor would look exactly like a healthy estate - silence reading as success, which is the failure mode this whole manifest exists to eliminate."
+    }
+  }
+}

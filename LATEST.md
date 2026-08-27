@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-27 16:17:23 (nightly reconciler)_
+_Auto-generated: 2026-08-27 16:38:31 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 678 | 2026-08-27 16:15:16 |
+| claude_manager | Operational | active | 679 | 2026-08-27 16:24:13 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -29,7 +29,7 @@ _Auto-generated: 2026-08-27 16:17:23 (nightly reconciler)_
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
 | qi_hive | Dashboard UX polish | active | 223 | 2026-08-27 19:06:18 |
-| retirementanalyzer | v0.12 â€” Phase 1 built, Task 1 backlog cleared | active | 80 | 2026-08-27 14:51:02 |
+| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 82 | 2026-08-27 20:18:18 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 31 | 2026-08-26 14:39:51 |
@@ -211,10 +211,10 @@ No further development planned. If ever wanted: server-side answer history for c
 - **Next:** None
 
 ### retirementanalyzer
-- **Phase:** v0.12 â€” Phase 1 built, Task 1 backlog cleared
-- **Status:** active
-- **Summary:** 663 tests passing. A user can now build a derived scenario from the browser and change the return assumption without editing JSON. Three commits are local and unpushed. Neither new feature has been exercised on the owner's real profile yet.
-- **Next:** Push. Exercise both features on the real profile. Decide on the house return tiers (UNVERIFIED house policy). Her SSA statement. Sign off the three house-policy datasets.
+- **Phase:** v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress
+- **Status:** paused
+- **Summary:** 712 tests pass, everything pushed, tree clean. Tier conservative, figures signed 2026-08-27, one detector firing (property exemptions). A blank disposable clone runs at C:\APPS\RetirementAnalyzer-TEST on 17844/18504 for the walkthrough; two of its steps have been walked and produced four defects. Resuming Sunday 2026-08-30.
+- **Next:** Start both apps (neither runs as a service), hard-refresh, finish docs/WALKTHROUGH.md from household A step 1, then delete the test copy. Then: her SSA statement, the spouse's annual contribution, the import-vs-rows decision, and sign-off on the three house-policy datasets.
 
 ### synvox
 - **Phase:** Phase 4 â€” evidence layer / reality check; monetisation deferred

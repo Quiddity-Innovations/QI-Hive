@@ -175,5 +175,70 @@ including TubeScout, which nothing else was looking at.**
 | 7 | Build the manifest monitor in Brain (§4) | 🟢 |
 | 8 | `pip install playwright` in the OC WSL env | 🟢 |
 
-**Not done in this audit — nothing was changed.** This was read-only by design; every item above is a
-proposal awaiting Renne's go-ahead.
+---
+
+## 6. REMEDIATION — completed 2026-08-27, same day
+
+Renne authorised the full remediation. **8 of 9 items are done and verified; 1 is blocked on him.**
+
+Every "fixed" claim below was proven by an artifact, not by an exit code.
+
+| # | Item | Status | Proof |
+|---|---|---|---|
+| 1 | TubeScout OAuth | 🔴 **BLOCKED — needs Renne** | Requires interactive Google sign-in + a Cloud Console publishing change. See `C:\APPS\TUBESCOUT\REAUTH_YOUTUBE.md` |
+| 2 | Verify Kaze/Yubin scheduled path | ✅ done | Fired the **real task definitions** via `Start-ScheduledTask` — no waiting for 18:00 |
+| 3 | Repoint OC family off `/mnt/c/OC` | ✅ done | 15 refs across 6 scripts, all `bash -n` clean, all live-tested |
+| 4 | Kakei unconditional success | ✅ verified | Code was already fixed; the path outage was what stopped it running. Now runs clean |
+| 5 | Sentry never-existent reports dir | ✅ done | New `inspector_export_snapshot.py` bridges `compliance_log` → JSON. **First drift report in its life sent** |
+| 6 | PersonalSong `plex_token` | ✅ done | `.bak-*` ignored; committed + pushed, first time since 2026-07-02 |
+| 7 | MaiaNightlySync never stages code | ✅ done | Allowlist → `git add -A`; commit `8de5645`, **35 files pushed** |
+| 8 | Central freshness monitor | ✅ done | `QI_TaskHealth` live, 22 tasks, 30-min cadence, Telegram alert **delivered** |
+| 9 | playwright in OC WSL | ✅ done | 1.62.0 + chromium headless shell installed |
+
+### What the artifacts say now
+
+- **Kaze** — `cron.log` broke its 18-day freeze (2026-08-09 06:00 → 2026-08-27 16:20) and carries `✅ Unified daily digest complete`. `cron-ai.log` likewise.
+- **Yubin** — `last-digest.json` moved from `2026-08-09 07:00:33` → `2026-08-27 16:22`. Was still failing at 07:00 that morning.
+- **Asa** — `✅ Briefing sent`, first since 2026-08-09.
+- **Sentry** — `✅ Drift report sent`, **first ever**.
+- **Kakei** — `✅ Weekly summary sent`, and now only prints that on Telegram's `"ok":true`.
+
+### Two things found during remediation that the audit missed
+
+**1. TubeScout's real root cause is not just an expired token.** `token.json` was
+issued 2026-06-15 and expired 2026-06-23 — **exactly 7 days**. That is the
+signature of a Google Cloud consent screen still in **"Testing"** status, where
+refresh tokens hard-expire at 7 days. Re-authing alone would buy another week and
+then die silently again. The runbook therefore leads with publishing the app.
+
+**2. The `nssm_install_qi` elevation rule is currently unsatisfiable.** It permits
+python only at `C:\Windows\System32`, `C:\1-AI\APPS\PYTHON` or `C:\Python*` —
+**none of which exist on this machine any more**; Python lives at
+`C:\Program Files\Python311`. So the broker denies every QI service install. The
+whitelist was **not** widened (security boundaries are Tier 1). `QI_TaskHealth`
+runs as a user-level scheduled task in the meantime. To promote it, from an
+**elevated** shell:
+
+```bash
+C:\QIH\engine\bin\nssm.exe install QI_TaskHealth "C:\Program Files\Python311\python.exe" "C:\QIH\tools\qi_task_health.py --daemon"
+```
+
+then `nssm set QI_TaskHealth AppDirectory C:\QIH` and `nssm start QI_TaskHealth`,
+and delete the interim scheduled task. Either the rule's python paths need
+updating or that promotion stays a manual step.
+
+### Honest caveat on the interim host
+
+The `QI_TaskHealth` scheduled task is itself wrapped in `conhost --headless`, so
+its own `LastTaskResult` is meaningless — the very blindness this monitor exists
+to compensate for. That is tolerable **only** because the monitor's product is a
+Telegram alert plus `C:\QIH\data\task_health.json`, and the manifest contains a
+self-watch entry on that file: if the monitor dies, its own staleness is visible
+rather than reading as a healthy estate. Promoting it to a real service removes
+the caveat entirely.
+
+### Still open
+
+- **TubeScout OAuth (item 1)** — the one genuinely blocked item, and still the highest-impact one.
+- **19 registry repos have no nightly git sync at all** (`C:\APPS\OC`, MapSnap, NEXUS, EasyFlow, TubeScout…). Out of scope for this remediation; worth its own pass.
+- **`noos.ai` silently dropped** from the domain watchlist ~2026-08-22 — confirm whether that was deliberate.

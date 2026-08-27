@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-27T16:06:01",
+  "generated_at": "2026-08-27T16:36:01",
   "cutoff": "2026-08-25T00:00:00",
   "transcripts_scanned": 25,
   "transcripts_skipped_old": 130,
   "transcripts_skipped_subagent": 106,
-  "brain_rows_in_window": 185,
+  "brain_rows_in_window": 192,
   "candidates": [
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS\\443e1564-e2f0-4e49-9d42-c7bb8d52622c.jsonl",
@@ -98,9 +98,9 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f.jsonl",
       "cwd": "C:\\APPS\\MediaStudio",
       "first_ts": "2026-08-27T13:07:25.950Z",
-      "last_ts": "2026-08-27T19:59:03.503Z",
-      "user_prompts": 19,
-      "assistant_replies": 730,
+      "last_ts": "2026-08-27T20:34:10.955Z",
+      "user_prompts": 20,
+      "assistant_replies": 775,
       "files_touched": [
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\add_caption_preview.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\analyse_pitch.py",
@@ -125,22 +125,22 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\raw_script.txt",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\register_service.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\register_talk.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\res_test.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\restore_vram_note.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\roadmap_phase3.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\summary_ff.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\update_howto.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\update_howto2.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\update_roadmap.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\validate_new.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\wire_negative.py"
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\update_roadmap.py"
       ],
       "first_prompt": "I should start comfyUI via the bat file or another way?",
-      "last_prompt": "<task-notification>\n<task-id>bthxqlx4o</task-id>\n<tool-use-id>toolu_01ASfL5L4Crzg84fy5ngPnBm</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\tasks\\bthxqlx4o.output",
+      "last_prompt": "<task-notification>\n<task-id>bi1ppismx</task-id>\n<tool-use-id>toolu_016TtF1CikvCnbY1CPDteDpN</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\tasks\\bi1ppismx.output",
       "project_id": "mediastudio",
-      "mtime": "2026-08-27T15:59:03",
-      "size_bytes": 3229383,
+      "mtime": "2026-08-27T16:34:11",
+      "size_bytes": 3432626,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-27 13:14:12",
+      "matched_brain_started": "2026-08-27 09:11:21",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -313,7 +313,7 @@
       "size_bytes": 1288202,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 17:19:10",
+      "matched_brain_started": "2026-08-26 17:56:18",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -362,17 +362,18 @@
       "size_bytes": 4824328,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 17:19:10",
+      "matched_brain_started": "2026-08-26 17:56:18",
       "matched_brain_title": "subagent_end"
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\227104a3-4cfd-4741-9d43-1950875ac5ae.jsonl",
       "cwd": "C:\\APPS\\Retirement Analyzer",
       "first_ts": "2026-08-27T02:55:46.177Z",
-      "last_ts": "2026-08-27T18:50:58.340Z",
-      "user_prompts": 10,
-      "assistant_replies": 551,
+      "last_ts": "2026-08-27T20:18:59.226Z",
+      "user_prompts": 11,
+      "assistant_replies": 565,
       "files_touched": [
+        "C:\\APPS\\Retirement Analyzer\\NEXT_SESSION.md",
         "C:\\APPS\\Retirement Analyzer\\docs\\WALKTHROUGH.md",
         "C:\\APPS\\Retirement Analyzer\\tests\\test_chart_axes.py",
         "C:\\APPS\\Retirement Analyzer\\tests\\test_entry_form.py",
@@ -401,17 +402,16 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\227104a3-4cfd-4741-9d43-1950875ac5ae\\scratchpad\\patch_tiers_ui.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\227104a3-4cfd-4741-9d43-1950875ac5ae\\scratchpad\\patch_ui.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\227104a3-4cfd-4741-9d43-1950875ac5ae\\scratchpad\\restart_app.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\227104a3-4cfd-4741-9d43-1950875ac5ae\\scratchpad\\set_tier_and_sign.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\227104a3-4cfd-4741-9d43-1950875ac5ae\\scratchpad\\write_docs.py"
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\227104a3-4cfd-4741-9d43-1950875ac5ae\\scratchpad\\set_tier_and_sign.py"
       ],
       "first_prompt": "resume next session",
-      "last_prompt": "When I entered the information and press sign-off. all the data got cleared. Nothing survived.",
+      "last_prompt": "Complete this session. I will continue on a new session on Sunday.",
       "project_id": "retirementanalyzer",
-      "mtime": "2026-08-27T14:50:58",
-      "size_bytes": 3255577,
+      "mtime": "2026-08-27T16:18:59",
+      "size_bytes": 3385245,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 17:19:10",
+      "matched_brain_started": "2026-08-26 17:56:18",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -440,7 +440,7 @@
       "size_bytes": 1319558,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 17:19:10",
+      "matched_brain_started": "2026-08-26 17:56:18",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -482,8 +482,8 @@
       "size_bytes": 4297286,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 10:15:25",
-      "matched_brain_title": "subagent_end"
+      "matched_brain_started": "2026-08-26 12:35:44",
+      "matched_brain_title": "Session ended (no transcript summary available)."
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\f67a8779-66bd-4588-b797-8eea4b843e1d.jsonl",
@@ -531,7 +531,7 @@
       "size_bytes": 6786349,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 17:19:10",
+      "matched_brain_started": "2026-08-26 17:56:18",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -618,13 +618,15 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79.jsonl",
       "cwd": "C:\\CLAUDE",
       "first_ts": "2026-08-27T15:37:17.907Z",
-      "last_ts": "2026-08-27T20:03:00.663Z",
-      "user_prompts": 8,
-      "assistant_replies": 170,
+      "last_ts": "2026-08-27T20:25:54.388Z",
+      "user_prompts": 10,
+      "assistant_replies": 290,
       "files_touched": [
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\feedback_blast_radius_check.md",
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\feedback_conhost_masks_exit_codes.md",
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\project_kaze_digest_outage_2026_08.md",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_artifact.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_kakei.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_oc_tasks.ps1",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\oc-assessment.html",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\patch_daemon.py",
@@ -633,10 +635,10 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\write_docs.py"
       ],
       "first_prompt": "Investigate what happened to my daily Digest from Kaze. I have not received in ages. Also check OC (Open Claw) status. And evaluate using OC for more than what we are using now. There is plenty new plug-ins, new ways to use OC for free. Als",
-      "last_prompt": "<task-notification>\n<task-id>bdjdqzf61</task-id>\n<tool-use-id>toolu_0159zTDDL6hPCE2u19db23HG</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\tasks\\bdjdqzf61.output</output-f",
+      "last_prompt": "# /loop — schedule a recurring or self-paced prompt\n\nParse the input below into `[interval] <prompt…>` and schedule it.\n\n## Parsing (in priority order)\n\n1. **Leading token**: if the first whitespace-delimited token matches `^\\d+[smhd]$` (e.",
       "project_id": "unknown",
-      "mtime": "2026-08-27T16:03:00",
-      "size_bytes": 1012781,
+      "mtime": "2026-08-27T16:25:54",
+      "size_bytes": 1457840,
       "likely_logged": true,
       "matched_via": "transcript_exact"
     },
@@ -644,22 +646,32 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187.jsonl",
       "cwd": "C:\\CLAUDE",
       "first_ts": "2026-08-27T18:53:21.963Z",
-      "last_ts": "2026-08-27T19:41:05.165Z",
-      "user_prompts": 2,
-      "assistant_replies": 122,
+      "last_ts": "2026-08-27T20:35:50.857Z",
+      "user_prompts": 3,
+      "assistant_replies": 292,
       "files_touched": [
+        "C:\\APPS\\OC\\repo\\scripts\\sentry\\sentry-weekly-drift.sh",
+        "C:\\APPS\\OC\\tools\\repoint_oc_paths.sh",
+        "C:\\APPS\\QI\\TOOLS\\maia_nightly_sync.py",
         "C:\\QIH\\ecosystem\\QI_Scheduled_Tasks_Registry.md",
+        "C:\\QIH\\ecosystem\\task_health_manifest.json",
         "C:\\QIH\\shared\\documentation\\QI_Task_Health_Audit_2026-08-27.md",
+        "C:\\QIH\\tools\\inspector_export_snapshot.py",
+        "C:\\QIH\\tools\\install_task_health_service.py",
+        "C:\\QIH\\tools\\qi_task_health.py",
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\feedback_conhost_masks_exit_codes.md",
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\project_task_health_audit_2026_08_27.md",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\add_selfwatch.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\fix_manifest.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\fixtabs.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\gen_summary.py"
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\gen_summary.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\register_taskhealth.ps1"
       ],
       "first_prompt": "Ecosystem-wide audit: QI scheduled tasks are blind to failure because of conhost exit-code masking.\n\nVERIFIED FINDING (2026-08-27)\n`conhost.exe --headless <cmd>` always returns exit code 0, discarding the wrapped command's real code:\n- `wsl",
-      "last_prompt": "<task-notification>\n<task-id>bcul02d10</task-id>\n<tool-use-id>toolu_0126QXeymXdrUH4jfB6QsvBr</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\tasks\\bcul02d10.output</output-f",
+      "last_prompt": "Complete all your recommendations. Only stop when fully done.",
       "project_id": "unknown",
-      "mtime": "2026-08-27T15:41:05",
-      "size_bytes": 786198,
+      "mtime": "2026-08-27T16:35:50",
+      "size_bytes": 1475488,
       "likely_logged": true,
       "matched_via": "transcript_exact"
     },
