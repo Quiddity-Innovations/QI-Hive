@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-26 00:34:16 (nightly reconciler)_
+_Auto-generated: 2026-08-27 00:33:57 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 589 | 2026-08-25 22:11:10 |
+| claude_manager | Operational | active | 635 | 2026-08-26 22:57:26 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -23,16 +23,16 @@ _Auto-generated: 2026-08-26 00:34:16 (nightly reconciler)_
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | naya | Phase 4 â€” standalone application | paused | 6 | 2026-08-22 21:39:20 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
-| noosorbis | v0.5.0 â€” complete; owner signed off | complete | 6 | 2026-08-22 21:45:01 |
+| noosorbis | v0.5.0 â€” complete; owner signed off | complete | 10 | 2026-08-26 15:28:47 |
 | openclaw | Phase 2 — agent expansion | active | 65 | 2026-07-31 21:58:24 |
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 220 | 2026-08-25 00:35:02 |
-| retirementanalyzer | v1 - engine + API + UI live | active | 9 | 2026-08-25 22:20:57 |
-| synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 77 | 2026-08-25 17:30:07 |
+| qi_hive | Dashboard UX polish | active | 221 | 2026-08-26 00:35:01 |
+| retirementanalyzer | v0.12 â€” Phase 1 built, Task 1 backlog cleared | active | 70 | 2026-08-27 03:18:23 |
+| synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
-| universal | Migration into C:\QIH | merged | 30 | 2026-08-23 17:43:09 |
+| universal | Migration into C:\QIH | merged | 31 | 2026-08-26 14:39:51 |
 
 ## Per-project
 
@@ -211,10 +211,10 @@ No further development planned. If ever wanted: server-side answer history for c
 - **Next:** None
 
 ### retirementanalyzer
-- **Phase:** v1 - engine + API + UI live
+- **Phase:** v0.12 â€” Phase 1 built, Task 1 backlog cleared
 - **Status:** active
-- **Summary:** Scaffolded via qi_new_project.py (19/19 compliance). Built stdlib analysis engine (allocation, concentration/HHI, drift, rebalancing), FastAPI on 8504, Gradio UI on 7844, sample dataset. Verified /analyze on sample (11 positions, $210k). Registered in registry + Brain + dashboard.
-- **Next:** Install QI_FidelityAnalyzer + QI_FidelityAnalyzerTunnel services; add PDF positions parsing; configurable target allocation in UI; first git commit + GitHub.
+- **Summary:** 663 tests passing. A user can now build a derived scenario from the browser and change the return assumption without editing JSON. Three commits are local and unpushed. Neither new feature has been exercised on the owner's real profile yet.
+- **Next:** Push. Exercise both features on the real profile. Decide on the house return tiers (UNVERIFIED house policy). Her SSA statement. Sign off the three house-policy datasets.
 
 ### synvox
 - **Phase:** Phase 4 â€” evidence layer / reality check; monetisation deferred
