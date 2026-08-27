@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-27 16:38:31 (nightly reconciler)_
+_Auto-generated: 2026-08-27 17:01:09 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 679 | 2026-08-27 16:24:13 |
+| claude_manager | Operational | active | 681 | 2026-08-27 16:53:16 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -28,7 +28,7 @@ _Auto-generated: 2026-08-27 16:38:31 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 223 | 2026-08-27 19:06:18 |
+| qi_hive | Observability hardening | active | 224 | 2026-08-27 19:06:18 |
 | retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 82 | 2026-08-27 20:18:18 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
@@ -205,9 +205,9 @@ No further development planned. If ever wanted: server-side answer history for c
 - **Next:** Self-logging discipline; ChromaDB doc refresh
 
 ### qi_hive
-- **Phase:** Dashboard UX polish
+- **Phase:** Observability hardening
 - **Status:** active
-- **Summary:** Dashboard home, /hive and LLM Usage redesigned to a calm Bento + status-table layout; Documentation Brain UI (search + Plex graph + split view + draggable resize). Fixed a Brain feedback loop where the poller re-ingested its own [auto:state_file] marker from status.json (qi_hive's state file = statu
+- **Summary:** Scheduled-task health audit found 7 of 37 tasks silently dead; 8 of 9 remediation items completed and verified the same day (2026-08-27). QI_TaskHealth now monitors 22 tasks by output artifact every 30 min with Telegram alerting, replacing LastTaskResult and log-mtime as the health signals â€” both
 - **Next:** None
 
 ### retirementanalyzer

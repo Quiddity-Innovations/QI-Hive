@@ -26,7 +26,47 @@ REPOS = [
     r"C:\APPS\AutoPDF",
     r"C:\APPS\PersonalSong",
     r"C:\APPS\M2V",
+
+    # Added 2026-08-27 (task health audit). These 16 were flagged by
+    # coverage_check() as "sync nowhere" every single night and nobody acted on
+    # it. Each was verified first: is a git repo, HAS an origin remote, and a
+    # dry-run `git add -A` + secret_gate scan came back with zero hits.
+    r"C:\APPS\AvatarStudio",
+    r"C:\APPS\CogniBase",
+    r"C:\APPS\QIP\Connector",
+    r"C:\APPS\CypherMiner",
+    r"C:\Users\renne\Downloads\DIGITIZATION COSTS",
+    r"C:\APPS\EasyFlow",
+    r"C:\APPS\Gamez",
+    r"C:\APPS\Lottery Wiz",
+    r"C:\APPS\MapSnap",
+    r"C:\APPS\MQ",
+    r"C:\APPS\NAYA",
+    r"C:\APPS\NEXUS",
+    r"C:\APPS\NoosOrbis",
+    r"C:\APPS\Retirement Analyzer",
+    r"C:\APPS\SynVox",
+    r"C:\APPS\TUBESCOUT",
 ]
+
+# Deliberately NOT synced, with the reason. Silence here would repeat the very
+# problem this audit was about, so anything left out gets named.
+NOT_SYNCED = {
+    # 38,499 files of a vendored virtualenv (Tools/headroom_env) are already
+    # COMMITTED to this repo. .gitignore was updated 2026-08-27 so nothing new
+    # gets added, but untracking what is already there is a ~38.5k-deletion
+    # commit and that is Renne's call, not a side effect of enabling sync.
+    # To clean it up and then add this repo to REPOS above:
+    #     git -C "C:\APPS\CLAUDE" rm -r --cached "Tools/headroom_env"
+    r"C:\APPS\CLAUDE": "vendored venv committed (38,499 files) — needs a decided cleanup first",
+
+    # No origin remote configured, so there is nothing to push to.
+    r"C:\APPS\AkiyaScout": "no git remote; also has zero commits",
+
+    # The parent has no remote. Its repo/ subdirectory IS a separate clone
+    # (rennesan/OC-Orchestrator) and is synced there instead.
+    r"C:\APPS\OC": "no git remote on the parent; repo/ is its own clone and is synced separately",
+}
 
 # Repos that carry their own dedicated sync task — deliberately NOT synced here,
 # so we don't double-commit. Used by the coverage check below.
