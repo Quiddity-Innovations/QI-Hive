@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-27 18:43:42 (nightly reconciler)_
+_Auto-generated: 2026-08-27 18:48:13 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 710 | 2026-08-27 18:41:56 |
+| claude_manager | Operational | active | 713 | 2026-08-27 18:47:31 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -28,7 +28,7 @@ _Auto-generated: 2026-08-27 18:43:42 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 227 | 2026-08-27 19:06:18 |
+| qi_hive | Observability hardening | active | 228 | 2026-08-27 19:06:18 |
 | retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 82 | 2026-08-27 20:18:18 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
@@ -183,8 +183,8 @@ No further development planned. If ever wanted: server-side answer history for c
 ### openclaw
 - **Phase:** Phase 2 â€” agent expansion (recovered + modernized)
 - **Status:** active
-- **Summary:** Fully recovered and modernized 2026-08-27. Kaze digests verified firing UNATTENDED at 18:00 and 18:05 through the repointed scheduled tasks (log paths confirm the new /mnt/c/APPS/OC/ path, not the junction fallback). Upgraded 2026.4.26 -> 2026.6.34, which regenerated a stale gateway unit (written by 2026.4.5) and cleared the memory-plugin failure. MCP recovered from total failure â€” root cause was a missing `transport` field causing a legacy SSE-first fallback (openclaw#72757); Tasuke now reaches 38 tools (qi-connector 29, qi-autopdf 5, qi-mapsnap 4). Memory search moved off a keyless OpenAI config to local nomic-embed-text (4/4 files, 10 chunks). TOOLS.md truncation eliminated (72,892/72,892 chars â€” the agent gating rulebook had been cut at ~line 470). Gateway moved to loopback. Found and disabled 3 hidden OpenClaw cron jobs with 36 consecutive errors each, all scheduled inside the GPU pause window. Kakei had 2 real non-path bugs (heredoc stealing stdin; unconditional success logging) â€” fixed. Sentry, Asa, Kakei all verified live. Decision: keep OpenClaw as the assistant â€” it is the only harness examined that supports LINE; build Koe voice inside it (whisper.cpp + Kokoro/Piper) rather than migrating to Hermes.
-- **Next:** 1) RENNE (elevated, one run): powershell -ExecutionPolicy Bypass -File "C:\APPS\OC\tools\rename_keepalive_service.ps1" â€” renames to QI_OCKeepalive, updates 5 referencing files, arms the digest freshness alarm. 2) RENNE decision: schedule or retire Yubin (no output ever; cron job now disabled). 3) Broaden memory indexing beyond 4 workspace files. 4) Build Koe as an OC channel plugin. 5) Ecosystem-wide conhost --headless exit-code audit (separate session). DO NOT migrate the digests into OpenClaw cron â€” they are currently independent of the gateway, which is deliberately stopped 10h/day.
+- **Summary:** Fully recovered and modernized 2026-08-27. All SIX agents verified working: Kaze (digests fired unattended 18:00/18:05), Sentry, Asa, Kakei, Tasuke, and YUBIN. Service renamed to QI_OCKeepalive and proven broker-manageable (nssm restart via QI_Elevate returns status: ok); freshness alarm armed and logging "Kaze digest OK" every 30 min. OpenClaw upgraded 2026.4.26 -> 2026.6.34; gateway on loopback; MCP recovered from total failure via transport=streamable-http, giving Tasuke 38 tools. Memory on local nomic-embed-text (4/4 files). TOOLS.md truncation eliminated. CORRECTION LOGGED (decision 581): my earlier claim that Yubin was dead was WRONG â€” it logs to /home/hyosuke/.openclaw/logs/yubin-task.log, not runtime/logs/agents/yubin/, and ran successfully today at 16:22 and 17:59. Yubin is load-bearing (feeds Kakei, Sentry, Asa, Tasuke) and is the email half of the shared "Maia Quiddam" persona alongside Kaze. Do not retire it.
+- **Next:** 1) RENNE (elevated): run C:\APPS\OC\tools\repoint_yubin_tasks.ps1 â€” OC-Yubin-Daily-8AM/-6PM are the last two OC tasks still on the dead /mnt/c/OC/ path; they work only via the C:\OC junction. 2) Broaden memory indexing beyond the 4 workspace files. 3) Build Koe voice (whisper.cpp + Kokoro-82M/Piper) as an OpenClaw channel plugin rather than migrating to Hermes. 4) Ecosystem-wide conhost --headless exit-code audit. DO NOT migrate the digests into OpenClaw cron â€” they are gateway-independent today, and the gateway is deliberately stopped 10h/day.
 
 ### personalsong
 - **Phase:** Working app

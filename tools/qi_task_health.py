@@ -75,7 +75,11 @@ POLL_MINUTES = 30
 # ─────────────────────────────────────────────────────────────
 def log(msg):
     line = "%s  %s" % (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg)
-    print(line)
+    # flush=True matters once this runs under NSSM: Python block-buffers stdout
+    # when it is not a terminal, so the service's captured log would lag minutes
+    # to hours behind reality. A monitor whose own log is stale is worse than
+    # useless - it is the exact thing it exists to detect.
+    print(line, flush=True)
     try:
         os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
         with open(LOG_FILE, "a", encoding="utf-8") as f:
