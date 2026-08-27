@@ -389,11 +389,26 @@ def write_status(results):
         },
         "tasks": results,
     }
+    # Atomic write. The status file is itself watched (the QI_TaskHealth
+    # self-entry), so a reader catching it mid-write sees a truncated file and
+    # reports the monitor DEAD — a false alarm. Observed 2026-08-27 when a
+    # manual run overlapped the scheduled one. A monitor that cries wolf gets
+    # ignored, which would defeat the entire point of it, so write to a temp
+    # file and os.replace() it into place (atomic on Windows and POSIX alike).
     try:
         os.makedirs(os.path.dirname(STATUS_OUT), exist_ok=True)
-        json.dump(payload, open(STATUS_OUT, "w", encoding="utf-8"), indent=2)
+        tmp = STATUS_OUT + ".tmp.%d" % os.getpid()
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, STATUS_OUT)
     except Exception as e:
         log("WARN: could not write status file: %s" % e)
+        try:
+            os.remove(tmp)
+        except Exception:
+            pass
     return payload
 
 
