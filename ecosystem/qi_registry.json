@@ -1907,7 +1907,7 @@
           "registered": "2026-05-13"
         },
         {
-          "name": "OC-Keepalive-Service",
+          "name": "QI_OCKeepalive",
           "project": "openclaw",
           "port": null,
           "script": "C:\\APPS\\OC\\tools\\oc-keepalive-daemon.py",

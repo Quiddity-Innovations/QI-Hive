@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 qi_web_panel.py — QI UNIVERSAL WEB CONTROL PANEL
 Single web page with internal tabs for every QI project that has a control panel.
@@ -147,7 +147,7 @@ PROJECTS = {
             {"label": "Dashboard", "port": 18800, "url": "http://127.0.0.1:18800"},
         ],
         "services": [
-            {"name": "OC-Keepalive-Service", "label": "OC keepalive monitor"},
+            {"name": "QI_OCKeepalive", "label": "OC keepalive monitor"},
         ],
         "logs": [
             {"label": "keepalive daemon",  "path": r"C:\APPS\OC\logs\keepalive.log"},

@@ -70,6 +70,7 @@
 | AutoPDF | QI_AutoPDF | ✅ 2026-06-15 | Web server 127.0.0.1:6969; AppDir C:\APPS\AutoPDF\Application; env AUTOPDF_NO_BROWSER=1 |
 | AutoPDFTunnel | QI_AutoPDFTunnel | ✅ 2026-06-15 | Cloudflare quick tunnel → :6969; URL in Application\status\tunnel.json; PIN-gated |
 | AutoPDFMCP | QI_AutoPDFMCP | ✅ 2026-08-07 | MCP gateway 127.0.0.1:8701; AppDir C:\APPS\AutoPDF; runs tools\run_mcp_gateway.py; SERVICE_AUTO_START. Tools + on/off live in C:\APPS\AutoPDF\config\mcp_gateway.json (Settings → AI & Connections). Register with `Application\_register_mcp_service.ps1` **elevated**. ⚠️ Free :8701 of any hand-started gateway first — see note below |
+| OC-Keepalive-Service | QI_OCKeepalive | ✅ 2026-08-27 | NotebookLM session-cookie monitor **+ Kaze digest freshness alarm**. Renamed because the old hyphenated non-`QI_` name failed QI_Elevate's `nssm_service_control` rule (`^QI_[A-Za-z0-9_]+$`), so it could not be restarted by QI automation at all. Rename verified: broker restart now returns `status: ok`. Despite the legacy name it is **not** a WSL keepalive — that is the `OC_WSL_KeepAlive` scheduled task. |
 
 ---
 
@@ -708,6 +709,28 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Note** | Caddy installed its internal root CA into the Windows trust store on first run, so `https://*.qi.local` shows a valid padlock. Adding a new app = one block in the Caddyfile + reload (`caddy reload`). |
 | **Status** | Registry entry added 2026-06-23; verified serving lottery.qi.local. Service install pending an elevated run of install_qi_caddy.bat. |
 | **Added** | 2026-06-23 |
+
+### QI_OCKeepalive
+| Field | Value |
+|---|---|
+| **Display name** | QI_OCKeepalive |
+| **Description** | NotebookLM session-cookie expiry monitor + Kaze digest freshness alarm. Alerts via Telegram. |
+| **Binary** | `C:\Program Files\Python311\python.exe` |
+| **Parameters** | `C:\APPS\OC\tools\oc-keepalive-daemon.py` |
+| **Working dir** | `C:\APPS\OC\tools` |
+| **Port** | none (no listener) |
+| **Stdout/Stderr log** | `C:\APPS\OC\runtime\logs\keepalive\nssm-stdout.log` / `nssm-stderr.log` |
+| **App log** | `C:\APPS\OC\runtime\logs\keepalive-daemon.log` |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem (Session 0) |
+| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **Install / rename** | `C:\APPS\OC\tools\rename_keepalive_service.ps1` (elevated, idempotent) |
+| **What it actually does** | Two independent 30-minute checks: (1) reads `C:\APPS\OC\runtime\nlm-storage-state.json` — mirrored from WSL by cron — and warns at 48h / 24h / expired on the shortest-lived NotebookLM cookie; (2) `check_digest_freshness()` reads Kaze's own delivery log for today and alerts if no digest completed by 09:00. |
+| **Why check #2 exists** | Task Scheduler cannot detect a failed Kaze run: every OC task launches via `conhost.exe --headless`, which **discards the wrapped exit code** (`wsl.exe` returns 127, conhost returns 0). This masked a total 18-day digest outage while every task reported success. The check is therefore **outcome-based**, never exit-code-based. |
+| **⚠️ Name is misleading** | It keeps **nothing** alive. The real WSL keepalive is the `OC_WSL_KeepAlive` scheduled task, which `oc_pause.ps1` / `oc_resume.ps1` enable and disable around the 07:30–17:30 GPU pause window. A past incident had this service showing *Running* while WSL was *Stopped*. |
+| **Broker manageable** | ✅ Yes — matches `^QI_[A-Za-z0-9_]+$`, so `run_elevated("nssm", ["restart","QI_OCKeepalive"])` works. Verified 2026-08-27 (`status: ok`, `rule_matched: nssm_service_control`). |
+| **Status** | Running. Renamed from `OC-Keepalive-Service` on 2026-08-27; 5 referencing files updated (backups `.bak-rename-20260827`). |
+| **Added** | 2026-08-27 |
 
 ### QI_M2VTunnel
 | Field | Value |

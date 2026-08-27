@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-27T17:06:01",
+  "generated_at": "2026-08-27T18:36:01",
   "cutoff": "2026-08-25T00:00:00",
   "transcripts_scanned": 25,
   "transcripts_skipped_old": 130,
-  "transcripts_skipped_subagent": 106,
-  "brain_rows_in_window": 197,
+  "transcripts_skipped_subagent": 107,
+  "brain_rows_in_window": 228,
   "candidates": [
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS\\443e1564-e2f0-4e49-9d42-c7bb8d52622c.jsonl",
@@ -98,9 +98,9 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f.jsonl",
       "cwd": "C:\\APPS\\MediaStudio",
       "first_ts": "2026-08-27T13:07:25.950Z",
-      "last_ts": "2026-08-27T21:05:50.242Z",
-      "user_prompts": 21,
-      "assistant_replies": 777,
+      "last_ts": "2026-08-27T22:35:17.756Z",
+      "user_prompts": 23,
+      "assistant_replies": 894,
       "files_touched": [
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\add_caption_preview.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\analyse_pitch.py",
@@ -134,13 +134,13 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\scratchpad\\update_roadmap.py"
       ],
       "first_prompt": "I should start comfyUI via the bat file or another way?",
-      "last_prompt": "<task-notification>\n<task-id>b6ujzlplb</task-id>\n<tool-use-id>toolu_01HEhhz93bKWWTAtkHVyqWTB</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-MediaStudio\\40a4b60b-3939-4ea9-8918-d2e9db3c700f\\tasks\\b6ujzlplb.output",
+      "last_prompt": "well, look at this: http://127.0.0.1:7864/",
       "project_id": "mediastudio",
-      "mtime": "2026-08-27T17:05:50",
-      "size_bytes": 3443538,
+      "mtime": "2026-08-27T18:35:17",
+      "size_bytes": 4068991,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-27 15:59:07",
+      "matched_brain_started": "2026-08-27 10:36:04",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -204,8 +204,8 @@
       "size_bytes": 230456,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-27 11:32:05",
-      "matched_brain_title": "Session ended (no transcript summary available)."
+      "matched_brain_started": "2026-08-27 10:46:09",
+      "matched_brain_title": "subagent_end"
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-NAYA\\12715b86-db61-48f0-a474-75c3b1399696.jsonl",
@@ -313,8 +313,8 @@
       "size_bytes": 1288202,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 14:16:52",
-      "matched_brain_title": "subagent_end"
+      "matched_brain_started": "2026-08-27 09:07:01",
+      "matched_brain_title": "Session ended (no transcript summary available)."
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\15caf730-2fde-4ece-a410-9959758fd4e2.jsonl",
@@ -362,7 +362,7 @@
       "size_bytes": 4824328,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 14:16:52",
+      "matched_brain_started": "2026-08-26 17:10:29",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -411,8 +411,8 @@
       "size_bytes": 3385245,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-27 09:44:10",
-      "matched_brain_title": "subagent_end"
+      "matched_brain_started": "2026-08-27 09:07:01",
+      "matched_brain_title": "Session ended (no transcript summary available)."
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\a99674e6-ebf4-4859-9882-88630c949419.jsonl",
@@ -440,7 +440,7 @@
       "size_bytes": 1319558,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 14:16:52",
+      "matched_brain_started": "2026-08-26 17:10:29",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -482,7 +482,7 @@
       "size_bytes": 4297286,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 10:26:31",
+      "matched_brain_started": "2026-08-26 12:37:18",
       "matched_brain_title": "subagent_end"
     },
     {
@@ -531,8 +531,8 @@
       "size_bytes": 6786349,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-08-26 14:16:52",
-      "matched_brain_title": "subagent_end"
+      "matched_brain_started": "2026-08-27 09:07:01",
+      "matched_brain_title": "Session ended (no transcript summary available)."
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78.jsonl",
@@ -618,27 +618,39 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79.jsonl",
       "cwd": "C:\\CLAUDE",
       "first_ts": "2026-08-27T15:37:17.907Z",
-      "last_ts": "2026-08-27T20:25:54.388Z",
-      "user_prompts": 10,
-      "assistant_replies": 290,
+      "last_ts": "2026-08-27T22:17:33.088Z",
+      "user_prompts": 16,
+      "assistant_replies": 467,
       "files_touched": [
+        "C:\\APPS\\OC\\runtime\\add_connector.sh",
+        "C:\\APPS\\OC\\tools\\rename_keepalive_service.ps1",
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\feedback_blast_radius_check.md",
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\feedback_conhost_masks_exit_codes.md",
+        "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\feedback_openclaw_mcp_transport.md",
         "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\project_kaze_digest_outage_2026_08.md",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\add_registry.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\add_section.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\final_summary.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_artifact.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_kakei.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_memory.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_memory2.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_oc_tasks.ps1",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\fix_path.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\oc-assessment.html",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\patch_daemon.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\patch_policy.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\patch_policy2.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\write_docs.py"
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\wire_mcp.sh",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\wire_mcp2.sh",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\write_docs.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79\\scratchpad\\write_docs2.py"
       ],
       "first_prompt": "Investigate what happened to my daily Digest from Kaze. I have not received in ages. Also check OC (Open Claw) status. And evaluate using OC for more than what we are using now. There is plenty new plug-ins, new ways to use OC for free. Als",
-      "last_prompt": "# /loop — schedule a recurring or self-paced prompt\n\nParse the input below into `[interval] <prompt…>` and schedule it.\n\n## Parsing (in priority order)\n\n1. **Leading token**: if the first whitespace-delimited token matches `^\\d+[smhd]$` (e.",
+      "last_prompt": "PS C:\\Users\\renne> powershell -ExecutionPolicy Bypass -File \"C:\\APPS\\OC\\tools\\rename_keepalive_service.ps1\"\n=== 1. Removing old service (OC-Keepalive-Service) ===\n  removed.\n=== 2. Installing QI_OCKeepalive ===\n  configured.\n=== 3. Starting",
       "project_id": "unknown",
-      "mtime": "2026-08-27T16:53:10",
-      "size_bytes": 1458165,
+      "mtime": "2026-08-27T18:17:33",
+      "size_bytes": 2182732,
       "likely_logged": true,
       "matched_via": "transcript_exact"
     },
@@ -646,14 +658,17 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187.jsonl",
       "cwd": "C:\\CLAUDE",
       "first_ts": "2026-08-27T18:53:21.963Z",
-      "last_ts": "2026-08-27T21:05:59.566Z",
-      "user_prompts": 4,
-      "assistant_replies": 424,
+      "last_ts": "2026-08-27T22:34:50.420Z",
+      "user_prompts": 14,
+      "assistant_replies": 615,
       "files_touched": [
         "C:\\APPS\\OC\\repo\\scripts\\sentry\\sentry-weekly-drift.sh",
+        "C:\\APPS\\OC\\tools\\repoint_oc_callees.sh",
         "C:\\APPS\\OC\\tools\\repoint_oc_paths.sh",
         "C:\\APPS\\QI\\TOOLS\\maia_nightly_sync.py",
         "C:\\APPS\\TUBESCOUT\\REAUTH_YOUTUBE.md",
+        "C:\\APPS\\TUBESCOUT\\shared\\sweep.py",
+        "C:\\APPS\\TUBESCOUT\\shared\\youtube_client.py",
         "C:\\QIH\\ecosystem\\QI_Scheduled_Tasks_Registry.md",
         "C:\\QIH\\ecosystem\\task_health_manifest.json",
         "C:\\QIH\\shared\\documentation\\QI_Task_Health_Audit_2026-08-27.md",
@@ -671,17 +686,18 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\fixtabs2.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\gen_summary.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\gen_summary2.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\mem_tubescout.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\mem_update2.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\prescan_secrets.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\register_taskhealth.ps1",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\survey_repos.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\update_memory.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\update_registry2.py"
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--CLAUDE\\e80f3663-fa70-4ac6-abd0-bded4971d187\\scratchpad\\update_memory.py"
       ],
       "first_prompt": "Ecosystem-wide audit: QI scheduled tasks are blind to failure because of conhost exit-code masking.\n\nVERIFIED FINDING (2026-08-27)\n`conhost.exe --headless <cmd>` always returns exit code 0, discarding the wrapped command's real code:\n- `wsl",
-      "last_prompt": "What Do you need me to do for tubescout? Can you walk me through? And can you take care of the rest?",
+      "last_prompt": "How do I switch to an API Key? Do it for me.",
       "project_id": "unknown",
-      "mtime": "2026-08-27T17:05:59",
-      "size_bytes": 2006449,
+      "mtime": "2026-08-27T18:34:50",
+      "size_bytes": 3774625,
       "likely_logged": true,
       "matched_via": "transcript_exact"
     },

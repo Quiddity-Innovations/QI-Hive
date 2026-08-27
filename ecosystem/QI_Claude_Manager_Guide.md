@@ -1,4 +1,4 @@
-# QI Hive Operator Guide
+﻿# QI Hive Operator Guide
 **Quiddity Innovations | Renne Santiago**  
 *Last updated: 2026-06-16 | Version: 3.0*  
 *The unified control plane for all QI projects*
@@ -240,7 +240,7 @@ All services are registered in Windows NSSM (Non-Sucking Service Manager).
 | QI_Elevate | Hive | — | Elevation Broker | Manual |
 | QI_HiveIngest | Hive | — | Worker | Manual |
 | QI_KazeConfigAPI | OpenClaw | 8401 | FastAPI | Manual |
-| OC-Keepalive-Service | OpenClaw | — | Daemon | Auto-start |
+| QI_OCKeepalive | OpenClaw | — | Daemon | Auto-start |
 
 **Status meaning:**
 - **Auto-start** — starts when Windows boots, auto-restarts if it crashes

@@ -197,6 +197,15 @@
       "max_age_hours": 2,
       "severity": "high",
       "note": "The monitor watching itself. It rewrites this file every pass (every 30 min), so a stale one means the monitor stopped. Without this entry a dead monitor would look exactly like a healthy estate - silence reading as success, which is the failure mode this whole manifest exists to eliminate."
+    },
+    "TubeScout_SubsRefresh": {
+      "owner": "tubescout",
+      "check": "sqlite",
+      "target": "C:\\APPS\\TUBESCOUT\\tubescout.db",
+      "query": "SELECT value FROM state WHERE key='last_subs_refresh'",
+      "max_age_hours": 2160,
+      "severity": "low",
+      "note": "NOT a scheduled task - a drift watch. TubeScout's sweep moved to an API key on 2026-08-27 (API keys never expire; the OAuth token died after 7 days and cost 66 days of silence). The only step still needing OAuth is pull_subscriptions(), which runs manually. If this goes stale, newly subscribed channels are being silently ignored. Fix: cd /d C:\\APPS\\TUBESCOUT && python -m shared.sweep --pull-subs"
     }
   }
 }
