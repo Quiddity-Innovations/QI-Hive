@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-27 17:01:09 (nightly reconciler)_
+_Auto-generated: 2026-08-27 17:07:12 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 681 | 2026-08-27 16:53:16 |
+| claude_manager | Operational | active | 684 | 2026-08-27 17:06:28 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |

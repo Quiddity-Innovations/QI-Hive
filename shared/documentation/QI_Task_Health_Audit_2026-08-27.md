@@ -237,8 +237,70 @@ self-watch entry on that file: if the monitor dies, its own staleness is visible
 rather than reading as a healthy estate. Promoting it to a real service removes
 the caveat entirely.
 
+---
+
+## 7. Follow-up pass — same day
+
+### Nightly git sync coverage: 19 unsynced repos → 3
+
+`coverage_check()` had warned `WARN 19 registry repo(s) sync nowhere` every night
+for months and nobody acted on it. **16 are now synced**, verified first: each is
+a git repo, has an `origin` remote, and a dry-run `git add -A` + `secret_gate`
+scan returned zero hits.
+
+That pre-scan was not a formality — it caught two repos that would have tried to
+commit **~54,000 vendored virtualenv files** (`Tools/headroom_env.old`,
+`.venv.old`). The secret gate would have ABORTed both, meaning they'd have been
+"added to the sync" and then silently never synced — **the PersonalSong failure
+repeating exactly**. Fixed at the cause by gitignoring the venvs.
+
+**3 deliberately excluded, and named in `NOT_SYNCED` in the script so the
+exclusion is never silent:**
+
+| Repo | Why |
+|---|---|
+| `C:\APPS\CLAUDE` | **38,499 files of a vendored venv are already committed.** `.gitignore` now blocks new ones, but untracking those is a ~38.5k-deletion commit — a decision, not a side effect. One command when you want it: `git -C "C:\APPS\CLAUDE" rm -r --cached "Tools/headroom_env"` |
+| `C:\APPS\AkiyaScout` | No `origin` remote, and zero commits |
+| `C:\APPS\OC` | Parent has no remote; its `repo/` subdir is its own clone (`rennesan/OC-Orchestrator`) and syncs there |
+
+⚠️ **Correction to §6:** the earlier claim that OC's six agent scripts "have no
+version control" was **wrong**. `C:\APPS\OC\repo` is a separate clone, ignored by
+the parent because it is nested. The scripts are versioned there and the repoint
+is committed as `c101164`.
+
+Three pushes (CogniBase, MapSnap, NEXUS) initially failed on
+`SSL_read ... bad record mac` / `unable to rewind rpc post data` — large-push
+buffer limits, not content problems. Fixed with `http.postBuffer=524288000` and
+`http.version=HTTP/1.1`; NEXUS additionally needed `http.lowSpeedLimit=0` +
+`http.lowSpeedTime=999` because its pending commit carried ~50 MB of demo videos
+(`docs/_demo_video/*.mp4`, three at 15.8 MB each) and the transfer was being cut
+off mid-push.
+
+**All three now push cleanly — verified 20/20 repos at 0 unpushed commits.** The
+videos were deliberately NOT excluded from backup: they are deliverables, and
+dropping them from version control to make a push succeed would have been a
+silent downgrade of what gets protected. Worth revisiting separately whether
+50 MB of MP4 belongs in git at all (the repo is already a 166 MB pack), but that
+is a content decision, not a plumbing one.
+
+Minor, still open: `C:\APPS\PersonalSong` logs `FAIL ... commit:` with an empty
+error when its only change is the dirty `seed-vc` gitlink. Harmless — it
+committed fine at 16:18 — but it will report FAIL on nights when nothing else
+changed, so it is noise worth removing later.
+
+### `noos.ai` was an accidental drop, and it matters
+
+Not a decision. `domain_drop_watch.py` had `DEFAULT_WATCH = ["noos.ai"]` as its
+fallback; when `C:\QIH\config\domain_watchlist.json` was created on 2026-08-22
+with only the three `noosorbis.*` domains, it silently replaced that default.
+
+**Restored — and the first poll after restoring found the domain is in
+`redemption period`, expired 2026-07-17.** It has been moving toward availability
+with nothing watching it for five days.
+
 ### Still open
 
-- **TubeScout OAuth (item 1)** — the one genuinely blocked item, and still the highest-impact one.
-- **19 registry repos have no nightly git sync at all** (`C:\APPS\OC`, MapSnap, NEXUS, EasyFlow, TubeScout…). Out of scope for this remediation; worth its own pass.
-- **`noos.ai` silently dropped** from the domain watchlist ~2026-08-22 — confirm whether that was deliberate.
+- **TubeScout OAuth (item 1)** — the one genuinely blocked item, and still the highest-impact one. Runbook: `C:\APPS\TUBESCOUT\REAUTH_YOUTUBE.md`.
+- **Promote `QI_TaskHealth` to an NSSM service** — one elevated command (registry §9).
+- **Decide the `nssm_install_qi` whitelist rule** — currently unsatisfiable, so the broker denies every QI service install. Not widened. Brain decision 577.
+- **`C:\APPS\CLAUDE` vendored-venv cleanup** — see the table above.
