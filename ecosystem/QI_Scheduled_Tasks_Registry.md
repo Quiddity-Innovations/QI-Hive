@@ -2,7 +2,7 @@
 
 **Authority:** This file is the single source of truth for all QI/OC/Maia **Windows Scheduled Tasks** (the sibling of `QI_Service_Registry.md`, which covers NSSM *services*).
 **Location:** `C:\QIH\ecosystem\QI_Scheduled_Tasks_Registry.md`
-**Last updated:** 2026-08-17 (audit: documented 8 missing tasks, flagged the QI_NightlyReconcile timeout and four dead one-shots — see §7)
+**Last updated:** 2026-08-27 (**health audit** — 7 tasks found silently DEAD, §3 log-timestamp advice corrected as unsafe; see §8 and `C:\QIH\shared\documentation\QI_Task_Health_Audit_2026-08-27.md`)
 
 > **If a scheduled task pops a command window, or you need to disable/enable one, START HERE.**
 
@@ -76,7 +76,9 @@ It is **idempotent** — edit the JSON, re-run `--apply`, done.
 ## 3. Gotchas (learned 2026-06-18 — don't repeat these)
 
 - ❌ **Do not swap `python.exe` → `pythonw.exe`.** `pythonw` sets `sys.stdout = None`, so any script that prints/logs to stdout crashes (exit 1). Also venvs often lack `pythonw.exe` (e.g. `C:\APPS\QI\.venv\Scripts\` has none). Use `conhost --headless python.exe` instead — real binary, valid stdout, no window.
-- ⚠️ **`conhost --headless` does not propagate the child exit code.** Task Scheduler will always show `LastTaskResult = 0`, even on failure. This is fine because every task logs to its own file — **verify a run by checking the log timestamp, not LastTaskResult.**
+- 🔴 **`conhost --headless` does not propagate the child exit code.** Task Scheduler will always show `LastTaskResult = 0`, even on failure — **even when the target binary does not exist at all** (re-verified 2026-08-27: `conhost --headless C:\NOPE\nothere.exe` → `0`). `LastTaskResult` is meaningless for all 24 conhost-wrapped tasks. `pythonw.exe` is **not** affected and does propagate exit codes correctly.
+- 🔴 **~~Verify a run by checking the log timestamp.~~ THIS ADVICE WAS WRONG — corrected 2026-08-27.** A wrapper log's mtime proves only that *something* appended, not that the job succeeded. Because the action redirects with `>> log 2>&1`, the shell's own **failure** messages land in the same log and keep it looking fresh. Measured during the 18-day OC outage: Kaze's wrapper log froze (an mtime check would have caught it) but **Yubin's grew every single day with 35 consecutive `No such file or directory` lines while completely dead** (an mtime check would have passed it). **Verify a run by checking for a task-specific SUCCESS MARKER or an advancing output artifact — never by mtime, never by exit code.** See `C:\QIH\shared\documentation\QI_Task_Health_Audit_2026-08-27.md` §1 and the reference implementation `check_digest_freshness()` in `C:\APPS\OC\tools\oc-keepalive-daemon.py`.
+- ⚠️ **A task that never worked still reports healthy.** Two tasks in this estate (`OC-Sentry-Drift-Sunday-8PM`, `OC-Kakei-Weekly-Sunday-7PM`) have **never** produced real output since creation — one guards on a directory that has never existed, the other prints `✅ sent` without checking curl's response. No regression is needed to be dead. New tasks must ship a freshness check as part of "done".
 - ⚠️ **`RunLevel = Highest` tasks need admin even to enable/modify.** Apply those from an **elevated** PowerShell/Terminal. The `QI_Elevate` broker only whitelists `nssm`/`sc`/`taskkill` (not PowerShell), so this step cannot currently be brokered.
 
 ---
@@ -107,7 +109,7 @@ All `hidden_user` tasks below are now windowless. `*` = required a one-time elev
 | OC-Sentry-Drift-Sunday-8PM | weekly Sun 20:00 | wsl `sentry-weekly-drift.sh` | hidden_user | conhost |
 | OC-ChatGPT-Keepalive | time trigger | `oc-chatgpt-keepalive.py` | hidden_user | already pythonw (silent) |
 | OC_WSL_KeepAlive * | time trigger | `keep-wsl-alive.ps1` | hidden_user | conhost (Highest) |
-| QI_McpConnectorGuard | every 5 min | `C:\QIH\engine	ools\ConnectorGuard\connector_guard.py` | hidden_user | conhost --headless in TR; reconciles Claude Desktop mcpServers vs connectors.json manifest; heartbeat in ConnectorGuard\logs |
+| QI_McpConnectorGuard | every 5 min | `C:\QIH\engine\tools\ConnectorGuard\connector_guard.py` | hidden_user | conhost --headless in TR; reconciles Claude Desktop mcpServers vs connectors.json manifest; heartbeat in ConnectorGuard\logs |
 | QI_NightlyReconcile | daily 02:30 | `tools\nightly_reconcile.py` | system | Backfills session_log from git + .docx, regenerates LATEST.md/status.json, runs the doc harvest + embeddings. **⚠ Was terminated (0x41306) on 2026-08-17 against a PT10M limit** — a measured run takes ~3.5 min but the doc-harvest embedding step is variable (175 docs that night). Needs `ExecutionTimeLimit` raised to PT30M — see §7. |
 | QI_ClaudeSelfAudit | monthly | Claude self-audit | hidden_user | Documented 2026-08-17 audit. |
 | QI_ClaudeUpdate_6AM | daily 06:00 | `C:\APPS\CLAUDE\Tools\claude_update_launch.bat` | hidden_user | Documented 2026-08-17 audit. |
@@ -204,3 +206,34 @@ Task registered and wrapped headless; **first run held until Sun 2026-08-23 00:0
 (`python C:\QIH\tools\qi_relay_draft.py --self-test --budget 0.40`). The external collaborator
 has been invited as an outside collaborator on the relay repo only; identities and roster live in
 the **private** relay repo (`peers.json`), never here — **this repo is public.**
+
+
+---
+
+## 8. Health status (audit 2026-08-27) — verified by output artifact, NOT LastTaskResult
+
+Full report: `C:\QIH\shared\documentation\QI_Task_Health_Audit_2026-08-27.md`
+
+| Status | Tasks |
+|---|---|
+| DEAD (66d) | **QI_TubeScout_AM**, **QI_TubeScout_PM** - `invalid_grant` on sweep+reclassify every cycle since 2026-06-23; no new video since 2026-06-22; still logs `cycle done` |
+| DEAD (18d) | **OC-Yubin-Daily-8AM**, **OC-Yubin-Daily-6PM** - `last-digest.json` frozen 2026-08-09; failed again today |
+| DEAD (18d) | **OC-Asa-Briefing-7AM** - last `Briefing sent` 2026-08-09; failed again today |
+| DEAD (never worked) | **OC-Sentry-Drift-Sunday-8PM** - reports dir has never existed; skips silently every week |
+| DEAD (never delivered) | **OC-Kakei-Weekly-Sunday-7PM** - 11/11 runs JSONDecodeError, logs success anyway |
+| UNPROVEN | **OC-Kaze-Digest-6AM/6PM**, **OC-Kaze-AI-Digest-6AM/6PM** - repaired manually 2026-08-27 11:40; scheduled path not yet proven |
+| DEGRADED | **QI_NightlyGitSync** (PersonalSong ABORTing 18+ nights on `plex_token`), **MaiaNightlySync** (never stages code; 86 files unbacked) |
+| HEALTHY | MaiaReconcile, QI_BrainBackfill, QI_McpConnectorGuard, QI_RelaySync, QI_EffortLedger_Daily, QI_DomainDropWatch_Daily, QI_ClaudeUpdate_6AM, QI_ClaudeSelfAudit |
+| DISABLED | OC_WSL_KeepAlive, QI_ClaudeVoiceBridgeCheck, QI_ClaudeVoiceMeeting_8AM |
+
+### Path rot
+`C:\OC` is an NTFS junction to `C:\APPS\OC` and is **load-bearing - do not remove**. But WSL's
+`/mnt/c/OC` view was only created **2026-08-27 11:40**; it did not resolve during the 18-day outage,
+which is the actual mechanism of the OC family's death. All six OC scripts still hardcode
+`/mnt/c/OC/...` internally, and the two Yubin task definitions still invoke the old path.
+
+### Proposed: one central freshness monitor
+Manifest at `C:\QIH\ecosystem\task_health_manifest.json`, evaluated by an always-on host
+(**QI_BrainAPI**, :9011). Central rather than per-task, because a per-task check dies with the task
+it is meant to watch. Check types ranked strongest-first: `db` row > log `marker` > `git` commit >
+file mtime. **Every new unattended job ships its freshness check as part of "done".**

@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-27 00:33:57 (nightly reconciler)_
+_Auto-generated: 2026-08-27 16:17:23 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 635 | 2026-08-26 22:57:26 |
+| claude_manager | Operational | active | 678 | 2026-08-27 16:15:16 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -21,15 +21,15 @@ _Auto-generated: 2026-08-27 00:33:57 (nightly reconciler)_
 | maia | Phase 4 — production | active | 23 | 2026-08-13 21:00:07 |
 | mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 185 | 2026-08-22 17:49:18 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
-| naya | Phase 4 â€” standalone application | paused | 6 | 2026-08-22 21:39:20 |
+| naya | Phase 4 â€” standalone application | paused | 10 | 2026-08-27 15:42:15 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
 | noosorbis | v0.5.0 â€” complete; owner signed off | complete | 10 | 2026-08-26 15:28:47 |
-| openclaw | Phase 2 — agent expansion | active | 65 | 2026-07-31 21:58:24 |
+| openclaw | Phase 2 â€” agent expansion (recovery + modernization) | active | 67 | 2026-08-27 15:52:00 |
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Dashboard UX polish | active | 221 | 2026-08-26 00:35:01 |
-| retirementanalyzer | v0.12 â€” Phase 1 built, Task 1 backlog cleared | active | 70 | 2026-08-27 03:18:23 |
+| qi_hive | Dashboard UX polish | active | 223 | 2026-08-27 19:06:18 |
+| retirementanalyzer | v0.12 â€” Phase 1 built, Task 1 backlog cleared | active | 80 | 2026-08-27 14:51:02 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 31 | 2026-08-26 14:39:51 |
@@ -181,10 +181,10 @@ secrets/ is hardened: one editable file, git ignores the folder wholesale, key l
 No further development planned. If ever wanted: server-side answer history for cross-device comparison (deliberately browser-only today), diagrams from an article's own structured data rather than the disabled diffusion pipeline, deleting the three *_noosorbis_exception elevation-whitelist rules now the app runs from C:\APPS\NoosOrbis, and Cloudflare Access while gate mode is open.
 
 ### openclaw
-- **Phase:** Phase 2 — agent expansion
+- **Phase:** Phase 2 â€” agent expansion (recovery + modernization)
 - **Status:** active
-- **Summary:** Agents live in WSL (Tasuke, Kaze, Yubin, Sentry, Asa, Koe, Kakei). Kaze Config API :8401. Keepalive service running.
-- **Next:** NotebookLM connection re-evaluation; Maia action routing
+- **Summary:** Kaze digest restored 2026-08-27 after an 18-day silent outage caused by the C:\OC -> C:\APPS\OC move plus conhost --headless exit-code masking. Junction in place, 11 of 13 scheduled tasks and the WSL crontab repointed, outcome-based freshness alarm patched into the keepalive daemon (arms on next service restart). Both digests verified delivering live. Decision taken: keep OpenClaw, upgrade it (4 months behind, only 4 plugins enabled), and add Goose as a separate on-demand coding harness rather than migrating to Hermes.
+- **Next:** 1) Elevated: nssm restart OC-Keepalive-Service to arm the freshness alarm. 2) openclaw doctor --repair (gateway service PATH missing 3 dirs). 3) Upgrade to 2026.6.34 extended-stable. 4) Verify Sentry/Asa/Kakei now produce output. 5) Point OpenClaw's MCP client at existing QI MCP servers (Brain, registry, MapSnap, AutoPDF). 6) Audit all QI conhost --headless tasks for exit-code blindness. 7) Decide whether to schedule or retire Yubin and Koe.
 
 ### personalsong
 - **Phase:** Working app

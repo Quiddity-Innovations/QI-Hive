@@ -346,6 +346,26 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Install** | Run `C:\PlayDeck\Install_Service.bat` as admin (self-elevates). The QI_Elevate broker cannot create new services — its whitelist covers existing ones only. |
 | **Registered** | 2026-07-29 |
 
+### QI_ComfyUI
+| Field | Value |
+|---|---|
+| **Display name** | QI - ComfyUI |
+| **Description** | ComfyUI (portable) — image / video / music generation engine on 127.0.0.1:8740. Serves Media Studio, the `qi-comfy` MCP server, and every workflow in `D:\AI\workflows`. |
+| **Binary** | `D:\AI\ComfyUI_windows_portable\python_embeded\python.exe` |
+| **Parameters** | `-s ComfyUI\main.py --windows-standalone-build --listen 127.0.0.1 --port 8740 --output-directory "D:\AI\Outputs\ComfyUI" --disable-auto-launch` |
+| **Working dir** | `D:\AI\ComfyUI_windows_portable` |
+| **Port** | 8740 (loopback only — indexes unreleased client media and biometric voice samples) |
+| **Stdout log** | `D:\AI\comfy_8740.log` |
+| **Stderr log** | `D:\AI\comfy_8740.log` (rotating, 50 MB) |
+| **Start type** | AUTO_START |
+| **Account** | LocalSystem |
+| **Env (required)** | `HF_HOME`, `HUGGINGFACE_HUB_CACHE`, `TRANSFORMERS_CACHE`, `DIFFUSERS_CACHE`, `TORCH_HOME` → all under `D:\AI\huggingface\`. ⚠️ These exist only in **HKCU**; LocalSystem does not inherit them. Without `AppEnvironmentExtra` ComfyUI re-downloads its caches into `C:\Windows\system32\config\systemprofile`. |
+| **Install** | Run `D:\AI\install_QI_ComfyUI_service.bat` as admin. Close the `Start_ComfyUI.bat` console first — only one process can hold 8740. The QI_Elevate broker cannot create new services. |
+| **Manual start (fallback)** | `D:\AI\Start_ComfyUI.bat` — identical arguments, visible log window. |
+| **Health** | `curl http://127.0.0.1:8740/system_stats` → 200 with GPU/VRAM JSON |
+| **Registered** | 2026-08-27 |
+| **Notes** | Four tenants share one 16 GB card. **Free VRAM is a misleading health signal** — report utilisation and the ComfyUI queue alongside memory. `POST /free` drops idle models but cannot stop a running job. |
+
 
 ## Quick Reference — NSSM Commands
 
