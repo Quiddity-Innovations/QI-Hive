@@ -298,9 +298,36 @@ with only the three `noosorbis.*` domains, it silently replaced that default.
 `redemption period`, expired 2026-07-17.** It has been moving toward availability
 with nothing watching it for five days.
 
+### ⚠️ Correction: the junction dependency was only partly retired
+
+A completed reference scan of `C:\APPS` + `C:\QIH` returned:
+
+| Pattern | Files |
+|---|---|
+| `C:\OC\` (Windows-style) | **0** |
+| `/mnt/c/OC/` (WSL-style) | 451 total · **69 live executables** under `C:\APPS\OC` after excluding `.claude/worktrees`, `.bak` and `.git` |
+
+So the earlier statement that item 3 "retired the dependency" was **narrower than
+it sounded**. The first pass fixed the six task ENTRY POINTS; it did not touch
+what they invoke, and two callees sat directly inside repaired daily chains:
+
+- `sentry/sentry-health-check.sh` ← `oc-morning-briefing.sh` (Asa, 07:00)
+- `kakei/kakei-from-yubin.py` ← `yubin-daily.sh` (08:00 and 18:00)
+
+**Both now repointed and live-tested through their callers** (commit `ce3b975`).
+The remaining ~67 are not in any repaired scheduled-task chain — disabled
+broadcast tasks, one-time `register-*.ps1` helpers, and the disabled WSL
+keepalive. They are latent, not active.
+
+The useful finding is the **0**: nothing on the Windows side references `C:\OC\`
+any more. The junction is load-bearing purely for WSL-side `/mnt/c/OC/` paths,
+which narrows any future retirement to a single, well-defined sweep. The junction
+**stays** either way.
+
 ### Still open
 
 - **TubeScout OAuth (item 1)** — the one genuinely blocked item, and still the highest-impact one. Runbook: `C:\APPS\TUBESCOUT\REAUTH_YOUTUBE.md`.
+- **~67 latent `/mnt/c/OC/` references** in non-scheduled OC files — worth a sweep, but nothing currently depends on it running.
 - **Promote `QI_TaskHealth` to an NSSM service** — one elevated command (registry §9).
 - **Decide the `nssm_install_qi` whitelist rule** — currently unsatisfiable, so the broker denies every QI service install. Not widened. Brain decision 577.
 - **`C:\APPS\CLAUDE` vendored-venv cleanup** — see the table above.
