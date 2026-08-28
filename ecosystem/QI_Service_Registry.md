@@ -301,13 +301,31 @@ do it, see below):
 powershell -ExecutionPolicy Bypass -File C:\QIH\tools\Install-QITaskHealthService.ps1
 ```
 
-**⚠ The broker cannot install QI services right now.** `nssm_install_qi` in
-`C:\QIH\commands\whitelist.json` permits python only at
-`C:\Windows\System32`, `C:\1-AI\APPS\PYTHON` or `C:\Python*` - none of which
-exist on this machine any more (python is at `C:\Program Files\Python311`), so
-the rule is unsatisfiable and every service install is denied. The whitelist was
-deliberately NOT widened; that is a security boundary. Brain decision 577.
-`nssm restart QI_TaskHealth` IS brokered and works normally.
+**Broker service installs — repaired 2026-08-27.** `nssm_install_qi` and
+`nssm_set_application` in `C:\QIH\commands\whitelist.json` permitted python only
+at `C:\Windows\System32`, `C:\1-AI\APPS\PYTHON` or `C:\Python*`. None of those
+exist on this machine, while **every** QI python service — including
+`QI_Elevate` itself — runs `C:\Program Files\Python311\python.exe`. The rules
+could therefore never match: they denied every service install while protecting
+nothing. Repaired with Renne's approval by adding the real path.
+
+**The script-path constraint was deliberately left byte-identical**
+(`^C:\\(QIH|QIP)(\\[A-Za-z0-9_.-]+)*\.py$`). That is the constraint doing the
+security work — and note what it implies: anyone who can write a `.py` under
+`C:\QIH` can obtain SYSTEM execution through the broker. That was already true
+before this change; the python-path repair does not alter it. Backup:
+`whitelist.json.bak-pathrepair-20260827`. Brain decisions 577 (finding) and 583
+(repair).
+
+> **Editing the whitelist requires restarting `QI_Elevate` EXTERNALLY.** Never
+> restart the broker through itself — it stays STOPPED and elevation is bricked
+> until a human starts it from an elevated shell.
+
+**Still a known limitation:** `nssm_install_qi` accepts exactly 4 args, and
+`nssm_set_appparams` accepts a bare `.py`/`.bat` path with **no arguments**. So a
+brokered install cannot pass something like `--daemon`. That is why
+`Install-QITaskHealthService.ps1` runs elevated rather than through the broker.
+Not widened — flagged for a separate decision.
 
 ### QI_Elevate
 | Field | Value |

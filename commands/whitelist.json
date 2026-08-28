@@ -59,7 +59,7 @@
       "args_regex": [
         "^install$",
         "^QI_[A-Za-z0-9_]+$",
-        "^(C:\\\\Windows\\\\System32\\\\python\\.exe|C:\\\\1-AI\\\\APPS\\\\PYTHON\\\\python\\.exe|C:\\\\Python[0-9]*\\\\python\\.exe)$",
+        "^(C:\\\\Windows\\\\System32\\\\python\\.exe|C:\\\\1-AI\\\\APPS\\\\PYTHON\\\\python\\.exe|C:\\\\Python[0-9]*\\\\python\\.exe|C:\\\\Program Files\\\\Python311\\\\python\\.exe)$",
         "^C:\\\\(QIH|QIP)(\\\\[A-Za-z0-9_.-]+)*\\.py$"
       ]
     },
@@ -138,7 +138,7 @@
         "^set$",
         "^QI_[A-Za-z0-9_]+$",
         "^Application$",
-        "^C:\\\\Windows\\\\System32\\\\(cmd|wsl|python)\\.exe$"
+        "^(C:\\\\Windows\\\\System32\\\\(cmd|wsl|python)\\.exe|C:\\\\Program Files\\\\Python311\\\\python\\.exe)$"
       ]
     },
     {
@@ -287,5 +287,6 @@
         "^C:\\\\APPS\\\\NoosOrbis\\\\main\\.py$"
       ]
     }
-  ]
+  ],
+  "_repaired_2026_08_27": "nssm_install_qi and nssm_set_application permitted python only at paths that do not exist on this machine (C:\\Windows\\System32, C:\\1-AI\\APPS\\PYTHON, C:\\Python*), so they could never match and every QI service install was denied - while every real QI service, including QI_Elevate itself, runs C:\\Program Files\\Python311\\python.exe. Added that path. The script-path constraint (C:\\QIH or C:\\QIP, .py only) is unchanged: that is the constraint doing the security work. Approved by Renne. Backup: whitelist.json.bak-pathrepair-20260827"
 }
