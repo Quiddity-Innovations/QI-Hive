@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-27 21:56:35 (nightly reconciler)_
+_Auto-generated: 2026-08-28 00:34:48 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 727 | 2026-08-27 21:56:13 |
+| claude_manager | Operational | active | 730 | 2026-08-27 22:01:11 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -28,8 +28,8 @@ _Auto-generated: 2026-08-27 21:56:35 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 230 | 2026-08-27 19:49:28 |
-| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 82 | 2026-08-27 20:18:18 |
+| qi_hive | Observability hardening | active | 231 | 2026-08-27 21:57:33 |
+| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 84 | 2026-08-27 20:18:18 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 31 | 2026-08-26 14:39:51 |
