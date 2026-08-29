@@ -1,14 +1,14 @@
 {
-  "generated": "2026-07-31T09:00:09.495054",
+  "generated": "2026-08-28T09:00:20.110155",
   "mode": "apply-safe",
-  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-07-31_0900.md",
-  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-07-31_0900.docx",
+  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-08-28_0900.md",
+  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-08-28_0900.docx",
   "auto_fixed": [
     "Removed 1 clean git worktree(s)",
     "Pruned 3 dead .claude.json entries"
   ],
   "needs_decision": [
-    "Large folder C:\\CLAUDE\\Tools (1912.4 MB) - confirm still in use"
+    "Large folder C:\\APPS\\CLAUDE\\Tools (3831.9 MB) - confirm still in use"
   ],
   "reviewed": false
 }

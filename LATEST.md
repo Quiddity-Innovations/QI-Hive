@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-08-28 00:34:48 (nightly reconciler)_
+_Auto-generated: 2026-08-29 00:34:33 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 730 | 2026-08-27 22:01:11 |
+| claude_manager | Operational | active | 794 | 2026-08-28 22:49:17 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -19,17 +19,17 @@ _Auto-generated: 2026-08-28 00:34:48 (nightly reconciler)_
 | lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
 | m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production | active | 23 | 2026-08-13 21:00:07 |
-| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 185 | 2026-08-22 17:49:18 |
+| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 186 | 2026-08-28 09:11:35 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
-| naya | Phase 4 â€” standalone application | paused | 10 | 2026-08-27 15:42:15 |
+| naya | Phase 5 â€” capability behind OpenClaw (application retired) | paused | 12 | 2026-08-28 08:07:21 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
 | noosorbis | v0.5.0 â€” complete; owner signed off | complete | 10 | 2026-08-26 15:28:47 |
 | openclaw | Phase 2 â€” agent expansion (recovered + modernized) | active | 67 | 2026-08-27 15:52:00 |
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 231 | 2026-08-27 21:57:33 |
-| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 84 | 2026-08-27 20:18:18 |
+| qi_hive | Observability hardening | active | 232 | 2026-08-28 00:35:02 |
+| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 97 | 2026-08-28 16:48:29 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 31 | 2026-08-26 14:39:51 |
@@ -149,14 +149,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** Resume when Renne picks the project back up.
 
 ### naya
-- **Phase:** Phase 4 â€” standalone application
+- **Phase:** Phase 5 â€” capability behind OpenClaw (application retired)
 - **Status:** paused
-- **Summary:** Naya is now a complete independent application (2026-08-22). Zero code or data reach-in to C:\APPS\QI: Maia's maia_db/maia_lang/maia_context vendored in-tree as naya_db_core/naya_lang/naya_context (deliberate fork), all 8 sys.path injections removed, peer-bridge relocated to C:\QIH\shared\bridge + C:\QIH\secrets. Fixed a real bug where naya_gradio.py was reading Maia's maia.db. Bot :8002 and Gradio :7861 verified HTTP 200 after restart via the QI_Elevate broker; error log empty.
-
-Drive scanning is paused per owner: \Naya\scan_for_duplicates (daily 02:00 over C:/D:/E:/F:) disabled, and usb_auto_scan + usb_scan_at_night set false. Telegram 409 root-caused â€” a webhook is registered, so getUpdates 409s by design; poller backed off from every-15s to once daily at 07:00, and 166.9 MB of log spam cleared.
-
-Status remains 'paused' (owner's standing decision from 2026-06-18) â€” this session was structural cleanup, not feature work.
-- **Next:** 1) Decide Telegram delivery path â€” webhook (working) or poller (now a once-daily no-op); running both is what caused the 409 storm. 2) Review naya_brain.db at 4.07 GB now that duplicate scans are paused. 3) Naya's four standard docs (Implementation Log, Meeting Minutes, Version History, Master Status Report) are still missing. 4) Optional: point Maia at C:\QIH\shared\bridge as well, once its code freeze lifts.
+- **Summary:** GENUINELY paused 2026-08-28 â€” not just a status field this time. QI_NayaBot, QI_NayaGradio and QI_NayaTunnel are Stopped with StartType Manual, so reboots no longer revive them; the nightly 02:00 4.5-hour multi-drive scan is halted. No data deleted (naya_brain.db 4.15 GB and filehq.db 2.63 GB intact). Naya is now a CAPABILITY OpenClaw calls rather than a standalone app: the FileHQ engine was extracted from naya_server.py (where it ran as a daemon thread) into standalone service QI_FileHQ on loopback :8200, fronted by MCP gateway QI_NayaMCP on :8250, consumed by OpenClaw as `qi-naya` and by Claude Desktop. Both new services are QI_-prefixed and broker-manageable. Standard docs (Implementation Log, Meeting Minutes, Version History) created â€” they had been missing since project start. Key correction logged: FileHQ is NOT a separate engine, it IS Naya's scanner (naya_watcher.py imports filehq_bridge), so it must not be dumped and rebuilt.
+- **Next:** 1) Build the duplicate review-and-approve flow â€” enumerated list, human approves, then execute. This is the layer that was never built and why >1 TB of identified waste has never been reclaimed. 2) Decide whether to enable `find` / `duplicate_group` (they return real file paths â€” currently OFF). 3) Finish categorisation â€” only ~12% of the 4.4M index is classified; the GPU is free during OpenClaw's 07:30-17:30 pause window. 4) Decide the fate of now-unused naya_server.py / naya_gradio.py. 5) Decide whether naya_brain.db (4.7M similarity rows, 1.34 TB of findings) should also be surfaced, or whether FileHQ's index is the single source of truth.
 
 ### nexus
 - **Phase:** Phase 2 — NSSM-supervised

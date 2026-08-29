@@ -71,6 +71,8 @@
 | AutoPDFTunnel | QI_AutoPDFTunnel | ✅ 2026-06-15 | Cloudflare quick tunnel → :6969; URL in Application\status\tunnel.json; PIN-gated |
 | AutoPDFMCP | QI_AutoPDFMCP | ✅ 2026-08-07 | MCP gateway 127.0.0.1:8701; AppDir C:\APPS\AutoPDF; runs tools\run_mcp_gateway.py; SERVICE_AUTO_START. Tools + on/off live in C:\APPS\AutoPDF\config\mcp_gateway.json (Settings → AI & Connections). Register with `Application\_register_mcp_service.ps1` **elevated**. ⚠️ Free :8701 of any hand-started gateway first — see note below |
 | OC-Keepalive-Service | QI_OCKeepalive | ✅ 2026-08-27 | NotebookLM session-cookie monitor **+ Kaze digest freshness alarm**. Renamed because the old hyphenated non-`QI_` name failed QI_Elevate's `nssm_service_control` rule (`^QI_[A-Za-z0-9_]+$`), so it could not be restarted by QI automation at all. Rename verified: broker restart now returns `status: ok`. Despite the legacy name it is **not** a WSL keepalive — that is the `OC_WSL_KeepAlive` scheduled task. |
+| _(new)_ | QI_FileHQ | ✅ 2026-08-28 | FileHQ engine extracted from the Naya bot process; loopback :8200. Does NOT scan on its own. |
+| _(new)_ | QI_NayaMCP | ✅ 2026-08-28 | MCP gateway :8250 fronting QI_FileHQ. Consumed by OpenClaw (`qi-naya`) + Claude Desktop. Executor deliberately not exposed. |
 
 ---
 
@@ -796,6 +798,44 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Broker manageable** | ✅ Yes — matches `^QI_[A-Za-z0-9_]+$`, so `run_elevated("nssm", ["restart","QI_OCKeepalive"])` works. Verified 2026-08-27 (`status: ok`, `rule_matched: nssm_service_control`). |
 | **Status** | Running. Renamed from `OC-Keepalive-Service` on 2026-08-27; 5 referencing files updated (backups `.bak-rename-20260827`). |
 | **Added** | 2026-08-27 |
+
+### QI_FileHQ
+| Field | Value |
+|---|---|
+| **Display name** | QI_FileHQ |
+| **Description** | FileHQ file-intelligence engine (loopback :8200). Index / scan / categorise / dedup API. |
+| **Binary** | `C:\Program Files\Python311\python.exe` |
+| **Parameters** | `C:\APPS\NAYA\filehq_service.py` |
+| **Working dir** | `C:\APPS\NAYA` |
+| **Port** | 8200 (loopback only — Naya's registered block 8200-8299) |
+| **Logs** | `C:\APPS\NAYA\LOGS\filehq_service.log`, `filehq_nssm_stdout.log` / `_stderr.log` |
+| **Start type** | AUTO_START · **Account** LocalSystem |
+| **Install** | `C:\APPS\NAYA\install_filehq_service.ps1` (elevated, idempotent, frees the port first) |
+| **History** | Until 2026-08-28 this ran as a daemon *thread* inside `naya_server.py`, so the engine only existed while the Naya Telegram bot ran. Extracted so OpenClaw can consume it without reviving the bot, the unused Gradio UI or the public tunnel. |
+| **Does it scan on its own?** | **No.** FileHQ's APScheduler registers jobs only from its `tasks` table, which has 0 rows. The old 02:00 nightly 4.5-hour multi-drive scan came from Naya's watchers in `naya_server.py`, which is now stopped. |
+| **Scale** | 4,432,053 files indexed · 18.03 TB catalogued · 694 duplicate groups · **0 operations ever executed** |
+| **Status** | Running. Installed 2026-08-28. |
+| **Added** | 2026-08-28 |
+
+### QI_NayaMCP
+| Field | Value |
+|---|---|
+| **Display name** | QI_NayaMCP |
+| **Description** | Naya/FileHQ MCP gateway (127.0.0.1:8250) fronting the FileHQ engine on :8200. Bearer-gated. |
+| **Binary** | `C:\Program Files\Python311\python.exe` |
+| **Parameters** | `C:\APPS\NAYA\tools\run_mcp_gateway.py` |
+| **Working dir** | `C:\APPS\NAYA` |
+| **Port** | 8250 (loopback) |
+| **Config** | `C:\APPS\NAYA\config\mcp_gateway.json` — every tool individually switchable; `enabled` is the master switch |
+| **Token** | `C:\APPS\NAYA\config\secrets\mcp_bearer_token.txt` |
+| **Logs** | `C:\APPS\NAYA\LOGS\naya_mcp_stdout.log` / `_stderr.log` |
+| **Start type** | AUTO_START · **Account** LocalSystem |
+| **Install** | `C:\APPS\NAYA\install_naya_mcp_service.ps1` (elevated; run the QI_FileHQ installer first) |
+| **Consumed by** | OpenClaw as `qi-naya` (⚠️ needs `transport: streamable-http` — see openclaw#72757) and Claude Desktop as `qi-naya` |
+| **Security — tool tiers** | ON: aggregate metadata (`status`, `categories`, `duplicates_summary`, `scan_status`) — counts and sizes, never a file path. OFF: `find`, `duplicate_group` — these return REAL FILE PATHS. OFF: `trigger_scan`, `trigger_categorize` — hours of disk I/O. **NEVER EXPOSED at any tier: FileHQ's executor, which deletes and moves files.** Destruction goes through an explicit approval list, not an MCP call. |
+| **Pattern** | Follows AutoPDF exactly (`:6969` → `:8701`). `qi_mcp_gateway.py` vendored into `tools\` with a new `filehq` adapter added to ADAPTERS. |
+| **Status** | Running. Installed 2026-08-28. |
+| **Added** | 2026-08-28 |
 
 ### QI_M2VTunnel
 | Field | Value |
