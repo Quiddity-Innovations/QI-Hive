@@ -1,16 +1,72 @@
 {
-  "generated_at": "2026-08-31T00:06:01",
-  "cutoff": "2026-08-29T00:00:00",
-  "transcripts_scanned": 1,
-  "transcripts_skipped_old": 160,
+  "generated_at": "2026-09-01T00:06:02",
+  "cutoff": "2026-08-30T00:00:00",
+  "transcripts_scanned": 3,
+  "transcripts_skipped_old": 159,
   "transcripts_skipped_subagent": 109,
-  "brain_rows_in_window": 2,
+  "brain_rows_in_window": 13,
   "candidates": [
+    {
+      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--\\1a875ff0-4276-4574-a931-5fb78bbf0d83.jsonl",
+      "cwd": "C:\\",
+      "first_ts": "2026-08-31T20:01:18.300Z",
+      "last_ts": "2026-08-31T22:32:16.976Z",
+      "user_prompts": 6,
+      "assistant_replies": 99,
+      "files_touched": [
+        "C:\\Users\\renne\\Downloads\\DISASTER\\_fixpaths.py",
+        "C:\\Users\\renne\\Downloads\\DISASTER\\find_photos.py",
+        "C:\\Users\\renne\\Downloads\\DISASTER\\get_nepal_photos.py",
+        "C:\\Users\\renne\\Downloads\\DISASTER\\get_photos.py",
+        "C:\\Users\\renne\\Downloads\\DISASTER\\powerhouse_photos\\Snowy_hydro_murray_1_machine_hall_floor.jpg",
+        "C:\\Users\\renne\\Downloads\\DISASTER\\trishuli_section.html",
+        "C:\\Users\\renne\\Downloads\\Nepal_Flood_2026\\README.md",
+        "C:\\Users\\renne\\Downloads\\Nepal_Flood_2026\\build_flood_kml.py",
+        "C:\\Users\\renne\\Downloads\\Nepal_Flood_2026\\trishuli_section.html"
+      ],
+      "first_prompt": "Is there a way to connect Claude Desktop to Google Earth Pro and use it to update the Google Earth Pro with more up to date maps? I am trying to understand the disaster in Nepal And China and wanted to get the maps available in the news and",
+      "last_prompt": "Pictures of the powerhouse, please",
+      "project_id": "unknown",
+      "mtime": "2026-08-31T23:12:37",
+      "size_bytes": 765774,
+      "likely_logged": true,
+      "matched_via": "transcript_exact"
+    },
+    {
+      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49.jsonl",
+      "cwd": "C:\\APPS\\Retirement Analyzer",
+      "first_ts": "2026-08-28T14:20:02.023Z",
+      "last_ts": "2026-08-31T16:39:21.402Z",
+      "user_prompts": 9,
+      "assistant_replies": 261,
+      "files_touched": [
+        "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\tool-results\\bqula10xg.txt",
+        "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\memory\\feedback-python-file-patching.md",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\build_video.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\msg1.txt",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\read_perf.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\reconcile.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\session_summary.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\update_version_history.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\video_build\\slide_00.png",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\video_build\\slide_02.png",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\video_build\\slide_08.png",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\video_slides.html",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\write_next.py",
+        "C:\\Users\\renne\\Downloads\\RETIREMENT\\Retirement_Strategy_Presentation_v2.html"
+      ],
+      "first_prompt": "@\"C:\\Users\\renne\\Downloads\\Retirement_Strategy_Review_v2_Definitive.docx\" @\"C:\\Users\\renne\\Downloads\\De-risking_the_Japan_early_retirement_blueprint.m4a\"\nRA - Session 6 - Read the report and listen to the criticism of the plan and the way w",
+      "last_prompt": "@\"C:\\Users\\renne\\Downloads\\performance_report_multiple_accounts_2026-08-31.pdf\"\nThis is my last 3 years of Fidelity Investment, how that reflects under Retirement Analyzer? What is the rate that my investments have grown per year and the av",
+      "project_id": "retirementanalyzer",
+      "mtime": "2026-08-31T12:39:21",
+      "size_bytes": 2916021,
+      "likely_logged": false
+    },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79.jsonl",
       "cwd": "C:\\CLAUDE",
       "first_ts": "2026-08-27T15:37:17.907Z",
-      "last_ts": "2026-08-29T02:12:18.744Z",
+      "last_ts": "2026-08-31T23:24:45.598Z",
       "user_prompts": 35,
       "assistant_replies": 918,
       "files_touched": [
@@ -48,13 +104,13 @@
       "first_prompt": "Investigate what happened to my daily Digest from Kaze. I have not received in ages. Also check OC (Open Claw) status. And evaluate using OC for more than what we are using now. There is plenty new plug-ins, new ways to use OC for free. Als",
       "last_prompt": "Fix the OC dashboard. I prefer that when I am in front of the computer",
       "project_id": "unknown",
-      "mtime": "2026-08-30T23:56:14",
-      "size_bytes": 4094878,
+      "mtime": "2026-08-31T23:36:53",
+      "size_bytes": 4103537,
       "likely_logged": false
     }
   ],
   "summary": {
-    "needs_backfill": 1,
-    "already_logged": 0
+    "needs_backfill": 2,
+    "already_logged": 1
   }
 }
