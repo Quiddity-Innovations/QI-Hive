@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-09-03T00:06:02",
-  "cutoff": "2026-09-01T00:00:00",
+  "generated_at": "2026-09-04T00:06:01",
+  "cutoff": "2026-09-02T00:00:00",
   "transcripts_scanned": 10,
-  "transcripts_skipped_old": 154,
+  "transcripts_skipped_old": 155,
   "transcripts_skipped_subagent": 111,
-  "brain_rows_in_window": 29,
+  "brain_rows_in_window": 10,
   "candidates": [
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--\\1a875ff0-4276-4574-a931-5fb78bbf0d83.jsonl",
@@ -89,11 +89,12 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49.jsonl",
       "cwd": "C:\\APPS\\Retirement Analyzer",
       "first_ts": "2026-08-28T14:20:02.023Z",
-      "last_ts": "2026-09-02T10:00:06.895Z",
-      "user_prompts": 13,
-      "assistant_replies": 318,
+      "last_ts": "2026-09-03T23:36:10.436Z",
+      "user_prompts": 17,
+      "assistant_replies": 360,
       "files_touched": [
         "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\tool-results\\bqula10xg.txt",
+        "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\memory\\feedback-check-qi-belt-before-building.md",
         "C:\\Users\\renne\\.claude\\projects\\C--APPS-Retirement-Analyzer\\memory\\feedback-python-file-patching.md",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\build_video.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\mari_pia.py",
@@ -102,6 +103,7 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\patch_wife_ss.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\patch_wife_tests.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\read_perf.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\rebuild_v3_andrew.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\reconcile.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\session_summary.py",
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\scratchpad\\update_version_history.py",
@@ -114,10 +116,10 @@
         "C:\\Users\\renne\\Downloads\\RETIREMENT\\Retirement_Strategy_Presentation_v2.html"
       ],
       "first_prompt": "@\"C:\\Users\\renne\\Downloads\\Retirement_Strategy_Review_v2_Definitive.docx\" @\"C:\\Users\\renne\\Downloads\\De-risking_the_Japan_early_retirement_blueprint.m4a\"\nRA - Session 6 - Read the report and listen to the criticism of the plan and the way w",
-      "last_prompt": "<task-notification>\n<task-id>bfwj6pzwz</task-id>\n<tool-use-id>toolu_013EFrwd8GftxQruwBXssv3K</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\tasks\\bfwj6pzw",
+      "last_prompt": "<task-notification>\n<task-id>bub9wgsho</task-id>\n<tool-use-id>toolu_01DZcXogRDA23QEyXpTuBQMU</tool-use-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-Retirement-Analyzer\\d3aa5ae2-03e9-4bd0-b33c-79b376b5fc49\\tasks\\bub9wgsh",
       "project_id": "retirementanalyzer",
-      "mtime": "2026-09-02T06:00:07",
-      "size_bytes": 3943996,
+      "mtime": "2026-09-03T19:36:10",
+      "size_bytes": 4145384,
       "likely_logged": false
     },
     {
@@ -179,8 +181,7 @@
       "project_id": "unknown",
       "mtime": "2026-09-02T14:17:10",
       "size_bytes": 470455,
-      "likely_logged": true,
-      "matched_via": "transcript_exact"
+      "likely_logged": false
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\b5af9253-1104-47f6-a880-621c3506ef79.jsonl",
@@ -229,6 +230,22 @@
       "likely_logged": false
     },
     {
+      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\e2f0e8cc-0ee3-4973-b83a-758dea272e34.jsonl",
+      "cwd": "C:\\CLAUDE",
+      "first_ts": "2026-09-03T21:05:57.092Z",
+      "last_ts": "2026-09-03T21:44:18.685Z",
+      "user_prompts": 5,
+      "assistant_replies": 10,
+      "files_touched": [],
+      "first_prompt": "@\"C:\\Users\\renne\\Downloads\\claimavenueassessment.html\"\nIs this possible technically and legally? - Look at the site ClaimAvenue.com and I was thinking about this idea, inspired on the claimavenue.com):  \n\nI even thought about creating one t",
+      "last_prompt": "Well, he started 8 days ago and already collected, almost  5k.",
+      "project_id": "unknown",
+      "mtime": "2026-09-03T17:44:18",
+      "size_bytes": 216624,
+      "likely_logged": true,
+      "matched_via": "transcript_exact"
+    },
+    {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\f3ce738c-412e-4f9d-b3a9-bf6ce0770a6d.jsonl",
       "cwd": "C:\\CLAUDE",
       "first_ts": "2026-09-02T17:52:51.605Z",
@@ -248,8 +265,7 @@
       "project_id": "unknown",
       "mtime": "2026-09-02T15:51:07",
       "size_bytes": 1283317,
-      "likely_logged": true,
-      "matched_via": "transcript_exact"
+      "likely_logged": false
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\e0a8246d-60e1-4640-9c03-8f1263f504a0.jsonl",
@@ -298,52 +314,6 @@
       "likely_logged": false
     },
     {
-      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705.jsonl",
-      "cwd": "C:\\Users\\renne\\Downloads\\NOTE DISCOVERY",
-      "first_ts": "2026-08-07T01:51:15.838Z",
-      "last_ts": "2026-08-14T21:19:31.837Z",
-      "user_prompts": 108,
-      "assistant_replies": 1081,
-      "files_touched": [
-        "C:\\MapSnap",
-        "C:\\MapSnap\\Application\\parse_onbase_config.py",
-        "C:\\MapSnap\\Product\\ONBASE13_POC\\.mapsnap_conn.json",
-        "C:\\MapSnap\\docs\\OnBase_Integration_Setup.md",
-        "C:\\QIH\\shared\\documentation\\design_harvest\\bu-hive-information\\HARVEST-NOTES.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\memory\\MEMORY.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\memory\\bu-edition-development-model.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\memory\\gov25-live-lab.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\memory\\onbase-notetype-encoding-solved.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\memory\\scanqueue-decode-next.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\memory\\session-end-continuation-prompt.md",
-        "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\memory\\shareable-doc-byline.md",
-        "C:\\Users\\renne\\.claude\\skills\\onbase-notetype-decoder\\SKILL.md",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\calibrate_read.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\config_objects.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\decode_ob25.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\discover_sql.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\dna_sweep_all.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\extract_expk_notetypes.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\extract_notetypes.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\hunt_unknowns.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\make_final_reference.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\make_final_xlsx.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\make_summary_docx.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\mrg_census.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\patch_mapsnap_ask.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\priv_read.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\scan_expk.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\survey_expk.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--Users-renne-Downloads-NOTE-DISCOVERY\\e1b9190d-e56f-43ea-a638-043c06db8705\\scratchpad\\survey_scanning.py"
-      ],
-      "first_prompt": "Read the markdown file under the folder and perform a run with it. Produce a comprehensive answer report Connect to the OnBase13_POC and find all the answers we are looking for",
-      "last_prompt": "A few questions, where is the dark masks from?",
-      "project_id": "onbase_dna",
-      "mtime": "2026-09-01T08:29:03",
-      "size_bytes": 9596818,
-      "likely_logged": false
-    },
-    {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\D--AI-output\\bc85294f-f412-4fd6-a91a-7b68a2a0dd00.jsonl",
       "cwd": "D:\\AI\\output",
       "first_ts": "2026-08-17T21:30:59.238Z",
@@ -364,7 +334,7 @@
     }
   ],
   "summary": {
-    "needs_backfill": 8,
-    "already_logged": 2
+    "needs_backfill": 9,
+    "already_logged": 1
   }
 }
