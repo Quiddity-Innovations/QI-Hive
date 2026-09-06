@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-05 00:33:33 (nightly reconciler)_
+_Auto-generated: 2026-09-06 00:33:34 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
-| avatarstudio | v1 — secured + backed up | active | 3 | 2026-06-16 16:10:00 |
-| claude_manager | Operational | active | 876 | 2026-09-04 19:00:02 |
+| avatarstudio | v1 — secured + backed up | active | 4 | 2026-09-05 23:32:32 |
+| claude_manager | Operational | active | 901 | 2026-09-06 00:03:29 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
@@ -19,7 +19,7 @@ _Auto-generated: 2026-09-05 00:33:33 (nightly reconciler)_
 | lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
 | m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production | active | 23 | 2026-08-13 21:00:07 |
-| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 186 | 2026-08-28 09:11:35 |
+| mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 187 | 2026-09-04 22:43:44 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | naya | Phase 5 â€” capability behind OpenClaw (application retired) | paused | 12 | 2026-08-28 08:07:21 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
@@ -28,8 +28,8 @@ _Auto-generated: 2026-09-05 00:33:33 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 239 | 2026-09-04 00:35:01 |
-| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 117 | 2026-09-04 18:02:03 |
+| qi_hive | Observability hardening | active | 240 | 2026-09-05 00:35:01 |
+| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 139 | 2026-09-06 00:03:30 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 32 | 2026-09-02 13:47:29 |

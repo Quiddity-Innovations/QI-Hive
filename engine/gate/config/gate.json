@@ -66,7 +66,7 @@
       "upstream": "127.0.0.1:8777",
       "app": "LotteryWiz",
       "mode": "open",
-      "why": "DEMO SITE (2026-08-16): Cloudflare Access (one-time email PIN, policy: any email) is the wall at the Cloudflare edge, so the gate cookie login would be a second wall that demo visitors cannot pass. Owner-only edits inside the app are still protected by the LotteryWiz owner key. Revert to 'protected' when the demo period ends or Cloudflare Access is removed."
+      "why": "PUBLIC BY STANDING DECISION (Renne, 2026-09-05): LotteryWiz is deliberately open to everyone, same posture as noosorbis -- no login of any kind. Owner-only edits inside the app remain protected by the LotteryWiz owner key (?owner=<key>), so a visitor can use the site but cannot change preset games. Do NOT 'revert to protected' -- the earlier note here said to, and that instruction is now withdrawn. OUTSTANDING at the time of writing: the Cloudflare Access application (one-time email PIN) that used to front this host still exists at the Cloudflare edge and must be deleted in the Zero Trust dashboard before the site is actually public; no stored QI credential has Access scope, so that is a manual step. Verify with: curl -sI https://lottery.quiddityinnovations.com/ | grep -i location  -- it should return nothing."
     },
     {
       "host": "cypher.quiddityinnovations.com",
