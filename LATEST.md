@@ -1,15 +1,15 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-06 00:33:34 (nightly reconciler)_
+_Auto-generated: 2026-09-07 00:34:27 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
-| avatarstudio | v1 — secured + backed up | active | 4 | 2026-09-05 23:32:32 |
-| claude_manager | Operational | active | 901 | 2026-09-06 00:03:29 |
+| avatarstudio | v1 — secured + backed up | active | 6 | 2026-09-06 03:21:16 |
+| claude_manager | Operational | active | 912 | 2026-09-06 14:52:14 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
-| comfyui | Active â€” media engine operational | active | 3 | 2026-08-17 23:27:35 |
+| comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
 | connector | v1.0 live | active_development | 1 | 2026-07-30 21:21:48 |
 | cypherminer | Phase 1 — frontend + tunnel live | complete | 4 | 2026-06-16 11:29:45 |
 | digitization | v1 — tool + docs delivered | complete | 4 | 2026-08-11 17:10:00 |
@@ -28,7 +28,7 @@ _Auto-generated: 2026-09-06 00:33:34 (nightly reconciler)_
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 240 | 2026-09-05 00:35:01 |
+| qi_hive | Observability hardening | active | 241 | 2026-09-06 00:35:01 |
 | retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 139 | 2026-09-06 00:03:30 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
