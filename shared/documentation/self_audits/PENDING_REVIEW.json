@@ -10,5 +10,6 @@
   "needs_decision": [
     "Large folder C:\\APPS\\CLAUDE\\Tools (3831.9 MB) - confirm still in use"
   ],
-  "reviewed": false
+  "reviewed": true,
+  "decision": "2026-09-09: Tools is 2x Headroom venv. headroom_env kept (QI_Headroom service uses it); headroom_env.old deleted (2.0 GB); both gitignored."
 }

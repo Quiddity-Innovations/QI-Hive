@@ -1,6 +1,6 @@
 # Gamez (gamez) — L2 brief
 
-_Generated 2026-09-08 17:56:09_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `C:\APPS\Gamez`
@@ -11,10 +11,7 @@ _Generated 2026-09-08 17:56:09_
 ## Brain
 - Current state: status=active, phase=Correctness & data integrity (post-feature-complete)
   Feature set complete; this pass fixed AI-Analyst/Quant correctness: board grounding (no more deflection), survive-to-title precompute, the DEF/ATT line null bug (pos_group coarse labels) across all 48 WC teams, removal of the per-match-vs-title category error, and a server-side model-vs-market guard. Verified live on prod 8710; merged to main and pushed.
-- Last decisions:
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08 21:51:31)
-  - Trinity health is inspected daily without calling an assistant; every assistant run is recorded in Agent HR as trial evidence (2026-09-08 21:37:12)
-  - Codex calls always name the model; CLI default pinned to gpt-5.6-terra; ladder luna â†’ terra â†’ sol, astra only with a stated reason (2026-09-08 21:37:00)
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # Gamez — World Cup 2026 Betting-Window Dashboard

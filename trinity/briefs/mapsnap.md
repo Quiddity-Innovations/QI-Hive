@@ -1,6 +1,6 @@
 # MapSnap (mapsnap) — L2 brief
 
-_Generated 2026-09-08 18:26:05_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `C:\APPS\MapSnap`

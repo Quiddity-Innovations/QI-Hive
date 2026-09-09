@@ -3,9 +3,9 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-09-08",
+    "last_updated": "2026-09-09",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
-    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded."
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded. | 2026-09-09: status-report reconciliation — registered qi_gate, aws_edge, transfer_station; status fixes naya/noosorbis/vlcdaemon; 8740 double-claim resolved; voice_studio outputs path."
   },
   "module_interface_contract": {
     "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -79,8 +79,9 @@
       "8710-8719": "Gamez family (WC2026 dashboard proxy)",
       "8720-8729": "Claude Voice family (realtime two-way voice assistant)",
       "8730-8739": "Voice Studio family (studio/batch voice rendering) — RESERVED. The panel currently serves UI+API on 7863; this block is held for a headless API split.",
-      "8740-8749": "QI Media Studio family (composition layer) - RESERVED. The panel serves UI+API on 7864; this block is held for a headless API split.",
-      "8750-8759": "SynVox family. 8750 = MatrAIx dev GUI (tools\\view_gui.py, manual). 8751 = SynVox API. 8753 = SynVox AI Router (subscription lane). 8752 and 8754-8759 unallocated."
+      "8740-8749": "ComfyUI (QI Media Engine) family — API :8740 (migrated from 8189 on 2026-08-10). Was double-claimed as Media Studio RESERVED until 2026-09-09.",
+      "8750-8759": "SynVox family. 8750 = MatrAIx dev GUI (tools\\view_gui.py, manual). 8751 = SynVox API. 8753 = SynVox AI Router (subscription lane). 8752 and 8754-8759 unallocated.",
+      "8760-8769": "QI Media Studio family (composition layer) - RESERVED for a headless API split; moved here from 8740-8749 on 2026-09-09 because ComfyUI actually listens on 8740. The panel serves UI+API on 7864."
     },
     "ui_blocks": {
       "7800-7809": "Maia UI family",
@@ -200,7 +201,7 @@
         "logs": "C:\\APPS\\NAYA\\LOGS"
       },
       "github": "https://github.com/Quiddity-Innovations/NAYA",
-      "status": "running_dev_paused",
+      "status": "paused",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -250,7 +251,8 @@
         "nexus (/synthesize)",
         "filehq (file content)",
         "maia (shared personality/LLM engine — future)"
-      ]
+      ],
+      "notes": "2026-09-09: status running_dev_paused->paused — app layer stopped/Manual since 2026-08-28; engine lives on as QI_FileHQ + QI_NayaMCP (Brain state)"
     },
     {
       "id": "nexus",
@@ -1338,10 +1340,10 @@
       "paths": {
         "logs": "D:\\Dev\\VoiceStudio\\logs",
         "voices": "D:\\Dev\\VoiceStudio\\data\\voices",
-        "outputs": "D:\\Dev\\VoiceStudio\\data\\out",
+        "outputs": "D:\\AI\\Outputs\\VoiceStudio",
         "models": "D:\\Dev\\VoiceStudio\\data\\models"
       },
-      "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history currently only in D:\\Dev\\VoiceStudio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending)."
+      "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history currently only in D:\\Dev\\VoiceStudio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending). | 2026-09-09: paths.outputs corrected to D:\\AI\\Outputs\\VoiceStudio (moved 2026-08-17)."
     },
     {
       "id": "comfyui",
@@ -1456,7 +1458,7 @@
         "ui": {
           "current": 7864,
           "block": "7840-7869",
-          "notes": "Media Studio panel (FastAPI serves the UI and its JSON API on this one port). LOOPBACK ONLY and never tunneled: the library indexes biometric voice samples and unreleased client media. Port 8740 (block 8740-8749) is reserved for a headless API split; nothing listens there yet."
+          "notes": "Media Studio panel (FastAPI serves the UI and its JSON API on this one port). LOOPBACK ONLY and never tunneled: the library indexes biometric voice samples and unreleased client media. Block 8760-8769 is reserved for a headless API split (moved from 8740-8749 on 2026-09-09; ComfyUI owns 8740); nothing listens there yet."
         }
       },
       "family_tier": "cousin",
@@ -1644,7 +1646,7 @@
       "description": "Modern reading experience over live Wikipedia, with a Librarian AI assistant",
       "path": "C:\\APPS\\NoosOrbis",
       "github": "TBD",
-      "status": "new",
+      "status": "live",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -1680,7 +1682,8 @@
         "D:/Dev/NoosOrbis is a stale copy, marked with PROMOTED-DO-NOT-EDIT.md. Safe to delete."
       ],
       "repo": "https://github.com/Quiddity-Innovations/noosorbis",
-      "repo_visibility": "private"
+      "repo_visibility": "private",
+      "notes": "2026-09-09: status new->live — v0.5.0 complete, owner signed off 2026-08-22, public via QI Gate"
     },
     {
       "id": "mythologies",
@@ -1792,7 +1795,7 @@
       "description": "Background daemon that drives VLC for QI's YouTube/media workflows.",
       "path": "C:\\APPS\\VLCDaemon",
       "github": "TBD",
-      "status": "active",
+      "status": "paused",
       "primary_language": "Python",
       "ports": {},
       "family_tier": "cousin",
@@ -1802,7 +1805,7 @@
       "consumes_from_ecosystem": [],
       "phase": "Working daemon, no repo until 2026-09-08",
       "registered": "2026-09-08",
-      "notes": "git init done 2026-09-08 (local only, no remote yet — Wave 0.9)."
+      "notes": "git init done 2026-09-08 (local only, no remote yet — Wave 0.9). | 2026-09-09: status active->paused — no runtime activity since 2026-06-17 (heartbeat/log); git-init on 2026-09-08 was administrative"
     },
     {
       "id": "trinity",
@@ -1826,6 +1829,120 @@
       "phase": "30-day assistant trial → review 2026-10-16",
       "registered": "2026-09-08",
       "notes": "Claude (spearhead) + ChatGPT via codex mcp-server + Gemini via qi_gemini_mcp.py. Components listed in C:\\QIH\\trinity\\README.md. No ports, no services, nothing unattended."
+    },
+    {
+      "id": "qi_gate",
+      "name": "QI Gate + Caddy",
+      "kind": "effort",
+      "type": "infrastructure",
+      "description": "Authentication wall in front of every internet-exposed QI application: Caddy edge :9040 + gate auth :9041. Demo accounts rolled out 2026-09-05.",
+      "path": "C:\\QIH\\engine\\gate",
+      "github": "part of C:\\QIH",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {
+        "edge": {
+          "current": 9040,
+          "block": "9000-9099"
+        },
+        "auth": {
+          "current": 9041,
+          "block": "9000-9099"
+        }
+      },
+      "services": [
+        {
+          "name": "QI_Caddy",
+          "port": 9040,
+          "managed_by": "NSSM",
+          "auto_start": true,
+          "internet_exposed": true,
+          "cloudflare_tunnel": true
+        },
+        {
+          "name": "QI_Gate",
+          "port": 9041,
+          "managed_by": "NSSM",
+          "auto_start": true,
+          "internet_exposed": false,
+          "cloudflare_tunnel": false
+        }
+      ],
+      "family_tier": "backbone",
+      "family_notes": "Every public QI hostname terminates here. Details also live in shared_infrastructure.qi_gate; this row exists so the effort shows up in project tooling.",
+      "integrates_with": [
+        "mapsnap",
+        "nexus",
+        "gamez",
+        "lotterywiz",
+        "noosorbis",
+        "cypherminer"
+      ],
+      "exposes_to_ecosystem": [
+        "Signed-in session gate for public apps",
+        "Shared read-only demo account"
+      ],
+      "consumes_from_ecosystem": [],
+      "phase": "Demo-account rollout live 2026-09-05; Lottery Cloudflare Access removal pending (owner)",
+      "registered": "2026-09-09",
+      "notes": "Registered 2026-09-09 from the ecosystem status report. Session summaries prefixed QIGate_."
+    },
+    {
+      "id": "aws_edge",
+      "name": "AWS Edge (free-tier hybrid)",
+      "kind": "effort",
+      "type": "infrastructure",
+      "description": "Hybrid 'edge on AWS, brain at home': Lambda LINE webhook relay + SQS queue (M1, live, drained by QI_MaiaQueueDrain), Docker/k3s/Helm experiments (M2/M4/M6, demoed 2026-07-30), Lambda cloud-brain scaffold (M3, dormant pending privacy decision).",
+      "path": "C:\\QIH\\shared\\documentation\\guides",
+      "github": "TBD",
+      "status": "paused",
+      "primary_language": "Python",
+      "ports": {},
+      "family_tier": "backbone",
+      "family_notes": "Account and resource inventory live in shared_infrastructure.aws. Only the M1 relay is production; k3s/Docker not re-verified since 2026-07-30. Free-tier credit clock started ~2026-07-30.",
+      "integrates_with": [
+        "maia"
+      ],
+      "exposes_to_ecosystem": [
+        "Durable LINE webhook front door"
+      ],
+      "consumes_from_ecosystem": [],
+      "phase": "M1 relay live; M2/M4/M6 demoed; M3 dormant — no activity since 2026-07-30",
+      "registered": "2026-09-09",
+      "notes": "Registered 2026-09-09 from the ecosystem status report. Owner decision open: privacy + provider keys for M3, or shelve M2-M6."
+    },
+    {
+      "id": "transfer_station",
+      "name": "QI Transfer Station",
+      "kind": "effort",
+      "type": "tool",
+      "description": "Hardened Windows OpenSSH SFTP receive station (port 22022, chrooted, no shell) with a local management console: arm/disarm, sender accounts, two-way transfers, session monitor. Ships disarmed.",
+      "path": "TBD — locate console source (built 2026-08-12..19)",
+      "github": "TBD",
+      "status": "paused",
+      "primary_language": "Python",
+      "ports": {
+        "sftp": {
+          "current": 22022,
+          "block": "n/a (SSH)",
+          "notes": "Disabled until armed"
+        },
+        "console": {
+          "current": 8751,
+          "block": "8750-8759",
+          "notes": "COLLIDES with SynVox API 8751 per SynVox registry row — resolve before next use"
+        }
+      },
+      "family_tier": "cousin",
+      "family_notes": "Grew out of the 148 GB VM transfer of 2026-08-12..14. No live load test ever run; no SHA-256 manifest check yet.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [
+        "Signup-free inbound file transfer"
+      ],
+      "consumes_from_ecosystem": [],
+      "phase": "Built and disarmed 2026-08-19; cleanup items open (dead Xfinity port-forward, VM still in drop folder)",
+      "registered": "2026-09-09",
+      "notes": "Registered 2026-09-09 from the ecosystem status report. Session summary QITransferStation_Summary_2026-08-19_2014.docx."
     }
   ],
   "family_taxonomy": {

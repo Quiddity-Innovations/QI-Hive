@@ -1,6 +1,6 @@
 # OnBase DNA Program (onbase_dna) — L2 brief
 
-_Generated 2026-09-08 17:56:10_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `C:\Users\renne\Downloads\NOTE DISCOVERY`
@@ -8,11 +8,9 @@ _Generated 2026-09-08 17:56:10_
 - Notes: Feeds MapSnap DNA knowledge (read-only). Spawns the Implementation Tool and Document Creator at T-1 per the 2026-08-14 charters. BU/client data never enters a repo.
 
 ## Brain
-- No current_state recorded.
-- Last decisions:
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08 21:51:31)
-  - Trinity health is inspected daily without calling an assistant; every assistant run is recorded in Agent HR as trial evidence (2026-09-08 21:37:12)
-  - Codex calls always name the model; CLI default pinned to gpt-5.6-terra; ladder luna â†’ terra â†’ sol, astra only with a stated reason (2026-09-08 21:37:00)
+- Current state: status=active, phase=Active knowledge program, no service/ports
+  Genotype-to-phenotype decoding of OnBase configuration for the DNA Codex. Per GOV25-DIALOG-TARGETS.md (most recent doc), current work is calibration dialog-trip targets for the GOV25 vertical, generated 2026-08-14 by _gov25_workorder.py.
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

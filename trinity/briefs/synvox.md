@@ -1,6 +1,6 @@
 # SynVox (synvox) — L2 brief
 
-_Generated 2026-09-08 17:56:10_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `C:\APPS\SynVox`
@@ -18,8 +18,7 @@ Acting on that led into /v1/capabilities, where three statements had been false 
 D6b then attempted a second coverage gap and closed none, on the evidence: GitHub release-download velocity (cumulative counts with no timestamps make "latest > previous" near-structural), Open Collective cancellations (updatedAt is dominated by the platform's own billing sweep â€” 40 of 146 in the 00:00 UTC hour, busiest minutes 00:03 on the 21st of five months), and share-shift measures (attention moving between products is not people moving). The generalisation is the deliverable: a count can be dominated by the system rather than the users it describes â€” three instances now â€” and the test is "would this number move if no user did anything?". The follow-up audit of every change producer found nothing else and is closed.
 
 Suite 1202 -> 1219 passed / 0 failed; reality_coverage unchanged at 2 of 6 (deliberately); every gate PASS; end-to-end study graded 3/3 in 105s at $0; 11/11 mutations caught.
-- Last decisions:
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08 21:51:31)
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # SynVox — Claude Project Instructions
@@ -153,4 +152,5 @@ look free, which is the same class of lie in the other direction.
 
    `synvox\grade\reality.py` — those two packages have never imported each other and
    the module docstrings say so on purpose. `tests\test_evidence_measure_declarations
+   .py` fails the build on drift. Same arrangement for `RELIABILITIES`, three copies.
 ...(truncated — cap 150 lines)

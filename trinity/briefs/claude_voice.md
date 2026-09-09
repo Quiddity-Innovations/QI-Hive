@@ -1,6 +1,6 @@
 # Claude Voice (claude_voice) — L2 brief
 
-_Generated 2026-09-08 17:56:09_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `C:\APPS\CLAUDE\Claude Voice`
@@ -11,10 +11,7 @@ _Generated 2026-09-08 17:56:09_
 ## Brain
 - Current state: status=active, phase=Dual-brain routing + Hive/launcher registration
   Root-caused a hallucination report: LINE/Telegram were answering from the local Ollama model impersonating Claude (it invented a meeting + wrong project list). Built brain.py â€” two named brains: 'Claude' (real, via claude_bridge) and 'Ronald' (local Ollama, renamed out of Claude + given an anti-hallucination prompt). Switchable by name in chat ('Claudeâ€¦' / 'Ronald, take a break') OR by config UI on :8720 (segmented toggle + hard-set lock that overrides voice commands). Wired into line_bot.py + telegram_bot.py; new QI_ClaudeVoiceControl service serves the UI. Fixed ffmpeg resolution for services (util.py) so voice notes work. Added a Claude Voice card to the QI Launchpad (C:\QIH\landing\index.html) with localhost addresses (Brain UI :8720, Meeting Room :8722) + LINE webhook hostname; updated qi_registry.json :8720 note. Default brain = Ronald (safe always-on; Claude/bridge only answers while a live session bridges).
-- Last decisions:
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08 21:51:31)
-  - Trinity health is inspected daily without calling an assistant; every assistant run is recorded in Agent HR as trial evidence (2026-09-08 21:37:12)
-  - Codex calls always name the model; CLI default pinned to gpt-5.6-terra; ladder luna â†’ terra â†’ sol, astra only with a stated reason (2026-09-08 21:37:00)
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # Claude Voice — two-way voice bridge

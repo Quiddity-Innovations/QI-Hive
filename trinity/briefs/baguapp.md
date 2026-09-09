@@ -2,7 +2,7 @@
 
 **FROZEN**
 
-_Generated 2026-09-08 17:56:10_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `C:\APPS\Baguapp`
@@ -13,10 +13,7 @@ _Generated 2026-09-08 17:56:10_
 ## Brain
 - Current state: status=paused, phase=Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16)
   Prototype frozen by owner decision. Only numbered patches for use-blocking defects with owner approval. Successor: baguapp_prod. Live at baguapp.vercel.app.
-- Last decisions:
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08 21:51:31)
-  - Trinity health is inspected daily without calling an assistant; every assistant run is recorded in Agent HR as trial evidence (2026-09-08 21:37:12)
-  - Codex calls always name the model; CLI default pinned to gpt-5.6-terra; ladder luna â†’ terra â†’ sol, astra only with a stated reason (2026-09-08 21:37:00)
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # BaguApp · O seu Feng Shui de Bolso
@@ -147,4 +144,7 @@ original a qualquer momento e o resultado é sempre o mesmo arquivo.
 Depois de aplicar, **confira o sha256** contra a versão testada.
 ## 13. Como testar
 O que sempre vale a pena verificar:
+
+- as tabelas de idioma (seção 6)
+- que a chave **não** aparece no HTML nem no localStorage
 ...(truncated — cap 150 lines)

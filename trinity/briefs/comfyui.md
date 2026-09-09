@@ -1,6 +1,6 @@
 # ComfyUI (QI Media Engine) (comfyui) — L2 brief
 
-_Generated 2026-09-08 17:56:10_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `D:\AI`
@@ -21,9 +21,7 @@ Every workflow exists twice â€” API format for Claude, editor twins prefixe
 Engine selection and defaults live in D:\AI\workflows\_video_backends.json. Docs: CLAUDE.md (rules), CHEATSHEET.md (daily), RENDER_TEMPLATES.md (5 worked examples doubling as a regression suite), HOW_TO_RUN_IT_YOURSELF.md (GUI steps).
 
 Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both). Exposes POST /free for VRAM release, already consumed by voice_studio.
-- Last decisions:
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08 21:51:31)
-  - Trinity health is inspected daily without calling an assistant; every assistant run is recorded in Agent HR as trial evidence (2026-09-08 21:37:12)
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # ComfyUI — how Claude works with it

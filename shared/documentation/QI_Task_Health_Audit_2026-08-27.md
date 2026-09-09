@@ -326,8 +326,8 @@ which narrows any future retirement to a single, well-defined sweep. The junctio
 
 ### Still open
 
-- **TubeScout OAuth (item 1)** — the one genuinely blocked item, and still the highest-impact one. Runbook: `C:\APPS\TUBESCOUT\REAUTH_YOUTUBE.md`.
+- ~~**TubeScout OAuth (item 1)**~~ — **CLOSED 2026-09-09.** Fixed the same day as this audit (commits 2026-08-27: "auth: move the sweep to an API key, ending the 7-day token cliff" and "oauth: make --login actually able to recover a revoked token"). Root cause: Google OAuth *Testing* mode caps refresh tokens at 7 days. Verified 2026-09-09: `data\logs\cycle.log` shows a full sweep at 07:08 (109 channels imported). Dead token preserved as `secrets	oken.json.dead-invalid_grant-20260827`.
 - **~67 latent `/mnt/c/OC/` references** in non-scheduled OC files — worth a sweep, but nothing currently depends on it running.
-- **Promote `QI_TaskHealth` to an NSSM service** — one elevated command (registry §9).
+- ~~**Promote `QI_TaskHealth` to an NSSM service**~~ — **DONE** (`nssm status QI_TaskHealth` = SERVICE_RUNNING, verified 2026-09-09).
 - **Decide the `nssm_install_qi` whitelist rule** — currently unsatisfiable, so the broker denies every QI service install. Not widened. Brain decision 577.
-- **`C:\APPS\CLAUDE` vendored-venv cleanup** — see the table above.
+- ~~**`C:\APPS\CLAUDE` vendored-venv cleanup**~~ — **DONE 2026-09-09**: `Tools\headroom_env.old` (2.0 GB) deleted, `Tools\headroom_env` (used by QI_Headroom) kept and untracked from git, `.bak-move`/`.bak-phase3*` debris gitignored and deleted.

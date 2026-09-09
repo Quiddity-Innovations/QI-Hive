@@ -1,6 +1,6 @@
 # QI Media Studio (mediastudio) — L2 brief
 
-_Generated 2026-09-08 17:56:10_
+_Generated 2026-09-09 02:38:45_
 
 ## Registry facts
 - Path: `C:\APPS\MediaStudio`
@@ -9,11 +9,9 @@ _Generated 2026-09-08 17:56:10_
 - Notes: Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history currently only in D:\Dev\Media Studio; C:\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending).
 
 ## Brain
-- No current_state recorded.
-- Last decisions:
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08 21:51:31)
-  - Trinity health is inspected daily without calling an assistant; every assistant run is recorded in Agent HR as trial evidence (2026-09-08 21:37:12)
-  - Codex calls always name the model; CLI default pinned to gpt-5.6-terra; ladder luna â†’ terra â†’ sol, astra only with a stated reason (2026-09-08 21:37:00)
+- Current state: status=active, phase=Composition layer live over six generators
+  Indexes assets from ComfyUI/Voice Studio/AvatarStudio/PersonalSong/M2V and turns shot lists into finished media, generating nothing itself. Per docs/INTERFACE.md (most recent doc), it adds the indexing + assembly step that was previously hand-rolled ffmpeg per generator.
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # QI Media Studio — how Claude works with this project
