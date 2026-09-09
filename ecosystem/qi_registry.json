@@ -1491,12 +1491,12 @@
       ],
       "services": [],
       "paths": {
-        "logs": "D:\\Dev\\MediaStudio\\logs",
-        "outputs": "D:\\Dev\\MediaStudio\\data\\out",
-        "shotlists": "D:\\Dev\\MediaStudio\\docs\\shotlists",
-        "index": "D:\\Dev\\MediaStudio\\data\\index.db"
+        "logs": "C:\\APPS\\MediaStudio\\logs",
+        "outputs": "C:\\APPS\\MediaStudio\\data\\out",
+        "shotlists": "C:\\APPS\\MediaStudio\\docs\\shotlists",
+        "index": "C:\\APPS\\MediaStudio\\data\\index.db"
       },
-      "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history currently only in D:\\Dev\\Media Studio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending)."
+      "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history currently only in D:\\Dev\\Media Studio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending). | 2026-09-09: paths repointed D:\\Dev -> C:\\APPS (app runs from C:\\APPS per the 2026-09-02 ruling)."
     },
     {
       "id": "filmforge",
