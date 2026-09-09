@@ -5,6 +5,33 @@
 
 ---
 
+
+## 2026-09-08 — Trinity check: both assistants verified, obedience-tested, guarded
+**Session Focus:** Verify the tri-platform arrangement (Claude + Codex/ChatGPT Plus + Gemini free tier) end-to-end; make it dependable; document for the §11a trial
+
+### Built
+- `C:\QIH\engine\tools\qi_trinity_check.py` — on-demand health check (13 checks: MCP wiring, Gemini key/config/quota/model visibility via ListModels, Codex CLI version vs npm latest, login, stale MCP processes, plan-visible models; `--ping` adds one cheap call per leg and records to Agent HR). Report → `C:\QIH\data\trinity\`, log → `C:\QIH\LOGS\trinity_check.log`. Never scheduled — nothing unattended calls an assistant.
+- `C:\QIH\shared\documentation\plans\QI_Trinity_Model_Guide_2026-09-08.md` — per-model selection guide for both sides (Plus quota per model, Gemini free-tier data policy, decision procedure).
+- WSL `~/.codex/config.toml` — pins `model = "gpt-5.6-terra"`, `sandbox_mode = "read-only"` so a call that forgets `model` no longer burns the gpt-6-astra window (5–45 msgs/5h) by default.
+- Agent HR roster: `codex` and `gemini` onboarded as kind=assistant; 9 test runs recorded under project `trinity`.
+
+### Fixed / found
+- Codex MCP failed from Claude Code: CLI 0.118.0 cannot decode the current `/models` response (new `max` effort level), fell back to `gpt-5.3-codex`, refused for ChatGPT-plan logins. CLI upgraded to 0.153.4 (17:18 local, Windows-side `npm i -g`); a Claude Code restart is needed for this session's MCP process to pick it up.
+- Stale-process detection: `readlink /proc/<pid>/exe` shows `(deleted)` on the native child, but `$(...)` inside an inline `wsl.exe bash -lc` string is mangled and reported 0 stale; probe moved to companion `qi_trinity_check_codex.sh` (emits JSON). Verified: 5 stale native processes flagged.
+
+### Verified
+- Fresh `codex mcp-server` 0.153.4 over JSON-RPC: initialize → tools/list → tools/call OK (6 s).
+- Codex (gpt-5.6-luna): verifiable read-only task correct (def_count 18), "no commands" honoured (0 executions), read-only sandbox held when asked to write.
+- Gemini (3.6-flash): strict JSON schema honoured; system instruction beat a conflicting user prompt.
+
+### Files
+- NEW `C:\QIH\engine\tools\qi_trinity_check.py`
+- NEW `C:\QIH\shared\documentation\plans\QI_Trinity_Model_Guide_2026-09-08.md`
+- NEW WSL `/home/hyosuke/.codex/config.toml`
+- UPD `C:\QIH\shared\documentation\plans\QI_TriPlatform_AI_Orchestration_Plan_2026-09-08.md` (§14 check log)
+- UPD `C:\QIH\engine\hive\agents\agent_hr.db` (roster + runs)
+
+---
 ## 2026-04-19 — Full QI_ Service Rename Sweep + Brain + Backup
 **Session Focus:** Rename all NSSM services to QI_ prefix; build Brain API; nightly backup
 

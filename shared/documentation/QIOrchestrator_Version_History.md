@@ -2,6 +2,18 @@
 
 ---
 
+
+## v1.3 — 2026-09-08
+**Type:** Trinity assistant layer — health check + model guide
+### Added
+- `engine/tools/qi_trinity_check.py` (13 checks, `--ping`, `--json`, Agent HR recording)
+- `plans/QI_Trinity_Model_Guide_2026-09-08.md`
+- WSL `~/.codex/config.toml` safe defaults (terra, read-only)
+- Agent HR: assistant roster entries `codex`, `gemini`
+### Fixed
+- Codex CLI 0.118.0 → 0.153.4 (stale CLI rejected every model on ChatGPT-plan login)
+
+---
 ## v1.2 — 2026-04-19
 **Type:** Documentation enforcement + Python path centralization
 ### Added

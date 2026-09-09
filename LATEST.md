@@ -1,12 +1,16 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-08 00:33:40 (nightly reconciler)_
+_Auto-generated: 2026-09-09 00:34:36 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
+| akiyascout | Registered, no commits yet | paused | 0 | — |
 | autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | v1 — secured + backed up | active | 6 | 2026-09-06 03:21:16 |
-| claude_manager | Operational | active | 923 | 2026-09-07 22:40:34 |
+| baguapp | Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16) | paused | 2 | 2026-09-08 19:22:18 |
+| baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
+| bakeoff | Eval rig — Hermes vs OpenClaw smoke 10/10 (2026-07-06) | complete | 0 | — |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 999 | 2026-09-08 21:22:51 |
 | claude_voice | Dual-brain routing + Hive/launcher registration | active | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
@@ -15,26 +19,41 @@ _Auto-generated: 2026-09-08 00:33:40 (nightly reconciler)_
 | digitization | v1 — tool + docs delivered | complete | 4 | 2026-08-11 17:10:00 |
 | easyflow | v1.2.x tester feedback cycle | blocked | 85 | 2026-05-22 15:24:39 |
 | filehq | Retired — merged into Naya | retired | 0 | — |
+| filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
 | gamez | Correctness & data integrity (post-feature-complete) | active | 8 | 2026-06-29 21:42:14 |
+| headroom | Pilot -- proxy fronting Ollama, not yet promoted to NSSM service | active | 0 | — |
 | lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
 | m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production | active | 23 | 2026-08-13 21:00:07 |
+| mailbrain | Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run) | active | 0 | — |
 | mapsnap | OnBase DNA â€” Tier C dark-mask calibration | active | 187 | 2026-09-04 22:43:44 |
+| mediastudio | Composition layer live over six generators | active | 71 | 2026-09-06 10:57:25 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
+| mythologies | Static site live | active | 5 | 2026-08-27 14:44:24 |
 | naya | Phase 5 â€” capability behind OpenClaw (application retired) | paused | 12 | 2026-08-28 08:07:21 |
 | nexus | Phase 2 — NSSM-supervised | active | 43 | 2026-08-11 19:00:00 |
 | noosorbis | v0.5.0 â€” complete; owner signed off | complete | 10 | 2026-08-26 15:28:47 |
+| onbase_dna | Active knowledge program, no service/ports | active | 5 | 2026-08-22 17:49:08 |
 | openclaw | Phase 2 â€” agent expansion (recovered + modernized) | active | 67 | 2026-08-27 15:52:00 |
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build â€” subjects and cross-site subscriptions | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 242 | 2026-09-07 00:35:01 |
-| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 139 | 2026-09-06 00:03:30 |
+| qi_hive | Observability hardening | active | 244 | 2026-09-08 21:36:30 |
+| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 140 | 2026-09-06 00:03:30 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 78 | 2026-08-26 12:43:55 |
+| trinity | 30-day assistant trial → review 2026-10-16 | active | 1 | 2026-09-08 22:28:44 |
 | tubescout | MVP + refinements complete | active | 12 | 2026-06-18 10:22:23 |
 | universal | Migration into C:\QIH | merged | 32 | 2026-09-02 13:47:29 |
+| vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
+| voice_studio | Batch voice rendering active; test guide in docs/TESTING.md | active | 0 | — |
 
 ## Per-project
+
+### akiyascout
+- **Phase:** Registered, no commits yet
+- **Status:** paused
+- **Summary:** Japanese real estate (Akiya/Kominka) aggregation platform with a personalized Scout Engine. Per registry notes and CLAUDE.md, repo exists at C:\APPS\AkiyaScout with ports allocated (API 8505 / UI 7845) but zero commits as of 2026-09-08.
+- **Next:** see project docs
 
 ### autopdf
 - **Phase:** Hardening + MCP integration
@@ -48,11 +67,29 @@ _Auto-generated: 2026-09-08 00:33:40 (nightly reconciler)_
 - **Summary:** Gradio talking-head pipeline on :7862. D-ID API key moved out of studio_config.json into gitignored secrets/avatarstudio.env (loaded via env/secret overlay; stripped on save). Key purged from the AvatarStudio private GitHub repo (history rewritten). Now git-backed at Quiddity-Innovations/AvatarStudio.
 - **Next:** Renne: rotate D-ID key at dashboard, paste new value into secrets/avatarstudio.env. Optional: install QI_AvatarStudio service (DEMAND_START) via the master installer.
 
-### claude_manager
-- **Phase:** Operational
+### baguapp
+- **Phase:** Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16)
+- **Status:** paused
+- **Summary:** Prototype frozen by owner decision. Only numbered patches for use-blocking defects with owner approval. Successor: baguapp_prod. Live at baguapp.vercel.app.
+- **Next:** No active work — successor is baguapp_prod.
+
+### baguapp_prod
+- **Phase:** Marco zero — spec + docs, no code yet
 - **Status:** active
-- **Summary:** Ecosystem fully booted + reconciled 2026-06-10..12. Drift watchdog live. 3 new GitHub remotes synced nightly.
-- **Next:** Named tunnels after domain purchase; monitor brain_drift checks
+- **Summary:** Registered 2026-09-08. The real BaguApp product; inherits from the frozen prototype at C:\APPS\Baguapp. Mould for MilkWise.
+- **Next:** Begin implementation from spec/docs.
+
+### bakeoff
+- **Phase:** Eval rig — Hermes vs OpenClaw smoke 10/10 (2026-07-06)
+- **Status:** complete
+- **Summary:** Registered 2026-09-08 (was unregistered). One-time eval rig, results archived.
+- **Next:** None — complete.
+
+### claude_manager
+- **Phase:** Trinity â€” both assistants live over MCP; 30-day trial running
+- **Status:** active
+- **Summary:** 2026-09-08 evening, after Claude Code restart: qi_trinity_check.py --ping = overall PASS (Codex 0.153.4 logged in on ChatGPT Plus, 3 fresh mcp-servers, 0 on deleted binary; Gemini key accepted, 6/200 calls, gemini-3.6-flash; 2 Agent HR rows). Then Claude commanded Codex directly over MCP from the new session (gpt-5.6-luna, read-only, approval never): def_count=18 for qi_gemini_mcp.py, verified by grep = 18. Both Trinity legs now proven on the MCP path, which was the one failure in the previous session (stale 0.118.0 binary until restart). Trial clock starts 2026-09-08; review 2026-10-16.
+- **Next:** Use Trinity on real work per the Â§3.1 rubric (Codex lunaâ†’terraâ†’sol; Gemini 3.6-flash, no sensitive data on the free tier). Log every assistant run to Agent HR project 'trinity'. Phase 3 next: register MailBrain + own repo + sweep 13 worktrees. Fix %APPDATA%\npm. Confirm which QI_TaskHealth (task vs service) is live.
 
 ### claude_voice
 - **Phase:** Dual-brain routing + Hive/launcher registration
@@ -112,11 +149,23 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Summary:** Capabilities absorbed into Naya (C:\NAYA\filehq). Original C:\FileHQ marked for deletion.
 - **Next:** None
 
+### filmforge
+- **Phase:** Completion plan defined 2026-08-27; core scene-split module built
+- **Status:** active
+- **Summary:** Long-form film orchestration (story to scenes to overnight GPU render). Per docs/ROADMAP.md (most recent doc, written 2026-08-27), most of the pipeline already exists -- Module B (script/shotlist.py) already outputs shot lists accepted by Media Studio's compose --dry-run.
+- **Next:** see project docs
+
 ### gamez
 - **Phase:** Correctness & data integrity (post-feature-complete)
 - **Status:** active
 - **Summary:** Feature set complete; this pass fixed AI-Analyst/Quant correctness: board grounding (no more deflection), survive-to-title precompute, the DEF/ATT line null bug (pos_group coarse labels) across all 48 WC teams, removal of the per-match-vs-title category error, and a server-side model-vs-market guard. Verified live on prod 8710; merged to main and pushed.
 - **Next:** Optional: Teams-Eval card visual pass now that lines are real; consider extending the guard to single-team title answers if needed.
+
+### headroom
+- **Phase:** Pilot -- proxy fronting Ollama, not yet promoted to NSSM service
+- **Status:** active
+- **Summary:** Open-source context/token compression proxy + MCP server, shared ecosystem infrastructure. No dedicated CLAUDE.md/docs folder exists under its registered path (C:\APPS\CLAUDE\Tools, a shared tools dir); per the registry's own family_notes, piloted in front of Ollama first (OPENAI_API_BASE localhost:11434) before NEXUS providers, promotion to QI_Headroom NSSM service pending adoption decision.
+- **Next:** see project docs
 
 ### lotterywiz
 - **Phase:** Public demo â€” documented
@@ -136,17 +185,35 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Summary:** Bot :8001 + Gradio :7860 + tunnels live under NSSM. Last code work 2026-05-15 (BP overrides, sibling filter, topic propagation, Cloudflare primary).
 - **Next:** Multi-bot template engine + RAG (ChromaDB)
 
+### mailbrain
+- **Phase:** Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run)
+- **Status:** active
+- **Summary:** Registered 2026-09-08. Clone of EasyFlow repo lineage — needs own repo (architecture plan Wave 0.9). 4-provider AI adapter (Gemini/OpenAI/Anthropic/Ollama).
+- **Next:** Split into its own repo per Wave 0.9 plan.
+
 ### mapsnap
 - **Phase:** OnBase DNA â€” Tier C dark-mask calibration
 - **Status:** active
 - **Summary:** OnBase DNA Program at 232 dark (type,bit) pairs, 136 reachable by one dialog, 96 needing write-probing; overall row coverage 80.3 percent over an 18-package corpus. action.flags2 is effectively closed (5 dark pairs, 99.8 percent). Audit workstream is current: AUDIT-REPORT-2026-08-11 fully triaged. Note Types and Scan Queues are 100 percent and published.
 - **Next:** Locate the Located By sub-selector encoding; mine GOV25's new dark pairs; action.flags (64 reachable); ruletable.flags (6.8 percent row coverage vs 96 dark pairs). Register the OnBase DNA Program as its own project via qi_new_project.py.
 
+### mediastudio
+- **Phase:** Composition layer live over six generators
+- **Status:** active
+- **Summary:** Indexes assets from ComfyUI/Voice Studio/AvatarStudio/PersonalSong/M2V and turns shot lists into finished media, generating nothing itself. Per docs/INTERFACE.md (most recent doc), it adds the indexing + assembly step that was previously hand-rolled ffmpeg per generator.
+- **Next:** see project docs
+
 ### mq
 - **Phase:** Phase 0 — scaffold
 - **Status:** paused
 - **Summary:** Marked paused by the 2026-08-17 audit — 133 days without a session; scaffold only. Silence is now intentional, so compliance stops filing session_freshness/brain_drift. Set back to 'active' on the next real session.
 - **Next:** Resume when Renne picks the project back up.
+
+### mythologies
+- **Phase:** Static site live
+- **Status:** active
+- **Summary:** Static site mapping 37 world mythologies (1,498 figures, 2,969 relationships) deployed to Vercel. Per CLAUDE.md, renders require an explicit RENDER: trigger from Renne and the aboriginal/arabian verticals remain held pending his framing sign-off.
+- **Next:** see project docs
 
 ### naya
 - **Phase:** Phase 5 â€” capability behind OpenClaw (application retired)
@@ -175,6 +242,12 @@ secrets/ is hardened: one editable file, git ignores the folder wholesale, key l
 - **Next:** Two optional jobs, neither blocking and both Renne's to do. (1) Add EXA_API_KEY to C:\APPS\NoosOrbis\secrets\noosorbis.env and restart to light up "The whole internet" â€” free, no card, from https://dashboard.exa.ai; the mode reports itself off until then rather than failing after someone types. (2) Rotate the Gemini key, which appeared in a chat transcript during setup; git history is verified clean so this is precaution, and Google auto-revokes keys it detects as leaked.
 
 No further development planned. If ever wanted: server-side answer history for cross-device comparison (deliberately browser-only today), diagrams from an article's own structured data rather than the disabled diffusion pipeline, deleting the three *_noosorbis_exception elevation-whitelist rules now the app runs from C:\APPS\NoosOrbis, and Cloudflare Access while gate mode is open.
+
+### onbase_dna
+- **Phase:** Active knowledge program, no service/ports
+- **Status:** active
+- **Summary:** Genotype-to-phenotype decoding of OnBase configuration for the DNA Codex. Per GOV25-DIALOG-TARGETS.md (most recent doc), current work is calibration dialog-trip targets for the GOV25 vertical, generated 2026-08-14 by _gov25_workorder.py.
+- **Next:** see project docs
 
 ### openclaw
 - **Phase:** Phase 2 â€” agent expansion (recovered + modernized)
@@ -224,6 +297,12 @@ D6b then attempted a second coverage gap and closed none, on the evidence: GitHu
 Suite 1202 -> 1219 passed / 0 failed; reality_coverage unchanged at 2 of 6 (deliberately); every gate PASS; end-to-end study graded 3/3 in 105s at $0; 11/11 mutations caught.
 - **Next:** D6c: close a coverage gap or establish that none can be closed yet â€” read CLAUDE.md rule 2i first, three candidates are already measured and rejected and repeating them wastes the session. D1d: price_stance wants a `band` kind no source emits; decide on paper. NEW: audit the rest of /v1/capabilities for stale claims (three in one block were false for four sessions; capability_flags.web_ui reads False on an install serving a web UI). Also: surface a source's refusal rate, and settle what reality_check.sources means when a source produced only a refusal. Monetisation stays deferred â€” do not build plans, metering or payment; when it is time, read billing.py's docstring first, including its flag that "edition" reads like a price tier and is not one.
 
+### trinity
+- **Phase:** 30-day assistant trial → review 2026-10-16
+- **Status:** active
+- **Summary:** Claude (spearhead) + ChatGPT via codex mcp-server + Gemini via qi_gemini_mcp.py. Components documented in C:\QIH\trinity\README.md. No ports, no services, nothing unattended.
+- **Next:** Review trial outcome 2026-10-16.
+
 ### tubescout
 - **Phase:** MVP + refinements complete
 - **Status:** active
@@ -235,3 +314,15 @@ Suite 1202 -> 1219 passed / 0 failed; reality_coverage unchanged at 2 of 6 (deli
 - **Status:** merged
 - **Summary:** C:\UNIVERSAL absorbed into C:\QIH (2026-04-22). Folder slated for deletion.  Status corrected per owner (Renne) 2026-06-18 dashboard review.
 - **Next:** Delete C:\UNIVERSAL after final verification
+
+### vlcdaemon
+- **Phase:** Working daemon, no repo until 2026-09-08
+- **Status:** active
+- **Summary:** git init done 2026-09-08 (local only, no remote yet — Wave 0.9).
+- **Next:** Add remote repo when Wave 0.9 executes.
+
+### voice_studio
+- **Phase:** Batch voice rendering active; test guide in docs/TESTING.md
+- **Status:** active
+- **Summary:** Studio (batch) voice tier for VibeVoice 1.5B narration. Per docs/TESTING.md (most recent doc), Test 0 confirms 9 preset voices load OK (scope=internal) via VoiceStudio_Voices.bat.
+- **Next:** see project docs

@@ -254,6 +254,18 @@ def main():
     except Exception as e:
         log(f"  Doc harvest FAILED: {type(e).__name__}: {e}")
 
+    # Trinity — regenerate the assistant onboarding briefs from the now-reconciled registry
+    # (owner approved 2026-09-08). Isolated: a failure here never fails the reconciler.
+    # Freshness of C:\QIH\trinity\ONBOARDING.md is watched by QI_TaskHealth (QI_TrinityOnboarding).
+    try:
+        r = subprocess.run(
+            [sys.executable, r'C:\QIH\engine\tools\qi_trinity_onboarding.py', '--ecosystem', '--all', '--force'],
+            capture_output=True, text=True, timeout=300)
+        tail = (r.stdout or r.stderr or '').strip().splitlines()[-1:] or ['']
+        log(f"  Trinity onboarding refresh: rc={r.returncode} {tail[0][:160]}")
+    except Exception as e:
+        log(f"  Trinity onboarding refresh FAILED: {type(e).__name__}: {e}")
+
     log("=== Nightly reconciler END ===\n")
 
 if __name__ == '__main__':

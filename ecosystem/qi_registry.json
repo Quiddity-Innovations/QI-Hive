@@ -3,7 +3,7 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-08-21",
+    "last_updated": "2026-09-08",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
     "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded."
   },
@@ -374,7 +374,7 @@
       "description": "Maia Quiddam — autonomous AI social media persona for Facebook, Instagram, WhatsApp",
       "path": "C:\\APPS\\MQ",
       "github": "https://github.com/Quiddity-Innovations/MQ",
-      "status": "new",
+      "status": "paused",
       "status_reason": "Awaiting Facebook Page approval + Meta Developer credentials. Entry point exists (Start_MQ.bat -> main.py). Updated 2026-05-11.",
       "primary_language": "Python",
       "ports": {
@@ -409,7 +409,7 @@
         "logs": "C:\\APPS\\EasyFlow\\LOGS"
       },
       "github": "TBD",
-      "status": "active_development",
+      "status": "blocked",
       "primary_language": "Python (Flask dashboard) + Google Apps Script",
       "ports": {
         "dashboard": {
@@ -743,7 +743,7 @@
       "description": "Music to Video — AI-powered music video generator from lyrics + audio track",
       "path": "C:\\APPS\\M2V",
       "github": "https://github.com/Quiddity-Innovations/M2V",
-      "status": "new",
+      "status": "paused",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -774,7 +774,7 @@
       "description": "Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone. Web app via serve.py (uvicorn in-process).",
       "path": "C:\\APPS\\PersonalSong",
       "github": "https://github.com/Quiddity-Innovations/PersonalSong",
-      "status": "active_development",
+      "status": "paused",
       "primary_language": "Python",
       "ports": {
         "ui": {
@@ -951,7 +951,7 @@
       "description": "Ingests a Fidelity positions CSV export and computes allocation, tax-bucket split (Taxable/Tax-Deferred/Roth), concentration risk (top-5 + HHI), glide-path drift vs a years-to-retirement target, rebalancing trades, and a 5-year retirement readiness plan (spending gap, 3-yr cash buffer, withdrawal rate vs 4% rule, income layers, blueprint checklist). FastAPI + Gradio. Formerly Fidelity Portfolio Analyzer (id fidelityanalyzer).",
       "path": "C:\\APPS\\Retirement Analyzer",
       "github": "https://github.com/Quiddity-Innovations/RetirementAnalyzer",
-      "status": "active",
+      "status": "paused",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -1146,7 +1146,7 @@
       "description": "English-first Japanese real estate (Akiya/Kominka/rural) aggregation platform with a personalized background Scout Engine: multi-source JP scraping, translation pipeline, profile wizard, and scheduled match notifications.",
       "path": "C:\\APPS\\AkiyaScout",
       "github": "TBD",
-      "status": "active_development",
+      "status": "new",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -1170,7 +1170,8 @@
         "GET /profiles",
         "POST /ingest"
       ],
-      "consumes_from_ecosystem": []
+      "consumes_from_ecosystem": [],
+      "notes": "Zero commits as of 2026-09-08 — repo exists, nothing committed."
     },
     {
       "id": "headroom",
@@ -1209,7 +1210,7 @@
       "id": "playdeck",
       "name": "PlayDeck",
       "description": "Personal hybrid video player — custom control UI over YouTube/Vimeo (IFrame API) and general tube sites (yt-dlp + own player); local-only",
-      "path": "C:\\PlayDeck",
+      "path": "C:\\APPS\\PlayDeck",
       "github": "TBD",
       "status": "new",
       "primary_language": "Python",
@@ -1340,7 +1341,7 @@
         "outputs": "D:\\Dev\\VoiceStudio\\data\\out",
         "models": "D:\\Dev\\VoiceStudio\\data\\models"
       },
-      "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10."
+      "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history currently only in D:\\Dev\\VoiceStudio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending)."
     },
     {
       "id": "comfyui",
@@ -1493,7 +1494,7 @@
         "shotlists": "D:\\Dev\\MediaStudio\\docs\\shotlists",
         "index": "D:\\Dev\\MediaStudio\\data\\index.db"
       },
-      "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10."
+      "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history currently only in D:\\Dev\\Media Studio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending)."
     },
     {
       "id": "filmforge",
@@ -1541,7 +1542,7 @@
         "logs": "D:\\Dev\\FilmForge\\LOGS",
         "entry": "D:\\Dev\\FilmForge\\RenderNight.bat"
       },
-      "notes": "Built 2026-08-10. Modules A (script generation), B (decomposition) and C (production manager) all working and verified end to end; output accepted by Media Studio compose --dry-run. Module D deliberately NOT built here: av_mux is the assembly authority, and the crossfade() and last_frame() primitives FilmForge needed were contributed upstream to it rather than forked. GPU broker live and cross-project preemption verified with VoiceStudio. Measured: ~80 s/shot on MiniMax H3 warm; an 8 h window is ~20 min of finished film, so a 90 min feature is ~4-5 nights. CORRECTED 2026-08-11 - OLLAMA IS A GPU TENANT. The 2026-08-10 finding (Ollama 0.32.6 reporting library=cpu and 0.00 GB VRAM, not seeing the RTX 5080 sm_120, so all local LLM work across maia/nexus/openclaw/autopdf was CPU-bound) no longer holds: the 0.32.7 update plus a restart restored CUDA (sm_120, 15.9 GiB). Re-measured on GPU: gemma4:latest 136.1 tok/s at 3.29 GB resident and 100% on GPU; gemma4:26b 65.6 tok/s at 12.0 GB, 65% on GPU; gemma4:31b 4.9 tok/s at 10.8 GB, only 49% on GPU because it wants 22 GB at runtime. Resident VRAM is NOT the pull size in either direction. Default moved 31b -> 26b: 31b is now both the largest and the slowest. OllamaTextDriver now takes a broker lease at NORMAL priority (preempts FilmForge's own BATCH overnight render at the next shot boundary) and returns VRAM with keep_alive=0 when another tenant is waiting. extend_video() implemented for MiniMax H3: last-frame continuity chaining via node 7's optional first_frame input, frame extracted by av_mux.last_frame().",
+      "notes": "Built 2026-08-10. Modules A (script generation), B (decomposition) and C (production manager) all working and verified end to end; output accepted by Media Studio compose --dry-run. Module D deliberately NOT built here: av_mux is the assembly authority, and the crossfade() and last_frame() primitives FilmForge needed were contributed upstream to it rather than forked. GPU broker live and cross-project preemption verified with VoiceStudio. Measured: ~80 s/shot on MiniMax H3 warm; an 8 h window is ~20 min of finished film, so a 90 min feature is ~4-5 nights. CORRECTED 2026-08-11 - OLLAMA IS A GPU TENANT. The 2026-08-10 finding (Ollama 0.32.6 reporting library=cpu and 0.00 GB VRAM, not seeing the RTX 5080 sm_120, so all local LLM work across maia/nexus/openclaw/autopdf was CPU-bound) no longer holds: the 0.32.7 update plus a restart restored CUDA (sm_120, 15.9 GiB). Re-measured on GPU: gemma4:latest 136.1 tok/s at 3.29 GB resident and 100% on GPU; gemma4:26b 65.6 tok/s at 12.0 GB, 65% on GPU; gemma4:31b 4.9 tok/s at 10.8 GB, only 49% on GPU because it wants 22 GB at runtime. Resident VRAM is NOT the pull size in either direction. Default moved 31b -> 26b: 31b is now both the largest and the slowest. OllamaTextDriver now takes a broker lease at NORMAL priority (preempts FilmForge's own BATCH overnight render at the next shot boundary) and returns VRAM with keep_alive=0 when another tenant is waiting. extend_video() implemented for MiniMax H3: last-frame continuity chaining via node 7's optional first_frame input, frame extracted by av_mux.last_frame(). | git history currently only in D:\\Dev\\FilmForge; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending).",
       "added_to_registry": "2026-08-10"
     },
     {
@@ -1708,6 +1709,123 @@
         "rennesan/mythologies-pipeline"
       ],
       "notes": "No ports and no service - deployed to Vercel from site/. Ship with: python packs/ship.py --deploy"
+    },
+    {
+      "id": "baguapp_prod",
+      "name": "BaguApp Prod",
+      "description": "The real BaguApp product — Bagua/Feng Shui analysis app. Inherits from the frozen prototype at C:\\APPS\\Baguapp.",
+      "path": "C:\\APPS\\BaguApp_Prod",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {},
+      "family_tier": "cousin",
+      "family_notes": "Successor product to the frozen Baguapp prototype. Mould for MilkWise.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [],
+      "consumes_from_ecosystem": [],
+      "phase": "Marco zero — spec + docs, no code yet",
+      "registered": "2026-09-08",
+      "notes": "The real BaguApp product; inherits from the frozen prototype at C:\\APPS\\Baguapp. Mould for MilkWise."
+    },
+    {
+      "id": "baguapp",
+      "name": "Baguapp",
+      "description": "Bagua/Feng Shui analysis prototype. Frozen 2026-09-08 by owner decision.",
+      "path": "C:\\APPS\\Baguapp",
+      "github": "TBD",
+      "status": "frozen",
+      "primary_language": "HTML/JS",
+      "ports": {},
+      "family_tier": "cousin",
+      "family_notes": "Predecessor of baguapp_prod. Live prototype at baguapp.vercel.app.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [],
+      "consumes_from_ecosystem": [],
+      "phase": "Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16)",
+      "registered": "2026-09-08",
+      "notes": "Only numbered patches for use-blocking defects with owner approval. Successor: baguapp_prod. Live at baguapp.vercel.app."
+    },
+    {
+      "id": "mailbrain",
+      "name": "MailBrain",
+      "description": "Email intelligence assistant — Chrome MV3 extension + Flask helper. Clone of EasyFlow lineage.",
+      "path": "C:\\APPS\\MailBrain",
+      "github": "TBD",
+      "status": "active_development",
+      "primary_language": "Python + JavaScript (Chrome MV3)",
+      "ports": {},
+      "family_tier": "cousin",
+      "family_notes": "Unregistered until 2026-09-08. Clone of EasyFlow repo — needs own repo (architecture plan Wave 0.9). 4-provider AI adapter (Gemini/OpenAI/Anthropic/Ollama).",
+      "integrates_with": [
+        "easyflow"
+      ],
+      "exposes_to_ecosystem": [],
+      "consumes_from_ecosystem": [],
+      "phase": "Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run)",
+      "registered": "2026-09-08",
+      "notes": "Unregistered until 2026-09-08. Clone of EasyFlow repo — needs own repo (architecture plan Wave 0.9). 4-provider AI adapter (Gemini/OpenAI/Anthropic/Ollama). Shares :8550 helper with EasyFlow lineage (8550 already allocated to easyflow — no ports claimed here)."
+    },
+    {
+      "id": "bakeoff",
+      "name": "Bakeoff",
+      "description": "Eval rig comparing Hermes vs OpenClaw on a shared gpt-oss-20b brain.",
+      "path": "C:\\APPS\\QIP\\Bakeoff",
+      "github": "TBD",
+      "status": "complete",
+      "primary_language": "Python",
+      "ports": {},
+      "family_tier": "cousin",
+      "family_notes": "Unregistered until 2026-09-08. One-time eval rig; not a running service.",
+      "integrates_with": [
+        "openclaw"
+      ],
+      "exposes_to_ecosystem": [],
+      "consumes_from_ecosystem": [],
+      "phase": "Eval rig — Hermes vs OpenClaw smoke 10/10 (2026-07-06)",
+      "registered": "2026-09-08",
+      "notes": "Unregistered until 2026-09-08."
+    },
+    {
+      "id": "vlcdaemon",
+      "name": "VLCDaemon",
+      "description": "Background daemon that drives VLC for QI's YouTube/media workflows.",
+      "path": "C:\\APPS\\VLCDaemon",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "ports": {},
+      "family_tier": "cousin",
+      "family_notes": "Working daemon, no repo until 2026-09-08.",
+      "integrates_with": [],
+      "exposes_to_ecosystem": [],
+      "consumes_from_ecosystem": [],
+      "phase": "Working daemon, no repo until 2026-09-08",
+      "registered": "2026-09-08",
+      "notes": "git init done 2026-09-08 (local only, no remote yet — Wave 0.9)."
+    },
+    {
+      "id": "trinity",
+      "name": "Trinity",
+      "description": "Tri-platform AI orchestration — Claude (spearhead) + ChatGPT via codex mcp-server + Gemini via qi_gemini_mcp.py.",
+      "path": "C:\\QIH\\trinity",
+      "github": "TBD",
+      "status": "active",
+      "primary_language": "Python",
+      "kind": "effort",
+      "type": "effort",
+      "ports": {},
+      "family_tier": "backbone",
+      "family_notes": "30-day assistant trial spanning Claude/ChatGPT/Gemini over MCP. No ports, no services, nothing unattended.",
+      "integrates_with": [
+        "qi_brain",
+        "claude_manager"
+      ],
+      "exposes_to_ecosystem": [],
+      "consumes_from_ecosystem": [],
+      "phase": "30-day assistant trial → review 2026-10-16",
+      "registered": "2026-09-08",
+      "notes": "Claude (spearhead) + ChatGPT via codex mcp-server + Gemini via qi_gemini_mcp.py. Components listed in C:\\QIH\\trinity\\README.md. No ports, no services, nothing unattended."
     }
   ],
   "family_taxonomy": {
@@ -1942,6 +2060,15 @@
           "start_type": "auto",
           "registered": "2026-06-23",
           "notes": "Local reverse proxy. One qi.local front door for all QI apps (subdomain routing, local HTTPS via Caddy internal CA). LAN-only — public exposure still handled by Cloudflare named tunnels. AppDirectory C:\\QIH\\engine\\proxy, log C:\\QIH\\logs\\qi_caddy.log. Config: C:\\QIH\\engine\\proxy\\Caddyfile."
+        },
+        {
+          "name": "QI_MaiaQueueDrain",
+          "project": "maia",
+          "port": null,
+          "script": "C:\\QIH\\engine\\relay\\maia_queue_drain_service.py",
+          "internet_exposed": false,
+          "added": "2026-09-08",
+          "notes": "QI-RELAY drain worker — code lives in C:\\QIH\\engine\\relay, not under C:\\APPS\\QI."
         }
       ],
       "naming_rule": "New services: QI_<Project><Role> — e.g. QI_NexusAPI, QI_MQBot. Never reuse names. NSSM binary always C:\\QIH\\engine\\bin\\nssm.exe.",
