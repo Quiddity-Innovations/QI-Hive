@@ -1225,8 +1225,8 @@
       "name": "PlayDeck",
       "description": "Personal hybrid video player — custom control UI over YouTube/Vimeo (IFrame API) and general tube sites (yt-dlp + own player); local-only",
       "path": "C:\\APPS\\PlayDeck",
-      "github": "TBD",
-      "status": "new",
+      "github": "https://github.com/Quiddity-Innovations/PlayDeck",
+      "status": "active",
       "primary_language": "Python",
       "ports": {
         "api": {
@@ -1246,7 +1246,8 @@
         "GET /version",
         "GET /info"
       ],
-      "consumes_from_ecosystem": []
+      "consumes_from_ecosystem": [],
+      "notes": "2026-09-10: private GitHub repo created and pushed (owner: only PlayDeck gets a remote; OC stays local-only)."
     },
     {
       "id": "connector",
