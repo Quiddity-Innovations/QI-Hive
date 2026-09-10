@@ -945,3 +945,39 @@ Symptom lookup:
 - public 502 → check **QI_NoosOrbis** first; the tunnel stays healthy while the app is down
 - hostname 404s after a gate change → restart **QI_Caddy** (serves :9040), not QI_Gate (:9041)
 - Librarian slow → GPU contention, check ComfyUI
+
+## QI_AvatarStudio  (added 2026-09-10 - registered late, the service predates this entry)
+
+| Field | Value |
+|---|---|
+| **QI_AvatarStudio** | `C:\APPS\AvatarStudio\.venv\Scripts\python.exe avatar_studio.py` |
+| AppDirectory | `C:\APPS\AvatarStudio` |
+| Description | QI Avatar Studio - Gradio talking-head video pipeline :7862 (WSL2 render backends). |
+| Port | 7862 (loopback only) |
+| Logs | `C:\APPS\AvatarStudio\logs\service.log` (stdout+stderr, rotated at 1 MB) |
+| Start type | DEMAND_START (manual) |
+| Account | LocalSystem |
+| Installer | `C:\APPS\AvatarStudio\install_service.bat` (UAC, uses `C:\QIH\engine\bin\nssm.exe`) |
+| **State on 2026-09-10** | **STOPPED on purpose** - see below |
+
+**Why it is stopped.** The service runs `avatar_studio.py`, the *old Gradio-only
+app*: it answers `/` but 404s on `/health` and has no `/api/render` or `/api/jobs`,
+so Media Studio's cockpit and Autopilot cannot use it. The copy that satisfies the
+plug-in contract is `engine\service.py` (WP2, 2026-09-09) and it exists **only in
+`D:\Dev\AvatarStudio`** - not promoted. While that is so, :7862 is served by
+`D:\Dev\AvatarStudio\run_studio.bat` in a console window, started by
+`D:\Dev\MediaStudio\QI_Autopilot_Control.bat avatar`. A console copy does not
+survive a reboot; the service would, but it is the wrong code.
+
+**Owner's decision pending (Media Studio `docs/AUTOPILOT_DECISIONS.md`, step 5):**
+either repoint this service at `engine\service.py` under `C:\APPS` after promoting
+`D:\Dev\AvatarStudio` with `qi_promote.py` (the runtime-tier convention), or repoint
+it into `D:\Dev` (works today, but a service reaching into the workshop is what
+`gpu_lease._broker_root()` warns against). Do **not** simply `nssm start` it: that
+puts the old app back on the port and the Autopilot avatar step fails preflight.
+
+Symptom lookup:
+- Media Studio cockpit shows AvatarStudio down / preflight says `plugins_unreachable: avatarstudio` -> nothing on :7862; run `QI_Autopilot_Control.bat avatar` (one UAC prompt if the previous copy was started elevated)
+- `/health` 404 but `/` answers -> the OLD app is on the port (this service was started); stop it, start `run_studio.bat`
+- Hallo2 render fails at "ffmpeg audio merge failed" with a path cut at a space -> the copy on :7862 predates the 2026-09-10 quoting fix in `avatar_pipeline.py`; restart it
+- render slow -> GPU contention; check ComfyUI's queue and `C:\QIH\run\gpu.lease`

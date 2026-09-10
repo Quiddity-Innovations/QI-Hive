@@ -1,47 +1,47 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-09 09:38:55 (nightly reconciler)_
+_Auto-generated: 2026-09-10 00:33:58 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | akiyascout | Registered, no commits yet | paused | 0 | — |
-| autopdf | Hardening + MCP integration | active | 60 | 2026-08-17 11:56:15 |
-| avatarstudio | v1 — launcher repaired 2026-09-05 (orphaned venv); not yet an NSSM service | active | 6 | 2026-09-06 03:21:16 |
-| baguapp | Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16) | paused | 2 | 2026-09-08 19:22:18 |
+| autopdf | Hardening + MCP integration; feature-tour videos delivered 2026-08-11 | active | 60 | 2026-08-17 11:56:15 |
+| avatarstudio | WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion | active_development | 7 | 2026-09-10 01:46:29 |
+| baguapp | Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16) | paused | 17 | 2026-09-09 21:00:49 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | Eval rig — Hermes vs OpenClaw smoke 10/10 (2026-07-06) | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1016 | 2026-09-09 13:03:22 |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1111 | 2026-09-10 00:07:32 |
 | claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
 | connector | v1.0 live + dispatch executor tools (2026-08-16); docs behind code | active | 1 | 2026-07-30 21:21:48 |
-| cypherminer | Phase 1 — frontend + tunnel live | complete | 4 | 2026-06-16 11:29:45 |
-| digitization | v1 — tool + docs delivered | complete | 4 | 2026-08-11 17:10:00 |
+| cypherminer | Phase 1 — 57 offline tools live via tunnel; API service never persisted | complete | 4 | 2026-06-16 11:29:45 |
+| digitization | v1 delivered; video series 2026-08-11; still under Downloads | complete | 4 | 2026-08-11 17:10:00 |
 | easyflow | v1.2.1 extension shipped; July QI LLM Hub mode added; fork to MailBrain | blocked | 85 | 2026-05-22 15:24:39 |
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
-| gamez | Correctness & data integrity (post-feature-complete) | active | 8 | 2026-06-29 21:42:14 |
+| gamez | World Cup 2026 dashboard — tournament over; archive-or-generalise pending | complete | 8 | 2026-06-29 21:42:14 |
 | headroom | Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com | active | 0 | — |
-| lotterywiz | Public demo â€” documented | active | 9 | 2026-08-16 20:53:09 |
+| lotterywiz | Public demo — documented; awaiting owner sign-off | active | 9 | 2026-08-16 20:53:09 |
 | m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production; AWS LINE relay + channel refactor live | active | 23 | 2026-08-13 21:00:07 |
 | mailbrain | Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run) | active | 0 | — |
 | mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 187 | 2026-09-04 22:43:44 |
-| mediastudio | Composition layer live over six generators | active | 72 | 2026-09-09 08:18:29 |
+| mediastudio | plugin_contract_rollout_wp1_done | active | 76 | 2026-09-10 03:30:24 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | mythologies | Static site live | active | 5 | 2026-08-27 14:44:24 |
 | naya | Phase 5 — capability behind OpenClaw (application retired 2026-08-28) | paused | 12 | 2026-08-28 08:07:21 |
 | nexus | Phase 2 — NSSM-supervised; role under review after Trinity ruling | active | 43 | 2026-08-11 19:00:00 |
-| noosorbis | v0.5.0 â€” complete; owner signed off | complete | 10 | 2026-08-26 15:28:47 |
+| noosorbis | development | active | 22 | 2026-09-09 19:41:36 |
 | onbase_dna | Active knowledge program, no service/ports | active | 5 | 2026-08-22 17:49:08 |
 | openclaw | Phase 2 â€” agent expansion (recovered + modernized) | active | 67 | 2026-08-27 15:52:00 |
 | personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 245 | 2026-09-09 00:35:02 |
+| qi_hive | Observability hardening | active | 250 | 2026-09-09 13:50:40 |
 | retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 140 | 2026-09-06 00:03:30 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
-| trinity | 30-day assistant trial → review 2026-10-16 | active | 1 | 2026-09-08 22:28:44 |
+| trinity | 30-day assistant trial → review 2026-10-16 | active | 3 | 2026-09-10 03:40:52 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
 | universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 32 | 2026-09-02 13:47:29 |
 | vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
@@ -56,16 +56,20 @@ _Auto-generated: 2026-09-09 09:38:55 (nightly reconciler)_
 - **Next:** see project docs
 
 ### autopdf
-- **Phase:** Hardening + MCP integration
+- **Phase:** Hardening + MCP integration; feature-tour videos delivered 2026-08-11
 - **Status:** active
-- **Summary:** Six weeks of accumulated work committed and pushed to GitHub (0a367e5, master) - the first commit since 2026-06-29. Three bodies of work landed together: (1) regex-library corruption root-caused to regression test 5*.10 and fixed durably with a server-side integrity guard on POST /api/regex-library-save plus a .prev generation backup; library reseeded to 30 built-ins. (2) MCP gateway - AutoPDF is an MCP server on 127.0.0.1:8701 running as QI_AutoPDFMCP, nine independently switchable tools, disabled tools never registered. (3) Settings reorganization - AI config split into its own "AI & Connections" section, every group given an explicit id. Regression suite is 28 PASS / 0 FAIL / 1 SKIP. Documentation regenerated (Technical Documentation, Technical Guide, User Guide, Test Guide, Cheatsheet) with the regex-library endpoints, the guard's rationale, and new test-guide rows 5*.11/5*.12. .gitignore corrected: live config/mcp_gateway.json now stays local (per-install, same rule as autopdf-settings.json) while the template ships, and Application/_register_mcp_service.ps1 was un-ignored - the _*.ps1 scratch rule had been swallowing a real deliverable. Version backup at _backups/2026-08-07_1527_before-commit-regexguard.
-- **Next:** Apply the same integrity-guard pattern to the other whole-file replace endpoints (templates, presets, settings) - the regex library is unlikely to be the only store a bad round-trip can blank. Audit remaining regression tests for the GET -> rebuild -> POST shape. Resolve the docs generator collision: _make_all_docs.py and _make_docs.py both write AutoPDF_User_Guide.docx, so run order decides the content. Still open from earlier: code signing for AutoPDF.exe (CrowdStrike EDR blocker), dots.ocr engine evaluation, user-facing date-format picker.
+- **Summary:** Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_AutoPDF :6969 and QI_AutoPDFMCP :8701 RUNNING. 2026-08-07 landed the regex-library integrity guard and the MCP gateway (9 tools); 2026-08-11 delivered 6 feature-tour video cuts and fixed /api/workflow-list returning a bare string. 2026-09-09: root CLAUDE.md / NEXT_SESSION_PROMPT.md brought current (they had said "no git").
+- **Next:** 1) Apply the integrity-guard pattern to templates/presets/settings endpoints. 2) Resolve _make_all_docs.py vs _make_docs.py collision on AutoPDF_User_Guide.docx. 3) Owner: code-sign AutoPDF.exe (CrowdStrike EDR); distribute the three video cuts.
 
 ### avatarstudio
-- **Phase:** v1 — launcher repaired 2026-09-05 (orphaned venv); not yet an NSSM service
-- **Status:** active
-- **Summary:** Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). The C:\1-AI to C:\APPS move had orphaned .venv (pyvenv.cfg pointed at a deleted python.exe) so run_studio.bat died silently for months. 2026-09-05 repointed the venv to C:\Program Files\Python311, verified 322 packages, added pre-flight + logging, verified :7862 returns 200. Not a service, so it does not survive reboot.
-- **Next:** 1) Install + register QI_AvatarStudio as an NSSM service. 2) pip install pytest so tests/test_smoke.py runs. 3) Audit sibling C:\APPS projects for the same orphaned-venv pattern (started 2026-09-09). 4) Owner: confirm whether the D-ID key still needs rotation (open since June).
+- **Phase:** WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion
+- **Status:** active_development
+- **Summary:** AvatarStudio now satisfies all six rows of the Media Studio plug-in contract (PLUGINS.md Â§1), built and committed in D:/Dev/AvatarStudio (94dc676, 86 tests passing). Render core extracted into avatar_pipeline.py with render_avatar() as the single orchestration generator; the Gradio GUI, the new FastAPI service and scene_pipeline.py are all thin callers, so the engine chain exists once. engine/service.py serves /health /version /info /api/render /api/jobs /api/gpu on 7862 and mounts the Gradio panel at / honouring ?embed=1 â€” one port for both doors because ui.port is what Media Studio iframes AND health-probes. driving_audio short-circuits TTS (the Voice Studio / CONVERGENCE item 1 seam). Outputs go to D:/AI/Outputs/AvatarStudio/<job_id>/ with a JSON sidecar. qi_plugin.json validated by Media Studio's own engine/plugins.py with zero warnings. Registry entry extended additively (Tier 2, backup .bak-20260909). Decision #599.
+
+Also fixed a live bug: edge-tts emitted pitch as "+0st", which edge-tts >= 7 rejects before writing audio â€” Japanese, French, Russian and German produced NO sound at all. Still broken in C:/APPS until promotion.
+
+Not done, deliberately: gpu.peak_vram_gb is null because the RTX 5080 was held by another tenant (14.1/16.3 GB) all session. Jobs now sample nvidia-smi into their sidecars so the first Hallo2 render on an idle card produces the number.
+- **Next:** 1. PROMOTE D:/Dev/AvatarStudio -> C:/APPS/AvatarStudio (owner's call). This also ships the edge-tts fix to the running Studio, where 4 of 10 languages are currently silent. 2. After promotion: repoint qi_plugin.json launch.cmd/cwd at C:/APPS, set launch.service to QI_AvatarStudio, run install_service.bat AS ADMIN (not run from the session â€” needs admin, and it refuses if engine/service.py is absent). 3. Measure gpu.peak_vram_gb with one Hallo2 render on an idle card, then copy vram.peak_gb from the sidecar into the manifest. 4. Add D:/Dev/AvatarStudio/qi_plugin.json to Media Studio's plugins.extra_manifests and drive one {"type":"avatar"} shot list end to end. 5. First real /api/render using a Voice Studio WAV as driving_audio.
 
 ### baguapp
 - **Phase:** Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16)
@@ -126,16 +130,16 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) Write the catch-up session summary for the 08-02/08-16 additions. 2) Confirm a GitHub remote exists. 3) Owner: confirm the capability URL is still active in claude.ai Connectors.
 
 ### cypherminer
-- **Phase:** Phase 1 — frontend + tunnel live
+- **Phase:** Phase 1 — 57 offline tools live via tunnel; API service never persisted
 - **Status:** complete
-- **Summary:** Bilingual offline tools suite. Static frontend served on :7842 (QI_CypherMinerUI), API on :8502, public tunnel QI_CypherMinerTunnel live (2026-06-15). Registered in ecosystem registry; now registered in Brain.  Status corrected per owner (Renne) 2026-06-18 dashboard review.
-- **Next:** Stand up a persistent API service for 8502; wire /health,/version,/info; git first commit.
+- **Summary:** Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_CypherMinerUI :7842 and tunnel RUNNING (cypher.quiddityinnovations.com). Shipped 2026-06-14 in one session; last real work 2026-06-23. API :8502 still not a persistent service (flagged 2026-06-18).
+- **Next:** 1) Decide whether anything calls the :8502 API; if yes wrap it as an NSSM service with /health /version /info, else close the item. 2) Optional: OCR / word-games DATA tier.
 
 ### digitization
-- **Phase:** v1 — tool + docs delivered
+- **Phase:** v1 delivered; video series 2026-08-11; still under Downloads
 - **Status:** complete
-- **Summary:** BU Digitization Cost Comparison Tool (client-side HTML) built with technical documentation and user guide (2026-06-15). Lives under Downloads\DIGITIZATION COSTS.  Status corrected per owner (Renne) 2026-06-18 dashboard review.
-- **Next:** Migrate to C:\ project folder per QI standards; git init; decide if it needs hosting/tunnel.
+- **Summary:** Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). Client-side HTML calculator, no service. 2026-08-11 produced 6 feature-tour video cuts and a CHANGELOG. Local git exists (06-15) but the folder remains C:\Users\renne\Downloads\DIGITIZATION COSTS, not C:\APPS. Correctly parked unless BU asks for hosting.
+- **Next:** Only if BU requests a hosted version: move to C:\APPS\DigitizationCostTool, re-point git remote, allocate a port or fold into an existing tunnel.
 
 ### easyflow
 - **Phase:** v1.2.1 extension shipped; July QI LLM Hub mode added; fork to MailBrain
@@ -156,10 +160,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** see project docs
 
 ### gamez
-- **Phase:** Correctness & data integrity (post-feature-complete)
-- **Status:** active
-- **Summary:** Feature set complete; this pass fixed AI-Analyst/Quant correctness: board grounding (no more deflection), survive-to-title precompute, the DEF/ATT line null bug (pos_group coarse labels) across all 48 WC teams, removal of the per-match-vs-title category error, and a server-side model-vs-market guard. Verified live on prod 8710; merged to main and pushed.
-- **Next:** Optional: Teams-Eval card visual pass now that lines are real; consider extending the guard to single-team title answers if needed.
+- **Phase:** World Cup 2026 dashboard — tournament over; archive-or-generalise pending
+- **Status:** complete
+- **Summary:** Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_GamezProxy :8710 and tunnel RUNNING; QuantProxy manual-start by design. Last real work 2026-06-30 (bracket redesign, correctness fixes); the 2026 World Cup ended in July so the live betting-window purpose is moot. Later commits are docs scrub/auto-sync.
+- **Next:** Owner decision: archive as a one-off (stop services, log archive date) or generalise the proxy/scoring engine for a future tournament.
 
 ### headroom
 - **Phase:** Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com
@@ -168,10 +172,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) Investigate the unhealthy kompress check — is compression working or bypassed? 2) Write a minimal README/docs so "see project docs" points somewhere. 3) Owner: confirm the Anthropic-upstream routing was intended; re-confirm Claude Code OAuth never routes through the proxy.
 
 ### lotterywiz
-- **Phase:** Public demo â€” documented
+- **Phase:** Public demo — documented; awaiting owner sign-off
 - **Status:** active
-- **Summary:** Live public demo at lottery.quiddityinnovations.com (any email gets a Cloudflare one-time code), now with a complete Quiddity Innovations documentation set: doc\README.md index, LotteryWiz_User_Guide.docx (16 sections, 23 screenshots, 4 recipes), feature-tour videos in both house voices (8.4/8.6 min, 24 scenes, + chapter segments), narration script, and five re-runnable scripts that regenerate everything from the live app.
-- **Next:** Pick the house voice (Andrew or Ava); owner click-through of the demo login; share doc\README.md + guide with first guests; decide git vs shared storage for the ~15 MB videos; on approval remove Cloudflare Access and revert QI Gate to protected.
+- **Summary:** Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_LotteryWiz :8777 and tunnel RUNNING (no /health route). 2026-08-16 delivered a 16-section user guide, two feature-tour videos and 5 re-runnable doc build scripts; demo opened to any email on Cloudflare Access and has stayed open since.
+- **Next:** 1) Owner: watch a tour, pick the house voice, click through the demo login, decide git vs storage for the ~15 MB videos. 2) Owner: remove the Lottery Cloudflare Access app (Zero Trust dashboard). 3) Then revert QI Gate to protected.
 
 ### m2v
 - **Phase:** v0.1.0 — scaffold + first render
@@ -198,10 +202,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) Sign in and confirm the 6 new OnBase API buttons render. 2) Dry-run kit/setup_unity_api.ps1 against a fresh environment key. 3) Fix the 4 failing qi_validator checks (root CLAUDE.md, requirements.txt, docs naming). 4) Owner: three-way merge decision for D:\Dev\BU Edition (untouched since 2026-08-08).
 
 ### mediastudio
-- **Phase:** Composition layer live over six generators
+- **Phase:** plugin_contract_rollout_wp1_done
 - **Status:** active
-- **Summary:** Indexes assets from ComfyUI/Voice Studio/AvatarStudio/PersonalSong/M2V and turns shot lists into finished media, generating nothing itself. Per docs/INTERFACE.md (most recent doc), it adds the indexing + assembly step that was previously hand-rolled ffmpeg per generator.
-- **Next:** see project docs
+- **Summary:** WP1 (plug-in manifest layer) and WP1b (independent review) are done and committed in D:\Dev\MediaStudio (not promoted to C:\APPS). A universal run-record/rerun feature was also added on top (record every job automatically, browse, reload and regenerate it) - both phases 1 and 2 of that are done; phase 3 ("load into editor" UI) is deferred, not required for the core ask. Next stage of the plug-in rollout is WP2 (AvatarStudio), which is scoped to a separate session/repo (D:\Dev\AvatarStudio) on Opus.
+- **Next:** Open a new Claude Code session in D:\Dev\AvatarStudio with Opus selected and run the WP2 kickoff prompt (bring AvatarStudio to the plug-in contract: /health /version /info /api/render /api/jobs, driving_audio pass-through, qi_plugin.json, NSSM service verification). First action of that session must be committing AvatarStudio's 16 pre-existing uncommitted files before any new work. Separately, commit D:\Dev\VoiceStudio\qi_plugin.json in the VoiceStudio repo where it currently sits untracked.
 
 ### mq
 - **Phase:** Phase 0 — scaffold
@@ -228,20 +232,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) Confirm whether the Chain Routing Mode error (2026-05-26) still reproduces. 2) Create the four missing standard docs (Implementation Log, Meeting Minutes, Version History, Master Status Report). 3) After the 2026-10-16 Trinity review: Renne decides NEXUS forward role; update registry description/family_notes.
 
 ### noosorbis
-- **Phase:** v0.5.0 â€” complete; owner signed off
-- **Status:** complete
-- **Summary:** Live at https://noosorbis.quiddityinnovations.com, commits e6a98da â†’ 66eee99, working tree clean, 203 tests green. Renne has confirmed he is happy with the final product and closed the session.
-
-Front page rebuilt around the mark: no masthead on "/", one Ask-the-Librarian field, four dismissible panels with a restore bar, a Try shelf randomised each load from Wikipedia's featured feed, add-to-collection confirmation, and a mission statement set as a centred dedication spanning the page container.
-
-Librarian has three modes across three engines, with provenance carried on every backend event and painted as a distinct colour, badge and footnote. "In the library" (local Ollama over Wikipedia passages) and "Its own knowledge" (Gemini 3.7 Flash, free tier) are live. "The whole internet" is built and tested but dark pending an EXA_API_KEY â€” it now runs on a search provider plus the local model rather than Google grounding, so it needs no billing and keeps the reader's question on the machine.
-
-"What you asked" keeps every answer in the browser with the mode that produced it, and compares answers to the same question side by side â€” the site's central argument made visible rather than asserted.
-
-secrets/ is hardened: one editable file, git ignores the folder wholesale, key lookup falls back across it. No billing account exists on any provider, so the public site cannot incur charges.
-- **Next:** Two optional jobs, neither blocking and both Renne's to do. (1) Add EXA_API_KEY to C:\APPS\NoosOrbis\secrets\noosorbis.env and restart to light up "The whole internet" â€” free, no card, from https://dashboard.exa.ai; the mode reports itself off until then rather than failing after someone types. (2) Rotate the Gemini key, which appeared in a chat transcript during setup; git history is verified clean so this is precaution, and Google auto-revokes keys it detects as leaked.
-
-No further development planned. If ever wanted: server-side answer history for cross-device comparison (deliberately browser-only today), diagrams from an article's own structured data rather than the disabled diffusion pipeline, deleting the three *_noosorbis_exception elevation-whitelist rules now the app runs from C:\APPS\NoosOrbis, and Cloudflare Access while gate mode is open.
+- **Phase:** development
+- **Status:** active
+- **Summary:** v0.3.x. Now multilingual across eight languages â€” en, es, fr, pt, ru, zh, ja, ko (Tier 1 + Tier 2 of the 2026-09-09 evaluation). Language is request-scoped; the cache-collision bug that would have served one language's articles to all eight is fixed; the interface is translated at el() with 284 strings per language; typography follows the script (Noto Sans SC/JP/KR, em-based measure for CJK, keep-all for Korean); language switching follows the article via langlinks. Also restored /api/librarian/{status,ask,ask_sync,suggest_collection}, 404 since 2026-08-26, and fixed a test suite that reported green while checks failed. 36 tests pass under both runners. Committed and pushed (02a8633). NOT YET LIVE: QI_NoosOrbis still runs the old code and needs an administrator restart.
+- **Next:** Restart QI_NoosOrbis as administrator so the public site serves the multilingual build â€” this is the only thing standing between the work and the users. Then: repoint CLAUDE.md and Start_NoosOrbis.bat from D:/Dev/NoosOrbis to C:/APPS/NoosOrbis. Tier 3 (Arabic, Urdu) needs RTL layout, with pdf:false already wired. Tier 4 (Hindi, Bengali) needs nomic-embed-text-v2-moe. Decide whether data/fontindex.json should stay tracked.
 
 ### onbase_dna
 - **Phase:** Active knowledge program, no service/ports

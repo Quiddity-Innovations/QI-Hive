@@ -9158,7 +9158,7 @@ def api_agent_hr():
                 ).fetchone()
                 runs_count, tokens_sum, ms_sum = agg
                 recent = conn.execute(
-                    "SELECT task_desc, project, started_at FROM runs WHERE agent = ? "
+                    "SELECT task_desc, project, started_at, model FROM runs WHERE agent = ? "
                     "ORDER BY started_at DESC LIMIT 3", (name,)
                 ).fetchall()
                 projects = conn.execute(
@@ -9172,7 +9172,7 @@ def api_agent_hr():
                     "tokens_k": round(tokens_sum / 1000, 1),
                     "hours": round(ms_sum / 3600000, 2),
                     "recent_tasks": [{"task_desc": t, "project": p, "project_id": _resolve_registry_project(p),
-                                       "started_at": s} for t, p, s in recent],
+                                       "started_at": s, "model": m or "—"} for t, p, s, m in recent],
                     "projects": [p for (p,) in projects],
                 })
             return JSONResponse({"ok": True, "agents": out})
@@ -9190,14 +9190,15 @@ def api_agent_hr_runs(agent: str):
         conn = _agent_hr_conn()
         try:
             rows = conn.execute(
-                "SELECT project, task_desc, started_at, duration_ms, tokens, tool_uses, outcome, session_id "
+                "SELECT project, task_desc, started_at, duration_ms, tokens, tool_uses, outcome, session_id, model "
                 "FROM runs WHERE agent = ? ORDER BY started_at DESC LIMIT 50", (agent,)
             ).fetchall()
             runs = [{
                 "project": p, "project_id": _resolve_registry_project(p), "task_desc": t,
                 "started_at": s, "duration_ms": d,
                 "tokens": tok, "tool_uses": tu, "outcome": o, "session_id": sid,
-            } for p, t, s, d, tok, tu, o, sid in rows]
+                "model": mdl or "—",
+            } for p, t, s, d, tok, tu, o, sid, mdl in rows]
             return JSONResponse({"ok": True, "agent": agent, "runs": runs})
         finally:
             conn.close()

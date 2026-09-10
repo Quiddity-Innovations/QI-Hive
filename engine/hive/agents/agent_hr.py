@@ -83,10 +83,19 @@ def ensure_schema(conn):
             tool_uses   INTEGER,
             outcome     TEXT,
             session_id  TEXT,
+            model       TEXT,
             UNIQUE(agent, session_id, started_at, task_desc)
         )
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_runs_agent ON runs(agent)")
+
+    # CREATE TABLE IF NOT EXISTS above only fires on a brand-new DB — the live
+    # DB (402+ rows) already has a `runs` table without `model`, so it needs an
+    # explicit migration. Safe to run every time ensure_schema() is called.
+    run_cols = {row[1] for row in conn.execute("PRAGMA table_info(runs)").fetchall()}
+    if "model" not in run_cols:
+        conn.execute("ALTER TABLE runs ADD COLUMN model TEXT")
+
     conn.commit()
 
 
@@ -292,9 +301,9 @@ def record_run(conn, run, source):
 
     cur = conn.execute(
         "INSERT OR IGNORE INTO runs (agent, project, task_desc, started_at, duration_ms, tokens, "
-        "tool_uses, outcome, session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "tool_uses, outcome, session_id, model) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (agent_name, run["project"], run["task_desc"], run["started_at"], run["duration_ms"],
-         run["tokens"], run["tool_uses"], run["outcome"], run["session_id"]),
+         run["tokens"], run["tool_uses"], run["outcome"], run["session_id"], run.get("model")),
     )
     run_added = cur.rowcount > 0
     when = run.get("resolved_at") or run["started_at"] or datetime.now().isoformat()

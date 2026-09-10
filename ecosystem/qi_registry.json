@@ -996,14 +996,26 @@
         "ui": {
           "current": 7862,
           "block": "7840-7869",
-          "notes": "Pre-registry Gradio port. Works; keep per migration_note."
+          "notes": "Pre-registry Gradio port. Works; keep per migration_note. Since 2026-09-09 this one port serves BOTH doors: engine/service.py (FastAPI) answers /health /version /info and the /api/render job API, and mounts the Gradio panel at / honouring ?embed=1 for framing. Loopback-only and never tunneled - /api/render reads local portrait and wav paths by path. The plug-in manifest is qi_plugin.json at the project root (Media Studio contract, D:/Dev/MediaStudio/docs/PLUGINS.md)."
         }
       },
       "family_tier": "sibling",
       "family_notes": "Media-generation studio. Depends on WSL2 for avatar render backends. Shares the avatar/voice vision used across QI agents.",
-      "integrates_with": [],
+      "integrates_with": [
+        "mediastudio",
+        "voice_studio",
+        "comfyui"
+      ],
       "exposes_to_ecosystem": [
-        "Talking-head avatar video generation (Gradio UI :7862)"
+        "Talking-head avatar video generation (Gradio UI :7862)",
+        "GET /health",
+        "GET /version",
+        "GET /info (also returns the qi_plugin.json manifest under the 'plugin' key)",
+        "GET / (panel; ?embed=1 strips chrome for embedding in QI Media Studio)",
+        "POST /api/render (portrait|source_video + driving_audio|script_text -> job_id; supplying driving_audio skips TTS entirely - the Voice Studio seam, CONVERGENCE item 1)",
+        "GET /api/jobs and /api/jobs/{id} (status, stage, log tail, output paths)",
+        "GET /api/gpu, POST /api/gpu/free",
+        "Renders + JSON sidecars under D:/AI/Outputs/AvatarStudio/<job_id>/ (library source for Media Studio)"
       ],
       "consumes_from_ecosystem": [],
       "paths": {

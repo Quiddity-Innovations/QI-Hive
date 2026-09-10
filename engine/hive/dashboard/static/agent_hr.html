@@ -22,6 +22,8 @@
   .qi-hr-wrap .model-opus   { background:#7c2d12; color:#fed7aa; }
   .qi-hr-wrap .model-sonnet { background:#065f46; color:#a7f3d0; }
   .qi-hr-wrap .model-haiku  { background:#1e3a8a; color:#bfdbfe; }
+  .qi-hr-wrap .model-gemini { background:#1e4620; color:#bbf7d0; }
+  .qi-hr-wrap .model-codex  { background:#134e4a; color:#99f6e4; }
   .qi-hr-wrap .model-inherit,
   .qi-hr-wrap .model-unknown { background:#334155; color:#cbd5e1; }
   .qi-hr-wrap .desc { font-size:.78rem; color:#94a3b8; margin-bottom:.6rem; min-height:1rem; }
@@ -83,6 +85,8 @@ function modelClass(model) {
   if (m.includes('opus')) return 'model-opus';
   if (m.includes('sonnet')) return 'model-sonnet';
   if (m.includes('haiku')) return 'model-haiku';
+  if (m.includes('gemini')) return 'model-gemini';
+  if (m.includes('gpt')) return 'model-codex';
   if (m === 'inherit') return 'model-inherit';
   return 'model-unknown';
 }
@@ -116,9 +120,10 @@ function renderGrid(agents) {
     const card = document.createElement('div');
     card.className = 'card-qi' + (selectedAgent === a.name ? ' selected' : '');
     card.onclick = () => showAgent(a.name);
-    const recentHtml = (a.recent_tasks || []).slice(0, 3).map(t =>
-      `<div class="task">&bull; ${escapeHTML(t.task_desc || '(no description)')} <span class="muted">— ${projectLink(t.project, t.project_id)}</span></div>`
-    ).join('') || '<div class="muted">No recorded runs yet.</div>';
+    const recentHtml = (a.recent_tasks || []).slice(0, 3).map(t => {
+      const runModel = (t.model && t.model !== '—') ? `<span class="badge-pill ${modelClass(t.model)}" style="font-size:.6rem; padding:.05rem .35rem; margin-left:.35rem;">${escapeHTML(t.model)}</span>` : '';
+      return `<div class="task">&bull; ${escapeHTML(t.task_desc || '(no description)')} <span class="muted">— ${projectLink(t.project, t.project_id)}</span>${runModel}</div>`;
+    }).join('') || '<div class="muted">No recorded runs yet.</div>';
     card.innerHTML = `
       <div class="card-head">
         <span class="dot ${active ? 'on' : 'off'}" title="${active ? 'active (run within 7 days)' : 'inactive'}"></span>

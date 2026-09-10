@@ -21,8 +21,15 @@ Log:      C:\\QIH\\LOGS\\trinity_check.log  (one line per run, never a key, neve
 What it catches (each was a real failure on 2026-09-08):
   * Codex CLI older than npm latest → old CLIs cannot decode /models and fall
     back to a model the ChatGPT plan rejects.
+  * Codex CLI 0.154.0 or newer → `codex mcp-server` no longer exists, so the
+    Codex leg cannot connect at all. The CLI is PINNED to 0.153.4 on purpose;
+    this check must never recommend upgrading past that (it did on 2026-09-09,
+    and the upgrade took Codex offline).
   * A running `codex mcp-server` whose binary was replaced after it started
     (Claude Code keeps the stale process until restart).
+  * Codex unable to serve MCP AT ALL — caught by a real `initialize` handshake,
+    not by counting processes. Added 2026-09-09: the old process-count check
+    reported PASS with zero servers running while the Codex leg was dead.
   * Codex not logged in / auth file missing.
   * Gemini key file missing, config model not visible to the key, daily cap near.
   * MCP entries missing from Claude Code's config.
@@ -55,6 +62,24 @@ CODEX_CHEAP_MODEL = "gpt-5.6-luna"   # ping model: cheapest listed; protects the
 CAP_WARN_FRACTION = 0.8
 
 PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
+
+# Codex CLI removed the `codex mcp-server` subcommand in 0.154.0 (deprecated in
+# 0.149.1). Its replacement, `codex app-server`, speaks OpenAI's own JSON-RPC
+# app-server protocol — NOT MCP: probed 2026-09-09, it answers `initialize` with
+# userAgent/codexHome instead of protocolVersion/capabilities, so an MCP client
+# cannot complete the handshake. 0.153.4 is the last version that serves MCP.
+# Verified by handshake on 2026-09-09: serverInfo.name = "codex-mcp-server".
+CODEX_MCP_REMOVED_IN = (0, 154, 0)
+CODEX_PIN = "0.153.4"
+
+# A real MCP initialize request. Single-quote-free so it can be embedded in a
+# bash -lc single-quoted string. The server exits on stdin EOF — no need to hold
+# stdin open.
+MCP_INIT_REQUEST = (
+    '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{'
+    '"protocolVersion":"2024-11-05","capabilities":{},'
+    '"clientInfo":{"name":"qi-trinity-check","version":"1.0"}}}'
+)
 
 
 def wsl(cmd: str, timeout=60) -> tuple[int, str]:
@@ -175,15 +200,37 @@ class Checks:
         self.add("codex", "CLI present in WSL", PASS if installed else FAIL, ver[:120])
         if not installed:
             return
+        installed_t = tuple(map(int, installed.split(".")))
+        # The ceiling is a hard compatibility boundary, not a preference.
+        if installed_t >= CODEX_MCP_REMOVED_IN:
+            self.add("codex", "CLI MCP-compatible", FAIL,
+                     f"installed {installed} — `codex mcp-server` was REMOVED in "
+                     f"{'.'.join(map(str, CODEX_MCP_REMOVED_IN))}; the Codex leg cannot connect. "
+                     f"Fix: npm i -g @openai/codex@{CODEX_PIN}, then restart Claude Code")
+        else:
+            self.add("codex", "CLI MCP-compatible", PASS,
+                     f"installed {installed} < {'.'.join(map(str, CODEX_MCP_REMOVED_IN))} (has mcp-server)")
+
         rc, latest = wsl("npm view @openai/codex version 2>/dev/null | tail -1", timeout=90)
         lm = re.search(r"(\d+\.\d+\.\d+)", latest or "")
         latest_v = lm.group(1) if lm else None
         if latest_v:
-            behind = tuple(map(int, installed.split("."))) < tuple(map(int, latest_v.split(".")))
-            self.add("codex", "CLI up to date", WARN if behind else PASS,
-                     f"installed {installed}, npm latest {latest_v}" + (" — upgrade: npm i -g @openai/codex@latest" if behind else ""))
+            latest_t = tuple(map(int, latest_v.split(".")))
+            if latest_t >= CODEX_MCP_REMOVED_IN:
+                # Deliberately NOT a WARN: being behind npm-latest is the correct
+                # state while latest has no MCP server. Do not nag toward the break.
+                self.add("codex", "CLI version policy", PASS,
+                         f"installed {installed}, npm latest {latest_v} — PINNED ON PURPOSE. "
+                         f"Do NOT upgrade: {latest_v} has no `mcp-server`. Migration path is the "
+                         f"Codex plugin for Claude Code, not a version bump")
+            else:
+                behind = installed_t < latest_t
+                self.add("codex", "CLI version policy", WARN if behind else PASS,
+                         f"installed {installed}, npm latest {latest_v}"
+                         + (f" — safe to upgrade (still below {'.'.join(map(str, CODEX_MCP_REMOVED_IN))}): "
+                            f"npm i -g @openai/codex@{latest_v}" if behind else ""))
         else:
-            self.add("codex", "CLI up to date", WARN, f"installed {installed}; npm registry unreachable")
+            self.add("codex", "CLI version policy", WARN, f"installed {installed}; npm registry unreachable")
         # Everything else comes from the companion script (inline $(...) gets mangled through wsl.exe)
         rc, raw = wsl(f"sed 's/\\r$//' '{COMPANION_WSL}' | bash", timeout=60)
         info = {}
@@ -199,9 +246,14 @@ class Checks:
         login = info.get("login", "")
         self.add("codex", "logged in (ChatGPT plan)", PASS if "Logged in" in login else FAIL, login[:120])
         total, stale = info.get("mcp_native_procs", 0), info.get("mcp_stale_procs", 0)
+        # NOT a liveness check. 0 running is normal when no Claude Code session is
+        # open; this line only catches processes pinned to a deleted binary.
+        # Liveness is check_codex_handshake().
         self.add("codex", "MCP server processes", WARN if stale else PASS,
-                 f"{total} native codex mcp-server running, {stale} on a deleted (pre-upgrade) binary"
-                 + (" — restart Claude Code to respawn" if stale else ""))
+                 f"{total} running, {stale} on a deleted (pre-upgrade) binary"
+                 + (" — restart Claude Code to respawn" if stale
+                    else " (a count of 0 is fine — liveness is the handshake)"))
+        self.check_codex_handshake()
         listed = [s for s in info.get("listed", "").split(",") if s]
         self.add("codex", "models visible to plan", PASS if listed else WARN, ", ".join(listed)[:200])
         cfg_model, cfg_sb = info.get("config_model"), info.get("config_sandbox")
@@ -234,6 +286,49 @@ class Checks:
                                  "duration_ms": ms, "outcome": "pass" if ok else "fail",
                                  "tokens": (usage.get("input_tokens", 0) or 0) + (usage.get("output_tokens", 0) or 0) or None,
                                  "tool_uses": cmds})
+
+    def check_codex_handshake(self):
+        """Speak actual MCP to the CLI and verify it answers as an MCP server.
+
+        This is the check that would have caught 2026-09-09: on 0.154.0 the
+        `mcp-server` subcommand is gone, so the CLI falls through to the
+        interactive prompt and never completes a handshake — while the process
+        count still read PASS.
+        """
+        cmd = (f"printf '%s\\n' '{MCP_INIT_REQUEST}' | "
+               f"timeout 20 {CODEX_BIN} mcp-server 2>/dev/null")
+        rc, out = wsl(cmd, timeout=45)
+        if rc == 124 or out == "timeout":
+            self.add("codex", "MCP handshake", FAIL,
+                     "no response within 20s — server never completed initialize")
+            return
+        for line in out.splitlines():
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                msg = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            result = msg.get("result")
+            if not isinstance(result, dict):
+                continue
+            server = result.get("serverInfo") or {}
+            name = server.get("name")
+            if name == "codex-mcp-server":
+                self.add("codex", "MCP handshake", PASS,
+                         f"serverInfo.name={name}, "
+                         f"protocolVersion={result.get('protocolVersion')}, "
+                         f"version={server.get('version')}")
+            else:
+                # `codex app-server` answers `initialize` too — with
+                # userAgent/codexHome and no serverInfo. It is NOT MCP.
+                self.add("codex", "MCP handshake", FAIL,
+                         f"replied to initialize but not as an MCP server "
+                         f"(serverInfo.name={name!r}, keys={sorted(result)[:6]})")
+            return
+        self.add("codex", "MCP handshake", FAIL,
+                 f"no JSON-RPC result returned — {out[:160] or 'empty output'}")
 
     # ── Agent HR ───────────────────────────────────────────────────────
     def record_hr(self, session_id: str):
