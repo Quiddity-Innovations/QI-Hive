@@ -419,15 +419,16 @@ Not widened — flagged for a separate decision.
 |---|---|
 | **Display name** | QI - ComfyUI |
 | **Description** | ComfyUI (portable) — image / video / music generation engine on 127.0.0.1:8740. Serves Media Studio, the `qi-comfy` MCP server, and every workflow in `D:\AI\workflows`. |
-| **Binary** | `D:\AI\ComfyUI_windows_portable\python_embeded\python.exe` |
-| **Parameters** | `-s ComfyUI\main.py --windows-standalone-build --listen 127.0.0.1 --port 8740 --output-directory "D:\AI\Outputs\ComfyUI" --disable-auto-launch` |
-| **Working dir** | `D:\AI\ComfyUI_windows_portable` |
+| **Binary** | `C:\Windows\System32\cmd.exe` (wrapper; since 2026-09-10) |
+| **Parameters** | `/c "D:\AI\Start_ComfyUI_Service_Wrapper.bat"` — the wrapper first runs `D:\AI\ollama_free_vram.py` (unloads every resident Ollama model, owner decision 2026-09-10) then launches `python_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --listen 127.0.0.1 --port 8740 --output-directory "D:\AI\Outputs\ComfyUI" --disable-smart-memory --reserve-vram 2 --disable-auto-launch` |
+| **Working dir** | `D:\AI` (wrapper cds into `ComfyUI_windows_portable`) |
 | **Port** | 8740 (loopback only — indexes unreleased client media and biometric voice samples) |
 | **Stdout log** | `D:\AI\comfy_8740.log` |
 | **Stderr log** | `D:\AI\comfy_8740.log` (rotating, 50 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
 | **Env (required)** | `HF_HOME`, `HUGGINGFACE_HUB_CACHE`, `TRANSFORMERS_CACHE`, `DIFFUSERS_CACHE`, `TORCH_HOME` → all under `D:\AI\huggingface\`. ⚠️ These exist only in **HKCU**; LocalSystem does not inherit them. Without `AppEnvironmentExtra` ComfyUI re-downloads its caches into `C:\Windows\system32\config\systemprofile`. |
+| **Status** | ✅ INSTALLED 2026-09-10 by Renne (elevated), repointed to the wrapper the same day; `nssm restart` works through the QI_Elevate broker (rule `nssm_service_control`). |
 | **Install** | Run `D:\AI\install_QI_ComfyUI_service.bat` as admin. Close the `Start_ComfyUI.bat` console first — only one process can hold 8740. The QI_Elevate broker cannot create new services. |
 | **Manual start (fallback)** | `D:\AI\Start_ComfyUI.bat` — identical arguments, visible log window. |
 | **Health** | `curl http://127.0.0.1:8740/system_stats` → 200 with GPU/VRAM JSON |
