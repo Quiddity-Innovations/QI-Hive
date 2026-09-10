@@ -193,7 +193,12 @@ def build_ecosystem_brief(registry: dict) -> str:
     lines.append("")
     lines.append("- Quiddity Innovations (QI) — owner Renne Santiago, sole developer + AI ambassador.")
     lines.append(f"- {len(projects)} registered projects sharing one machine, ports, git, and a converging future.")
-    lines.append("- Two run tiers: `C:\\APPS` is the gold build/run tier; `D:\\Dev` is the packaged-out copy.")
+    lines.append("- Two tiers (owner's ruling 2026-09-10, `QI_Standards.md` §1.1): "
+                 "`C:\\APPS\\<App>` is the app Renne runs **and** the development source - "
+                 "git lives there, sessions open there, services point there. "
+                 "`D:\\Dev\\<App>` is a plain clone of the same remote: a backup on a second "
+                 "disk and the source for installing elsewhere, never edited, no `.venv`. "
+                 "Nothing operational may name `D:\\Dev`.")
     lines.append("- Port blocks are per-project (e.g. Maia 8100-8199, NEXUS 8300-8399, QI Hive 9000-9099) —")
     lines.append("  never pick an adjacent port; check `C:\\QIH\\ecosystem\\qi_registry.json` `port_strategy`.")
     lines.append("- `C:\\QIH\\ecosystem\\qi_registry.json` is the single source of truth for ports, services,")

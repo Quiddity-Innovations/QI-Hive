@@ -73,9 +73,18 @@ def load_registry_projects():
 
 
 def find_git_repo(path_str: str):
-    """Resolve the effective git repo dir for a registry path, with the D:\\Dev\\<name>
-    fallback (mediastudio/filmforge/voice_studio and any similarly-split project live
-    there, not under their registry `path`). Returns (git_dir, note) or (None, reason)."""
+    """Resolve the effective git repo dir for a registry path.
+
+    The D:\\Dev\\<name> fallback below existed because mediastudio, filmforge and
+    voice_studio kept their history there while their registry `path` (C:\\APPS)
+    held a copy with no .git. The tier ruling of 2026-09-10 ended that: C:\\APPS
+    is the source and carries the repo, and D:\\Dev is a backup clone.
+
+    The fallback is kept as a DETECTOR, not a convenience. If it ever fires now,
+    the registry path has lost its .git and the number being reported came off a
+    backup - so it is returned as a loud note rather than a silent success.
+
+    Returns (git_dir, note) or (None, reason)."""
     if not path_str:
         return None, "no path in registry"
     candidate = Path(path_str)
@@ -86,7 +95,8 @@ def find_git_repo(path_str: str):
     if basename:
         fallback = DEV_FALLBACK_ROOT / basename
         if fallback.is_dir() and (fallback / ".git").is_dir():
-            return fallback, f"fallback D:\\Dev\\{basename}"
+            return fallback, (f"WRONG TIER: {candidate} has no .git, read the BACKUP "
+                              f"clone D:\\Dev\\{basename} instead - fix the source tier")
     if not candidate.is_dir():
         return None, "path does not exist"
     return None, "no .git"

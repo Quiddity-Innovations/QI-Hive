@@ -1,6 +1,6 @@
 # Quiddity Innovations — Project Standards (QI DNA)
 *Every QI project inherits these conventions. No exceptions.*
-*Last updated: 2026-04-05*
+*Last updated: 2026-09-10 (added 1.1, the two-tier model)*
 
 ---
 
@@ -18,6 +18,48 @@ C:\<PROJECT_NAME_UPPERCASE>\
 | OpenClaw | `C:\APPS\OC\` |
 | FileHQ | `C:\FileHQ\` |
 | Future | `C:\<NAME>\` |
+
+### 1.1 The two tiers: `C:\APPS` is the source, `D:\Dev` is the backup
+
+**Owner's ruling, 2026-09-10. This is the model for every QI project.**
+
+| Tier | What it is |
+|---|---|
+| `C:\APPS\<App>` | **The app Renne runs AND the development source.** Defects are found in use and fixed in place, right here. `git` lives here. Claude sessions open here. The QI Hive and `qi_registry.json` point here. This is the only tier where work happens. |
+| `D:\Dev\<App>` | **Backup and distribution source.** A plain `git clone` of the same remote, kept on a second physical disk. It is what you clone from to put the app on another machine or to build an installer. It is never edited, and it carries no runtime state: no `.venv`, no `data/`, no `logs/`, no `secrets/`. |
+
+**Why this way round.** The app and the source being the same tree is the whole
+point: Renne finds a defect *while using the app*, and the fix goes in where he
+found it. A model where the running copy is build output means every fix needs a
+promotion step to reach the thing that was broken — and the costliest failures
+this ecosystem has had were never bad code, they were a fix that never reached
+the copy that runs.
+
+**Rules:**
+
+- **Nothing operational may ever name `D:\Dev`.** Not an NSSM service, not a
+  scheduled task, not a Caddy route, not a tunnel, not a plug-in manifest's
+  launcher, not a registry path. The backup clone has no virtualenv, so anything
+  pointed there fails — and usually fails *quietly*.
+- **Refresh a backup with `git -C D:\Dev\<App> pull`.** That is the entire
+  maintenance story.
+- **A backup that is dirty, ahead, or diverged is a fault, not drift.** It means
+  somebody edited the backup. Find out whether the change belongs in
+  `C:\APPS\<App>`, move it there, then discard and re-pull.
+- **`qi_promote.py` copies to a DIFFERENT MACHINE only.** It is not a step
+  between `D:\Dev` and `C:\APPS`, and there is no promotion between tiers to
+  perform. If you find yourself "promoting" to get a fix into the running app,
+  the app is set up wrong.
+- **A new project gets `C:\APPS\<App>` first**, and a `D:\Dev\<App>` clone only
+  once the code is on a remote worth backing up.
+
+**History.** Fifteen apps already worked this way (Maia, NEXUS, Naya, NoosOrbis,
+MapSnap, AutoPDF, MailBrain, EasyFlow, PlayDeck, TubeScout, CogniBase, Gamez,
+MQ, CypherMiner, AkiyaScout) and `qi_registry.json` named `C:\APPS` for every
+project. Only the media suite — MediaStudio, VoiceStudio, FilmForge,
+AvatarStudio — was built inverted, on a "`D:\Dev` is the workshop" doctrine that
+**no standard ever stated**. It was realigned on 2026-09-10. Writing the model
+down here is the actual fix: an unwritten convention is one nobody can follow.
 
 ---
 

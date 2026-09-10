@@ -1,12 +1,12 @@
 # QI Ecosystem — Assistant Onboarding (L1)
 
-_Generated 2026-09-09 02:38:45 · qi_registry.json sha256[:12] = f7ccfea7a8fd_
+_Generated 2026-09-10 15:35:33 · qi_registry.json sha256[:12] = edbfacec479b_
 
 ## Who QI is
 
 - Quiddity Innovations (QI) — owner Renne Santiago, sole developer + AI ambassador.
 - 42 registered projects sharing one machine, ports, git, and a converging future.
-- Two run tiers: `C:\APPS` is the gold build/run tier; `D:\Dev` is the packaged-out copy.
+- Two tiers (owner's ruling 2026-09-10, `QI_Standards.md` §1.1): `C:\APPS\<App>` is the app Renne runs **and** the development source - git lives there, sessions open there, services point there. `D:\Dev\<App>` is a plain clone of the same remote: a backup on a second disk and the source for installing elsewhere, never edited, no `.venv`. Nothing operational may name `D:\Dev`.
 - Port blocks are per-project (e.g. Maia 8100-8199, NEXUS 8300-8399, QI Hive 9000-9099) —
   never pick an adjacent port; check `C:\QIH\ecosystem\qi_registry.json` `port_strategy`.
 - `C:\QIH\ecosystem\qi_registry.json` is the single source of truth for ports, services,
@@ -39,7 +39,7 @@ _Generated 2026-09-09 02:38:45 · qi_registry.json sha256[:12] = f7ccfea7a8fd_
 |---|---|---|---|---|---|
 | filehq | C:\APPS\NAYA\filehq | merged_into_naya | - | api 8000 | File intelligence engine — MERGED into Naya (C:\APPS\NAYA\filehq\) |
 | maia | C:\APPS\QI | active_production | - | api 8001 · ui 7860 | Multi-channel AI assistant platform (LINE, Telegram, Messenger, Instagram, WhatsApp) |
-| naya | C:\APPS\NAYA | running_dev_paused | - | api 8002 · ui 7861 | Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanni… |
+| naya | C:\APPS\NAYA | paused | - | api 8002 · ui 7861 | Personal AI assistant for Renne — AI/physics/programming/networking domains + file scanni… |
 | nexus | C:\APPS\NEXUS | active_development | - | api 8010 · ui 7880 · mcp 8310 | Neural Exchange and Unified Synthesis — AI orchestration backbone for all QI projects |
 | openclaw | C:\APPS\OC | active_production | - | gateway 18789 | Autonomous AI agent platform — Tasuke-orchestrated (Renne talks only to Tasuke) |
 | mq | C:\APPS\MQ | paused | - | api 8500 · ui 7840 | Maia Quiddam — autonomous AI social media persona for Facebook, Instagram, WhatsApp |
@@ -50,8 +50,6 @@ _Generated 2026-09-09 02:38:45 · qi_registry.json sha256[:12] = f7ccfea7a8fd_
 | autopdf | C:\APPS\AutoPDF | Active Dev | 2c | http 6969 · mcp 8701 | Self-contained PDF toolkit: convert / split / extract / catalog |
 | cognibase | C:\APPS\CogniBase | pre_poc | - | api 8650 | Local desktop platform that connects to Hyland OnBase, lifts its data into a vector store… |
 | mapsnap | C:\APPS\MapSnap | active_stable | - | api 9876 · mcp 8651 | Local-first schema-intelligence tool for ANY enterprise database set up as a profile (SQL… |
-| m2v | C:\APPS\M2V | paused | - | api 8501 · ui 7841 | Music to Video — AI-powered music video generator from lyrics + audio track |
-| personalsong | C:\APPS\PersonalSong | paused | - | ui 8088 | Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone |
 | cypherminer | C:\APPS\CypherMiner | complete | - | api 8502 · ui 7842 | Local-first bilingual (EN/PT) offline suite of crypto, encoding, math and text tools |
 | lotterywiz | C:\APPS\Lottery Wiz | active | - | api 8777 | Fantasy 5 covering-design app — generates optimal play sets with guaranteed coverage |
 | digitization | C:\Users\renne\Downloads\DIGITIZATION COSTS | complete | - | — | BU Digitization Cost Comparison Tool — client-side HTML calculator for Document Imaging &… |
@@ -63,7 +61,7 @@ _Generated 2026-09-09 02:38:45 · qi_registry.json sha256[:12] = f7ccfea7a8fd_
 | claude_voice | C:\APPS\CLAUDE\Claude Voice | active_development | - | api 8720 · line 8721 · webcall 8722 · voice_api 8725 | Voice-driven assistant + (in progress) VOICE DISPATCH console |
 | akiyascout | C:\APPS\AkiyaScout | new | - | api 8505 · ui 7845 | English-first Japanese real estate (Akiya/Kominka/rural) aggregation platform with a pers… |
 | headroom | C:\APPS\CLAUDE\Tools | pilot | - | proxy 9020 · mcp stdio | Context/token compression layer (open-source, Apache-2.0) — proxy + MCP server that compr… |
-| playdeck | C:\APPS\PlayDeck | new | - | api 8506 · ui 7846 | Personal hybrid video player — custom control UI over YouTube/Vimeo (IFrame API) and gene… |
+| playdeck | C:\APPS\PlayDeck | active | - | api 8506 · ui 7846 | Personal hybrid video player — custom control UI over YouTube/Vimeo (IFrame API) and gene… |
 | connector | C:\APPS\QIP\Connector | active_development | - | api 9030 | QI Connector — remote MCP server (Streamable HTTP) exposing QI ecosystem tools (Brain, re… |
 | voice_studio | C:\APPS\VoiceStudio | active_development | - | ui 7863 | Studio (batch) voice tier: VibeVoice 1.5B long-form, multi-speaker rendering with consent… |
 | comfyui | D:\AI | active | - | api 8740 | Local image and video generation engine |
@@ -71,11 +69,13 @@ _Generated 2026-09-09 02:38:45 · qi_registry.json sha256[:12] = f7ccfea7a8fd_
 | filmforge | C:\APPS\FilmForge | active_development | - | api 7865 | Long-form film orchestration: story -> script -> scenes -> shot lists -> overnight GPU re… |
 | onbase_dna | C:\Users\renne\Downloads\NOTE DISCOVERY | active | - | — | Genotype-to-phenotype decoding of OnBase configuration (DNA Codex, calibration, generated… |
 | synvox | C:\APPS\SynVox | active_development | - | api 8751 · ai_router 8753 | SynVox (synthetic vox - the synthetic voice of the people) |
-| noosorbis | C:\APPS\NoosOrbis | new | - | api 8507 · ui 7847 | Modern reading experience over live Wikipedia, with a Librarian AI assistant |
+| noosorbis | C:\APPS\NoosOrbis | live | - | api 8507 · ui 7847 | Modern reading experience over live Wikipedia, with a Librarian AI assistant |
 | mythologies | C:\APPS\Mythologies | live | - | — | Static site mapping 37 world mythologies as relationship graphs |
 | baguapp_prod | C:\APPS\BaguApp_Prod | active | Marco zero — spec + docs, no… | — | The real BaguApp product — Bagua/Feng Shui analysis app |
 | baguapp | C:\APPS\Baguapp | frozen | Prototype frozen 2026-09-08 (… | — | Bagua/Feng Shui analysis prototype |
 | mailbrain | C:\APPS\MailBrain | active_development | Phase 1 live (Chrome MV3 exte… | — | Email intelligence assistant — Chrome MV3 extension + Flask helper |
-| bakeoff | C:\APPS\QIP\Bakeoff | complete | Eval rig — Hermes vs OpenClaw… | — | Eval rig comparing Hermes vs OpenClaw on a shared gpt-oss-20b brain |
-| vlcdaemon | C:\APPS\VLCDaemon | active | Working daemon, no repo until… | — | Background daemon that drives VLC for QI's YouTube/media workflows |
+| vlcdaemon | C:\APPS\VLCDaemon | paused | Working daemon, no repo until… | — | Background daemon that drives VLC for QI's YouTube/media workflows |
 | trinity | C:\QIH\trinity | active | 30-day assistant trial → revi… | — | Tri-platform AI orchestration — Claude (spearhead) + ChatGPT via codex mcp-server + Gemin… |
+| qi_gate | C:\QIH\engine\gate | active | Demo-account rollout live 202… | edge 9040 · auth 9041 | Authentication wall in front of every internet-exposed QI application: Caddy edge :9040 +… |
+| aws_edge | C:\QIH\shared\documentation\guides | paused | M1 relay live; M2/M4/M6 demoe… | — | Hybrid 'edge on AWS, brain at home': Lambda LINE webhook relay + SQS queue (M1, live, dra… |
+| transfer_station | TBD — locate console source (built 2026-08-12..19) | paused | Built and disarmed 2026-08-19… | sftp 22022 · console 8751 | Hardened Windows OpenSSH SFTP receive station (port 22022, chrooted, no shell) with a loc… |

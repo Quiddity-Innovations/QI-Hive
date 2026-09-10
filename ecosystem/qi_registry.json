@@ -1278,6 +1278,7 @@
       "name": "QI Voice Studio",
       "description": "Studio (batch) voice tier: VibeVoice 1.5B long-form, multi-speaker rendering with consent-gated cloned voices. Narrates the BU/MapSnap explainer videos. NOT the realtime tier — conversation stays on Claude Voice edge-tts.",
       "path": "C:\\APPS\\VoiceStudio",
+      "github": "https://github.com/Quiddity-Innovations/VoiceStudio",
       "status": "active_development",
       "primary_language": "Python",
       "ports": {
@@ -1313,12 +1314,12 @@
       ],
       "services": [],
       "paths": {
-        "logs": "D:\\Dev\\VoiceStudio\\logs",
-        "voices": "D:\\Dev\\VoiceStudio\\data\\voices",
+        "logs": "C:\\APPS\\VoiceStudio\\logs",
+        "voices": "C:\\APPS\\VoiceStudio\\data\\voices",
         "outputs": "D:\\AI\\Outputs\\VoiceStudio",
-        "models": "D:\\Dev\\VoiceStudio\\data\\models"
+        "models": "C:\\APPS\\VoiceStudio\\data\\models"
       },
-      "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history currently only in D:\\Dev\\VoiceStudio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending). | 2026-09-09: paths.outputs corrected to D:\\AI\\Outputs\\VoiceStudio (moved 2026-08-17)."
+      "notes": "Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history lives in C:\\APPS\\VoiceStudio (the source tier since the owner's ruling of 2026-09-10) and on GitHub; D:\\Dev\\VoiceStudio is a plain backup clone. | 2026-09-09: paths.outputs corrected to D:\\AI\\Outputs\\VoiceStudio (moved 2026-08-17)."
     },
     {
       "id": "comfyui",
@@ -1427,6 +1428,7 @@
       "name": "QI Media Studio",
       "description": "The composition layer for QI's generators. Indexes every asset ComfyUI, Voice Studio, AvatarStudio, PersonalSong, M2V and the project library have produced, and turns a declarative shot list into finished media. Generates nothing itself - stills and video go to ComfyUI, speech to Voice Studio - so each domain keeps a single authority.",
       "path": "C:\\APPS\\MediaStudio",
+      "github": "https://github.com/Quiddity-Innovations/MediaStudio",
       "status": "active_development",
       "primary_language": "Python",
       "ports": {
@@ -1469,14 +1471,14 @@
         "shotlists": "C:\\APPS\\MediaStudio\\docs\\shotlists",
         "index": "C:\\APPS\\MediaStudio\\data\\index.db"
       },
-      "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history currently only in D:\\Dev\\Media Studio; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending). | 2026-09-09: paths repointed D:\\Dev -> C:\\APPS (app runs from C:\\APPS per the 2026-09-02 ruling)."
+      "notes": "Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history lives in C:\\APPS\\MediaStudio (the source tier since the owner's ruling of 2026-09-10) and on GitHub; D:\\Dev\\MediaStudio is a plain backup clone. | 2026-09-09: paths repointed D:\\Dev -> C:\\APPS (app runs from C:\\APPS per the 2026-09-02 ruling)."
     },
     {
       "id": "filmforge",
       "name": "QI FilmForge",
       "description": "Long-form film orchestration: story -> script -> scenes -> shot lists -> overnight GPU rendering. Generates nothing itself and assembles nothing itself: shots go to ComfyUI via the driver layer, assembly goes to Media Studio's av_mux, speech to Voice Studio. Its own contribution is the model abstraction layer, scene decomposition, durable multi-night state, and the GPU render-window broker.",
       "path": "C:\\APPS\\FilmForge",
-      "github": "TBD",
+      "github": "https://github.com/Quiddity-Innovations/FilmForge",
       "status": "active_development",
       "primary_language": "Python",
       "ports": {
@@ -1512,12 +1514,12 @@
         "QI_FilmForge_Night (registered DISABLED, fires at window start)"
       ],
       "paths": {
-        "config": "D:\\Dev\\FilmForge\\config\\config.yaml",
-        "projects": "D:\\Dev\\FilmForge\\projects",
-        "logs": "D:\\Dev\\FilmForge\\LOGS",
-        "entry": "D:\\Dev\\FilmForge\\RenderNight.bat"
+        "config": "C:\\APPS\\FilmForge\\config\\config.yaml",
+        "projects": "C:\\APPS\\FilmForge\\projects",
+        "logs": "C:\\APPS\\FilmForge\\LOGS",
+        "entry": "C:\\APPS\\FilmForge\\RenderNight.bat"
       },
-      "notes": "Built 2026-08-10. Modules A (script generation), B (decomposition) and C (production manager) all working and verified end to end; output accepted by Media Studio compose --dry-run. Module D deliberately NOT built here: av_mux is the assembly authority, and the crossfade() and last_frame() primitives FilmForge needed were contributed upstream to it rather than forked. GPU broker live and cross-project preemption verified with VoiceStudio. Measured: ~80 s/shot on MiniMax H3 warm; an 8 h window is ~20 min of finished film, so a 90 min feature is ~4-5 nights. CORRECTED 2026-08-11 - OLLAMA IS A GPU TENANT. The 2026-08-10 finding (Ollama 0.32.6 reporting library=cpu and 0.00 GB VRAM, not seeing the RTX 5080 sm_120, so all local LLM work across maia/nexus/openclaw/autopdf was CPU-bound) no longer holds: the 0.32.7 update plus a restart restored CUDA (sm_120, 15.9 GiB). Re-measured on GPU: gemma4:latest 136.1 tok/s at 3.29 GB resident and 100% on GPU; gemma4:26b 65.6 tok/s at 12.0 GB, 65% on GPU; gemma4:31b 4.9 tok/s at 10.8 GB, only 49% on GPU because it wants 22 GB at runtime. Resident VRAM is NOT the pull size in either direction. Default moved 31b -> 26b: 31b is now both the largest and the slowest. OllamaTextDriver now takes a broker lease at NORMAL priority (preempts FilmForge's own BATCH overnight render at the next shot boundary) and returns VRAM with keep_alive=0 when another tenant is waiting. extend_video() implemented for MiniMax H3: last-frame continuity chaining via node 7's optional first_frame input, frame extracted by av_mux.last_frame(). | git history currently only in D:\\Dev\\FilmForge; C:\\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending).",
+      "notes": "Built 2026-08-10. Modules A (script generation), B (decomposition) and C (production manager) all working and verified end to end; output accepted by Media Studio compose --dry-run. Module D deliberately NOT built here: av_mux is the assembly authority, and the crossfade() and last_frame() primitives FilmForge needed were contributed upstream to it rather than forked. GPU broker live and cross-project preemption verified with VoiceStudio. Measured: ~80 s/shot on MiniMax H3 warm; an 8 h window is ~20 min of finished film, so a 90 min feature is ~4-5 nights. CORRECTED 2026-08-11 - OLLAMA IS A GPU TENANT. The 2026-08-10 finding (Ollama 0.32.6 reporting library=cpu and 0.00 GB VRAM, not seeing the RTX 5080 sm_120, so all local LLM work across maia/nexus/openclaw/autopdf was CPU-bound) no longer holds: the 0.32.7 update plus a restart restored CUDA (sm_120, 15.9 GiB). Re-measured on GPU: gemma4:latest 136.1 tok/s at 3.29 GB resident and 100% on GPU; gemma4:26b 65.6 tok/s at 12.0 GB, 65% on GPU; gemma4:31b 4.9 tok/s at 10.8 GB, only 49% on GPU because it wants 22 GB at runtime. Resident VRAM is NOT the pull size in either direction. Default moved 31b -> 26b: 31b is now both the largest and the slowest. OllamaTextDriver now takes a broker lease at NORMAL priority (preempts FilmForge's own BATCH overnight render at the next shot boundary) and returns VRAM with keep_alive=0 when another tenant is waiting. extend_video() implemented for MiniMax H3: last-frame continuity chaining via node 7's optional first_frame input, frame extracted by av_mux.last_frame(). | git history lives in C:\\APPS\\FilmForge (the source tier since the owner's ruling of 2026-09-10) and on GitHub; D:\\Dev\\FilmForge is a plain backup clone.",
       "added_to_registry": "2026-08-10"
     },
     {

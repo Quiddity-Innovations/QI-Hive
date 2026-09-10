@@ -947,7 +947,7 @@ Symptom lookup:
 - hostname 404s after a gate change → restart **QI_Caddy** (serves :9040), not QI_Gate (:9041)
 - Librarian slow → GPU contention, check ComfyUI
 
-## QI_AvatarStudio  (added 2026-09-10; promoted to C:\APPS the same day)
+## QI_AvatarStudio  (added 2026-09-10; runs from C:\APPS, the source tier)
 
 | Field | Value |
 |---|---|
@@ -958,21 +958,22 @@ Symptom lookup:
 | Logs | `C:\APPS\AvatarStudio\logs\service.log` (stdout+stderr, rotated at 1 MB) |
 | Start type | DEMAND_START (manual). AUTO_START is the owner's option; the panel loads no model at start, Hallo2 runs per job in WSL2. |
 | Account | LocalSystem |
-| Installer | `C:\APPS\AvatarStudio\install_service.bat` (UAC; refuses if `engine\service.py` is not promoted) |
-| Promotion | `python C:\QIH\ecosystem\qi_promote.py avatarstudio --apply` from `D:\Dev\AvatarStudio` (git); stamp `C:\APPS\AvatarStudio\PROMOTED_FROM.json` names the commit |
+| Installer | `C:\APPS\AvatarStudio\install_service.bat` (UAC; refuses if `engine\service.py` is missing) |
+| Source | `C:\APPS\AvatarStudio` **is** the development source as well as the running copy (tier ruling 2026-09-10, `QI_Standards.md` §1.1). Edit there, commit, restart the service. There is no promotion step. `D:\Dev\AvatarStudio` is a backup clone — refresh with `git -C D:\Dev\AvatarStudio pull`, never edit it, never point this service at it |
 | Manifest | `C:\APPS\AvatarStudio\qi_plugin.json` - discovered by Media Studio from this registry path; `gpu.peak_vram_gb 10.3` measured 2026-09-10 |
 
 **History.** Installed originally against `avatar_studio.py`, the old Gradio-only app
 (answers `/` but 404s on `/health`, no `/api/render`), and therefore STOPPED while
 Media Studio's Autopilot was flown from a console copy. On 2026-09-10 the owner chose
-promotion over repointing into `D:\Dev`; `D:\Dev\AvatarStudio` is the workshop and
-carries `PROMOTION.md` saying so. **The registration is repointed at `engine\service.py`
-by `D:\Dev\MediaStudio\QI_Autopilot_Control.bat avatar`** (elevated once: it stops
+to run it from `C:\APPS` rather than repoint the service into `D:\Dev` — and later the
+same day ruled that `C:\APPS` is the development source too, which removed the
+promotion step entirely. **The registration is repointed at `engine\service.py`
+by `C:\APPS\MediaStudio\QI_Autopilot_Control.bat avatar`** (elevated once: it stops
 whatever holds :7862, sets Application/AppParameters/AppDirectory/Description via
 `C:\QIH\engine\bin\nssm.exe` if they still name the old app, and `sc start`s it).
 Verify with `sc query QI_AvatarStudio` (RUNNING) and
 `reg query HKLM\SYSTEM\CurrentControlSet\Services\QI_AvatarStudio\Parameters /v AppParameters`
-(must say `engine\service.py`). Until that step has run once after promotion, :7862 is
+(must say `engine\service.py`). Until that step has run once after a change, :7862 is
 served by `C:\APPS\AvatarStudio\run_studio.bat` in a console window - same code, does
 not survive a reboot.
 
@@ -980,5 +981,5 @@ Symptom lookup:
 - Media Studio cockpit shows AvatarStudio down / preflight says `plugins_unreachable: avatarstudio` -> nothing on :7862; run `QI_Autopilot_Control.bat avatar` (one UAC prompt)
 - `/health` 404 but `/` answers -> the OLD app is on the port (registration still names `avatar_studio.py`); the same `avatar` step fixes it
 - `/health` answers but AppParameters says `avatar_studio.py` -> a console copy is serving; run the `avatar` step to converge on the service
-- Hallo2 fails at "ffmpeg audio merge failed" -> the copy on :7862 predates `3d8ca70`; re-promote and restart
+- Hallo2 fails at "ffmpeg audio merge failed" -> the copy on :7862 predates `3d8ca70`; pull/restart the service
 - Hallo2 slow (600 s for a 9 s clip instead of ~240 s) -> another tenant on the card; the exclusive step unloads ComfyUI, Voice Studio and Ollama, check `nvidia-smi --query-compute-apps` for anything else

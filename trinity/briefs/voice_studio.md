@@ -1,12 +1,12 @@
 # QI Voice Studio (voice_studio) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 15:35:33_
 
 ## Registry facts
 - Path: `C:\APPS\VoiceStudio`
 - Status: active_development
 - Ports: ui:7863
-- Notes: Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history currently only in D:\Dev\VoiceStudio; C:\APPS copy has no .git — seed per architecture plan Wave 0.9 (pending).
+- Notes: Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history lives in C:\APPS\VoiceStudio (the source tier since the owner's ruling of 2026-09-10) and on GitHub; D:\Dev\VoiceStudio is a plain backup clone. | 2026-09-09: paths.outputs corrected to D:\AI\Outputs\VoiceStudio (moved 2026-08-17).
 
 ## Brain
 - Current state: status=active, phase=Batch voice rendering active; test guide in docs/TESTING.md
@@ -15,6 +15,9 @@ _Generated 2026-09-09 02:38:45_
 
 ## CLAUDE.md rules
 # QI Voice Studio — how Claude works with this project
+disk: never edited, never running anything. Registered in
+`C:\QIH\ecosystem\qi_registry.json` as `voice_studio`.
+
 ## 🔴 The one rule that matters: this is the STUDIO tier
 **Never wire this into Claude Voice's conversational path.** `realtime.py`, the LINE and
 Telegram bridges, the meeting room on `:8722` and the shared voice API on `:8725` run on
@@ -52,4 +55,4 @@ python** — that runs 3.13 / transformers 5.x and the downgrade would break Wan
 Ideogram.
 
 ## Entry points
-`VoiceStudio_AddMyVoice.bat`, `VoiceStudio_Panel.bat`, `VoiceStudio_RenderBUDemo.bat`, `VoiceStudio_TestMyVoice.bat`, `VoiceStudio_Voices.bat`
+`VoiceStudio_AddMyVoice.bat`, `VoiceStudio_Panel.bat`, `VoiceStudio_RenderBUDemo.bat`, `VoiceStudio_Restart.bat`, `VoiceStudio_TestMyVoice.bat`, `VoiceStudio_Voices.bat`
