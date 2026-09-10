@@ -3,9 +3,9 @@
     "name": "Quiddity Innovations — Ecosystem Registry",
     "description": "Single source of truth for all QI projects: ports, services, relationships, integration contracts.",
     "version": "1.0.0",
-    "last_updated": "2026-09-09",
+    "last_updated": "2026-09-10",
     "maintainer": "Claude (PM delegate) — Renne Santiago (owner/sponsor)",
-    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded. | 2026-09-09: status-report reconciliation — registered qi_gate, aws_edge, transfer_station; status fixes naya/noosorbis/vlcdaemon; 8740 double-claim resolved; voice_studio outputs path."
+    "note": "All projects consolidating under QI Hive (C:\\QIH). Projects moving to C:\\APPS\\QIP one by one. AutoPDF registered 2026-05-01. | Reconciliation 2026-05-09: backfilled session_log from .docx + git, registered cognibase/mapsnap/autopdf in Brain, added QI_MaiaGradio service. | Audit 2026-05-13: retired C:\\UNIVERSAL folder, repointed stale QI_Dashboard log paths, registered QI_Elevate/QI_HiveIngest/QI_KazeConfigAPI in registry, fixed QI_NayaGradio missing log redirection. | Move 2026-05-13: AutoPDF moved from C:\\Users\\renne\\Downloads\\AUTOPDF to C:\\APPS\\AutoPDF (standardized path). | Reconciliation 2026-06-10: registered personalsong (:8088), refreshed Brain project_state for all projects, merged OpenClaw/unknown session IDs, git-initialized AutoPDF + PersonalSong, added Hive Inspector brain-drift check. | 2026-06-20: registered claude_voice (:8720, block 8720-8729) — realtime two-way voice assistant spun out of Gamez; loopback-only, not tunneled. | 2026-08-16: registered synvox (SynVox) - persona-simulation + market-reality idea-validation platform, engine MatrAIx at C:\\APPS\\SynVox\\engine\\matraix, Phase 0 bootstrapped via the new QI Connector executor (qi_execute_script('setup-synvox')); reserved port block 8750-8759. | 2026-08-17: synvox allocated ports api:8751 and ai_router:8753 within its 8750-8759 block (Law 5, before implementation); status -> active_development; four editions recorded. | 2026-09-09: status-report reconciliation — registered qi_gate, aws_edge, transfer_station; status fixes naya/noosorbis/vlcdaemon; 8740 double-claim resolved; voice_studio outputs path. | 2026-09-10: m2v, personalsong, bakeoff RETIRED and deleted by owner decision (venvs orphaned by the C:\\1-AI move; no use since June/July). Reusable code in D:\\Dev\\QI-Salvage; user data in D:\\Dev\\_archive; M2V + PersonalSong remain on GitHub."
   },
   "module_interface_contract": {
     "description": "Every QI project MUST implement these endpoints. This is what enables them to be assembled into the unified app.",
@@ -157,7 +157,7 @@
         },
         {
           "name": "maia_gradio",
-          "nssm_name": "QI_MaiaDemoTunnel",
+          "nssm_name": "QI_MaiaGradio",
           "port": 7860,
           "type": "Gradio",
           "managed_by": "NSSM"
@@ -166,8 +166,30 @@
           "name": "maia_tunnel",
           "nssm_name": "QI_MaiaTunnel",
           "port": null,
-          "type": "Cloudflare Tunnel",
-          "managed_by": "NSSM"
+          "type": "Cloudflare named tunnel (qi-maia)",
+          "managed_by": "NSSM",
+          "hostnames": [
+            "maia.quiddityinnovations.com",
+            "maia-demo.quiddityinnovations.com"
+          ],
+          "notes": "Both hostnames route to QI Gate :9040"
+        },
+        {
+          "name": "maia_queue_drain",
+          "nssm_name": "QI_MaiaQueueDrain",
+          "port": null,
+          "type": "AWS SQS relay drain",
+          "managed_by": "NSSM",
+          "notes": "Drains the AWS Lambda+SQS LINE webhook relay"
+        },
+        {
+          "name": "maia_demo_tunnel",
+          "nssm_name": "QI_MaiaDemoTunnel",
+          "port": null,
+          "type": "Cloudflare quick tunnel (legacy)",
+          "managed_by": "NSSM",
+          "status": "disabled_on_purpose",
+          "notes": "Ephemeral --url http://localhost:7860 quick tunnel with a random trycloudflare hostname, from demo day 2026-06-26. Superseded by the named tunnel qi-maia serving maia-demo.quiddityinnovations.com. Stopped+Disabled deliberately - do NOT health-check it."
         }
       ],
       "family_tier": "core",
@@ -738,66 +760,6 @@
           "installed": "2026-07-30"
         }
       ]
-    },
-    {
-      "id": "m2v",
-      "name": "M2V",
-      "description": "Music to Video — AI-powered music video generator from lyrics + audio track",
-      "path": "C:\\APPS\\M2V",
-      "github": "https://github.com/Quiddity-Innovations/M2V",
-      "status": "paused",
-      "primary_language": "Python",
-      "ports": {
-        "api": {
-          "current": 8501,
-          "block": "8500-8599"
-        },
-        "ui": {
-          "current": 7841,
-          "block": "7840-7849"
-        }
-      },
-      "family_tier": "cousin",
-      "family_notes": "New project — family role to be determined as it develops.",
-      "integrates_with": [],
-      "exposes_to_ecosystem": [
-        "GET /health",
-        "GET /version",
-        "GET /info"
-      ],
-      "consumes_from_ecosystem": [],
-      "paths": {
-        "logs": "C:\\APPS\\M2V\\data\\logs"
-      }
-    },
-    {
-      "id": "personalsong",
-      "name": "PersonalSong Studio",
-      "description": "Local free AI song generator — ACE-Step sung vocals + Demucs/Seed-VC voice clone. Web app via serve.py (uvicorn in-process).",
-      "path": "C:\\APPS\\PersonalSong",
-      "github": "https://github.com/Quiddity-Innovations/PersonalSong",
-      "status": "paused",
-      "primary_language": "Python",
-      "ports": {
-        "ui": {
-          "current": 8088,
-          "recommended_block": "8500-8599",
-          "notes": "Pre-registry — port 8088 chosen before registration (registered 2026-06-10). Outside all allocated blocks; works, keep unless migrating. If migrated, use 8502 in the 8500-8599 cousin block."
-        }
-      },
-      "family_tier": "cousin",
-      "family_notes": "Sibling-in-spirit of M2V (song generation feeds music-video generation). Registered 2026-06-10 during Brain drift reconciliation.",
-      "integrates_with": [
-        "m2v"
-      ],
-      "exposes_to_ecosystem": [
-        "Song generation (ACE-Step)",
-        "Voice cloning (Demucs/Seed-VC)"
-      ],
-      "consumes_from_ecosystem": [],
-      "loopback_only": true,
-      "internet_exposed": false,
-      "added_to_registry": "2026-06-10"
     },
     {
       "id": "cypherminer",
@@ -1479,9 +1441,7 @@
       "integrates_with": [
         "voice_studio",
         "comfyui",
-        "avatarstudio",
-        "personalsong",
-        "m2v"
+        "avatarstudio"
       ],
       "exposes_to_ecosystem": [
         "GET /health",
@@ -1781,26 +1741,6 @@
       "phase": "Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run)",
       "registered": "2026-09-08",
       "notes": "Unregistered until 2026-09-08. Clone of EasyFlow repo — needs own repo (architecture plan Wave 0.9). 4-provider AI adapter (Gemini/OpenAI/Anthropic/Ollama). Shares :8550 helper with EasyFlow lineage (8550 already allocated to easyflow — no ports claimed here)."
-    },
-    {
-      "id": "bakeoff",
-      "name": "Bakeoff",
-      "description": "Eval rig comparing Hermes vs OpenClaw on a shared gpt-oss-20b brain.",
-      "path": "C:\\APPS\\QIP\\Bakeoff",
-      "github": "TBD",
-      "status": "complete",
-      "primary_language": "Python",
-      "ports": {},
-      "family_tier": "cousin",
-      "family_notes": "Unregistered until 2026-09-08. One-time eval rig; not a running service.",
-      "integrates_with": [
-        "openclaw"
-      ],
-      "exposes_to_ecosystem": [],
-      "consumes_from_ecosystem": [],
-      "phase": "Eval rig — Hermes vs OpenClaw smoke 10/10 (2026-07-06)",
-      "registered": "2026-09-08",
-      "notes": "Unregistered until 2026-09-08."
     },
     {
       "id": "vlcdaemon",

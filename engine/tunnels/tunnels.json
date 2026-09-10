@@ -213,19 +213,6 @@
       ]
     },
     {
-      "name": "qi-m2v",
-      "product": "M2V",
-      "service": "QI_M2VTunnel",
-      "install_if_missing": true,
-      "ingress": [
-        {
-          "hostname": "m2v",
-          "port": 7841,
-          "note": "M2V Music-to-Video Gradio UI (FastAPI on :8501 stays internal). Migrated from quick tunnel 2026-06-23."
-        }
-      ]
-    },
-    {
       "name": "qi-connector",
       "product": "QI Connector (remote MCP for Claude)",
       "service": "QI_ConnectorTunnel",

@@ -81,11 +81,8 @@
       "mode": "protected"
     },
     {
-      "host": "m2v.quiddityinnovations.com",
       "upstream": "127.0.0.1:7841",
-      "app": "M2V",
-      "mode": "protected",
-      "note": "127.0.0.1 not localhost — M2V Gradio binds IPv4 only."
+      "mode": "protected"
     },
     {
       "host": "autopdf.quiddityinnovations.com",
