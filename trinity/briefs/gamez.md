@@ -1,6 +1,6 @@
 # Gamez (gamez) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\Gamez`
@@ -9,8 +9,8 @@ _Generated 2026-09-09 02:38:45_
 - Notes: Standalone betting/analytics tool. Shares the OpenRouter key from C:\APPS\QI\maia.db (like MapSnap). Packaged as a portable .exe for sharing.
 
 ## Brain
-- Current state: status=active, phase=Correctness & data integrity (post-feature-complete)
-  Feature set complete; this pass fixed AI-Analyst/Quant correctness: board grounding (no more deflection), survive-to-title precompute, the DEF/ATT line null bug (pos_group coarse labels) across all 48 WC teams, removal of the per-match-vs-title category error, and a server-side model-vs-market guard. Verified live on prod 8710; merged to main and pushed.
+- Current state: status=complete, phase=World Cup 2026 dashboard — tournament over; archive-or-generalise pending
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_GamezProxy :8710 and tunnel RUNNING; QuantProxy manual-start by design. Last real work 2026-06-30 (bracket redesign, correctness fixes); the 2026 World Cup ended in July so the live betting-window purpose is moot. Later commits are docs scrub/auto-sync.
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules

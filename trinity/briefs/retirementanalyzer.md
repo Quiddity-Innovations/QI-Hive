@@ -1,6 +1,6 @@
 # Retirement Analyzer (retirementanalyzer) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\Retirement Analyzer`
@@ -11,9 +11,7 @@ _Generated 2026-09-09 02:38:45_
 ## Brain
 - Current state: status=paused, phase=v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress
   712 tests pass, everything pushed, tree clean. Tier conservative, figures signed 2026-08-27, one detector firing (property exemptions). A blank disposable clone runs at C:\APPS\RetirementAnalyzer-TEST on 17844/18504 for the walkthrough; two of its steps have been walked and produced four defects. Resuming Sunday 2026-08-30.
-- Last decisions:
-  - A derived projection is not a safe source on the privacy boundary (2026-08-27)
-  - A user-editable planning assumption lives in the profile, never in config/reference (2026-08-27)
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # RetirementAnalyzer — Claude Project Instructions

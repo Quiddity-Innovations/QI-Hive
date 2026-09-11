@@ -1,16 +1,16 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-10 00:33:58 (nightly reconciler)_
+_Auto-generated: 2026-09-11 00:34:08 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | akiyascout | Registered, no commits yet | paused | 0 | — |
 | autopdf | Hardening + MCP integration; feature-tour videos delivered 2026-08-11 | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion | active_development | 7 | 2026-09-10 01:46:29 |
-| baguapp | Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16) | paused | 17 | 2026-09-09 21:00:49 |
+| baguapp | Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16) | paused | 19 | 2026-09-09 21:00:49 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
-| bakeoff | Eval rig — Hermes vs OpenClaw smoke 10/10 (2026-07-06) | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1111 | 2026-09-10 00:07:32 |
+| bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1152 | 2026-09-10 20:23:11 |
 | claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
@@ -21,29 +21,30 @@ _Auto-generated: 2026-09-10 00:33:58 (nightly reconciler)_
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
 | gamez | World Cup 2026 dashboard — tournament over; archive-or-generalise pending | complete | 8 | 2026-06-29 21:42:14 |
+| godseye | Live â€” fully provisioned | live | 26 | 2026-09-10 21:41:21 |
 | headroom | Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com | active | 0 | — |
 | lotterywiz | Public demo — documented; awaiting owner sign-off | active | 9 | 2026-08-16 20:53:09 |
-| m2v | v0.1.0 — scaffold + first render | paused | 6 | 2026-06-18 00:35:05 |
+| m2v | RETIRED 2026-09-10 — deleted by owner decision | complete | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production; AWS LINE relay + channel refactor live | active | 23 | 2026-08-13 21:00:07 |
 | mailbrain | Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run) | active | 0 | — |
 | mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 187 | 2026-09-04 22:43:44 |
-| mediastudio | plugin_contract_rollout_wp1_done | active | 76 | 2026-09-10 03:30:24 |
+| mediastudio | Realigned to the C:\APPS source tier; Autopilot v1 flown, review gate pending | active | 84 | 2026-09-10 21:14:06 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | mythologies | Static site live | active | 5 | 2026-08-27 14:44:24 |
 | naya | Phase 5 — capability behind OpenClaw (application retired 2026-08-28) | paused | 12 | 2026-08-28 08:07:21 |
 | nexus | Phase 2 — NSSM-supervised; role under review after Trinity ruling | active | 43 | 2026-08-11 19:00:00 |
-| noosorbis | development | active | 22 | 2026-09-09 19:41:36 |
+| noosorbis | development | active | 23 | 2026-09-09 19:41:36 |
 | onbase_dna | Active knowledge program, no service/ports | active | 5 | 2026-08-22 17:49:08 |
 | openclaw | Phase 2 â€” agent expansion (recovered + modernized) | active | 67 | 2026-08-27 15:52:00 |
-| personalsong | Working app | paused | 11 | 2026-06-18 00:35:04 |
+| personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 250 | 2026-09-09 13:50:40 |
+| qi_hive | Observability hardening | active | 260 | 2026-09-10 19:40:00 |
 | retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 140 | 2026-09-06 00:03:30 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
-| trinity | 30-day assistant trial → review 2026-10-16 | active | 3 | 2026-09-10 03:40:52 |
+| trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
-| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 32 | 2026-09-02 13:47:29 |
+| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 43 | 2026-09-10 16:50:11 |
 | vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
 | voice_studio | Batch voice rendering active; test guide in docs/TESTING.md | active | 0 | — |
 
@@ -84,10 +85,10 @@ Not done, deliberately: gpu.peak_vram_gb is null because the RTX 5080 was held b
 - **Next:** Begin implementation from spec/docs.
 
 ### bakeoff
-- **Phase:** Eval rig — Hermes vs OpenClaw smoke 10/10 (2026-07-06)
+- **Phase:** RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage
 - **Status:** complete
-- **Summary:** Registered 2026-09-08 (was unregistered). One-time eval rig, results archived.
-- **Next:** None — complete.
+- **Summary:** bakeoff: venv orphaned by the C:\1-AI move, no real use since June/July 2026. Owner (Renne, 2026-09-10) ruled: salvage reusable code, delete the rest. Reusable modules copied to D:\Dev\QI-Salvage (commit a601b33); user data archived to D:\Dev\_archive (M2V renders/uploads 246 MB; PersonalSong music_library incl. songs made for Mari, sources, stems 116 MB; Bakeoff full zip incl. .git). Folder(s) deleted from C:\APPS and D:\Dev. M2V + PersonalSong repos remain on GitHub (fully pushed).
+- **Next:** None.
 
 ### claude_manager
 - **Phase:** Trinity â€” both assistants live over MCP; 30-day trial running
@@ -165,6 +166,12 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Summary:** Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_GamezProxy :8710 and tunnel RUNNING; QuantProxy manual-start by design. Last real work 2026-06-30 (bracket redesign, correctness fixes); the 2026 World Cup ended in July so the live betting-window purpose is moot. Later commits are docs scrub/auto-sync.
 - **Next:** Owner decision: archive as a one-off (stop services, log archive date) or generalise the proxy/scoring engine for a future tournament.
 
+### godseye
+- **Phase:** Live â€” fully provisioned
+- **Status:** live
+- **Summary:** God's Eye View fully operational at C:\APPS\Godseye on port 8780 (loopback-only, no service, no tunnel). All 8 provider keys configured including OpenSky OAuth; all 10 functional checks pass with live data (Google place search resolving "Belo Horizonte", OpenAI realtime voice token minting, 6396 vessels, 164262 fire detections, 30.9KB TomTom flow tiles, 9505 aircraft, 2.6MB TLE, 800 cameras, 24 launches). Maintenance tooling built at project root: Godseye.bat menu plus maintain.mjs / verify-all.mjs / check-keys.mjs / set-key.mjs / make-portable.mjs, all syntax-verified. Two portability paths: a 23KB portable bundle with INSTALL.bat, and Docker/compose (node:24-bookworm-slim, runtime key injection, 127.0.0.1-bound ports). Runbook published at https://claude.ai/code/artifact/879e5e69-62f2-46a1-99db-98ef2e0da959. qi_validator 19/20.
+- **Next:** Nothing blocking â€” the install is complete and verified. Optional: decide pin-vs-track for the vendored upstream version and re-run verify-all.mjs after each pull; test the Docker path end-to-end (Docker CLI 29.7.2 / Compose v5.4.0 installed, Desktop daemon was not running); transfer the portable bundle to the laptop via USB or encrypted channel and delete it after install. Future: custom QI data layer (MapSnap/NEXUS geodata) as an isolated module under src/data/ needing no upstream changes.
+
 ### headroom
 - **Phase:** Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com
 - **Status:** active
@@ -178,10 +185,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) Owner: watch a tour, pick the house voice, click through the demo login, decide git vs storage for the ~15 MB videos. 2) Owner: remove the Lottery Cloudflare Access app (Zero Trust dashboard). 3) Then revert QI Gate to protected.
 
 ### m2v
-- **Phase:** v0.1.0 — scaffold + first render
-- **Status:** paused
-- **Summary:** Marked paused by the 2026-08-17 audit — 60 days without a session. Silence is now intentional, so compliance stops filing session_freshness/brain_drift. Set back to 'active' on the next real session.
-- **Next:** Resume when Renne picks the project back up.
+- **Phase:** RETIRED 2026-09-10 — deleted by owner decision
+- **Status:** complete
+- **Summary:** m2v: venv orphaned by the C:\1-AI move, no real use since June/July 2026. Owner (Renne, 2026-09-10) ruled: salvage reusable code, delete the rest. Reusable modules copied to D:\Dev\QI-Salvage (commit a601b33); user data archived to D:\Dev\_archive (M2V renders/uploads 246 MB; PersonalSong music_library incl. songs made for Mari, sources, stems 116 MB; Bakeoff full zip incl. .git). Folder(s) deleted from C:\APPS and D:\Dev. M2V + PersonalSong repos remain on GitHub (fully pushed).
+- **Next:** None. Renne: delete the qi-m2v tunnel + m2v DNS record in the Cloudflare dashboard.
 
 ### maia
 - **Phase:** Phase 4 — production; AWS LINE relay + channel refactor live
@@ -202,10 +209,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) Sign in and confirm the 6 new OnBase API buttons render. 2) Dry-run kit/setup_unity_api.ps1 against a fresh environment key. 3) Fix the 4 failing qi_validator checks (root CLAUDE.md, requirements.txt, docs naming). 4) Owner: three-way merge decision for D:\Dev\BU Edition (untouched since 2026-08-08).
 
 ### mediastudio
-- **Phase:** plugin_contract_rollout_wp1_done
+- **Phase:** Realigned to the C:\APPS source tier; Autopilot v1 flown, review gate pending
 - **Status:** active
-- **Summary:** WP1 (plug-in manifest layer) and WP1b (independent review) are done and committed in D:\Dev\MediaStudio (not promoted to C:\APPS). A universal run-record/rerun feature was also added on top (record every job automatically, browse, reload and regenerate it) - both phases 1 and 2 of that are done; phase 3 ("load into editor" UI) is deferred, not required for the core ask. Next stage of the plug-in rollout is WP2 (AvatarStudio), which is scoped to a separate session/repo (D:\Dev\AvatarStudio) on Opus.
-- **Next:** Open a new Claude Code session in D:\Dev\AvatarStudio with Opus selected and run the WP2 kickoff prompt (bring AvatarStudio to the plug-in contract: /health /version /info /api/render /api/jobs, driving_audio pass-through, qi_plugin.json, NSSM service verification). First action of that session must be committing AvatarStudio's 16 pre-existing uncommitted files before any new work. Separately, commit D:\Dev\VoiceStudio\qi_plugin.json in the VoiceStudio repo where it currently sits untracked.
+- **Summary:** 2026-09-10 tier realignment: C:\APPS\MediaStudio is now the git working copy AND the development source (owner's ruling). Repo pushed to github.com/Quiddity-Innovations/MediaStudio (branch dev) - before today the only history was on D:\Dev with no remote at all. The service runs from C:\APPS and proves it: GET /version reports root C:\APPS\MediaStudio, tier "runtime", and the HEAD commit. 119 tests pass, qi_validator 20/20. Config, tools, tests and docs repointed off D:\Dev; plugins.extra_manifests, and AvatarStudio's and VoiceStudio's plug-in launch blocks, all now name C:\APPS (they pointed at D:\Dev launchers that no longer have a .venv - each would have failed silently). session_handoff.py's drift table was inverted to mean "the D:\Dev backup is N commits behind". Autopilot remains engaged=false pending the Fable review gate; that is unchanged by this work. The earlier state note saying "Media Studio deliberately not promoted; the C:\APPS copy is stale" is obsolete - there is no promotion any more.
+- **Next:** 1) Close the live Claude session holding D:\Dev\MediaStudio, then replace that tree with a plain clone + PRISTINE.md (same for D:\Dev\VoiceStudio). 2) Owner to delete C:\APPS\MediaStudio\DO-NOT-EDIT-HERE.md and AvatarStudio's PROMOTION.md - both teach the retired model. 3) S3: the GUI coherence work, opening in C:\APPS\MediaStudio. 4) Fable review gate on docs/AUTOPILOT.md before engaged=true.
 
 ### mq
 - **Phase:** Phase 0 — scaffold
@@ -250,10 +257,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) RENNE (elevated): run C:\APPS\OC\tools\repoint_yubin_tasks.ps1 â€” OC-Yubin-Daily-8AM/-6PM are the last two OC tasks still on the dead /mnt/c/OC/ path; they work only via the C:\OC junction. 2) Broaden memory indexing beyond the 4 workspace files. 3) Build Koe voice (whisper.cpp + Kokoro-82M/Piper) as an OpenClaw channel plugin rather than migrating to Hermes. 4) Ecosystem-wide conhost --headless exit-code audit. DO NOT migrate the digests into OpenClaw cron â€” they are gateway-independent today, and the gateway is deliberately stopped 10h/day.
 
 ### personalsong
-- **Phase:** Working app
-- **Status:** paused
-- **Summary:** Marked paused by the 2026-08-17 audit — 60 days without a session. Silence is now intentional, so compliance stops filing session_freshness/brain_drift. Set back to 'active' on the next real session.
-- **Next:** Resume when Renne picks the project back up.
+- **Phase:** RETIRED 2026-09-10 — deleted by owner decision
+- **Status:** complete
+- **Summary:** personalsong: venv orphaned by the C:\1-AI move, no real use since June/July 2026. Owner (Renne, 2026-09-10) ruled: salvage reusable code, delete the rest. Reusable modules copied to D:\Dev\QI-Salvage (commit a601b33); user data archived to D:\Dev\_archive (M2V renders/uploads 246 MB; PersonalSong music_library incl. songs made for Mari, sources, stems 116 MB; Bakeoff full zip incl. .git). Folder(s) deleted from C:\APPS and D:\Dev. M2V + PersonalSong repos remain on GitHub (fully pushed).
+- **Next:** None.
 
 ### playdeck
 - **Phase:** Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28

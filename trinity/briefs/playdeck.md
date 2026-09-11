@@ -1,6 +1,6 @@
 # PlayDeck (playdeck) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\PlayDeck`
@@ -9,8 +9,8 @@ _Generated 2026-09-09 02:38:45_
 - Notes: New project — family role to be determined as it develops.
 
 ## Brain
-- Current state: status=active, phase=Feature build â€” subjects and cross-site subscriptions
-  Subjects list plus a Subs tab that pulls new videos from every site the user is signed in to, filtered by subject. Eleven platforms mapped, YouTube first-class. Live on 127.0.0.1:8506 with Instagram and Reddit returning items.
+- Current state: status=active, phase=Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_PlayDeck :8506 RUNNING (the only media-group service actually up). 2026-08-28 fixed HLS-manifest capture for non-flat yt-dlp entries and the live-broadcast 0% hang (pre-check + plain-English refusal + dismiss stuck rows). The fix ran live but sat uncommitted for 12 days; committed 2026-09-09.
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules

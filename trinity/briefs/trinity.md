@@ -1,6 +1,6 @@
 # Trinity (trinity) — L2 brief
 
-_Generated 2026-09-09 02:38:46_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\QIH\trinity`
@@ -11,7 +11,9 @@ _Generated 2026-09-09 02:38:46_
 ## Brain
 - Current state: status=active, phase=30-day assistant trial → review 2026-10-16
   Claude (spearhead) + ChatGPT via codex mcp-server + Gemini via qi_gemini_mcp.py. Components documented in C:\QIH\trinity\README.md. No ports, no services, nothing unattended.
-- No project-scoped decisions recorded.
+- Last decisions:
+  - Codex MCP liveness is now a real handshake, not a process count â€” and the check has a self-test (2026-09-10)
+  - Codex CLI PINNED at 0.153.4 â€” 0.154.0 removed `codex mcp-server` and took the Codex leg offline (2026-09-10)
 
 ## CLAUDE.md rules
 # Trinity — CLAUDE.md

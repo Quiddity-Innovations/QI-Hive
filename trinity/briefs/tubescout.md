@@ -1,6 +1,6 @@
 # TubeScout (tubescout) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\TUBESCOUT`
@@ -10,10 +10,9 @@ _Generated 2026-09-09 02:38:45_
 - Notes: YouTube subscription intelligence. Feeds NEXUS Scout (Kaze digest) + QI Brain implement-scoring. Sibling-in-spirit of NEXUS Scout.
 
 ## Brain
-- Current state: status=active, phase=MVP + refinements complete
-  Overnight refinements done: page persists via no-admin Startup launcher (NSSM service wedged on SYSTEM account, corrected bat left); classification fixed (other 450->1 via YouTube topicCategories + ranking, new granular topics); cross-channel dedup live (10 dups->8 cross-covered, '+N also covered' on page); Whisper fallback built + verified (opt-in, off by default, live-stream guard); Brain test feature 304 removed. Page serving 353 deduped cards / 13 topics; 7am/7pm tasks Ready.
-- Last decisions:
-  - TubeScout must move off OAuth to an API key â€” Testing-mode caps tokens at 7 days (2026-08-27)
+[line redacted by qi_handoff secret-pattern filter]
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_TubeScout :8503 and tunnel RUNNING; data\logs\cycle.log shows a full sweep completing 2026-09-09 07:08 (109 channels). The 2026-08-27 audit finding "dead 66 days on expired OAuth token" was fixed the same day: Google OAuth Testing mode caps refresh tokens at 7 days, so the daily sweep moved to a non-expiring API key and --login can recover a revoked token. Audit item closed 2026-09-09.
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # TubeScout — Claude Project Instructions

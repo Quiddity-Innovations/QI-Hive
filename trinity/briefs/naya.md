@@ -1,17 +1,17 @@
 # Naya (naya) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\NAYA`
-- Status: running_dev_paused
+- Status: paused
 - Ports: api:8002, ui:7861
 - Services: NayaBot
-- Notes: Personal file management AI for Renne. Absorbed FileHQ as file engine module. Telegram is the only chat interface. LAN-only — no Cloudflare tunnel, no internet exposure.
+- Notes: 2026-09-09: status running_dev_paused->paused — app layer stopped/Manual since 2026-08-28; engine lives on as QI_FileHQ + QI_NayaMCP (Brain state)
 
 ## Brain
-- Current state: status=paused, phase=Phase 5 â€” capability behind OpenClaw (application retired)
-  GENUINELY paused 2026-08-28 â€” not just a status field this time. QI_NayaBot, QI_NayaGradio and QI_NayaTunnel are Stopped with StartType Manual, so reboots no longer revive them; the nightly 02:00 4.5-hour multi-drive scan is halted. No data deleted (naya_brain.db 4.15 GB and filehq.db 2.63 GB intact). Naya is now a CAPABILITY OpenClaw calls rather than a standalone app: the FileHQ engine was extracted from naya_server.py (where it ran as a daemon thread) into standalone service QI_FileHQ on loopback :8200, fronted by MCP gateway QI_NayaMCP on :8250, consumed by OpenClaw as `qi-naya` and by Claude Desktop. Both new services are QI_-prefixed and broker-manageable. Standard docs (Implementation Log, Meeting Minutes, Version History) created â€” they had been missing since project start. Key correction logged: FileHQ is NOT a separate engine, it IS Naya's scanner (naya_watcher.py imports filehq_bridge), so it must not be dumped and rebuilt.
+- Current state: status=paused, phase=Phase 5 — capability behind OpenClaw (application retired 2026-08-28)
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). App layer (QI_NayaBot/Gradio/Tunnel) STOPPED, StartType Manual, deliberate. Engine lives on as QI_FileHQ :8200 + QI_NayaMCP :8250, both RUNNING and consumed by OpenClaw and Claude Desktop. naya_brain.db (4.15 GB) and filehq.db (2.63 GB) intact. Registry status corrected 2026-09-09 to paused.
 - Last decisions:
   - Naya becomes a capability OpenClaw calls, not a standalone application (2026-08-28)
 

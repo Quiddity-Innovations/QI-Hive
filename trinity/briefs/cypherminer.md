@@ -1,6 +1,6 @@
 # CypherMiner (cypherminer) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\CypherMiner`
@@ -9,8 +9,8 @@ _Generated 2026-09-09 02:38:45_
 - Notes: New project — family role to be determined as it develops.
 
 ## Brain
-- Current state: status=complete, phase=Phase 1 — frontend + tunnel live
-  Bilingual offline tools suite. Static frontend served on :7842 (QI_CypherMinerUI), API on :8502, public tunnel QI_CypherMinerTunnel live (2026-06-15). Registered in ecosystem registry; now registered in Brain.  Status corrected per owner (Renne) 2026-06-18 dashboard review.
+- Current state: status=complete, phase=Phase 1 — 57 offline tools live via tunnel; API service never persisted
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_CypherMinerUI :7842 and tunnel RUNNING (cypher.quiddityinnovations.com). Shipped 2026-06-14 in one session; last real work 2026-06-23. API :8502 still not a persistent service (flagged 2026-06-18).
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules

@@ -1,6 +1,6 @@
 # AutoPDF (autopdf) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\AutoPDF`
@@ -10,8 +10,8 @@ _Generated 2026-09-09 02:38:45_
 - Services: QI_AutoPDFMCP
 
 ## Brain
-- Current state: status=active, phase=Hardening + MCP integration
-  Six weeks of accumulated work committed and pushed to GitHub (0a367e5, master) - the first commit since 2026-06-29. Three bodies of work landed together: (1) regex-library corruption root-caused to regression test 5*.10 and fixed durably with a server-side integrity guard on POST /api/regex-library-save plus a .prev generation backup; library reseeded to 30 built-ins. (2) MCP gateway - AutoPDF is an MCP server on 127.0.0.1:8701 running as QI_AutoPDFMCP, nine independently switchable tools, disabled tools never registered. (3) Settings reorganization - AI config split into its own "AI & Connections" section, every group given an explicit id. Regression suite is 28 PASS / 0 FAIL / 1 SKIP. Documentation regenerated (Technical Documentation, Technical Guide, User Guide, Test Guide, Cheatsheet) with the regex-library endpoints, the guard's rationale, and new test-guide rows 5*.11/5*.12. .gitignore corrected: live config/mcp_gateway.json now stays local (per-install, same rule as autopdf-settings.json) while the template ships, and Application/_register_mcp_service.ps1 was un-ignored - the _*.ps1 scratch rule had been swallowing a real deliverable. Version backup at _backups/2026-08-07_1527_before-commit-regexguard.
+- Current state: status=active, phase=Hardening + MCP integration; feature-tour videos delivered 2026-08-11
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_AutoPDF :6969 and QI_AutoPDFMCP :8701 RUNNING. 2026-08-07 landed the regex-library integrity guard and the MCP gateway (9 tools); 2026-08-11 delivered 6 feature-tour video cuts and fixed /api/workflow-list returning a bare string. 2026-09-09: root CLAUDE.md / NEXT_SESSION_PROMPT.md brought current (they had said "no git").
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
@@ -33,7 +33,7 @@ These are the Phase 2 architectural concepts. Don't reinvent them:
 ## Things the user has explicitly asked for
 ## Things the user does NOT want
 ## Test suites — when to run which
-- **Manual `.docx` checklist** (`Documentation/AutoPDF_Test_Guide.docx`) — only items the automated tiers don't reach (zone drawing, modal animations, visual judgment).
+- **Manual `.docx` checklist** (`docs/AutoPDF_Test_Guide.docx`) — only items the automated tiers don't reach (zone drawing, modal animations, visual judgment).
 
 ## Documentation regeneration
 ## Session end protocol

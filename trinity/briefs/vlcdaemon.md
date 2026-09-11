@@ -1,12 +1,12 @@
 # VLCDaemon (vlcdaemon) — L2 brief
 
-_Generated 2026-09-09 02:38:46_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\VLCDaemon`
-- Status: active
+- Status: paused
 - Phase: Working daemon, no repo until 2026-09-08
-- Notes: git init done 2026-09-08 (local only, no remote yet — Wave 0.9).
+- Notes: git init done 2026-09-08 (local only, no remote yet — Wave 0.9). | 2026-09-09: status active->paused — no runtime activity since 2026-06-17 (heartbeat/log); git-init on 2026-09-08 was administrative
 
 ## Brain
 - Current state: status=active, phase=Working daemon, no repo until 2026-09-08

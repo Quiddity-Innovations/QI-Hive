@@ -1,6 +1,6 @@
 # Claude Voice (claude_voice) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\CLAUDE\Claude Voice`
@@ -9,8 +9,8 @@ _Generated 2026-09-09 02:38:45_
 - Notes: Standalone realtime voice assistant spun out of Gamez on 2026-06-20. The STT+VAD+TTS bridge is a reusable ecosystem feature other QI projects can adopt (e.g. Maia/OpenClaw Koe). Male voice (Andrew EN / Antonio pt-BR); identity is always 'Claude', never 'Andrew'.
 
 ## Brain
-- Current state: status=active, phase=Dual-brain routing + Hive/launcher registration
-  Root-caused a hallucination report: LINE/Telegram were answering from the local Ollama model impersonating Claude (it invented a meeting + wrong project list). Built brain.py â€” two named brains: 'Claude' (real, via claude_bridge) and 'Ronald' (local Ollama, renamed out of Claude + given an anti-hallucination prompt). Switchable by name in chat ('Claudeâ€¦' / 'Ronald, take a break') OR by config UI on :8720 (segmented toggle + hard-set lock that overrides voice commands). Wired into line_bot.py + telegram_bot.py; new QI_ClaudeVoiceControl service serves the UI. Fixed ffmpeg resolution for services (util.py) so voice notes work. Added a Claude Voice card to the QI Launchpad (C:\QIH\landing\index.html) with localhost addresses (Brain UI :8720, Meeting Room :8722) + LINE webhook hostname; updated qi_registry.json :8720 note. Default brain = Ronald (safe always-on; Claude/bridge only answers while a live session bridges).
+- Current state: status=blocked, phase=Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). 2026-08-20 root-caused why the stack would not stay off (global SessionStart hook re-armed the bridge in every project session). Built the VOICE_DISABLED kill switch, pinned the four QI_ClaudeVoice* services to demand-start, disabled meeting-room/bridge-health tasks, and scheduled QI_ClaudeVoiceRestore_20260919. QI_ClaudeVoiceControl :8720 STOPPED by design; claudevoice.quiddityinnovations.com returns 530 until restore.
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules

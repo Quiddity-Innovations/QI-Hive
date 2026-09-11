@@ -1,6 +1,6 @@
 # Headroom (headroom) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\CLAUDE\Tools`
@@ -9,8 +9,8 @@ _Generated 2026-09-09 02:38:45_
 - Notes: Pilot 2026-07: proxy in front of Ollama first (OPENAI_API_BASE=http://localhost:11434/v1), then NEXUS providers if savings hold. Do NOT re-point Claude Code's own endpoint through the proxy — subscription OAuth path stays untouched; Claude Code uses the MCP mode instead.
 
 ## Brain
-- Current state: status=active, phase=Pilot -- proxy fronting Ollama, not yet promoted to NSSM service
-  Open-source context/token compression proxy + MCP server, shared ecosystem infrastructure. No dedicated CLAUDE.md/docs folder exists under its registered path (C:\APPS\CLAUDE\Tools, a shared tools dir); per the registry's own family_notes, piloted in front of Ollama first (OPENAI_API_BASE localhost:11434) before NEXUS providers, promotion to QI_Headroom NSSM service pending adoption decision.
+- Current state: status=active, phase=Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). Contrary to the registry ("pilot, not yet promoted"), QI_Headroom is SERVICE_RUNNING (headroom-proxy 0.32.1, ~3.6 days uptime on 2026-09-09) via Tools/headroom_env; upstream is https://api.anthropic.com, not Ollama as documented. Internal kompress backend reports unhealthy while overall status is healthy. Stale 2.0 GB headroom_env.old deleted 2026-09-09; venv untracked from git.
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules

@@ -1,6 +1,6 @@
 # MapSnap (mapsnap) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\MapSnap`
@@ -10,8 +10,8 @@ _Generated 2026-09-09 02:38:45_
 - Notes: Sibling of cognibase (same DNA, different scope). MapSnap = engine-agnostic schema intelligence over any structured system of record (proposes canonical-key mappings for the BU federation); cognibase = live OnBase + cross-source correlation/governance. Kept separate intentionally to insulate the stable discovery tool from the integration product's churn.
 
 ## Brain
-- Current state: status=active, phase=OnBase DNA â€” Tier C dark-mask calibration
-  OnBase DNA Program at 232 dark (type,bit) pairs, 136 reachable by one dialog, 96 needing write-probing; overall row coverage 80.3 percent over an 18-package corpus. action.flags2 is effectively closed (5 dark pairs, 99.8 percent). Audit workstream is current: AUDIT-REPORT-2026-08-11 fully triaged. Note Types and Scan Queues are 100 percent and published.
+- Current state: status=active, phase=Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_MapSnap :9876 and QI_MapSnapMCP :8651 healthy. 2026-08-17 closed a live OpenRouter-key exposure (GET /api/settings served the key over the public tunnel): qi_secrets.py resolver, key moved to an ACL-locked env file, backups redacted. 2026-08-14 shipped login-race fix, 6 OnBase Unity common-elements collections, environment profiles, 39-table Setup Guide + installer. The previous "OnBase DNA Tier C" phase label belongs to project onbase_dna.
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules

@@ -2,7 +2,7 @@
 
 **FROZEN**
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\APPS\Baguapp`
@@ -13,7 +13,9 @@ _Generated 2026-09-09 02:38:45_
 ## Brain
 - Current state: status=paused, phase=Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16)
   Prototype frozen by owner decision. Only numbered patches for use-blocking defects with owner approval. Successor: baguapp_prod. Live at baguapp.vercel.app.
-- No project-scoped decisions recorded.
+- Last decisions:
+  - CorreÃ§Ã£o: URL do filme do mascote e drift de av_mux.draw_text() entre D:\Dev e C:\APPS (2026-09-09)
+  - Mascote Pixiu em 6 tomadas de 4,96s, ordem 1-2-3-4-6-5, URL queimada por ffmpeg (2026-09-09)
 
 ## CLAUDE.md rules
 # BaguApp · O seu Feng Shui de Bolso
@@ -145,6 +147,4 @@ Depois de aplicar, **confira o sha256** contra a versão testada.
 ## 13. Como testar
 O que sempre vale a pena verificar:
 
-- as tabelas de idioma (seção 6)
-- que a chave **não** aparece no HTML nem no localStorage
 ...(truncated — cap 150 lines)

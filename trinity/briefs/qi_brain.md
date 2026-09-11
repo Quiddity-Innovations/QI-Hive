@@ -1,6 +1,6 @@
 # QI Brain (qi_brain) — L2 brief
 
-_Generated 2026-09-09 02:38:45_
+_Generated 2026-09-10 02:35:09_
 
 ## Registry facts
 - Path: `C:\QIH\engine\brain`
@@ -9,8 +9,8 @@ _Generated 2026-09-09 02:38:45_
 - Services: QI_BrainAPI
 
 ## Brain
-- Current state: status=active, phase=Phase 5 — operational
-  Brain API on :9011 (moved from 9010 on 2026-05-14 — Logitech G HUB squats 9010). SQLite + ChromaDB + 12 MCP tools. NSSM QI_BrainAPI running.
+- Current state: status=active, phase=Phase 5 — operational (SQLite + ChromaDB + MCP, :9011)
+  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_BrainAPI :9011 healthy (version 002), 586 decisions / 2,265 sessions logged. Bookkeeping for Brain-as-a-project had stopped at 2026-06-10 because all Brain-touching work is logged under qi_hive/claude_manager.
 - No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
