@@ -1,6 +1,6 @@
 # Naya (naya) — L2 brief
 
-_Generated 2026-09-10 02:35:09_
+_Generated 2026-09-11 02:36:20_
 
 ## Registry facts
 - Path: `C:\APPS\NAYA`
@@ -12,8 +12,7 @@ _Generated 2026-09-10 02:35:09_
 ## Brain
 - Current state: status=paused, phase=Phase 5 — capability behind OpenClaw (application retired 2026-08-28)
   Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). App layer (QI_NayaBot/Gradio/Tunnel) STOPPED, StartType Manual, deliberate. Engine lives on as QI_FileHQ :8200 + QI_NayaMCP :8250, both RUNNING and consumed by OpenClaw and Claude Desktop. naya_brain.db (4.15 GB) and filehq.db (2.63 GB) intact. Registry status corrected 2026-09-09 to paused.
-- Last decisions:
-  - Naya becomes a capability OpenClaw calls, not a standalone application (2026-08-28)
+- No project-scoped decisions recorded.
 
 ## CLAUDE.md rules
 # Naya — Claude Project Instructions

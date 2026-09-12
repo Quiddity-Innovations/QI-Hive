@@ -1,11 +1,11 @@
 # QI Ecosystem — Assistant Onboarding (L1)
 
-_Generated 2026-09-10 15:35:33 · qi_registry.json sha256[:12] = edbfacec479b_
+_Generated 2026-09-11 02:36:20 · qi_registry.json sha256[:12] = af112b6067ac_
 
 ## Who QI is
 
 - Quiddity Innovations (QI) — owner Renne Santiago, sole developer + AI ambassador.
-- 42 registered projects sharing one machine, ports, git, and a converging future.
+- 43 registered projects sharing one machine, ports, git, and a converging future.
 - Two tiers (owner's ruling 2026-09-10, `QI_Standards.md` §1.1): `C:\APPS\<App>` is the app Renne runs **and** the development source - git lives there, sessions open there, services point there. `D:\Dev\<App>` is a plain clone of the same remote: a backup on a second disk and the source for installing elsewhere, never edited, no `.venv`. Nothing operational may name `D:\Dev`.
 - Port blocks are per-project (e.g. Maia 8100-8199, NEXUS 8300-8399, QI Hive 9000-9099) —
   never pick an adjacent port; check `C:\QIH\ecosystem\qi_registry.json` `port_strategy`.
@@ -79,3 +79,4 @@ _Generated 2026-09-10 15:35:33 · qi_registry.json sha256[:12] = edbfacec479b_
 | qi_gate | C:\QIH\engine\gate | active | Demo-account rollout live 202… | edge 9040 · auth 9041 | Authentication wall in front of every internet-exposed QI application: Caddy edge :9040 +… |
 | aws_edge | C:\QIH\shared\documentation\guides | paused | M1 relay live; M2/M4/M6 demoe… | — | Hybrid 'edge on AWS, brain at home': Lambda LINE webhook relay + SQS queue (M1, live, dra… |
 | transfer_station | TBD — locate console source (built 2026-08-12..19) | paused | Built and disarmed 2026-08-19… | sftp 22022 · console 8751 | Hardened Windows OpenSSH SFTP receive station (port 22022, chrooted, no shell) with a loc… |
+| godseye | C:\APPS\Godseye | live | - | ui 8780 | Third-party open-source (MIT) real-time spatial-intelligence console: photorealistic 3D g… |

@@ -1,18 +1,19 @@
 # Maia (maia) — L2 brief
 
-_Generated 2026-09-10 02:35:09_
+_Generated 2026-09-11 02:36:20_
 
 ## Registry facts
 - Path: `C:\APPS\QI`
 - Status: active_production
 - Ports: api:8001, ui:7860
-- Services: QI_MaiaBot, QI_MaiaDemoTunnel, QI_MaiaTunnel
+- Services: QI_MaiaBot, QI_MaiaGradio, QI_MaiaTunnel, QI_MaiaQueueDrain, QI_MaiaDemoTunnel
 - Notes: The flagship product. All other projects ultimately serve Maia or learn from it.
 
 ## Brain
 - Current state: status=active, phase=Phase 4 — production; AWS LINE relay + channel refactor live
   Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). Bot :8001, Gradio, tunnel, QueueDrain all RUNNING under NSSM. Since June: AWS Lambda+SQS webhook relay (2026-07-30), channels/*.py split with replay tests, Meta signature verification, bcrypt auth, watchdog hardening, QI-RELAY collaborator channel (2026-08-19). Last real feature commits ~2026-08-05.
-- No project-scoped decisions recorded.
+- Last decisions:
+  - Health-check Maia's demo chain, not its git commit recency (2026-09-10)
 
 ## CLAUDE.md rules
 # Maia — Claude Project Instructions

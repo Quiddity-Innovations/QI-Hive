@@ -1,12 +1,12 @@
 # PlayDeck (playdeck) — L2 brief
 
-_Generated 2026-09-10 02:35:09_
+_Generated 2026-09-11 02:36:20_
 
 ## Registry facts
 - Path: `C:\APPS\PlayDeck`
-- Status: new
+- Status: active
 - Ports: api:8506, ui:7846
-- Notes: New project — family role to be determined as it develops.
+- Notes: 2026-09-10: private GitHub repo created and pushed (owner: only PlayDeck gets a remote; OC stays local-only).
 
 ## Brain
 - Current state: status=active, phase=Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28

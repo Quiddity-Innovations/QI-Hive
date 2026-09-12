@@ -1,16 +1,16 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-11 00:34:08 (nightly reconciler)_
+_Auto-generated: 2026-09-12 00:34:47 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | akiyascout | Registered, no commits yet | paused | 0 | — |
 | autopdf | Hardening + MCP integration; feature-tour videos delivered 2026-08-11 | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion | active_development | 7 | 2026-09-10 01:46:29 |
-| baguapp | Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16) | paused | 19 | 2026-09-09 21:00:49 |
+| baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1152 | 2026-09-10 20:23:11 |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1179 | 2026-09-12 00:16:45 |
 | claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
@@ -21,14 +21,14 @@ _Auto-generated: 2026-09-11 00:34:08 (nightly reconciler)_
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
 | gamez | World Cup 2026 dashboard — tournament over; archive-or-generalise pending | complete | 8 | 2026-06-29 21:42:14 |
-| godseye | Live â€” fully provisioned | live | 26 | 2026-09-10 21:41:21 |
+| godseye | Live â€” fully provisioned | live | 27 | 2026-09-11 08:40:00 |
 | headroom | Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com | active | 0 | — |
 | lotterywiz | Public demo — documented; awaiting owner sign-off | active | 9 | 2026-08-16 20:53:09 |
 | m2v | RETIRED 2026-09-10 — deleted by owner decision | complete | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production; AWS LINE relay + channel refactor live | active | 23 | 2026-08-13 21:00:07 |
 | mailbrain | Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run) | active | 0 | — |
 | mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 187 | 2026-09-04 22:43:44 |
-| mediastudio | Realigned to the C:\APPS source tier; Autopilot v1 flown, review gate pending | active | 84 | 2026-09-10 21:14:06 |
+| mediastudio | Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual | active | 87 | 2026-09-11 13:39:33 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | mythologies | Static site live | active | 5 | 2026-08-27 14:44:24 |
 | naya | Phase 5 — capability behind OpenClaw (application retired 2026-08-28) | paused | 12 | 2026-08-28 08:07:21 |
@@ -39,12 +39,12 @@ _Auto-generated: 2026-09-11 00:34:08 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 260 | 2026-09-10 19:40:00 |
-| retirementanalyzer | v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress | paused | 140 | 2026-09-06 00:03:30 |
+| qi_hive | Observability hardening | active | 262 | 2026-09-11 00:35:01 |
+| retirementanalyzer | analysis | active | 159 | 2026-09-12 00:03:29 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
-| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 43 | 2026-09-10 16:50:11 |
+| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 45 | 2026-09-11 09:10:33 |
 | vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
 | voice_studio | Batch voice rendering active; test guide in docs/TESTING.md | active | 0 | — |
 
@@ -73,10 +73,10 @@ Not done, deliberately: gpu.peak_vram_gb is null because the RTX 5080 was held b
 - **Next:** 1. PROMOTE D:/Dev/AvatarStudio -> C:/APPS/AvatarStudio (owner's call). This also ships the edge-tts fix to the running Studio, where 4 of 10 languages are currently silent. 2. After promotion: repoint qi_plugin.json launch.cmd/cwd at C:/APPS, set launch.service to QI_AvatarStudio, run install_service.bat AS ADMIN (not run from the session â€” needs admin, and it refuses if engine/service.py is absent). 3. Measure gpu.peak_vram_gb with one Hallo2 render on an idle card, then copy vram.peak_gb from the sidecar into the manifest. 4. Add D:/Dev/AvatarStudio/qi_plugin.json to Media Studio's plugins.extra_manifests and drive one {"type":"avatar"} shot list end to end. 5. First real /api/render using a Voice Studio WAV as driving_audio.
 
 ### baguapp
-- **Phase:** Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16)
-- **Status:** paused
-- **Summary:** Prototype frozen by owner decision. Only numbered patches for use-blocking defects with owner approval. Successor: baguapp_prod. Live at baguapp.vercel.app.
-- **Next:** No active work — successor is baguapp_prod.
+- **Phase:** ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09
+- **Status:** active
+- **Summary:** ProduÃ§Ã£o em baguapp.vercel.app com o roteador de validaÃ§Ã£o por modelo (dpl_5BTwWVpRZtMqcB7S2Zda6BhTPztu, publicado 11/09 â€” estava commitado e nÃ£o publicado havia trÃªs dias). Escada: gemini (3 modelos) + openrouter (2 Gemma gratuitos); degrau "extra" pronto no cÃ³digo mas SEM motor, porque a ponte para o Ollama local foi medida e recusada (armadilha 17: velocidade e competÃªncia sÃ£o excludentes na RTX 5080).
+- **Next:** DecisÃ£o do dono sobre reabrir o degrau local por (a) outro modelo de visÃ£o >=120 tok/s, (b) I Ching em segunda chamada sob demanda, ou (c) GPU maior. Fora isso o protÃ³tipo segue congelado; o produto real Ã© baguapp_prod.
 
 ### baguapp_prod
 - **Phase:** Marco zero — spec + docs, no code yet
@@ -209,10 +209,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) Sign in and confirm the 6 new OnBase API buttons render. 2) Dry-run kit/setup_unity_api.ps1 against a fresh environment key. 3) Fix the 4 failing qi_validator checks (root CLAUDE.md, requirements.txt, docs naming). 4) Owner: three-way merge decision for D:\Dev\BU Edition (untouched since 2026-08-08).
 
 ### mediastudio
-- **Phase:** Realigned to the C:\APPS source tier; Autopilot v1 flown, review gate pending
+- **Phase:** Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual
 - **Status:** active
-- **Summary:** 2026-09-10 tier realignment: C:\APPS\MediaStudio is now the git working copy AND the development source (owner's ruling). Repo pushed to github.com/Quiddity-Innovations/MediaStudio (branch dev) - before today the only history was on D:\Dev with no remote at all. The service runs from C:\APPS and proves it: GET /version reports root C:\APPS\MediaStudio, tier "runtime", and the HEAD commit. 119 tests pass, qi_validator 20/20. Config, tools, tests and docs repointed off D:\Dev; plugins.extra_manifests, and AvatarStudio's and VoiceStudio's plug-in launch blocks, all now name C:\APPS (they pointed at D:\Dev launchers that no longer have a .venv - each would have failed silently). session_handoff.py's drift table was inverted to mean "the D:\Dev backup is N commits behind". Autopilot remains engaged=false pending the Fable review gate; that is unchanged by this work. The earlier state note saying "Media Studio deliberately not promoted; the C:\APPS copy is stale" is obsolete - there is no promotion any more.
-- **Next:** 1) Close the live Claude session holding D:\Dev\MediaStudio, then replace that tree with a plain clone + PRISTINE.md (same for D:\Dev\VoiceStudio). 2) Owner to delete C:\APPS\MediaStudio\DO-NOT-EDIT-HERE.md and AvatarStudio's PROMOTION.md - both teach the retired model. 3) S3: the GUI coherence work, opening in C:\APPS\MediaStudio. 4) Fable review gate on docs/AUTOPILOT.md before engaged=true.
+- **Summary:** 2026-09-11 (S4): second teaching session complete. Video, fit, music, assembly, av_mux primitives and run records all walked end to end against the running machine, every example producing a file that opens. Deliverable S4_What_Media_Studio_Is (48 s) mixes a card, a generated still with Ken Burns, a generated MiniMax clip looped to fit, four narration lines in one model load, and a ducked music bed - built in 10.2 s from docs/shotlists/s4_studio.json. Preflight found gemma4:26b resident and idle in Ollama holding the card with 0.4 GB free while every cockpit light was green; unloading took it to 13.82 GB. Narration is verified by rendering a real wav now, never by /health. docs/HOWTO_GAPS.md is at 33 items (G27-G33 added). Biggest finding: /api/runs/{id}/rerun is a ComfyUI cache hit, not a re-render (decision 612). G10 is answered - personalsong and m2v were retired by owner decision on 2026-09-10, so the 155 library rows the S3 rescan dropped were deliberate; the implied config edit (drop personalsong_legacy and m2v from library.sources, fix CLAUDE.md's music row) awaits the owner's yes. No docs were fixed: HOWTO.md and CHEATSHEET.md are still wrong on all 33 counts, and S5 writes the manual. Autopilot remains engaged=false pending the Fable review gate. Committed a6e3b6b, pushed, D:\Dev backup pulled.
+- **Next:** S5, two halves. HALF 1 (do first, it needs decisions): GUI consistency - inventory the Library, Composer, Voices tab, cockpit and Autopilot panel into docs/INTERFACE.md BEFORE converting anything; check the Voice Studio and AvatarStudio ?embed=1 iframes before choosing a palette; decide one token set and one component vocabulary; convert screen by screen, committing each one working. HALF 2: write the manual from HOWTO_GAPS.md's 33 items - priority G12 (output dir is D:\AI\Outputs\MediaStudio not data\out), G21 (health asserts liveness not capability), G4 (listening+http_ok table), G9 (Rescan removes rows), G18 (the seed), G30 (rerun does not re-render); cite live endpoints rather than restating values. Ask the owner early: G10 config edit y/n, and whether the four small code fixes (G27 draw_text CLI branch, G29 populate artifact from output_paths, G31 freed_gb, a test that renders one narration line) land in S5 or S6. Still open beyond S5: session_handoff.py should probe capability not /health, and the Fable review gate on docs/AUTOPILOT.md before engaged=true.
 
 ### mq
 - **Phase:** Phase 0 — scaffold
@@ -281,10 +281,18 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** None
 
 ### retirementanalyzer
-- **Phase:** v0.14 â€” Task 1 cleared; end-to-end walkthrough in progress
-- **Status:** paused
-- **Summary:** 712 tests pass, everything pushed, tree clean. Tier conservative, figures signed 2026-08-27, one detector firing (property exemptions). A blank disposable clone runs at C:\APPS\RetirementAnalyzer-TEST on 17844/18504 for the walkthrough; two of its steps have been walked and produced four defects. Resuming Sunday 2026-08-30.
-- **Next:** Start both apps (neither runs as a service), hard-refresh, finish docs/WALKTHROUGH.md from household A step 1, then delete the test copy. Then: her SSA statement, the spouse's annual contribution, the import-vs-rows decision, and sign-off on the three house-policy datasets.
+- **Phase:** analysis
+- **Status:** active
+- **Summary:** Deterministic scenario analysis is now complete and internally consistent. The two inputs previously carried as admitted placeholders - the US downsize rent and the contradictory life-expectancy pair - are both resolved: the rent by the owner's figure plus a swept band, the life expectancy by running all nine combinations instead of choosing one. Correcting the rent moved a real headline three years later; the longevity sweep showed longevity is close to irrelevant against the destination decision, which is reported plainly rather than dressed up.
+
+A defect in the withdrawal-rate test was found and fixed during that sweep: it discarded the entire survivor phase. A year-by-year walk now runs alongside it.
+
+Reporting is de-duplicated at the source: all narrative numbers are computed once in a shared figures module, which removed about twenty hand-typed literals from prose. The plain report exists in English, Portuguese and Japanese from one generator. Two automated gates now run before anything is sent.
+
+Two gaps remain open by deliberate choice, each with its own named section rather than a footnote: foreign tax (both jurisdictions tax him; no US-Brazil treaty at all; Japan taxes US social security under its own treaty's Article 17(1) rather than the US Model rule) and long-term care (wholly unmodelled; the owner's view that it matters less abroad is recorded as his judgement, not as a result).
+
+Everything remains private and outside the git repository. Nothing committed, published or uploaded.
+- **Next:** The blocking item before any retirement date is set is the stochastic run in the project's own engine - all current output is deterministic by design, and the weakest surviving path carries a high first-year draw with no guaranteed income underneath it, which is precisely the shape sequence risk punishes. Beyond that: settle a third profile discrepancy found this session (the spouse's foreign pension amount and start age, and her own benefit at full retirement age, disagree between the signed fingerprint and the people[] block - and the guaranteed-income floor is what carries the two cheapest destinations); decide whether the headline base case moves to the other life-expectancy pair, which changes nothing actionable; price a real rental listing to size the cushion rather than the date; obtain a cross-border tax opinion for whichever destination is chosen; and decide whether bridge-aware survival should become a scoring component rather than a parallel measure.
 
 ### synvox
 - **Phase:** Phase 4 â€” evidence layer / reality check; monetisation deferred

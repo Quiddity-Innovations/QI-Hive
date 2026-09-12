@@ -1,6 +1,6 @@
 # QI Media Studio (mediastudio) — L2 brief
 
-_Generated 2026-09-10 15:35:33_
+_Generated 2026-09-11 02:36:20_
 
 ## Registry facts
 - Path: `C:\APPS\MediaStudio`
@@ -12,7 +12,7 @@ _Generated 2026-09-10 15:35:33_
 - Current state: status=active, phase=Realigned to the C:\APPS source tier; Autopilot v1 flown, review gate pending
   2026-09-10 tier realignment: C:\APPS\MediaStudio is now the git working copy AND the development source (owner's ruling). Repo pushed to github.com/Quiddity-Innovations/MediaStudio (branch dev) - before today the only history was on D:\Dev with no remote at all. The service runs from C:\APPS and proves it: GET /version reports root C:\APPS\MediaStudio, tier "runtime", and the HEAD commit. 119 tests pass, qi_validator 20/20. Config, tools, tests and docs repointed off D:\Dev; plugins.extra_manifests, and AvatarStudio's and VoiceStudio's plug-in launch blocks, all now name C:\APPS (they pointed at D:\Dev launchers that no longer have a .venv - each would have failed silently). session_handoff.py's drift table was inverted to mean "the D:\Dev backup is N commits behind". Autopilot remains engaged=false pending the Fable review gate; that is unchanged by this work. The earlier state note saying "Media Studio deliberately not promoted; the C:\APPS copy is stale" is obsolete - there is no promotion any more.
 - Last decisions:
-  - Decision 3 closed (Hallo2 10.3 GB); AvatarStudio promoted to C:\APPS as the QI_AvatarStudio service; qi_promote.py created; Ollama unloaded before exclusive steps (2026-09-10)
+  - Health endpoints must assert capability, not liveness â€” /health 200 is not evidence a service works (2026-09-10)
 
 ## CLAUDE.md rules
 # QI Media Studio — how Claude works with this project

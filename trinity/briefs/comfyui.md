@@ -1,6 +1,6 @@
 # ComfyUI (QI Media Engine) (comfyui) — L2 brief
 
-_Generated 2026-09-10 02:35:09_
+_Generated 2026-09-11 02:36:20_
 
 ## Registry facts
 - Path: `D:\AI`
@@ -103,4 +103,4 @@ make room for a new one.
 ## Adding a workflow found online
 
 ## Entry points
-`Free_ComfyUI_Memory.bat`, `Start_ComfyUI.bat`, `install_QI_ComfyUI_service.bat`
+`Free_ComfyUI_Memory.bat`, `Start_ComfyUI.bat`, `Start_ComfyUI_Service_Wrapper.bat`, `install_QI_ComfyUI_service.bat`, `ollama_free_vram.py`
