@@ -2,7 +2,7 @@
 
 **FROZEN**
 
-_Generated 2026-09-11 02:36:20_
+_Generated 2026-09-12 02:35:04_
 
 ## Registry facts
 - Path: `C:\APPS\Baguapp`
@@ -11,9 +11,10 @@ _Generated 2026-09-11 02:36:20_
 - Notes: Only numbered patches for use-blocking defects with owner approval. Successor: baguapp_prod. Live at baguapp.vercel.app.
 
 ## Brain
-- Current state: status=paused, phase=Prototype frozen 2026-09-08 (owner decision, CLAUDE.md §16)
-  Prototype frozen by owner decision. Only numbered patches for use-blocking defects with owner approval. Successor: baguapp_prod. Live at baguapp.vercel.app.
+- Current state: status=active, phase=ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09
+  ProduÃ§Ã£o em baguapp.vercel.app com o roteador de validaÃ§Ã£o por modelo (dpl_5BTwWVpRZtMqcB7S2Zda6BhTPztu, publicado 11/09 â€” estava commitado e nÃ£o publicado havia trÃªs dias). Escada: gemini (3 modelos) + openrouter (2 Gemma gratuitos); degrau "extra" pronto no cÃ³digo mas SEM motor, porque a ponte para o Ollama local foi medida e recusada (armadilha 17: velocidade e competÃªncia sÃ£o excludentes na RTX 5080).
 - Last decisions:
+  - Degrau "extra" ligado ao Ollama local: medido e recusado (2026-09-12)
   - CorreÃ§Ã£o: URL do filme do mascote e drift de av_mux.draw_text() entre D:\Dev e C:\APPS (2026-09-09)
   - Mascote Pixiu em 6 tomadas de 4,96s, ordem 1-2-3-4-6-5, URL queimada por ffmpeg (2026-09-09)
 
@@ -146,5 +147,4 @@ original a qualquer momento e o resultado é sempre o mesmo arquivo.
 Depois de aplicar, **confira o sha256** contra a versão testada.
 ## 13. Como testar
 O que sempre vale a pena verificar:
-
 ...(truncated — cap 150 lines)

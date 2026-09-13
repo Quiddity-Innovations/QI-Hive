@@ -1,6 +1,6 @@
 # QI Ecosystem — Assistant Onboarding (L1)
 
-_Generated 2026-09-11 02:36:20 · qi_registry.json sha256[:12] = af112b6067ac_
+_Generated 2026-09-12 02:35:04 · qi_registry.json sha256[:12] = af112b6067ac_
 
 ## Who QI is
 

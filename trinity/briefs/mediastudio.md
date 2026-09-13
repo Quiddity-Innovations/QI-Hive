@@ -1,6 +1,6 @@
 # QI Media Studio (mediastudio) — L2 brief
 
-_Generated 2026-09-11 02:36:20_
+_Generated 2026-09-12 02:35:04_
 
 ## Registry facts
 - Path: `C:\APPS\MediaStudio`
@@ -9,10 +9,10 @@ _Generated 2026-09-11 02:36:20_
 - Notes: Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history lives in C:\APPS\MediaStudio (the source tier since the owner's ruling of 2026-09-10) and on GitHub; D:\Dev\MediaStudio is a plain backup clone. | 2026-09-09: paths repointed D:\Dev -> C:\APPS (app runs from C:\APPS per the 2026-09-02 ruling).
 
 ## Brain
-- Current state: status=active, phase=Realigned to the C:\APPS source tier; Autopilot v1 flown, review gate pending
-  2026-09-10 tier realignment: C:\APPS\MediaStudio is now the git working copy AND the development source (owner's ruling). Repo pushed to github.com/Quiddity-Innovations/MediaStudio (branch dev) - before today the only history was on D:\Dev with no remote at all. The service runs from C:\APPS and proves it: GET /version reports root C:\APPS\MediaStudio, tier "runtime", and the HEAD commit. 119 tests pass, qi_validator 20/20. Config, tools, tests and docs repointed off D:\Dev; plugins.extra_manifests, and AvatarStudio's and VoiceStudio's plug-in launch blocks, all now name C:\APPS (they pointed at D:\Dev launchers that no longer have a .venv - each would have failed silently). session_handoff.py's drift table was inverted to mean "the D:\Dev backup is N commits behind". Autopilot remains engaged=false pending the Fable review gate; that is unchanged by this work. The earlier state note saying "Media Studio deliberately not promoted; the C:\APPS copy is stale" is obsolete - there is no promotion any more.
+- Current state: status=active, phase=Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual
+  2026-09-11 (S4): second teaching session complete. Video, fit, music, assembly, av_mux primitives and run records all walked end to end against the running machine, every example producing a file that opens. Deliverable S4_What_Media_Studio_Is (48 s) mixes a card, a generated still with Ken Burns, a generated MiniMax clip looped to fit, four narration lines in one model load, and a ducked music bed - built in 10.2 s from docs/shotlists/s4_studio.json. Preflight found gemma4:26b resident and idle in Ollama holding the card with 0.4 GB free while every cockpit light was green; unloading took it to 13.82 GB. Narration is verified by rendering a real wav now, never by /health. docs/HOWTO_GAPS.md is at 33 items (G27-G33 added). Biggest finding: /api/runs/{id}/rerun is a ComfyUI cache hit, not a re-render (decision 612). G10 is answered - personalsong and m2v were retired by owner decision on 2026-09-10, so the 155 library rows the S3 rescan dropped were deliberate; the implied config edit (drop personalsong_legacy and m2v from library.sources, fix CLAUDE.md's music row) awaits the owner's yes. No docs were fixed: HOWTO.md and CHEATSHEET.md are still wrong on all 33 counts, and S5 writes the manual. Autopilot remains engaged=false pending the Fable review gate. Committed a6e3b6b, pushed, D:\Dev backup pulled.
 - Last decisions:
-  - Health endpoints must assert capability, not liveness â€” /health 200 is not evidence a service works (2026-09-10)
+  - Rerun reproduces provenance, it does not re-roll â€” /api/runs/{id}/rerun is a ComfyUI cache hit (2026-09-11)
 
 ## CLAUDE.md rules
 # QI Media Studio — how Claude works with this project

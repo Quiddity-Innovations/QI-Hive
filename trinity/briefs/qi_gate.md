@@ -1,6 +1,6 @@
 # QI Gate + Caddy (qi_gate) — L2 brief
 
-_Generated 2026-09-11 02:36:20_
+_Generated 2026-09-12 02:35:04_
 
 ## Registry facts
 - Path: `C:\QIH\engine\gate`

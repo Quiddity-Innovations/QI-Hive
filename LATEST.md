@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-12 00:34:47 (nightly reconciler)_
+_Auto-generated: 2026-09-13 00:34:07 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@ _Auto-generated: 2026-09-12 00:34:47 (nightly reconciler)_
 | baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1179 | 2026-09-12 00:16:45 |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1187 | 2026-09-12 14:41:03 |
 | claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
@@ -21,13 +21,13 @@ _Auto-generated: 2026-09-12 00:34:47 (nightly reconciler)_
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
 | gamez | World Cup 2026 dashboard — tournament over; archive-or-generalise pending | complete | 8 | 2026-06-29 21:42:14 |
-| godseye | Live â€” fully provisioned | live | 27 | 2026-09-11 08:40:00 |
+| godseye | Live â€” fully provisioned | live | 28 | 2026-09-11 08:40:00 |
 | headroom | Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com | active | 0 | — |
 | lotterywiz | Public demo — documented; awaiting owner sign-off | active | 9 | 2026-08-16 20:53:09 |
 | m2v | RETIRED 2026-09-10 — deleted by owner decision | complete | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production; AWS LINE relay + channel refactor live | active | 23 | 2026-08-13 21:00:07 |
 | mailbrain | Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run) | active | 0 | — |
-| mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 187 | 2026-09-04 22:43:44 |
+| mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 188 | 2026-09-12 04:16:52 |
 | mediastudio | Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual | active | 87 | 2026-09-11 13:39:33 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | mythologies | Static site live | active | 5 | 2026-08-27 14:44:24 |
@@ -39,8 +39,8 @@ _Auto-generated: 2026-09-12 00:34:47 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 262 | 2026-09-11 00:35:01 |
-| retirementanalyzer | analysis | active | 159 | 2026-09-12 00:03:29 |
+| qi_hive | Observability hardening | active | 263 | 2026-09-12 00:35:01 |
+| retirementanalyzer | analysis | active | 173 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
