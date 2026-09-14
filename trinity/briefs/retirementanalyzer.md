@@ -1,6 +1,6 @@
 # Retirement Analyzer (retirementanalyzer) — L2 brief
 
-_Generated 2026-09-12 02:35:04_
+_Generated 2026-09-13 02:35:44_
 
 ## Registry facts
 - Path: `C:\APPS\Retirement Analyzer`
@@ -20,7 +20,7 @@ Two gaps remain open by deliberate choice, each with its own named section rathe
 
 Everything remains private and outside the git repository. Nothing committed, published or uploaded.
 - Last decisions:
-  - A single steady-state ratio cannot test a plan that has phases; add a year-by-year walk alongside it (2026-09-11)
+  - An adversarial section must be able to fail its own attacks, or it is theatre (2026-09-12)
 
 ## CLAUDE.md rules
 # RetirementAnalyzer — Claude Project Instructions

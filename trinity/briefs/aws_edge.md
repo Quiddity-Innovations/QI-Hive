@@ -1,6 +1,6 @@
 # AWS Edge (free-tier hybrid) (aws_edge) — L2 brief
 
-_Generated 2026-09-12 02:35:04_
+_Generated 2026-09-13 02:35:45_
 
 ## Registry facts
 - Path: `C:\QIH\shared\documentation\guides`

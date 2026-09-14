@@ -1,12 +1,12 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-13 00:34:07 (nightly reconciler)_
+_Auto-generated: 2026-09-14 00:34:24 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | akiyascout | Registered, no commits yet | paused | 0 | — |
 | autopdf | Hardening + MCP integration; feature-tour videos delivered 2026-08-11 | active | 60 | 2026-08-17 11:56:15 |
-| avatarstudio | WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion | active_development | 7 | 2026-09-10 01:46:29 |
+| avatarstudio | WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion | active_development | 8 | 2026-09-10 01:46:29 |
 | baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
@@ -39,8 +39,8 @@ _Auto-generated: 2026-09-13 00:34:07 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 263 | 2026-09-12 00:35:01 |
-| retirementanalyzer | analysis | active | 173 | 2026-09-12 17:57:59 |
+| qi_hive | Observability hardening | active | 264 | 2026-09-13 00:35:01 |
+| retirementanalyzer | analysis | active | 174 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
