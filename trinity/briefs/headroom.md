@@ -1,6 +1,6 @@
 # Headroom (headroom) — L2 brief
 
-_Generated 2026-09-13 02:35:45_
+_Generated 2026-09-14 02:35:54_
 
 ## Registry facts
 - Path: `C:\APPS\CLAUDE\Tools`

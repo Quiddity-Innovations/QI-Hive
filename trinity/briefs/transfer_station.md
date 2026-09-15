@@ -1,6 +1,6 @@
 # QI Transfer Station (transfer_station) — L2 brief
 
-_Generated 2026-09-13 02:35:45_
+_Generated 2026-09-14 02:35:54_
 
 ## Registry facts
 - Path: `TBD — locate console source (built 2026-08-12..19)`
