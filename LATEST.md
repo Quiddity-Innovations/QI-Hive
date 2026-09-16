@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-15 00:34:36 (nightly reconciler)_
+_Auto-generated: 2026-09-16 00:34:28 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -21,7 +21,7 @@ _Auto-generated: 2026-09-15 00:34:36 (nightly reconciler)_
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
 | gamez | World Cup 2026 dashboard — tournament over; archive-or-generalise pending | complete | 8 | 2026-06-29 21:42:14 |
-| godseye | Live â€” fully provisioned | live | 39 | 2026-09-15 00:08:08 |
+| godseye | Live â€” fully provisioned | live | 40 | 2026-09-15 00:08:08 |
 | headroom | Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com | active | 0 | — |
 | lotterywiz | Public demo — documented; awaiting owner sign-off | active | 9 | 2026-08-16 20:53:09 |
 | m2v | RETIRED 2026-09-10 — deleted by owner decision | complete | 6 | 2026-06-18 00:35:05 |
@@ -39,7 +39,7 @@ _Auto-generated: 2026-09-15 00:34:36 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 265 | 2026-09-14 00:35:02 |
+| qi_hive | Observability hardening | active | 266 | 2026-09-15 00:35:03 |
 | retirementanalyzer | analysis | active | 174 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
