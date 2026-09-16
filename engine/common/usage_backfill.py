@@ -255,6 +255,16 @@ def run(today: date | None = None, apply: bool = True) -> dict:
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
+    # 2026-09-16: the ledger was recalibrated (usage_recalibrate.py) after the
+    # audit found the v1 parser inflated every figure ~6x. This backfill still
+    # models history with the pre-recalibration unit rates and would overwrite
+    # the scaled estimated/anchored rows (same source rank), re-inflating YTD.
+    # Refuse unless the caller explicitly accepts that, and point at the fix.
+    if "--reinflate-ok" not in sys.argv:
+        print("REFUSED: usage_backfill.py would overwrite the recalibrated ledger rows "
+              "(see usage_recalibrate.py and QIHive_Feature_Audit_2026-09-16.docx). "
+              "Re-derive the unit rates from the v2 parser first; then run with --reinflate-ok.")
+        raise SystemExit(2)
     res = run()
     print("=" * 72)
     print("BACKFILL COMPLETE")

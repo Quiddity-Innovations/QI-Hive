@@ -302,21 +302,12 @@ def _win(days: int):
 
 
 def _ensure_usage_fresh():
-    """Repair a stale ledger before any usage read.
+    """Kick a background ledger snapshot (throttled to once per 5 min).
 
-    Every helper below prefers the ledger whenever it holds ANY row for the
-    requested window. That makes a stale ledger far worse than an empty one:
-    an empty window falls back to live parsing and is correct, while a
-    partially-covered window silently truncates at the ledger's last day. That
-    is exactly how YTD froze at $60,124 for the eight days after 2026-08-05 —
-    and how 30d came to read LOWER than 7d, because only the 7d window was
-    empty enough to trigger the fallback.
-
-    Keeping the ledger current is the fix. The snapshot runs on a background
-    thread (throttled to once per 5 min) so it never adds to this request's
-    latency — see `usage_snapshot_task.ensure_fresh`. The scheduled task
-    `QI_UsageSnapshot` is the primary guarantee; this is the safety net for
-    when it has not run yet.
+    Since the 2026-09-16 audit every window that ends today is answered from
+    the ledger for days < today PLUS a live parse of today's transcripts, so a
+    stale ledger can no longer hide today's spend. The snapshot still matters
+    for yesterday and earlier — see `usage_snapshot_task.ensure_fresh`.
     """
     if usage_snapshot_task is None:
         return
@@ -325,29 +316,69 @@ def _ensure_usage_fresh():
 
 
 def _warn_if_truncating(start, end):
-    """Log when the ledger cannot cover a window it is about to answer for.
-
-    `_ensure_usage_fresh` should prevent this, so reaching here means the
-    snapshot is failing. Without this line the symptom is invisible: the tile
-    just quietly reports a smaller number.
-    """
+    """Log when the ledger cannot cover the part of a window it answers for
+    (everything before today). Reaching here means the snapshot is failing."""
     if usage_ledger is None:
         return
     try:
+        from datetime import date as _d, timedelta as _td
+        need = min(end, _d.today() - _td(days=1))
         m = usage_ledger.max_day()
-        if m is not None and m < end:
+        if m is not None and m < need:
             log.warning(
-                f"usage ledger only covers through {m} but window ends {end} — "
+                f"usage ledger only covers through {m} but window needs {need} — "
                 f"figures for this window are truncated; check QI_UsageSnapshot")
     except Exception:
         pass
 
 
+_ADDITIVE_RANGE_KEYS = (
+    "tokens", "cache_reads", "cost_usd", "turns", "sessions",
+    "actual_cost_usd", "actual_tokens",
+    "local_savings_usd", "local_optimized_cost_usd", "offloaded_turns", "offloaded_tokens",
+    "batch_savings_usd", "batch_optimized_cost_usd", "batchable_turns",
+    "combined_cost_usd", "combined_savings_usd",
+)
+
+
+def _merge_range(led: dict | None, live: dict | None, start, end) -> dict:
+    """Sum a ledger window (days < today) with the live parse of today."""
+    out = {"start": start.isoformat(), "end": end.isoformat(), "days": (end - start).days + 1}
+    led = led or {}
+    live = live or {}
+    for k in _ADDITIVE_RANGE_KEYS:
+        out[k] = (led.get(k) or 0) + (live.get(k) or 0)
+    for k in ("tokens", "cache_reads", "turns", "sessions", "actual_tokens",
+              "offloaded_turns", "offloaded_tokens", "batchable_turns"):
+        out[k] = int(out[k])
+    for k in ("cost_usd", "actual_cost_usd", "local_savings_usd", "local_optimized_cost_usd",
+              "batch_savings_usd", "batch_optimized_cost_usd", "combined_cost_usd",
+              "combined_savings_usd"):
+        out[k] = round(out[k], 2)
+    actual = out["actual_cost_usd"] or out["cost_usd"]
+    def pct(p): return round((p / actual) * 100, 1) if actual > 0 else 0.0
+    out["local_savings_pct"] = pct(out["local_savings_usd"])
+    out["batch_savings_pct"] = pct(out["batch_savings_usd"])
+    out["combined_savings_pct"] = pct(out["combined_savings_usd"])
+    src = dict(led.get("cost_by_source") or {})
+    src["measured"] = round(src.get("measured", 0.0) + (live.get("cost_usd") or 0.0), 2)
+    out["cost_by_source"] = src
+    out["measured_pct"] = round(100 * src.get("measured", 0.0) / actual, 1) if actual else 0.0
+    return out
+
+
 def usage_range(start, end):
-    """Window metrics, preferring the ledger so reconstructed history is
-    included. Falls back to live transcript parsing if the ledger is empty."""
+    """Window metrics: ledger for days before today (so reconstructed history
+    counts), live transcript parse for today (so the figure is never stale).
+    Falls back to a full live parse when the ledger has nothing for the window."""
+    from datetime import date as _d, timedelta as _td
+    if end < start:
+        start, end = end, start
     _ensure_usage_fresh()
-    if usage_ledger is not None:
+    today = _d.today()
+    if usage_ledger is None or start > today:
+        return usage_stats.range_stats(start, end)
+    if end < today:
         try:
             r = usage_ledger.range_stats(start, end)
             if r.get("turns"):
@@ -355,7 +386,23 @@ def usage_range(start, end):
                 return r
         except Exception as e:
             log.warning(f"usage_ledger.range_stats failed: {e}")
-    return usage_stats.range_stats(start, end)
+        return usage_stats.range_stats(start, end)
+    led = None
+    led_end = today - _td(days=1)
+    if start <= led_end:
+        try:
+            led = usage_ledger.range_stats(start, led_end)
+            if led.get("turns"):
+                _warn_if_truncating(start, led_end)
+            else:
+                led = None
+        except Exception as e:
+            log.warning(f"usage_ledger.range_stats failed: {e}")
+            led = None
+        if led is None:
+            return usage_stats.range_stats(start, end)
+    live = usage_stats.range_stats(today, today)
+    return _merge_range(led, live, start, end)
 
 
 def usage_totals(days: int):
@@ -364,84 +411,111 @@ def usage_totals(days: int):
     return r
 
 
+def _live_today_daily_row() -> dict:
+    row = dict(usage_stats.daily(1)[0])
+    row.setdefault("source", "measured")
+    row.setdefault("confidence", "exact")
+    return row
+
+
 def usage_daily(days: int):
+    from datetime import date as _d, timedelta as _td
     _ensure_usage_fresh()
+    start, end = _win(days)
     if usage_ledger is not None:
         try:
-            rows = usage_ledger.daily_range(*_win(days))
-            if any(x["cost_usd"] for x in rows):
-                return rows
+            led_end = end - _td(days=1)
+            rows = usage_ledger.daily_range(start, led_end) if start <= led_end else []
+            if any(x["cost_usd"] for x in rows) or days == 1:
+                return rows + [_live_today_daily_row()]
         except Exception as e:
             log.warning(f"usage_ledger.daily_range failed: {e}")
     return usage_stats.daily(days)
 
 
-def usage_by_project(days: int):
+def _merge_rows(key: str, led_rows: list, live_rows: list, fields: tuple) -> list:
+    """Sum ledger dimension rows (days < today) with live rows for today."""
+    merged: dict[str, dict] = {}
+    for r in led_rows:
+        m = dict(r)
+        m["_measured_cost"] = (r.get("cost_usd", r.get("actual_usd", 0.0)) or 0.0) * (r.get("measured_pct") or 0) / 100.0
+        merged[r[key]] = m
+    for r in live_rows:
+        cost = r.get("cost_usd", r.get("actual_usd", 0.0)) or 0.0
+        if r[key] in merged:
+            m = merged[r[key]]
+            for f in fields:
+                m[f] = (m.get(f) or 0) + (r.get(f) or 0)
+            m["_measured_cost"] += cost
+            if r.get("family"):
+                m["family"] = r["family"]
+        else:
+            m = dict(r)
+            m["_measured_cost"] = cost
+            merged[r[key]] = m
+    out = []
+    for m in merged.values():
+        total = m.get("cost_usd", m.get("actual_usd", 0.0)) or 0.0
+        m["measured_pct"] = round(100 * m.pop("_measured_cost") / total, 0) if total else 0
+        for f in fields:
+            if f in m and isinstance(m[f], float):
+                m[f] = round(m[f], 2)
+        if "actual_usd" in m and "combined_usd" in m:
+            a = m["actual_usd"]
+            m["total_savings_usd"] = round(a - m["combined_usd"], 2)
+            m["total_savings_pct"] = round(((a - m["combined_usd"]) / a) * 100, 1) if a else 0.0
+        out.append(m)
+    sort_key = "actual_usd" if out and "actual_usd" in out[0] else "cost_usd"
+    out.sort(key=lambda r: r.get(sort_key, 0) or 0, reverse=True)
+    return out
+
+
+def _dims_window(days: int, ledger_fn, live_fn, key: str, fields: tuple):
+    from datetime import timedelta as _td
     _ensure_usage_fresh()
+    start, end = _win(days)
+    live = live_fn(1)
     if usage_dimensions is not None:
         try:
-            rows = usage_dimensions.by_project(*_win(days))
-            if rows:
-                return rows
+            led_end = end - _td(days=1)
+            led = ledger_fn(start, led_end) if start <= led_end else []
+            if led or days == 1:
+                return _merge_rows(key, led, live, fields)
         except Exception as e:
-            log.warning(f"usage_dimensions.by_project failed: {e}")
-    return usage_stats.by_project(days)
+            log.warning(f"{ledger_fn.__name__} failed: {e}")
+    return live_fn(days)
+
+
+_SIMPLE_FIELDS = ("tokens", "cost_usd", "turns")
+_SAVINGS_FIELDS = ("tokens", "turns", "actual_usd", "local_opt_usd", "batch_opt_usd", "combined_usd")
+
+
+def usage_by_project(days: int):
+    return _dims_window(days, usage_dimensions.by_project if usage_dimensions else None,
+                        usage_stats.by_project, "project", _SIMPLE_FIELDS)
 
 
 def usage_by_model(days: int):
-    _ensure_usage_fresh()
-    if usage_dimensions is not None:
-        try:
-            rows = usage_dimensions.by_model(*_win(days))
-            if rows:
-                return rows
-        except Exception as e:
-            log.warning(f"usage_dimensions.by_model failed: {e}")
-    return usage_stats.by_model(days)
+    return _dims_window(days, usage_dimensions.by_model if usage_dimensions else None,
+                        usage_stats.by_model, "model", _SIMPLE_FIELDS)
 
 
 def usage_savings_by_project(days: int):
-    _ensure_usage_fresh()
-    if usage_dimensions is not None:
-        try:
-            rows = usage_dimensions.savings_by_project(*_win(days))
-            if rows:
-                return rows
-        except Exception as e:
-            log.warning(f"usage_dimensions.savings_by_project failed: {e}")
-    return usage_stats.savings_by_project(days)
+    return _dims_window(days, usage_dimensions.savings_by_project if usage_dimensions else None,
+                        usage_stats.savings_by_project, "project", _SAVINGS_FIELDS)
 
 
 def usage_savings_by_model(days: int):
-    _ensure_usage_fresh()
-    if usage_dimensions is not None:
-        try:
-            rows = usage_dimensions.savings_by_model(*_win(days))
-            if rows:
-                return rows
-        except Exception as e:
-            log.warning(f"usage_dimensions.savings_by_model failed: {e}")
-    return usage_stats.savings_by_model(days)
+    return _dims_window(days, usage_dimensions.savings_by_model if usage_dimensions else None,
+                        usage_stats.savings_by_model, "model", _SAVINGS_FIELDS)
 
 
 def usage_totals_since(start):
-    """Calendar-window totals, preferring the durable ledger.
-
-    Returns the usage_stats shape plus, when the ledger answered,
-    `cost_by_source` / `measured_pct` so the UI can show how much of the
-    figure is measured versus reconstructed.
-    """
-    _ensure_usage_fresh()
-    if usage_ledger is not None:
-        try:
-            r = usage_ledger.totals_since(start)
-            if r.get("turns"):
-                from datetime import date as _d
-                _warn_if_truncating(start, _d.today())
-                return r
-        except Exception as e:
-            log.warning(f"usage_ledger.totals_since failed: {e}")
-    return usage_stats.totals_since(start)
+    """Calendar-window totals (QTD / YTD): ledger through yesterday + live today."""
+    from datetime import date as _d
+    r = usage_range(start, _d.today())
+    r["since"] = start.isoformat()
+    return r
 
 # ── Data helpers ─────────────────────────────────────────────────────────────
 
@@ -1186,26 +1260,35 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         ("effort",    "/effort",  "bi-stopwatch",     "Effort Ledger"),
         ("news",      "/news",    "bi-newspaper",     "Headlines"),
         ("activity",  "/activity","bi-activity",      "Activity"),
-        ("dispatch",  "/dispatch","bi-send-check",    "CoWork Dispatch"),
         ("brain",     "/brain",   "bi-cpu",           "QI Brain"),
         ("mission",   "/mission-control", "bi-broadcast-pin", "Mission Control"),
         ("agent_hr",  "/agents",  "bi-person-badge",  "Agent HR"),
-        ("warroom",   "/warroom", "bi-chat-dots",     "War Room"),
         ("logs",      "/logs",    "bi-journal-text",  "Logs"),
         ("config",    "/config",  "bi-sliders",       "Config"),
         ("library",   "/library", "bi-journals",      "Library"),
         ("guide",     "/guide",   "bi-book",          "Guide"),
     ]
-    nav_html = ""
-    for key, href, icon, label in nav_items:
-        active_cls = "active" if active == key else ""
-        nav_html += f"""
+    # LABS — experimental surfaces, kept out of the main flow but not removed.
+    nav_items_labs = [
+        ("warroom",   "/warroom", "bi-chat-dots",     "War Room"),
+        ("dispatch",  "/dispatch","bi-send-check",    "CoWork Dispatch"),
+    ]
+
+    def _render_nav_items(items):
+        out = ""
+        for key, href, icon, label in items:
+            active_cls = "active" if active == key else ""
+            out += f"""
         <li class="nav-item">
           <a href="{href}" class="nav-link {active_cls}">
             <i class="nav-icon bi {icon}"></i>
             <p>{label}</p>
           </a>
         </li>"""
+        return out
+
+    nav_html = _render_nav_items(nav_items)
+    nav_html_labs = _render_nav_items(nav_items_labs)
 
     now   = datetime.now().strftime("%Y-%m-%d %H:%M")
     theme = _get_theme()
@@ -1402,6 +1485,8 @@ def base_layout(title: str, content: str, active: str = "") -> str:
         <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation">
           <li class="nav-header">QI HIVE</li>
           {nav_html}
+          <li class="nav-header">LABS</li>
+          {nav_html_labs}
         </ul>
       </nav>
       <div class="sidebar-legend px-3 pb-3 pt-2 border-top border-secondary-subtle" style="font-size:.75rem;">
@@ -1771,7 +1856,17 @@ def render_dashboard() -> str:
     status  = load_status()
     agents  = load_agents()
     tasks   = load_tasks()
-    readiness = load_json(Path(r"C:\QIH\data\project_readiness.json"))
+    _readiness_path = Path(r"C:\QIH\data\project_readiness.json")
+    readiness = load_json(_readiness_path)
+    readiness_staleness_note = ""
+    try:
+        _r_mtime_iso = datetime.fromtimestamp(_readiness_path.stat().st_mtime).isoformat()
+        if (datetime.now() - datetime.fromtimestamp(_readiness_path.stat().st_mtime)).days >= 7:
+            readiness_staleness_note = (
+                f'<div class="alert alert-warning py-1 px-2 mb-2" style="font-size:.75rem">'
+                f'<i class="bi bi-exclamation-triangle me-1"></i>readiness data {_age_badge(_r_mtime_iso)}</div>')
+    except Exception:
+        pass
 
     # Status -> (color, icon). Must match the sidebar legend:
     #   dark      = Complete / production-stable
@@ -2199,6 +2294,7 @@ def render_dashboard() -> str:
         <span class="fw-medium"><i class="bi bi-folder2-open me-2 text-body-secondary"></i>Projects</span>
         <a href="/board" class="ms-auto small text-decoration-none">Open board <i class="bi bi-arrow-right"></i></a>
       </div>
+      {readiness_staleness_note}
       <div class="card-body p-0">
         <table class="table table-sm table-hover align-middle mb-0">
           <thead><tr class="text-body-secondary" style="font-size:.72rem">
@@ -2254,8 +2350,8 @@ def render_dashboard() -> str:
 
 # ── Health Page ───────────────────────────────────────────────────────────────
 
-def render_health() -> str:
-    data = run_health_check()
+def render_health(force: bool = False) -> str:
+    data = run_health_check(force=force)
     checked_at = data["checked_at"]
 
     rows = ""
@@ -2426,6 +2522,7 @@ def render_board(project_filter: str = "") -> str:
                   </span>
                   <span class="badge text-bg-dark badge-agent">{proj}</span>
                 </div>
+                {f'<div class="text-muted mt-1" style="font-size:.68rem">moved {_relative_time(t["updated_at"])}</div>' if t.get('updated_at') else ''}
               </div>
             </div>"""
 
@@ -3156,39 +3253,77 @@ except Exception:
     def _static_url_for_port(_port):
         return None
 
-KNOWN_TUNNELS = [
-    {"port": 8600, "label": "Hive Dashboard",
-     "json": r"C:\QIH\engine\hive\tunnel\status\tunnel.json"},
-    {"port": 6969, "label": "AutoPDF",
-     "json": r"C:\AUTOPDF\Application\status\tunnel.json"},
-    {"port": 8001, "label": "Maia API",
-     "log":  r"C:\APPS\QI\LOGS\tunnel_log.txt"},
-    {"port": 7860, "label": "Maia Demo (Gradio)",
-     "log":  r"C:\APPS\QI\LOGS\Maia_Gradio_Tunnel_Log.txt"},
-    {"port": 7861, "label": "Naya UI",
-     "log":  r"C:\APPS\NAYA\LOGS\QI_NayaTunnel.stderr.log"},
-    {"port": 7880, "label": "NEXUS UI",
-     "log":  r"C:\APPS\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log"},
-    {"port": 8650, "label": "CogniBase",
-     "log":  r"C:\APPS\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log"},
-    {"port": 9876, "label": "MapSnap",
-     "log":  r"C:\APPS\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log"},
-    {"port": 8777, "label": "LotteryWiz",
-     "log":  r"C:\APPS\Lottery Wiz\LOGS\tunnel.log"},
-    {"port": 7842, "label": "CypherMiner",
-     "log":  r"C:\APPS\CypherMiner\LOGS\tunnel.log"},
-    {"port": 7841, "label": "M2V",
-     "log":  r"C:\APPS\M2V\logs\tunnel.log"},
-    {"port": 8503, "label": "TubeScout",
-     "log":  r"C:\APPS\TUBESCOUT\data\logs\tunnel.log"},
-    {"port": 8710, "label": "Gamez (WC2026)",
-     "log":  r"C:\APPS\Gamez\proxy\LOGS\tunnel_log.txt"},
-]
+# Log-fallback paths for ports on tunnels still using the older log-parsing
+# discovery method (the static named URL from tunnels.json always wins when
+# available — these only matter if that lookup ever comes back empty).
+# M2V (7841) was dropped 2026-09-16: it has no entry in tunnels.json and no
+# live service backing it — an orphan from before the named-tunnel migration.
+_TUNNEL_LOG_FALLBACK = {
+    8600: r"C:\QIH\engine\hive\tunnel\status\tunnel.json",   # json, not log — handled below
+    6969: r"C:\AUTOPDF\Application\status\tunnel.json",       # json, not log
+    8001: r"C:\APPS\QI\LOGS\tunnel_log.txt",
+    7860: r"C:\APPS\QI\LOGS\Maia_Gradio_Tunnel_Log.txt",
+    7861: r"C:\APPS\NAYA\LOGS\QI_NayaTunnel.stderr.log",
+    7880: r"C:\APPS\NEXUS\LOGS\QI_NEXUSTunnel.stderr.log",
+    8650: r"C:\APPS\CogniBase\LOGS\QI_CogniBaseTunnel.stderr.log",
+    9876: r"C:\APPS\MapSnap\LOGS\QI_MapSnapTunnel.stderr.log",
+    8777: r"C:\APPS\Lottery Wiz\LOGS\tunnel.log",
+    7842: r"C:\APPS\CypherMiner\LOGS\tunnel.log",
+    8503: r"C:\APPS\TUBESCOUT\data\logs\tunnel.log",
+    8710: r"C:\APPS\Gamez\proxy\LOGS\tunnel_log.txt",
+}
+_TUNNEL_JSON_FALLBACK_PORTS = {8600, 6969}  # entries above that are json state files, not logs
+
+
+def _load_tunnel_specs() -> list[dict]:
+    """Union of every ingress port declared in tunnels.json (source of truth
+    for static named tunnels) plus any KNOWN_TUNNELS-era log-fallback ports
+    that tunnels.json doesn't (yet) cover."""
+    specs: dict[int, dict] = {}
+    try:
+        cfg = json.loads(Path(_TUN_DIR, "tunnels.json").read_text(encoding="utf-8"))
+    except Exception:
+        cfg = {}
+
+    for entry in cfg.get("tunnels", []):
+        product = entry.get("product") or entry.get("name") or "?"
+        ingress = entry.get("ingress", [])
+        url_file = entry.get("url_file")
+        for ing in ingress:
+            port = ing.get("port")
+            if port is None:
+                continue
+            hostname = ing.get("hostname", "")
+            label = product if len(ingress) == 1 else f"{product} ({hostname or port})"
+            spec = {"port": int(port), "label": label}
+            if url_file:
+                spec["json"] = url_file
+            elif port in _TUNNEL_LOG_FALLBACK:
+                if port in _TUNNEL_JSON_FALLBACK_PORTS:
+                    spec["json"] = _TUNNEL_LOG_FALLBACK[port]
+                else:
+                    spec["log"] = _TUNNEL_LOG_FALLBACK[port]
+            specs[int(port)] = spec
+
+    # Any log-fallback port not represented in tunnels.json at all (legacy
+    # safety net — nothing here today since every non-M2V port migrated).
+    for port, path in _TUNNEL_LOG_FALLBACK.items():
+        if port in specs:
+            continue
+        spec = {"port": port, "label": f"port {port}"}
+        if port in _TUNNEL_JSON_FALLBACK_PORTS:
+            spec["json"] = path
+        else:
+            spec["log"] = path
+        specs[port] = spec
+
+    return list(specs.values())
+
 
 def _get_tunnels() -> dict[int, dict]:
     """Return {port: {url, status, source, updated_at}} for every known tunnel."""
     out: dict[int, dict] = {}
-    for spec in KNOWN_TUNNELS:
+    for spec in _load_tunnel_specs():
         port = int(spec["port"])
         entry = {"url": None, "status": "unknown", "source": None,
                  "updated_at": None, "label": spec.get("label", "")}
@@ -3929,13 +4064,13 @@ def api_brain_status():
     return JSONResponse({"brain_online": brain_online(), **get_brain_status()})
 
 @app.get("/health")
-def health_page(request: Request):
+def health_page(request: Request, force: bool = False):
     """Content-negotiated: browsers get HTML, monitors/API clients get JSON.
     QI validator uses Accept: application/json or curl default → JSON probe."""
     accept = (request.headers.get("accept") or "").lower()
     wants_html = "text/html" in accept and "application/json" not in accept
     if wants_html:
-        return HTMLResponse(base_layout("Health Check", render_health(), "health"))
+        return HTMLResponse(base_layout("Health Check", render_health(force=force), "health"))
     # JSON probe
     return JSONResponse({
         "status":  "ok",
@@ -4675,7 +4810,7 @@ def api_scout_digest():
     try:
         with urllib.request.urlopen("http://127.0.0.1:8010/scout/digest", timeout=10) as resp:
             data = _json.loads(resp.read().decode())
-        # Parse the markdown to extract first 5 headlines
+        # Parse the markdown to extract the top headlines
         content = data.get("content_md", "")
         items = []
         for line in content.splitlines():
@@ -4684,14 +4819,20 @@ def api_scout_digest():
                 url_end = line.index(")", title_end)
                 title = line[5:title_end]
                 url = line[title_end + 2:url_end]
-                items.append({"title": title, "url": url})
-                if len(items) >= 5:
+                try:
+                    from urllib.parse import urlparse
+                    source = urlparse(url).netloc.replace("www.", "")
+                except Exception:
+                    source = ""
+                items.append({"title": title, "url": url, "source": source})
+                if len(items) >= 8:
                     break
         return JSONResponse({
             "ok": True,
             "date": data.get("date"),
             "item_count": data.get("item_count", 0),
             "top_5": items,
+            "top_8": items,
         })
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=503)
@@ -4772,6 +4913,22 @@ class TaskUpdate(BaseModel):
     agent:       Optional[str] = None
     priority:    Optional[str] = None
 
+def _normalize_registry_project(name: str) -> str:
+    """Match a free-text project string to a qi_registry.json id (case-insensitive
+    on id or display name); fall back to the given string lower-cased so an
+    unrecognized project is still stored consistently rather than dropped."""
+    if not name:
+        return name
+    try:
+        reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+        for p in reg.get("projects", []):
+            if name.lower() in (str(p.get("id", "")).lower(), str(p.get("name", "")).lower()):
+                return p.get("id", name.lower())
+    except Exception:
+        pass
+    return name.lower()
+
+
 @app.get("/api/tasks")
 def api_get_tasks():
     return JSONResponse({"tasks": load_tasks()})
@@ -4779,15 +4936,17 @@ def api_get_tasks():
 @app.post("/api/tasks")
 def api_create_task(task: TaskCreate):
     tasks = load_tasks()
+    now_iso = datetime.now().isoformat(timespec="seconds")
     new_task = {
         "id": "t" + uuid.uuid4().hex[:6],
         "title": task.title,
         "description": task.description,
-        "project": task.project,
+        "project": _normalize_registry_project(task.project),
         "agent": task.agent,
         "priority": task.priority,
         "column": "backlog",
         "created_at": datetime.now().strftime("%Y-%m-%d"),
+        "updated_at": now_iso,
     }
     tasks.append(new_task)
     save_tasks(tasks)
@@ -4801,9 +4960,10 @@ def api_update_task(task_id: str, update: TaskUpdate):
             if update.column      is not None: t["column"]      = update.column
             if update.title       is not None: t["title"]       = update.title
             if update.description is not None: t["description"] = update.description
-            if update.project     is not None: t["project"]     = update.project
+            if update.project     is not None: t["project"]     = _normalize_registry_project(update.project)
             if update.agent       is not None: t["agent"]       = update.agent
             if update.priority    is not None: t["priority"]    = update.priority
+            t["updated_at"] = datetime.now().isoformat(timespec="seconds")
             save_tasks(tasks)
             return JSONResponse(t)
     raise HTTPException(404, "Task not found")
@@ -4873,8 +5033,15 @@ async def _start_board_sync():
 
 # ── Tests Page ───────────────────────────────────────────────────────────────
 
-TESTS_RESULTS = Path(r"C:\Claude\Tests\results\latest.json")
-TESTS_RUNNER  = Path(r"C:\Claude\Tests\run_tests.py")
+TESTS_DIR     = Path(r"C:\QIH\engine\hive\dashboard\tests")
+TESTS_RESULTS = _PROJECT_DIR / "data" / "tests" / "latest.json"
+TESTS_RUNNER  = TESTS_DIR / "run_tests.py"  # fallback runner, only used if pytest-json-report is missing
+
+try:
+    import pytest_jsonreport  # noqa: F401
+    _HAS_JSON_REPORT_PLUGIN = True
+except ImportError:
+    _HAS_JSON_REPORT_PLUGIN = False
 
 HIVE_CONFIG        = _PROJECT_DIR / "data" / "hive_config.json"
 _EF_WORKTREE       = Path(r"C:\APPS\EasyFlow\tester_builds\beta_unpacked")
@@ -5070,6 +5237,17 @@ def render_easyflow_card() -> str:
     cfg = _load_hive_config()
     saved_ext_id = cfg.get("easyflow_extension_id", "")
 
+    # Blocked badge — sourced from qi_registry.json, not a local flag, so it
+    # reflects the ecosystem-wide call rather than drifting out of sync.
+    blocked_badge = ""
+    try:
+        reg = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+        ef_entry = next((p for p in reg.get("projects", []) if p.get("id", "").lower() == "easyflow"), {})
+        if (ef_entry.get("status") or "").lower() == "blocked":
+            blocked_badge = '<span class="badge text-bg-danger ms-2">blocked</span>'
+    except Exception:
+        pass
+
     # Build test-script copy rows
     script_rows = ""
     for script_name in ("v12_feature_test.js", "regression_test.js"):
@@ -5102,7 +5280,7 @@ def render_easyflow_card() -> str:
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title mb-0">
           <i class="bi bi-envelope-open me-2"></i>EasyFlow
-          <span class="badge text-bg-secondary ms-2">v{ef_version}</span>
+          <span class="badge text-bg-secondary ms-2">v{ef_version}</span>{blocked_badge}
         </h3>
         <span class="text-muted" style="font-size:.8rem;">
           Unpacked extension — ID changes on each Chrome reload
@@ -5188,14 +5366,40 @@ def render_easyflow_card() -> str:
 
 import subprocess as _subprocess
 
+_TESTS_SUITE_PATTERNS = {
+    "smoke": "test_smoke.py",
+    "api":   "test_api*.py",
+    "ui":    "test_ui*.py",
+    "all":   None,
+}
+
 @app.post("/api/tests/run")
 def api_run_tests(suite: str = "all"):
     """Run the pytest suite in a subprocess and return summary."""
-    if not TESTS_RUNNER.exists():
-        raise HTTPException(404, "Test runner not found at C:\\Claude\\Tests\\run_tests.py")
+    if not TESTS_DIR.exists():
+        raise HTTPException(404, f"Tests directory not found at {TESTS_DIR}")
+
+    TESTS_RESULTS.parent.mkdir(parents=True, exist_ok=True)
+
+    pattern = _TESTS_SUITE_PATTERNS.get(suite)
+    target = str(TESTS_DIR)
+    if pattern:
+        matches = list(TESTS_DIR.glob(pattern))
+        if matches:
+            target = str(TESTS_DIR) + os.sep + pattern
+
+    if _HAS_JSON_REPORT_PLUGIN:
+        cmd = [
+            sys.executable, "-m", "pytest", target, "-q",
+            "--json-report", f"--json-report-file={TESTS_RESULTS}",
+        ]
+    else:
+        if not TESTS_RUNNER.exists():
+            raise HTTPException(404, f"Test runner not found at {TESTS_RUNNER}")
+        cmd = [sys.executable, str(TESTS_RUNNER), suite]
 
     proc = _subprocess.run(
-        [sys.executable, str(TESTS_RUNNER), suite],
+        cmd,
         capture_output=True, text=True, timeout=300,
         encoding="utf-8", errors="replace"
     )
@@ -6159,9 +6363,6 @@ async def api_header_lock_set(request: Request):
 
 # ── CoWork Dispatch ───────────────────────────────────────────────────────────
 
-_DISPATCH_LOG: list[dict] = []   # in-memory ring buffer (last 100)
-_MAX_DISPATCH_LOG = 100
-
 @app.post("/api/dispatch")
 async def api_dispatch(request: Request):
     """
@@ -6220,18 +6421,7 @@ async def api_dispatch(request: Request):
         result = {"ok": False, "error": str(e), "type": msg_type, "project_id": project_id}
         log.error(f"dispatch error [{msg_type}]: {e}")
 
-    # Log to ring buffer
-    entry = {**result, "received_at": datetime.now().isoformat(), "source": source}
-    _DISPATCH_LOG.append(entry)
-    if len(_DISPATCH_LOG) > _MAX_DISPATCH_LOG:
-        _DISPATCH_LOG.pop(0)
-
     return JSONResponse(result)
-
-
-@app.get("/api/dispatch/log")
-def api_dispatch_log():
-    return JSONResponse({"ok": True, "log": list(reversed(_DISPATCH_LOG))})
 
 
 # ── /logs — cross-project tail viewer ────────────────────────────────────────
@@ -6241,7 +6431,8 @@ LOGS_ROOT = _PROJECT_DIR / "logs"
 
 # Project chip colors for the UI
 _PROJECT_COLORS: dict[str, str] = {
-    "qi_hive":  "#7c3aed",  # purple
+    "qi_hive":     "#7c3aed",  # purple
+    "qi_hive_app": "#7c3aed",  # same family — second qi_hive root
     "maia":     "#2563eb",  # blue
     "naya":     "#db2777",  # pink
     "nexus":    "#0891b2",  # cyan
@@ -6272,6 +6463,11 @@ def _resolve_log_roots() -> dict[str, Path]:
             if p.exists():
                 out[pid] = p
     out.setdefault("qi_hive", Path(r"C:\QIH\logs"))
+    # Second browsable root for qi_hive: the qi_logger app-log output
+    # (WARNING/ERROR lines), separate from the uvicorn access log root above.
+    app_log_root = Path(r"C:\QIH\logs\dashboard")
+    if app_log_root.exists():
+        out["qi_hive_app"] = app_log_root
     return out
 
 
@@ -6282,11 +6478,17 @@ def _get_log_roots() -> dict[str, Path]:
     return _LOG_ROOTS_CACHE
 
 
-_MAX_LOG_FILES = 500
+_MAX_LOG_FILES = 1500
+_MAX_LOG_FILES_PER_ROOT = 200
 
 
 def _list_log_files(project_id: str | None = None) -> list[dict]:
-    """Return [{project_id, name, rel_path, size_bytes, mtime}, ...] sorted by mtime desc."""
+    """Return [{project_id, name, rel_path, size_bytes, mtime}, ...] sorted by mtime desc.
+
+    Capped per-root (newest-first) before the global cap is applied, so a
+    high-volume root (e.g. Maia's 25k+ .txt files) can't crowd the dashboard's
+    own qi_hive entries out of the combined list.
+    """
     roots = _get_log_roots()
     if project_id:
         pid_lower = project_id.lower()
@@ -6300,15 +6502,16 @@ def _list_log_files(project_id: str | None = None) -> list[dict]:
     for pid, root in scan.items():
         if not root.exists():
             continue
+        root_files = []
         collected = 0
         for pat in ("*.log", "*.txt", "*.err", "*.out"):
-            if collected >= 300:
+            if collected >= 2000:
                 break
             for p in root.rglob(pat):
                 try:
                     st = p.stat()
                     rel = str(p.relative_to(root)).replace("\\", "/")
-                    out.append({
+                    root_files.append({
                         "project_id": pid,
                         "name": p.name,
                         "rel_path": rel,
@@ -6316,10 +6519,12 @@ def _list_log_files(project_id: str | None = None) -> list[dict]:
                         "mtime": st.st_mtime,
                     })
                     collected += 1
-                    if collected >= 300:  # per-project cap (e.g. Maia has 25k+ .txt)
+                    if collected >= 2000:  # raw walk cap before per-root sort/trim
                         break
                 except OSError:
                     pass
+        root_files.sort(key=lambda x: x["mtime"], reverse=True)
+        out.extend(root_files[:_MAX_LOG_FILES_PER_ROOT])
     out.sort(key=lambda x: x["mtime"], reverse=True)
     if len(out) > _MAX_LOG_FILES:
         logger.warning("Log file walk returned %d files; truncating to %d", len(out), _MAX_LOG_FILES)
@@ -6367,6 +6572,7 @@ def render_logs() -> str:
     project_labels = {
         "": "All projects",
         "qi_hive":  "QI Hive",
+        "qi_hive_app": "qi_hive (app log)",
         "maia":     "Maia",
         "naya":     "Naya",
         "nexus":    "NEXUS",
@@ -6555,6 +6761,8 @@ def api_tail_log_legacy(filename: str, lines: int = 200):
         full.relative_to(root.resolve())
     except ValueError:
         raise HTTPException(400, "path escapes logs root")
+    if not full.exists():
+        return JSONResponse({"error": f"log file not found: {filename}"}, status_code=404)
     return {"path": filename, "lines": lines, "content": _tail_file(full, lines)}
 
 
@@ -6827,6 +7035,32 @@ _NSSM = r"C:\QIH\engine\bin\nssm.exe"
 _CREATE_NO_WINDOW = getattr(_sp, "CREATE_NO_WINDOW", 0)
 
 
+_SERVICE_REGISTRY_MD = Path(r"C:\QIH\ecosystem\QI_Service_Registry.md")
+_service_registry_cache: dict = {"t": 0.0, "names": set()}
+
+
+def _registered_service_names() -> set[str]:
+    """Names declared with a `### QI_...` heading in the service registry, cached 5 min."""
+    import time as _time
+    now = _time.time()
+    if now - _service_registry_cache["t"] < 300 and _service_registry_cache["names"]:
+        return _service_registry_cache["names"]
+    names: set[str] = set()
+    try:
+        import re as _re
+        text = _SERVICE_REGISTRY_MD.read_text(encoding="utf-8")
+        names = set(_re.findall(r"^###\s+(QI_\S+)", text, flags=_re.MULTILINE))
+    except Exception:
+        logger.exception("failed to parse QI_Service_Registry.md")
+    _service_registry_cache["t"] = now
+    _service_registry_cache["names"] = names
+    return names
+
+
+def _is_legacy_service(name: str) -> bool:
+    return (not name.startswith("QI_")) or (name not in _registered_service_names())
+
+
 def _collect_services() -> list[dict]:
     """List QI_* + known legacy services with status + AppDirectory."""
     out = []
@@ -6903,12 +7137,15 @@ def api_scheduled_tasks():
 
 
 def render_services() -> str:
+    services = sorted(_collect_services(), key=lambda s: (_is_legacy_service(s["name"]), s["name"]))
     rows = ""
-    for s in _collect_services():
+    for s in services:
         badge_cls = {"SERVICE_RUNNING": "bg-success", "SERVICE_STOPPED": "bg-danger",
                      "SERVICE_PAUSED": "bg-warning"}.get(s["status"], "bg-secondary")
+        legacy_badge = (' <span class="badge text-bg-secondary" title="Not QI_-prefixed or not in QI_Service_Registry.md">'
+                        'legacy / unregistered</span>') if _is_legacy_service(s["name"]) else ""
         rows += f"""<tr>
-          <td><code>{s['name']}</code></td>
+          <td><code>{s['name']}</code>{legacy_badge}</td>
           <td><span class="badge {badge_cls}">{s['status']}</span></td>
           <td class="small text-muted">{s['app_dir']}</td>
           <td class="small">{s['description'][:80]}</td>
@@ -7519,7 +7756,7 @@ def render_usage() -> str:
     <p class="small text-muted mt-3">
       <i class="bi bi-info-circle me-1"></i>
       Data parsed locally from <code>~/.claude/projects/**/*.jsonl</code> — no API calls.
-      Pricing per 1M tokens: Opus $15/$75 · Sonnet $3/$15 · Haiku $0.80/$4. Cache-read at 10%, cache-write at 125%/200% (5m/1h).
+      Pricing: {usage_stats.pricing_text()}. Message-level dedup on since 2026-09-16 (one JSONL line per content block no longer counts as a turn).
       <br>
       <i class="bi bi-cpu me-1"></i>
       <strong>Local offload mapping:</strong> Haiku → 100% to gemma4 / qwen3:8b · Sonnet → 40% to gpt-oss-20b / gemma4:31b · Opus → 0% (stays on Claude).
@@ -7733,7 +7970,7 @@ def render_activity() -> str:
             <th style="width:140px">Time</th><th style="width:130px">Project</th>
             <th style="width:120px">Event</th><th>Summary</th><th style="width:160px">User / Host</th>
           </tr></thead>
-          <tbody>{hive_rows or '<tr><td colspan="5" class="text-muted text-center py-3">No hive reports yet. Hooks are deployed; entries appear as projects run sessions.</td></tr>'}</tbody>
+          <tbody id="hive-reports-tbody">{hive_rows or '<tr><td colspan="5" class="text-muted text-center py-3">No hive reports yet. Hooks are deployed; entries appear as projects run sessions.</td></tr>'}</tbody>
         </table>
       </div>
     </div>
@@ -7755,7 +7992,7 @@ def render_activity() -> str:
             <th class="text-end" style="width:80px">Cost</th>
             <th style="width:90px">Session</th>
           </tr></thead>
-          <tbody>{session_rows or '<tr><td colspan="8" class="text-muted text-center">no sessions in window</td></tr>'}</tbody>
+          <tbody id="session-log-tbody">{session_rows or '<tr><td colspan="8" class="text-muted text-center">no sessions in window</td></tr>'}</tbody>
         </table>
       </div>
     </div>
@@ -7766,6 +8003,61 @@ def render_activity() -> str:
       Hive Reports come from the <code>.claude</code> hooks I deployed to each project (session_start / session_end / task_done). They capture explicit intent and project-reported summaries.
       Session Log is derived from the raw Claude Code <code>.jsonl</code> transcripts — always available, shows every session whether or not the hook fired.
     </p>
+
+    <script>
+    (function() {{
+      const EV_COLOR = {{session_start:'info', session_end:'success', task_done:'primary', error:'danger'}};
+      function esc(s) {{ return (s || '').toString().replace(/</g, '&lt;'); }}
+      function renderHiveRow(r) {{
+        const ev = r.event || '—';
+        const color = EV_COLOR[ev] || 'secondary';
+        const ts = (r.timestamp || '').slice(0, 19).replace('T', ' ');
+        const summary = esc(r.summary).slice(0, 160);
+        return '<tr>' +
+          '<td><small class="text-muted">' + ts + '</small></td>' +
+          '<td><span class="badge text-bg-dark">' + esc(r.project || '—') + '</span></td>' +
+          '<td><span class="badge text-bg-' + color + '">' + esc(ev) + '</span></td>' +
+          '<td>' + (summary || '<em class="text-muted">no summary</em>') + '</td>' +
+          '<td><small class="text-muted">' + esc(r.user || '—') + '@' + esc(r.host || '—') + '</small></td>' +
+          '</tr>';
+      }}
+      function renderSessionRow(s) {{
+        const started = (s.started || '').slice(0, 19).replace('T', ' ');
+        const durMin = s.duration_min || 0;
+        const dur = durMin >= 1 ? Math.round(durMin) + 'm' : Math.round(durMin * 60) + 's';
+        const model = (s.primary_model || '').replace('claude-', '').replace('-20251001', '');
+        const fam = model.includes('opus') ? 'opus' : model.includes('sonnet') ? 'sonnet' : model.includes('haiku') ? 'haiku' : '?';
+        const col = {{opus:'danger', sonnet:'primary', haiku:'success'}}[fam] || 'secondary';
+        return '<tr>' +
+          '<td><small class="text-muted">' + started + '</small></td>' +
+          '<td><span class="badge text-bg-dark">' + esc(s.project) + '</span></td>' +
+          '<td><span class="badge text-bg-' + col + '">' + fam + '</span> <small><code>' + esc(model) + '</code></small></td>' +
+          '<td class="text-end">' + (s.turns || 0).toLocaleString() + '</td>' +
+          '<td class="text-end"><small>' + dur + '</small></td>' +
+          '<td class="text-end"><small>' + ((s.tokens || 0) / 1000000).toFixed(1) + 'M</small></td>' +
+          '<td class="text-end">$' + (s.cost_usd || 0).toFixed(2) + '</td>' +
+          '<td><small class="text-muted font-monospace">' + esc((s.session || '').slice(0, 8)) + '…</small></td>' +
+          '</tr>';
+      }}
+      function refreshActivity() {{
+        fetch('/api/activity/hive_reports?limit=50').then(r => r.json()).then(d => {{
+          const tb = document.getElementById('hive-reports-tbody');
+          if (!tb) return;
+          const rows = d.rows || [];
+          tb.innerHTML = rows.length ? rows.map(renderHiveRow).join('') :
+            '<tr><td colspan="5" class="text-muted text-center py-3">No hive reports yet. Hooks are deployed; entries appear as projects run sessions.</td></tr>';
+        }}).catch(() => {{}});
+        fetch('/api/activity/sessions?days=7&limit=100').then(r => r.json()).then(d => {{
+          const tb = document.getElementById('session-log-tbody');
+          if (!tb) return;
+          const rows = d.rows || [];
+          tb.innerHTML = rows.length ? rows.map(renderSessionRow).join('') :
+            '<tr><td colspan="8" class="text-muted text-center">no sessions in window</td></tr>';
+        }}).catch(() => {{}});
+      }}
+      setInterval(refreshActivity, 60000);
+    }})();
+    </script>
     """
 
 
@@ -7788,27 +8080,77 @@ _HEADLINE_STYLE = {
 _HEADLINE_KINDS = ["session", "decision", "feature", "dispatch", "compliance", "state"]
 
 
+def _parse_ts_utc(iso_str: str):
+    """Best-effort parse of an ISO-ish timestamp into an aware UTC datetime, or None.
+
+    Tz-aware strings (trailing Z or an explicit offset) are trusted as-is.
+    Naive strings are assumed LOCAL unless that reading would land more than
+    60s in the future, in which case they are assumed UTC — the compliance
+    writer stamps UTC with no suffix, everything else stamps local naive.
+    """
+    if not iso_str:
+        return None
+    s = str(iso_str).strip()
+    dt = None
+    try:
+        s2 = s[:-1] + "+00:00" if s.endswith("Z") else s
+        dt = datetime.fromisoformat(s2)
+    except Exception:
+        try:
+            dt = datetime.strptime(s[:19].replace("T", " "), "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            try:
+                dt = datetime.strptime(s[:10], "%Y-%m-%d")
+            except Exception:
+                return None
+
+    if dt.tzinfo is not None:
+        return dt.astimezone(timezone.utc)
+
+    now_local = datetime.now().astimezone()
+    local_guess = dt.astimezone()  # naive -> attaches system-local tz, no shift
+    if (local_guess - now_local).total_seconds() > 60:
+        return dt.replace(tzinfo=timezone.utc)
+    return local_guess.astimezone(timezone.utc)
+
+
 def _relative_time(iso_str: str) -> str:
     """Convert an ISO-ish timestamp into a human relative phrase."""
     if not iso_str:
         return ""
-    try:
-        s = iso_str[:19].replace("T", " ")
-        dt = datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
-    except Exception:
-        try:
-            dt = datetime.strptime(iso_str[:10], "%Y-%m-%d")
-        except Exception:
-            return iso_str
-    delta = datetime.now() - dt
-    secs = int(delta.total_seconds())
-    if secs < 60:                return f"{secs}s ago"
+    dt_utc = _parse_ts_utc(iso_str)
+    if dt_utc is None:
+        return iso_str
+    delta = datetime.now(timezone.utc) - dt_utc
+    secs = max(0, int(delta.total_seconds()))
+    if secs < 60:                return "just now" if secs < 5 else f"{secs}s ago"
     if secs < 3600:              return f"{secs // 60}m ago"
     if secs < 86400:             return f"{secs // 3600}h ago"
     if secs < 86400 * 7:         return f"{secs // 86400}d ago"
     if secs < 86400 * 30:        return f"{secs // (86400 * 7)}w ago"
     if secs < 86400 * 365:       return f"{secs // (86400 * 30)}mo ago"
-    return dt.strftime("%Y-%m-%d")
+    return dt_utc.astimezone().strftime("%Y-%m-%d")
+
+
+def _age_badge(ts_str: str) -> str:
+    """Bootstrap badge summarising how stale a timestamp is.
+
+    green (<24h) / amber text-bg-warning (<7d) / red text-bg-danger (older) /
+    grey text-bg-secondary (unparseable). Shared everywhere an "age" needs
+    a quick visual signal instead of just prose.
+    """
+    dt_utc = _parse_ts_utc(ts_str)
+    if dt_utc is None:
+        return '<span class="badge text-bg-secondary">unknown</span>'
+    secs = max(0, int((datetime.now(timezone.utc) - dt_utc).total_seconds()))
+    label = _relative_time(ts_str) or "just now"
+    if secs < 86400:
+        css = "text-bg-success"
+    elif secs < 86400 * 7:
+        css = "text-bg-warning"
+    else:
+        css = "text-bg-danger"
+    return f'<span class="badge {css}">{label}</span>'
 
 
 def _headline_row(h: dict) -> str:
@@ -7851,6 +8193,11 @@ def render_news() -> str:
     """Twitter/X-style chronological feed of everything happening across QI."""
     data = _brain_get("/api/headlines", {"limit": 200}) or {}
     headlines_list = data.get("headlines", [])
+    headlines_list = sorted(
+        headlines_list,
+        key=lambda h: _parse_ts_utc(h.get("ts", "")) or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
 
     # Compute project + kind counts for the filter chips
     proj_counts: dict[str, int] = {}
@@ -7888,7 +8235,49 @@ def render_news() -> str:
                        f'data-filter-project="{pid}">{pid} '
                        f'<span class="badge text-bg-dark ms-1">{n}</span></button>')
 
+    digest_card = """
+    <div class="card mb-3">
+      <div class="card-header py-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#ai-digest-body">
+        <h5 class="mb-0"><i class="bi bi-robot me-2"></i>AI news digest — <span id="ai-digest-count">…</span> items today
+          <i class="bi bi-chevron-down float-end small text-muted mt-1"></i></h5>
+      </div>
+      <div class="collapse" id="ai-digest-body">
+        <div class="card-body" id="ai-digest-list">
+          <div class="text-muted small">Loading digest…</div>
+        </div>
+      </div>
+    </div>
+    <script>
+    (function() {
+      fetch('/api/scout/digest').then(r => r.json()).then(d => {
+        const countEl = document.getElementById('ai-digest-count');
+        const listEl = document.getElementById('ai-digest-list');
+        if (!d.ok) {
+          countEl.textContent = '0';
+          listEl.innerHTML = '<div class="text-muted small">Digest unavailable.</div>';
+          return;
+        }
+        const items = d.top_8 || [];
+        countEl.textContent = d.item_count || items.length;
+        if (!items.length) {
+          listEl.innerHTML = '<div class="text-muted small">No items today.</div>';
+          return;
+        }
+        listEl.innerHTML = items.map(it => (
+          '<div class="py-1 border-bottom">' +
+          '<a href="' + it.url + '" target="_blank" rel="noopener" class="fw-semibold text-decoration-none">' + it.title + '</a>' +
+          (it.source ? ' <small class="text-muted">(' + it.source + ')</small>' : '') +
+          '</div>'
+        )).join('');
+      }).catch(() => {
+        document.getElementById('ai-digest-list').innerHTML = '<div class="text-muted small">Digest unavailable.</div>';
+      });
+    })();
+    </script>
+    """
+
     return f"""
+    {digest_card}
     <div class="card mb-3">
       <div class="card-header py-2">
         <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -8129,8 +8518,17 @@ def render_dispatch() -> str:
           {cards}
         </div>"""
 
+    newest_ts = max((d.get("created_at") or d.get("ts") or "" for d in human), default="")
+    last_activity_banner = f"""
+    <div class="alert alert-secondary small mb-3">
+      <i class="bi bi-flask me-1"></i><strong>Experimental</strong> — last activity
+      {html.escape(newest_ts[:16]) if newest_ts else "never"}
+      {_age_badge(newest_ts) if newest_ts else ''}
+    </div>"""
+
     return f"""
     <div class="container-fluid">
+      {last_activity_banner}
       <div class="row mb-3">
         <div class="col-12">
           <div class="card">
@@ -8605,6 +9003,8 @@ def render_mission_control() -> str:
 
     projects    = snap.get("projects", []) if isinstance(snap, dict) else []
     dispatches  = disp.get("dispatches", []) if isinstance(disp, dict) else []
+    dispatches  = [d for d in dispatches
+                   if not (d.get("source") == "hive_inspector" or d.get("type") == "compliance")]
     inbox_items = inbox.get("entries", []) if isinstance(inbox, dict) else []
 
     # ── Agents panel (Claude Code, Claude Work, CoWork, Claude Chat) ──
@@ -8624,7 +9024,10 @@ def render_mission_control() -> str:
     for aid, label, icon, color in agent_types:
         seen = last_seen_by_agent.get(aid)
         if seen:
-            last_touch  = html.escape((seen.get("last_ts") or "")[:16] or "never")
+            raw_ts      = seen.get("last_ts") or ""
+            dt_utc      = _parse_ts_utc(raw_ts)
+            last_touch  = dt_utc.astimezone().strftime("%Y-%m-%d %H:%M") if dt_utc else "never"
+            last_touch  = f'{last_touch} {_age_badge(raw_ts)}' if raw_ts else "never"
             active_proj = html.escape(seen.get("last_project") or "-")
             last_event  = html.escape(seen.get("last_event") or "-")
             last_model  = html.escape(seen.get("last_model") or "")
@@ -8650,6 +9053,35 @@ def render_mission_control() -> str:
             </div>
           </div>
         </div>"""
+
+    # ── Hive roster (hive-* sub-agents from agent_hr.db) ──
+    hive_roster_cards = ""
+    try:
+        _hr_conn = _agent_hr_conn()
+        try:
+            _hr_rows = _hr_conn.execute(
+                "SELECT a.name, a.last_active, COUNT(r.id) AS runs "
+                "FROM agents a LEFT JOIN runs r ON r.agent = a.name "
+                "WHERE a.name LIKE 'hive-%' GROUP BY a.name ORDER BY a.name"
+            ).fetchall()
+        finally:
+            _hr_conn.close()
+        for name, last_active, runs in _hr_rows:
+            age = _age_badge(last_active) if last_active else '<span class="badge text-bg-secondary">never</span>'
+            hive_roster_cards += f"""
+            <div class="col-md-6 col-xl-3 mb-3">
+              <div class="card h-100 border-start border-4 border-info">
+                <div class="card-body p-3">
+                  <h6 class="mb-1"><i class="bi bi-robot me-2 text-info"></i>{html.escape(name)}</h6>
+                  <div class="small">Last active: {age}</div>
+                  <div class="small text-muted">{runs} run{'s' if runs != 1 else ''}</div>
+                </div>
+              </div>
+            </div>"""
+    except Exception:
+        hive_roster_cards = '<div class="text-muted small">agent_hr.db unavailable.</div>'
+    if not hive_roster_cards:
+        hive_roster_cards = '<div class="text-muted small">No hive-* agents recorded yet.</div>'
 
     # ── Project heat map ──
     # Sort projects by last_active desc
@@ -8751,6 +9183,10 @@ def render_mission_control() -> str:
     <!-- Agents strip -->
     <h5 class="mt-2 mb-2"><i class="bi bi-people-fill me-2"></i>Active Agents</h5>
     <div class="row">{agent_cards}</div>
+
+    <!-- Hive roster -->
+    <h5 class="mt-2 mb-2"><i class="bi bi-diagram-3-fill me-2"></i>Hive roster</h5>
+    <div class="row">{hive_roster_cards}</div>
 
     <div class="row">
 
@@ -8880,6 +9316,14 @@ def render_warroom_chat() -> str:
     if not bubbles:
         bubbles = '<div class="text-muted text-center p-4">No messages yet. Say hello 👋</div>'
 
+    last_activity_ts = rows[-1].get("ts") if rows else None
+    last_activity_banner = f"""
+    <div class="alert alert-secondary small mb-3">
+      <i class="bi bi-flask me-1"></i><strong>Experimental</strong> — last activity
+      {html.escape((last_activity_ts or "")[:16]) if last_activity_ts else "never"}
+      {_age_badge(last_activity_ts) if last_activity_ts else ''}
+    </div>"""
+
     return f"""
     <div class="content-header">
       <h1 class="fw-bold"><i class="bi bi-chat-dots me-2 text-info"></i>War Room</h1>
@@ -8889,6 +9333,7 @@ def render_warroom_chat() -> str:
         see <a href="/mission-control">Mission Control</a> for the live status board).
       </p>
     </div>
+    {last_activity_banner}
 
     <style>
       #warroom-feed {{ max-height:62vh; overflow-y:auto; padding:1rem;
@@ -9320,6 +9765,21 @@ OPS_ACTIONS = {
         "cmd":   ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
                   "-File", r"C:\APPS\CLAUDE\Tools\claude_restart_guard.ps1", "-Scan"],
     },
+    "chroma_backfill": {
+        "label": "Brain semantic index backfill",
+        "desc":  "chroma_backfill.py — embeds any session_log / decisions / features rows missing from the Brain's "
+                 "Chroma collections (idempotent upsert). Safety net for the 2026-09-16 fix that made hive_ingest and "
+                 "the poller embed on write; schedule nightly.",
+        "icon":  "bi-diagram-3", "group": "Maintenance", "confirm": False, "timeout": 1800,
+        "cmd":   [_OPS_PY, r"C:\QIH\engine\brain\tools\chroma_backfill.py"],
+    },
+    "remove_legacy_services": {
+        "label": "Remove legacy NSSM services (ClaudeManager, NayaTunnel, NEXUSTunnel)",
+        "desc":  "One-shot cleanup from the 2026-09-16 audit: records each service's parameters to C:\\QIH\\_archive "
+                 "(rollback), stops it, then nssm remove. Fixed list — the script accepts no arguments.",
+        "icon":  "bi-trash3", "group": "Maintenance", "confirm": True, "timeout": 300,
+        "cmd":   [_OPS_PY, r"C:\QIH\engine\hive\tools\remove_legacy_services.py"],
+    },
     "maia_restart": {
         "label": "Restart Maia Services",
         "desc":  "maia_restart_services.py — bounces QI MaiaTunnel + MaiaBot via sc.exe (needs the one-time service-rights grant; no admin prompt).",
@@ -9349,11 +9809,11 @@ OPS_ACTIONS = {
     },
     "restart_brain": {
         "label": "Restart Brain API",
-        "desc":  "Bounces QI_BrainAPI (:9011) via sc.exe. Needs the one-time service-rights grant (same as Maia restart); agents lose Brain briefly.",
-        "icon":  "bi-cpu", "group": "Services", "confirm": True, "timeout": 120,
-        "cmd":   ["powershell.exe", "-NoProfile", "-Command",
-                  "sc.exe stop QI_BrainAPI; Start-Sleep 4; sc.exe start QI_BrainAPI; Start-Sleep 3; "
-                  "(Get-Service QI_BrainAPI).Status"],
+        "desc":  "Relaunches the Brain API app process under its NSSM host (:9011). sc.exe stop is refused (1051) "
+                 "because QI_Dashboard/MaiaBot/NayaBot/NEXUS depend on QI_BrainAPI; this path never asks the SCM to stop, "
+                 "so dependents are untouched. Agents lose Brain for ~10 s.",
+        "icon":  "bi-cpu", "group": "Services", "confirm": True, "timeout": 180,
+        "cmd":   [_OPS_PY, r"C:\QIH\engine\hive\tools\qi_restart_service.py", "QI_BrainAPI", "--port", "9011"],
     },
     "headroom_status": {
         "label": "Headroom Status",
@@ -9565,10 +10025,8 @@ def _ops_resolve(action_id: str) -> dict | None:
             return {
                 "label": f"Restart {svc}", "group": "Services", "confirm": True,
                 "timeout": 180, "icon": "bi-bootstrap-reboot",
-                "desc": f"sc.exe stop/start {svc}",
-                "cmd": ["powershell.exe", "-NoProfile", "-Command",
-                        f"sc.exe stop {svc}; Start-Sleep 4; sc.exe start {svc}; Start-Sleep 3; "
-                        f"(Get-Service {svc}).Status"],
+                "desc": f"Restart {svc} by relaunching its app process under NSSM (safe for services with dependents)",
+                "cmd": [_OPS_PY, r"C:\QIH\engine\hive\tools\qi_restart_service.py", svc],
             }
     return None
 
@@ -9631,6 +10089,18 @@ def _ops_save_schedules():
 
 
 _ops_load_schedules()
+
+# Seed default schedules for the read-only ops actions ONLY when the schedules
+# file is absent or empty — never overrides anything Renne configured himself.
+_OPS_DEFAULT_SCHEDULES = {
+    "supervisor":      {"mode": "daily", "at": "06:10"},
+    "snapshots":       {"mode": "daily", "at": "06:20"},
+    "self_audit":      {"mode": "daily", "at": "06:30"},
+    "headroom_status": {"mode": "daily", "at": "06:40"},
+}
+if not _ops_schedules:
+    _ops_schedules = dict(_OPS_DEFAULT_SCHEDULES)
+    _ops_save_schedules()
 
 
 def _ops_sched_describe(s: dict) -> str:
@@ -9755,9 +10225,10 @@ def render_ops() -> str:
             elif st.get("rc") is None:
                 badge = '<span class="badge text-bg-secondary">never run</span>'
             elif st.get("rc") == 0:
-                badge = f'<span class="badge text-bg-success">OK · {st.get("finished","")}</span>'
+                badge = f'OK {_age_badge(st.get("finished"))} <small class="text-muted">{st.get("finished","")}</small>'
             else:
-                badge = f'<span class="badge text-bg-danger">exit {st.get("rc")} · {st.get("finished","")}</span>'
+                badge = (f'<span class="badge text-bg-danger">exit {st.get("rc")}</span> '
+                         f'{_age_badge(st.get("finished"))} <small class="text-muted">{st.get("finished","")}</small>')
             confirm_attr = "true" if a.get("confirm") else "false"
             row += f"""
             <div class="col-md-6 col-xl-4">
@@ -9856,7 +10327,16 @@ def render_ops() -> str:
           Service Control — all QI apps</h5>
         <div class="alert alert-secondary">No QI_* services detected (service query failed or none installed).</div>"""
 
+    no_schedule_banner = ""
+    if not _ops_schedules:
+        no_schedule_banner = """
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <strong>No action is scheduled — nothing here runs unattended.</strong>
+        </div>"""
+
     return f"""
+    {no_schedule_banner}
     <div class="callout callout-info mb-3">
       <i class="bi bi-info-circle me-2"></i>Maintenance scripts run here in the background —
       buttons stay disabled while a job runs, and the badge + output update live.
@@ -10140,6 +10620,40 @@ def _voice_speech_trace(base: Path) -> dict:
     }
 
 
+_voice_restore_task_cache = {"t": 0.0, "task": None}
+
+
+def _voice_restore_task() -> str | None:
+    """Name of a QI_ClaudeVoiceRestore_* scheduled task if one exists, cached 10 min.
+
+    Used to distinguish "deliberately powered down, will come back on its own"
+    from "actually broken" when the mic loop and responder are both stopped.
+    """
+    import time as _time
+    now = _time.time()
+    if now - _voice_restore_task_cache["t"] < 600:
+        return _voice_restore_task_cache["task"]
+    task_name = None
+    try:
+        r = _sp.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-ScheduledTask | Where-Object TaskName -like 'QI_ClaudeVoiceRestore_*' "
+             "| Select-Object -First 1 TaskName,State | ConvertTo-Json"],
+            capture_output=True, text=True, timeout=15, creationflags=_CREATE_NO_WINDOW,
+        )
+        out = (r.stdout or "").strip()
+        if out:
+            data = json.loads(out)
+            if isinstance(data, list):
+                data = data[0] if data else {}
+            task_name = data.get("TaskName")
+    except Exception:
+        task_name = None
+    _voice_restore_task_cache["t"] = now
+    _voice_restore_task_cache["task"] = task_name
+    return task_name
+
+
 def voice_state() -> dict:
     """Everything the Claude Voice panel needs, read straight from Claude
     Voice's own files. No subprocess, so rendering the page costs nothing and
@@ -10220,6 +10734,7 @@ def voice_state() -> dict:
             "cities": [c.get("name") for c in brief_cfg.get("weather", [])],
             "sections": list((brief_cfg.get("news") or {}).keys()),
             "cached": _voice_age(cached_at) if cached_at else None,
+            "cached_at": cached_at,
             "ttl_min": brief_cfg.get("cache_ttl_min", 30),
         },
     }
@@ -10295,6 +10810,18 @@ def render_voice() -> str:
         f'<button class="btn btn-sm btn-primary" onclick="voiceRun(\'trigger_on\',false)">'
         f'<i class="bi bi-shield-check"></i> Arm trigger</button>'
     )
+
+    voice_restore_banner = ""
+    mic_stopped = not v["services"][0]["up"]
+    responder_stopped = not v["services"][1]["up"]
+    if mic_stopped and responder_stopped:
+        restore_task = _voice_restore_task()
+        if restore_task:
+            voice_restore_banner = f"""
+            <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+              <i class="bi bi-info-circle-fill"></i>
+              Deliberately powered down — auto-restore scheduled by <code>{html.escape(restore_task)}</code>
+            </div>"""
 
     svc_rows = ""
     for svc in v["services"]:
@@ -10377,7 +10904,8 @@ def render_voice() -> str:
                    + _voice_badge(" \u00b7 ".join(brief["sections"]) or "no sections configured")
                    + _voice_badge("written fresh by Claude" if brief["phrasing"] == "claude" else "fixed template"))
     if brief["cached"]:
-        brief_facts += _voice_badge(f'cached {brief["cached"]}')
+        cached_iso = datetime.fromtimestamp(brief["cached_at"]).isoformat() if brief.get("cached_at") else ""
+        brief_facts += f'cached {_age_badge(cached_iso)}' if cached_iso else _voice_badge(f'cached {brief["cached"]}')
 
     return f"""
     <div class="callout callout-info mb-3">
@@ -10420,6 +10948,7 @@ def render_voice() -> str:
       <div class="card-footer">{trig_btn}</div>
     </div>
 
+    {voice_restore_banner}
     <div class="card mb-3">
       <div class="card-header"><i class="bi bi-mic me-2"></i>Voice services</div>
       <div class="card-body p-0">

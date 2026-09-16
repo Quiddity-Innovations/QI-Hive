@@ -37,6 +37,49 @@ from core.db import open_brain_db
 
 log = logging.getLogger("qi.brain.poller")
 
+# Root cause of the 2026-09-16 Chroma index-lag audit: this inbox processor
+# inserted "decision" and "session" messages straight into SQLite and never
+# embedded them into ChromaDB. Reuse the Brain's own embedder/metadata shape
+# (same as api.py's log_decision/log_session) so /brain-search treats these
+# identically to API-originated rows. Runs inside the Brain API process
+# already, so no new event loop management is needed beyond asyncio.run()
+# from this background thread.
+_memory_store = None
+
+
+def _get_memory_store():
+    global _memory_store
+    if _memory_store is None:
+        from core.memory_store import MemoryStore
+        _memory_store = MemoryStore()
+    return _memory_store
+
+
+def _embed_inbox_decision(decision_id: int, title: str, rationale: str, project_id: str, impact_scope: str) -> None:
+    try:
+        import asyncio
+        store = _get_memory_store()
+        asyncio.run(store.add_decision(
+            decision_id=decision_id,
+            text=f"{title}\n{rationale}",
+            metadata={"project_id": project_id or "", "scope": impact_scope or ""},
+        ))
+    except Exception as e:
+        log.warning(f"[BRAIN EMBED ERROR] decision_id={decision_id}: {type(e).__name__}: {e}")
+
+
+def _embed_inbox_session(session_id: int, title: str, summary: str, project_id: str, model_used: str) -> None:
+    try:
+        import asyncio
+        store = _get_memory_store()
+        asyncio.run(store.add_session(
+            session_id=session_id,
+            text=f"{title}\n{summary}",
+            metadata={"project_id": project_id or "", "model": model_used or ""},
+        ))
+    except Exception as e:
+        log.warning(f"[BRAIN EMBED ERROR] session_id={session_id}: {type(e).__name__}: {e}")
+
 INBOX_DIR     = Path(r"C:\QIH\engine\brain\inbox")
 PROCESSED_DIR = INBOX_DIR / "processed"
 ERROR_DIR     = INBOX_DIR / "errors"
@@ -247,6 +290,7 @@ def _process_inbox_file(f: Path, min_age_s: float) -> tuple[bool, str]:
         msg_type   = payload.get("type", "note")
         project_id = payload.get("project_id", "unknown")
         source     = payload.get("source", "file")
+        embed_after_commit = None
 
         with open_brain_db() as conn:
             if msg_type == "state_update":
@@ -262,30 +306,38 @@ def _process_inbox_file(f: Path, min_age_s: float) -> tuple[bool, str]:
                 )
 
             elif msg_type == "decision":
-                conn.execute(
+                d_title = payload.get("title", "(untitled)")
+                d_rationale = payload.get("rationale", "")
+                d_scope = payload.get("impact_scope", "project")
+                cur = conn.execute(
                     """INSERT INTO decisions
                            (project_id, agent_id, title, rationale, impact_scope, tags)
                        VALUES (?, 'system', ?, ?, ?, ?)""",
                     (project_id,
-                     payload.get("title", "(untitled)"),
-                     payload.get("rationale", ""),
-                     payload.get("impact_scope", "project"),
+                     d_title,
+                     d_rationale,
+                     d_scope,
                      json.dumps(payload.get("tags", [])))
                 )
+                embed_after_commit = ("decision", cur.lastrowid, d_title, d_rationale, project_id, d_scope)
 
             elif msg_type == "session":
-                conn.execute(
+                s_title = payload.get("title", "Session")
+                s_summary = payload.get("summary", "")
+                s_model = payload.get("model_used")
+                cur = conn.execute(
                     """INSERT INTO session_log
                            (project_id, agent_id, session_title, summary,
                             decisions_made, features_logged, model_used)
                        VALUES (?, 'system', ?, ?, ?, ?, ?)""",
                     (project_id,
-                     payload.get("title", "Session"),
-                     payload.get("summary", ""),
+                     s_title,
+                     s_summary,
                      payload.get("decisions_made", 0),
                      payload.get("features_logged", 0),
-                     payload.get("model_used"))
+                     s_model)
                 )
+                embed_after_commit = ("session", cur.lastrowid, s_title, s_summary, project_id, s_model)
 
             elif msg_type == "scope_drop":
                 # Import here to avoid circular at module load
@@ -306,6 +358,15 @@ def _process_inbox_file(f: Path, min_age_s: float) -> tuple[bool, str]:
                 (msg_type, project_id, source, f.name, json.dumps(payload))
             )
             conn.commit()
+
+        if embed_after_commit:
+            kind = embed_after_commit[0]
+            if kind == "decision":
+                _, dec_id, d_title, d_rationale, pid, scope = embed_after_commit
+                _embed_inbox_decision(dec_id, d_title, d_rationale, pid, scope)
+            else:
+                _, sess_id, s_title, s_summary, pid, model_used = embed_after_commit
+                _embed_inbox_session(sess_id, s_title, s_summary, pid, model_used)
 
         # Archive
         PROCESSED_DIR.mkdir(parents=True, exist_ok=True)

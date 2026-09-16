@@ -302,3 +302,35 @@ that — `QI_ClaudeUpdate_6AM` writes `result: "noop"` every morning, which is w
 "nothing happened" is still provably healthy there.
 
 **Every new unattended job ships its freshness check as part of "done".**
+
+---
+
+## 10. QI_NightlyBackup — nightly SQLite backups
+
+**Added (to this registry):** 2026-09-16 · **Cadence:** daily 01:00 · **Window mode:** `hidden_user`
+
+Backs up the ecosystem's core SQLite databases via each DB's online backup API
+(not a file copy — safe against a writer mid-transaction) to a dated folder.
+
+| Item | Path |
+|---|---|
+| Task action | `"C:\Program Files\Python311\python.exe" "C:\QIH\engine\brain\tools\backup.py"` |
+| Backup target | `C:\QIH\shared\backups\db\YYYY-MM-DD\` |
+| Databases backed up | qi_brain, effort_ledger, agent_hr, maia, naya, nexus |
+| Retention | 30 days |
+| Log (per day) | `C:\QIH\LOGS\nightly_backup\backup_YYYYMMDD.log` |
+| Success marker | `backup OK` in that day's log |
+| Monitored by | QI_TaskHealth (marker check against the per-day log) |
+
+**History:** v1 pointed at the deleted `C:\UNIVERSAL` tree and exited 1 every
+night from 2026-04-22 until fixed 2026-09-16 — nightly backups were silently
+failing for almost five months. Retarget to `C:\QIH` is what "fixed" means here;
+no data was recoverable from the dead run, only future nights are covered.
+
+**Symptom → check:**
+
+| Symptom | Check |
+|---|---|
+| No folder for today under `db\` | `backup_YYYYMMDD.log` for that date — look for the failing DB name |
+| Folder exists but missing a DB's file | Same log — the online backup API call for that DB threw |
+| QI_TaskHealth alerts stale | Confirm the task actually fired: `LastTaskResult` is meaningless (conhost-wrapped) — check the log's own timestamp and `backup OK` marker instead |

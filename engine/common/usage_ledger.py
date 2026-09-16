@@ -4,28 +4,29 @@ QI Hive — persistent daily usage ledger.
 The problem this solves
 -----------------------
 `usage_stats.py` is stateless: it re-parses ~/.claude/projects/**/*.jsonl on
-every call. Claude Code deletes those transcripts on a retention timer, so
-every historical figure silently decayed. This module gives the Hive a
-durable per-day store that survives transcript deletion.
+every call. Claude Code used to delete those transcripts on a retention timer
+(cleanupPeriodDays is now 3650, so it no longer does), and every historical
+figure silently decayed. This module gives the Hive a durable per-day store.
 
 Two entry points:
 
     snapshot()   — read today's (and recent) MEASURED days out of usage_stats
-                   and upsert them into qi_brain.db. Safe to run repeatedly;
-                   intended for the nightly sync task.
+                   and upsert them into qi_brain.db. Safe to run repeatedly.
 
-    totals_since(d) / daily(n) — read back from the ledger, preferring
-                   measured rows and falling back to reconstructed ones.
+    totals_since(d) / daily(n) / range_stats(a, b) — read back from the ledger.
 
 Provenance is first-class. Every row records:
 
     source      measured  — parsed from a real transcript
                 anchored  — distributed from a known window total
-                            (the 2026-06-19 dashboard screenshot)
                 estimated — modelled from activity proxies
                 none      — no account existed; genuinely zero
-
     confidence  exact | medium | low | certain
+
+v2 (2026-09-16 audit): rows also carry the token split (input / output /
+cache-write 5m / 1h) and `pricing_version`, so a future price change can be
+re-applied by arithmetic instead of a re-parse. Rows written before v2 were
+scaled once by usage_recalibrate.py (see their `note`).
 
 `snapshot()` will NEVER overwrite a measured row with an estimate, and will
 always upgrade an estimated row to measured if real data reappears.
@@ -38,19 +39,12 @@ import sys as _sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-# This module is imported two ways: as `engine.common.usage_ledger` by the
-# dashboard, and as a bare `usage_ledger` by the CLI tools in this folder.
-# Sibling imports below (usage_stats, usage_dimensions) are written bare, so
-# make this directory importable under either entry point. Without this the
-# dashboard silently falls back to live transcript parsing and the ledger's
-# reconstructed history disappears from every tile.
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
 if _HERE not in _sys.path:
     _sys.path.insert(0, _HERE)
 
 BRAIN_DB = Path(r"C:\QIH\data\qi_brain.db")
 
-# Rank used to decide whether an incoming row may replace an existing one.
 _SOURCE_RANK = {"none": 0, "estimated": 1, "anchored": 2, "measured": 3}
 
 DDL = """
@@ -68,56 +62,71 @@ CREATE TABLE IF NOT EXISTS usage_daily (
 );
 CREATE INDEX IF NOT EXISTS idx_usage_daily_source ON usage_daily(source);
 """
+# Additive v2 columns — applied on every connect() so a fresh DB and an old
+# one converge without a separate migration step.
+_V2_COLUMNS = (
+    ("input_tokens",    "INTEGER NOT NULL DEFAULT 0"),
+    ("output_tokens",   "INTEGER NOT NULL DEFAULT 0"),
+    ("cache_write_5m",  "INTEGER NOT NULL DEFAULT 0"),
+    ("cache_write_1h",  "INTEGER NOT NULL DEFAULT 0"),
+    ("pricing_version", "TEXT"),
+)
 
 
 def connect() -> sqlite3.Connection:
     con = sqlite3.connect(BRAIN_DB, timeout=30)
     con.execute("PRAGMA journal_mode=WAL")
     con.executescript(DDL)
+    cols = {r[1] for r in con.execute("PRAGMA table_info(usage_daily)")}
+    for name, decl in _V2_COLUMNS:
+        if name not in cols:
+            con.execute(f"ALTER TABLE usage_daily ADD COLUMN {name} {decl}")
+    con.commit()
     return con
 
 
 def upsert_day(con: sqlite3.Connection, day: date, *, tokens: int, cache_reads: int,
                cost_usd: float, turns: int, sessions: int, source: str,
-               confidence: str, note: str = "", force: bool = False) -> bool:
+               confidence: str, note: str = "", force: bool = False,
+               input_tokens: int = 0, output_tokens: int = 0,
+               cache_write_5m: int = 0, cache_write_1h: int = 0,
+               pricing_version: str | None = None) -> bool:
     """Insert or update one day. Returns True if written.
 
     A row is only replaced when the incoming `source` ranks >= the stored one,
     so a reconstruction pass can never clobber real measured data.
     """
     ds = day.isoformat()
-    cur = con.execute("SELECT source FROM usage_daily WHERE day=?", (ds,))
-    row = cur.fetchone()
+    row = con.execute("SELECT source FROM usage_daily WHERE day=?", (ds,)).fetchone()
     if row and not force:
         if _SOURCE_RANK.get(source, 0) < _SOURCE_RANK.get(row[0], 0):
             return False
     con.execute(
         """INSERT INTO usage_daily
              (day, tokens, cache_reads, cost_usd, turns, sessions,
-              source, confidence, note, updated_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?)
+              source, confidence, note, updated_at,
+              input_tokens, output_tokens, cache_write_5m, cache_write_1h, pricing_version)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
            ON CONFLICT(day) DO UPDATE SET
              tokens=excluded.tokens, cache_reads=excluded.cache_reads,
              cost_usd=excluded.cost_usd, turns=excluded.turns,
              sessions=excluded.sessions, source=excluded.source,
              confidence=excluded.confidence, note=excluded.note,
-             updated_at=excluded.updated_at""",
+             updated_at=excluded.updated_at,
+             input_tokens=excluded.input_tokens, output_tokens=excluded.output_tokens,
+             cache_write_5m=excluded.cache_write_5m, cache_write_1h=excluded.cache_write_1h,
+             pricing_version=excluded.pricing_version""",
         (ds, int(tokens), int(cache_reads), float(cost_usd), int(turns),
          int(sessions), source, confidence, note,
-         datetime.now().isoformat(timespec="seconds")),
+         datetime.now().isoformat(timespec="seconds"),
+         int(input_tokens), int(output_tokens), int(cache_write_5m), int(cache_write_1h),
+         pricing_version),
     )
     return True
 
 
 def max_day() -> date | None:
-    """Newest day present in the ledger, or None when it is empty.
-
-    Read paths use this as a staleness probe: every window helper prefers the
-    ledger whenever it holds ANY row for the window, so a ledger that has
-    stopped being snapshotted silently truncates 30d/QTD/YTD at this date
-    instead of falling back to live parsing. See `ensure_fresh` in
-    usage_snapshot_task.
-    """
+    """Newest day present in the ledger, or None when it is empty."""
     con = connect()
     try:
         r = con.execute("SELECT MAX(day) FROM usage_daily").fetchone()[0]
@@ -128,13 +137,8 @@ def max_day() -> date | None:
 
 def snapshot(days: int = 45, verbose: bool = False) -> dict:
     """Persist the last `days` of MEASURED data from usage_stats into the
-    ledger. This is the call that makes history durable — once a day has been
-    snapshotted, deleting its transcript no longer loses it.
-
-    Only days with real activity are written as 'measured'; a zero day inside
-    the transcript window is left alone, because it may simply mean the
-    transcript was already deleted rather than that nothing happened.
-    """
+    ledger. Only days with real activity are written as 'measured'; a zero day
+    inside the transcript window is left alone."""
     import usage_stats
 
     con = connect()
@@ -150,7 +154,10 @@ def snapshot(days: int = 45, verbose: bool = False) -> dict:
             cost_usd=row["cost_usd"],
             turns=row["turns"], sessions=row["sessions"],
             source="measured", confidence="exact",
-            note="parsed from ~/.claude/projects transcripts",
+            note="parsed from ~/.claude/projects transcripts (v2 parser)",
+            input_tokens=row.get("input_tokens", 0), output_tokens=row.get("output_tokens", 0),
+            cache_write_5m=row.get("cache_write_5m", 0), cache_write_1h=row.get("cache_write_1h", 0),
+            pricing_version=usage_stats.PRICING_VERSION,
         )
         written += 1 if ok else 0
         if verbose:
@@ -202,15 +209,14 @@ def daily(days: int = 30) -> list[dict]:
     ]
 
 
-def daily_range(start: date, end: date) -> list[dict]:
-    """Per-day rows for an inclusive window, zero-filled so the chart has a
-    continuous x-axis even across days with no activity.
+# Fraction of spend that fell OUTSIDE the 00:00-06:00 batch window, measured
+# from real transcripts. Reconstructed days carry no hour-of-day.
+_BATCHABLE_FRACTION = 0.99
 
-    Includes the three what-if series the daily chart plots (actual / with
-    local offload / combined). Local offload is computed from that day's own
-    model-family mix, so an Opus-heavy day correctly shows ~no offloadable
-    work while a Haiku-heavy one shows nearly all of it.
-    """
+
+def daily_range(start: date, end: date) -> list[dict]:
+    """Per-day rows for an inclusive window, zero-filled, with the three
+    what-if series the daily chart plots."""
     import usage_stats
 
     con = connect()
@@ -250,21 +256,8 @@ def daily_range(start: date, end: date) -> list[dict]:
     return out
 
 
-# Fraction of spend that fell OUTSIDE the 00:00-06:00 batch window, measured
-# from real transcripts. Reconstructed days carry no hour-of-day, so the
-# measured ratio is applied to them rather than inventing a distribution.
-_BATCHABLE_FRACTION = 0.99
-
-
 def range_stats(start: date, end: date) -> dict:
-    """Ledger-backed equivalent of usage_stats.range_stats — same keys, so the
-    LLM Usage tab's range picker and drilldown work over reconstructed history
-    exactly as they do over measured days.
-
-    Local-offload savings are computed per model family from
-    usage_daily_model, so a window dominated by Opus reports ~0% offloadable
-    while a Haiku-heavy one reports ~100% -- the same rule usage_stats applies.
-    """
+    """Ledger-backed equivalent of usage_stats.range_stats — same keys."""
     if end < start:
         start, end = end, start
     import usage_stats
@@ -281,8 +274,6 @@ def range_stats(start: date, end: date) -> dict:
     local_savings = 0.0
     for fam, c in fam_rows:
         local_savings += (c or 0.0) * usage_stats.LOCAL_OFFLOAD_BY_FAMILY.get(fam, 0.0)
-    # If the dimension table is empty for this window, fall back to no offload
-    # rather than silently reporting a fabricated saving.
     batchable = actual * _BATCHABLE_FRACTION
     batch_savings = batchable * usage_stats.BATCH_DISCOUNT
     combined = (actual - local_savings)
@@ -296,8 +287,6 @@ def range_stats(start: date, end: date) -> dict:
         "days": (end - start).days + 1,
         "tokens": base["tokens"], "cache_reads": base["cache_reads"],
         "cost_usd": actual, "turns": base["turns"], "sessions": base["sessions"],
-        # Aliases so this is a drop-in for both usage_stats.totals() and
-        # usage_stats.savings(), which name the same quantities differently.
         "actual_cost_usd": actual, "actual_tokens": base["tokens"],
         "measured_pct": base["measured_pct"], "cost_by_source": base["cost_by_source"],
         "local_savings_usd": round(local_savings, 2),
@@ -327,15 +316,7 @@ def measured_span() -> tuple[date, date] | None:
 
 
 def measured_totals(start: date | None = None, end: date | None = None) -> dict:
-    """Totals over MEASURED days only — the durable calibration base.
-
-    Reconstruction calibrates unit rates ($/turn, tokens/turn) against real
-    data. Reading that base from live transcripts would make it depend on the
-    very files that get deleted; the whole point of the ledger is that it
-    doesn't. As measured history accumulates, this widens automatically and
-    a re-run of the backfill re-derives every estimate against a larger,
-    better sample.
-    """
+    """Totals over MEASURED days only — the durable calibration base."""
     con = connect()
     q = ("SELECT COALESCE(SUM(tokens),0), COALESCE(SUM(cache_reads),0), "
          "COALESCE(SUM(cost_usd),0), COALESCE(SUM(turns),0), COUNT(*) "

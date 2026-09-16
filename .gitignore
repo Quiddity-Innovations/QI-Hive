@@ -87,3 +87,7 @@ worktrees/
 
 # QI Relay digests — regenerated every sync, machine-local
 inbox/relay/
+
+# 2026-09-16 audit remediation: SQLite backup sets and archived .bak clutter stay out of git
+shared/backups/
+_archive/bak_*/

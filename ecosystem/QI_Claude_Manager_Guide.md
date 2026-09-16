@@ -20,7 +20,7 @@
 
 ---
 
-## PART 1 — THE DASHBOARD (18 TABS)
+## PART 1 — THE DASHBOARD (25 TABS)
 
 ### **1. Dashboard** (`/`)
 Home page. Shows:
@@ -29,21 +29,38 @@ Home page. Shows:
 - **Agent team status** — which agents are idle/active, current model
 - **Session summary** — what was worked on last
 
-### **2. Launcher** (`/launcher`)
+### **2. Claude Voice** (`/voice`)
+Control panel for Claude Voice's desktop processes (mic loop, responder, session
+trigger, floating buttons, tray icon). These are detached processes with no
+port, so Services/Ops can't see them — this panel talks to them directly:
+- **Headline status** — armed/disarmed, greeted-today badge
+- **Trigger** — arm/disarm the session-start watcher
+- **Service rows** — per-process up/down dot with Start/Stop buttons
+- **Desktop controls** — show/hide floating buttons, show/remove tray icon
+- Reads live state from `voice_state()`, not a polled service
+
+### **3. Launcher** (`/launcher`)
 Click-to-launch interface for all QI projects:
 - **Links to all 22 projects** by name and category
 - **Port reference** — what port each project is on
 - **Status light** — green = healthy, yellow = warning, red = down
 - Opens project UIs/APIs without leaving the dashboard
 
-### **3. The Hive** (`/hive`)
+### **4. Tunnels** (`/tunnels`)
+Live view of every Cloudflare tunnel across the ecosystem:
+- **Clickable URL** for each tunnel, with a copy-to-clipboard button
+- **Offline QR code** (segno-generated) for quick phone access
+- **Live aggregate state** from `/api/tunnels` — up/down per tunnel
+- Backed by `engine/tunnels/tunnels.json` (`static_urls.url_for_port`)
+
+### **5. The Hive** (`/hive`)
 The agent roster. Shows:
 - **7 hive agents** — Architect, Builder, Scout, Scribe, Inspector, Tester, Ops
 - **Agent status** — idle, active, or last task
 - **Current model** — which Claude model each agent is running on
 - **Role description** — what each agent does
 
-### **4. Health Check** (`/health`)
+### **6. Health Check** (`/health`)
 Live ecosystem scan. Runs every time you open it. Shows:
 - **Service status** — each QI_* service: up/down, uptime, port listening
 - **Port inventory** — which ports are open, which are in use
@@ -52,7 +69,7 @@ Live ecosystem scan. Runs every time you open it. Shows:
 - **Action Needed** — specific issues flagged with remediation steps
 - Auto-refreshes every 60 seconds
 
-### **5. Task Board** (`/board`)
+### **7. Task Board** (`/board`)
 Kanban board for all tasks. Features:
 - **4 columns** — Backlog → In Progress → Review → Done
 - **Drag cards** — move tasks between columns, auto-saves
@@ -62,7 +79,7 @@ Kanban board for all tasks. Features:
 - **Card metadata** — priority color (red/yellow/green), assigned agent, due date
 - All changes are persisted to the database
 
-### **6. Tests** (`/tests`)
+### **8. Tests** (`/tests`)
 Test runner for all projects. Types:
 - **Smoke Tests** (~15s) — quick `/health` ping on every QI_* service
 - **API Tests** (~60s) — full endpoint coverage (GET /version, GET /info, GET /health on every project)
@@ -71,7 +88,7 @@ Test runner for all projects. Types:
 - Results show: pass/fail/skip counts, per-test detail, failure messages
 - Failures **auto-create tasks** on the kanban board
 
-### **7. Project Status** (`/projects/status`)
+### **9. Project Status** (`/projects/status`)
 Detailed per-project view (22 total). Shows for each:
 - **Identity** — name, path, description
 - **Ports** — API port(s), UI port(s), other services
@@ -81,7 +98,7 @@ Detailed per-project view (22 total). Shows for each:
 - **GitHub link** — if available
 - Sort/filter by status or family tier
 
-### **8. Services** (`/services`)
+### **10. Services** (`/services`)
 Complete NSSM service inventory. Lists all QI_* services:
 - **Service name** — QI_MaiaBot, QI_NayaBot, QI_NEXUS, QI_Dashboard, QI_BrainAPI, etc.
 - **Status** — Running / Stopped / Error
@@ -92,7 +109,16 @@ Complete NSSM service inventory. Lists all QI_* services:
 - **Auto-start** — whether service starts on boot
 - All services use NSSM binary at `C:\QIH\engine\bin\nssm.exe`
 
-### **9. Scheduled Tasks** (`/tasks`)
+### **11. Ops** (`/ops`)
+Operational actions grouped by category (Monitoring, Maintenance, Services,
+Headroom):
+- **Action cards** — one per registered op, grouped by its category
+- **Run now** — fire an action on demand, output streamed back
+- **Schedule** — set interval or daily-time schedules per action
+- **Service restart shortcuts** — restart any QI_* service without leaving the tab
+- Also fronts the Voice & assistant controls surfaced from Claude Voice
+
+### **12. Scheduled Tasks** (`/tasks`)
 Windows Task Scheduler view. Shows recurring jobs:
 - **Task name** — QI_TubeScout_AM, MaiaNightlySync, etc.
 - **Schedule** — cron-like description (daily at 12:30 AM, etc.)
@@ -102,7 +128,7 @@ Windows Task Scheduler view. Shows recurring jobs:
 - Buttons: Run Now, Enable, Disable
 - **Result history** — last 3 runs with exit codes
 
-### **10. LLM Usage** (`/usage`)
+### **13. LLM Usage** (`/usage`)
 Token and API cost tracking across all projects. Shows:
 - **By project** — Maia, Naya, NEXUS, etc. — how many tokens used
 - **By model** — Claude, GPT-4, Gemini, Qwen, etc.
@@ -111,7 +137,17 @@ Token and API cost tracking across all projects. Shows:
 - **Limits** — if set, show overage warnings
 - **Export** — download CSV for accounting
 
-### **11. Headlines** (`/news`)
+### **14. Effort Ledger** (`/effort`)
+Summary view of the Effort Ledger (`qi_effort_ledger`) — elapsed vs. business
+hours, tracked with a verifiable hash chain:
+- **Elapsed hours** — total logged time, date range covered
+- **Business vs. off-hours split** — after-hours/early-morning/weekend/holiday buckets
+- **Per-project breakdown** — hours and business-hours split by project
+- **Chain integrity** — verifies the ledger's hash chain hasn't been tampered with
+- **Token/cost totals** — output tokens and USD cost summed from `events`
+- Degrades to a setup notice (never breaks the dashboard) if the ledger DB is absent
+
+### **15. Headlines** (`/news`)
 AI news digest. Powered by NEXUS Scout + Kaze. Shows:
 - **Daily digest** — AI news from multiple sources
 - **Filtered by interest** — can select topics (AGI, Vision, LLMs, NLP, etc.)
@@ -120,7 +156,7 @@ AI news digest. Powered by NEXUS Scout + Kaze. Shows:
 - **Excerpt** — preview of the article
 - Click to open full article
 
-### **12. Activity** (`/activity`)
+### **16. Activity** (`/activity`)
 Event log and audit trail. Shows:
 - **Session start/end** — who started what session, when
 - **Service restarts** — when QI_* services were restarted
@@ -131,7 +167,7 @@ Event log and audit trail. Shows:
 - Filter by service, project, or time range
 - Auto-rotates logs daily
 
-### **13. CoWork Dispatch** (`/dispatch`)
+### **17. CoWork Dispatch** (`/dispatch`)
 Integration point for Claude Code multi-agent system. Shows:
 - **CoWork status** — is the Claude Code gateway listening?
 - **Agent queue** — incoming requests from Claude Code threads
@@ -140,7 +176,7 @@ Integration point for Claude Code multi-agent system. Shows:
 - Manual test panel to send a task to an agent
 - Configuration for MCP routing
 
-### **14. QI Brain** (`/brain`)
+### **18. QI Brain** (`/brain`)
 Knowledge substrate dashboard. Shows:
 - **Session log** — all sessions logged to Brain (project, date, summary)
 - **Decision registry** — design decisions with rationale and impact scope
@@ -150,7 +186,24 @@ Knowledge substrate dashboard. Shows:
 - Link to Brain API at :9011
 - Browser for qi_brain.db schema
 
-### **15. War Room** (`/warroom`)
+### **19. Mission Control** (`/mission-control`)
+Single-pane-of-glass view of all agents, projects, and dispatches in flight,
+sourced from Brain + the Hive registry, refreshing every 30s:
+- **Agent panel** — Claude Code, Claude (Interactive), CoWork, Claude Work — last-seen per agent
+- **Ecosystem snapshot** — project list pulled from `/api/ecosystem_snapshot`
+- **Poll status** — Brain's polling loop health
+- **Inbox log** — last 5 inbox entries
+- **Dispatch feed** — last 20 dispatches in flight
+- Replaces the old status board — deep links to it now land here
+
+### **20. Agent HR** (`/agents`)
+Personnel files for the hive agent roster, backed by `agent_hr.db`:
+- **Per-agent record** — role, current model, recent task history
+- **Trinity run log** — Codex/Gemini delegation runs auto-logged here
+- Static HTML page (`static/agent_hr.html`) rendered inside the shared layout
+- Linked from War Room's "Personnel files" shortcut
+
+### **21. War Room** (`/warroom`)
 Heads-up display for critical work. Shows:
 - **Current bottlenecks** — what's blocking projects right now
 - **Multi-session features** — what's being built across multiple sessions
@@ -159,7 +212,7 @@ Heads-up display for critical work. Shows:
 - **Agent load** — who's busy, who's idle
 - **Next milestones** — upcoming dates and what they require
 
-### **16. Logs** (`/logs`)
+### **22. Logs** (`/logs`)
 Centralized log viewer. Browse all service logs:
 - **By service** — dropdown to pick QI_MaiaBot, QI_Dashboard, etc.
 - **Real-time tail** — last 1000 lines with live refresh
@@ -169,7 +222,7 @@ Centralized log viewer. Browse all service logs:
 - **Clear** — archive old logs
 - All log files are standardized to UTF-8 format
 
-### **17. Config** (`/config`)
+### **23. Config** (`/config`)
 Ecosystem configuration view (read-only in UI; edit via files):
 - **Port allocations** — all reserved blocks and current usage
 - **Service settings** — NSSM service parameters (startup args, working directory, etc.)
@@ -178,7 +231,16 @@ Ecosystem configuration view (read-only in UI; edit via files):
 - **Architecture** — summary of QI_Architecture_Principles.md
 - Edit notes: real changes made by editing source files (see "Files" section below)
 
-### **18. Guide** (`/guide`)
+### **24. Library** (`/library`)
+The Documentation Brain's browser tile — search, graph, and status views over
+the doc catalog in `qi_brain.db`:
+- **Search** — free-text search with project/type filters, sourced from `/api/library/facets` + `/api/library/search`
+- **Graph (Plex)** — the D3 knowledge-graph view of doc↔project↔decision relationships (`/api/library/graph`)
+- **Split view** — search and graph side by side
+- **Project Status shortcut** — jumps to `/projects/status`
+- **Open/Reveal/Download** — act on any indexed doc directly from a result row
+
+### **25. Guide** (`/guide`)
 This guide. Rendered as HTML from `QI_Claude_Manager_Guide.md`.
 
 ---
@@ -526,3 +588,5 @@ Both are kept current by automated and manual processes. The dashboard reads the
 
 **End of Guide**  
 Last refreshed: 2026-06-18 — added PART 12 (Documentation Brain). From `qi_registry.json` (22 projects, 14 active services)
+
+2026-09-16 — 7 tabs added (audit)

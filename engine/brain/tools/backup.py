@@ -1,173 +1,181 @@
 # -*- coding: utf-8 -*-
 """
-QI Nightly Backup — backup.py
-==============================
-Backs up all QI SQLite databases to C:\UNIVERSAL\BACKUPS\YYYY-MM-DD\
-Runs nightly at 1:00 AM via Windows Task Scheduler.
-Keeps 30 days of backups; older ones are auto-purged.
+QI Nightly Backup — backup.py  (v2, 2026-09-16)
+================================================
+Backs up every QI SQLite database that exists to
+    C:\\QIH\\shared\\backups\\db\\YYYY-MM-DD\\<name>.db
+using the SQLite online-backup API (safe while the owning service is writing),
+verifies each copy with PRAGMA integrity_check, keeps 30 days, and writes a
+per-day log C:\\QIH\\LOGS\\nightly_backup\\backup_YYYYMMDD.log whose last line
+is "backup OK" ONLY when every present target succeeded. QI_TaskHealth checks
+that marker (task_health_manifest.json), so a failing night trips an alert
+instead of a Task Scheduler "0".
 
-Targets:
-  - C:\APPS\QI\maia.db              (Maia: users, messages, config)
-  - C:\APPS\NAYA\naya.db            (Naya: conversations, preferences)
-  - C:\APPS\NAYA\filehq\db\filehq.db (FileHQ file index — large, use SQLite backup API)
-  - C:\APPS\NEXUS\nexus.db          (NEXUS: sessions, metrics, cache)
-  - C:\UNIVERSAL\qi_brain\qi_brain.db (QI Brain: decisions, features, sessions)
+History: v1 wrote to C:\\UNIVERSAL\\BACKUPS and read qi_brain.db from
+C:\\UNIVERSAL\\qi_brain — both deleted on 2026-04-22 — so the scheduled task
+QI_NightlyBackup exited 1 every night and no Brain backup existed until the
+2026-09-16 audit caught it.
+
+Runs nightly at 01:00 via Windows Task Scheduler (QI_NightlyBackup).
 
 Usage:
-  python C:\\UNIVERSAL\\qi_brain\\tools\\backup.py
-  python C:\\UNIVERSAL\\qi_brain\\tools\\backup.py --dry-run
+  python C:\\QIH\\engine\\brain\\tools\\backup.py
+  python C:\\QIH\\engine\\brain\\tools\\backup.py --dry-run
+  python C:\\QIH\\engine\\brain\\tools\\backup.py --verify   (open newest set, count rows)
 """
 from __future__ import annotations
 
-import sys
+import argparse
+import json
 import shutil
 import sqlite3
-import argparse
-import logging
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+BACKUP_ROOT = Path(r"C:\QIH\shared\backups\db")
+LOG_DIR = Path(r"C:\QIH\LOGS\nightly_backup")
+KEEP_DAYS = 30
 
-# ── Configuration ──────────────────────────────────────────────────────────────
-
-BACKUP_ROOT   = Path(r"C:\UNIVERSAL\BACKUPS")
-RETENTION_DAYS = 30
-LOG_FILE       = Path(r"C:\UNIVERSAL\BACKUPS\backup.log")
-
-# Each tuple: (source_path, label)
-# label is used in the filename: label_YYYY-MM-DD.db
 TARGETS: list[tuple[Path, str]] = [
-    (Path(r"C:\APPS\QI\maia.db"),                              "maia"),
-    (Path(r"C:\APPS\NAYA\naya.db"),                            "naya"),
-    (Path(r"C:\APPS\NAYA\filehq\db\filehq.db"),                "filehq"),
-    (Path(r"C:\APPS\NEXUS\nexus.db"),                          "nexus"),
-    (Path(r"C:\UNIVERSAL\qi_brain\qi_brain.db"),          "qi_brain"),
+    (Path(r"C:\QIH\data\qi_brain.db"),                 "qi_brain"),
+    (Path(r"C:\QIH\data\effort\effort_ledger.db"),     "effort_ledger"),
+    (Path(r"C:\QIH\engine\hive\agents\agent_hr.db"),   "agent_hr"),
+    (Path(r"C:\APPS\QI\maia.db"),                      "maia"),
+    (Path(r"C:\APPS\NAYA\naya.db"),                    "naya"),
+    (Path(r"C:\APPS\NEXUS\nexus.db"),                  "nexus"),
 ]
 
-# ── Logging ────────────────────────────────────────────────────────────────────
-
-BACKUP_ROOT.mkdir(parents=True, exist_ok=True)
-logging.basicConfig(
-    filename=str(LOG_FILE),
-    level=logging.INFO,
-    format="%(asctime)s  %(levelname)s  %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-log = logging.getLogger("qi_backup")
-_console = logging.StreamHandler(sys.stdout)
-_console.setFormatter(logging.Formatter("%(asctime)s  %(levelname)s  %(message)s", "%H:%M:%S"))
-log.addHandler(_console)
+_LOG_LINES: list[str] = []
 
 
-# ── SQLite hot backup (safe while DB is being written) ────────────────────────
-
-def sqlite_backup(src: Path, dst: Path) -> None:
-    """
-    Use sqlite3.Connection.backup() — the only safe way to copy a live SQLite
-    file. Works even with WAL mode; no data corruption risk.
-    """
-    src_conn = sqlite3.connect(str(src))
-    dst_conn = sqlite3.connect(str(dst))
-    try:
-        src_conn.backup(dst_conn, pages=200)   # 200 pages at a time; yields between chunks
-    finally:
-        dst_conn.close()
-        src_conn.close()
-
-
-# ── Backup one target ─────────────────────────────────────────────────────────
-
-def backup_one(src: Path, label: str, dest_dir: Path, dry_run: bool) -> bool:
-    dest = dest_dir / f"{label}.db"
-
-    if not src.exists():
-        log.warning(f"SKIP {label}: source not found at {src}")
-        return False
-
-    src_mb = src.stat().st_size / (1024 * 1024)
-    log.info(f"  {label}: {src} ({src_mb:.1f} MB) → {dest}")
-
-    if dry_run:
-        log.info(f"  [DRY RUN] would copy {src} → {dest}")
-        return True
-
-    try:
-        sqlite_backup(src, dest)
-        dest_mb = dest.stat().st_size / (1024 * 1024)
-        log.info(f"  {label}: OK ({dest_mb:.1f} MB written)")
-        return True
-    except Exception as e:
-        log.error(f"  {label}: FAILED — {e}")
-        # Attempt plain copy as fallback (safe if file isn't heavily written)
+def log(msg: str) -> None:
+    line = f"{datetime.now().isoformat(timespec='seconds')} {msg}"
+    _LOG_LINES.append(line)
+    if sys.stdout is not None:
         try:
-            shutil.copy2(str(src), str(dest))
-            log.warning(f"  {label}: fallback plain copy succeeded")
-            return True
-        except Exception as e2:
-            log.error(f"  {label}: fallback also failed — {e2}")
-            return False
+            print(line)
+        except Exception:
+            pass
 
 
-# ── Purge old backups ─────────────────────────────────────────────────────────
+def flush_log() -> None:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    p = LOG_DIR / f"backup_{datetime.now():%Y%m%d}.log"
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write("\n".join(_LOG_LINES) + "\n")
 
-def purge_old(dry_run: bool) -> None:
-    cutoff = datetime.now() - timedelta(days=RETENTION_DAYS)
+
+def backup_one(src: Path, dest: Path) -> dict:
+    con = sqlite3.connect(f"file:{src}?mode=ro", uri=True, timeout=60)
+    try:
+        out = sqlite3.connect(dest)
+        try:
+            con.backup(out, pages=4096)
+            integrity = out.execute("PRAGMA integrity_check").fetchone()[0]
+            n_tables = out.execute("select count(*) from sqlite_master where type='table'").fetchone()[0]
+        finally:
+            out.close()
+    finally:
+        con.close()
+    return {"src": str(src), "dest": str(dest), "bytes": dest.stat().st_size,
+            "integrity": integrity, "tables": n_tables}
+
+
+def purge_old(dry_run: bool) -> int:
+    cutoff = datetime.now() - timedelta(days=KEEP_DAYS)
     removed = 0
-    for day_dir in BACKUP_ROOT.iterdir():
-        if not day_dir.is_dir():
+    if not BACKUP_ROOT.is_dir():
+        return 0
+    for d in BACKUP_ROOT.iterdir():
+        if not d.is_dir():
             continue
         try:
-            # Directory names are YYYY-MM-DD
-            dir_date = datetime.strptime(day_dir.name, "%Y-%m-%d")
+            when = datetime.strptime(d.name[:10], "%Y-%m-%d")
         except ValueError:
-            continue   # skip non-date directories
-        if dir_date < cutoff:
-            if dry_run:
-                log.info(f"  [DRY RUN] would delete old backup: {day_dir}")
-            else:
-                shutil.rmtree(day_dir)
-                log.info(f"  Purged old backup: {day_dir}")
+            continue  # labelled/manual sets (e.g. *_pre-remediation) are never purged
+        if len(d.name) > 10:
+            continue
+        if when < cutoff:
+            log(f"purge {d}")
+            if not dry_run:
+                shutil.rmtree(d, ignore_errors=True)
             removed += 1
-    if removed == 0:
-        log.info(f"  No backups older than {RETENTION_DAYS} days to purge")
+    return removed
+
+
+def verify_latest() -> int:
+    sets = sorted(p for p in BACKUP_ROOT.iterdir() if p.is_dir()) if BACKUP_ROOT.is_dir() else []
+    if not sets:
+        print("no backup sets found"); return 1
+    latest = sets[-1]
+    rc = 0
+    for db in sorted(latest.glob("*.db")):
+        try:
+            con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+            ok = con.execute("PRAGMA integrity_check").fetchone()[0]
+            tables = [r[0] for r in con.execute("select name from sqlite_master where type='table'")]
+            counts = {t: con.execute(f'select count(*) from "{t}"').fetchone()[0] for t in tables[:4]}
+            con.close()
+            print(f"{db.name:20} integrity={ok} tables={len(tables)} {counts}")
+            if ok != "ok":
+                rc = 1
+        except Exception as e:
+            print(f"{db.name:20} FAILED {e!r}"); rc = 1
+    return rc
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--verify", action="store_true")
+    a = ap.parse_args()
+    if a.verify:
+        return verify_latest()
+
+    day_dir = BACKUP_ROOT / datetime.now().strftime("%Y-%m-%d")
+    log(f"nightly backup start -> {day_dir}{' (dry run)' if a.dry_run else ''}")
+    if not a.dry_run:
+        day_dir.mkdir(parents=True, exist_ok=True)
+    manifest, failed, done = [], 0, 0
+    for src, name in TARGETS:
+        if not src.exists():
+            log(f"skip   {name}: {src} not present")
+            continue
+        if a.dry_run:
+            log(f"would  {name}: {src} ({src.stat().st_size:,} bytes)")
+            continue
+        try:
+            m = backup_one(src, day_dir / f"{name}.db")
+            manifest.append(m)
+            done += 1
+            if m["integrity"] != "ok":
+                failed += 1
+                log(f"BAD    {name}: integrity={m['integrity']}")
+            else:
+                log(f"ok     {name}: {m['bytes']:,} bytes, {m['tables']} tables")
+        except Exception as e:
+            failed += 1
+            log(f"FAILED {name}: {e!r}")
+    removed = purge_old(a.dry_run)
+    if not a.dry_run:
+        (day_dir / "manifest.json").write_text(json.dumps(
+            {"created": datetime.now().isoformat(timespec="seconds"), "files": manifest,
+             "failed": failed, "purged_sets": removed}, indent=2), encoding="utf-8")
+    if failed == 0 and (done > 0 or a.dry_run):
+        log(f"backup OK ({done} databases, {removed} old sets purged)")
+        rc = 0
     else:
-        log.info(f"  Purged {removed} old backup(s)")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="QI Nightly Database Backup")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would happen without writing")
-    args = parser.parse_args()
-
-    ts    = datetime.now()
-    label = ts.strftime("%Y-%m-%d")
-    dest_dir = BACKUP_ROOT / label
-    dest_dir.mkdir(parents=True, exist_ok=True)
-
-    log.info(f"{'='*60}")
-    log.info(f"QI Backup started — {ts.strftime('%Y-%m-%d %H:%M:%S')}{' [DRY RUN]' if args.dry_run else ''}")
-    log.info(f"Destination: {dest_dir}")
-
-    ok_count  = 0
-    fail_count = 0
-
-    for src_path, db_label in TARGETS:
-        success = backup_one(src_path, db_label, dest_dir, args.dry_run)
-        if success:
-            ok_count += 1
-        else:
-            fail_count += 1
-
-    log.info(f"Backup complete — {ok_count} OK / {fail_count} failed")
-    log.info(f"Purging backups older than {RETENTION_DAYS} days...")
-    purge_old(args.dry_run)
-    log.info(f"{'='*60}")
-
-    sys.exit(0 if fail_count == 0 else 1)
+        log(f"backup FAILED ({failed} failures, {done} ok)")
+        rc = 1
+    flush_log()
+    return rc
 
 
 if __name__ == "__main__":
-    main()
+    if sys.stdout is not None:
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+    raise SystemExit(main())

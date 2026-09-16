@@ -154,16 +154,38 @@ def _emit(msg: str) -> None:
             pass
 
 
+MARKER_DIR = Path(r"C:\QIH\LOGS\usage_snapshot")
+
+
+def _mark_success(msg: str) -> None:
+    """Per-day success marker for QI_TaskHealth (check type 'marker').
+
+    The rolling usage_snapshot.log also receives 'snapshot FAILED' lines, so
+    its mtime proves nothing; this file only ever gets a line when a snapshot
+    completed, and its name carries the date so yesterday's success cannot
+    satisfy today's check (audit 2026-09-16, item U7).
+    """
+    try:
+        MARKER_DIR.mkdir(parents=True, exist_ok=True)
+        p = MARKER_DIR / f"usage_snapshot_{datetime.now():%Y%m%d}.log"
+        with p.open("a", encoding="utf-8") as fh:
+            fh.write(f"{datetime.now().isoformat(timespec='seconds')} {msg}\n")
+    except Exception:
+        pass
+
+
 def main() -> int:
     try:
         import usage_ledger
 
         r = run()
         ytd = usage_ledger.totals_since(date(date.today().year, 1, 1))
-        _emit(f"[usage_ledger] snapshotted {r['written']} day(s); "
-              f"dimensions {r['project_rows']}p/{r['model_rows']}m; "
-              f"YTD ${ytd['cost_usd']:,.2f} "
-              f"({ytd['measured_pct']}% measured)")
+        line = (f"[usage_ledger] snapshotted {r['written']} day(s); "
+                f"dimensions {r['project_rows']}p/{r['model_rows']}m; "
+                f"YTD ${ytd['cost_usd']:,.2f} "
+                f"({ytd['measured_pct']}% measured)")
+        _emit(line)
+        _mark_success("snapshot OK " + line)
         if r["unreconciled_projects"] or r["unreconciled_models"]:
             _emit(f"[usage_ledger] WARNING unreconciled days — "
                   f"projects={r['unreconciled_projects']} "

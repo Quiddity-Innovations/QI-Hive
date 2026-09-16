@@ -326,15 +326,29 @@ async def info():
 @app.get("/api/status")
 async def status():
     with open_brain_db() as conn:
-        n_projects  = conn.execute("SELECT COUNT(*) FROM projects WHERE active=1").fetchone()[0]
-        n_decisions = conn.execute("SELECT COUNT(*) FROM decisions WHERE superseded_by IS NULL").fetchone()[0]
-        n_features  = conn.execute("SELECT COUNT(*) FROM features").fetchone()[0]
-        n_pending   = conn.execute("SELECT COUNT(*) FROM feature_evaluations WHERE decided=0").fetchone()[0]
-        n_sessions  = conn.execute("SELECT COUNT(*) FROM session_log").fetchone()[0]
+        n_projects       = conn.execute("SELECT COUNT(*) FROM projects WHERE active=1").fetchone()[0]
+        n_decisions_all  = conn.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+        n_decisions      = conn.execute("SELECT COUNT(*) FROM decisions WHERE superseded_by IS NULL").fetchone()[0]
+        n_features       = conn.execute("SELECT COUNT(*) FROM features").fetchone()[0]
+        n_pending        = conn.execute("SELECT COUNT(*) FROM feature_evaluations WHERE decided=0").fetchone()[0]
+        n_sessions       = conn.execute("SELECT COUNT(*) FROM session_log").fetchone()[0]
     try:
         chroma = _memory().collection_counts()
     except Exception:
         chroma = {}
+
+    # Coverage read-out — how much of each SQL source is semantically
+    # searchable. Added 2026-09-16 after the audit found qi_sessions at 7%
+    # coverage (see chroma_backfill.py / hive_ingest.py, poller.py for the
+    # root cause and fix). qi_docs has no SQL row count to compare against
+    # (it indexes ecosystem doc chunks, not a table), so it reports counts
+    # only.
+    chroma_coverage = {
+        COL_SESSIONS:  {"indexed": chroma.get(COL_SESSIONS, 0),  "total": n_sessions},
+        COL_DECISIONS: {"indexed": chroma.get(COL_DECISIONS, 0), "total": n_decisions_all},
+        COL_FEATURES:  {"indexed": chroma.get(COL_FEATURES, 0),  "total": n_features},
+        COL_DOCS:      {"indexed": chroma.get(COL_DOCS, 0),      "total": chroma.get(COL_DOCS, 0)},
+    }
 
     return {
         "ok": True,
@@ -344,6 +358,7 @@ async def status():
         "pending_reviews":    n_pending,
         "sessions_logged":    n_sessions,
         "chroma_counts":      chroma,
+        "chroma_coverage":    chroma_coverage,
         "providers_active":   len(ProviderFactory.list_active()),
     }
 
@@ -1968,17 +1983,43 @@ async def compliance_recent(project_id: Optional[str] = None, limit: int = 50):
 
 @app.get("/api/compliance/status")
 async def compliance_status():
-    """Current red/yellow/green per project — based on the most recent run for each."""
+    """Current red/yellow/green per project — based on the most recent run for each.
+
+    'inspector_verdict' rows are a separate audit trail (the hive-inspector's
+    own pass/fail verdicts on dispatch reviews, always logged under qi_hive)
+    and are excluded here on two counts: they are not a project compliance
+    run, and their run_id ("inspector_verdict_<dispatch_id>") sorts lexically
+    above real UUID4 run_ids, which previously made MAX(run_id) pick a stale
+    2026-08-17 self-verdict as qi_hive's "latest run" forever. Latest run is
+    now chosen by actual recorded_at, and self-verdicts are surfaced
+    separately via self_assessment instead of masquerading as the real run.
+    """
     with open_brain_db() as conn:
         rows = conn.execute("""
             SELECT cl.project_id, cl.status, cl.severity, cl.check_id, cl.message, cl.action_taken
             FROM compliance_log cl
             INNER JOIN (
-                SELECT project_id, MAX(run_id) AS last_run
+                SELECT project_id, run_id, MAX(recorded_at) AS last_ts
                 FROM compliance_log
+                WHERE check_id != 'inspector_verdict'
                 GROUP BY project_id
-            ) latest ON cl.project_id = latest.project_id AND cl.run_id = latest.last_run
+            ) latest ON cl.project_id = latest.project_id AND cl.run_id = latest.run_id
+            WHERE cl.check_id != 'inspector_verdict'
         """).fetchall()
+        self_assess_rows = conn.execute("""
+            SELECT cl.project_id, cl.status, cl.message, cl.recorded_at
+            FROM compliance_log cl
+            INNER JOIN (
+                SELECT project_id, MAX(recorded_at) AS last_ts
+                FROM compliance_log
+                WHERE check_id = 'inspector_verdict'
+                GROUP BY project_id
+            ) latest ON cl.project_id = latest.project_id AND cl.recorded_at = latest.last_ts
+            WHERE cl.check_id = 'inspector_verdict'
+        """).fetchall()
+    self_assess = {r["project_id"]: {"verdict": r["status"], "message": r["message"],
+                                      "recorded_at": r["recorded_at"]}
+                   for r in self_assess_rows}
     by_proj: dict[str, dict] = {}
     for r in rows:
         d = dict(r)
@@ -2008,6 +2049,8 @@ async def compliance_status():
             p["overall"] = "yellow"
         else:
             p["overall"] = "green"
+        if p["project_id"] in self_assess:
+            p["self_assessment"] = self_assess[p["project_id"]]
     return {"ok": True, "projects": list(by_proj.values())}
 
 

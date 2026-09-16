@@ -3,6 +3,42 @@
 ---
 
 
+## v1.4 — 2026-09-16 (Audit Remediation Build)
+**Type:** Full infrastructure remediation — usage pipeline, backups, compliance, dashboards, hygiene
+**Version String:** 3.0.0 (unchanged; remediation build)
+### Added
+- `engine/common/usage_stats.py` v2 (message.id dedup, per-model pricing with Fable 5.1 @ 0.025x)
+- `engine/common/usage_ledger.py` v2 (token-split columns, pricing_version for audit)
+- `engine/common/usage_recalibrate.py` (historical rescale without deletion, 2.05× dedup factor)
+- `engine/brain/tools/backup.py` v2 (C:\QIH\shared\backups\db\ target with integrity checks + marker)
+- `engine/brain/tools/db_backup_now.py` (ad-hoc backup tool)
+- `engine/hive/tools/qi_restart_service.py` (NSSM restart with dependency awareness)
+- `engine/hive/dashboard/tests/test_usage_stats.py` (14 unit + smoke tests)
+- `engine/hive/tools/archive_bak_files.py` (268 *.bak-* → archive, reversible)
+- `_archive/bak_2026-09-16/` (reversible archive of old backup files)
+- `_archive/legacy_services_2026-09-16.json` (rollback record)
+### Updated
+- `engine/common/usage_backfill.py` (safety gate: --reinflate-ok required)
+- `engine/hive/dashboard/server.py` (14 tabs: Headlines, Tests, Tunnels, Ops, Health, Logs, Services, Mission Control, Claude Voice, EasyFlow, Board, War Room, Activity; 26 routes all 200)
+- `engine/hive/dashboard/health_check.py` (rebuild on qi_registry.json change; phantom projects removed)
+- `engine/hive/agents/agent_hr.py` (agent name normalisation, project re-attribution)
+- `ecosystem/QI_Service_Registry.md` (3 legacy services removed, 48 total)
+- `ecosystem/QI_Scheduled_Tasks_Registry.md` (backup task registered)
+- `data/project_readiness.json` (gaps filled, additive)
+- `shared/documentation/QI_Claude_Manager_Guide.md` (expanded to 25 tabs)
+### Fixed
+- **LLM Usage inflation:** 6.08× error corrected; YTD $106,020 → $18,380; 30d $28,528 → $4,537
+- **QI_NightlyBackup:** repointed from deleted C:\UNIVERSAL to C:\QIH\shared\backups\db\; 6 DBs backed 17:11
+- **Compliance false-positives:** nssm_registry orphan services (38) correctly attributed; claudemd_exists scoped; qi_hive → 0 failures
+- **Dashboard route health:** 26/26 GET 200 after single QI_Dashboard restart (17:31)
+- **Brain Chroma index:** sessions 186 → 2,662; daily backfill @ 03:15
+- **Service orphans:** 3 legacy services removed (ClaudeManager, NayaTunnel, NEXUSTunnel); 21 unregistered flagged for review
+### Verification
+- Single dashboard restart (17:31); all routes verified 200
+- 14 unit tests: 10 test + 4 smoke = all passing
+- Smoke tests per route; POST endpoint tests added to future roadmap
+
+---
 ## v1.3 — 2026-09-08
 **Type:** Trinity assistant layer — health check + model guide
 ### Added

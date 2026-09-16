@@ -338,12 +338,14 @@ def check_canonical_docs(pid: str, path: Path, auto_fix: bool) -> list[CheckResu
 
 
 def check_claudemd_exists(pid: str, path: Path, auto_fix: bool) -> CheckResult:
-    cm = path / 'CLAUDE.md'
-    if cm.exists():
-        return CheckResult('claudemd_exists', pid, 'pass', 'medium', False,
-                           'CLAUDE.md present at project root')
+    # A project's CLAUDE.md legitimately lives at the root or under .claude/
+    # (e.g. qi_hive keeps it at C:\QIH\.claude\CLAUDE.md) — both pass.
+    for cm in (path / 'CLAUDE.md', path / '.claude' / 'CLAUDE.md'):
+        if cm.exists():
+            return CheckResult('claudemd_exists', pid, 'pass', 'medium', False,
+                               f'CLAUDE.md present at {cm}')
     return CheckResult('claudemd_exists', pid, 'fail', 'medium', False,
-                       'CLAUDE.md missing at project root',
+                       'CLAUDE.md missing at project root or .claude\\CLAUDE.md',
                        'Manual: write project-specific CLAUDE.md (cannot auto-generate meaningfully)')
 
 
@@ -561,24 +563,52 @@ def check_tunnel_write_auth(auto_fix: bool) -> list[CheckResult]:
 
 # ── Global (ecosystem-wide) checks ──
 
-# Map service-name prefix → project_id for attributing CheckResults.
-_SERVICE_PROJECT_PREFIX = (
-    ('QI_Maia',       'maia'),
-    ('QI_Naya',       'naya'),
-    ('QI_NEXUS',      'nexus'),
-    ('QI_Brain',      'qi_brain'),
-    ('QI_Hive',       'qi_hive'),
-    ('QI_Dashboard',  'qi_hive'),
-    ('QI_Elevate',    'qi_hive'),
-    ('QI_KazeConfig', 'openclaw'),
-)
+def _norm_stem(s: str) -> str:
+    return re.sub(r'[^a-z0-9]', '', s.lower())
 
 
-def _project_for_service(name: str) -> str:
-    for prefix, pid in _SERVICE_PROJECT_PREFIX:
-        if name.startswith(prefix):
-            return pid
-    return 'qi_hive'
+def _build_service_project_map(registry: dict) -> dict[str, str]:
+    """Map known NSSM service name -> owning project_id, from each
+    project's own 'services' list in qi_registry.json (source of truth),
+    falling back to shared_infrastructure.nssm_services.registered[]."""
+    m: dict[str, str] = {}
+    for p in registry.get('projects', []) or []:
+        pid = p.get('id')
+        if not pid:
+            continue
+        for svc in p.get('services', []) or []:
+            name = svc if isinstance(svc, str) else (svc or {}).get('nssm_name') or (svc or {}).get('name')
+            if name and str(name).startswith('QI_'):
+                m[name] = pid
+    for entry in (registry.get('shared_infrastructure', {})
+                          .get('nssm_services', {})
+                          .get('registered', []) or []):
+        name, pid = entry.get('name'), entry.get('project')
+        if name and pid:
+            m.setdefault(name, pid)
+    return m
+
+
+def _project_for_service(name: str, registry: dict) -> str:
+    """Attribute an orphan QI_* service to its owning project.
+
+    Order: (a) known service->project map from the registry, (b) longest
+    matching project id/name as a prefix of the service-name stem, (c) the
+    neutral 'ecosystem' bucket — never default to qi_hive, which is just
+    the inspector's own home and not an owner of everyone else's services.
+    """
+    known = _build_service_project_map(registry)
+    if name in known:
+        return known[name]
+
+    stem = _norm_stem(name[3:] if name.startswith('QI_') else name)
+    best_pid, best_len = None, 0
+    for p in registry.get('projects', []) or []:
+        for cand in (p.get('id', ''), p.get('name', '')):
+            cand_norm = _norm_stem(str(cand))
+            if cand_norm and stem.startswith(cand_norm) and len(cand_norm) > best_len:
+                best_pid, best_len = p.get('id'), len(cand_norm)
+    return best_pid or 'ecosystem'
 
 
 def _list_qi_services_on_machine() -> Optional[list[str]]:
@@ -634,7 +664,7 @@ def check_nssm_registry_mismatch(auto_fix: bool) -> list[CheckResult]:
     missing_from_machine  = qi_registered  - on_machine_set
 
     for svc in sorted(missing_from_registry):
-        pid = _project_for_service(svc)
+        pid = _project_for_service(svc, registry)
         results.append(CheckResult(
             'nssm_registry', pid, 'fail', 'high', False,
             f"Service '{svc}' is installed but not in qi_registry.json",
@@ -642,7 +672,7 @@ def check_nssm_registry_mismatch(auto_fix: bool) -> list[CheckResult]:
         ))
 
     for svc in sorted(missing_from_machine):
-        pid = _project_for_service(svc)
+        pid = _project_for_service(svc, registry)
         results.append(CheckResult(
             'nssm_registry', pid, 'warn', 'medium', False,
             f"Service '{svc}' is in qi_registry.json but not installed on this machine",

@@ -3,6 +3,52 @@
 ---
 
 
+## 2026-09-16 — Full Feature Audit: LLM Usage Root Cause + Cross-Cutting Health
+**Focus:** Audit all 25 dashboard tabs and infrastructure; identify why LLM Usage shows 6× inflation; document remediation roadmap
+
+### Key Findings
+- **LLM Usage inflation root cause:** Two-part bug: (1) JSONL line deduplication missing in _iter_events (Claude Code writes 2–5 lines per message); (2) MODEL_PRICING table stale since 2024 (predates Fable 5.1/5, Opus 5). Correction: 30-day $28,528 → $4,690; QTD/YTD inflated throughout.
+- **Infrastructure failures:** QI_NightlyBackup targets deleted paths; qi_brain.db unprotected. Compliance page shows false-positive on claudemd_exists. Health/Ops stale data. Tunnels misses 4 active services.
+- **Audit tally:** 9 working, 14 degraded, 2 broken, 1 dead
+
+### Decisions
+| Code | Decision | Date |
+|------|----------|------|
+| AD-024 | LLM Usage remediation delegated to Claude Opus 5; phases: (1) usage pipeline dedup+pricing, (2) backup repoint+health, (3) dashboard freshness, (4) dust | 2026-09-16 |
+| AD-025 | Compliance scope separated: qi_hive verdict independent of other projects' orphan services | 2026-09-16 |
+| AD-026 | Model pricing factored by era (2024 prices, Fable 5.1 era); reconstruction anchored to verified 2026-06-19 screenshot | 2026-09-16 |
+
+### Next Steps
+1. Opus 5 session: Phase 1 (usage dedup+pricing, 10–14 h) before any ledger migration
+2. QI_NightlyBackup repoint + qi_brain.db backup health check (2–3 h)
+3. Compliance nssm_registry scope fix (3–4 h)
+
+---
+## 2026-09-16 — Audit Remediation: All 19 Items Completed & Verified
+**Focus:** Owner-delegated remediation of 19 audit findings; Fable 5.1 executed full scope; live verification on all 26 dashboard routes
+
+### Owner Directive
+"Execute full remediation; all 19 items. Fable 5.1 session end-to-end; verify each component live."
+
+### Execution Summary
+- **Phase 1 (usage pipeline):** message.id dedup + per-model pricing table with Fable 5.1 @ 0.025x; per-file cache + registry-driven attribution; historical rescale 2026-06-26→today (2.05× dedup, YTD $106k→$18.4k, 30d $28.5k→$4.5k); ledger v2 token-split; server.py live merge
+- **Phase 2 (backup + health):** backup.py v2 targets C:\QIH\shared\backups\db\; 6 DBs 17:11 with markers; db_backup_now.py; nssm_registry fixed (38 orphan → real owners); claudemd_exists checks .claude/CLAUDE.md; qi_hive → 0 failures
+- **Phase 3 (dashboard + Brain):** 14 tabs refreshed (Headlines/Tests/Tunnels/Ops/Health/Logs/Services/Mission Control/Claude Voice/EasyFlow/Board/War Room/Activity); Chroma 186→2,662 sessions; daily 03:15 backfill; qi_restart_service.py dep-safe NSSM
+- **Phase 4 (hygiene):** phantom projects removed; 268 *.bak-* → archive (reversible); 3 legacy services removed; project_readiness gaps filled; Brain drift check PASS
+- **Verification:** Single QI_Dashboard restart 17:31; all 26 routes GET 200; no tracebacks; 14 unit tests passing
+
+### Decisions
+| Code | Decision | Date |
+|------|----------|------|
+| AD-027 | Remediation complete; overnight proof TBD (owner verifies 01:00 backup + 03:15 chroma + 06:10 ops schedules) | 2026-09-16 |
+| AD-028 | 21 legacy/unregistered services flagged for owner review (retire or register decision) | 2026-09-16 |
+
+### Next Steps
+1. Owner verification tomorrow: backup 01:00 rc=0, usage snapshot markers, ops schedules 06:10–06:40, chroma 03:15
+2. Review & decide on 21 legacy/unregistered services
+3. (Optional) cross-usage audit: usage_stats vs API logs to confirm dedup accuracy
+
+---
 ## 2026-09-08 — Trinity check (owner directives + results)
 **Focus:** Prove the Trinity setup works, that both assistants obey, and that it is dependable
 

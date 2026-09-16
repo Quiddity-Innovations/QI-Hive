@@ -8,6 +8,7 @@ and files them into:
 Runs in a simple loop; installable as NSSM service QI_HiveIngest.
 """
 from __future__ import annotations
+import asyncio
 import json
 import sqlite3
 import shutil
@@ -15,6 +16,35 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+
+# Root cause of the 2026-09-16 Chroma index-lag audit: this module writes
+# session_log rows directly with sqlite3 and never touched ChromaDB, so
+# rows landing here (the dominant source of session_log volume) were never
+# semantically searchable. Reuse the Brain's own embedder/metadata shape so
+# /brain-search treats these identically to API-originated rows.
+sys.path.insert(0, r"C:\QIH\engine\brain")
+_memory_store = None
+
+
+def _get_memory_store():
+    global _memory_store
+    if _memory_store is None:
+        from core.memory_store import MemoryStore
+        _memory_store = MemoryStore()
+    return _memory_store
+
+
+def _embed_session(session_id: int, title: str, summary: str, project: str, model_used: str) -> None:
+    """Best-effort embed; never let a Chroma/Ollama hiccup block ingest."""
+    try:
+        store = _get_memory_store()
+        asyncio.run(store.add_session(
+            session_id=session_id,
+            text=f"{title}\n{summary}",
+            metadata={"project_id": project or "", "model": model_used or ""},
+        ))
+    except Exception as e:
+        log(f"[BRAIN EMBED ERROR] session_id={session_id}: {type(e).__name__}: {e}")
 
 ROOT     = Path(r"C:\QIH")
 INBOX    = ROOT / "shared" / "reports" / "inbox"
@@ -156,6 +186,7 @@ def write_to_brain(payload: dict) -> bool:
             conn.commit()
             sid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             log(f"[BRAIN] inserted session_log id={sid} project={project} agent={agent_id}")
+            _embed_session(sid, title, summary or "(no summary captured)", project, model_used)
             return True
         finally:
             conn.close()

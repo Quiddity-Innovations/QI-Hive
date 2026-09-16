@@ -245,18 +245,54 @@ _PROJECTS_FALLBACK = {
     },
 }
 
-try:
-    PROJECTS = _build_projects_from_registry()
-except Exception as _reg_err:
-    import warnings as _warnings
-    _warnings.warn(
-        f"[health_check] Failed to load registry ({_reg_err}); using fallback PROJECTS dict.",
-        RuntimeWarning,
-        stacklevel=1,
-    )
-    PROJECTS = _PROJECTS_FALLBACK
+def _load_projects() -> dict:
+    try:
+        return _build_projects_from_registry()
+    except Exception as _reg_err:
+        import warnings as _warnings
+        _warnings.warn(
+            f"[health_check] Failed to load registry ({_reg_err}); using fallback PROJECTS dict.",
+            RuntimeWarning,
+            stacklevel=1,
+        )
+        return _PROJECTS_FALLBACK
 
-STATUS_FILE = Path(r"C:\Claude\status.json")
+
+# Module-level name kept for backward compatibility — anything importing
+# `health_check.PROJECTS` directly still works. Internal callers (below) go
+# through `_get_projects()` instead, which rebuilds this on registry change,
+# so PROJECTS is only ever fresh as of the last call to _get_projects().
+PROJECTS = _load_projects()
+
+# mtime of qi_registry.json as of the last successful PROJECTS build. None
+# forces a rebuild attempt (e.g. registry unreadable at import time).
+_registry_mtime = _REGISTRY_PATH.stat().st_mtime if _REGISTRY_PATH.exists() else None
+
+
+def _get_projects() -> dict:
+    """Return the current PROJECTS dict, rebuilding it if qi_registry.json has
+    changed since the last build.
+
+    PROJECTS used to be computed once at import time (~module load), so
+    editing the registry (retiring a project, fixing a path) had no effect
+    until QI_Dashboard's process restarted. The 330s HEALTH_CACHE_TTL refresh
+    now calls this on every recompute, so a registry edit is visible within
+    one refresh cycle instead of requiring a service restart. (2026-09-16 audit.)
+    """
+    global PROJECTS, _registry_mtime
+    try:
+        current_mtime = _REGISTRY_PATH.stat().st_mtime if _REGISTRY_PATH.exists() else None
+    except OSError:
+        current_mtime = None
+
+    if current_mtime is not None and current_mtime != _registry_mtime:
+        PROJECTS = _load_projects()
+        _registry_mtime = current_mtime
+
+    return PROJECTS
+
+
+STATUS_FILE = Path(r"C:\QIH\data\status.json")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -386,7 +422,7 @@ def _compute_health_check():
     results = {}
     checked_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    for name, cfg in PROJECTS.items():
+    for name, cfg in _get_projects().items():
         path = cfg["path"]
         exists = Path(path).exists()
 
@@ -731,9 +767,10 @@ if __name__ == "__main__":
             with open(STATUS_FILE, encoding="utf-8") as f:
                 status = json.load(f)
         else:
+            STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
             status = {}
         status["last_health_check"] = data
-        status["_meta"]["last_updated"] = datetime.now().isoformat()
+        status.setdefault("_meta", {})["last_updated"] = datetime.now().isoformat()
         with open(STATUS_FILE, "w", encoding="utf-8") as f:
             json.dump(status, f, indent=2)
         print(f"Saved to {STATUS_FILE}")

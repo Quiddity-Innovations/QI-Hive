@@ -32,16 +32,45 @@ TRANSCRIPTS_GLOB = r"C:\Users\renne\.claude\projects\*\*.jsonl"
 MAX_FILE_BYTES = 50 * 1024 * 1024
 TAIL_BYTES     = 2 * 1024 * 1024   # how far back --ingest-hook looks in a live transcript
 
+COMMON_DIR = r"C:\QIH\engine\common"
+if COMMON_DIR not in sys.path:
+    sys.path.insert(0, COMMON_DIR)
+from usage_stats import _project_from_cwd  # noqa: E402  (single source for cwd->project id)
+
+# Bare identifiers Claude Code uses for its own Task types. Recorded as
+# "builtin:<type>" (2026-09-16 fix) so they can never collide with a real
+# hive-* role and are visibly distinct from auto-discovered agents on the
+# roster.
+BUILTIN_TYPES = {"general-purpose", "Explore", "Plan", "claude"}
+
 BUILTIN_AGENTS = [
-    ("general-purpose", "builtin", "inherit",
+    ("builtin:general-purpose", "builtin", "inherit",
      "Built-in Claude Code agent for open-ended search and multi-step tasks."),
-    ("Explore", "builtin", "inherit",
+    ("builtin:Explore", "builtin", "inherit",
      "Built-in fast, read-only codebase exploration agent."),
-    ("Plan", "builtin", "inherit",
+    ("builtin:Plan", "builtin", "inherit",
      "Built-in planning agent used to design an approach before implementation."),
-    ("claude", "builtin", "inherit",
+    ("builtin:claude", "builtin", "inherit",
      "Default Claude agent identity when no specialized subagent_type is set."),
 ]
+
+
+def normalize_agent_name(raw):
+    """hive-<role> keeps its hyphenated roster form; known Claude Code
+    built-ins become 'builtin:<type>'; anything else passes through;
+    empty/missing -> 'unknown_subagent' (2026-09-16 audit fix)."""
+    if not raw:
+        return "unknown_subagent"
+    raw = str(raw).strip()
+    if not raw:
+        return "unknown_subagent"
+    low = raw.lower()
+    if low.startswith("hive-") or low.startswith("hive_"):
+        role = low.replace("hive-", "").replace("hive_", "")
+        return f"hive-{role}" if role else "unknown_subagent"
+    if raw in BUILTIN_TYPES:
+        return f"builtin:{raw}"
+    return raw
 
 # Tool names that represent a sub-agent dispatch across observed Claude Code
 # harness versions ("Task" is the documented name; this environment's
@@ -385,7 +414,7 @@ def cmd_ingest_hook(conn):
             run = {
                 "agent":       agent_raw or "unknown_subagent",
                 "project":     cwd,
-                "task_desc":   None,
+                "task_desc":   payload.get("description") or None,
                 "started_at":  now_iso,
                 "duration_ms": None,
                 "tokens":      None,
@@ -395,6 +424,17 @@ def cmd_ingest_hook(conn):
                 "model":       payload.get("model"),
                 "resolved_at": now_iso,
             }
+
+        # 2026-09-16 fix: the real SubagentStop payload rarely carries a
+        # subagent_type, so most rows landed as agent='unknown_subagent' with
+        # the raw cwd as project. Normalize agent (hive-*/builtin:<type>
+        # stay meaningful) and resolve project through the same
+        # longest-registry-path logic every other QI usage stat uses, so
+        # "unknown_subagent" is reserved for runs that are genuinely
+        # unattributable, not ones where the resolver was never tried.
+        run["agent"] = normalize_agent_name(run.get("agent"))
+        folder_name = Path(transcript).parent.name if transcript else ""
+        run["project"] = _project_from_cwd(run.get("project") or cwd, folder_name)
 
         record_run(conn, run, source="ingest-hook")
         conn.commit()
