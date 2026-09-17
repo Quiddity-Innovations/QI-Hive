@@ -2,6 +2,31 @@
 
 ---
 
+## 2026-09-16 (evening) - Remediation Verification and Loop Closure
+**Focus:** Prove the same-day remediation held, fix what the proofs exposed, and cross-check the corrected usage figures against an independent tool
+
+### Key Findings
+- **All overnight proofs pass** for today's run: backup OK with six databases and integrity ok, task health DEAD 0 / STALE 0, snapshot markers every ~30 min. The scheduled 03:15 and 06:10-06:40 jobs fire on their own for the first time tomorrow; all five were run manually today and every one returned rc 0.
+- **The supervisor had been failing silently for 38 days.** A project with a placeholder registry path (`transfer_station`) produced a row with no `severity`, and `render_dashboard()` raised `KeyError`. Because `report.json` is written before `DASHBOARD.md`, the report looked healthy while the dashboard file froze at 2026-08-09. This is the "unattended jobs lie" pattern one layer in: the rc was visible on the Ops card, but nothing compared the artifact's mtime to the schedule.
+- **The Headroom Status badge was checking the wrong port** (doctor default 8787 vs the registered proxy on 9020) and had been red since 2026-07-28 while the service was healthy the whole time.
+- **The corrected usage figures hold up independently.** ccusage says $4,492.02 for the last 30 days, the Hive says $4,557.48 - a 1.46% gap, fully explained by UTC vs local date bucketing and by the Hive's finer cache-write tiering.
+
+### Decisions
+| Code | Decision | Date |
+|------|----------|------|
+| AD-027 | A project row with a missing or placeholder path is rated `red`, never left unrated - one unrated row must not be able to take down the whole ecosystem dashboard | 2026-09-16 |
+| AD-028 | Ops health actions derive their exit code from the thing being guarded, not from a third-party tool's own rc; a check that can never go green is a defect, not a warning | 2026-09-16 |
+| AD-029 | "w/ Local" offload rates are per-project from each project's own measured model mix; a single blended rate across projects is misleading and is now only a fallback | 2026-09-16 |
+| AD-030 | Smoke tests cover every nav route and read-only API, so a tab that starts failing is a red test next run rather than a finding in the next audit | 2026-09-16 |
+
+### Next Steps
+1. Owner to supply the section 5 mismatch list, if any - every item was verified independently and passes.
+2. Confirm tomorrow at or after 07:00 that the five scheduled ops actions fired on their own schedule, and that `backup_20260917.log` and the 2026-09-17 backup set exist.
+3. Decide on renaming the 36 historical Agent HR rows to `builtin:<type>` (owner's call, not done).
+4. Consider trimming the Health Check page's ~104 s cold render as the project count grows.
+
+---
+
 
 ## 2026-09-16 — Full Feature Audit: LLM Usage Root Cause + Cross-Cutting Health
 **Focus:** Audit all 25 dashboard tabs and infrastructure; identify why LLM Usage shows 6× inflation; document remediation roadmap

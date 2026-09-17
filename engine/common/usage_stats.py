@@ -528,6 +528,9 @@ def _whatif_agg(evs, cutoff, key):
     agg: dict[str, dict] = defaultdict(lambda: {
         "tokens": 0, "turns": 0, "family": "?",
         "actual": 0.0, "local_opt": 0.0, "batch_opt": 0.0, "combined": 0.0,
+        # Cost per family, so a row can explain its own offload rate rather
+        # than leaving the reader to guess (2026-09-16 audit follow-up).
+        "fam_cost": defaultdict(float),
     })
     for e in evs:
         if e["ts"].astimezone().date() < cutoff:
@@ -539,6 +542,7 @@ def _whatif_agg(evs, cutoff, key):
         c = e["cost"]
         a = agg[e[key]]
         a["family"] = fam
+        a["fam_cost"][fam] += c
         a["tokens"] += e["tokens"]
         a["turns"]  += 1
         a["actual"] += c
@@ -551,6 +555,8 @@ def _whatif_agg(evs, cutoff, key):
     rows = []
     for k, a in agg.items():
         actual = a["actual"]
+        fc = a["fam_cost"]
+        ftot = sum(fc.values())
         row = {
             key:             k,
             "tokens":        a["tokens"],
@@ -561,6 +567,13 @@ def _whatif_agg(evs, cutoff, key):
             "combined_usd":  round(a["combined"], 2),
             "total_savings_usd": round(actual - a["combined"], 2),
             "total_savings_pct": round(((actual - a["combined"]) / actual) * 100, 1) if actual > 0 else 0.0,
+            # The offload rate this row's w/ Local figure actually used, and
+            # the family mix it came from.
+            "offload_pct": round(100 * (actual - a["local_opt"]) / actual, 1) if actual > 0 else 0.0,
+            "family_mix": ({fam: round(c / ftot, 4)
+                            for fam, c in sorted(fc.items(), key=lambda x: -x[1])}
+                           if ftot > 0 else {}),
+            "offload_basis": "measured",
         }
         if key == "model":
             row["family"] = a["family"]

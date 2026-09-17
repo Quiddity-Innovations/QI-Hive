@@ -7323,11 +7323,24 @@ def render_usage() -> str:
         </div>'''
 
     # "By Project (30d)" — now with savings columns
+    # The w/ Local figure is only as honest as the offload rate behind it, and
+    # that rate is a pure function of the project's model mix (haiku 100%,
+    # sonnet 40%, opus/fable 0%). Show the mix and the resulting rate inline so
+    # a 0.0% row reads as "this project is all opus", not as a broken column.
+    def _mix_hint(r: dict) -> str:
+        mix = r.get("family_mix") or {}
+        if not mix:
+            return '<div class="small text-muted">offload rate: window blend (no measured turns)</div>'
+        parts = " · ".join(f"{fam} {share*100:.0f}%"
+                           for fam, share in list(mix.items())[:3] if share >= 0.01)
+        return (f'<div class="small text-muted">{parts} &rarr; '
+                f'{r.get("offload_pct", 0):.1f}% offloadable</div>')
+
     project_rows = ""
     for r in projects_sav:
         if r["actual_usd"] <= 0: continue
         project_rows += f'''<tr>
-          <td><strong>{r["project"]}</strong></td>
+          <td><strong>{r["project"]}</strong>{_mix_hint(r)}</td>
           <td class="text-end">{r["tokens"]/1_000_000:.1f}M</td>
           <td class="text-end">{r["turns"]:,}</td>
           <td class="text-end">${r["actual_usd"]:,.2f}</td>
@@ -9817,13 +9830,26 @@ OPS_ACTIONS = {
     },
     "headroom_status": {
         "label": "Headroom Status",
-        "desc":  "Is the compression proxy alive on :9020? Runs doctor + a port check. (Doctor's own 'proxy' line checks its default 8787 — trust the :9020 port check line.)",
+        "desc":  "Is the compression proxy alive on :9020? Runs the doctor against :9020 plus a port check. Green when the proxy is up; the 'not routed' warnings are by design - Claude Code deliberately does NOT route through the proxy (registry: the subscription OAuth path stays untouched, MCP mode is used instead).",
         "icon":  "bi-heart-pulse", "group": "Headroom", "confirm": False, "timeout": 120,
+        # 2026-09-16 audit follow-up: this called `headroom doctor` with no
+        # --port, so the doctor probed its built-in default 8787 while the proxy
+        # actually listens on 9020 (qi_registry -> headroom.ports.proxy). It
+        # reported "proxy not reachable" and exited non-zero, pinning this badge
+        # red permanently even though QI_Headroom was healthy - a standing false
+        # alarm that teaches people to ignore the badge. The doctor now checks
+        # 9020, and the exit code reflects the proxy: rc 0 (healthy) and rc 1
+        # (warnings only - the intentional not-routed ones) pass; rc >= 2
+        # (proxy down) or nothing listening on :9020 fail.
         "cmd":   ["powershell.exe", "-NoProfile", "-Command",
                   "$p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue; "
                   "if ($p) { Write-Output ':9020 proxy: LISTENING (pid ' + ($p | Select-Object -First 1 -ExpandProperty OwningProcess) + ')' } "
                   "else { Write-Output ':9020 proxy: NOT RUNNING' }; "
-                  "& 'C:\\APPS\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' doctor"],
+                  "& 'C:\APPS\CLAUDE\Tools\headroom_env\Scripts\headroom.exe' doctor --port 9020; "
+                  "$rc = $LASTEXITCODE; "
+                  "if (-not $p) { Write-Output 'RESULT: FAIL - nothing is listening on :9020'; exit 1 }; "
+                  "if ($rc -ge 2) { Write-Output ('RESULT: FAIL - doctor reported a failure (rc=' + $rc + ')'); exit 1 }; "
+                  "Write-Output ('RESULT: OK - proxy up on :9020 (doctor rc=' + $rc + ', warnings are by design)'); exit 0"],
     },
     "headroom_proxy_start": {
         "label": "Start Headroom Proxy",

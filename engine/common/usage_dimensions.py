@@ -360,6 +360,10 @@ def _savings_rows(rows: list[dict], key: str) -> list[dict]:
             "batch_opt_usd": round(batch_opt, 2), "combined_usd": round(combined, 2),
             "total_savings_usd": round(actual - combined, 2),
             "total_savings_pct": round(((actual - combined) / actual) * 100, 1) if actual else 0.0,
+            # What the "w/ Local" column is actually claiming, per row.
+            "offload_pct": round(frac * 100, 1),
+            "family_mix": r.get("_mix", {}),
+            "offload_basis": r.get("_mix_source", "family"),
         })
     return out
 
@@ -368,17 +372,66 @@ def savings_by_model(start: date, end: date) -> list[dict]:
     return _savings_rows(by_model(start, end), "model")
 
 
+def _measured_family_mix(start: date, end: date) -> dict[str, dict[str, float]]:
+    """Cost by project -> family, from the measured transcript events only.
+
+    The ledger's dimension tables are keyed (day, project) and (day, model)
+    separately, so they cannot answer "which families did THIS project use".
+    The surviving transcripts can, for the days they cover. Returns
+    {project: {family: cost_usd}}; empty if the events cannot be read (the
+    caller then falls back to the window blend).
+    """
+    try:
+        import usage_stats
+    except Exception:
+        return {}
+    mix: dict[str, dict[str, float]] = collections.defaultdict(
+        lambda: collections.defaultdict(float))
+    try:
+        for e in usage_stats._iter_events():
+            d = e["ts"].astimezone().date()
+            if d < start or d > end:
+                continue
+            mix[e["project"]][e["family"]] += e["cost"]
+    except Exception:
+        return {}
+    return {p: dict(f) for p, f in mix.items()}
+
+
 def savings_by_project(start: date, end: date) -> list[dict]:
     rows = by_project(start, end)
-    # Blend the window's local-offload rate from the model mix, then apply it
-    # uniformly across projects — per-project family splits aren't tracked.
     import usage_stats
+
+    # Window-wide blended offload rate, kept as the fallback for projects with
+    # no measured events in the window (reconstructed-only history).
     mrows = by_model(start, end)
     tot = sum(m["cost_usd"] for m in mrows) or 1.0
     blend = sum(m["cost_usd"] * usage_stats.LOCAL_OFFLOAD_BY_FAMILY.get(m["family"], 0.0)
                 for m in mrows) / tot
+
+    # 2026-09-16 audit follow-up: applying `blend` to every project told every
+    # project the same story. Offload potential is entirely a function of model
+    # family (haiku 100%, sonnet 40%, opus/fable 0%), so a haiku-heavy project
+    # and an opus-only project must not share one rate — the old column implied
+    # an opus-only project could move ~1% of its spend to Ollama, which is
+    # false, and hid the projects where offloading would actually pay. Each
+    # project now gets the rate implied by its OWN measured family mix; the
+    # blend survives only where that project has no measured events.
+    fam_mix = _measured_family_mix(start, end)
     for r in rows:
-        r["_blend"] = blend
+        fm = fam_mix.get(r["project"])
+        if fm and sum(fm.values()) > 0:
+            ftot = sum(fm.values())
+            r["_blend"] = sum(
+                c * usage_stats.LOCAL_OFFLOAD_BY_FAMILY.get(fam, 0.0)
+                for fam, c in fm.items()) / ftot
+            r["_mix"] = {fam: round(c / ftot, 4)
+                         for fam, c in sorted(fm.items(), key=lambda x: -x[1])}
+            r["_mix_source"] = "measured"
+        else:
+            r["_blend"] = blend
+            r["_mix"] = {}
+            r["_mix_source"] = "window blend"
     return _savings_rows(rows, "project")
 
 

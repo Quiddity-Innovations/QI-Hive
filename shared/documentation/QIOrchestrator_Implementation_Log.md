@@ -5,6 +5,47 @@
 
 ---
 
+## 2026-09-16 (evening) - Remediation Verification: supervisor KeyError, Headroom false alarm, usage cross-check
+**Session Focus:** Verify the same-day audit remediation, close the loop on the overnight proofs, and independently confirm the corrected usage figures
+
+### Verified (all proofs pass)
+- **Nightly backup** - `LOGS\nightly_backup\backup_20260916.log` ends `backup OK (6 databases, 0 old sets purged)`; `shared\backups\db\2026-09-16` holds 6 .db files + manifest; `backup.py --verify` reports `integrity=ok` on all six.
+- **Task health** - `data/task_health.json`: OK 28, STALE 0, DEAD 0, ERROR 0. QI_NightlyBackup, QI_UsageSnapshot and QI_BrainDriftCheck_Daily all report `marker present in today's log`.
+- **Usage snapshot** - `LOGS\usage_snapshot\usage_snapshot_20260916.log` carries `snapshot OK` lines every ~30 min from 17:13.
+- **Dashboard checklist** - /news (no negative ages, digest card), /tunnels (Kaze 18800, Maia Quiddam :8500, Connector 9030, no M2V), /health (no phantom projects), /services (3 orphans gone, legacy badges), /compliance (qi_hive 15 pass / 0 fail), /guide (25 numbered tabs) all confirmed.
+
+### Fixed
+- **Supervisor crashed on every run since 2026-08-09, silently.** `inspect_project()` returned early for a project whose registered path does not exist without setting `severity`; `render_dashboard()` then raised `KeyError: 'severity'`. `report.json` is written first, so the failure was invisible: the report kept updating while `C:\APPS\CLAUDE\DASHBOARD.md` stayed frozen at 2026-08-09 for 38 days. Triggered by `transfer_station`, whose registry path is the placeholder `TBD - locate console source`. Fix: rate a missing path `red` at the early return, and make the counter tolerant. Supervisor now exits 0 and DASHBOARD.md regenerated at 21:02.
+- **Headroom Status badge was a permanent false alarm.** The ops action ran `headroom doctor` with no `--port`, so the doctor probed its built-in default 8787 while QI_Headroom actually listens on 9020 (`qi_registry` -> `headroom.ports.proxy`). It reported "proxy not reachable", exited non-zero, and pinned the card red while the proxy was healthy. Fix: point the doctor at 9020 and derive the exit code from the proxy - rc 0/1 pass (the "not routed" warnings are deliberate; Claude Code must not route through the proxy), rc >= 2 or a dead port fail.
+- **Ops badges showed 2026-07-28.** `_ops_state` is loaded from `data/ops_history.json` once at startup and never reconciled; the 17:31 scheduled runs were recorded by the process that the 17:31 restart replaced, and the stale in-memory copy later overwrote the file. Cleared by re-running all five actions; all now rc 0 and dated today. `run_sequence` completed 5/5 OK.
+
+### Built
+- **`test_smoke.py` extended from 14 to 71 tests.** Parametrised GETs over all 25 nav routes plus /compliance, and 28 read-only API endpoints; required-parameter contracts for `/api/usage/range` and `/api/agent-hr/runs`; `/health` requested with a browser Accept header so the page is graded rather than its JSON probe; the warm-up fixture now primes the expensive pages. Tests tab reports 71 passed / 0 failed.
+- **Per-project model-family split for the "w/ Local" column.** `usage_dimensions.savings_by_project()` applied one window-wide blended offload rate to every project, so an opus-only project and a haiku-heavy project were told the same story. Each project now gets the rate implied by its own measured family mix (the blend survives only where a project has no measured turns), and the table shows the mix inline: retirementanalyzer `opus 100% -> 0.0% offloadable`, mediastudio `opus 75% / fable 13% / sonnet 12% -> 5.0%`. `actual_usd` is untouched, so the ledger reconciliation invariant holds.
+
+### Independent cross-check of the usage figures
+`ccusage@20.0.20` over `C:\Users\renne\.claude\projects` for 2026-08-18..2026-09-16 reports **$4,492.02**; the Hive's `/api/usage/savings?days=30` reports **$4,557.48** - a **+1.46% gap**, inside the 5% tolerance. Two structural differences account for the per-day and per-model scatter:
+
+1. **Date bucketing.** The Hive buckets by UTC, ccusage by local time. Proof: the Hive carries a 2026-09-17 bucket that cannot exist locally, and evening-heavy days shift whole to the next day (09-09 -$130 / 09-10 +$117).
+2. **Cache-write tiering.** The Hive separates 5-minute (1.25x) from 1-hour (2.0x) cache writes; ccusage applies one cache-creation rate. Nearly all Fable 5.1 writes are 1-hour, so the Hive charges $20/M where ccusage charges $12.50/M - which is why the Hive's Fable 5.1 line is *higher* ($421.69 vs $333.60) despite its cheaper 0.025x cache-read rate.
+
+Per model: opus-5 $3,868 vs $3,881 (-0.3%), fable-5 $171.60 on both, sonnet-5 $95.62 vs $102.29. `gpt-6-astra` ($2.88, Codex) appears only in ccusage - Trinity spend is tracked separately.
+
+### Files Changed
+- C:\APPS\CLAUDE\supervisor\supervisor.py (+ .bak-20260916)
+- C:\QIH\engine\hive\dashboard\server.py (+ .bak-headroom-20260916)
+- C:\QIH\engine\common\usage_dimensions.py (+ .bak-20260916)
+- C:\QIH\engine\common\usage_stats.py (+ .bak-20260916)
+- C:\QIH\engine\hive\dashboard\tests\test_smoke.py (+ .bak-20260916)
+- REGENERATED C:\APPS\CLAUDE\DASHBOARD.md (first time since 2026-08-09)
+
+### Open
+- Owner mismatch list for section 5 of the remediation report not yet supplied; every "Now" item was verified independently and passes.
+- Renaming 36 historical Agent HR rows to the `builtin:<type>` convention still needs the owner's go-ahead - not done.
+- The Health Check page costs ~104 s on its first render after a restart (sc / netstat / git fan-out across 43 projects) and is then served warm from a 330 s cache. Designed behaviour, but the cold window has grown with the ecosystem.
+
+---
+
 
 ## 2026-09-16 — Full Feature Audit: LLM Usage Root Cause + Cross-Cutting Health
 **Session Focus:** Audit all 25 dashboard tabs, compliance, and cross-cutting systems; identify root cause of LLM Usage inflation; deliver remediation roadmap
