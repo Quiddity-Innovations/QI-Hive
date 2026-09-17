@@ -69,8 +69,16 @@ CREATE TABLE IF NOT EXISTS usage_daily_model (
     source TEXT NOT NULL, confidence TEXT NOT NULL, updated_at TEXT NOT NULL,
     PRIMARY KEY (day, model)
 );
+CREATE TABLE IF NOT EXISTS usage_daily_project_family (
+    day TEXT NOT NULL, project TEXT NOT NULL, family TEXT NOT NULL,
+    tokens INTEGER NOT NULL DEFAULT 0, cost_usd REAL NOT NULL DEFAULT 0.0,
+    turns INTEGER NOT NULL DEFAULT 0,
+    source TEXT NOT NULL, confidence TEXT NOT NULL, updated_at TEXT NOT NULL,
+    PRIMARY KEY (day, project, family)
+);
 CREATE INDEX IF NOT EXISTS idx_udp_day ON usage_daily_project(day);
 CREATE INDEX IF NOT EXISTS idx_udm_day ON usage_daily_model(day);
+CREATE INDEX IF NOT EXISTS idx_udpf_day ON usage_daily_project_family(day);
 """
 
 # ── Model eras ──────────────────────────────────────────────────────────
@@ -297,11 +305,17 @@ def backfill(verbose: bool = True, since: date | None = None) -> dict:
           WHERE d.cost_usd>0 GROUP BY d.day
           HAVING ABS(c-mc) > 0.02)""").fetchone()[0]
     con.close()
+    # usage_daily_project_family is derived from the two tables just rewritten,
+    # so rebuild it in the same scope. Leaving it behind would let the
+    # By-Project offload rates quietly describe a previous rebuild.
+    pf = rebuild_project_family(verbose=verbose, since=since)
     if verbose:
         print(f"project rows: {n_p:,}   model rows: {n_m:,}")
         print(f"reconciliation mismatches — projects: {bad}  models: {bad_m}")
     return {"project_rows": n_p, "model_rows": n_m,
-            "unreconciled_projects": bad, "unreconciled_models": bad_m}
+            "unreconciled_projects": bad, "unreconciled_models": bad_m,
+            "project_family_rows": pf["rows"],
+            "unreconciled_project_family": pf["unreconciled"]}
 
 
 # ── Read-back API (mirrors usage_stats shapes) ──────────────────────────
@@ -372,6 +386,151 @@ def savings_by_model(start: date, end: date) -> list[dict]:
     return _savings_rows(by_model(start, end), "model")
 
 
+def rebuild_project_family(verbose: bool = False, since: date | None = None) -> dict:
+    """Fill usage_daily_project_family(day, project, family) for every day.
+
+    Why this table exists
+    ---------------------
+    Offload potential is a pure function of model family (haiku 100%, sonnet
+    40%, opus/fable 0%), but the ledger kept projects and models in *separate*
+    tables, so it could never answer "which families did THIS project use on
+    that day". savings_by_project therefore read the family split out of the
+    live transcripts, which only reach back ~40 days; every older window fell
+    back to one window-wide blended rate applied to every project alike. That
+    rate told an opus-only project it could move ~1% of its spend to Ollama
+    (false) and flattened the haiku-heavy projects where offloading actually
+    pays. This table carries the split for the ledger's whole history.
+
+    Population is additive and derived from what is already stored - it never
+    touches usage_daily, usage_daily_project or usage_daily_model, so the
+    reconciliation invariant and the 2026-09-16 recalibration are untouched:
+
+      measured days  grouped straight from the surviving transcript events,
+                     the same source usage_daily_project was built from.
+      other days     the day's project shares crossed with that day's model
+                     family shares (both already stored). Independence is the
+                     honest assumption here: the reconstruction has no
+                     evidence that a given project skewed toward a family on a
+                     day nobody measured.
+
+    Either way SUM(cost_usd) per (day, project) equals usage_daily_project for
+    that day, so the table adds a dimension without inventing money.
+    """
+    import collections as _c
+    con = usage_ledger.connect()
+    con.executescript(DDL)          # rebuild() is not a prerequisite of this pass
+    now = datetime.now().isoformat(timespec="seconds")
+
+    # Measured (project, family) costs per day, from the transcripts.
+    meas: dict = _c.defaultdict(lambda: _c.defaultdict(lambda: [0.0, 0, 0]))
+    try:
+        import usage_stats
+        for e in usage_stats._iter_events():
+            d = e["ts"].astimezone().date().isoformat()
+            slot = meas[d][(e["project"], e["family"])]
+            slot[0] += e["cost"]; slot[1] += e["tokens"]; slot[2] += 1
+    except Exception as exc:          # transcripts unreadable -> shares only
+        if verbose:
+            print(f"  (no measured events: {exc})")
+
+    # Per-day family shares from the model dimension, for the non-measured days.
+    fam_share: dict = _c.defaultdict(lambda: _c.defaultdict(float))
+    for ds, fam, cost in con.execute(
+            "SELECT day, family, SUM(cost_usd) FROM usage_daily_model GROUP BY day, family"):
+        fam_share[ds][fam] += cost or 0.0
+
+    if since:
+        con.execute("DELETE FROM usage_daily_project_family WHERE day>=?",
+                    (since.isoformat(),))
+        sel = ("SELECT day, project, tokens, cost_usd, turns, source, confidence "
+               "FROM usage_daily_project WHERE day>=?")
+        args = (since.isoformat(),)
+    else:
+        con.execute("DELETE FROM usage_daily_project_family")
+        sel = ("SELECT day, project, tokens, cost_usd, turns, source, confidence "
+               "FROM usage_daily_project")
+        args = ()
+    n = 0
+    for ds, proj, tokens, cost, turns, source, conf in con.execute(sel, args):
+        m = meas.get(ds) or {}
+        mine = {f: v for (p, f), v in m.items() if p == proj}
+        if source == "measured" and mine:
+            split = {f: v[0] for f, v in mine.items()}
+            tok   = {f: v[1] for f, v in mine.items()}
+            trn   = {f: v[2] for f, v in mine.items()}
+        else:
+            fs = fam_share.get(ds) or {}
+            tot = sum(fs.values())
+            if tot <= 0:
+                continue
+            split = {f: cost * (c / tot) for f, c in fs.items()}
+            tok   = {f: int(tokens * (c / tot)) for f, c in fs.items()}
+            trn   = {f: int(round(turns * (c / tot))) for f, c in fs.items()}
+        csum = sum(split.values())
+        if csum <= 0:
+            continue
+        # Normalise so the family rows add up to the project's own day cost.
+        for fam, c in split.items():
+            scaled = cost * (c / csum)
+            if scaled <= 0:
+                continue
+            con.execute(
+                "INSERT OR REPLACE INTO usage_daily_project_family VALUES (?,?,?,?,?,?,?,?,?)",
+                (ds, proj, fam, tok.get(fam, 0), scaled, trn.get(fam, 0), source, conf, now))
+            n += 1
+    con.commit()
+
+    bad = con.execute("""
+        SELECT COUNT(*) FROM (
+          SELECT p.day, p.project, p.cost_usd c, IFNULL(SUM(f.cost_usd),0) fc
+          FROM usage_daily_project p
+          LEFT JOIN usage_daily_project_family f
+                 ON f.day=p.day AND f.project=p.project
+          WHERE p.cost_usd>0 AND p.day>=? GROUP BY p.day, p.project
+          HAVING ABS(c-fc) > 0.02)""",
+        (since.isoformat() if since else "0000-01-01",)).fetchone()[0]
+    con.close()
+    if verbose:
+        print(f"project-family rows: {n:,}   unreconciled (day, project): {bad}")
+    return {"rows": n, "unreconciled": bad}
+
+
+def family_mix_by_project(start: date, end: date
+                          ) -> tuple[dict[str, dict[str, float]], dict[str, float]]:
+    """({project: {family: cost_usd}}, {project: measured share 0..1}) for a window.
+
+    Covers the ledger's whole history, not just the days whose transcripts
+    survive - that is the point of usage_daily_project_family. The second dict
+    says how much of each project's cost came from days that were actually
+    measured, so the caller can label the offload rate honestly: on a
+    reconstructed day the family split is the day's model mix crossed with the
+    project's share, which is modelled, not observed, and must not be presented
+    as if someone had counted it.
+    """
+    con = usage_ledger.connect()
+    try:
+        con.executescript(DDL)      # first reader on a fresh DB must not 500
+        rows = con.execute(
+            """SELECT project, family, SUM(cost_usd),
+                      SUM(CASE WHEN source='measured' THEN cost_usd ELSE 0 END)
+                 FROM usage_daily_project_family
+                WHERE day>=? AND day<=? GROUP BY project, family""",
+            (start.isoformat(), end.isoformat())).fetchall()
+    except sqlite3.Error:
+        return {}, {}
+    finally:
+        con.close()
+    out: dict[str, dict[str, float]] = {}
+    tot: dict[str, float] = {}
+    meas: dict[str, float] = {}
+    for proj, fam, cost, mcost in rows:
+        out.setdefault(proj, {})[fam] = cost or 0.0
+        tot[proj] = tot.get(proj, 0.0) + (cost or 0.0)
+        meas[proj] = meas.get(proj, 0.0) + (mcost or 0.0)
+    share = {p: (meas[p] / tot[p]) for p in tot if tot[p] > 0}
+    return out, share
+
+
 def _measured_family_mix(start: date, end: date) -> dict[str, dict[str, float]]:
     """Cost by project -> family, from the measured transcript events only.
 
@@ -417,9 +576,22 @@ def savings_by_project(start: date, end: date) -> list[dict]:
     # false, and hid the projects where offloading would actually pay. Each
     # project now gets the rate implied by its OWN measured family mix; the
     # blend survives only where that project has no measured events.
-    fam_mix = _measured_family_mix(start, end)
+    # 2026-09-17 verification follow-up: _measured_family_mix only sees the
+    # ~40 days of surviving transcripts, so every older window still handed
+    # every project the same `blend`. usage_daily_project_family carries the
+    # split for the ledger's whole history, so ask it first and keep the live
+    # transcripts as the fallback for days the ledger has not been rebuilt for.
+    ledger_mix, ledger_measured = family_mix_by_project(start, end)
+    live_mix = _measured_family_mix(start, end)
     for r in rows:
-        fm = fam_mix.get(r["project"])
+        fm = ledger_mix.get(r["project"])
+        # "measured" only when the window really was observed for this project;
+        # a mostly-reconstructed window says "modelled" so the rate is not read
+        # as evidence it isn't.
+        src_label = "measured" if ledger_measured.get(r["project"], 0.0) >= 0.5 else "modelled"
+        if not (fm and sum(fm.values()) > 0):
+            fm = live_mix.get(r["project"])
+            src_label = "measured"
         if fm and sum(fm.values()) > 0:
             ftot = sum(fm.values())
             r["_blend"] = sum(
@@ -427,7 +599,7 @@ def savings_by_project(start: date, end: date) -> list[dict]:
                 for fam, c in fm.items()) / ftot
             r["_mix"] = {fam: round(c / ftot, 4)
                          for fam, c in sorted(fm.items(), key=lambda x: -x[1])}
-            r["_mix_source"] = "measured"
+            r["_mix_source"] = src_label
         else:
             r["_blend"] = blend
             r["_mix"] = {}

@@ -66,8 +66,10 @@ def run(days: int = WINDOW_DAYS) -> dict:
         "written": res["written"],
         "project_rows": dim["project_rows"],
         "model_rows": dim["model_rows"],
+        "project_family_rows": dim.get("project_family_rows", 0),
         "unreconciled_projects": dim["unreconciled_projects"],
         "unreconciled_models": dim["unreconciled_models"],
+        "unreconciled_project_family": dim.get("unreconciled_project_family", 0),
     }
 
 
@@ -181,15 +183,18 @@ def main() -> int:
         r = run()
         ytd = usage_ledger.totals_since(date(date.today().year, 1, 1))
         line = (f"[usage_ledger] snapshotted {r['written']} day(s); "
-                f"dimensions {r['project_rows']}p/{r['model_rows']}m; "
+                f"dimensions {r['project_rows']}p/{r['model_rows']}m"
+                f"/{r['project_family_rows']}pf; "
                 f"YTD ${ytd['cost_usd']:,.2f} "
                 f"({ytd['measured_pct']}% measured)")
         _emit(line)
         _mark_success("snapshot OK " + line)
-        if r["unreconciled_projects"] or r["unreconciled_models"]:
+        if (r["unreconciled_projects"] or r["unreconciled_models"]
+                or r["unreconciled_project_family"]):
             _emit(f"[usage_ledger] WARNING unreconciled days — "
                   f"projects={r['unreconciled_projects']} "
-                  f"models={r['unreconciled_models']}")
+                  f"models={r['unreconciled_models']} "
+                  f"project_family={r['unreconciled_project_family']}")
         return 0
     except Exception as e:
         # Never let a bookkeeping failure break session teardown.

@@ -1,7 +1,60 @@
 # QI Orchestrator — Implementation Log
 
-> Covers: QI Dashboard (port 9000) + QI Brain API (port 9010)
-> Root: `C:\UNIVERSAL\`
+> Covers: QI Hive Dashboard (port 8600) + QI Brain API (port 9011)
+> Root: `C:\QIH\` — migrated from `C:\UNIVERSAL\` on 2026-04-22; that path no
+> longer exists on disk (verified 2026-09-09). Header corrected 2026-09-17.
+
+---
+
+## 2026-09-17 - Overnight Proofs, ccusage Cross-Check, Per-Project Offload Dimension
+**Session Focus:** Verify the 2026-09-16 remediation survived its first unattended night, cross-check the usage figures against an independent tool, and clear the remaining leftovers
+
+### Overnight proofs - all pass
+- **Nightly backup** - `LOGS\nightly_backup\backup_20260917.log` ends `backup OK (6 databases, 0 old sets purged)` at 01:00:04; `shared\backups\db\2026-09-17` holds six .db files + manifest; `backup.py --verify` reports `integrity=ok` on all six (agent_hr, effort_ledger, maia, naya, nexus, qi_brain).
+- **Scheduled Ops actions fired on their own for the first time.** chroma_backfill 03:15 rc 0 (+5 sessions embedded); supervisor 06:10 rc 0; snapshots 06:20 rc 0; self_audit 06:30 rc 0. The supervisor output names `C:\APPS\*` throughout - no pre-migration paths survive.
+- **Task health** - `data/task_health.json`: OK 28, STALE 0, DEAD 0, ERROR 0. QI_NightlyBackup, QI_UsageSnapshot and QI_BrainDriftCheck_Daily all report `marker present in today's log`.
+- **Usage snapshot** - `LOGS\usage_snapshot\usage_snapshot_20260917.log` carries 29 `snapshot OK` lines, one every ~30 min from 00:05.
+
+### Fixed
+- **Headroom Status badge, again - the probe this time, not the port.** Yesterday corrected the doctor's port (8787 -> 9020) but left `Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue` as the sole FAIL trigger. At 06:40 it returned nothing and pinned the badge red, in the *same run* where the doctor connected to 127.0.0.1:9020 and reported `up 11d 12h` with 0 failures. The proxy never went down: by the 13:50 re-run uptime read `up 11d 19h`, exactly the 7h10m elapsed. Get-NetTCPConnection resolves through CIM (root/StandardCimv2), and the silenced error turned "the probe broke" into "the proxy is down" - a false alarm of precisely the kind the badge was fixed to stop producing. A real TCP connect (3 tries, 700 ms apart) now decides; the CIM lookup is demoted to best-effort, used only to name the pid. Same rc contract.
+- **Usage dedup was keeping a partial completion.** `dedup()` kept the *first* row per message id. Streaming writes one transcript row per chunk sharing one message id: input, cache-read and cache-write are fixed at request time and identical on every row, but output_tokens grows as the stream runs. Measured over 2026-08-19..09-17: 1,052 message ids had a varying output count, 0 had a varying cache-read or cache-write count, and 714,859 output tokens were being dropped. Now keeps the largest output per id (O(n) index map, first-seen order preserved). 30-day figure $4,071.98 -> $4,092.95.
+
+### Built - per-project model-family dimension
+`usage_daily_project(day, project)` and `usage_daily_model(day, model, family)` were separate tables, so the ledger could never answer "which families did THIS project use". `savings_by_project` therefore read the family split from the live transcripts, which reach back only ~40 days; every older window handed **every** project one blended rate - telling an opus-only project it could move ~1% of its spend to Ollama (false) and flattening the haiku-heavy projects where offloading actually pays.
+- New table `usage_daily_project_family(day, project, family, ...)`, PK (day, project, family), 2,167 rows, 0 unreconciled. Purely additive: `usage_daily`, `usage_daily_project` and `usage_daily_model` are untouched, so the reconciliation invariant and the 2026-09-16 recalibration stand.
+- Measured days group straight from transcript events; other days cross the day's project shares with its model-family shares, then normalise so family rows sum to that project's own day cost.
+- `family_mix_by_project()` also returns each project's **measured share**, so the UI can label the rate `measured` or `modelled`. A reconstructed window is a derivation, not an observation, and must not read like one.
+- `backfill()` now rebuilds the joint table in the same scope (it is derived from the two tables backfill just rewrote); `usage_snapshot_task` reports `NNNpf` and warns on unreconciled project-family days.
+- Result on /usage: 15 project rows, 6 distinct offload rates, 0 `window blend` fallbacks.
+
+### Cross-check - the Hive is the more accurate number
+ccusage $4,248.03 vs Hive $4,071.98 over the same 30 days: a 4.14% gap that reconciles to 0.14%.
+
+| Step | Amount |
+|---|---|
+| ccusage 30d | $4,248.03 |
+| less cross-file duplicate copies | -$166.24 |
+| less gpt-6-astra (Codex, non-Anthropic) | -$2.88 |
+| = expected Hive figure | $4,078.91 |
+| actual Hive figure | $4,072.93 |
+| residual | -$5.98 (-0.14%) |
+
+Both tools agree **to the token on 20 of 26 days**. All divergence sits in 2026-09-06..09-11, where transcripts were duplicated: on 09-06 two Baguapp session files carry the same 137 message ids with identical requestIds, and ccusage's total for that day is exactly 2x the Hive's. ccusage dedups within a file; the Hive dedups globally on message.id. Turn counts match exactly (17,943 both), so no turns are lost. After the output fix, the three models with no cross-file duplicates match ccusage **to the cent**: sonnet-5 $100.13, fable-5 $50.28, haiku-4-5 $1.09 - confirming both the price table and the parser.
+
+### Agent HR
+37 historical run rows renamed to the `builtin:<type>` convention `normalize_agent_name()` already emits (Explore 17, general-purpose 19, Plan 1; the bare `claude` roster row had 0 runs). Run total unchanged at 524; 0 bare builtin rows remain.
+
+### Not done
+- **Owner checklist (section 5 of the remediation report) not yet walked.** Owner reported not having checked it; no mismatches were raised, so none were reproduced. Still open.
+- Smoke-test coverage and the backend per-family offload split were already delivered on 2026-09-16 - verified rather than rebuilt (71 tests pass, covering 25 nav routes + 28 API endpoints).
+
+### Files Changed
+- `engine/hive/dashboard/server.py` (headroom probe; `_mix_hint` basis tag) - .bak-headroom-20260917
+- `engine/common/usage_stats.py` (`dedup` keeps max output) - .bak-dedup-20260917
+- `engine/common/usage_dimensions.py` (new table, builder, reader, wiring) - .bak-projfamily-20260917
+- `engine/common/usage_snapshot_task.py` (reports and guards project-family) - .bak-projfamily-20260917
+- `engine/hive/agents/agent_hr.db` (37 rows renamed) - .bak-builtin-rename-20260917
+- `C:\QIH\data\qi_brain.db` - new table `usage_daily_project_family`
 
 ---
 

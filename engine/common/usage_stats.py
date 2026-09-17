@@ -402,16 +402,34 @@ def _parse_file(jsonl: Path) -> list[dict]:
 
 
 def dedup(events: list[dict]) -> list[dict]:
-    """Keep the first event per message id; events without an id are kept."""
-    seen: set = set()
-    out = []
+    """One event per message id, keeping the row with the largest output_tokens;
+    events without an id are kept.
+
+    Streaming writes a transcript row per chunk, all sharing one message id. The
+    input, cache-read and cache-write counts are fixed when the request is made
+    and are identical on every row, but output_tokens grows as the stream runs,
+    so only the final row carries the true output. Keeping the *first* row
+    therefore billed a partial completion: measured 2026-09-17 over 2026-08-19..
+    09-17, 1,052 message ids had a varying output count (0 had a varying
+    cache-read or cache-write count) and 714,859 output tokens were being
+    dropped, about $17.90 or +0.44% on the 30-day figure. Cross-file duplicates
+    still collapse to one event - that is what keeps the Hive's total below
+    ccusage's, which counts a message once per transcript file (see the
+    2026-09-17 verification session).
+    """
+    slot: dict = {}          # message id -> index into out (first-seen position)
+    out: list = []
     for e in events:
         mid = e.get("mid")
-        if mid:
-            if mid in seen:
-                continue
-            seen.add(mid)
-        out.append(e)
+        if not mid:
+            out.append(e)
+            continue
+        i = slot.get(mid)
+        if i is None:
+            slot[mid] = len(out)
+            out.append(e)
+        elif (e.get("output") or 0) > (out[i].get("output") or 0):
+            out[i] = e
     return out
 
 

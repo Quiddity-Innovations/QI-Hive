@@ -2,6 +2,43 @@
 
 ---
 
+## 2026-09-17 - First Unattended Night, and Which Usage Number to Trust
+**Focus:** Prove the remediation survives without a human in the loop, and settle whether the corrected usage figures are right
+
+### Key Findings
+- **The remediation held overnight.** Every scheduled job fired on its own for the first time and returned rc 0: chroma_backfill 03:15, supervisor 06:10, snapshots 06:20, self_audit 06:30. Backup OK with six databases and integrity ok; task health DEAD 0 / STALE 0; 29 snapshot markers through the day.
+- **One badge failed, and it was the badge's fault - for the second day running.** Yesterday fixed Headroom's *port*; today exposed its *probe*. `Get-NetTCPConnection` with `-ErrorAction SilentlyContinue` reports "not running" both when the proxy is down and when the CIM call hiccups, and the two are indistinguishable. The same run's doctor proved the proxy had been up 11d 12h. A red badge that is wrong is worse than no badge: it is what teaches people to stop reading badges.
+- **ccusage is the inflated number, not the Hive.** The 4.14% gap is not the Hive undercounting - it is ccusage counting a message once per transcript file. On 2026-09-06 two Baguapp session files carry the same 137 message ids with identical requestIds, and ccusage's total is exactly double. Both tools agree to the token on 20 of 26 days, and the turn counts match exactly (17,943).
+- **One genuine parser defect, found by the cross-check.** Dedup kept the first streaming row per message id, which carries a partial output count; 714,859 output tokens were being dropped. After the fix, three models match ccusage to the cent - the strongest evidence yet that the price table is right.
+- **The "w/ Local" column was still blended for most of history.** Per-project family mixes existed only for the ~40 days of surviving transcripts; every older window used one rate for every project.
+
+### Decisions
+- **AD-009: the ledger carries a (day, project, family) dimension.** Offload potential is a pure function of model family, so any table claiming an offload rate per project must know that project's family mix. Added as a separate additive table rather than a column on `usage_daily_project`, so the existing reconciliation invariant and the 2026-09-16 recalibration are untouched and the rollback is a DROP.
+- **A modelled rate must say so.** On reconstructed days the family split is the day's model mix crossed with the project's share - a derivation. The API returns `offload_basis` and the UI badges anything that is not `measured`. The audit was about labels that overstate evidence; this applies the same rule to a number we just created.
+- **Never decide health on a probe that cannot distinguish "broken" from "false".** Health checks decide on the authoritative signal (a TCP connect) and treat enumeration APIs as best-effort decoration.
+- **Agent HR history renamed to `builtin:<type>`** (37 rows), so the roster stops listing bare and prefixed entries as separate agents.
+
+### Architecture Decisions (cumulative)
+| Code | Decision | Date |
+|------|----------|------|
+| AD-001 | SQLite for all structured data | 2026-04-19 |
+| AD-002 | ChromaDB for semantic/vector memory only | 2026-04-19 |
+| AD-003 | All NSSM services prefixed QI_ | 2026-04-19 |
+| AD-004 | NSSM binary standardized to C:\QIH\engine\bin\nssm.exe | 2026-04-19 |
+| AD-005 | Zero hardcoded LLM config - all in DB | 2026-04-19 |
+| AD-006 | Python path centralized in qi_python_config.json | 2026-04-19 |
+| AD-007 | C:\QIH is permanent home for all cross-project tooling | 2026-04-06 |
+| AD-008 | Projects stay independent - Brain is purely additive | 2026-04-19 |
+| AD-009 | Usage ledger carries a (day, project, family) dimension | 2026-09-17 |
+
+### Next Steps
+1. **Owner walks section 5 of the remediation report** on http://127.0.0.1:8600 and reports mismatches - the one item this session could not close.
+2. Watch tomorrow's 06:40 Headroom badge: it should be green from the new probe with no manual re-run.
+3. Confirm the 2026-10-16 Trinity trial review still finds its Agent HR data after the rename.
+4. Revisit War Room / CoWork Dispatch on 2026-10-16 (30-day idle review agreed 2026-09-16).
+
+---
+
 ## 2026-09-16 (evening) - Remediation Verification and Loop Closure
 **Focus:** Prove the same-day remediation held, fix what the proofs exposed, and cross-check the corrected usage figures against an independent tool
 

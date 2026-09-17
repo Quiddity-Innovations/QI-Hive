@@ -7333,8 +7333,15 @@ def render_usage() -> str:
             return '<div class="small text-muted">offload rate: window blend (no measured turns)</div>'
         parts = " · ".join(f"{fam} {share*100:.0f}%"
                            for fam, share in list(mix.items())[:3] if share >= 0.01)
+        # Say where the split came from. "modelled" means the window is mostly
+        # reconstructed days, where the family mix is the day's model mix
+        # crossed with the project's share - a derivation, not an observation,
+        # and it must not read like one (2026-09-17).
+        basis = r.get("offload_basis", "")
+        tag = ('' if basis == "measured"
+               else f' <span class="badge text-bg-secondary-subtle">{basis}</span>')
         return (f'<div class="small text-muted">{parts} &rarr; '
-                f'{r.get("offload_pct", 0):.1f}% offloadable</div>')
+                f'{r.get("offload_pct", 0):.1f}% offloadable{tag}</div>')
 
     project_rows = ""
     for r in projects_sav:
@@ -9841,13 +9848,30 @@ OPS_ACTIONS = {
         # 9020, and the exit code reflects the proxy: rc 0 (healthy) and rc 1
         # (warnings only - the intentional not-routed ones) pass; rc >= 2
         # (proxy down) or nothing listening on :9020 fail.
+        # 2026-09-17 verification follow-up: the Get-NetTCPConnection probe above
+        # was the sole FAIL trigger, and it is not authoritative. At 06:40 today it
+        # returned nothing (badge red, rc 1) in the same run where the doctor
+        # connected to 127.0.0.1:9020 and reported "up 11d 12h" - the proxy had in
+        # fact been listening continuously (uptime advanced exactly 7h10m by the
+        # 13:50 re-run, which passed). Get-NetTCPConnection goes through CIM
+        # (root/StandardCimv2); when that call hiccups, -ErrorAction
+        # SilentlyContinue turns "the probe broke" into "the proxy is down". Now a
+        # real TCP connect decides (3 tries, 700 ms apart) and the CIM lookup is
+        # best-effort, used only to name the pid. Same rc contract as before.
         "cmd":   ["powershell.exe", "-NoProfile", "-Command",
-                  "$p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue; "
-                  "if ($p) { Write-Output ':9020 proxy: LISTENING (pid ' + ($p | Select-Object -First 1 -ExpandProperty OwningProcess) + ')' } "
-                  "else { Write-Output ':9020 proxy: NOT RUNNING' }; "
+                  "$listening = $false; "
+                  "foreach ($try in 1..3) { "
+                  "  try { $c = New-Object System.Net.Sockets.TcpClient; $c.Connect('127.0.0.1', 9020); "
+                  "        $listening = $c.Connected; $c.Close() } catch { $listening = $false }; "
+                  "  if ($listening) { break }; Start-Sleep -Milliseconds 700 }; "
+                  "$pidnote = ''; "
+                  "try { $p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction Stop | Select-Object -First 1; "
+                  "      if ($p) { $pidnote = ' (pid ' + $p.OwningProcess + ')' } } catch { $pidnote = ' (pid lookup unavailable)' }; "
+                  "if ($listening) { Write-Output (':9020 proxy: LISTENING' + $pidnote) } "
+                  "else { Write-Output ':9020 proxy: NOT RUNNING (3 TCP connects to 127.0.0.1:9020 refused)' }; "
                   "& 'C:\APPS\CLAUDE\Tools\headroom_env\Scripts\headroom.exe' doctor --port 9020; "
                   "$rc = $LASTEXITCODE; "
-                  "if (-not $p) { Write-Output 'RESULT: FAIL - nothing is listening on :9020'; exit 1 }; "
+                  "if (-not $listening) { Write-Output 'RESULT: FAIL - nothing is listening on :9020'; exit 1 }; "
                   "if ($rc -ge 2) { Write-Output ('RESULT: FAIL - doctor reported a failure (rc=' + $rc + ')'); exit 1 }; "
                   "Write-Output ('RESULT: OK - proxy up on :9020 (doctor rc=' + $rc + ', warnings are by design)'); exit 0"],
     },
