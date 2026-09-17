@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-17 00:33:35 (nightly reconciler)_
+_Auto-generated: 2026-09-17 17:45:42 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@ _Auto-generated: 2026-09-17 00:33:35 (nightly reconciler)_
 | baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1190 | 2026-09-16 16:20:36 |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1193 | 2026-09-17 17:44:35 |
 | claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
@@ -39,12 +39,12 @@ _Auto-generated: 2026-09-17 00:33:35 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Operational â€” audit remediation verified | active | 295 | 2026-09-17 01:22:58 |
+| qi_hive | Verification and hardening | healthy | 300 | 2026-09-17 21:44:51 |
 | retirementanalyzer | analysis | active | 174 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
-| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 75 | 2026-09-16 22:24:40 |
+| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 77 | 2026-09-17 17:29:47 |
 | vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
 | voice_studio | Batch voice rendering active; test guide in docs/TESTING.md | active | 0 | — |
 
@@ -275,10 +275,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) ChromaDB doc refresh (open since June). 2) Decide whether qi_brain is tracked separately or folded into qi_hive bookkeeping. 3) Add a TaskHealth rule flagging any project whose git activity is >14 days newer than its Brain project_state.
 
 ### qi_hive
-- **Phase:** Operational â€” audit remediation verified
-- **Status:** active
-- **Summary:** The 2026-09-16 audit remediation is verified end to end. Backups, task health, usage snapshots and all five scheduled ops actions pass; the full section-5 dashboard checklist was confirmed independently. Three defects found during verification were fixed: a supervisor KeyError that had silently froz
-- **Next:** None
+- **Phase:** Verification and hardening
+- **Status:** healthy
+- **Summary:** The 2026-09-16 audit remediation survived its first unattended night: backup OK with six databases and integrity ok, all four scheduled Ops actions fired on their own at rc 0 with only C:\APPS paths, task health DEAD 0 / STALE 0, and 29 usage snapshot markers. The one red badge (headroom_status) was a false alarm from a silenced CIM probe, not a down proxy, and now decides on a real TCP connect. The corrected usage figures were independently corroborated against ccusage: the 4.14% gap reconciles to 0.14% and is ccusage over-counting duplicated transcripts, not the Hive undercounting. One real parser defect was found and fixed (dedup kept a partial streaming output count, dropping 714,859 output tokens), after which three models match ccusage to the cent. A new usage_daily_project_family dimension ends the window-wide blended offload rate across the ledger's whole history. 71 dashboard tests pass.
+- **Next:** Owner walks section 5 of the remediation report on http://127.0.0.1:8600 and reports mismatches - the only item this session could not close. Watch tomorrow's 06:40 Headroom badge for a green result with no manual re-run. Confirm the 2026-10-16 Trinity trial review still finds its Agent HR data after the builtin:<type> rename. Revisit War Room / CoWork Dispatch on 2026-10-16. Consider a freshness check on the project-family table so a failed rebuild is loud.
 
 ### retirementanalyzer
 - **Phase:** analysis

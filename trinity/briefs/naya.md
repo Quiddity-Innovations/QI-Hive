@@ -1,6 +1,6 @@
 # Naya (naya) — L2 brief
 
-_Generated 2026-09-16 02:35:55_
+_Generated 2026-09-17 02:35:36_
 
 ## Registry facts
 - Path: `C:\APPS\NAYA`

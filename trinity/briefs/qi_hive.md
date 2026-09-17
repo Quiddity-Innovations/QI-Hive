@@ -1,6 +1,6 @@
 # QI Hive (qi_hive) — L2 brief
 
-_Generated 2026-09-16 02:35:55_
+_Generated 2026-09-17 02:35:37_
 
 ## Registry facts
 - Path: `C:\QIH`
@@ -10,11 +10,12 @@ _Generated 2026-09-16 02:35:55_
 - Notes: The nervous system and operational layer. Absorbs Claude Manager. QI Brain is the hive mind. Agents are the bees.
 
 ## Brain
-- Current state: status=active, phase=Observability hardening
-  [auto:state_file] Scheduled-task health audit found 7 of 37 tasks silently dead; 8 of 9 remediation items completed and verified the same day (2026-08-27). QI_TaskHealth now monitors 22 tasks by output artifact every 30 min with Telegram alerting, replacing LastTaskResult and log-mtime as the health signals â€” both 
+- Current state: status=active, phase=Operational â€” audit remediation verified
+  [auto:state_file] The 2026-09-16 audit remediation is verified end to end. Backups, task health, usage snapshots and all five scheduled ops actions pass; the full section-5 dashboard checklist was confirmed independently. Three defects found during verification were fixed: a supervisor KeyError that had silently froz
 - Last decisions:
-  - Tier model ruling: C:\APPS is the app AND the development source; D:\Dev is a backup clone (2026-09-10)
-  - Hive currency pass 2026-09-08: registry brought to 42 projects; C:\APPS stays the registered path even where git history lives only in D:\Dev; QI-RELAY is a Maia component, not a project (2026-09-08)
+  - Health checks assert on the artifact, not on a tool's exit code (2026-09-17)
+  - Per-day success markers are the Hive's task-health standard; services with dependents restart by relaunching the NSSM child, never sc stop (2026-09-16)
+  - LLM Usage figures are ~6x overstated; remediation (dedup + per-model pricing + ledger re-snapshot) delegated to Opus 5, backup fix first (2026-09-16)
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).
