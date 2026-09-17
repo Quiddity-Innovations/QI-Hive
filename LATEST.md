@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-16 21:25:13 (nightly reconciler)_
+_Auto-generated: 2026-09-17 00:33:35 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -39,12 +39,12 @@ _Auto-generated: 2026-09-16 21:25:13 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Operational â€” audit remediation verified | active | 294 | 2026-09-17 01:22:58 |
+| qi_hive | Operational â€” audit remediation verified | active | 295 | 2026-09-17 01:22:58 |
 | retirementanalyzer | analysis | active | 174 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
-| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 73 | 2026-09-16 18:56:26 |
+| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 75 | 2026-09-16 22:24:40 |
 | vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
 | voice_studio | Batch voice rendering active; test guide in docs/TESTING.md | active | 0 | — |
 
@@ -277,8 +277,8 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 ### qi_hive
 - **Phase:** Operational â€” audit remediation verified
 - **Status:** active
-- **Summary:** The 2026-09-16 audit remediation is verified end to end. Backups, task health, usage snapshots and all five scheduled ops actions pass; the full section-5 dashboard checklist was confirmed independently. Three defects found during verification were fixed: a supervisor KeyError that had silently frozen DASHBOARD.md for 38 days, a Headroom ops badge that probed the wrong port and could never go green, and stale ops badges caused by in-memory state overwriting the history file. Smoke coverage went from 14 to 71 tests across all 25 nav routes and 28 read-only APIs. The corrected usage figures were cross-checked against ccusage and agree to within 1.46%.
-- **Next:** Confirm tomorrow at or after 07:00 that the five ops actions fired on their own schedule and that backup_20260917.log and the 2026-09-17 backup set exist. Collect the owner's section 5 mismatch list if any. Get a ruling on renaming the 36 historical Agent HR rows to builtin:<type>. Consider trimming the Health Check page's ~104s cold render.
+- **Summary:** The 2026-09-16 audit remediation is verified end to end. Backups, task health, usage snapshots and all five scheduled ops actions pass; the full section-5 dashboard checklist was confirmed independently. Three defects found during verification were fixed: a supervisor KeyError that had silently froz
+- **Next:** None
 
 ### retirementanalyzer
 - **Phase:** analysis

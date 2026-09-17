@@ -1,51 +1,11 @@
 {
-  "generated_at": "2026-09-16T21:06:02",
-  "cutoff": "2026-09-14T00:00:00",
-  "transcripts_scanned": 8,
-  "transcripts_skipped_old": 200,
+  "generated_at": "2026-09-17T00:06:02",
+  "cutoff": "2026-09-15T00:00:00",
+  "transcripts_scanned": 6,
+  "transcripts_skipped_old": 202,
   "transcripts_skipped_subagent": 166,
-  "brain_rows_in_window": 53,
+  "brain_rows_in_window": 58,
   "candidates": [
-    {
-      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-Godseye\\0e348b9a-3556-4d93-a1fc-ae6bdd217ab4.jsonl",
-      "cwd": "C:\\APPS\\Godseye",
-      "first_ts": "2026-09-14T19:08:30.145Z",
-      "last_ts": "2026-09-15T00:20:00.736Z",
-      "user_prompts": 9,
-      "assistant_replies": 289,
-      "files_touched": [],
-      "first_prompt": "What is the default location that shows under God's eye view when it displays. it.",
-      "last_prompt": "how can I find flight AA962 from Sao Paulo to New york",
-      "project_id": "godseye",
-      "mtime": "2026-09-14T20:20:00",
-      "size_bytes": 3539245,
-      "likely_logged": false
-    },
-    {
-      "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74.jsonl",
-      "cwd": "C:\\APPS\\PlayDeck",
-      "first_ts": "2026-08-28T14:43:08.835Z",
-      "last_ts": "2026-08-28T20:47:11.151Z",
-      "user_prompts": 7,
-      "assistant_replies": 193,
-      "files_touched": [
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\gen_summary.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\geturl.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\iso2.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\iso3.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\iso4.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\patch_fix_deadlock.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\patch_record.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\patch_ui.py",
-        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--APPS-PlayDeck\\49005c84-7633-4fb4-b9d9-dc9aa58dca74\\scratchpad\\patch_ui2.py"
-      ],
-      "first_prompt": "trying to download this link: https://www.youtube.com/watch?v=7WZ9lGZDWt4 via play deck but I only get this... https://www.youtube.com/watch?v=7WZ9lGZDWt4",
-      "last_prompt": "how can I get the raw m3u8 file. I think VLC Media can record it without much of a problem.",
-      "project_id": "playdeck",
-      "mtime": "2026-09-14T17:43:23",
-      "size_bytes": 1085857,
-      "likely_logged": false
-    },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--APPS-SynVox\\52e20ed9-3bf7-4b26-b31a-db06f6d02a78.jsonl",
       "cwd": "C:\\APPS\\SynVox",
@@ -142,9 +102,9 @@
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\32e4d7d7-6e6e-4eb2-a251-2f4241462686.jsonl",
       "cwd": "C:\\QIH",
       "first_ts": "2026-09-16T20:22:40.409Z",
-      "last_ts": "2026-09-16T22:53:01.143Z",
-      "user_prompts": 14,
-      "assistant_replies": 307,
+      "last_ts": "2026-09-17T02:24:57.239Z",
+      "user_prompts": 15,
+      "assistant_replies": 308,
       "files_touched": [
         "C:\\QIH\\engine\\brain\\tools\\backup.py",
         "C:\\QIH\\engine\\brain\\tools\\db_backup_now.py",
@@ -170,32 +130,37 @@
         "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\32e4d7d7-6e6e-4eb2-a251-2f4241462686\\tasks\\bjur5x4bq.output"
       ],
       "first_prompt": "The LLM Usage under the QI Hive is not showing the appropriate numbers. Time to fully audit the QI Hive. and provide an assessment per Feature. From Dashboard to Guide. Once the assessment provided, provide here a summarized bullet going fr",
-      "last_prompt": "I read the whole thing. I approve your plan. Create a prompt for a new session to start executing the plan.",
+      "last_prompt": "<task-notification>\n<task-id>aee7974463b592816</task-id>\n<output-file>C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\32e4d7d7-6e6e-4eb2-a251-2f4241462686\\tasks\\aee7974463b592816.output</output-file>\n<status>completed</status>\n<summary>Agen",
       "project_id": "qi_hive",
-      "mtime": "2026-09-16T18:53:01",
-      "size_bytes": 3542032,
+      "mtime": "2026-09-16T22:39:57",
+      "size_bytes": 3550583,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-09-16 16:36:36",
-      "matched_brain_title": "Audited 6 dashboard tabs (Dispatch, Brain, Mission Control, ..."
+      "matched_brain_started": "2026-09-16 17:10:51",
+      "matched_brain_title": "session_start"
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\4e353da4-384e-4775-b13d-f4a8c665d281.jsonl",
       "cwd": "C:\\QIH",
       "first_ts": "2026-09-16T22:53:57.243Z",
-      "last_ts": "2026-09-17T01:05:41.178Z",
+      "last_ts": "2026-09-17T01:26:07.264Z",
       "user_prompts": 5,
-      "assistant_replies": 199,
-      "files_touched": [],
+      "assistant_replies": 314,
+      "files_touched": [
+        "C:\\Users\\renne\\.claude\\projects\\C--QIH\\memory\\reference_artifact_freshness_over_exit_codes.md",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\4e353da4-384e-4775-b13d-f4a8c665d281\\scratchpad\\append_docs.py",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\4e353da4-384e-4775-b13d-f4a8c665d281\\scratchpad\\commitmsg.txt",
+        "C:\\Users\\renne\\AppData\\Local\\Temp\\claude\\C--QIH\\4e353da4-384e-4775-b13d-f4a8c665d281\\scratchpad\\make_summary.py"
+      ],
       "first_prompt": "QI - S[next] - QI Hive: Verify audit remediation and close the loop\n\nContext\n- On 2026-09-16 a full feature audit of the QI Hive dashboard was run (C:\\QIH\\shared\\documentation\\QIHive_Feature_Audit_2026-09-16.docx) and all 19 remediation ite",
       "last_prompt": "I hit my usage limit while you were working, but it has reset now. Please continue from where you left off.",
       "project_id": "qi_hive",
-      "mtime": "2026-09-16T21:05:41",
-      "size_bytes": 1256923,
+      "mtime": "2026-09-16T21:26:07",
+      "size_bytes": 1772308,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-09-16 16:36:36",
-      "matched_brain_title": "Audited 6 dashboard tabs (Dispatch, Brain, Mission Control, ..."
+      "matched_brain_started": "2026-09-16 17:10:51",
+      "matched_brain_title": "session_start"
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--QIH\\e34d9e04-fcf7-44cd-9b5f-9d6cecd4681d.jsonl",
@@ -212,8 +177,8 @@
       "size_bytes": 486073,
       "likely_logged": true,
       "matched_via": "time_proximity",
-      "matched_brain_started": "2026-09-16 16:36:36",
-      "matched_brain_title": "Audited 6 dashboard tabs (Dispatch, Brain, Mission Control, ..."
+      "matched_brain_started": "2026-09-16 17:10:51",
+      "matched_brain_title": "session_start"
     },
     {
       "transcript": "C:\\Users\\renne\\.claude\\projects\\C--Users-renne-Downloads-NOTE-DISCOVERY\\3de90ab5-99ae-4732-808d-368f8201c861.jsonl",
@@ -263,7 +228,7 @@
     }
   ],
   "summary": {
-    "needs_backfill": 5,
+    "needs_backfill": 3,
     "already_logged": 3
   }
 }
