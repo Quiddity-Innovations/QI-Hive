@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-16 00:34:28 (nightly reconciler)_
+_Auto-generated: 2026-09-16 21:23:42 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@ _Auto-generated: 2026-09-16 00:34:28 (nightly reconciler)_
 | baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1189 | 2026-09-14 15:08:04 |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1190 | 2026-09-16 16:20:36 |
 | claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
@@ -21,7 +21,7 @@ _Auto-generated: 2026-09-16 00:34:28 (nightly reconciler)_
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
 | gamez | World Cup 2026 dashboard — tournament over; archive-or-generalise pending | complete | 8 | 2026-06-29 21:42:14 |
-| godseye | Live â€” fully provisioned | live | 40 | 2026-09-15 00:08:08 |
+| godseye | Live â€” fully provisioned | live | 41 | 2026-09-16 16:20:39 |
 | headroom | Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com | active | 0 | — |
 | lotterywiz | Public demo — documented; awaiting owner sign-off | active | 9 | 2026-08-16 20:53:09 |
 | m2v | RETIRED 2026-09-10 — deleted by owner decision | complete | 6 | 2026-06-18 00:35:05 |
@@ -39,12 +39,12 @@ _Auto-generated: 2026-09-16 00:34:28 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Observability hardening | active | 266 | 2026-09-15 00:35:03 |
+| qi_hive | Operational â€” audit remediation verified | active | 292 | 2026-09-17 01:22:58 |
 | retirementanalyzer | analysis | active | 174 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
-| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 45 | 2026-09-11 09:10:33 |
+| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 73 | 2026-09-16 18:56:26 |
 | vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
 | voice_studio | Batch voice rendering active; test guide in docs/TESTING.md | active | 0 | — |
 
@@ -275,10 +275,10 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** 1) ChromaDB doc refresh (open since June). 2) Decide whether qi_brain is tracked separately or folded into qi_hive bookkeeping. 3) Add a TaskHealth rule flagging any project whose git activity is >14 days newer than its Brain project_state.
 
 ### qi_hive
-- **Phase:** Observability hardening
+- **Phase:** Operational â€” audit remediation verified
 - **Status:** active
-- **Summary:** Scheduled-task health audit found 7 of 37 tasks silently dead; 8 of 9 remediation items completed and verified the same day (2026-08-27). QI_TaskHealth now monitors 22 tasks by output artifact every 30 min with Telegram alerting, replacing LastTaskResult and log-mtime as the health signals â€” both
-- **Next:** None
+- **Summary:** The 2026-09-16 audit remediation is verified end to end. Backups, task health, usage snapshots and all five scheduled ops actions pass; the full section-5 dashboard checklist was confirmed independently. Three defects found during verification were fixed: a supervisor KeyError that had silently frozen DASHBOARD.md for 38 days, a Headroom ops badge that probed the wrong port and could never go green, and stale ops badges caused by in-memory state overwriting the history file. Smoke coverage went from 14 to 71 tests across all 25 nav routes and 28 read-only APIs. The corrected usage figures were cross-checked against ccusage and agree to within 1.46%.
+- **Next:** Confirm tomorrow at or after 07:00 that the five ops actions fired on their own schedule and that backup_20260917.log and the 2026-09-17 backup set exist. Collect the owner's section 5 mismatch list if any. Get a ruling on renaming the 36 historical Agent HR rows to builtin:<type>. Consider trimming the Health Check page's ~104s cold render.
 
 ### retirementanalyzer
 - **Phase:** analysis

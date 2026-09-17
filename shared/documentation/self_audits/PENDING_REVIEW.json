@@ -1,15 +1,13 @@
 {
-  "generated": "2026-08-28T09:00:20.110155",
-  "mode": "apply-safe",
-  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-08-28_0900.md",
-  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-08-28_0900.docx",
-  "auto_fixed": [
-    "Removed 1 clean git worktree(s)",
-    "Pruned 3 dead .claude.json entries"
-  ],
+  "generated": "2026-09-16T21:14:04.455899",
+  "mode": "report-only",
+  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-16_2114.md",
+  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-16_2114.docx",
+  "auto_fixed": [],
   "needs_decision": [
-    "Large folder C:\\APPS\\CLAUDE\\Tools (3831.9 MB) - confirm still in use"
+    "1 stale .claude.json worktree entries",
+    "Large folder C:\\APPS\\CLAUDE\\Tools (1919.2 MB) - confirm still in use",
+    "6 config backups accumulating - consider trimming oldest"
   ],
-  "reviewed": true,
-  "decision": "2026-09-09: Tools is 2x Headroom venv. headroom_env kept (QI_Headroom service uses it); headroom_env.old deleted (2.0 GB); both gitignored."
+  "reviewed": false
 }

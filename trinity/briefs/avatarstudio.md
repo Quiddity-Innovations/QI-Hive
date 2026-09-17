@@ -1,6 +1,6 @@
 # AvatarStudio (avatarstudio) — L2 brief
 
-_Generated 2026-09-15 02:35:44_
+_Generated 2026-09-16 02:35:56_
 
 ## Registry facts
 - Path: `C:\APPS\AvatarStudio`
