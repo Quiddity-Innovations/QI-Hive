@@ -1,6 +1,6 @@
 # Maia (maia) — L2 brief
 
-_Generated 2026-09-17 02:35:36_
+_Generated 2026-09-18 02:35:23_
 
 ## Registry facts
 - Path: `C:\APPS\QI`

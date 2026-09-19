@@ -1,6 +1,6 @@
 # QI Media Studio (mediastudio) — L2 brief
 
-_Generated 2026-09-17 02:35:37_
+_Generated 2026-09-18 02:35:24_
 
 ## Registry facts
 - Path: `C:\APPS\MediaStudio`

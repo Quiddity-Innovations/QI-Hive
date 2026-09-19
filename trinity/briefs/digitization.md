@@ -1,6 +1,6 @@
 # Digitization Cost Tool (digitization) — L2 brief
 
-_Generated 2026-09-17 02:35:37_
+_Generated 2026-09-18 02:35:23_
 
 ## Registry facts
 - Path: `C:\Users\renne\Downloads\DIGITIZATION COSTS`

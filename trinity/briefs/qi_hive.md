@@ -1,6 +1,6 @@
 # QI Hive (qi_hive) — L2 brief
 
-_Generated 2026-09-17 02:35:37_
+_Generated 2026-09-18 02:35:23_
 
 ## Registry facts
 - Path: `C:\QIH`
@@ -10,12 +10,12 @@ _Generated 2026-09-17 02:35:37_
 - Notes: The nervous system and operational layer. Absorbs Claude Manager. QI Brain is the hive mind. Agents are the bees.
 
 ## Brain
-- Current state: status=active, phase=Operational â€” audit remediation verified
-  [auto:state_file] The 2026-09-16 audit remediation is verified end to end. Backups, task health, usage snapshots and all five scheduled ops actions pass; the full section-5 dashboard checklist was confirmed independently. Three defects found during verification were fixed: a supervisor KeyError that had silently froz
+- Current state: status=healthy, phase=Verification and hardening
+  [auto:state_file] The 2026-09-16 audit remediation survived its first unattended night: backup OK with six databases and integrity ok, all four scheduled Ops actions fired on their own at rc 0 with only C:\APPS paths, task health DEAD 0 / STALE 0, and 29 usage snapshot markers. The one red badge (headroom_status) was
 - Last decisions:
-  - Health checks assert on the artifact, not on a tool's exit code (2026-09-17)
-  - Per-day success markers are the Hive's task-health standard; services with dependents restart by relaunching the NSSM child, never sc stop (2026-09-16)
-  - LLM Usage figures are ~6x overstated; remediation (dedup + per-model pricing + ledger re-snapshot) delegated to Opus 5, backup fix first (2026-09-16)
+  - The Hive's global message.id dedup is correct; ccusage inflates by counting per file (2026-09-17)
+  - Health checks decide on an authoritative signal, never a silenced enumeration API (2026-09-17)
+  - AD-009: usage ledger carries a (day, project, family) dimension (2026-09-17)
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

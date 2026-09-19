@@ -1,6 +1,6 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-18 00:34:05 (nightly reconciler)_
+_Auto-generated: 2026-09-19 00:34:51 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@ _Auto-generated: 2026-09-18 00:34:05 (nightly reconciler)_
 | baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1196 | 2026-09-17 18:37:32 |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1209 | 2026-09-18 22:16:23 |
 | claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
@@ -28,7 +28,7 @@ _Auto-generated: 2026-09-18 00:34:05 (nightly reconciler)_
 | maia | Phase 4 — production; AWS LINE relay + channel refactor live | active | 23 | 2026-08-13 21:00:07 |
 | mailbrain | Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run) | active | 0 | — |
 | mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 188 | 2026-09-12 04:16:52 |
-| mediastudio | Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual | active | 87 | 2026-09-11 13:39:33 |
+| mediastudio | Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual | active | 88 | 2026-09-11 13:39:33 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | mythologies | Static site live | active | 5 | 2026-08-27 14:44:24 |
 | naya | Phase 5 — capability behind OpenClaw (application retired 2026-08-28) | paused | 12 | 2026-08-28 08:07:21 |
@@ -39,12 +39,12 @@ _Auto-generated: 2026-09-18 00:34:05 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Verification and hardening | healthy | 303 | 2026-09-17 21:44:51 |
+| qi_hive | Verification and hardening | healthy | 308 | 2026-09-18 17:05:41 |
 | retirementanalyzer | analysis | active | 174 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
-| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 78 | 2026-09-17 18:02:27 |
+| universal | Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted | complete | 79 | 2026-09-18 16:56:57 |
 | vlcdaemon | Working daemon, no repo until 2026-09-08 | active | 0 | — |
 | voice_studio | Batch voice rendering active; test guide in docs/TESTING.md | active | 0 | — |
 
