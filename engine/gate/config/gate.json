@@ -81,10 +81,6 @@
       "mode": "protected"
     },
     {
-      "upstream": "127.0.0.1:7841",
-      "mode": "protected"
-    },
-    {
       "host": "autopdf.quiddityinnovations.com",
       "upstream": "127.0.0.1:6969",
       "app": "AutoPDF",
