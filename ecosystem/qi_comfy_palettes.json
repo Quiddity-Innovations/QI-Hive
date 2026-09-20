@@ -1,0 +1,92 @@
+{
+  "qi_dark": {
+    "id": "qi_dark",
+    "name": "QI Studio (Dark)",
+    "light_theme": false,
+    "colors": {
+      "litegraph_base": {
+        "CLEAR_BACKGROUND_COLOR": "#0e1116",
+        "NODE_TITLE_COLOR": "#98a1ad",
+        "NODE_SELECTED_TITLE_COLOR": "#e6e9ee",
+        "NODE_TEXT_COLOR": "#e6e9ee",
+        "NODE_TEXT_HIGHLIGHT_COLOR": "#6a94ff",
+        "NODE_DEFAULT_COLOR": "#232932",
+        "NODE_DEFAULT_BGCOLOR": "#1a1e25",
+        "NODE_DEFAULT_BOXCOLOR": "#2a303a",
+        "NODE_BOX_OUTLINE_COLOR": "#6a94ff",
+        "NODE_ERROR_COLOUR": "#e5705f",
+        "DEFAULT_SHADOW_COLOR": "rgba(0,0,0,.45)",
+        "WIDGET_BGCOLOR": "#0f1216",
+        "WIDGET_OUTLINE_COLOR": "#2a303a",
+        "WIDGET_TEXT_COLOR": "#e6e9ee",
+        "WIDGET_SECONDARY_TEXT_COLOR": "#98a1ad",
+        "BADGE_FG_COLOR": "#0b0e13",
+        "BADGE_BG_COLOR": "#6a94ff"
+      },
+      "comfy_base": {
+        "fg-color": "#e6e9ee",
+        "bg-color": "#12151a",
+        "comfy-menu-bg": "#1a1e25",
+        "comfy-menu-secondary-bg": "#0f1216",
+        "comfy-input-bg": "#0f1216",
+        "input-text": "#e6e9ee",
+        "descrip-text": "#98a1ad",
+        "drag-text": "#98a1ad",
+        "error-text": "#e5705f",
+        "border-color": "#2a303a",
+        "tr-even-bg-color": "#1a1e25",
+        "tr-odd-bg-color": "#0f1216",
+        "content-bg": "#0f1216",
+        "content-fg": "#e6e9ee",
+        "content-hover-bg": "#1b2434",
+        "content-hover-fg": "#e6e9ee",
+        "bar-shadow": "rgba(0,0,0,.45) 0 0 0.5rem"
+      }
+    }
+  },
+  "qi_light": {
+    "id": "qi_light",
+    "name": "QI Studio (Light)",
+    "light_theme": true,
+    "colors": {
+      "litegraph_base": {
+        "CLEAR_BACKGROUND_COLOR": "#e9ecf1",
+        "NODE_TITLE_COLOR": "#5f6771",
+        "NODE_SELECTED_TITLE_COLOR": "#171a1f",
+        "NODE_TEXT_COLOR": "#171a1f",
+        "NODE_TEXT_HIGHLIGHT_COLOR": "#3b6ef5",
+        "NODE_DEFAULT_COLOR": "#eef0f4",
+        "NODE_DEFAULT_BGCOLOR": "#ffffff",
+        "NODE_DEFAULT_BOXCOLOR": "#e2e5ea",
+        "NODE_BOX_OUTLINE_COLOR": "#3b6ef5",
+        "NODE_ERROR_COLOUR": "#c0392b",
+        "DEFAULT_SHADOW_COLOR": "rgba(16,20,28,.08)",
+        "WIDGET_BGCOLOR": "#eef0f4",
+        "WIDGET_OUTLINE_COLOR": "#e2e5ea",
+        "WIDGET_TEXT_COLOR": "#171a1f",
+        "WIDGET_SECONDARY_TEXT_COLOR": "#5f6771",
+        "BADGE_FG_COLOR": "#ffffff",
+        "BADGE_BG_COLOR": "#3b6ef5"
+      },
+      "comfy_base": {
+        "fg-color": "#171a1f",
+        "bg-color": "#f5f6f8",
+        "comfy-menu-bg": "#ffffff",
+        "comfy-menu-secondary-bg": "#eef0f4",
+        "comfy-input-bg": "#eef0f4",
+        "input-text": "#171a1f",
+        "descrip-text": "#5f6771",
+        "drag-text": "#5f6771",
+        "error-text": "#c0392b",
+        "border-color": "#e2e5ea",
+        "tr-even-bg-color": "#ffffff",
+        "tr-odd-bg-color": "#eef0f4",
+        "content-bg": "#eef0f4",
+        "content-fg": "#171a1f",
+        "content-hover-bg": "#eaf0ff",
+        "content-hover-fg": "#171a1f",
+        "bar-shadow": "rgba(16,20,28,.08) 0 0 0.5rem"
+      }
+    }
+  }
+}

@@ -196,6 +196,46 @@ multiple of a `timeout=` value. Check the hostname before suspecting your code.
 
 ---
 
+## 5a. Visual Theme (panels that a person looks at)
+
+**Authority:** `C:\QIH\ecosystem\QI_Theme.json`
+**Tool:** `python C:\QIH\ecosystem\qi_theme_sync.py [--check|--dry-run]`
+**Written up in:** `C:\APPS\MediaStudio\docs\THEME.md`
+
+Any project that serves an HTML panel takes its colours from the authority. No
+project holds a colour value of its own — the tool stamps the token block into
+each surface between markers and nothing outside them is touched:
+
+```
+/* QI-THEME:BEGIN */   ...generated...   /* QI-THEME:END */
+```
+
+Stamped rather than linked on purpose: a stylesheet served from one project's
+port would make every other panel look wrong whenever that project was down.
+Each project stays self-contained at runtime; the duplication stays mechanical.
+
+- **Edit the authority, re-run the tool.** An edit inside the markers survives
+  until the next sync silently reverts it.
+- **`--check` is the freshness check** (see the unattended-jobs rule): it exits
+  non-zero the moment a surface falls behind. Wire it into the project's own
+  handoff or health check — a panel that quietly stops matching its neighbour
+  reports nothing and nobody files a ticket about a colour.
+- **Three states, not two.** `:root` light, `prefers-color-scheme` dark unless
+  pinned, `[data-theme]` beats both. Never define a token only inside a media
+  query.
+- **A third-party app keeps its own settings.** Speak its API (ComfyUI:
+  `POST /api/settings`); never hand-edit a file its own frontend owns, and never
+  overwrite the parts of its config that carry its meaning rather than our
+  branding.
+- **How a panel is told the mode is declared, not hardcoded.** `ui.theme_param`
+  and `ui.theme_live` in `qi_plugin.json`. Adding a panel must not mean editing
+  the host.
+
+Consumers as of 2026-09-20: MediaStudio, VoiceStudio, AvatarStudio (Gradio),
+ComfyUI (palette). The list lives in `QI_Theme.json` → `consumers`.
+
+---
+
 ## 6. Code Standards (Python)
 
 - **Encoding:** Always `encoding='utf-8'` on all file operations

@@ -1,0 +1,119 @@
+{
+  "$schema_note": "QI shared visual theme. THIS FILE IS THE AUTHORITY. Never copy values out of it into a project by hand - run qi_theme_sync.py, which stamps them between markers and can check for drift.",
+  "version": "1.0.0",
+  "updated": "2026-09-20",
+  "name": "QI Studio",
+  "rationale": [
+    "The media suite is four separate products behind one window. Each grew its own",
+    "near-identical palette, so they read as four apps rather than one. This file is the",
+    "single set of values; every surface stamps the same block.",
+    "",
+    "Two things are deliberately NOT unified:",
+    "  - the cockpit instrument panel is dark in both modes (a cockpit is dark), so its",
+    "    tokens have no light variant;",
+    "  - ComfyUI's node_slot colours are data-type semantics (MODEL purple, IMAGE blue),",
+    "    not branding. The chrome adopts QI; the type colours stay ComfyUI's."
+  ],
+  "modes": {
+    "light": {
+      "bg": "#f5f6f8",
+      "panel": "#ffffff",
+      "ink": "#171a1f",
+      "muted": "#5f6771",
+      "line": "#e2e5ea",
+      "accent": "#3b6ef5",
+      "accent-ink": "#ffffff",
+      "accent-soft": "#eaf0ff",
+      "ok": "#1a8f4a",
+      "warn": "#b8860b",
+      "bad": "#c0392b",
+      "code": "#eef0f4",
+      "shadow": "rgba(16,20,28,.08)",
+      "rail": "#1b1f27",
+      "rail-ink": "#cdd4de",
+      "rail-active": "#2a3140",
+      "rail-dim": "#6b7482"
+    },
+    "dark": {
+      "bg": "#12151a",
+      "panel": "#1a1e25",
+      "ink": "#e6e9ee",
+      "muted": "#98a1ad",
+      "line": "#2a303a",
+      "accent": "#6a94ff",
+      "accent-ink": "#0b0e13",
+      "accent-soft": "#1b2434",
+      "ok": "#4ec27e",
+      "warn": "#d9a441",
+      "bad": "#e5705f",
+      "code": "#0f1216",
+      "shadow": "rgba(0,0,0,.45)",
+      "rail": "#0e1116",
+      "rail-ink": "#b7c0cc",
+      "rail-active": "#1e242e",
+      "rail-dim": "#6b7482"
+    }
+  },
+  "fixed": {
+    "_note": "Same in both modes. The cockpit instrument panel is dark by design; the nav rail is per-mode (see modes.*.rail) because it deepens in dark.",
+    "rail-brand": "#ffffff",
+    "inst": "#1b1f27",
+    "inst-ink": "#e8edf4",
+    "inst-dim": "#8a95a5",
+    "inst-dim2": "#7f8a9a",
+    "inst-mono": "#6f7a8a",
+    "inst-head": "rgba(255,255,255,.031)",
+    "inst-line": "rgba(255,255,255,.059)",
+    "inst-edge": "rgba(0,0,0,.4)",
+    "inst-well": "#0b0e13",
+    "inst-chip": "rgba(255,255,255,.051)",
+    "inst-chip-line": "rgba(255,255,255,.078)",
+    "inst-chip-ink": "#dfe5ee",
+    "lamp-up": "#2fd07a",
+    "lamp-warn": "#e0a83c",
+    "lamp-bad": "#e0574a",
+    "lamp-off": "#4a2f2f",
+    "knob-hi": "#6e7889",
+    "knob-lo": "#49525f",
+    "knob-on-hi": "#5fe09a",
+    "knob-on-lo": "#2fa864",
+    "knob-bed-on": "#14361f",
+    "inst-btn-ink": "#b7c0cc",
+    "inst-btn-line": "rgba(255,255,255,.122)",
+    "inst-btn-hover": "rgba(255,255,255,.071)",
+    "inst-shadow": "rgba(0,0,0,.333)",
+    "inst-well-shadow": "rgba(0,0,0,.667)"
+  },
+  "type": {
+    "ui": "\"Segoe UI\",system-ui,-apple-system,sans-serif",
+    "mono": "Consolas,ui-monospace,\"Cascadia Mono\",monospace",
+    "radius": "10px",
+    "radius-sm": "7px"
+  },
+  "consumers": [
+    {
+      "id": "mediastudio",
+      "path": "C:\\APPS\\MediaStudio\\ui\\app.html",
+      "kind": "css",
+      "note": "the host window"
+    },
+    {
+      "id": "voicestudio",
+      "path": "C:\\APPS\\VoiceStudio\\ui\\panel.html",
+      "kind": "css",
+      "note": "embedded at ?embed=1&theme=<mode>"
+    },
+    {
+      "id": "avatarstudio",
+      "path": "C:\\APPS\\AvatarStudio\\avatar_studio.py",
+      "kind": "gradio",
+      "note": "Gradio themes.Soft; we override its CSS variables. Switches on ?__theme=<mode>"
+    },
+    {
+      "id": "comfyui",
+      "path": "http://127.0.0.1:8740",
+      "kind": "comfy-palette",
+      "note": "installed through ComfyUI's own POST /api/settings - its settings file is never hand-edited"
+    }
+  ]
+}
