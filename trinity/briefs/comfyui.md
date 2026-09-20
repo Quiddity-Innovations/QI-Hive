@@ -1,6 +1,6 @@
 # ComfyUI (QI Media Engine) (comfyui) — L2 brief
 
-_Generated 2026-09-18 02:35:24_
+_Generated 2026-09-19 02:35:17_
 
 ## Registry facts
 - Path: `D:\AI`

@@ -1,17 +1,17 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-19 00:34:51 (nightly reconciler)_
+_Auto-generated: 2026-09-20 00:33:35 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | akiyascout | Registered, no commits yet | paused | 0 | — |
 | autopdf | Hardening + MCP integration; feature-tour videos delivered 2026-08-11 | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion | active_development | 8 | 2026-09-10 01:46:29 |
-| baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
+| baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 28 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
-| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1209 | 2026-09-18 22:16:23 |
-| claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 40 | 2026-08-20 15:41:37 |
+| claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1221 | 2026-09-19 21:55:39 |
+| claude_voice | Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19 | blocked | 43 | 2026-09-19 14:09:38 |
 | cognibase | Pre-POC — Phase B core complete; feature-tour video delivered 2026-08-13 | active | 29 | 2026-08-13 18:42:32 |
 | comfyui | Active â€” media engine operational | active | 5 | 2026-09-06 14:52:30 |
 | connector | v1.0 live + dispatch executor tools (2026-08-16); docs behind code | active | 1 | 2026-07-30 21:21:48 |
@@ -21,7 +21,7 @@ _Auto-generated: 2026-09-19 00:34:51 (nightly reconciler)_
 | filehq | Retired — merged into Naya | retired | 0 | — |
 | filmforge | Completion plan defined 2026-08-27; core scene-split module built | active | 1 | 2026-08-11 04:04:31 |
 | gamez | World Cup 2026 dashboard — tournament over; archive-or-generalise pending | complete | 8 | 2026-06-29 21:42:14 |
-| godseye | Live â€” fully provisioned | live | 41 | 2026-09-16 16:20:39 |
+| godseye | active development | healthy | 47 | 2026-09-19 14:54:30 |
 | headroom | Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com | active | 0 | — |
 | lotterywiz | Public demo — documented; awaiting owner sign-off | active | 9 | 2026-08-16 20:53:09 |
 | m2v | RETIRED 2026-09-10 — deleted by owner decision | complete | 6 | 2026-06-18 00:35:05 |
@@ -39,8 +39,8 @@ _Auto-generated: 2026-09-19 00:34:51 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Verification and hardening | healthy | 308 | 2026-09-18 17:05:41 |
-| retirementanalyzer | analysis | active | 174 | 2026-09-12 17:57:59 |
+| qi_hive | Verification and hardening | healthy | 310 | 2026-09-19 00:35:02 |
+| retirementanalyzer | analysis | active | 177 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |
@@ -167,10 +167,16 @@ Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both
 - **Next:** Owner decision: archive as a one-off (stop services, log archive date) or generalise the proxy/scoring engine for a future tournament.
 
 ### godseye
-- **Phase:** Live â€” fully provisioned
-- **Status:** live
-- **Summary:** God's Eye View fully operational at C:\APPS\Godseye on port 8780 (loopback-only, no service, no tunnel). All 8 provider keys configured including OpenSky OAuth; all 10 functional checks pass with live data (Google place search resolving "Belo Horizonte", OpenAI realtime voice token minting, 6396 vessels, 164262 fire detections, 30.9KB TomTom flow tiles, 9505 aircraft, 2.6MB TLE, 800 cameras, 24 launches). Maintenance tooling built at project root: Godseye.bat menu plus maintain.mjs / verify-all.mjs / check-keys.mjs / set-key.mjs / make-portable.mjs, all syntax-verified. Two portability paths: a 23KB portable bundle with INSTALL.bat, and Docker/compose (node:24-bookworm-slim, runtime key injection, 127.0.0.1-bound ports). Runbook published at https://claude.ai/code/artifact/879e5e69-62f2-46a1-99db-98ef2e0da959. qi_validator 19/20.
-- **Next:** Nothing blocking â€” the install is complete and verified. Optional: decide pin-vs-track for the vendored upstream version and re-run verify-all.mjs after each pull; test the Docker path end-to-end (Docker CLI 29.7.2 / Compose v5.4.0 installed, Desktop daemon was not running); transfer the portable bundle to the laptop via USB or encrypted channel and delete it after install. Future: custom QI data layer (MapSnap/NEXUS geodata) as an isolated module under src/data/ needing no upstream changes.
+- **Phase:** active development
+- **Status:** healthy
+- **Summary:** Flight-number search works, and now works even when the live feed does not. Typing an IATA flight number resolves to the ICAO callsign a transponder actually broadcasts (QR779â†’QTR779, NH833â†’ANA833, G31252â†’GLO1252, EK319â†’UAE319, DL796â†’DAL796) and tracks the aircraft; a codeshare that is never transmitted (JL5385) explains itself.
+
+The proxy now keeps every snapshot it downloads instead of discarding it (decision 624): ~12,300 callsigns per worldwide snapshot, 1.7 MB on disk, 6-hour retention, no extra upstream call. A search miss resolves index-first (free, instant), then the live adsb.lol callsign endpoint, then a stale index fix labelled honestly as "last seen N min ago". /api/flight-index?stats=1 reports coverage per continent.
+
+Two defects reported mid-session were misdiagnoses and were retracted (decision 623): place-name search is NOT broken, and arming the tracking latch does NOT cancel a camera flight. Both came from an idle browser pane running no Cesium render loop. Recorded in C:\APPS\Godseye\CLAUDE.md and project memory.
+
+Suite 2775 pass / 0 fail on qi/local (d78c83e, 72fd14a, 00d21ea, a0ac080 â€” unpushed; origin is the upstream third party).
+- **Next:** Watch the index over a longer run: confirm the 6-hour TTL and 300k ceiling behave, and that the file stays a few MB. Consider seeding it by sweeping several continental anchors against adsb.lol when OpenSky is throttled, since OpenSky's free tier is heavily NA/Europe weighted (7,111 NA and 3,890 EU against 768 Asia, 319 South America, 35 Oceania). Consider not caching a 429 for the full 60s TTL in the shared proxyJson helper. Extend the IATA table only with verified codes.
 
 ### headroom
 - **Phase:** Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com
