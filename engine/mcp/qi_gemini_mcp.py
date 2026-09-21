@@ -131,6 +131,46 @@ def _bump_usage() -> int:
     return count
 
 
+def _tokens_path() -> Path:
+    day = datetime.now().strftime("%Y-%m-%d")
+    return DATA_DIR / f"tokens_{day}.jsonl"
+
+
+def _record_tokens(tool: str, model: str, raw: dict, latency_ms: int) -> None:
+    """Append Google's own token counts for one successful call.
+
+    Added 2026-09-20. Until then `_call_gemini` extracted the text and dropped
+    `usageMetadata`, so the Hive dashboard had to reconstruct Gemini volume as
+    prompt_chars/4 from the diagnostic log — a real estimate, and one the LLM
+    Usage tab had to flag as such on every row. Google returns the measured
+    split on every response; writing it down costs one line and turns an
+    estimate into a measurement.
+
+    Read by `engine/common/usage_assistants.py`. Sizes only — never the prompt,
+    never the reply, never the key (same rule as `_log_call`).
+    """
+    try:
+        meta = (raw or {}).get("usageMetadata") or {}
+        if not meta:
+            return
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        row = {
+            "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "tool": tool,
+            "model": model,
+            "prompt_tokens": int(meta.get("promptTokenCount") or 0),
+            "output_tokens": int(meta.get("candidatesTokenCount") or 0),
+            "cached_tokens": int(meta.get("cachedContentTokenCount") or 0),
+            "thoughts_tokens": int(meta.get("thoughtsTokenCount") or 0),
+            "total_tokens": int(meta.get("totalTokenCount") or 0),
+            "latency_ms": latency_ms,
+        }
+        with open(_tokens_path(), "a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except Exception:
+        pass        # accounting must never cost a caller their answer
+
+
 # ------------------------------------------------------------------- penalty
 # "castigo" — a model that just failed with 429/503/timeout is benched for
 # penalty_minutes so the next call skips straight to the next rung of the
@@ -291,7 +331,7 @@ def _generate(prompt: str, system: str = None, model: str = None, tool_name: str
                     "attempts": attempts}
 
         started = time.monotonic()
-        ok, text_or_err, _raw, status_code = _call_gemini(
+        ok, text_or_err, raw, status_code = _call_gemini(
             candidate,
             contents=[{"parts": [{"text": prompt}]}],
             system=system,
@@ -303,6 +343,7 @@ def _generate(prompt: str, system: str = None, model: str = None, tool_name: str
         _log_call(tool_name, candidate, prompt_chars, ok, latency_ms)
 
         if ok:
+            _record_tokens(tool_name, candidate, raw, latency_ms)
             _clear_bench(candidate)
             return {"text": text_or_err, "model": candidate, "attempts": attempts}
 

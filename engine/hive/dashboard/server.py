@@ -172,6 +172,19 @@ except Exception as _e:                                    # pragma: no cover
     usage_ledger = usage_dimensions = usage_snapshot_task = None
     log.warning(f"usage_ledger unavailable, falling back to live parse: {_e}")
 
+# ── The other two Trinity legs ───────────────────────────────────────────────
+# Claude has been measured since day one; ChatGPT (via Codex) and Gemini went
+# live 2026-09-08 and spent quota invisibly for twelve days because this page
+# only ever knew about ~/.claude. usage_assistants parses Codex's own rollout
+# transcripts and the Gemini MCP's token log so all three legs show up here.
+# Optional by design: if it fails to import, the Claude figures must still
+# render exactly as before.
+try:
+    from engine.common import usage_assistants
+except Exception as _e:                                    # pragma: no cover
+    usage_assistants = None
+    log.warning(f"usage_assistants unavailable, LLM Usage will show Claude only: {_e}")
+
 
 def merge_status_projects(projects: dict) -> dict:
     """Collapse duplicate project entries in status.json into one row each.
@@ -643,14 +656,17 @@ PAGE_READMES: dict[str, str] = {
         <p class="mb-0 text-muted">Approximately one-third of planned tasks are active. The rest are designed but not yet created. Use this page to confirm that nightly jobs actually ran before assuming the data they produce is fresh.</p>
     """,
     "usage": """
-        <p><strong>LLM Usage</strong> tracks token consumption and estimated cost across every Claude session logged by QI Brain.</p>
+        <p><strong>LLM Usage</strong> tracks token consumption and API-equivalent cost across all three Trinity legs — <strong>Claude</strong> (Claude Code), <strong>ChatGPT</strong> (via Codex) and <strong>Gemini</strong> (via the qi-gemini MCP).</p>
         <ul class="mb-2">
-          <li><strong>Today / 7d / 30d cards</strong> — total tokens (input + output + cache) and cost for each window.</li>
-          <li><strong>Daily chart</strong> — three bars per day: Actual cost · Cost with local models substituted · Cost with both local and batch optimisations. Hover for exact figures.</li>
+          <li><strong>All Three Legs</strong> — one row per assistant: calls, fresh tokens, cache re-reads, API-equivalent spend and the actual flat-rate plan behind it. This is the only card that mixes the three; everything below it is Claude-only unless its title says otherwise.</li>
+          <li><strong>Trinity Assistants</strong> — quota pressure first (ChatGPT's rolling 5-hour window and weekly cap; Gemini's calls-today against the self-imposed 200/day), then a per-model breakdown. Both plans are flat rate, so <em>running out of window</em> is the real failure mode, not overspending.</li>
+          <li><strong>Today / 7d / 30d cards</strong> — Claude only: total fresh tokens (input + output + cache writes, excluding re-reads) and cost for each window.</li>
+          <li><strong>Daily chart</strong> — Claude only. Three bars per day: Actual cost · Cost with local models substituted · Cost with both local and batch optimisations. Hover for exact figures.</li>
           <li><strong>By project / By model</strong> — break down spend to see which projects and which models are consuming the most budget.</li>
           <li><strong>Savings calculator</strong> — shows how much you could save by routing more work through local models (Ollama) or using the Anthropic Batch API for non-interactive tasks.</li>
         </ul>
-        <p class="mb-0 text-muted">Data is logged automatically by Claude Code session hooks. If a session shows no usage data, check that the <code>QI_BrainAPI</code> service was running during that session — usage is only recorded when Brain is online.</p>
+        <p class="mb-1 text-muted"><strong>Where the numbers come from.</strong> Claude: <code>~/.claude/projects/**/*.jsonl</code>. ChatGPT: Codex's own rollout transcripts in <code>~/.codex/sessions/</code>, which carry a measured token split per response and cover both Claude's MCP delegations and the sessions you drive in Codex Desktop. Gemini: <code>data/gemini_mcp/tokens_*.jsonl</code>, written from Google's <code>usageMetadata</code>. Gemini calls made before 2026-09-20 predate that logging and are reconstructed from the call log — every one of those is badged <span class="badge text-bg-warning">est</span>.</p>
+        <p class="mb-0 text-muted">Assistant prices live in <code>config/llm_prices_external.json</code> with a source URL and a verification date — correcting a rate is a data edit, not a code change. A model with no published rate shows as <span class="badge text-bg-secondary">inferred</span> (costed at the account's default model) or <span class="badge text-bg-dark">unpriced</span>, never as a confident guess.</p>
     """,
     "activity": """
         <p><strong>Activity</strong> shows two live event feeds — one from each Claude runtime.</p>
@@ -7260,6 +7276,47 @@ def api_usage_savings_today():
 def api_usage_savings_by_model(days: int = 30):
     return JSONResponse({"days": days, "rows": usage_savings_by_model(days)})
 
+@app.get("/api/usage/assistants")
+def api_usage_assistants(days: int = 30):
+    """Gemini + ChatGPT/Codex totals for the window, split by provider."""
+    if usage_assistants is None:
+        return JSONResponse({"error": "usage_assistants unavailable"}, status_code=503)
+    return JSONResponse(usage_assistants.totals(days))
+
+
+@app.get("/api/usage/assistants/daily")
+def api_usage_assistants_daily(days: int = 30):
+    if usage_assistants is None:
+        return JSONResponse({"error": "usage_assistants unavailable"}, status_code=503)
+    return JSONResponse({"days": days, "series": usage_assistants.daily(days)})
+
+
+@app.get("/api/usage/assistants/by_model")
+def api_usage_assistants_by_model(days: int = 30):
+    if usage_assistants is None:
+        return JSONResponse({"error": "usage_assistants unavailable"}, status_code=503)
+    return JSONResponse({"days": days, "rows": usage_assistants.by_model(days)})
+
+
+@app.get("/api/usage/assistants/sources")
+def api_usage_assistants_sources():
+    """Where the assistant numbers come from, and whether each leg was found.
+    Makes a silent zero distinguishable from a genuinely idle assistant."""
+    if usage_assistants is None:
+        return JSONResponse({"error": "usage_assistants unavailable"}, status_code=503)
+    return JSONResponse(usage_assistants.available())
+
+
+@app.get("/api/usage/quota")
+def api_usage_quota():
+    """Live quota pressure on the two subscription assistants. Per Renne's
+    standing directive the unit of waste is quota, not dollars — this is the
+    number to act on."""
+    if usage_assistants is None:
+        return JSONResponse({"error": "usage_assistants unavailable"}, status_code=503)
+    return JSONResponse(usage_assistants.quota())
+
+
 @app.get("/api/usage/range")
 def api_usage_range(start: str, end: str = ""):
     """Token + cost + savings metrics for an inclusive [start, end] local-date
@@ -7272,6 +7329,303 @@ def api_usage_range(start: str, end: str = ""):
     except (ValueError, TypeError):
         return JSONResponse({"error": "dates must be ISO yyyy-mm-dd"}, status_code=400)
     return JSONResponse(usage_range(s, e))
+
+
+CLAUDE_PLAN_USD_PER_MONTH = 200.0   # Claude MAX. Shown only to compare outlay vs API-equivalent.
+
+
+def _fmt_tokens(n: int) -> str:
+    """1_558_339 -> '1.6M'. Keeps three provider columns readable side by side."""
+    if n >= 1_000_000_000:
+        return f"{n/1_000_000_000:.2f}B"
+    if n >= 1_000_000:
+        return f"{n/1_000_000:.1f}M"
+    if n >= 1_000:
+        return f"{n/1_000:.1f}K"
+    return f"{n:,}"
+
+
+def _render_three_legs(claude30: dict, days: int = 30) -> str:
+    """One row per Trinity leg: what it consumed, what it would have cost on a
+    metered API, and what it actually costs per month.
+
+    Deliberately NOT folded into the Claude totals above. The 2026-09-16 audit
+    was caused by a number that quietly grew to mean something other than what
+    its label said; mixing a measured Claude figure with an assistant figure
+    under one heading would repeat exactly that. Three legs, three rows, one
+    explicit total.
+    """
+    if usage_assistants is None:
+        return ""
+    try:
+        a = usage_assistants.totals(days)
+        src = usage_assistants.available()
+    except Exception as e:                                  # pragma: no cover
+        log.warning(f"assistant usage unavailable: {e}")
+        return ""
+
+    legs = [
+        {"name": "Claude", "sub": "Claude Code · this session and every agent",
+         "icon": "bi-stars", "colour": "#6366f1",
+         "calls": claude30.get("turns", 0), "calls_label": "turns",
+         "tokens": claude30.get("tokens", 0), "cache": claude30.get("cache_reads", 0),
+         "cost": claude30.get("cost_usd", 0.0), "plan": "Claude MAX",
+         "plan_usd": CLAUDE_PLAN_USD_PER_MONTH, "flags": ""},
+    ]
+    for p in usage_assistants.PROVIDERS:
+        r = a["providers"][p]
+        sub = usage_assistants.subscription(p)
+        flags = []
+        if r["estimated_calls"]:
+            flags.append(f'<span class="badge text-bg-warning ms-1" title="Reconstructed from the '
+                         f'call log as prompt_chars/4 — measured token logging started 2026-09-20">'
+                         f'{r["estimated_calls"]} est</span>')
+        if r["inferred_calls"]:
+            flags.append(f'<span class="badge text-bg-secondary ms-1" title="Vendor publishes no '
+                         f'rate for this slug; costed at the account default model">'
+                         f'{r["inferred_calls"]} inferred price</span>')
+        legs.append({
+            "name": r["label"],
+            "sub": ("Codex rollout transcripts — MCP delegations + Codex Desktop"
+                    if p == "codex" else "qi-gemini MCP — usageMetadata per call"),
+            "icon": "bi-robot" if p == "codex" else "bi-google",
+            "colour": "#10a37f" if p == "codex" else "#4285f4",
+            "calls": r["calls"], "calls_label": "calls",
+            "tokens": r["tokens"], "cache": r["cache_reads"],
+            "cost": r["cost_usd"], "plan": sub.get("plan", "—"),
+            "plan_usd": float(sub.get("usd_per_month") or 0.0),
+            "flags": "".join(flags),
+        })
+
+    tot_tokens = sum(l["tokens"] for l in legs)
+    tot_cache = sum(l["cache"] for l in legs)
+    tot_cost = sum(l["cost"] for l in legs)
+    tot_calls = sum(l["calls"] for l in legs)
+    tot_plan = sum(l["plan_usd"] for l in legs)
+
+    rows = ""
+    for l in legs:
+        share = (l["cost"] / tot_cost * 100) if tot_cost else 0.0
+        rows += f'''<tr>
+          <td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:{l["colour"]};margin-right:7px"></span>
+              <strong>{l["name"]}</strong>{l["flags"]}
+              <br><small class="text-muted">{l["sub"]}</small></td>
+          <td class="text-end">{l["calls"]:,}<br><small class="text-muted">{l["calls_label"]}</small></td>
+          <td class="text-end">{_fmt_tokens(l["tokens"])}</td>
+          <td class="text-end text-muted">{_fmt_tokens(l["cache"])}</td>
+          <td class="text-end"><strong>${l["cost"]:,.2f}</strong></td>
+          <td style="width:130px">
+            <div class="progress" style="height:6px" title="{share:.1f}% of API-equivalent spend">
+              <div class="progress-bar" style="width:{share:.1f}%;background:{l["colour"]}"></div>
+            </div>
+            <small class="text-muted">{share:.0f}%</small>
+          </td>
+          <td class="text-end"><small>{l["plan"]}<br><span class="text-muted">${l["plan_usd"]:,.0f}/mo</span></small></td>
+        </tr>'''
+
+    missing = ""
+    if not src.get("codex_found"):
+        missing += (f'<div class="small text-warning mt-2"><i class="bi bi-exclamation-triangle me-1"></i>'
+                    f'No Codex transcripts found under <code>{src.get("codex_dir")}</code> — the ChatGPT row '
+                    f'is zero because there is no evidence, not because nothing ran.</div>')
+    # Claude's own Codex delegations are written inside WSL and reach this page
+    # only through the mirror. A mirror that quietly stops looks exactly like a
+    # quiet week, so say so out loud.
+    mir = src.get("codex_wsl_mirror") or {}
+    if not src.get("codex_wsl_root"):
+        missing += ('<div class="small text-warning mt-2"><i class="bi bi-exclamation-triangle me-1"></i>'
+                    'The WSL-side Codex transcripts are not being read — this row counts Codex Desktop '
+                    'only and is missing every delegation Claude made over MCP. Run '
+                    '<code>python C:\\QIH\\engine\\common\\usage_codex_wsl_sync.py</code>.</div>')
+    elif mir.get("stale"):
+        age = mir.get("age_hours")
+        age_txt = f"{age:.0f}h ago" if isinstance(age, (int, float)) else "never"
+        missing += (f'<div class="small text-warning mt-2"><i class="bi bi-clock-history me-1"></i>'
+                    f'WSL transcript mirror last ran <strong>{age_txt}</strong> — Claude\'s Codex '
+                    f'delegations since then are not counted yet. Re-run '
+                    f'<code>usage_codex_wsl_sync.py</code>.</div>')
+    elif mir.get("error"):
+        missing += (f'<div class="small text-danger mt-2"><i class="bi bi-x-octagon me-1"></i>'
+                    f'WSL transcript mirror failed: <code>{mir["error"]}</code></div>')
+    if not src.get("gemini_measured"):
+        missing += ('<div class="small text-muted mt-2"><i class="bi bi-info-circle me-1"></i>'
+                    'No measured Gemini token log yet — rows shown are reconstructed from the call log. '
+                    'Measured logging starts with the next Gemini call after the MCP server restarts.')
+
+    return f'''
+    <div class="card mb-3" style="border-left:4px solid #10a37f">
+      <div class="card-header py-2 area-toggle d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" data-bs-target="#area-trinity" role="button" aria-expanded="true">
+        <h3 class="card-title mb-0"><i class="bi bi-diagram-3 me-2"></i>All Three Legs ({days}d)
+          <span class="text-muted small fw-normal ms-2">Claude · ChatGPT/Codex · Gemini</span></h3>
+        <i class="bi bi-chevron-down area-chevron"></i>
+      </div>
+      <div id="area-trinity" class="collapse show"><div class="card-body py-2">
+        <table class="table table-sm align-middle mb-1">
+          <thead><tr class="text-muted" style="font-size:.75rem">
+            <th>Leg</th><th class="text-end">Calls</th><th class="text-end">Fresh tokens</th>
+            <th class="text-end">Cache re-reads</th><th class="text-end">API-equiv</th>
+            <th>Share</th><th class="text-end">Actual plan</th>
+          </tr></thead>
+          <tbody>{rows}</tbody>
+          <tfoot><tr class="border-top">
+            <td><strong>All three</strong></td>
+            <td class="text-end"><strong>{tot_calls:,}</strong></td>
+            <td class="text-end"><strong>{_fmt_tokens(tot_tokens)}</strong></td>
+            <td class="text-end text-muted">{_fmt_tokens(tot_cache)}</td>
+            <td class="text-end"><strong>${tot_cost:,.2f}</strong></td>
+            <td></td>
+            <td class="text-end"><strong>${tot_plan:,.0f}/mo</strong></td>
+          </tr></tfoot>
+        </table>
+        <p class="small text-muted mb-0">
+          <strong>API-equiv</strong> is what this traffic would have cost on a metered API — all three legs are
+          flat-rate subscriptions, so nothing in that column is money spent. Claude and Codex token counts are
+          measured from each vendor's own client transcripts; Gemini's are measured where the token log exists
+          and flagged <span class="badge text-bg-warning">est</span> where they were reconstructed.
+        </p>
+        {missing}
+      </div></div>
+    </div>'''
+
+
+def _render_assistant_detail(days: int = 30) -> str:
+    """Quota pressure first, models second.
+
+    Renne's standing directive (2026-09-08): "the unit of waste is quota, not
+    dollars." Both assistants are $20/mo or free — running out of window is the
+    failure mode, not overspending — so the quota panel leads and the dollar
+    table supports it.
+    """
+    if usage_assistants is None:
+        return ""
+    try:
+        q = usage_assistants.quota()
+        models = usage_assistants.by_model(days)
+        origins = usage_assistants.by_originator(days)
+    except Exception as e:                                  # pragma: no cover
+        log.warning(f"assistant detail unavailable: {e}")
+        return ""
+
+    cq = q["codex"]
+    codex_rows = "".join(
+        f'<tr><td><code>{m["model"]}</code></td>'
+        f'<td class="text-end">{m["calls"]:,}</td>'
+        f'<td class="text-end">{_fmt_tokens(m["tokens"])}</td></tr>'
+        for m in cq["by_model"]
+    ) or '<tr><td colspan="3" class="text-muted text-center py-2">Nothing in the last 5 hours.</td></tr>'
+
+    gq = q["gemini"]
+    g_pct = min(100.0, gq["pct"])
+    g_colour = "bg-danger" if g_pct >= 85 else "bg-warning" if g_pct >= 60 else "bg-success"
+
+    model_rows = ""
+    for m in models:
+        badge = ""
+        if m["unpriced_calls"]:
+            badge = '<span class="badge text-bg-dark ms-1" title="No published rate — not costed">unpriced</span>'
+        elif m["inferred_calls"]:
+            badge = ('<span class="badge text-bg-secondary ms-1" title="Vendor publishes no rate for this '
+                     'slug; costed at the account default model">inferred</span>')
+        if m["estimated_calls"]:
+            badge += ('<span class="badge text-bg-warning ms-1" title="Token count reconstructed as '
+                      'prompt_chars/4, not measured">est</span>')
+        colour = "#10a37f" if m["provider"] == "codex" else "#4285f4"
+        model_rows += f'''<tr>
+          <td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:{colour};margin-right:7px"></span>
+              <code>{m["model"]}</code>{badge}</td>
+          <td><small class="text-muted">{m["label"]}</small></td>
+          <td class="text-end">{m["calls"]:,}</td>
+          <td class="text-end">{_fmt_tokens(m["tokens"])}</td>
+          <td class="text-end text-muted">{_fmt_tokens(m["cache_reads"])}</td>
+          <td class="text-end">${m["cost_usd"]:,.2f}</td>
+        </tr>'''
+    model_rows = model_rows or ('<tr><td colspan="6" class="text-muted text-center py-3">'
+                                'No assistant calls in this window.</td></tr>')
+
+    origin_rows = "".join(
+        f'<tr><td><small>{o["originator"] or "unknown"}</small></td>'
+        f'<td><small class="text-muted">{o["provider"]}</small></td>'
+        f'<td class="text-end">{o["calls"]:,}</td>'
+        f'<td class="text-end">{_fmt_tokens(o["tokens"])}</td></tr>'
+        for o in origins
+    ) or '<tr><td colspan="4" class="text-muted text-center py-2">&mdash;</td></tr>'
+
+    return f'''
+    <div class="card mb-3">
+      <div class="card-header py-2 area-toggle d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" data-bs-target="#area-assistants" role="button" aria-expanded="true">
+        <h3 class="card-title mb-0"><i class="bi bi-people me-2"></i>Trinity Assistants — Quota &amp; Models
+          <span class="text-muted small fw-normal ms-2">ChatGPT/Codex · Gemini</span></h3>
+        <i class="bi bi-chevron-down area-chevron"></i>
+      </div>
+      <div id="area-assistants" class="collapse show"><div class="card-body py-2">
+
+        <div class="alert alert-secondary py-2 small mb-3">
+          <i class="bi bi-fuel-pump me-1"></i>
+          <strong>Quota is the constraint here, not cost.</strong> Both plans are flat rate, so the risk is
+          running out of window mid-task — not a bill. Watch these two panels; the dollar table below is
+          only for weighing the three legs against each other.
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-7">
+            <div class="border rounded p-2 h-100">
+              <div class="d-flex justify-content-between align-items-baseline mb-2">
+                <strong style="color:#10a37f"><i class="bi bi-robot me-1"></i>ChatGPT Plus — rolling 5-hour window</strong>
+                <span class="badge text-bg-dark">{cq["window_calls"]:,} calls · {_fmt_tokens(cq["window_tokens"])}</span>
+              </div>
+              <table class="table table-sm mb-2">
+                <thead><tr class="text-muted" style="font-size:.72rem">
+                  <th>Model</th><th class="text-end">Calls</th><th class="text-end">Fresh tokens</th>
+                </tr></thead>
+                <tbody>{codex_rows}</tbody>
+              </table>
+              <div class="small text-muted">
+                Last 7 days: <strong>{cq["week_calls"]:,}</strong> calls · <strong>{_fmt_tokens(cq["week_tokens"])}</strong> against the weekly cap.<br>
+                {cq["note"]}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="border rounded p-2 h-100">
+              <div class="d-flex justify-content-between align-items-baseline mb-2">
+                <strong style="color:#4285f4"><i class="bi bi-google me-1"></i>Gemini — calls today</strong>
+                <span class="badge text-bg-dark">{gq["calls_today"]} / {gq["daily_cap"]}</span>
+              </div>
+              <div class="progress mb-2" style="height:14px">
+                <div class="progress-bar {g_colour}" style="width:{g_pct:.1f}%">{gq["pct"]:.0f}%</div>
+              </div>
+              <div class="small text-muted">{gq["note"]}</div>
+            </div>
+          </div>
+        </div>
+
+        <h6 class="text-muted mb-2" style="font-size:.8rem">BY MODEL ({days}d)</h6>
+        <table class="table table-sm table-striped align-middle mb-3">
+          <thead><tr class="text-muted" style="font-size:.75rem">
+            <th>Model</th><th>Leg</th><th class="text-end">Calls</th>
+            <th class="text-end">Fresh tokens</th><th class="text-end">Cache re-reads</th>
+            <th class="text-end">API-equiv</th>
+          </tr></thead>
+          <tbody>{model_rows}</tbody>
+        </table>
+
+        <h6 class="text-muted mb-2" style="font-size:.8rem">WHO DROVE THE CALL ({days}d)</h6>
+        <table class="table table-sm mb-2">
+          <thead><tr class="text-muted" style="font-size:.72rem">
+            <th>Originator</th><th>Leg</th><th class="text-end">Calls</th><th class="text-end">Fresh tokens</th>
+          </tr></thead>
+          <tbody>{origin_rows}</tbody>
+        </table>
+        <p class="small text-muted mb-0">
+          Separates the calls Claude delegated over MCP from the sessions Renne ran himself in Codex Desktop.
+          Both spend the same quota, but only the first is something the delegation policy can tune.
+        </p>
+
+        <p class="small text-muted mb-0 mt-2"><i class="bi bi-tag me-1"></i>{usage_assistants.pricing_text()}</p>
+      </div></div>
+    </div>'''
 
 
 def render_usage() -> str:
@@ -7400,6 +7754,11 @@ def render_usage() -> str:
     p_tot_sav    = p_tot_actual - p_tot_comb
     p_tot_pct    = (p_tot_sav / p_tot_actual * 100) if p_tot_actual else 0.0
 
+    # The other two legs. Built as plain strings outside the f-string below so
+    # their Bootstrap markup does not have to double every brace.
+    trinity_legs_html = _render_three_legs(t30, 30)
+    assistants_html   = _render_assistant_detail(30)
+
     return f"""
     <style>
       /* Compact small-box: thinner rows across the 3 tiers */
@@ -7445,16 +7804,22 @@ def render_usage() -> str:
       .area-toggle.collapsed .area-chevron {{ transform: rotate(-90deg); }}
     </style>
 
-    <!-- MAX-plan disclaimer: these are API list-price equivalents, not actual subscription cost -->
+    <!-- Subscription disclaimer: these are API list-price equivalents, not actual subscription cost -->
     <div class="alert alert-info d-flex align-items-start mb-3" style="border-left:4px solid #0dcaf0">
       <i class="bi bi-info-circle-fill fs-5 me-2 mt-1"></i>
       <div class="small">
-        <strong>Estimates use Anthropic API list pricing.</strong>
-        You're on the <strong>Claude MAX plan</strong> — the figures below are <em>what this workload would cost via direct API access</em>, not what you actually pay. Your real monthly outlay is the flat MAX subscription. Use this page to track relative usage trends, plan-tier sizing, and savings from local offload / batch — not as a bill.
+        <strong>Every dollar on this page is an API list-price equivalent, not a bill.</strong>
+        All three legs are flat-rate: <strong>Claude MAX</strong>, <strong>ChatGPT Plus</strong> ($20/mo) and a
+        <strong>free-tier Gemini key</strong> ($0). The figures below are <em>what this workload would have cost via
+        metered API access</em>. Use them to track usage trends, size a plan tier, and weigh the three legs against
+        each other — never as an invoice. On the two assistants the real constraint is <strong>quota</strong>, not
+        cost; see the Trinity Assistants card.
         <br>
-        <strong>Tokens Today</strong> excludes cache re-reads (same prefix loaded each turn — they don't represent fresh consumption). The cache-read volume is shown separately under each card so you can see what the model is actually re-loading.
+        <strong>Tokens</strong> excludes cache re-reads (same prefix loaded each turn — they don't represent fresh consumption). The cache-read volume is shown separately under each card so you can see what the model is actually re-loading.
       </div>
     </div>
+
+    {trinity_legs_html}
 
     <!-- Expand / collapse all areas -->
     <div class="d-flex justify-content-end mb-2">
@@ -7470,7 +7835,7 @@ def render_usage() -> str:
         <h3 class="card-title mb-0 area-toggle d-inline-flex align-items-center gap-2"
             data-bs-toggle="collapse" data-bs-target="#sp-body" role="button" aria-expanded="true">
           <i class="bi bi-chevron-down area-chevron"></i>
-          <span><i class="bi bi-calendar-range me-2"></i>Selected Period —
+          <span><i class="bi bi-calendar-range me-2"></i>Claude — Selected Period:
           <span id="sp-label" class="text-primary">today</span></span>
         </h3>
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -7510,8 +7875,8 @@ def render_usage() -> str:
     <div class="card mb-2">
       <div class="card-header py-2 area-toggle d-flex justify-content-between align-items-center"
            data-bs-toggle="collapse" data-bs-target="#area-overview" role="button" aria-expanded="true">
-        <h3 class="card-title mb-0"><i class="bi bi-speedometer2 me-2"></i>Token &amp; Cost Overview
-          <span class="text-muted small fw-normal ms-2">Today → Year-to-date</span></h3>
+        <h3 class="card-title mb-0"><i class="bi bi-speedometer2 me-2"></i>Claude — Token &amp; Cost Overview
+          <span class="text-muted small fw-normal ms-2">Today → Year-to-date · Claude Code only, assistants are in the cards above</span></h3>
         <i class="bi bi-chevron-down area-chevron"></i>
       </div>
       <div id="area-overview" class="collapse show"><div class="card-body py-2">
@@ -7560,6 +7925,8 @@ def render_usage() -> str:
       </div></div>
     </div>
     </div></div></div>
+
+    {assistants_html}
 
     <!-- Row 2: Local FREE LLMs (Ollama) (collapsible) -->
     <div class="card mb-2">
@@ -7651,7 +8018,7 @@ def render_usage() -> str:
     <div class="card mb-3">
       <div class="card-header d-flex justify-content-between align-items-center area-toggle"
            data-bs-toggle="collapse" data-bs-target="#area-daily" role="button" aria-expanded="true">
-        <h3 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Daily Spend — Last 30 Days <small class="text-muted fw-normal">(click a bar to drill in)</small></h3>
+        <h3 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Claude — Daily Spend, Last 30 Days <small class="text-muted fw-normal">(click a bar to drill in)</small></h3>
         <div class="d-flex align-items-center gap-3">
           <div class="chart-legend">
             <span><i class="sw bar-actual"></i>Actual</span>

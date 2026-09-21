@@ -1,8 +1,8 @@
 {
-  "generated": "2026-09-19T06:30:22.757868",
+  "generated": "2026-09-20T06:30:24.542448",
   "mode": "report-only",
-  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-19_0630.md",
-  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-19_0630.docx",
+  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-20_0630.md",
+  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-20_0630.docx",
   "auto_fixed": [],
   "needs_decision": [
     "2 stale .claude.json worktree entries",

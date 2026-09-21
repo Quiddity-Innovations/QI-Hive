@@ -1,0 +1,28 @@
+{
+  "_README": [
+    "Extra locations the LLM Usage tab scans for Codex rollout transcripts.",
+    "",
+    "`codex mcp-server` - the binary Claude delegates to - runs under WSL, so the",
+    "rollouts for every MCP delegation land in /home/<user>/.codex/sessions, not in",
+    "the Windows profile. QI_Dashboard runs as LocalSystem and has no WSL session,",
+    "and \\\\wsl.localhost is not reachable from Python here either - so those files",
+    "are mirrored onto C: by engine/common/usage_codex_wsl_sync.py and read from the",
+    "mirror. Without this entry the ChatGPT column counts only Codex Desktop and",
+    "silently drops everything Claude delegated.",
+    "",
+    "Paths are scanned in order, before the Windows profile. Duplicates across roots",
+    "are harmless - events dedup on the vendor's response_id.",
+    "",
+    "QI_CODEX_EXTRA_ROOTS (semicolon-separated) adds roots without editing this file."
+  ],
+  "codex_extra_roots": [
+    "C:\\QIH\\data\\codex_wsl\\sessions"
+  ],
+  "codex_wsl_sync": {
+    "script": "C:\\QIH\\engine\\common\\usage_codex_wsl_sync.py",
+    "distro": "Ubuntu-24.04",
+    "user": "hyosuke",
+    "state_file": "C:\\QIH\\data\\codex_wsl\\_sync_state.json",
+    "note": "Run it to refresh the mirror. The state file - not an exit code - is the health signal; the dashboard reports its age so a stopped mirror shows as stale rather than as a quietly shrinking number."
+  }
+}

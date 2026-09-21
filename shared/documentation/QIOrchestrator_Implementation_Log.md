@@ -6,6 +6,89 @@
 
 ---
 
+## 2026-09-20 - LLM Usage Tab: Trinity Visibility (ChatGPT/Codex + Gemini)
+**Session Focus:** Bring the two non-Claude Trinity legs — ChatGPT via Codex and Gemini via the qi-gemini MCP, both live since 2026-09-08 — onto the LLM Usage tab, which until now measured Claude only
+
+### Built
+- **`engine/common/usage_assistants.py` (new, ~620 lines).** Codex: reads `~/.codex/sessions/**/rollout-*.jsonl` `token_usage_record` events - a measured (not estimated) input/cached-input/output/reasoning split from OpenAI's own client, covering both Claude's MCP delegations and sessions Renne drives directly in Codex Desktop (`originator` field separates them). Gemini: reads the new `data/gemini_mcp/tokens_YYYY-MM-DD.jsonl`; calls before 2026-09-20 predate that log and are reconstructed from `LOGS/gemini_mcp.log` as prompt_chars/4, flagged `estimated`. Public API: `today()`, `daily()`, `range_stats()`, `totals()`, `by_model()`, `by_provider()`, `by_project()`, `by_originator()`, `quota()`, `available()`, `pricing_text()`.
+- **`config/llm_prices_external.json` (new).** OpenAI + Google list prices per 1M tokens, each with a `verified_on` date and source URL (verified 2026-09-20). Correcting a rate is now a data edit, not a code change; an unpublished rate is `inferred` (badged, costed at account default) or `unpriced` - never a silent guess.
+- **`qi_gemini_mcp.py`** - added `_record_tokens()` / `_tokens_path()`; `_generate()` now writes Google's `usageMetadata` per call (previously discarded). Sizes only, never prompt/reply text. Verified live.
+- **`server.py`** - guarded import of `usage_assistants`; five new endpoints (`/api/usage/assistants`, `/assistants/daily`, `/assistants/by_model`, `/assistants/sources`, `/api/usage/quota`); two new cards (`_render_three_legs`, `_render_assistant_detail`); Claude-only cards relabelled "Claude - ...".
+- **`test_usage_assistants.py` (new)** - 17 tests (3 more added later this session for the WSL mirror), all passing alongside the existing 10 usage_stats tests (27 total).
+- **`engine/common/usage_codex_wsl_sync.py` (new, later this session).** Mirrors WSL-side Codex rollout transcripts to `data/codex_wsl/sessions` so a LocalSystem service can read them - see "Gap found and fixed later this session" below.
+- **`config/usage_assistants.json` (new, later this session).** Registers the mirror as an extra Codex session root; also honours a `QI_CODEX_EXTRA_ROOTS` env var.
+
+### Five correctness traps caught and locked down with tests
+- Codex ships three usage blocks per record (`usage`, `turn_token_usage`, `thread_token_usage`); reading the wrong one inflates a long thread by its own length - the same shape of bug as the 2026-09-16 Claude 6x overstatement. Read `usage` only, dedup on `response_id`.
+- OpenAI folds `reasoning_output_tokens` INSIDE `output_tokens`; Google reports `thoughtsTokenCount` SEPARATELY and bills it as output - verified against each vendor's own totals. Gemini thoughts are added to output; Codex's are not.
+- `QI_Dashboard` runs as LocalSystem, where `Path.home()` resolves to the systemprofile directory, not Renne's - the first live restart showed a confident zero for the whole ChatGPT leg. Fixed by mirroring `usage_stats._find_projects_dir`'s resolution order; `/api/usage/sources` and an on-page warning now make this failure loud instead of silent.
+- `nssm restart` from an unelevated shell reported success while leaving the old process running; the real restart went through the elevation broker (`qi_elevate_client.run_elevated`).
+- **Found later this session:** `codex mcp-server` - the binary Claude actually delegates to over MCP - runs under WSL, so every rollout transcript for a Claude-initiated delegation landed in `/home/hyosuke/.codex/sessions`, not the Windows profile the parser read. The ChatGPT column was silently counting only the sessions Renne drives himself. See "Gap found and fixed later this session" below.
+
+### Verified live figures (30-day window)
+⚠️ Superseded for the ChatGPT/Codex row - see the corrected, both-roots figures below. Claude and Gemini rows are unaffected.
+
+| Leg | Calls | Fresh tokens | Cache re-reads | API-equivalent | Actual plan |
+|---|---|---|---|---|---|
+| Claude | 14,195 turns | 81.0M | 4.0B | $2,929.82 | Claude MAX |
+| ~~ChatGPT / Codex~~ | ~~454~~ | ~~2.4M~~ | 36.1M | ~~$56.37~~ | ChatGPT Plus $20/mo |
+| Gemini | 13 | 3.9K | 0 | $0.00 | AI Studio free tier $0/mo |
+
+Codex totals reconciled exactly with a raw sum of the *Windows-root* rollout files (36,068,224 cached / 2,443,041 fresh) - dedup dropped nothing real on that side, but the reconciliation was scoped to only half the picture.
+
+### Gap found and fixed later this session - WSL Codex sessions were invisible
+
+**The gap:** `codex mcp-server` - the binary Claude delegates to over MCP - runs under WSL, so the rollout transcripts for every delegation Claude makes land in `/home/hyosuke/.codex/sessions`, NOT the Windows profile. Codex Desktop writes to `C:\Users\renne\.codex\sessions`. The parser was scanning only the Windows side, so the ChatGPT column counted the sessions Renne drives himself and silently dropped every call Claude delegated. Caught by making one deliberate `gpt-5.6-luna` MCP call and finding no matching rollout on the Windows side.
+
+**Why it couldn't just read the WSL path:** `\\wsl.localhost\<distro>\...` is not enumerable from Python here - `is_dir()` returns False on a known-good path - and `QI_Dashboard` runs as LocalSystem, which has no WSL session at all.
+
+**The fix (all live and verified):**
+- New `engine/common/usage_codex_wsl_sync.py` - mirrors WSL rollouts to `data/codex_wsl/sessions`. Incremental (rollouts are append-only, so a file is re-copied only when its size changes), writes to a `.part` file then renames so a killed run can't leave a half-file, and validates every path against a strict regex before it reaches a shell.
+- New `config/usage_assistants.json` - registers the mirror as an extra Codex root; also honours `QI_CODEX_EXTRA_ROOTS`.
+- `usage_assistants.py` - `codex_sessions_dir()` became `codex_session_roots()` (a list); added `wsl_mirror_status()` and `_is_wsl_root()`; `available()` now reports `codex_roots`, `codex_windows_root`, `codex_wsl_root` and `codex_wsl_mirror`.
+- `server.py` - the "All Three Legs" card now warns on the page if the WSL root is missing entirely, if the mirror is stale (>24h), or if its last run errored.
+- New scheduled task **QI_CodexMirror** - hourly, `pythonw.exe` (no console, deliberately no `conhost --headless` wrapper), running as renne/Interactive because WSL needs a live user session. Registered, triggered, verified: second run correctly skipped all 38 files. Health is the freshness of `data/codex_wsl/_sync_state.json`, not the task's LastTaskResult.
+- Tests: 3 more added - 17 in the new file, 27 passing with the existing usage_stats suite.
+
+**Two more WSL traps** (both measured 2026-09-20, both fail silently with exit code 0):
+1. Inside `wsl.exe -d <d> -u <u> -- bash -lc`, `$HOME` is empty - WSL hands the shell the Windows environment and the login shell doesn't repopulate it. `"$HOME/.codex/sessions"` resolved to `/.codex/sessions`, the `-d` guard failed, and the sync cheerfully reported `remote_files: 0`.
+2. Shell variable assignment does not survive the round trip. Measured: `x="$(echo hi)"; echo "[$x]"` prints `[]`, while the inline form `echo "[$(echo hi)]"` prints `[hi]`.
+
+Resolution: write these scripts with no shell variables at all and use bare `~`, which bash expands from `/etc/passwd` regardless of `HOME`.
+
+**Corrected ChatGPT/Codex figures (30-day window, both roots):**
+| Model | Leg | Calls | Fresh tokens | API-equiv |
+|---|---|---|---|---|
+| gpt-6-astra | ChatGPT/Codex | 316 | 1,579,377 | $53.77 |
+| codex-auto-review (inferred price) | ChatGPT/Codex | 146 | 927,423 | $3.35 |
+| gpt-5.6-terra | ChatGPT/Codex | 10 | 75,355 | $0.25 |
+| gpt-5.6-luna | ChatGPT/Codex | 58 | 204,479 | $0.06 |
+| gemini-3.5-flash-lite (est) | Gemini | 2 | 3,613 | $0.00 |
+| gemini-3.6-flash (est) | Gemini | 11 | 284 | $0.00 |
+
+ChatGPT/Codex leg totals (both roots): 530 calls, ~2.79M fresh tokens, ~$57.43 API-equivalent - up from the Windows-only 454 / 2.4M / $56.37 above. The two MCP-delegation models - luna (58 calls) and terra (10 calls), 68 calls totalling ~280K tokens - were entirely invisible before this fix. Total assistant events (ChatGPT/Codex + Gemini) rose from 471 to 543. The Claude row above is unchanged and still correct.
+
+### Decision
+Claude's figures were deliberately NOT merged into a combined total - three legs sit in one explicit comparison card, every Claude-only card relabelled, so a number never quietly means something other than its label (the root cause of the 2026-09-16 audit). Per Renne's 2026-09-08 directive, both assistant plans are flat-rate, so the card leads with quota (ChatGPT's 5-hour/weekly window, Gemini's calls-today vs the 200/day cap) over the dollar table.
+
+### Not done
+- Home-page "Claude usage strip" not yet extended to the two assistants - pending owner decision.
+- `codex-auto-review` pricing still `inferred` at account default (gpt-5.6-terra), covering 146 of 530 ChatGPT/Codex calls (both roots).
+- No freshness check yet on the Gemini token log itself.
+- Confirm QI_CodexMirror is still running and `_sync_state.json` is fresh after the next reboot - it runs as renne/Interactive, so it only fires while Renne is logged on.
+
+### Files Changed
+- `C:\QIH\engine\common\usage_assistants.py` (new, modified again later this session)
+- `C:\QIH\config\llm_prices_external.json` (new)
+- `C:\QIH\engine\hive\dashboard\tests\test_usage_assistants.py` (new, 3 more tests added later)
+- `C:\QIH\engine\mcp\qi_gemini_mcp.py`
+- `C:\QIH\engine\hive\dashboard\server.py` (modified, then modified again later this session)
+- `C:\QIH\engine\common\usage_codex_wsl_sync.py` (new, later this session)
+- `C:\QIH\config\usage_assistants.json` (new, later this session)
+- Scheduled task **QI_CodexMirror** registered (hourly, renne/Interactive)
+
+---
+
 ## 2026-09-17 - Overnight Proofs, ccusage Cross-Check, Per-Project Offload Dimension
 **Session Focus:** Verify the 2026-09-16 remediation survived its first unattended night, cross-check the usage figures against an independent tool, and clear the remaining leftovers
 

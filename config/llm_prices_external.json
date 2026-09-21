@@ -1,0 +1,65 @@
+{
+  "_README": [
+    "API list prices for the two non-Claude Trinity legs, in USD per 1,000,000 tokens.",
+    "",
+    "WHY THIS FILE EXISTS: the LLM Usage tab was once 6x wrong because stale prices were",
+    "hardcoded in Python (audit 2026-09-16). Prices now live in data, dated and sourced,",
+    "so correcting one is an edit here plus a dashboard restart - never a code change.",
+    "",
+    "HOW TO EDIT: set the numbers, set the model's 'verified_on' to the date YOU checked",
+    "the vendor page, and bump 'pricing_version'. A price left null renders as 'unpriced'",
+    "on the dashboard - that is deliberate. NEVER guess a number to fill a null: an honest",
+    "gap is cheaper than a confident wrong figure.",
+    "",
+    "Claude's own prices are NOT here - they live in engine/common/usage_stats.py",
+    "MODEL_PRICES and are governed by usage_recalibrate.py."
+  ],
+  "pricing_version": "2026-09-20",
+  "note_on_actual_cost": "Both assistants are flat-rate subscriptions (ChatGPT Plus $20/mo, Gemini free-tier key $0/mo). These prices produce an API-EQUIVALENT figure - what the same traffic would have cost on a metered API - for comparison against the Claude column. They are not money spent.",
+  "subscriptions": {
+    "codex":  {"plan": "ChatGPT Plus",         "usd_per_month": 20.0, "meter": "rolling 5-hour window + weekly cap, token-metered"},
+    "gemini": {"plan": "AI Studio free tier",  "usd_per_month":  0.0, "meter": "self-imposed 200 calls/day; Google RPM/TPM/RPD per model"}
+  },
+  "codex": {
+    "_source": "https://developers.openai.com/api/docs/pricing",
+    "_verified_on": "2026-09-20",
+    "_default_model": "gpt-5.6-terra",
+    "_price_unknown_as": "gpt-5.6-terra",
+    "_price_unknown_note": "Slugs with no published price (Codex's hidden internal ones) are costed at the account's default model and flagged 'inferred' on the dashboard, so the API-equivalent column stays complete without pretending the rate is known.",
+    "models": {
+      "gpt-6-astra":       {"input": 10.00, "cached_input": 1.00, "output": 50.00, "verified_on": "2026-09-20",
+                            "note": "vendor page + 3 independent pricing trackers agree"},
+      "gpt-5.6-sol":       {"input":  4.00, "cached_input": 0.40, "output": 20.00, "verified_on": "2026-09-20",
+                            "note": "vendor page + third-party trackers agree"},
+      "gpt-5.6-terra":     {"input":  2.00, "cached_input": 0.20, "output": 12.00, "verified_on": "2026-09-20",
+                            "note": "vendor page + third-party trackers agree"},
+      "gpt-5.6-luna":      {"input":  0.20, "cached_input": 0.02, "output":  1.20, "verified_on": "2026-09-20",
+                            "note": "vendor page + third-party trackers agree"},
+      "gpt-5.5":           {"input":  5.00, "cached_input": 0.50, "output": 30.00, "verified_on": "2026-09-20",
+                            "note": "vendor page only - single source, not cross-checked"},
+      "codex-auto-review": {"input": null,  "cached_input": null, "output": null,  "verified_on": null,
+                            "note": "hidden internal slug driving Codex's own review pass; OpenAI publishes no rate for it, so it costs at _price_unknown_as and shows as inferred"}
+    }
+  },
+  "gemini": {
+    "_source": "https://ai.google.dev/gemini-api/docs/pricing",
+    "_verified_on": "2026-09-20",
+    "_default_model": "gemini-3.6-flash",
+    "_price_unknown_as": "gemini-3.6-flash",
+    "_free_tier_note": "Calls made with the AI Studio free-tier key cost $0 regardless of the numbers below. The numbers exist only to answer 'what would this have cost on the paid API'.",
+    "models": {
+      "gemini-3.8-flash":      {"input": 0.75, "cached_input": 0.075, "output": 3.75, "verified_on": "2026-09-20",
+                                "note": "Standard tier; page states promotional rate through 2026-12-31"},
+      "gemini-3.7-flash":      {"input": 0.75, "cached_input": 0.075, "output": 3.75, "verified_on": "2026-09-20",
+                                "note": "Standard tier; page states promotional rate through 2026-12-31"},
+      "gemini-3.6-flash":      {"input": 0.75, "cached_input": 0.075, "output": 3.75, "verified_on": "2026-09-20",
+                                "note": "Standard tier; page states promotional rate through 2026-12-31"},
+      "gemini-3.5-flash-lite": {"input": 0.30, "cached_input": null,  "output": 2.50, "verified_on": "2026-09-20",
+                                "note": "page lists no cache-read rate for this model; cached tokens cost at the input rate until it does"},
+      "gemini-3.1-pro-preview":{"input": 2.00, "cached_input": 0.20,  "output": 12.00, "verified_on": "2026-09-20",
+                                "note": "<=200k tokens. PAID API ONLY - the Trinity free-tier key cannot call it"},
+      "gemini-2.5-flash":      {"input": null, "cached_input": null,  "output": null, "verified_on": null,
+                                "note": "retired slug, appears only in the 2026-09-08 selftest line; no current published rate"}
+    }
+  }
+}

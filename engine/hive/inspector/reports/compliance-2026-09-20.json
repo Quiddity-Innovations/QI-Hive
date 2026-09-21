@@ -1,0 +1,566 @@
+{
+  "generated_at": "2026-09-20T20:00:02",
+  "generated_by": "inspector_export_snapshot.py",
+  "day": "2026-09-20",
+  "run_id": "50fc1666-2f97-4438-a11e-a2bdaef6aacc",
+  "totals": {
+    "pass": 114,
+    "fail": 47,
+    "warn": 9,
+    "skip": 5
+  },
+  "issue_count": 56,
+  "project_count": 23,
+  "projects": {
+    "autopdf": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_AutoPDF' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=autopdf)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_AutoPDFMCP' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=autopdf)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_AutoPDFTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=autopdf)"
+      },
+      {
+        "check_id": "session_freshness",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "dispatched",
+        "message": "No session activity in 34 days (status=active)",
+        "fix_action": "Mark project paused/blocked, or run a session"
+      }
+    ],
+    "avatarstudio": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_AvatarStudio' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=avatarstudio)"
+      }
+    ],
+    "claude_voice": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_ClaudeVoiceControl' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=claude_voice)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_ClaudeVoiceLine' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=claude_voice)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_ClaudeVoiceTelegram' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=claude_voice)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_ClaudeVoiceTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=claude_voice)"
+      }
+    ],
+    "cognibase": [
+      {
+        "check_id": "claudemd_exists",
+        "status": "fail",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "CLAUDE.md missing at project root or .claude\\CLAUDE.md",
+        "fix_action": "Manual: write project-specific CLAUDE.md (cannot auto-generate meaningfully)"
+      },
+      {
+        "check_id": "docs_no_decoys",
+        "status": "fail",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "dispatched",
+        "message": "Doc-shaped folder 'Documentation' at root (47 files) — should be merged into docs/",
+        "fix_action": "Move contents of 'Documentation' into docs/, then delete the empty folder."
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_CogniBase' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=cognibase)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_CogniBaseTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=cognibase)"
+      },
+      {
+        "check_id": "session_freshness",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "dispatched",
+        "message": "No session activity in 38 days (status=active)",
+        "fix_action": "Mark project paused/blocked, or run a session"
+      },
+      {
+        "check_id": "tunnel_write_auth",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "QI_CogniBaseTunnel → :8650: tunnel-exposed service accepts anonymous writes (got 404) — owner risk-accepted 2026-06-12, surfaced per Law 6",
+        "fix_action": ""
+      }
+    ],
+    "comfyui": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_ComfyUI' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=comfyui)"
+      }
+    ],
+    "connector": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_ConnectorMCP' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=connector)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_ConnectorTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=connector)"
+      }
+    ],
+    "cypherminer": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_CypherMinerTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=cypherminer)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_CypherMinerUI' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=cypherminer)"
+      }
+    ],
+    "ecosystem": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_HiveApply' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=ecosystem)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_HiveInspectorDrain' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=ecosystem)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_KazeNewsTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=ecosystem)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_TaskHealth' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=ecosystem)"
+      }
+    ],
+    "filehq": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_FileHQ' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=filehq)"
+      }
+    ],
+    "gamez": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_GamezProxy' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=gamez)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_GamezQuantProxy' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=gamez)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_GamezTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=gamez)"
+      }
+    ],
+    "headroom": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_Headroom' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=headroom)"
+      }
+    ],
+    "lotterywiz": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_LotteryWiz' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=lotterywiz)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_LotteryWizTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=lotterywiz)"
+      }
+    ],
+    "m2v": [
+      {
+        "check_id": "project_path_exists",
+        "status": "fail",
+        "severity": "critical",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Project path missing on disk: C:\\APPS\\M2V",
+        "fix_action": ""
+      }
+    ],
+    "maia": [
+      {
+        "check_id": "session_freshness",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "dispatched",
+        "message": "No session activity in 38 days (status=active)",
+        "fix_action": "Mark project paused/blocked, or run a session"
+      },
+      {
+        "check_id": "tunnel_write_auth",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "QI_MaiaDemoTunnel → :7860: tunnel-exposed service accepts anonymous writes (got 404) — owner risk-accepted 2026-06-12, surfaced per Law 6",
+        "fix_action": ""
+      }
+    ],
+    "mapsnap": [
+      {
+        "check_id": "claudemd_exists",
+        "status": "fail",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "CLAUDE.md missing at project root or .claude\\CLAUDE.md",
+        "fix_action": "Manual: write project-specific CLAUDE.md (cannot auto-generate meaningfully)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_MapSnap' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=mapsnap)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_MapSnapBUSetup' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=mapsnap)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_MapSnapMCP' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=mapsnap)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_MapSnapMCPBU' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=mapsnap)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_MapSnapTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=mapsnap)"
+      },
+      {
+        "check_id": "tunnel_write_auth",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "QI_MapSnapTunnel → :9876: tunnel-exposed service accepts anonymous writes (got 404) — owner risk-accepted 2026-06-12, surfaced per Law 6",
+        "fix_action": ""
+      }
+    ],
+    "mq": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_MQTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=mq)"
+      }
+    ],
+    "naya": [
+      {
+        "check_id": "docs_no_decoys",
+        "status": "fail",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "dispatched",
+        "message": "Doc-shaped folder 'DOCUMENTATION' at root (3 files) — should be merged into docs/",
+        "fix_action": "Move contents of 'DOCUMENTATION' into docs/, then delete the empty folder."
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_NayaMCP' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=naya)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_NayaTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=naya)"
+      }
+    ],
+    "nexus": [
+      {
+        "check_id": "brain_drift",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "dispatched",
+        "message": "Brain is 2d behind reality: newest evidence is session summary docx 2026-08-13, but last session_log row is 2026-08-11",
+        "fix_action": "Backfill a session_log entry (qi.log_session) and refresh project_state"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_NEXUSTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=nexus)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_NexusMCP' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=nexus)"
+      },
+      {
+        "check_id": "session_freshness",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "dispatched",
+        "message": "No session activity in 40 days (status=active)",
+        "fix_action": "Mark project paused/blocked, or run a session"
+      },
+      {
+        "check_id": "tunnel_write_auth",
+        "status": "warn",
+        "severity": "medium",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "QI_NEXUSTunnel → :8010: tunnel-exposed service accepts anonymous writes (got 404) — owner risk-accepted 2026-06-12, surfaced per Law 6",
+        "fix_action": ""
+      }
+    ],
+    "noosorbis": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_NoosOrbis' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=noosorbis)"
+      },
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_NoosOrbisTunnel' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=noosorbis)"
+      }
+    ],
+    "personalsong": [
+      {
+        "check_id": "project_path_exists",
+        "status": "fail",
+        "severity": "critical",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Project path missing on disk: C:\\APPS\\PersonalSong",
+        "fix_action": ""
+      }
+    ],
+    "playdeck": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_PlayDeck' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=playdeck)"
+      }
+    ],
+    "qi_gate": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_Gate' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=qi_gate)"
+      }
+    ],
+    "retirementanalyzer": [
+      {
+        "check_id": "nssm_registry",
+        "status": "fail",
+        "severity": "high",
+        "auto_fixable": false,
+        "action_taken": "none",
+        "message": "Service 'QI_RetirementAnalyzer' is installed but not in qi_registry.json",
+        "fix_action": "Add entry under shared_infrastructure.nssm_services.registered[] (project=retirementanalyzer)"
+      }
+    ]
+  }
+}
