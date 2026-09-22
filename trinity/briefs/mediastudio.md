@@ -1,6 +1,6 @@
 # QI Media Studio (mediastudio) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:12_
 
 ## Registry facts
 - Path: `C:\APPS\MediaStudio`
@@ -9,10 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Read-only over every source directory: it records where media is and what made it, and never moves, renames or deletes another project's files. Provenance survives the mux - each composition writes a .json manifest naming every voice, prompt and source file. Registered 2026-08-10. | git history lives in C:\APPS\MediaStudio (the source tier since the owner's ruling of 2026-09-10) and on GitHub; D:\Dev\MediaStudio is a plain backup clone. | 2026-09-09: paths repointed D:\Dev -> C:\APPS (app runs from C:\APPS per the 2026-09-02 ruling).
 
 ## Brain
-- Current state: status=active, phase=Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual
-  2026-09-11 (S4): second teaching session complete. Video, fit, music, assembly, av_mux primitives and run records all walked end to end against the running machine, every example producing a file that opens. Deliverable S4_What_Media_Studio_Is (48 s) mixes a card, a generated still with Ken Burns, a generated MiniMax clip looped to fit, four narration lines in one model load, and a ducked music bed - built in 10.2 s from docs/shotlists/s4_studio.json. Preflight found gemma4:26b resident and idle in Ollama holding the card with 0.4 GB free while every cockpit light was green; unloading took it to 13.82 GB. Narration is verified by rendering a real wav now, never by /health. docs/HOWTO_GAPS.md is at 33 items (G27-G33 added). Biggest finding: /api/runs/{id}/rerun is a ComfyUI cache hit, not a re-render (decision 612). G10 is answered - personalsong and m2v were retired by owner decision on 2026-09-10, so the 155 library rows the S3 rescan dropped were deliberate; the implied config edit (drop personalsong_legacy and m2v from library.sources, fix CLAUDE.md's music row) awaits the owner's yes. No docs were fixed: HOWTO.md and CHEATSHEET.md are still wrong on all 33 counts, and S5 writes the manual. Autopilot remains engaged=false pending the Fable review gate. Committed a6e3b6b, pushed, D:\Dev backup pulled.
-- Last decisions:
-  - Rerun reproduces provenance, it does not re-roll â€” /api/runs/{id}/rerun is a ComfyUI cache hit (2026-09-11)
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # QI Media Studio — how Claude works with this project
@@ -82,6 +79,15 @@ Schedule it for **shortly after the reset time the CLI reported**. If you do not
 actually know that time, say so and hand the owner the command — **do not guess a
 time and let a cloud run fire into a still-exhausted quota**. A wrong schedule is
 worse than none: it burns the first tokens of the new window on a run that
+## 🔴 One set of colours, and nobody holds a copy of it
+wrong whenever the fourth was down) while the duplication stays mechanical.
+
+Edit the authority and re-run the tool. Editing inside the markers works right
+encode data types and stay ComfyUI's, same rule as `_video_backends.json`.
+
+**How a component is told the mode is declared, not hardcoded.** A plug-in says
+Adding a fifth window must not mean editing `ui/app.html`. See `docs/THEME.md`.
+
 ## Suite membership
 Modules are discovered from `qi_registry.json`, never hardcoded. A project joins
 by having `/health`, `/version`, `/info`, a panel route honouring `?embed=1`, and

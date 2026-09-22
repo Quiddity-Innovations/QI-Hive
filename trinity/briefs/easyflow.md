@@ -2,7 +2,7 @@
 
 **BLOCKED**
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:06_
 
 ## Registry facts
 - Path: `C:\APPS\EasyFlow`
@@ -11,9 +11,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Standalone desktop tool for email management. Not a server-based QI project. Runs locally for end users. Built as a gift for family/friends with full UI-driven workflow.
 
 ## Brain
-- Current state: status=blocked, phase=v1.2.1 extension shipped; July QI LLM Hub mode added; fork to MailBrain
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). Last real feature commit 2026-07-02 (QI LLM Hub mode — hub-first chat + AI triage with fallback). Docs last refreshed 2026-05-13. MailBrain now exists as a separately registered successor (302 uncommitted files, committed 2026-09-09).
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

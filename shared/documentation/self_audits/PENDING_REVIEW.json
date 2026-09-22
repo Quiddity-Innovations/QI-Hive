@@ -1,13 +1,14 @@
 {
-  "generated": "2026-09-20T06:30:24.542448",
+  "generated": "2026-09-21T06:30:16.625383",
   "mode": "report-only",
-  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-20_0630.md",
-  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-20_0630.docx",
+  "md_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-21_0630.md",
+  "docx_report": "C:\\QIH\\shared\\documentation\\self_audits\\Claude_SelfAudit_2026-09-21_0630.docx",
   "auto_fixed": [],
   "needs_decision": [
     "2 stale .claude.json worktree entries",
     "Large folder C:\\APPS\\CLAUDE\\Tools (1919.2 MB) - confirm still in use",
     "6 config backups accumulating - consider trimming oldest"
   ],
-  "reviewed": false
+  "reviewed": true,
+  "review_decision": "apply now (2026-09-21, Astrelier S2): 2 worktree entries pruned; 3 oldest backups archived to ~/.claude/backups/archive_2026-09-21_selfaudit; Tools folder reported, not changed"
 }

@@ -1,6 +1,6 @@
 # ComfyUI (QI Media Engine) (comfyui) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:09_
 
 ## Registry facts
 - Path: `D:\AI`
@@ -9,19 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Generation is gated behind an explicit trigger: Claude renders only on a 'RENDER:' or '/comfy' message, never inferred. Rules in D:\AI\CLAUDE.md. SFW and NSFW both in scope. Workflows exist twice on purpose: API format in D:\AI\workflows (what Claude queues) and editor twins prefixed 'QI - ' in the ComfyUI user folder (what Renne clicks). They are copies, not links — changing one does not change the other. Registered 2026-08-10.
 
 ## Brain
-- Current state: status=active, phase=Active â€” media engine operational
-  Local image/video generation engine on D:\AI, port 8189, driven by Claude via the qi-comfy MCP server and directly usable in its own web UI at http://127.0.0.1:8189.
-
-14 workflows verified working: t2i_fast (Z-Image Turbo, ~8s), t2i_sdxl, t2i_lora (SDXL + nudify_xl_lite, the NSFW route), t2i_lora_sd15 (Realistic Vision 5.1 for the three SD 1.5 LoRAs), t2i_ideogram (only engine rendering legible text), i2i, describe2img (Gemma 4 in-graph captioning), t2v_minimax (DEFAULT video â€” 1344x768 WITH stereo audio, ~75s), t2v_wan, i2v_wan, plus video_enhance_av / video_enhance / video_smooth / video_upscale.
-
-Generation is gated: Claude renders only on an explicit RENDER: or /comfy trigger, never inferred. SFW and NSFW both in scope; no real identifiable people, no minors.
-
-Every workflow exists twice â€” API format for Claude, editor twins prefixed "QI - " in the ComfyUI sidebar for Renne. They are copies, not links.
-
-Engine selection and defaults live in D:\AI\workflows\_video_backends.json. Docs: CLAUDE.md (rules), CHEATSHEET.md (daily), RENDER_TEMPLATES.md (5 worked examples doubling as a regression suite), HOW_TO_RUN_IT_YOURSELF.md (GUI steps).
-
-Deliberately not integrated: in-graph Ollama/Cloudflare nodes (NEXUS covers both). Exposes POST /free for VRAM release, already consumed by voice_studio.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # ComfyUI — how Claude works with it

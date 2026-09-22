@@ -1,6 +1,6 @@
 # AkiyaScout (akiyascout) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:54_
 
 ## Registry facts
 - Path: `C:\APPS\AkiyaScout`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Zero commits as of 2026-09-08 — repo exists, nothing committed.
 
 ## Brain
-- Current state: status=paused, phase=Registered, no commits yet
-  Japanese real estate (Akiya/Kominka) aggregation platform with a personalized Scout Engine. Per registry notes and CLAUDE.md, repo exists at C:\APPS\AkiyaScout with ports allocated (API 8505 / UI 7845) but zero commits as of 2026-09-08.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # AkiyaScout — Claude Project Instructions

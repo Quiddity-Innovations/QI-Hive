@@ -1,6 +1,6 @@
 # World Mythologies (mythologies) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:27_
 
 ## Registry facts
 - Path: `C:\APPS\Mythologies`
@@ -8,9 +8,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: No ports and no service - deployed to Vercel from site/. Ship with: python packs/ship.py --deploy
 
 ## Brain
-- Current state: status=active, phase=Static site live
-  Static site mapping 37 world mythologies (1,498 figures, 2,969 relationships) deployed to Vercel. Per CLAUDE.md, renders require an explicit RENDER: trigger from Renne and the aboriginal/arabian verticals remain held pending his framing sign-off.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # World Mythologies — project instructions

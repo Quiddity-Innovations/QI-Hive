@@ -1,6 +1,6 @@
 # OnBase DNA Program (onbase_dna) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:18_
 
 ## Registry facts
 - Path: `C:\Users\renne\Downloads\NOTE DISCOVERY`
@@ -8,9 +8,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Feeds MapSnap DNA knowledge (read-only). Spawns the Implementation Tool and Document Creator at T-1 per the 2026-08-14 charters. BU/client data never enters a repo.
 
 ## Brain
-- Current state: status=active, phase=Active knowledge program, no service/ports
-  Genotype-to-phenotype decoding of OnBase configuration for the DNA Codex. Per GOV25-DIALOG-TARGETS.md (most recent doc), current work is calibration dialog-trip targets for the GOV25 vertical, generated 2026-08-14 by _gov25_workorder.py.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

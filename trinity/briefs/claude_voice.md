@@ -1,6 +1,6 @@
 # Claude Voice (claude_voice) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:51_
 
 ## Registry facts
 - Path: `C:\APPS\CLAUDE\Claude Voice`
@@ -9,10 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Standalone realtime voice assistant spun out of Gamez on 2026-06-20. The STT+VAD+TTS bridge is a reusable ecosystem feature other QI projects can adopt (e.g. Maia/OpenClaw Koe). Male voice (Andrew EN / Antonio pt-BR); identity is always 'Claude', never 'Andrew'.
 
 ## Brain
-- Current state: status=blocked, phase=Deliberately powered down 2026-08-20; auto-restore armed for 2026-09-19
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). 2026-08-20 root-caused why the stack would not stay off (global SessionStart hook re-armed the bridge in every project session). Built the VOICE_DISABLED kill switch, pinned the four QI_ClaudeVoice* services to demand-start, disabled meeting-room/bridge-health tasks, and scheduled QI_ClaudeVoiceRestore_20260919. QI_ClaudeVoiceControl :8720 STOPPED by design; claudevoice.quiddityinnovations.com returns 530 until restore.
-- Last decisions:
-  - Never schedule an auto-on task for a paused public-facing stack â€” use a calendar reminder (2026-09-19)
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # Claude Voice — two-way voice bridge

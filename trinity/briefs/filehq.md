@@ -1,6 +1,6 @@
 # FileHQ (filehq) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:33:48_
 
 ## Registry facts
 - Path: `C:\APPS\NAYA\filehq`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Merging into Naya. FileHQ becomes Naya's file engine. Phase 1 (bridge) complete. Phase 2 (code absorption) pending Renne approval.
 
 ## Brain
-- Current state: status=retired, phase=Retired — merged into Naya
-  Capabilities absorbed into Naya (C:\NAYA\filehq). Original C:\FileHQ marked for deletion.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

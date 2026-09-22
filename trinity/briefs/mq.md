@@ -1,6 +1,6 @@
 # MQ (mq) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:03_
 
 ## Registry facts
 - Path: `C:\APPS\MQ`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: New project — family role to be determined as it develops. Status 2026-05-13: not started yet (was paused_pending_credentials; corrected to new).
 
 ## Brain
-- Current state: status=paused, phase=Phase 0 — scaffold
-  Marked paused by the 2026-08-17 audit — 133 days without a session; scaffold only. Silence is now intentional, so compliance stops filing session_freshness/brain_drift. Set back to 'active' on the next real session.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # Maia Quiddam (MQ) — Claude Project Instructions

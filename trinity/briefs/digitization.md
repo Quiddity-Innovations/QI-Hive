@@ -1,6 +1,6 @@
 # Digitization Cost Tool (digitization) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:33_
 
 ## Registry facts
 - Path: `C:\Users\renne\Downloads\DIGITIZATION COSTS`
@@ -8,9 +8,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Self-contained single-file HTML tool (no server). NOT YET migrated to a C:\ project root — still under Downloads. Migration to QI standard layout pending.
 
 ## Brain
-- Current state: status=complete, phase=v1 delivered; video series 2026-08-11; still under Downloads
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). Client-side HTML calculator, no service. 2026-08-11 produced 6 feature-tour video cuts and a CHANGELOG. Local git exists (06-15) but the folder remains C:\Users\renne\Downloads\DIGITIZATION COSTS, not C:\APPS. Correctly parked unless BU asks for hosting.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

@@ -1,6 +1,6 @@
 # LotteryWiz (lotterywiz) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:30_
 
 ## Registry facts
 - Path: `C:\APPS\Lottery Wiz`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Standalone utility app. NSSM service QI_LotteryWiz + public tunnel QI_LotteryWizTunnel (installed 2026-06-15).
 
 ## Brain
-- Current state: status=active, phase=Public demo — documented; awaiting owner sign-off
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_LotteryWiz :8777 and tunnel RUNNING (no /health route). 2026-08-16 delivered a 16-section user guide, two feature-tour videos and 5 re-runnable doc build scripts; demo opened to any email on Cloudflare Access and has stayed open since.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

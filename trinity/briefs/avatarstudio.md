@@ -1,6 +1,6 @@
 # AvatarStudio (avatarstudio) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:42_
 
 ## Registry facts
 - Path: `C:\APPS\AvatarStudio`
@@ -9,13 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Media-generation studio. Depends on WSL2 for avatar render backends. Shares the avatar/voice vision used across QI agents.
 
 ## Brain
-- Current state: status=active_development, phase=WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion
-  AvatarStudio now satisfies all six rows of the Media Studio plug-in contract (PLUGINS.md Â§1), built and committed in D:/Dev/AvatarStudio (94dc676, 86 tests passing). Render core extracted into avatar_pipeline.py with render_avatar() as the single orchestration generator; the Gradio GUI, the new FastAPI service and scene_pipeline.py are all thin callers, so the engine chain exists once. engine/service.py serves /health /version /info /api/render /api/jobs /api/gpu on 7862 and mounts the Gradio panel at / honouring ?embed=1 â€” one port for both doors because ui.port is what Media Studio iframes AND health-probes. driving_audio short-circuits TTS (the Voice Studio / CONVERGENCE item 1 seam). Outputs go to D:/AI/Outputs/AvatarStudio/<job_id>/ with a JSON sidecar. qi_plugin.json validated by Media Studio's own engine/plugins.py with zero warnings. Registry entry extended additively (Tier 2, backup .bak-20260909). Decision #599.
-
-Also fixed a live bug: edge-tts emitted pitch as "+0st", which edge-tts >= 7 rejects before writing audio â€” Japanese, French, Russian and German produced NO sound at all. Still broken in C:/APPS until promotion.
-
-Not done, deliberately: gpu.peak_vram_gb is null because the RTX 5080 was held by another tenant (14.1/16.3 GB) all session. Jobs now sample nvidia-smi into their sidecars so the first Hallo2 render on an idle card produces the number.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # QI Avatar Studio — Claude Session Instructions
@@ -43,6 +37,8 @@ never semitones** (see Known Fixes).
 ## How to Kill & Restart the Studio
 ## Pending Work (Next Session)
 ## QI Ecosystem Context
+## 🔴 Colours are not edited here
+`qi_plugin.json`. Standalone, it follows the OS exactly as it always has.
 
 ## Entry points
 `avatar_pipeline.py`, `avatar_studio.py`, `check_syntax.py`, `diagnose.py`, `gen_tokyo_times_tts.py`, `gen_voices_kokoro.py`, `generate_summary.py`, `install_service.bat`, `run_avatar.bat`, `run_studio.bat`, `scene_pipeline.py`, `smoke_test.py`, `start_studio.py`, `test_all_languages.py`, `test_edge_tts.py`, `test_langs.py`, `test_routing.py`

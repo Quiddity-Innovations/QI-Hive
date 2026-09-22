@@ -1,6 +1,6 @@
 # AutoPDF (autopdf) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:18_
 
 ## Registry facts
 - Path: `C:\APPS\AutoPDF`
@@ -10,9 +10,7 @@ _Generated 2026-09-20 02:33:55_
 - Services: QI_AutoPDFMCP
 
 ## Brain
-- Current state: status=active, phase=Hardening + MCP integration; feature-tour videos delivered 2026-08-11
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_AutoPDF :6969 and QI_AutoPDFMCP :8701 RUNNING. 2026-08-07 landed the regex-library integrity guard and the MCP gateway (9 tools); 2026-08-11 delivered 6 feature-tour video cuts and fixed /api/workflow-list returning a bare string. 2026-09-09: root CLAUDE.md / NEXT_SESSION_PROMPT.md brought current (they had said "no git").
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # AutoPDF — Claude Session Instructions

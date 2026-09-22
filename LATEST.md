@@ -1,13 +1,13 @@
 # QI Hive — LATEST
 
-_Auto-generated: 2026-09-20 18:35:37 (nightly reconciler)_
+_Auto-generated: 2026-09-21 02:30:02 (nightly reconciler)_
 
 | Project | Phase | Status | Sessions | Last |
 |---|---|---|---|---|
 | akiyascout | Registered, no commits yet | paused | 0 | — |
 | autopdf | Hardening + MCP integration; feature-tour videos delivered 2026-08-11 | active | 60 | 2026-08-17 11:56:15 |
 | avatarstudio | WP2 complete â€” Media Studio plug-in contract satisfied, awaiting promotion | active_development | 8 | 2026-09-10 01:46:29 |
-| baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 28 | 2026-09-12 02:41:39 |
+| baguapp | ProtÃ³tipo congelado (2026-09-08); em produÃ§Ã£o com o roteador de 11/09 | active | 26 | 2026-09-12 02:41:39 |
 | baguapp_prod | Marco zero — spec + docs, no code yet | active | 0 | — |
 | bakeoff | RETIRED 2026-09-10 — deleted; results preserved in D:\Dev\QI-Salvage | complete | 0 | — |
 | claude_manager | Trinity â€” both assistants live over MCP; 30-day trial running | active | 1231 | 2026-09-20 18:09:54 |
@@ -27,8 +27,8 @@ _Auto-generated: 2026-09-20 18:35:37 (nightly reconciler)_
 | m2v | RETIRED 2026-09-10 — deleted by owner decision | complete | 6 | 2026-06-18 00:35:05 |
 | maia | Phase 4 — production; AWS LINE relay + channel refactor live | active | 23 | 2026-08-13 21:00:07 |
 | mailbrain | Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run) | active | 0 | — |
-| mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 190 | 2026-09-20 14:11:33 |
-| mediastudio | Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual | active | 91 | 2026-09-20 18:09:54 |
+| mapsnap | Active stable — secret-reference migration done 2026-08-17; Unity API buttons pending verification | active | 189 | 2026-09-20 14:11:33 |
+| mediastudio | Teaching sessions done (S3+S4); S5 is GUI consistency + writing the manual | active | 90 | 2026-09-20 18:09:54 |
 | mq | Phase 0 — scaffold | paused | 1 | 2026-04-06 12:00:00 |
 | mythologies | Static site live | active | 5 | 2026-08-27 14:44:24 |
 | naya | Phase 5 — capability behind OpenClaw (application retired 2026-08-28) | paused | 12 | 2026-08-28 08:07:21 |
@@ -39,8 +39,8 @@ _Auto-generated: 2026-09-20 18:35:37 (nightly reconciler)_
 | personalsong | RETIRED 2026-09-10 — deleted by owner decision | complete | 11 | 2026-06-18 00:35:04 |
 | playdeck | Feature build — subjects + subscriptions; live-broadcast fix shipped 2026-08-28 | active | 5 | 2026-08-08 14:48:55 |
 | qi_brain | Phase 5 — operational (SQLite + ChromaDB + MCP, :9011) | active | 4 | 2026-04-20 01:16:39 |
-| qi_hive | Verification and hardening | healthy | 314 | 2026-09-20 17:50:58 |
-| retirementanalyzer | analysis | active | 178 | 2026-09-12 17:57:59 |
+| qi_hive | Verification and hardening | healthy | 314 | 2026-09-21 00:35:02 |
+| retirementanalyzer | analysis | active | 175 | 2026-09-12 17:57:59 |
 | synvox | Phase 4 â€” evidence layer / reality check; monetisation deferred | active | 79 | 2026-09-09 09:30:16 |
 | trinity | 30-day assistant trial → review 2026-10-16 | active | 4 | 2026-09-10 12:27:07 |
 | tubescout | MVP + refinements; OAuth outage fixed 2026-08-27 (API-key sweep) | active | 12 | 2026-06-18 10:22:23 |

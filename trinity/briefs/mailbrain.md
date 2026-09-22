@@ -1,6 +1,6 @@
 # MailBrain (mailbrain) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:36_
 
 ## Registry facts
 - Path: `C:\APPS\MailBrain`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Unregistered until 2026-09-08. Clone of EasyFlow repo — needs own repo (architecture plan Wave 0.9). 4-provider AI adapter (Gemini/OpenAI/Anthropic/Ollama). Shares :8550 helper with EasyFlow lineage (8550 already allocated to easyflow — no ports claimed here).
 
 ## Brain
-- Current state: status=active, phase=Phase 1 live (Chrome MV3 extension + Flask :8550 helper, manual-run)
-  Registered 2026-09-08. Clone of EasyFlow repo lineage — needs own repo (architecture plan Wave 0.9). 4-provider AI adapter (Gemini/OpenAI/Anthropic/Ollama).
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

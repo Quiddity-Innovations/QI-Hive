@@ -1,6 +1,6 @@
 # NEXUS (nexus) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:33:57_
 
 ## Registry facts
 - Path: `C:\APPS\NEXUS`
@@ -10,9 +10,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: The AI intelligence layer. Not a user-facing product — it serves all other projects. In the unified app, NEXUS becomes the AI engine module that powers everything.
 
 ## Brain
-- Current state: status=active, phase=Phase 2 — NSSM-supervised; role under review after Trinity ruling
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_NEXUS + QI_NexusMCP (:8310) + API :8010 all healthy. No feature work since the 2026-06-10 snapshot beyond an 08-11 feature-tour video. The 2026-09-08 Trinity decision takes NEXUS out of assistant orchestration (Claude + Codex MCP + Gemini MCP instead); provider routing and Scout digest still served.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # NEXUS — Claude Project Instructions

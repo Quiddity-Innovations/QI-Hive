@@ -1,6 +1,6 @@
 # BaguApp Prod (baguapp_prod) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:30_
 
 ## Registry facts
 - Path: `C:\APPS\BaguApp_Prod`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: The real BaguApp product; inherits from the frozen prototype at C:\APPS\Baguapp. Mould for MilkWise.
 
 ## Brain
-- Current state: status=active, phase=Marco zero — spec + docs, no code yet
-  Registered 2026-09-08. The real BaguApp product; inherits from the frozen prototype at C:\APPS\Baguapp. Mould for MilkWise.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # BaguApp — o aplicativo de verdade

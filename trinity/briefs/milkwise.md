@@ -1,6 +1,6 @@
 # MilkWise (milkwise) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:57_
 
 ## Registry facts
 - Path: `C:\APPS\MilkWise`
@@ -10,8 +10,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Hosting is a MANUAL Vercel CLI deployment (Deploy_MilkWise.bat) — a git push does not redeploy. Governing docs live in the repo under 'Quiddity Innovations - MilkWise Documentation\Technical Documentation' (design doc, assessment D1-D21, findings F1-F21). Do not add analytics, third-party scripts, image persistence or any diagnostic claim.
 
 ## Brain
-- No current_state recorded.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # MilkWise — project notes for Claude

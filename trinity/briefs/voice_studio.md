@@ -1,6 +1,6 @@
 # QI Voice Studio (voice_studio) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:06_
 
 ## Registry facts
 - Path: `C:\APPS\VoiceStudio`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Consent gate is mandatory and ships enabled: every voice needs an owner + consent record in data/voices/manifest.json, scoped internal or commercial. Renders write a .json audit sidecar. Code and weights are MIT; supply chain pinned in config/provenance.json. Registered 2026-08-10. | git history lives in C:\APPS\VoiceStudio (the source tier since the owner's ruling of 2026-09-10) and on GitHub; D:\Dev\VoiceStudio is a plain backup clone. | 2026-09-09: paths.outputs corrected to D:\AI\Outputs\VoiceStudio (moved 2026-08-17).
 
 ## Brain
-- Current state: status=active, phase=Batch voice rendering active; test guide in docs/TESTING.md
-  Studio (batch) voice tier for VibeVoice 1.5B narration. Per docs/TESTING.md (most recent doc), Test 0 confirms 9 preset voices load OK (scope=internal) via VoiceStudio_Voices.bat.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # QI Voice Studio — how Claude works with this project
@@ -53,6 +51,8 @@ listed by name in `config/voicestudio.json` as `video_builder.apps`, and the pan
 transformers pinned 4.51.3 by the vendor. **Do not install this into ComfyUI's embedded
 python** — that runs 3.13 / transformers 5.x and the downgrade would break Wan, Qwen3VL and
 Ideogram.
+## 🔴 Colours are not edited here
+`qi_plugin.json`. Standalone, it follows the OS exactly as it always has.
 
 ## Entry points
 `VoiceStudio_AddMyVoice.bat`, `VoiceStudio_Panel.bat`, `VoiceStudio_RenderBUDemo.bat`, `VoiceStudio_Restart.bat`, `VoiceStudio_TestMyVoice.bat`, `VoiceStudio_Voices.bat`

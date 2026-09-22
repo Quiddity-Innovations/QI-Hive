@@ -1,6 +1,6 @@
 # Retirement Analyzer (retirementanalyzer) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:39_
 
 ## Registry facts
 - Path: `C:\APPS\Retirement Analyzer`
@@ -9,18 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Personal-finance utility. Automates the manual Fidelity portfolio review/rebalancing previously done by hand (see Downloads analysis docs), extended with a 5-year retirement-readiness planning layer.
 
 ## Brain
-- Current state: status=active, phase=analysis
-  Deterministic scenario analysis is now complete and internally consistent. The two inputs previously carried as admitted placeholders - the US downsize rent and the contradictory life-expectancy pair - are both resolved: the rent by the owner's figure plus a swept band, the life expectancy by running all nine combinations instead of choosing one. Correcting the rent moved a real headline three years later; the longevity sweep showed longevity is close to irrelevant against the destination decision, which is reported plainly rather than dressed up.
-
-A defect in the withdrawal-rate test was found and fixed during that sweep: it discarded the entire survivor phase. A year-by-year walk now runs alongside it.
-
-Reporting is de-duplicated at the source: all narrative numbers are computed once in a shared figures module, which removed about twenty hand-typed literals from prose. The plain report exists in English, Portuguese and Japanese from one generator. Two automated gates now run before anything is sent.
-
-Two gaps remain open by deliberate choice, each with its own named section rather than a footnote: foreign tax (both jurisdictions tax him; no US-Brazil treaty at all; Japan taxes US social security under its own treaty's Article 17(1) rather than the US Model rule) and long-term care (wholly unmodelled; the owner's view that it matters less abroad is recorded as his judgement, not as a result).
-
-Everything remains private and outside the git repository. Nothing committed, published or uploaded.
-- Last decisions:
-  - An adversarial section must be able to fail its own attacks, or it is theatre (2026-09-12)
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # RetirementAnalyzer — Claude Project Instructions

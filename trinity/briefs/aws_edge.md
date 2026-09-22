@@ -1,6 +1,6 @@
 # AWS Edge (free-tier hybrid) (aws_edge) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:48_
 
 ## Registry facts
 - Path: `C:\QIH\shared\documentation\guides`
@@ -9,8 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Registered 2026-09-09 from the ecosystem status report. Owner decision open: privacy + provider keys for M3, or shelve M2-M6.
 
 ## Brain
-- No current_state recorded.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

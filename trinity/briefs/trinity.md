@@ -1,6 +1,6 @@
 # Trinity (trinity) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:42_
 
 ## Registry facts
 - Path: `C:\QIH\trinity`
@@ -9,10 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Claude (spearhead) + ChatGPT via codex mcp-server + Gemini via qi_gemini_mcp.py. Components listed in C:\QIH\trinity\README.md. No ports, no services, nothing unattended.
 
 ## Brain
-- Current state: status=active, phase=30-day assistant trial → review 2026-10-16
-  Claude (spearhead) + ChatGPT via codex mcp-server + Gemini via qi_gemini_mcp.py. Components documented in C:\QIH\trinity\README.md. No ports, no services, nothing unattended.
-- Last decisions:
-  - Jev (TypeSafe AI) System One decision layer â€” FROZEN until 2026-10-16 review (2026-09-20)
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # Trinity — CLAUDE.md

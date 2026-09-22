@@ -1,6 +1,6 @@
 # QI-Universal (universal) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:09_
 
 ## Registry facts
 - Path: `C:\QIH`
@@ -8,9 +8,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Universal tools layer. Not a product — shared utilities for all QI projects. QI Launcher at localhost:8650 is the single-page dashboard for all project localhost URLs. | Launcher port 8650 removed 2026-06-15 (conflicted with cognibase; QI Launcher superseded by Hive Dashboard :8600).
 
 ## Brain
-- Current state: status=complete, phase=Retired — absorbed into C:\QIH 2026-04-22; C:\UNIVERSAL deleted
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). C:\UNIVERSAL verified gone from disk on 2026-09-09; the "delete after final verification" next step recorded 2026-06-18 was completed but never written back. QI Launcher :8650 decommissioned 2026-06-15 in favour of Hive Dashboard :8600.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).

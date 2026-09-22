@@ -1,6 +1,6 @@
 # QI Connector (connector) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:03_
 
 ## Registry facts
 - Path: `C:\APPS\QIP\Connector`
@@ -10,9 +10,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Backbone infrastructure — the ecosystem's front door for Claude clients. One remote MCP connector (claude.ai custom connector) replaces per-machine, per-tool MCP config: claude.ai web/mobile, Claude Desktop and Claude Code all reach QI tools through connector.quiddityinnovations.com. Registered 2026-07-30.
 
 ## Brain
-- Current state: status=active, phase=v1.0 live + dispatch executor tools (2026-08-16); docs behind code
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). QI_ConnectorMCP :9030 and QI_ConnectorTunnel RUNNING, /health ok. Since the 07-30 summary: generic MapSnap/NEXUS/Maia/Naya tool sections (07-31 to 08-02) and dispatch executor tools qi_list_scripts / qi_execute_script / qi_script_status (08-16) — never documented in a session summary.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # QI Connector — Claude Project Instructions

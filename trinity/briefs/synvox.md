@@ -1,6 +1,6 @@
 # SynVox (synvox) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:35:21_
 
 ## Registry facts
 - Path: `C:\APPS\SynVox`
@@ -10,15 +10,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Sibling tier - a product in its own right, not a tool of another project. Composes existing QI apps as engines: NEXUS (multi-model synthesis of results), EasyFlow/MailBrain (email-campaign simulation), Maia (multilingual conversational layer for chatbot evals), CogniBase (RAG store for ingested market reports). Reached through the QI Connector rather than owning its own MCP server in Phase 0-1; port block 8750-8759 is reserved for the Phase 5 standalone surface. Registered 2026-08-16.
 
 ## Brain
-- Current state: status=active, phase=Phase 4 â€” evidence layer / reality check; monetisation deferred
-  Session 12 (continued). Owner deferred monetisation: SynVox charges nobody, it is an internal tool for Renne and Urcil, and only enough endpoint surface was to be reserved for a future pricing model. Done and closed â€” synvox/billing.py holds the contract with no implementation, four routes (GET /v1/billing/plans, /account, /usage, POST /v1/billing/subscribe) answer 501 capability_disabled, capability_flags.billing is False, and all four were verified live. Nothing had to be moved: SynVox never had customer-billing code, and the two things that wear the word "price" â€” the pre-run cost gate and the Van Westendorp/Gabor-Granger instruments â€” are not billing and are now asserted untouched. The hard part is recorded rather than solved: on the subscription lane SynVox cannot measure money at all, so billing.METERABLE marks runs/personas/inference-calls countable and provider cost and tokens not, so nobody designs a plan on a number that reads zero for subscription-lane customers.
-
-Acting on that led into /v1/capabilities, where three statements had been false for four sessions: the reality_check flag said the matcher was not built after D1..D6 built it, the honesty block asserted a FIXED reality-check status (wrong shape for a per-verdict outcome), and the note â€” rendered on two UI screens â€” told users grade A was unreachable until a layer that had already shipped. All three were pinned by two tests and a route-walk check, which is why nobody noticed. Fixed, and an over-broad guard that asserted on a whole file while claiming to be about evidence routes was narrowed.
-
-D6b then attempted a second coverage gap and closed none, on the evidence: GitHub release-download velocity (cumulative counts with no timestamps make "latest > previous" near-structural), Open Collective cancellations (updatedAt is dominated by the platform's own billing sweep â€” 40 of 146 in the 00:00 UTC hour, busiest minutes 00:03 on the 21st of five months), and share-shift measures (attention moving between products is not people moving). The generalisation is the deliverable: a count can be dominated by the system rather than the users it describes â€” three instances now â€” and the test is "would this number move if no user did anything?". The follow-up audit of every change producer found nothing else and is closed.
-
-Suite 1202 -> 1219 passed / 0 failed; reality_coverage unchanged at 2 of 6 (deliberately); every gate PASS; end-to-end study graded 3/3 in 105s at $0; 11/11 mutations caught.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 # SynVox — Claude Project Instructions
@@ -153,4 +145,6 @@ look free, which is the same class of lie in the other direction.
    `synvox\grade\reality.py` — those two packages have never imported each other and
    the module docstrings say so on purpose. `tests\test_evidence_measure_declarations
    .py` fails the build on drift. Same arrangement for `RELIABILITIES`, three copies.
+   **A derived change must be one the source can stand behind, and every refusal is
+   load-bearing.** `census` compares only NON-OVERLAPPING vintages (acs5 2023 pools
 ...(truncated — cap 150 lines)

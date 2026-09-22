@@ -1,6 +1,6 @@
 # Headroom (headroom) — L2 brief
 
-_Generated 2026-09-20 02:33:55_
+_Generated 2026-09-21 02:34:57_
 
 ## Registry facts
 - Path: `C:\APPS\CLAUDE\Tools`
@@ -9,9 +9,7 @@ _Generated 2026-09-20 02:33:55_
 - Notes: Pilot 2026-07: proxy in front of Ollama first (OPENAI_API_BASE=http://localhost:11434/v1), then NEXUS providers if savings hold. Do NOT re-point Claude Code's own endpoint through the proxy — subscription OAuth path stays untouched; Claude Code uses the MCP mode instead.
 
 ## Brain
-- Current state: status=active, phase=Promoted — QI_Headroom NSSM service live on :9020 fronting api.anthropic.com
-  Backfilled 2026-09-09 from QI_Project_Status_Report_2026-09-09.docx (Claude Fable 5.1). Contrary to the registry ("pilot, not yet promoted"), QI_Headroom is SERVICE_RUNNING (headroom-proxy 0.32.1, ~3.6 days uptime on 2026-09-09) via Tools/headroom_env; upstream is https://api.anthropic.com, not Ollama as documented. Internal kompress backend reports unhealthy while overall status is healthy. Stale 2.0 GB headroom_env.old deleted 2026-09-09; venv untracked from git.
-- No project-scoped decisions recorded.
+- Brain offline or unreachable — skipped.
 
 ## CLAUDE.md rules
 - No CLAUDE.md found (or no matching rule/heading lines).
