@@ -27,6 +27,11 @@ from typing import Callable, Optional
 
 sys.stdout.reconfigure(encoding='utf-8')
 
+# Shared secret token shapes (ERE, for git grep) — engine/common, resolved from
+# this file so `python -m`, the Brain API and nightly_reconcile all find it.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'common'))
+from qi_secret_patterns import TOKEN_SHAPES  # noqa: E402
+
 DB = r'C:\QIH\data\qi_brain.db'
 REGISTRY = r'C:\QIH\ecosystem\qi_registry.json'
 HOOKS_DIR = Path(r'C:\QIH\hooks')
@@ -410,16 +415,8 @@ def check_secrets_in_source(pid: str, path: Path, auto_fix: bool) -> Optional[Ch
     """
     if not (path / '.git').exists():
         return None
-    patterns = [
-        (r'[0-9]{8,10}:AA[A-Za-z0-9_-]{30,}',  'Telegram bot token'),
-        (r'sk-ant-[A-Za-z0-9_-]{20,}',          'Anthropic API key'),
-        (r'sk-proj-[A-Za-z0-9_-]{20,}',         'OpenAI API key'),
-        (r'AIza[0-9A-Za-z_-]{30,}',             'Google API key'),
-        (r'EAA[A-Za-z0-9]{60,}',                'Meta page/access token'),
-        (r'gh[ops]_[A-Za-z0-9]{30,}',           'GitHub token'),
-    ]
     hits = []
-    for pat, label in patterns:
+    for _name, pat, label in TOKEN_SHAPES:
         try:
             out = subprocess.run(
                 ['git', '-C', str(path), 'grep', '-l', '-E', pat,
