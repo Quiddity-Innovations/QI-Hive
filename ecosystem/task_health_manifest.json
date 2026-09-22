@@ -201,6 +201,15 @@
       "severity": "low",
       "note": "NOT a scheduled task - a drift watch. TubeScout's sweep moved to an API key on 2026-08-27 (API keys never expire; the OAuth token died after 7 days and cost 66 days of silence). The only step still needing OAuth is pull_subscriptions(), which runs manually. If this goes stale, newly subscribed channels are being silently ignored. Fix: cd /d C:\\APPS\\TUBESCOUT && python -m shared.sweep --pull-subs"
     },
+    "TubeScout_Summaries": {
+      "owner": "tubescout",
+      "check": "sqlite",
+      "target": "C:\\APPS\\TUBESCOUT\\tubescout.db",
+      "query": "SELECT value FROM state WHERE key='summarize_last_ok'",
+      "max_age_hours": 13,
+      "severity": "medium",
+      "note": "OUTCOME watch, not a liveness watch: the cycle runs fine but can write news cards from trimmed descriptions instead of NEXUS. summarize.record_health() advances this key only when >= 25% of a >= 20-video run came from NEXUS (config summarize.health_*). 13h + 6h grace = one bad 07:00/19:00 cycle alerts within ~7-12h. Added 2026-09-22 after 1 in 3 cycles since 2026-08-27 got via_nexus=0 silently (NEXUS 'groq' model 404, 'gemini' disabled, Cloudflare quota). Triage: state key summarize_last_run in tubescout.db has provider_errors; then C:\\APPS\\NEXUS\\data\\logs\\nexus.log."
+    },
     "QI_TrinityCheck_Daily": {
       "owner": "qi_hive",
       "check": "marker",
