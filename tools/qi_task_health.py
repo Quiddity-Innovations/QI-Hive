@@ -175,7 +175,7 @@ def expand_target(target):
 
 
 # ─────────────────────────────────────────────────────────────
-# the four check types, strongest first
+# the check types: four artifact checks (strongest first) + a service probe
 # ─────────────────────────────────────────────────────────────
 def check_sqlite(spec):
     db = spec["target"]
@@ -284,11 +284,41 @@ def check_file(spec):
     return datetime.fromtimestamp(os.path.getmtime(target)), "mtime"
 
 
+def check_http(spec):
+    """Liveness probe for a long-running SERVICE, not a scheduled task.
+
+    A service can sit in SERVICE_RUNNING while answering nothing. QI_BrainAPI
+    did exactly that from 2026-09-20 18:16 to 2026-09-23, its event loop frozen
+    in a ChromaDB deadlock, and no artifact check noticed because its poller
+    thread kept writing qi_brain.db. The only honest signal is a real request
+    that comes back within `timeout_s`. Point `target` at an endpoint that
+    touches the service's dependencies (Brain: /api/status reads SQLite AND
+    Chroma), not at a bare /health route.
+    """
+    import urllib.request
+    url = spec["target"]
+    timeout = float(spec.get("timeout_s", 15))
+    started = time.time()
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as r:
+            body = r.read(65536).decode("utf-8", errors="replace")
+            code = r.status
+    except Exception as e:
+        return None, "no answer after %.0fs: %s" % (time.time() - started, e)
+    if code != 200:
+        return None, "HTTP %s" % code
+    expect = spec.get("expect")
+    if expect and expect not in body:
+        return None, "answered but missing %r" % expect
+    return now(), "HTTP 200 in %.1fs" % (time.time() - started)
+
+
 CHECKS = {
     "sqlite": check_sqlite,
     "marker": check_marker,
     "git": check_git,
     "file": check_file,
+    "http": check_http,
 }
 
 

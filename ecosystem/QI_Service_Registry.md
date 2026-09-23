@@ -255,7 +255,7 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 |---|---|
 | **Display name** | QI — Brain API |
 | **Description** | QI Brain — hive nervous system. SQLite + ChromaDB + 12 MCP tools. Agent growth loop, decisions, features, sessions. FastAPI on port 9011. (Port 9010 permanently squatted by Logitech G HUB lghub_agent.exe — moved 2026-05-14.) |
-| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **Binary** | `C:\Program Files\Python311\python.exe` (verified with `nssm get` 2026-09-23; the old `C:\1-AI\APPS\PYTHON` path no longer exists) |
 | **Parameters** | `C:\QIH\engine\brain\api.py` |
 | **Working dir** | `C:\QIH` |
 | **Port** | 9011 |
@@ -466,6 +466,7 @@ type C:\QIH\engine\brain\LOGS\qi_brain_api.log
 | Dashboard (:8600) down | QI_Dashboard | `C:\QIH\engine\hive\dashboard\LOGS\dashboard.log` | `nssm status QI_Dashboard` |
 | Dashboard tunnel URL gone | QI_DashboardTunnel | `C:\QIH\engine\hive\tunnel\LOGS\tunnel_service.log` | `nssm status QI_DashboardTunnel` |
 | Brain API (:9011) down | QI_BrainAPI | `C:\QIH\engine\brain\LOGS\qi_brain_api.log` | `nssm status QI_BrainAPI` |
+| Brain is SERVICE_RUNNING but :9011 (even /health) times out; the log shows startup, then no requests; `ingest.log` stops too | QI_BrainAPI + QI_HiveIngest | same logs | ChromaDB deadlock on a poisoned HNSW snapshot (2026-09-20). Find the collection by running `count()` on each one in a scratch copy of `qi_memory`. Fix: `engine\brain\tools\rebuild_chroma_collection.py` prepare, then swap with Brain and HiveIngest stopped |
 | Elevation broker not responding | QI_Elevate | `C:\QIH\logs\elevation\broker_stderr.log` | `nssm status QI_Elevate` |
 | PlayDeck won't open on :8506 | QI_PlayDeck | `C:\PlayDeck\data\logs\service_err.log` | `nssm status QI_PlayDeck` |
 | Hive ingest stalled | QI_HiveIngest | `C:\QIH\logs\hive\ingest_stderr.log` | `nssm status QI_HiveIngest` |

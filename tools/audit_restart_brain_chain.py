@@ -14,7 +14,7 @@ restart itself — it stops before it can write its own result and cannot bring
 itself back. (Learned the hard way, 2026-08-17.)
 """
 from __future__ import annotations
-import sys, time, json, urllib.request
+import subprocess, sys, time, json, urllib.request
 from pathlib import Path
 
 sys.path.insert(0, r"C:\QIH\engine\common")
@@ -58,9 +58,23 @@ def probe(name: str, timeout: float = 60.0) -> bool:
     return False
 
 
+def was_running(name: str) -> bool:
+    out = subprocess.run([r"C:\QIH\engine\bin\nssm.exe", "status", name],
+                         capture_output=True, text=True).stdout.replace("\0", "").strip()
+    return out == "SERVICE_RUNNING"
+
+
 def main() -> int:
+    # Only bring back what was running. QI_NayaBot is DEMAND_START and parked on
+    # purpose (its watchers ran a 4.5 h nightly multi-drive scan); the first
+    # version of this script started it anyway on 2026-09-23.
+    running = [s for s in DEPENDENTS if was_running(s)]
+    parked = [s for s in DEPENDENTS if s not in running]
+    if parked:
+        print(f"left as found (not running before): {parked}")
+
     print("=== stopping dependents ===")
-    for s in DEPENDENTS:
+    for s in running:
         svc("stop", s)
 
     print("\n=== restarting Brain ===")
@@ -70,12 +84,12 @@ def main() -> int:
     print(f"  brain health: {'UP' if probe(BRAIN) else 'DOWN'}")
 
     print("\n=== starting dependents back ===")
-    for s in reversed(DEPENDENTS):
+    for s in reversed(running):
         svc("start", s)
 
     print("\n=== verifying ===")
     failed = []
-    for s in [BRAIN] + DEPENDENTS:
+    for s in [BRAIN] + running:
         up = probe(s)
         print(f"  {s:16} {'UP' if up else '** DOWN **'}")
         if not up:

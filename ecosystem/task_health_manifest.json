@@ -6,7 +6,8 @@
     "sqlite": "query must return a single timestamp; freshest wins. Strongest check — a real data row.",
     "marker": "a success string must appear in a log file whose name may contain {date:FMT}. Proves the job reached its own finish line.",
     "git": "most recent commit timestamp in a repo.",
-    "file": "artifact mtime. Weakest — use only where nothing better exists."
+    "file": "artifact mtime. Weakest — use only where nothing better exists.",
+    "http": "SERVICE liveness: a real request must return 200 (and contain `expect`, if set) within timeout_s. For always-on services, whose artifacts can stay fresh while the process is frozen. A failed probe is DEAD at once."
   },
   "_severity": "high = tell me the day it breaks. medium = tell me, no rush. low = report only.",
   "defaults": {
@@ -144,6 +145,25 @@
       "max_age_hours": 2,
       "severity": "low",
       "note": "Every 30 min; 2h window tolerates a couple of misses."
+    },
+    "QI_BrainAPI": {
+      "owner": "qi_brain",
+      "check": "http",
+      "target": "http://127.0.0.1:9011/api/status",
+      "expect": "\"ok\":true",
+      "timeout_s": 20,
+      "max_age_hours": 1,
+      "severity": "high",
+      "note": "Service liveness, not a task. Dark 2026-09-20 18:16 -> 2026-09-23 while NSSM said SERVICE_RUNNING: a ChromaDB deadlock (poisoned qi_sessions HNSW snapshot) froze the whole process, /health included, yet its poller thread kept writing qi_brain.db, so no artifact check could see it. /api/status is the probe on purpose: it reads SQLite AND Chroma, so it fails on exactly that class of fault. A failed probe reports DEAD immediately (grace does not apply). Fix path: engine/brain/tools/rebuild_chroma_collection.py."
+    },
+    "QI_HiveIngest": {
+      "owner": "qi_hive",
+      "check": "marker",
+      "target": "C:\\QIH\\logs\\hive\\ingest.log",
+      "marker": "[BRAIN] inserted session_log",
+      "max_age_hours": 2,
+      "severity": "high",
+      "note": "Service, fed every 30 min by QI_BrainBackfill stubs, so its log is never legitimately quiet for hours. Froze with QI_BrainAPI on 2026-09-22 14:49 (same Chroma deadlock, inside add_session) while still SERVICE_RUNNING; the inbox backed up to 8,258 files. Append-only log, so freshness comes from its mtime."
     },
     "QI_McpConnectorGuard": {
       "owner": "qi_hive",
