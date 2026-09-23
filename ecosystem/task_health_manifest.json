@@ -263,6 +263,15 @@
       "max_age_hours": 26,
       "severity": "high",
       "note": "Nightly 01:00 SQLite backups (engine/brain/tools/backup.py v2) to C:\\QIH\\shared\\backups\\db\\YYYY-MM-DD. Added 2026-09-16: the task had exited 1 every night since C:\\UNIVERSAL was deleted (2026-04-22) and nobody knew — Task Scheduler's rc was the only signal. 'backup OK' is written only when every present database copied and passed PRAGMA integrity_check."
+    },
+    "QI_Decide": {
+      "owner": "decide",
+      "check": "sqlite",
+      "target": "C:\\APPS\\QIP\\Decide\\data\\decide.db",
+      "query": "SELECT MAX(ts) FROM heartbeat WHERE status='ok'",
+      "max_age_hours": 1,
+      "severity": "high",
+      "note": "QI Decide (Laya System One service, :8810). The heartbeat row is written every 5 min ONLY when a canary decision through the full path (queue -> model -> log) returns the right answer, so 'process up but model broken' goes stale here instead of looking healthy. Callers fall back when it is down (Trinity guard -> detectors only; doc harvester -> 'other'), so staleness means degraded protection, not an outage. Added 2026-09-22."
     }
   }
 }
