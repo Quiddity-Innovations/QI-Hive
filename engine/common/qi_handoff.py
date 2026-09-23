@@ -30,18 +30,12 @@ ARCHIVE = HANDOFF_DIR / "archive"
 LEDGER = HANDOFF_DIR / "ledger.csv"
 
 # Conservative secret redactor — false positive costs a re-run, false
-# negative costs a leaked key, so every pattern below runs case-insensitive
-# even where the real-world prefix is fixed-case (AIza, ghp_, sk-).
-SECRET_PATTERNS = [
-    ("api_key", re.compile(r"api[_-]?key", re.IGNORECASE)),
-    ("sk_key", re.compile(r"sk-[A-Za-z0-9]{20,}", re.IGNORECASE)),
-    ("google_key", re.compile(r"AIza[0-9A-Za-z_-]{30,}", re.IGNORECASE)),
-    ("github_token", re.compile(r"ghp_[A-Za-z0-9]{30,}", re.IGNORECASE)),
-    ("bearer", re.compile(r"Bearer [A-Za-z0-9._-]{20,}", re.IGNORECASE)),
-    ("client_secret", re.compile(r"client_secret", re.IGNORECASE)),
-    ("token_json", re.compile(r"token_[a-z]+\.json", re.IGNORECASE)),
-    ("secrets_path", re.compile(r"secrets\\", re.IGNORECASE)),
-]
+# negative costs a leaked key, so every pattern runs case-insensitive even
+# where the real-world prefix is fixed-case (AIza, ghp_, sk-). The list lives
+# in qi_secret_patterns (shared with the inspector); SECRET_PATTERNS stays
+# exported here because qi_trinity_onboarding and QI Decide's guard import it.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from qi_secret_patterns import REDACTION_HINTS as SECRET_PATTERNS  # noqa: E402
 
 ID_RE = r"\d{8}-\d{3}"
 HANDOFF_NAME_RE = re.compile(rf"HANDOFF-({ID_RE})-([A-Za-z0-9]+)\.md")

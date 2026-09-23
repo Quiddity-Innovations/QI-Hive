@@ -37,12 +37,28 @@ SELF_PEER = os.environ.get("QI_RELAY_PEER", "renne")
 KNOWN_TYPES = ["status", "fyi", "question", "request", "decision", "handoff", "ack", "blocked"]
 
 # Cheap tripwire for PROTOCOL.md 7.5 - secrets must never enter a repo every peer reads.
+# Relay-specific shapes live here; the precise key shapes (sk-ant-, sk-proj-, AIza, gh*_,
+# telegram, meta) come from the shared engine/common/qi_secret_patterns.py below.
 SECRET_PATTERNS = [
     (re.compile(r"\b(?:sk|pk|ghp|gho|github_pat)_[A-Za-z0-9_]{16,}"), "API key / token literal"),
+    # Hyphenated sk- keys (OpenAI legacy/project/service, Anthropic). Hyphens are only allowed
+    # after a known prefix, or prose such as "sk-learn-compatible-estimator" would trip it;
+    # \b keeps "task-..." out. Deliberately overlaps the shared shapes: it is the fallback.
+    (re.compile(r"\bsk-(?:[A-Za-z0-9]{20,}|(?:ant|proj|svcacct|admin)-[A-Za-z0-9_-]{20,})"),
+     "API key (sk-)"),
     (re.compile(r"(?i)\b(password|passwd|api[_-]?key|secret|bearer)\s*[:=]\s*\S+"), "credential assignment"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "private key block"),
     (re.compile(r"(?i)\b(?:mongodb|postgres(?:ql)?|mysql|redis)://[^\s:]+:[^\s@]+@"), "connection string with password"),
 ]
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "engine" / "common"))
+try:
+    from qi_secret_patterns import TOKEN_SHAPES_RE
+    SECRET_PATTERNS += [(rx, label) for _name, rx, label in TOKEN_SHAPES_RE]
+except ImportError:
+    # Degrade loudly, not silently: the local sk- shapes above still catch the common keys.
+    print("[WARN] engine/common/qi_secret_patterns.py not found - secret scan is running "
+          "on relay-local patterns only.", file=sys.stderr)
 
 
 def main() -> int:
