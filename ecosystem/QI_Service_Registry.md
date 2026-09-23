@@ -886,6 +886,19 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Start type** | both AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` |
 | **Added** | 2026-07-30 — installed entirely via QI_Elevate broker (first service proving the `nssm_install_qi` whitelist rule) |
 
+### QI_Decide (QI Decide - local System One decision service)
+| Field | Value |
+|---|---|
+| **Project** | QI Decide - `C:\APPS\QIP\Decide` (registry id `decide`, port **8810**, block 8810-8819). Scope: QI Hive + Trinity only |
+| **QI_Decide** | `C:\Program Files\Python311\python.exe C:\APPS\QIP\Decide\main.py`, AppDir `C:\APPS\QIP\Decide`, logs `data\logs\service_std{out,err}.log` + app log `data\logs\decide.log` |
+| **Purpose** | Laya (ModernBERT-large 421M, CPU-only, offline) answers REGISTERED typed questions (choice / score / yes-no) with probabilities. Callers: Trinity Gemini guard (stage 2), Documentation Brain doc typing (shadow). Never a hard dependency: callers fall back when it is down |
+| **Health** | `http://127.0.0.1:8810/health` (+ `/ready /version /info /capabilities`) · `C:\APPS\QIP\Decide\Status_QIDecide.bat` |
+| **Freshness** | QI_TaskHealth entry `QI_Decide`: `SELECT MAX(ts) FROM heartbeat WHERE status='ok'` in `data\decide.db`, max age 1 h (+ global grace). Heartbeat = canary decision every 5 min, written only when the answer is right |
+| **Symptom lookup** | `/health` status `starting` for > 60 s -> model load slow/failed, see `load_error` + `decide.log` · `degraded` -> torch/transformers version drift on system Python (a system-wide upgrade) · heartbeat `canary_wrong` -> model files or libraries changed; run `tools\ctl.py status` · exits with code **3** -> port 8810 already held (a console copy is running: `Stop_QIDecide.bat`) |
+| **Install** | `C:\APPS\QIP\Decide\tools\Install-QIDecideService.ps1` from an **elevated** PowerShell. Not via the QI_Elevate broker: its `nssm_install_qi` script regex still says `C:\(QIH|QIP)` and `C:\QIP` no longer exists since the August move to `C:\APPS\QIP` (owner decision pending) |
+| **Start type** | DELAYED_AUTO_START · **Account** LocalSystem · **NSSM** `C:\QIH\engine\bin\nssm.exe` · AppExit 3 = Exit (no restart loop when the port is taken) |
+| **Added** | 2026-09-22 install script ready · **✅ INSTALLED 2026-09-23 13:09 UTC** by the owner (elevated script); verified: LocalSystem, DELAYED_AUTO_START, AppExit 3 = Exit, offline env, heartbeat continuous across the switch, TaskHealth `QI_Decide` OK, guard stage 2 reaches it (159 ms) |
+
 ### QI_MapSnapMCP (MapSnap MCP Gateway — Phase 2)
 | Field | Value |
 |---|---|
