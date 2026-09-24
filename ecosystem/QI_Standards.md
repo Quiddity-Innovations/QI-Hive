@@ -336,7 +336,29 @@ These traits must be present in every QI project, no matter what it does:
 
 Multiple QI projects run on the same machine and share infrastructure tools (NSSM, cloudflared). Each project **must not harm the others**.
 
+### Independent but modular (Renne, 2026-09-24)
+
+An app must start and run with `C:\QIH` absent. Working with the Hive is an
+optional add-on, never a requirement.
+
+- **Own NSSM:** each app ships a relabeled copy `<App>_NSSM.exe` in its own root
+  (FileDescription "<App> Service Manager (QI)", so the UAC popup names the app).
+  Its services' binary path points there; its scripts use `%~dp0<App>_NSSM.exe`.
+  `C:\QIH\engine\bin\nssm.exe` and its `*_NSSM.exe` copies are for **Hive** services only.
+- **One Hive switch:** every Hive touchpoint (registry, CORS list, Brain, reports) sits
+  behind one config block with a working standalone fallback. No hard-coded
+  `C:\QIH\...` in runtime code.
+- **Guard it with a test** that fails on hard-coded Hive paths. Reference:
+  `C:\APPS\NEXUS\shared\ecosystem.py` + `tests\unit\test_independence.py`.
+- Why: NEXUS was pointed at a shared nssm in `C:\UNIVERSAL`; the folder was deleted
+  and its Control panel broke silently for months (found 2026-09-24).
+
 ### NSSM Service Naming
+
+> **Standard (Renne, 2026-09-24): `QI_<App>_<Function>`**, e.g. `QI_ClaudeVoice_Control`,
+> `QI_NEXUS_API`, `QI_NEXUS_Tunnel`. Display names follow the same form, with no `QI -`,
+> `QI —` or `QI ` prefix. Migrating the existing names below is **pending** (plan to follow,
+> needs Renne's approval per service, since a Windows service can't be renamed in place).
 
 Every project owns exactly two NSSM services, named after the project:
 

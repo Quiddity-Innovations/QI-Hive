@@ -212,9 +212,10 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 ### QI_NEXUS
 | Field | Value |
 |---|---|
-| **Display name** | QI — NEXUS Scout Engine |
+| **Display name** | QI - NEXUS Scout Engine |
 | **Description** | Quiddity Innovations NEXUS: Neural Exchange and Unified Synthesis. Scout/digest engine with multi-provider LLM dispatch. API port 8010, UI port 7880. |
-| **Binary** | `C:\1-AI\APPS\PYTHON\python.exe` |
+| **NSSM binary** | `C:\APPS\NEXUS\NEXUS_NSSM.exe` (NEXUS's own copy, 2026-09-24). Check / repoint: `C:\APPS\NEXUS\NEXUS_Fix_Service_Path.bat [check]`. Until Renne runs it, still `C:\QIH\engine\bin\nssm.exe`. |
+| **Binary** | `C:\Program Files\Python311\python.exe` (verified `nssm get` 2026-09-24) |
 | **Parameters** | `C:\APPS\NEXUS\main.py` |
 | **Working dir** | `C:\APPS\NEXUS` |
 | **Ports** | API 8010 · UI 7880 |
@@ -567,6 +568,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 |---|---|
 | **Display name** | QI - NEXUS Cloudflare Tunnel |
 | **Description** | Cloudflare quick tunnel exposing NEXUS UI (port 7880). |
+| **NSSM binary** | `C:\APPS\NEXUS\NEXUS_NSSM.exe` (NEXUS's own copy, 2026-09-24; switched by the same `NEXUS_Fix_Service_Path.bat`). Tunnel config stays Hive-managed (see STATIC NAMED TUNNELS above). |
 | **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
 | **Parameters** | `tunnel --url http://localhost:7880` |
 | **Working dir** | `C:\Program Files (x86)\cloudflared` |
