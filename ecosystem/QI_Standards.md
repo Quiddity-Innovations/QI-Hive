@@ -356,7 +356,7 @@ optional add-on, never a requirement.
 ### NSSM Service Naming
 
 > **Standard (Renne, 2026-09-24): `QI_<App>_<Function>`**, e.g. `QI_ClaudeVoice_Control`,
-> `QI_NEXUS_API`, `QI_NEXUS_Tunnel`. Display names follow the same form, with no `QI -`,
+> `QI_NEXUS_Server`, `QI_NEXUS_Tunnel`; a single-service app uses `_Server`. Display names follow the same form, with no `QI -`,
 > `QI —` or `QI ` prefix. Migrating the existing names below is **pending** (plan to follow,
 > needs Renne's approval per service, since a Windows service can't be renamed in place).
 
