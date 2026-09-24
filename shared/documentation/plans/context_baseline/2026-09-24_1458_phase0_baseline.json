@@ -1,0 +1,306 @@
+{
+  "taken": "2026-09-24T14:58:23",
+  "label": "phase0_baseline",
+  "ground_truth": {
+    "days": 14,
+    "sessions": 267,
+    "first_turn_tokens_median": 74412,
+    "first_turn_tokens_p90": 93521,
+    "user_prompts_per_session_median": 5,
+    "by_project_median": {
+      "C--CLAUDE": 67333,
+      "C--APPS-PrepStream": 74464,
+      "C--QIH": 73383,
+      "C--APPS-SynVox": 79173,
+      "C--APPS-Retirement-Analyzer": 82891,
+      "C--APPS-MediaStudio": 79140,
+      "C--APPS-MapSnap": 63797,
+      "C--MapSnap": 63173,
+      "C--Users-renne-Downloads-NOTE-DISCOVERY": 64067,
+      "C--APPS-Astrelier": 93360,
+      "C--APPS-MilkWise": 85501,
+      "C--APPS-Baguapp": 99147
+    }
+  },
+  "static": {
+    "global_claude_md": {
+      "path": "C:\\Users\\renne\\.claude\\CLAUDE.md",
+      "bytes": 37299,
+      "chars": 36117,
+      "est_tokens": 9029
+    },
+    "memory_index_C--CLAUDE": {
+      "path": "C:\\Users\\renne\\.claude\\projects\\C--CLAUDE\\memory\\MEMORY.md",
+      "bytes": 18912,
+      "chars": 18698,
+      "est_tokens": 4674
+    },
+    "memory_stores": {
+      "C--": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--AkiyaScout": {
+        "files": 2,
+        "index_bytes": 151
+      },
+      "C--APPS": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--APPS-Astrelier": {
+        "files": 13,
+        "index_bytes": 1978
+      },
+      "C--APPS-AvatarStudio": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--APPS-Baguapp": {
+        "files": 2,
+        "index_bytes": 147
+      },
+      "C--APPS-CLAUDE": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--APPS-CogniBase": {
+        "files": 2,
+        "index_bytes": 149
+      },
+      "C--APPS-Godseye": {
+        "files": 3,
+        "index_bytes": 372
+      },
+      "C--APPS-Lottery-Wiz": {
+        "files": 3,
+        "index_bytes": 416
+      },
+      "C--APPS-MapSnap": {
+        "files": 17,
+        "index_bytes": 2442
+      },
+      "C--APPS-MediaStudio": {
+        "files": 9,
+        "index_bytes": 1288
+      },
+      "C--APPS-MilkWise": {
+        "files": 3,
+        "index_bytes": 456
+      },
+      "C--APPS-Mythologies": {
+        "files": 10,
+        "index_bytes": 1793
+      },
+      "C--APPS-NAYA": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--APPS-NEXUS": {
+        "files": 2,
+        "index_bytes": 145
+      },
+      "C--APPS-NoosOrbis": {
+        "files": 4,
+        "index_bytes": 533
+      },
+      "C--APPS-PlayDeck": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--APPS-PrepStream": {
+        "files": 4,
+        "index_bytes": 183
+      },
+      "C--APPS-QIP-Connector": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--APPS-QIP-Decide": {
+        "files": 4,
+        "index_bytes": 526
+      },
+      "C--APPS-Retirement-Analyzer": {
+        "files": 12,
+        "index_bytes": 2080
+      },
+      "C--APPS-SynVox": {
+        "files": 14,
+        "index_bytes": 1871
+      },
+      "C--APPS-TUBESCOUT": {
+        "files": 3,
+        "index_bytes": 326
+      },
+      "C--CLAUDE": {
+        "files": 102,
+        "index_bytes": 18912
+      },
+      "C--CLAUDE-Claude-Voice": {
+        "files": 9,
+        "index_bytes": 1489
+      },
+      "C--CogniBase": {
+        "files": 5,
+        "index_bytes": 622
+      },
+      "C--EasyFlow": {
+        "files": 25,
+        "index_bytes": 4507
+      },
+      "C--FidelityAnalyzer": {
+        "files": 2,
+        "index_bytes": 173
+      },
+      "C--FileHQ": {
+        "files": 3,
+        "index_bytes": 257
+      },
+      "C--Gamez": {
+        "files": 19,
+        "index_bytes": 5000
+      },
+      "C--GMAIL---BEYOND": {
+        "files": 5,
+        "index_bytes": 508
+      },
+      "C--Lottery-Wiz": {
+        "files": 2,
+        "index_bytes": 163
+      },
+      "C--MapSnap": {
+        "files": 29,
+        "index_bytes": 8791
+      },
+      "C--NAYA": {
+        "files": 6,
+        "index_bytes": 631
+      },
+      "C--NEXUS": {
+        "files": 9,
+        "index_bytes": 1372
+      },
+      "C--OC": {
+        "files": 8,
+        "index_bytes": 923
+      },
+      "C--PlayDeck": {
+        "files": 3,
+        "index_bytes": 348
+      },
+      "C--QI": {
+        "files": 42,
+        "index_bytes": 7485
+      },
+      "C--QI-RELAY": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--QIH": {
+        "files": 18,
+        "index_bytes": 2848
+      },
+      "C--Retirement-Analyzer": {
+        "files": 8,
+        "index_bytes": 949
+      },
+      "C--TUBESCOUT": {
+        "files": 3,
+        "index_bytes": 446
+      },
+      "C--UNIVERSAL": {
+        "files": 11,
+        "index_bytes": 1691
+      },
+      "C--Users-renne-AppData-Local-Temp": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "C--Users-renne-Downloads": {
+        "files": 8,
+        "index_bytes": 5856
+      },
+      "C--Users-renne-Downloads-AUTOPDF": {
+        "files": 23,
+        "index_bytes": 4823
+      },
+      "C--Users-renne-Downloads-DIGITIZATION-COSTS": {
+        "files": 2,
+        "index_bytes": 201
+      },
+      "C--Users-renne-Downloads-HINDU-MYTHOLOGY---VERITABLE-HOKUM": {
+        "files": 10,
+        "index_bytes": 1793
+      },
+      "C--Users-renne-Downloads-NOTE-DISCOVERY": {
+        "files": 34,
+        "index_bytes": 6064
+      },
+      "D--AI-ComfyUI-windows-portable": {
+        "files": 6,
+        "index_bytes": 686
+      },
+      "D--AI-output": {
+        "files": 0,
+        "index_bytes": 0
+      },
+      "D--Dev-AvatarStudio": {
+        "files": 1,
+        "index_bytes": 537
+      },
+      "D--Dev-FilmForge": {
+        "files": 1,
+        "index_bytes": 519
+      },
+      "D--Dev-MediaStudio": {
+        "files": 7,
+        "index_bytes": 670
+      },
+      "D--Dev-VoiceStudio": {
+        "files": 1,
+        "index_bytes": 531
+      }
+    },
+    "agent_defs_bytes": {
+      "DISPATCH_PROTOCOL.md": 4706,
+      "hive-architect.md": 2932,
+      "hive-builder.md": 1943,
+      "hive-inspector.md": 2873,
+      "hive-librarian.md": 4695,
+      "hive-ops.md": 2554,
+      "hive-scout.md": 1473,
+      "hive-scribe.md": 2219,
+      "hive-tester.md": 1948
+    }
+  },
+  "hooks": {
+    "session_start": [
+      {
+        "cwd": "C:\\CLAUDE",
+        "chars": 10186,
+        "est_tokens": 2546
+      },
+      {
+        "cwd": "C:\\APPS\\QI",
+        "chars": 10182,
+        "est_tokens": 2546
+      },
+      {
+        "cwd": "C:\\APPS\\MapSnap",
+        "chars": 10192,
+        "est_tokens": 2548
+      }
+    ],
+    "user_prompt_ecosystem_word": {
+      "cwd": "C:\\CLAUDE",
+      "chars": 1406,
+      "est_tokens": 352
+    }
+  },
+  "docs": {
+    "days": 30,
+    "session_summary_docx": 100,
+    "shared_docs_files_touched": 153,
+    "session_summary_docx_total": 472
+  }
+}

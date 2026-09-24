@@ -125,8 +125,11 @@ PROJECTS = {
     },
     "universal": {
         "name": "QI Orchestrator (migrated into QIH on 2026-04-22)",
-        "keywords": ["orchestrator", "dashboard", "brain", "qi brain", "qi dashboard",
-                     "universal", "ecosystem", "nightly backup", "training"],
+        # Bare "dashboard", "brain", "ecosystem", "training" removed 2026-09-24:
+        # ordinary words in any QI prompt, so they injected this RETIRED
+        # project's brief (plus a "create missing docs" nag) into unrelated work.
+        "keywords": ["orchestrator", "qi brain", "qi dashboard",
+                     "universal", "nightly backup"],
         "brain_id": "universal",
         "path": r"C:\QIH",  # was C:\UNIVERSAL — migrated 2026-04-22, see docs/UNIVERSAL_MIGRATION_PLAN.md
         "doc_dir": r"C:\QIH\shared\documentation",
@@ -328,13 +331,10 @@ def build_briefing(project_id: str) -> str:
             lines.append(tail)
 
     # ── Doc audit ─────────────────────────────────────────────────────────────
-    missing_docs = _audit_project_docs(cfg)
-    if missing_docs:
-        lines.append(f"\n⚠️  MISSING STANDARD DOCS — CREATE BEFORE STARTING WORK")
-        for d in missing_docs:
-            lines.append(f"   ❌ {d}")
-    else:
-        lines.append(f"\n✅ All standard docs present")
+    # The "MISSING STANDARD DOCS — CREATE BEFORE STARTING WORK" banner was
+    # removed 2026-09-24 (declutter Phase 1): it ordered doc creation before
+    # the user's actual task, even for retired projects. The audit itself is
+    # still available on demand — audit_docs.py / create_missing_docs.py.
 
     # ── Key paths ─────────────────────────────────────────────────────────────
     lines.append(f"\n📁 KEY PATHS")
@@ -420,25 +420,13 @@ def build_global_briefing() -> str:
             "Loaded natively by Claude Code from this project's own store: " + _native
         )
 
-    # Read user profile
-    user_mem = os.path.join(MEM_DIR, "user_renne.md")
-    try:
-        with open(user_mem, encoding='utf-8', errors='replace') as f:
-            lines.append("\n=== USER PROFILE ===\n" + f.read().strip())
-    except Exception:
-        pass
+    # The legacy store's user_renne.md + every feedback_*.md used to be pasted
+    # in here, into every session (~1.9k tokens). Removed 2026-09-24
+    # (declutter Phase 1): the profile was stale ("working dir Downloads",
+    # "bots as a fun project") and feedback_project_standards.md still ordered
+    # conversation logs saved to the deleted LINE BOTS folder. What was still
+    # true now lives in the global CLAUDE.md, loaded natively.
 
-    # Read feedback rules (all feedback_*.md)
-    for fname in sorted(os.listdir(MEM_DIR)):
-        if fname.startswith("feedback_") and fname.endswith(".md"):
-            path = os.path.join(MEM_DIR, fname)
-            try:
-                with open(path, encoding='utf-8', errors='replace') as f:
-                    lines.append(f"\n=== {fname} ===\n" + f.read().strip())
-            except Exception:
-                pass
-
-    lines.append("\n[Waiting for project selection — say which project to load full context]")
     return "\n\n".join(lines)
 
 

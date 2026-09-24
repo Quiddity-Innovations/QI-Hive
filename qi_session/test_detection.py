@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
-sys.path.insert(0, r'C:\UNIVERSAL\qi_session')
+sys.path.insert(0, r'C:\QIH\qi_session')
 from qi_context_loader import detect_project
 
 tests = [
@@ -8,7 +8,10 @@ tests = [
     ("Hi, let us work on Maia today", "maia"),
     ("I want to fix a bug in Naya", "naya"),
     ("NEXUS is giving me issues", "nexus"),
-    ("let us look at the dashboard", "universal"),
+    ("let us look at the dashboard", None),       # bare word, 2026-09-24
+    ("restart the brain api", None),
+    ("check the ecosystem registry", None),
+    ("qi dashboard is down", "universal"),
     ("OpenClaw agents are broken", "openclaw"),
     ("random message about stuff", None),
     ("EasyFlow email integration", "easyflow"),
