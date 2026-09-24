@@ -1,6 +1,6 @@
 # Quiddity Innovations — Project Standards (QI DNA)
 *Every QI project inherits these conventions. No exceptions.*
-*Last updated: 2026-09-10 (added 1.1, the two-tier model)*
+*Last updated: 2026-09-24 (1.1 revised: C:\APPS is Renne's own, D:\Dev is the generalized `generic` branch)*
 
 ---
 
@@ -19,14 +19,31 @@ C:\<PROJECT_NAME_UPPERCASE>\
 | FileHQ | `C:\FileHQ\` |
 | Future | `C:\<NAME>\` |
 
-### 1.1 The two tiers: `C:\APPS` is the source, `D:\Dev` is the backup
+### 1.1 The two tiers: `C:\APPS` is Renne's own, `D:\Dev` is the generalized version
 
-**Owner's ruling, 2026-09-10. This is the model for every QI project.**
+**Owner's rulings: 2026-09-10, revised 2026-09-24. This is the model for every QI project.
+Renne may override it for any specific decision (Law 6).**
 
-| Tier | What it is |
-|---|---|
-| `C:\APPS\<App>` | **The app Renne runs AND the development source.** Defects are found in use and fixed in place, right here. `git` lives here. Claude sessions open here. The QI Hive and `qi_registry.json` point here. This is the only tier where work happens. |
-| `D:\Dev\<App>` | **Backup and distribution source.** A plain `git clone` of the same remote, kept on a second physical disk. It is what you clone from to put the app on another machine or to build an installer. It is never edited, and it carries no runtime state: no `.venv`, no `data/`, no `logs/`, no `secrets/`. |
+| Tier | Branch | What it is |
+|---|---|---|
+| `C:\APPS\<App>` | `main` | **Renne's own install: the app he runs, uses himself and shares with nobody, AND the development source.** Defects are found in use and fixed in place, right here. `git` lives here. Claude sessions open here. The QI Hive and `qi_registry.json` point here. It may carry his own setup (his profiles, config, naming). Site or client material still never reaches GitHub; it stays in git-ignored places. |
+| `D:\Dev\<App>` | `generic` if it exists, else `main` | **The generalized version: what may be deployed to other people, and only with Renne's consent.** A clone of the same remote, on a second physical disk. Where the app has a `generic` branch, D:\Dev checks it out and **generalization work is committed there**: de-siting renames, rebranding, removing assumptions that only fit Renne's setup. An app without a `generic` branch keeps D:\Dev as a plain clone of `main` that is never edited. Either way, it carries no runtime state and no site data: no `.venv`, no `data/`, no `logs/`, no `secrets/`. |
+
+**Branch model (apps with a `generic` branch):**
+
+- **Changes flow one way: `main` → `generic`.** Fixes and features land on `main` in
+  `C:\APPS` first. They reach `generic` by merge. Generalization commits stay on
+  `generic` and never merge back into `main` unless Renne says so.
+- **Where a change goes:** if it costs Renne's own setup nothing (a bug fix, or
+  site-free wording in a comment), commit it on `main`. It reaches `generic` by
+  merge. If it would change his working setup (renaming a file his data uses,
+  rebranding, stripping his config), commit it on `generic` only.
+- **Refresh:** `git -C D:\Dev\<App> pull` (brings in `generic`), then
+  `git -C D:\Dev\<App> merge origin/main`, resolve, and push.
+- **Create one** when the first generalization is needed:
+  `git -C C:\APPS\<App> push origin main:refs/heads/generic`, then
+  `git -C D:\Dev\<App> fetch` and `git -C D:\Dev\<App> switch --track origin/generic`.
+  First app: MapSnap, 2026-09-24.
 
 **Why this way round.** The app and the source being the same tree is the whole
 point: Renne finds a defect *while using the app*, and the fix goes in where he
@@ -39,17 +56,19 @@ the copy that runs.
 
 - **Nothing operational may ever name `D:\Dev`.** Not an NSSM service, not a
   scheduled task, not a Caddy route, not a tunnel, not a plug-in manifest's
-  launcher, not a registry path. The backup clone has no virtualenv, so anything
+  launcher, not a registry path. D:\Dev has no virtualenv, so anything
   pointed there fails — and usually fails *quietly*.
-- **Refresh a backup with `git -C D:\Dev\<App> pull`.** That is the entire
-  maintenance story.
-- **A backup that is dirty, ahead, or diverged is a fault, not drift.** It means
-  somebody edited the backup. Find out whether the change belongs in
-  `C:\APPS\<App>`, move it there, then discard and re-pull.
+- **Refresh a plain clone with `git -C D:\Dev\<App> pull`.** A `generic` checkout
+  also merges `origin/main` (see the branch model above).
+- **Uncommitted or unpushed work in D:\Dev is a fault, not drift.** A plain clone
+  that is ahead of or diverged from `main` is also a fault: somebody edited it.
+  Find out whether the change belongs in `C:\APPS\<App>`, move it there, then
+  discard and re-pull. A `generic` branch being ahead of `main` is by design.
 - **`qi_promote.py` copies to a DIFFERENT MACHINE only.** It is not a step
   between `D:\Dev` and `C:\APPS`, and there is no promotion between tiers to
   perform. If you find yourself "promoting" to get a fix into the running app,
-  the app is set up wrong.
+  the app is set up wrong. Deploying to someone else starts from `D:\Dev`
+  (its `generic` branch where one exists), with Renne's consent.
 - **A new project gets `C:\APPS\<App>` first**, and a `D:\Dev\<App>` clone only
   once the code is on a remote worth backing up.
 
@@ -60,6 +79,11 @@ project. Only the media suite — MediaStudio, VoiceStudio, FilmForge,
 AvatarStudio — was built inverted, on a "`D:\Dev` is the workshop" doctrine that
 **no standard ever stated**. It was realigned on 2026-09-10. Writing the model
 down here is the actual fix: an unwritten convention is one nobody can follow.
+
+**Revision 2026-09-24.** Renne clarified what each tier is *for*: `C:\APPS` is his
+personal install, used only by him; `D:\Dev` is the generalized version that may be
+deployed to others with his consent. Generalization therefore happens on D:\Dev's
+`generic` branch, not in his working setup. Everything else above is unchanged.
 
 ---
 
