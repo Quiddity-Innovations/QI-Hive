@@ -56,6 +56,13 @@ if ($Rollback) {
             if (WaitRunning $r.name 45) { Log "  OK   $($r.name) restored + running" } else { Log "  FAIL $($r.name) restored but NOT running" }
         } else { Log "  OK   $($r.name) restored" }
     }
+    foreach ($d in (Get-ChildItem "$here\batch1_removed_*.cmd" -ErrorAction SilentlyContinue)) {
+        $svc = $d.BaseName -replace '^batch1_removed_', ''
+        if (-not (Get-Service -Name $svc -ErrorAction SilentlyContinue)) {
+            & cmd.exe /c "`"$($d.FullName)`"" | Out-Null
+            Log ("  recreate {0}: {1}" -f $svc, [bool](Get-Service -Name $svc -ErrorAction SilentlyContinue))
+        }
+    }
     Log '=== rollback done ==='; exit 0
 }
 
@@ -133,6 +140,29 @@ foreach ($r in $work) {
             Log ("     dependent {0} restarted: {1}" -f $d.Name, (WaitRunning $d.Name 60))
         }
     }
+}
+
+# ---------------------------------------------------------------- REMOVE retired services
+# Renne 2026-09-24: QI_MaiaDemoTunnel retired 2026-06-20 (maia-demo now on QI_MaiaTunnel),
+# Disabled since. Removed only if still Stopped + Disabled and its config was saved.
+$REMOVE = @('QI_MaiaDemoTunnel')
+foreach ($svc in $REMOVE) {
+    $s = Get-CimInstance Win32_Service -Filter "Name='$svc'"
+    if (-not $s) { Log "  --   $svc already removed"; continue }
+    if ($s.State -ne 'Stopped' -or $s.StartMode -ne 'Disabled') {
+        Log "  SKIP remove $svc - it is $($s.State)/$($s.StartMode), expected Stopped/Disabled"; continue }
+    Log "  $svc remove (config saved first for rollback)"
+    if (-not $Execute) { continue }
+    $dump = "$here\batch1_removed_$svc.cmd"
+    $reg  = "$here\batch1_removed_$svc.reg"
+    & $s.PathName.Trim('"') dump $svc 2>$null | Set-Content -Path $dump -Encoding ASCII
+    & reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\$svc" $reg /y | Out-Null
+    $saved = (Test-Path $dump) -and ((Get-Content $dump -Raw) -match ' install ') -and (Test-Path $reg)
+    if (-not $saved) { Log "     SKIP - could not save config, $svc NOT removed"; continue }
+    & sc.exe delete $svc | Out-Null
+    Start-Sleep -Seconds 2
+    if (Get-Service -Name $svc -ErrorAction SilentlyContinue) { Log "     WARN - still listed (Windows removes it after the Services window closes)" }
+    else { Log "     OK removed. Recreate: $dump" }
 }
 
 # ---------------------------------------------------------------- VERIFY

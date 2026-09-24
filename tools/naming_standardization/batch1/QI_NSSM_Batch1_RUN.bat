@@ -2,7 +2,8 @@
 setlocal
 :: QI NSSM Batch 1 - run tonight (Renne, 2026-09-24). Double-click, approve UAC.
 :: Moves 58 QI services onto their own app's NSSM copy, cleans display names,
-:: drops the NEXUS/Maia/Naya boot dependency on QI_BrainAPI. No renames.
+:: drops the NEXUS/Maia/Naya boot dependency on QI_BrainAPI, removes the
+:: retired QI_MaiaDemoTunnel (config saved first). No renames.
 :: Running services restart one at a time (~5-15 s outage each, ~15 min total).
 :: Each failure rolls back that one service. Undo everything: QI_NSSM_Batch1_ROLLBACK.bat
 
