@@ -3,18 +3,18 @@
 **Authority:** This file is the single source of truth for all QI NSSM Windows services.
 **Location:** `C:\QIH\ecosystem\QI_Service_Registry.md`
 **Convention:** All QI services are prefixed `QI_` so they group together in Windows Services, Task Manager, and Event Viewer.
-**Last updated:** 2026-06-20 (static named-tunnel migration)
+**Last updated:** 2026-09-24 (Batch 1: per-app NSSM, display names, MaiaDemoTunnel removed)
 
 > **Looking for Scheduled Tasks (not services)?** — e.g. a task popping a command window, or you need to enable/disable one — see the sibling **`QI_Scheduled_Tasks_Registry.md`**.
 
-> ## ⏳ PENDING — Per-product NSSM (arming for Sat 2026-06-27 00:05 (midnight ending Fri))
-> Today every `QI_*` service shares one `C:\QIH\engine\bin\nssm.exe`, so the UAC
-> consent popup reads *"the non-sucking service manager"* and never says which
-> product. On Friday, task **`QI_NamingStandardize_Friday`** re-points each
-> service to a **per-product copy** (`Maia_NSSM.exe`, `Naya_NSSM.exe`, …) whose
-> embedded FileDescription names the product, so the popup identifies it.
-> The 18 copies are already staged in `C:\QIH\engine\bin\`. Tooling, dry-runs,
-> rollback, and the service→exe map: **`C:\QIH\tools\naming_standardization\`**.
+> ## ✅ DONE — Per-app NSSM (Batch 1, 2026-09-24)
+> Every `QI_*` service runs on its own relabeled NSSM copy: app services on
+> `<AppRoot>\<App>_NSSM.exe`, Hive services on `C:\QIH\engine\bin\<Label>_NSSM.exe`,
+> so the UAC popup names the product and no app depends on `C:\QIH` to start.
+> Display name = service name. App→QI_BrainAPI boot dependencies removed (NEXUS, Maia, Naya).
+> 58 services, 0 rollbacks, verified by `verify_batch1.py`. Plan / rollback / result:
+> `C:\QIH\tools\naming_standardization\batch1\`. The shared `nssm.exe` is kept only as the source
+> for new copies. Next: renames to `QI_<App>_<Function>` (`..\batch2\name_map.json`), one app per wave.
 
 > ## 🌐 STATIC NAMED TUNNELS (2026-06-20)
 > All QI `*Tunnel` services were migrated from **quick tunnels** (random `*.trycloudflare.com`,
@@ -122,7 +122,7 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Stderr log** | `C:\APPS\QI\LOGS\maia_error.txt` |
 | **Start type** | AUTO_START (delayed) |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` (standardized 2026-04-22) |
+| **NSSM binary** | `C:\APPS\QI\Maia_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 
 ### QI_MaiaQueueDrain
 | Field | Value |
@@ -136,7 +136,7 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Stdout/err log** | `C:\QIH\logs\maia_queue_drain.log` (drainer also logs to `C:\APPS\QI\LOGS\queue_drain_log.txt`) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem (AWS creds pinned to `C:\Users\renne\.aws\credentials` via env in drainer) |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\QI\Maia_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Symptom lookup** | Maia not answering LINE but /health ok → check this service + `aws sqs get-queue-attributes` message count. Rollback: revert `_line_webhook_url` in maia_server.py to tunnel URL + restart QI_MaiaBot. |
 
 ### QI_MaiaTunnel
@@ -177,7 +177,7 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 | **Stderr log** | `C:\APPS\QI\LOGS\maia_gradio_error.log` (rotated at 5 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\QI\Maia_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **AppExit** | Default = Restart (5 s delay, 10 s throttle) |
 | **Added** | 2026-05-09 |
 
@@ -214,7 +214,7 @@ After editing `gate.json`: `python gen_caddyfile.py` then
 |---|---|
 | **Display name** | QI - NEXUS Scout Engine |
 | **Description** | Quiddity Innovations NEXUS: Neural Exchange and Unified Synthesis. Scout/digest engine with multi-provider LLM dispatch. API port 8010, UI port 7880. |
-| **NSSM binary** | `C:\APPS\NEXUS\NEXUS_NSSM.exe` (NEXUS's own copy, 2026-09-24). Check / repoint: `C:\APPS\NEXUS\NEXUS_Fix_Service_Path.bat [check]`. Until Renne runs it, still `C:\QIH\engine\bin\nssm.exe`. |
+| **NSSM binary** | `C:\APPS\NEXUS\NEXUS_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Binary** | `C:\Program Files\Python311\python.exe` (verified `nssm get` 2026-09-24) |
 | **Parameters** | `C:\APPS\NEXUS\main.py` |
 | **Working dir** | `C:\APPS\NEXUS` |
@@ -341,7 +341,7 @@ Not widened — flagged for a separate decision.
 | **Stderr log** | `C:\QIH\logs\elevation\broker_stderr.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\QIH\engine\bin\Elevate_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Registered** | 2026-05-13 (was running but not in registry) |
 
 ### QI_HiveIngest
@@ -355,7 +355,7 @@ Not widened — flagged for a separate decision.
 | **Stderr log** | `C:\QIH\logs\hive\ingest_stderr.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\QIH\engine\bin\Hive_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Registered** | 2026-05-13 (was running but not in registry) |
 
 ### QI_HiveApply
@@ -371,7 +371,7 @@ Not widened — flagged for a separate decision.
 | **Port** | none |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem (matches QI_HiveIngest — re-evaluate during Phase 2) |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\QIH\engine\bin\Hive_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Kill switch** | Create `C:\QIH\engine\hive\apply\HALT` to drain queued items without stopping service |
 | **Inbox dir** | `C:\QIH\inbox\hive_builder\` |
 | **Registered** | 2026-05-13 |
@@ -389,7 +389,7 @@ Not widened — flagged for a separate decision.
 | **Port** | none |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\QIH\engine\bin\Hive_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Inbox dir** | `C:\QIH\inbox\hive_inspector\` |
 | **Done dir** | `C:\QIH\inbox\hive_inspector\done\` |
 | **Quarantine dir** | `C:\QIH\inbox\hive_inspector\quarantine\` |
@@ -513,7 +513,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Stderr log** | `C:\APPS\OC\runtime\logs\agents\kaze\kaze-config-api.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\OC\Kaze_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **UI** | `http://localhost:18800/kaze-config/` |
 
 ### QI_MapSnap
@@ -529,7 +529,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Stderr log** | `C:\APPS\MapSnap\LOGS\QI_MapSnap.stderr.log` (rotated at 5 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\MapSnap\MapSnap_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Added** | 2026-05-13 |
 
 ### QI_CogniBase
@@ -545,7 +545,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Stderr log** | `C:\APPS\CogniBase\LOGS\QI_CogniBase.stderr.log` (rotated at 5 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\CogniBase\CogniBase_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Setup note** | Requires `sqlglot` in venv. Run `C:\APPS\CogniBase\.venv\Scripts\pip.exe install -r requirements.txt` if dependencies drift. |
 | **Added** | 2026-05-13 |
 
@@ -568,7 +568,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 |---|---|
 | **Display name** | QI - NEXUS Cloudflare Tunnel |
 | **Description** | Cloudflare quick tunnel exposing NEXUS UI (port 7880). |
-| **NSSM binary** | `C:\APPS\NEXUS\NEXUS_NSSM.exe` (NEXUS's own copy, 2026-09-24; switched by the same `NEXUS_Fix_Service_Path.bat`). Tunnel config stays Hive-managed (see STATIC NAMED TUNNELS above). |
+| **NSSM binary** | `C:\APPS\NEXUS\NEXUS_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Binary** | `C:\Program Files (x86)\cloudflared\cloudflared.exe` |
 | **Parameters** | `tunnel --url http://localhost:7880` |
 | **Working dir** | `C:\Program Files (x86)\cloudflared` |
@@ -682,7 +682,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Current public URL** | `C:\APPS\OC\runtime\dashboard\news-tunnel-url.txt` + redirect page `news-tunnel.html` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\OC\Kaze_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Install** | `C:\APPS\OC\scripts\tunnel\install-kaze-news-tunnel.bat` (run elevated) |
 | **Note** | Quick tunnel → URL changes on each (re)start. Wrapper captures the new URL, writes it to `news-tunnel-url.txt` + `news-tunnel.html`, and pushes it to Telegram (Kaze's bot) on every start. For a stable custom hostname, switch to a named tunnel + a domain on the Cloudflare account. |
 | **Status** | ✅ Live as of 2026-06-17 |
@@ -700,7 +700,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Stdout/Stderr log** | `C:\APPS\TUBESCOUT\data\logs\service.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\TUBESCOUT\TubeScout_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Install** | `C:\APPS\TUBESCOUT\tools\fix_services.ps1` (run elevated via gsudo; idempotent) |
 | **Note** | Reinstalled 2026-06-18 — **AppDirectory was wrong** (`C:\1-AI\APPS\PYTHON`), so `api.main` could not be imported and the service sat PAUSED. Corrected to `C:\APPS\TUBESCOUT`. The old logon-Startup `QI_TubeScout_Server.vbs` was disabled to stop a second uvicorn competing for :8503. |
 | **Status** | ✅ Live as of 2026-06-18 — health `{"status":"ok"}` |
@@ -719,7 +719,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Current public URL** | **https://tubescout.quiddityinnovations.com** (permanent; resolved by the Hive dashboard via `tunnels.json` → port 8503) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\TUBESCOUT\TubeScout_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Install / config** | Central toolchain: entry in `C:\QIH\engine\tunnels\tunnels.json`; provisioned by `migrate_named_tunnels.py`. The old `fix_services.ps1` quick-tunnel step is **superseded**. |
 | **Note** | Reinstalled 2026-06-18 — **AppStdout/AppStderr were empty**, so cloudflared's output (which carries the public URL) went nowhere and the Hive dashboard found no URL → TubeScout never appeared under the Hive. Now logged to `tunnel.log`, the exact path the dashboard reads. Quick tunnel → URL changes on each (re)start; for a stable hostname switch to a named tunnel + a domain on the Cloudflare account. |
 | **Status** | ✅ Live as of 2026-06-18 |
@@ -737,7 +737,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Stdout/Stderr log** | `C:\APPS\Gamez\proxy\LOGS\gamez_proxy_service.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\Gamez\Gamez_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Install** | `C:\APPS\Gamez\proxy\install_service.bat` (double-click; self-elevates via UAC). Uninstall: `uninstall_service.bat`. |
 | **Note** | Proxy also serves WC2026.html at `/` so the app runs same-origin (no file:// CORS). Shares the OpenRouter key from `C:\APPS\QI\maia.db`. |
 | **Status** | Registry entry added 2026-06-19; service install pending an elevated run of install_service.bat |
@@ -755,7 +755,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Stdout/Stderr log** | `C:\APPS\Gamez\proxy\LOGS\hyde_service.log` |
 | **Start type** | DEMAND_START (manual — OFF by default; this is the Hyde access switch) |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\Gamez\Gamez_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Install** | `C:\APPS\Gamez\proxy\install_hyde_service.bat` (double-click; self-elevates via UAC). On/off: `start_hyde.bat` / `stop_hyde.bat`. No-service alternative: `run_hyde.bat`. |
 | **Note** | The Jekyll/Hyde switch: typing `hyde` in the app fetches this persona via the public proxy's `/persona?mode=hyde`; stop this service and that 503s, so the public Analyst is the only reachable persona. Same public name (worldcup:8710); no new tunnel/hostname. |
 | **Status** | Registry entry added 2026-06-27; service install pending an elevated run of install_hyde_service.bat |
@@ -773,7 +773,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Stdout/Stderr log** | `C:\QIH\logs\qi_caddy.log` (rotates at 10 MB) |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\QIH\engine\bin\Caddy_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Install** | `C:\QIH\engine\proxy\install_qi_caddy.bat` (right-click → Run as administrator). Stop the foreground Caddy first so ports 80/443 are free. |
 | **Config** | `C:\QIH\engine\proxy\Caddyfile` — subdomain → port map (lottery, cypher, hive, nexus, etc.). Validate edits with `caddy validate --config ...`. |
 | **Exposure** | LAN-only. Public access for any app is still via its Cloudflare named tunnel, NOT this proxy. Requires `*.qi.local` to resolve to 127.0.0.1 (hosts file or Acrylic DNS wildcard). |
@@ -794,7 +794,7 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **App log** | `C:\APPS\OC\runtime\logs\keepalive-daemon.log` |
 | **Start type** | AUTO_START |
 | **Account** | LocalSystem (Session 0) |
-| **NSSM binary** | `C:\QIH\engine\bin\nssm.exe` |
+| **NSSM binary** | `C:\APPS\OC\OC_NSSM.exe` (own relabeled copy, Batch 1 2026-09-24) |
 | **Install / rename** | `C:\APPS\OC\tools\rename_keepalive_service.ps1` (elevated, idempotent) |
 | **What it actually does** | Two independent 30-minute checks: (1) reads `C:\APPS\OC\runtime\nlm-storage-state.json` — mirrored from WSL by cron — and warns at 48h / 24h / expired on the shortest-lived NotebookLM cookie; (2) `check_digest_freshness()` reads Kaze's own delivery log for today and alerts if no digest completed by 09:00. |
 | **Why check #2 exists** | Task Scheduler cannot detect a failed Kaze run: every OC task launches via `conhost.exe --headless`, which **discards the wrapped exit code** (`wsl.exe` returns 127, conhost returns 0). This masked a total 18-day digest outage while every task reported success. The check is therefore **outcome-based**, never exit-code-based. |

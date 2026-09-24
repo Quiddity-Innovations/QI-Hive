@@ -24,7 +24,9 @@ $log    = "$here\logs\batch1_${mode}_$ts.log"
 $result = "$here\batch1_result.json"
 $DROP_BRAIN_DEP = @('QI_NEXUS', 'QI_MaiaBot', 'QI_NayaBot')
 
-function Log($m) { $line = "[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m; Write-Host $line; Add-Content -Path $log -Value $line -Encoding UTF8 }
+# Log file may be held open by a viewer (tail -f locked it on 2026-09-24); never let that spam or stop the run.
+function Log($m) { $line = "[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m; Write-Host $line
+    try { [IO.File]::AppendAllText($log, $line + "`r`n", [Text.Encoding]::UTF8) } catch { } }
 function BinPath($svc) { (Get-CimInstance Win32_Service -Filter "Name='$svc'").PathName.Trim('"') }
 function State($svc)   { (Get-Service -Name $svc -ErrorAction SilentlyContinue).Status }
 function WaitRunning($svc, $sec) {

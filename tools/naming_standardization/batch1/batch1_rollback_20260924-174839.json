@@ -1,0 +1,524 @@
+﻿[
+    {
+        "name":  "QI_NayaBot",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - Naya Bot Server",
+        "depends":  [
+                        "QI_BrainAPI"
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_AutoPDFTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI AutoPDF Tunnel (Cloudflare)",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_KazeNewsTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI Kaze News Tunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_NoosOrbis",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_NoosOrbis",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_ConnectorMCP",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_ConnectorMCP",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_NayaTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_NayaTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_NEXUS",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - NEXUS Scout Engine",
+        "depends":  [
+                        "QI_BrainAPI"
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_ClaudeVoiceControl",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_ClaudeVoiceControl",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_NEXUSTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_NEXUSTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_Caddy",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_Caddy",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_GamezQuantProxy",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI Gamez Quant (Hyde) Service",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_ConnectorTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_ConnectorTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MapSnap",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_MapSnap",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_GamezProxy",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI Gamez Proxy (WC2026)",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MQTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_MQTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_HiveInspectorDrain",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_HiveInspectorDrain",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_ClaudeVoiceTelegram",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_ClaudeVoiceTelegram",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_Headroom",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_Headroom",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_KazeConfigAPI",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_KazeConfigAPI",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_AvatarStudio",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_AvatarStudio",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_AutoPDFMCP",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI AutoPDF MCP Gateway",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_Gate",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_Gate",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_Dashboard",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - Orchestrator Dashboard",
+        "depends":  [
+                        "QI_BrainAPI"
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_BrainAPI",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - Brain API",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_GamezTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_GamezTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_LotteryWizTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI Lottery Wiz Cloudflare Tunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_RetirementAnalyzer",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_RetirementAnalyzer",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_MaiaBot",
+        "bin":  "C:\\QIH\\engine\\bin\\Maia_NSSM.exe",
+        "display":  "QI - Maia Bot Server",
+        "depends":  [
+                        "QI_BrainAPI"
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_HiveApply",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_HiveApply",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_AutoPDF",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI AutoPDF (PDF toolkit web server)",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_ClaudeVoiceTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_ClaudeVoiceTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_NoosOrbisTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_NoosOrbisTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_CypherMinerTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - CypherMiner Cloudflare Tunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_DashboardTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - Dashboard Cloudflare Tunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_CypherMinerUI",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - CypherMiner UI (static build, port 7842)",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_FileHQ",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_FileHQ",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MapSnapBUSetup",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_MapSnapBUSetup",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_TubeScout",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_TubeScout",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_OCKeepalive",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_OCKeepalive",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_LotteryWiz",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI Lottery Wiz (Fantasy 5)",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MaiaTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\Maia_NSSM.exe",
+        "display":  "QI - Maia Cloudflare Tunnel (Production)",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_ClaudeVoiceLine",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_ClaudeVoiceLine",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_Decide",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI Decide",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_Elevate",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_Elevate",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_ComfyUI",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - ComfyUI",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_CogniBase",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_CogniBase",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MapSnapTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_MapSnapTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_TaskHealth",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_TaskHealth",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_NexusMCP",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_NexusMCP",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MapSnapMCPBU",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_MapSnapMCPBU",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_NayaMCP",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_NayaMCP",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MaiaGradio",
+        "bin":  "C:\\QIH\\engine\\bin\\Maia_NSSM.exe",
+        "display":  "QI - Maia Gradio UI",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_CogniBaseTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_CogniBaseTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MapSnapMCP",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_MapSnapMCP",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_HiveIngest",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_HiveIngest",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_MaiaQueueDrain",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_MaiaQueueDrain",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    },
+    {
+        "name":  "QI_NayaGradio",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI - Naya Gradio UI",
+        "depends":  [
+
+                    ],
+        "was_running":  false
+    },
+    {
+        "name":  "QI_TubeScoutTunnel",
+        "bin":  "C:\\QIH\\engine\\bin\\nssm.exe",
+        "display":  "QI_TubeScoutTunnel",
+        "depends":  [
+
+                    ],
+        "was_running":  true
+    }
+]

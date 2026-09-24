@@ -1,0 +1,365 @@
+﻿{
+    "mode":  "EXECUTE",
+    "when":  "2026-09-24T17:52:15",
+    "log":  "C:\\QIH\\tools\\naming_standardization\\batch1\\logs\\batch1_EXECUTE_20260924-174839.log",
+    "ok":  58,
+    "rolled_back":  [
+
+                    ],
+    "was_running_now_not":  [
+
+                            ],
+    "still_on_shared_nssm":  [
+
+                             ],
+    "services":  [
+                     {
+                         "name":  "QI_AutoPDF",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_AutoPDFMCP",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_AutoPDFTunnel",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_AvatarStudio",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_ClaudeVoiceControl",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_ClaudeVoiceLine",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_ClaudeVoiceTelegram",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_ClaudeVoiceTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_CogniBase",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_CogniBaseTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_ComfyUI",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_ConnectorMCP",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_ConnectorTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_CypherMinerTunnel",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_CypherMinerUI",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_Decide",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_FileHQ",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_GamezProxy",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_GamezQuantProxy",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_GamezTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_Headroom",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_KazeConfigAPI",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_KazeNewsTunnel",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_LotteryWiz",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_LotteryWizTunnel",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MaiaBot",
+                         "status":  "ok",
+                         "change":  "binary+display+drop-Brain-dependency",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MaiaGradio",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MaiaQueueDrain",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MaiaTunnel",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MapSnap",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MapSnapBUSetup",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_MapSnapMCP",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MapSnapMCPBU",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MapSnapTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_MQTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_NayaBot",
+                         "status":  "ok",
+                         "change":  "binary+display+drop-Brain-dependency",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_NayaGradio",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_NayaMCP",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_NayaTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_NEXUS",
+                         "status":  "ok",
+                         "change":  "binary+display+drop-Brain-dependency",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_NexusMCP",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_NEXUSTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_NoosOrbis",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_NoosOrbisTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_OCKeepalive",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_RetirementAnalyzer",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  false
+                     },
+                     {
+                         "name":  "QI_TubeScout",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_TubeScoutTunnel",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_BrainAPI",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_Caddy",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_Dashboard",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_DashboardTunnel",
+                         "status":  "ok",
+                         "change":  "binary+display",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_Gate",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_HiveApply",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_HiveIngest",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_HiveInspectorDrain",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_TaskHealth",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     },
+                     {
+                         "name":  "QI_Elevate",
+                         "status":  "ok",
+                         "change":  "binary",
+                         "restarted":  true
+                     }
+                 ]
+}
