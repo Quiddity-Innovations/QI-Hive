@@ -937,6 +937,25 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Start type** | **DEMAND_START** (never auto-runs) · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
 | **Added** | 2026-07-31 — BU Edition session; installed via QI_Elevate broker |
 
+### QI_Headroom (LLM context-compression proxy) — registered 2026-09-25
+| Field | Value |
+|---|---|
+| **Project** | Headroom (open-source, Apache-2.0, v0.32.1) — `qi_registry.json` id `headroom`, status **pilot**, tier backbone |
+| **Description** | QI Headroom - LLM context compression proxy (:9020 -> Ollama :11434, isolated venv) |
+| **Binary** | `C:\APPS\CLAUDE\Tools\headroom_env\Scripts\headroom.exe` |
+| **Parameters** | `proxy --port 9020` |
+| **Environment** | `OPENAI_API_BASE=http://localhost:11434/v1` |
+| **Working dir** | `C:\APPS\CLAUDE\Tools` |
+| **Port** | 9020 (Hive block 9000-9099, loopback) — OpenAI-compatible gateway in front of Ollama |
+| **Health** | `GET http://127.0.0.1:9020/health` → `{"service":"headroom-proxy","status":"healthy","ready":true,...}` |
+| **Stdout log** | `C:\APPS\CLAUDE\Tools\headroom_env\logs\stdout.log` |
+| **Stderr log** | `C:\APPS\CLAUDE\Tools\headroom_env\logs\stderr.log` |
+| **Start type** | AUTO_START · LocalSystem |
+| **NSSM binary** | `C:\APPS\CLAUDE\Tools\Headroom_NSSM.exe` (own relabeled copy) |
+| **Footprint** | `headroom_env\` venv ≈ 2.07 GB — the reason `C:\APPS\CLAUDE\Tools` is 2 GB (see `Tools\TOOLS_INVENTORY.md`). Retiring the service is the only way to reclaim it. |
+| **Consumers** | Ollama-bound callers that point at :9020. Claude Code does **not** route through it (subscription OAuth path untouched); Claude uses Headroom's stdio MCP mode instead. |
+| **Why it matters** | Was running unregistered from 2026-07 until found by the 2026-09-25 self-audit Tools inventory. If :9020 is down, callers pointed at it fail while Ollama itself (:11434) is fine — check this service before blaming Ollama. |
+
 ## QI_NoosOrbis / QI_NoosOrbisTunnel  (added 2026-08-21)
 
 | Field | Value |
