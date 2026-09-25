@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Safely patch .claude.json to add SQLite and Git MCP servers."""
+"""Safely patch .claude.json to add the SQLite MCP servers."""
 import json
 import sys
 import os
@@ -18,13 +18,9 @@ NEW_SERVERS = {
         "command": "C:/Program Files/Python311/Scripts/mcp-server-sqlite.exe",
         "args": ["--db-path", "C:/APPS/NAYA/naya.db"],
         "env": {}
-    },
-    "git": {
-        "type": "stdio",
-        "command": "C:/Users/renne/AppData/Roaming/npm/git-mcp-server.cmd",
-        "args": [],
-        "env": {}
     }
+    # "git" (npm @cyanheads/git-mcp-server) removed 2026-09-25: the Windows npm global prefix is gone,
+    # so it pointed at a missing command and failed in every session. Claude uses Bash git.
 }
 
 with open(CONFIG_PATH, encoding='utf-8') as f:

@@ -1192,7 +1192,11 @@
         "logs": "C:\\APPS\\Headroom\\logs",
         "nssm": "C:\\APPS\\Headroom\\Headroom_NSSM.exe"
       },
-      "service": "QI_Headroom_Server"
+      "service": "QI_Headroom_Server",
+      "health": {
+        "url": "http://127.0.0.1:9020/health",
+        "expect": "\"status\":\"healthy\""
+      }
     },
     {
       "id": "playdeck",

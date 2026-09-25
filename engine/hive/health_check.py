@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 import threading
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -73,7 +74,7 @@ _REGISTRY_PATH = Path(r"C:\QIH\ecosystem\qi_registry.json")
 
 def _first_port(ports_dict: dict) -> int | None:
     """Return the first usable integer port from a registry project's `ports` dict."""
-    for key in ("api", "http", "dashboard", "ui", "gateway"):
+    for key in ("api", "http", "dashboard", "ui", "gateway", "proxy"):
         entry = ports_dict.get(key)
         if isinstance(entry, dict):
             val = entry.get("current")
@@ -121,6 +122,10 @@ def _build_projects_from_registry() -> dict:
             "db": None,
             "doc_path": doc_path,
             "key_files": [],
+            # Optional registry block `"health": {"url": ..., "expect": ...}`: "Running" is not
+            # "healthy" - a service can run while what it serves is dead. (added 2026-09-25)
+            "health_url": (entry.get("health") or {}).get("url"),
+            "health_expect": (entry.get("health") or {}).get("expect"),
         }
 
         note = entry.get("status_reason") or entry.get("family_notes") or entry.get("path_migration_note")
@@ -325,6 +330,21 @@ def check_service(name):
     return "unknown"
 
 
+def check_health_url(url, expect=None, timeout=3):
+    """GET a declared health URL. Returns (ok, detail); ok needs HTTP 2xx and, when given,
+    the `expect` substring in the body."""
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as r:
+            body = r.read(4096).decode("utf-8", errors="replace")
+            if not 200 <= r.status < 300:
+                return False, f"HTTP {r.status}"
+            if expect and expect not in body.replace(" ", ""):
+                return False, f"missing {expect}"
+            return True, "healthy"
+    except Exception as e:
+        return False, f"unreachable ({e.__class__.__name__})"
+
+
 def check_port(port):
     """Returns True if something is listening on the port."""
     if not port:
@@ -354,12 +374,24 @@ def doc_freshness(doc_path, code_path):
     Compare newest code file mtime vs newest doc file mtime.
     Returns: 'current', 'stale', 'no_docs', or 'no_code'
     """
+    skip = {".venv", "venv", "env", "node_modules", "site-packages", ".git", "__pycache__"}
+
     def newest_mtime(folder, exts):
-        folder = Path(folder)
-        if not folder.exists():
+        # os.walk so vendored dependency trees are pruned, not walked (a 2 GB venv made this
+        # slow and its .py files made docs look stale) - 2026-09-25
+        if not Path(folder).exists():
             return None
-        files = [f for f in folder.rglob("*") if f.suffix in exts and f.is_file()]
-        return max((f.stat().st_mtime for f in files), default=None)
+        newest = None
+        for root, dirs, files in os.walk(folder):
+            dirs[:] = [d for d in dirs if d not in skip and not d.endswith("_env")]
+            for fn in files:
+                if Path(fn).suffix in exts:
+                    try:
+                        m = os.path.getmtime(os.path.join(root, fn))
+                    except OSError:
+                        continue
+                    newest = m if newest is None or m > newest else newest
+        return newest
 
     code_mtime = newest_mtime(code_path, {".py", ".js", ".ts", ".sql"})
     doc_mtime = newest_mtime(doc_path, {".md", ".docx", ".pdf"})
@@ -450,6 +482,11 @@ def _compute_health_check():
         if api_port:
             project_result["port_open"] = check_port(api_port)
 
+        # Declared health endpoint (registry `health.url`)
+        if cfg.get("health_url"):
+            ok, detail = check_health_url(cfg["health_url"], cfg.get("health_expect"))
+            project_result["health_endpoint"] = detail
+
         # Git
         project_result["git"] = git_status(path)
 
@@ -475,6 +512,8 @@ def _compute_health_check():
             issues.append("service stopped")
         if svc == "not_found":
             issues.append("service not installed")
+        if cfg.get("health_url") and project_result.get("health_endpoint") != "healthy":
+            issues.append(f"health endpoint {project_result.get('health_endpoint')}")
         if "stale" in str(project_result.get("docs", "")):
             issues.append(project_result["docs"])
         if not project_result.get("has_summary"):
