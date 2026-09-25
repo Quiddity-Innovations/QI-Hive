@@ -1159,7 +1159,7 @@
       "id": "headroom",
       "name": "Headroom",
       "description": "Context/token compression layer (open-source, Apache-2.0) — proxy + MCP server that compresses tool outputs, JSON, logs and history before they reach LLMs. Shared infrastructure for the whole ecosystem.",
-      "path": "C:\\APPS\\CLAUDE\\Tools",
+      "path": "C:\\APPS\\Headroom",
       "github": "https://github.com/headroomlabs-ai/headroom",
       "status": "pilot",
       "primary_language": "Python",
@@ -1167,12 +1167,12 @@
         "proxy": {
           "current": 9020,
           "block": "9000-9099",
-          "notes": "Headroom compression proxy (OpenAI-compatible gateway). QI Hive family block — shared infrastructure like Brain (:9011). Registered 2026-07-28 during pilot; promote to QI_Headroom NSSM service if adopted."
+          "notes": "Headroom compression proxy (OpenAI-compatible gateway) - NSSM service QI_Headroom_Server from C:\\APPS\\Headroom. QI Hive family block, shared infrastructure like Brain (:9011)."
         },
         "mcp": {
           "current": "stdio",
           "block": "N/A",
-          "notes": "headroom mcp serve — stdio MCP for Claude Code sessions (headroom_compress / headroom_retrieve / headroom_stats). Registered in C:\\APPS\\CLAUDE\\.mcp.json."
+          "notes": "headroom mcp serve - stdio MCP (headroom_compress / headroom_retrieve / headroom_stats). Configured in C:\\APPS\\CLAUDE\\.mcp.json -> C:\\APPS\\Headroom\\.venv\\Scripts\\headroom.exe."
         }
       },
       "family_tier": "backbone",
@@ -1186,7 +1186,13 @@
         "OpenAI-compatible proxy on :9020",
         "MCP tools: headroom_compress, headroom_retrieve, headroom_stats"
       ],
-      "consumes_from_ecosystem": []
+      "consumes_from_ecosystem": [],
+      "paths": {
+        "venv": "C:\\APPS\\Headroom\\.venv",
+        "logs": "C:\\APPS\\Headroom\\logs",
+        "nssm": "C:\\APPS\\Headroom\\Headroom_NSSM.exe"
+      },
+      "service": "QI_Headroom_Server"
     },
     {
       "id": "playdeck",
@@ -2045,6 +2051,20 @@
         "docs": "C:\\APPS\\Astrelier\\Quiddity Innovations - Astrelier Documentation",
         "logs": "C:\\APPS\\Astrelier\\data\\logs"
       }
+    },
+    {
+      "id": "notepadpp_mcp",
+      "name": "notepadpp-mcp (third-party)",
+      "description": "Vendored sandraschi/notepadpp-mcp @98c63cb - stdio MCP that drives Notepad++. ON DEMAND only (not in ~/.claude.json): claude --mcp-config C:\\APPS\\NotepadppMCP\\notepadpp.mcp.json. NppBridge (/ide) is the primary Notepad++ path; review/delete at 2026-10-25.",
+      "path": "C:\\APPS\\NotepadppMCP",
+      "github": "https://github.com/sandraschi/notepadpp-mcp",
+      "status": "on-demand",
+      "family_tier": "cousin",
+      "ports": {},
+      "integrates_with": [
+        "nppbridge",
+        "claude_manager"
+      ]
     }
   ],
   "family_taxonomy": {

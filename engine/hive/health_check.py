@@ -47,7 +47,7 @@ _SERVICE_MAP = {
     # Added 2026-08-17 audit — these services exist but were never mapped, so
     # the projects reported no service at all.
     "retirementanalyzer": "QI_RetirementAnalyzer",
-    "headroom":           "QI_Headroom",
+    "headroom":           "QI_Headroom_Server",
     "playdeck":           "QI_PlayDeck",
     # Removed 2026-08-17 audit — QI_FidelityAnalyzer / QI_AvatarStudio /
     # QI_PersonalSong / QI_M2V / QI_MQ were mapped but have never been

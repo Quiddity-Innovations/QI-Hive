@@ -937,24 +937,26 @@ All services currently run on `C:\1-AI\APPS\PYTHON\python.exe`. The planned migr
 | **Start type** | **DEMAND_START** (never auto-runs) · LocalSystem · NSSM `C:\QIH\engine\bin\nssm.exe` |
 | **Added** | 2026-07-31 — BU Edition session; installed via QI_Elevate broker |
 
-### QI_Headroom (LLM context-compression proxy) — registered 2026-09-25
+### QI_Headroom_Server (LLM context-compression proxy) — registered 2026-09-25
 | Field | Value |
 |---|---|
-| **Project** | Headroom (open-source, Apache-2.0, v0.32.1) — `qi_registry.json` id `headroom`, status **pilot**, tier backbone |
-| **Description** | QI Headroom - LLM context compression proxy (:9020 -> Ollama :11434, isolated venv) |
-| **Binary** | `C:\APPS\CLAUDE\Tools\headroom_env\Scripts\headroom.exe` |
+| **Project** | Headroom (open-source, Apache-2.0, v0.32.1) — `qi_registry.json` id `headroom`, status **pilot**, tier backbone. Own app root `C:\APPS\Headroom` since 2026-09-25 (untangled from `C:\APPS\CLAUDE\Tools`). |
+| **Description** | Headroom - LLM context compression proxy (:9020 -> Ollama :11434). App root C:\APPS\Headroom |
+| **Binary** | `C:\APPS\Headroom\.venv\Scripts\headroom.exe` |
 | **Parameters** | `proxy --port 9020` |
 | **Environment** | `OPENAI_API_BASE=http://localhost:11434/v1` |
-| **Working dir** | `C:\APPS\CLAUDE\Tools` |
+| **Working dir** | `C:\APPS\Headroom` |
 | **Port** | 9020 (Hive block 9000-9099, loopback) — OpenAI-compatible gateway in front of Ollama |
-| **Health** | `GET http://127.0.0.1:9020/health` → `{"service":"headroom-proxy","status":"healthy","ready":true,...}` |
-| **Stdout log** | `C:\APPS\CLAUDE\Tools\headroom_env\logs\stdout.log` |
-| **Stderr log** | `C:\APPS\CLAUDE\Tools\headroom_env\logs\stderr.log` |
-| **Start type** | AUTO_START · LocalSystem |
-| **NSSM binary** | `C:\APPS\CLAUDE\Tools\Headroom_NSSM.exe` (own relabeled copy) |
-| **Footprint** | `headroom_env\` venv ≈ 2.07 GB — the reason `C:\APPS\CLAUDE\Tools` is 2 GB (see `Tools\TOOLS_INVENTORY.md`). Retiring the service is the only way to reclaim it. |
+| **Health** | `GET http://127.0.0.1:9020/health` → `{"service":"headroom-proxy","status":"healthy","ready":true,...}` (Running is not healthy — check this) |
+| **Stdout log** | `C:\APPS\Headroom\logs\stdout.log` (outside the venv on purpose) |
+| **Stderr log** | `C:\APPS\Headroom\logs\stderr.log` |
+| **Start type** | AUTO_START · LocalSystem · AppExit Restart |
+| **NSSM binary** | `C:\APPS\Headroom\Headroom_NSSM.exe` (own relabeled copy) |
+| **Install** | `C:\APPS\Headroom\Install_QI_Headroom_Server.bat` (self-elevates). The QI_Elevate broker cannot create services or point one at `C:\APPS`; `sc start/stop` works through it (rule `sc_service_control`). |
+| **MCP** | `headroom.exe mcp serve` (stdio) — configured in `C:\APPS\CLAUDE\.mcp.json`. `mcp` pinned `<2`: on mcp 2.0 it crashed at start and was dead in every session until 2026-09-25. |
 | **Consumers** | Ollama-bound callers that point at :9020. Claude Code does **not** route through it (subscription OAuth path untouched); Claude uses Headroom's stdio MCP mode instead. |
-| **Why it matters** | Was running unregistered from 2026-07 until found by the 2026-09-25 self-audit Tools inventory. If :9020 is down, callers pointed at it fail while Ollama itself (:11434) is fine — check this service before blaming Ollama. |
+| **Old name** | `QI_Headroom` (binary `C:\APPS\CLAUDE\Tools\Headroom_NSSM.exe`, venv `Tools\headroom_env`) — **stopped + DISABLED** as the rollback until 2026-10-25, then removed by `C:\APPS\CLAUDE\Tools\untangle_tools.py finalize`. Rollback: `untangle_tools.py rollback`. |
+| **Why it matters** | If :9020 is down, callers pointed at it fail while Ollama itself (:11434) is fine — check this service before blaming Ollama. |
 
 ## QI_NoosOrbis / QI_NoosOrbisTunnel  (added 2026-08-21)
 

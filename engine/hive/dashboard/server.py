@@ -10236,7 +10236,7 @@ OPS_ACTIONS = {
                   "      if ($p) { $pidnote = ' (pid ' + $p.OwningProcess + ')' } } catch { $pidnote = ' (pid lookup unavailable)' }; "
                   "if ($listening) { Write-Output (':9020 proxy: LISTENING' + $pidnote) } "
                   "else { Write-Output ':9020 proxy: NOT RUNNING (3 TCP connects to 127.0.0.1:9020 refused)' }; "
-                  "& 'C:\APPS\CLAUDE\Tools\headroom_env\Scripts\headroom.exe' doctor --port 9020; "
+                  "& 'C:\APPS\Headroom\.venv\Scripts\headroom.exe' doctor --port 9020; "
                   "$rc = $LASTEXITCODE; "
                   "if (-not $listening) { Write-Output 'RESULT: FAIL - nothing is listening on :9020'; exit 1 }; "
                   "if ($rc -ge 2) { Write-Output ('RESULT: FAIL - doctor reported a failure (rc=' + $rc + ')'); exit 1 }; "
@@ -10248,7 +10248,7 @@ OPS_ACTIONS = {
         "icon":  "bi-play-circle", "group": "Headroom", "confirm": False, "timeout": 60,
         "cmd":   ["powershell.exe", "-NoProfile", "-Command",
                   "$env:OPENAI_API_BASE='http://localhost:11434/v1'; "
-                  "Start-Process -FilePath 'C:\\APPS\\CLAUDE\\Tools\\headroom_env\\Scripts\\headroom.exe' "
+                  "Start-Process -FilePath 'C:\\APPS\\Headroom\\.venv\\Scripts\\headroom.exe' "
                   "-ArgumentList 'proxy','--port','9020' -WindowStyle Hidden; "
                   "Start-Sleep 3; "
                   "$p = Get-NetTCPConnection -LocalPort 9020 -State Listen -ErrorAction SilentlyContinue; "

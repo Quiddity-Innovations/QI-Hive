@@ -68,5 +68,8 @@
     "QI_Dashboard / QI_DashboardTunnel": "Dashboard is the Hive's UI -> QI_Hive_Dashboard / QI_Hive_Tunnel",
     "QI_TaskHealth": "Hive health monitor -> QI_Hive_TaskHealth",
     "QI_Elevate": "-> QI_Elevate_Broker; the QI_Elevate whitelist rules use regex ^QI_[A-Za-z0-9_]+$ so new names still match, but the broker's own name appears in ~1.2k places - LAST wave"
+  },
+  "done": {
+    "QI_Headroom": "QI_Headroom_Server - done 2026-09-25 with the Headroom untangle (new service installed, old one disabled; removed at 2026-10-25 finalize). Skip in waves."
   }
 }
