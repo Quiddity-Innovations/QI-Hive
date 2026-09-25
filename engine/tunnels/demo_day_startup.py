@@ -26,7 +26,9 @@ sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 TUNNELS_JSON = os.path.join(HERE, "tunnels.json")
 NSSM = r"C:\QIH\engine\bin\nssm.exe"
-NOTIFY = r"C:\APPS\CLAUDE\Tools\qi_tasuke_notify.py"
+# The Hive's own copy of the Tasuke LINE notifier (engine\common), resolved from this file - never another
+# project's folder (QI rule 2026-09-24). Byte-identical to the CLAUDE Tools copy as of 2026-09-25.
+NOTIFY = os.path.join(os.path.dirname(HERE), "common", "qi_tasuke_notify.py")
 PYTHON = sys.executable
 LOG_DIR = os.path.join(HERE, "LOGS")
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -186,10 +188,20 @@ def classify(host, code):
 
 
 def notify(text):
+    """Push to Tasuke LINE. Delivery is judged by the notifier's own "Tasuke notify OK" line, never its exit code."""
+    if not os.path.isfile(NOTIFY):
+        log(f"(notify skipped: notifier not found at {NOTIFY})")
+        return False
     try:
-        subprocess.run([PYTHON, NOTIFY, text], capture_output=True, text=True, timeout=60)
+        r = subprocess.run([PYTHON, NOTIFY, text], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=60, stdin=subprocess.DEVNULL)
+        out = (r.stdout + r.stderr).strip()
     except Exception as e:
         log(f"(notify failed: {e})")
+        return False
+    ok = "Tasuke notify OK" in out
+    log(f"Tasuke LINE: {'delivered' if ok else 'NOT delivered'} [{out[:200]}]")
+    return ok
 
 
 def main():
@@ -289,6 +301,13 @@ def main():
         summary = summary_head + "\nAll public URLs are live. Ready for demos."
     log("\n" + summary)
 
+    # Notify Renne via Tasuke LINE (before the report is written, so the delivery result lands in it)
+    if DRYRUN:
+        log(f"\n(dryrun: skipping Tasuke LINE notification; notifier "
+            f"{'resolves' if os.path.isfile(NOTIFY) else 'NOT FOUND'}: {NOTIFY})")
+    else:
+        notify(summary)
+
     # Write report log
     stamp = time.strftime("%Y-%m-%d_%H%M")
     report = os.path.join(LOG_DIR, f"demo_day_{stamp}.log")
@@ -296,12 +315,10 @@ def main():
         f.write("\n".join(log_lines))
     log(f"\nReport: {report}")
 
-    # Notify Renne via Tasuke LINE
-    if DRYRUN:
-        log("\n(dryrun: skipping Tasuke LINE notification)")
-    else:
-        notify(summary)
-
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--check-notifier"]:
+        found = os.path.isfile(NOTIFY)
+        print(f"{'OK notifier resolves' if found else 'NOT FOUND'}: {NOTIFY}")
+        sys.exit(0 if found else 1)
     main()
